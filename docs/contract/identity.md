@@ -587,3 +587,11 @@ present with the wrong condition key/operator reports `false`). On the
 | `identity.tag_auth.tagger_role_protected` | bool | All 13 IAM role-mutation actions denied on both the tagger and deployment role, exempting only the deployment role. |
 
 Controls: `CTL.IAM.SCP.TAGAUTH.ENFORCE.001`, `CTL.IAM.SCP.TAGAUTH.MUTATION.001`, `CTL.IAM.RCP.TAGAUTH.SESSION.001`, `CTL.IAM.SCP.TAGAUTH.TAGGER.001`, and the compound `CTL.IAM.TAGAUTH.COMPLETE.001` (reads all four). Params (tag_prefix, tagger_role, deployment_role, sensitive_actions) are collector inputs; defaults `scp-`, `tagger`, `stacksets-exec-*`, and the four IAM credential actions.
+
+## `identity.s3express.*` — S3 Express CreateSession scope
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `identity.s3express.create_session_unrestricted` | bool | IAM role grants `s3express:CreateSession` with `Resource: *` — can obtain data-plane credentials for any Directory Bucket in the account. |
+
+Controls: `CTL.S3EXPRESS.SESSION.SCOPE.001`.

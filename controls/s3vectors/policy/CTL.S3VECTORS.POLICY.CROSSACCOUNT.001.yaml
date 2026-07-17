@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.S3VECTORS.POLICY.CROSSACCOUNT.001
+name: Vector Bucket Policy Must Restrict Cross-Account Access
+description: >
+  Vector Bucket policies granting cross-account access must include
+  an aws:PrincipalOrgID condition. The s3vectors: namespace is
+  separate from s3:, so RCPs scoped to s3:* that enforce
+  PrincipalOrgID do not cover Vector Buckets. An unscoped
+  cross-account grant exposes embedding data to external principals.
+domain: exposure
+exposure:
+  type: cross_account_access
+  principal_scope: cross_account
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.3"
+  ccm_v4: ["DSP-17", "IAM-16"]
+scope_tags:
+  - aws
+  - s3vectors
+taxonomy:
+  - identity-perimeter
+  - trust-boundary
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3vectors_vector_bucket
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.access.has_external_access
+  - storage.access.policy_has_scoping_condition
+remediation:
+  description: >
+    Vector Bucket policy permits cross-account access without an
+    organization-scoping condition.
+  action: >
+    Add aws:PrincipalOrgID condition to all Allow statements that
+    grant access to external accounts.
+  example: |
+    {
+      "storage": {
+        "kind": "vector_bucket",
+        "access": {
+          "has_external_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: vector_bucket
+    - field: properties.storage.access.has_external_access
+      op: eq
+      value: true
+    - field: properties.storage.access.policy_has_scoping_condition
+      op: ne
+      value: true
+tests:
+  - name: vector bucket with unscoped external access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3vectors:us-east-1:123456789012:bucket/shared-embeddings
+      asset_type: aws_s3vectors_vector_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: vector_bucket
+          access:
+            has_external_access: true
+            policy_has_scoping_condition: false
+  - name: vector bucket with org-scoped external access passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3vectors:us-east-1:123456789012:bucket/shared-embeddings
+      asset_type: aws_s3vectors_vector_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: vector_bucket
+          access:
+            has_external_access: true
+            policy_has_scoping_condition: true

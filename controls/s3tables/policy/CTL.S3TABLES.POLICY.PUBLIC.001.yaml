@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.S3TABLES.POLICY.PUBLIC.001
+name: Table Bucket Policy Must Not Permit Public Access
+description: >
+  S3 Tables Table Bucket policies must not grant access to anonymous
+  or wildcard principals. Table Buckets use the s3tables: IAM
+  namespace, which is separate from s3:. Organization-level S3 Block
+  Public Access and RCPs scoped to s3:* do not cover s3tables:
+  actions. A public policy on a Table Bucket exposes the entire
+  Iceberg table catalog and data.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - s3tables
+taxonomy:
+  - identity-perimeter
+  - trust-boundary
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3tables_table_bucket
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.access.has_wildcard_principal
+remediation:
+  description: >
+    Table Bucket policy grants access to anonymous or wildcard
+    principals. S3 Block Public Access does not cover the s3tables:
+    namespace.
+  action: >
+    Remove wildcard Principal statements from the Table Bucket
+    policy. Add aws:PrincipalOrgID condition. Verify SCP/RCP
+    coverage for s3tables: actions exists independently.
+  example: |
+    {
+      "storage": {
+        "kind": "table_bucket",
+        "access": {
+          "has_wildcard_principal": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: table_bucket
+    - field: properties.storage.access.has_wildcard_principal
+      op: eq
+      value: true
+tests:
+  - name: table bucket with wildcard principal fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3tables:us-east-1:123456789012:bucket/analytics-tables
+      asset_type: aws_s3tables_table_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: table_bucket
+          access:
+            has_wildcard_principal: true
+  - name: table bucket with restricted policy passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3tables:us-east-1:123456789012:bucket/analytics-tables
+      asset_type: aws_s3tables_table_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: table_bucket
+          access:
+            has_wildcard_principal: false

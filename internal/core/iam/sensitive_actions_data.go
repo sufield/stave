@@ -411,6 +411,15 @@ var defaultActions = []ActionClassification{
 	{Action: "s3express:CreateSession", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
 	{Action: "s3express:PutObject", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
 
+	// --- DataAccess additions: S3 Tables ---
+	{Action: "s3tables:GetTableObject", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+	{Action: "s3tables:PutTableObject", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+
+	// --- DataAccess additions: S3 Vectors ---
+	{Action: "s3vectors:GetVectors", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+	{Action: "s3vectors:PutVectors", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+	{Action: "s3vectors:SearchVectors", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+
 	// --- DataAccess additions: Security telemetry ---
 	{Action: "securitylake:CreateSubscriber", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
 	{Action: "securitylake:GetDatalake", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
@@ -471,6 +480,10 @@ var defaultActions = []ActionClassification{
 	{Action: "kms:DeleteImportedKeyMaterial", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "s3express:DeleteBucketPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "s3express:PutBucketPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "s3tables:PutTableBucketPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "s3tables:DeleteTableBucketPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "s3vectors:PutVectorBucketPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "s3vectors:DeleteVectorBucketPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "backup:DeleteBackupVault", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "backup:DeleteRecoveryPoint", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "rbin:DeleteRule", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},

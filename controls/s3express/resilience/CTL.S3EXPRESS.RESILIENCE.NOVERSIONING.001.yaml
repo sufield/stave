@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.S3EXPRESS.RESILIENCE.NOVERSIONING.001
+name: Directory Bucket Has No Versioning or Object Lock
+description: >
+  S3 Express Directory Buckets do not support versioning, Object Lock,
+  or cross-region replication. Data in a Directory Bucket has no
+  S3-native ransomware resilience. This control fires on production
+  Directory Buckets to ensure compensating controls (AWS Backup,
+  cross-account copy, application-layer snapshots) are documented.
+  This is a design limitation of S3 Express One Zone, not a
+  misconfiguration.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-11"]
+scope_tags:
+  - aws
+  - s3express
+taxonomy:
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3express_directory_bucket
+params:
+  attack_stage: impact
+observation_fields:
+  - storage.kind
+  - storage.is_production
+remediation:
+  description: >
+    Directory Bucket exists in a production account. S3 Express
+    Directory Buckets do not support versioning or Object Lock —
+    there is no S3-native ransomware resilience.
+  action: >
+    Implement compensating controls: AWS Backup with cross-account
+    vault, periodic cross-account copy to a versioned S3 bucket,
+    or application-layer snapshot mechanisms. Document the
+    compensating control in the bucket's tags.
+  example: |
+    {
+      "storage": {
+        "kind": "directory_bucket",
+        "is_production": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: directory_bucket
+    - field: properties.storage.is_production
+      op: eq
+      value: true
+tests:
+  - name: production directory bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3express:us-east-1:123456789012:bucket/prod-cache--use1-az4--x-s3
+      asset_type: aws_s3express_directory_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: directory_bucket
+          is_production: true
+  - name: non-production directory bucket passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3express:us-east-1:123456789012:bucket/dev-scratch--use1-az4--x-s3
+      asset_type: aws_s3express_directory_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: directory_bucket
+          is_production: false

@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.S3EXPRESS.SESSION.SCOPE.001
+name: CreateSession Must Be Resource-Scoped
+description: >
+  s3express:CreateSession returns temporary data-plane credentials
+  for a specific Directory Bucket. An IAM policy granting
+  CreateSession with Resource: * allows the principal to obtain
+  credentials for ANY Directory Bucket in the account. This is
+  equivalent to granting s3:GetObject + s3:PutObject on all
+  Directory Buckets — a broad data-access grant hidden behind
+  a single action.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-16"]
+scope_tags:
+  - aws
+  - s3express
+taxonomy:
+  - identity-perimeter
+  - credential-lifecycle
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - identity.kind
+  - identity.s3express.create_session_unrestricted
+remediation:
+  description: >
+    IAM role grants s3express:CreateSession without resource
+    restrictions. The role can obtain data-plane credentials for
+    any Directory Bucket in the account.
+  action: >
+    Scope the s3express:CreateSession Allow statement to specific
+    Directory Bucket ARNs. Use Resource conditions to limit which
+    buckets the role can create sessions for.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "s3express": {
+          "create_session_unrestricted": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.s3express.create_session_unrestricted
+      op: eq
+      value: true
+tests:
+  - name: role with unrestricted CreateSession fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/data-pipeline"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          s3express:
+            create_session_unrestricted: true
+  - name: role with scoped CreateSession passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/scoped-cache-reader"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          s3express:
+            create_session_unrestricted: false

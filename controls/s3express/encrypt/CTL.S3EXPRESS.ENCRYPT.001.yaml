@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.S3EXPRESS.ENCRYPT.001
+name: Directory Bucket Encryption at Rest Required
+description: >
+  S3 Express Directory Buckets must have server-side encryption
+  enabled. Directory Buckets support SSE-S3 (default) and SSE-KMS.
+  This control verifies encryption is not disabled or downgraded.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.4.1"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - s3express
+taxonomy:
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3express_directory_bucket
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
+remediation:
+  description: >
+    Directory Bucket does not have server-side encryption enabled.
+  action: >
+    Enable default encryption using SSE-S3 or SSE-KMS on the
+    Directory Bucket.
+  example: |
+    {
+      "storage": {
+        "kind": "directory_bucket",
+        "encryption": {
+          "at_rest_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: directory_bucket
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: false
+tests:
+  - name: directory bucket without encryption fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3express:us-east-1:123456789012:bucket/unencrypted--use1-az4--x-s3
+      asset_type: aws_s3express_directory_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: directory_bucket
+          encryption:
+            at_rest_enabled: false
+  - name: directory bucket with encryption passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3express:us-east-1:123456789012:bucket/encrypted--use1-az4--x-s3
+      asset_type: aws_s3express_directory_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: directory_bucket
+          encryption:
+            at_rest_enabled: true

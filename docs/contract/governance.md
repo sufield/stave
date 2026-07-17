@@ -34,6 +34,42 @@ classification used by agent-scoped controls.
 
 Controls: `CTL.IAM.AGENT.LONGLIVEDKEYS.001`, `CTL.IAM.AGENT.CHAIN.SENSITIVE.001`.
 
+## `identity.role.boundary_denies_*` / `identity.scp.denies_*` — policy deny coverage
+
+Pre-computed booleans indicating whether an SCP, RCP, or permission boundary
+contains a Deny statement covering a specific privileged action. Consumed by
+payer boundary controls (`CTL.IAM.BOUNDARY.PAYER.*.001`) and SCP controls
+(`CTL.IAM.SCP.*.001`, `CTL.ORG.SCP.*.001`).
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `identity.role.has_boundary` | bool | A permission boundary policy is attached to the role. |
+| `identity.role.boundary_denies_assume_root` | bool | The boundary contains a Deny for `sts:AssumeRoot`. |
+| `identity.role.boundary_denies_org_mutation` | bool | The boundary denies org mutation actions (`organizations:LeaveOrganization`, `organizations:DeleteOrganization`, etc.). |
+| `identity.role.boundary_denies_self_removal` | bool | The boundary denies `iam:DeleteRolePermissionsBoundary` (prevents boundary removal). |
+| `identity.scp.denies_*` | bool | The effective SCP chain denies a specific privileged action (e.g., `denies_root_access_key`, `denies_cloudtrail_modify`, `denies_leave_org`). |
+
+### Collector invariant: NotAction in Deny statements
+
+When computing `denies_*` booleans, collectors **MUST** handle `NotAction`
+in Deny statements correctly. `NotAction` in a Deny is semantically the
+**inverse** of `Action` in a Deny:
+
+```
+{"Effect": "Deny", "Action": ["sts:AssumeRoot"]}
+→ boundary_denies_assume_root = true  (denies this specific action)
+
+{"Effect": "Deny", "NotAction": ["sts:AssumeRoot"]}
+→ boundary_denies_assume_root = false  (this action is EXCLUDED from deny)
+→ boundary_denies_org_mutation = true   (everything else IS denied)
+→ boundary_denies_self_removal = true
+```
+
+A collector that skips `NotAction` statements silently under-reports deny
+coverage — a SILENT_RISK at the collector layer. The Stave predicate engine
+never sees the raw policy document; it only evaluates these pre-computed
+booleans.
+
 ## `ai.knowledge_base.*` — RAG retrieval signals (derived)
 
 Compound signals for Bedrock Knowledge Base retrieval safety, computed by the

@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.S3EXPRESS.POLICY.CROSSACCOUNT.001
+name: Directory Bucket Policy Must Restrict Cross-Account Access
+description: >
+  Directory Bucket policies granting cross-account access must include
+  an aws:PrincipalOrgID condition. The s3express: namespace is
+  separate from s3:, so RCPs scoped to s3:* that enforce
+  PrincipalOrgID do not cover Directory Buckets.
+domain: exposure
+exposure:
+  type: cross_account_access
+  principal_scope: cross_account
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.3"
+  ccm_v4: ["DSP-17", "IAM-16"]
+scope_tags:
+  - aws
+  - s3express
+taxonomy:
+  - identity-perimeter
+  - trust-boundary
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3express_directory_bucket
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.access.has_external_access
+  - storage.access.policy_has_scoping_condition
+remediation:
+  description: >
+    Directory Bucket policy permits cross-account access without an
+    organization-scoping condition.
+  action: >
+    Add aws:PrincipalOrgID condition to all Allow statements that
+    grant access to external accounts. Verify SCP coverage for
+    s3express: actions separately from s3: actions.
+  example: |
+    {
+      "storage": {
+        "kind": "directory_bucket",
+        "access": {
+          "has_external_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: directory_bucket
+    - field: properties.storage.access.has_external_access
+      op: eq
+      value: true
+    - field: properties.storage.access.policy_has_scoping_condition
+      op: ne
+      value: true
+tests:
+  - name: directory bucket with unscoped external access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3express:us-east-1:123456789012:bucket/shared-data--use1-az4--x-s3
+      asset_type: aws_s3express_directory_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: directory_bucket
+          access:
+            has_external_access: true
+            policy_has_scoping_condition: false
+  - name: directory bucket with org-scoped external access passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3express:us-east-1:123456789012:bucket/shared-data--use1-az4--x-s3
+      asset_type: aws_s3express_directory_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: directory_bucket
+          access:
+            has_external_access: true
+            policy_has_scoping_condition: true

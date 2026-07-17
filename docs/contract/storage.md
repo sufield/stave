@@ -1,9 +1,10 @@
 # Storage Domain
 
-Contract fields for object storage services — S3 buckets, GCS buckets, and
-single-region S3 Access Points. Namespace prefix: `storage.*`. Also
-covers `s3_ref.*` (bucket reference / takeover detection) and
-`s3_upload.*` (upload policy scope).
+Contract fields for object storage services — S3 buckets, S3 Express
+Directory Buckets, S3 Tables Table Buckets, S3 Vectors Vector Buckets,
+GCS buckets, and single-region S3 Access Points. Namespace prefix:
+`storage.*`. Also covers `s3_ref.*` (bucket reference / takeover
+detection) and `s3_upload.*` (upload policy scope).
 
 Part of the [observation contract](README.md).
 
@@ -216,6 +217,59 @@ GCP-specific properties use fields that don't exist in the S3 contract.
 
 **GCP-specific fields:** `storage.controls.uniform_access_enabled`,
 `storage.encryption.cmek_enabled`.
+
+## S3 sub-namespace bucket types
+
+AWS places S3 Express, S3 Tables, and S3 Vectors in separate IAM
+namespaces (`s3express:`, `s3tables:`, `s3vectors:`). Organization-level
+S3 Block Public Access, RCPs scoped to `s3:*`, and SCPs covering `s3:`
+actions do **not** apply to these namespaces. Each sub-namespace has its
+own bucket creation, policy management, and data-plane APIs.
+
+The `storage.kind` field distinguishes bucket types:
+
+| `storage.kind` value | IAM namespace | Asset type | Bucket type |
+|---|---|---|---|
+| `bucket` | `s3:` | `aws_s3_bucket` | Standard S3 bucket |
+| `directory_bucket` | `s3express:` | `aws_s3express_directory_bucket` | S3 Express One Zone Directory Bucket |
+| `table_bucket` | `s3tables:` | `aws_s3tables_table_bucket` | S3 Tables Table Bucket (Iceberg) |
+| `vector_bucket` | `s3vectors:` | `aws_s3vectors_vector_bucket` | S3 Vectors Vector Bucket (embeddings) |
+
+### Design limitations by bucket type
+
+| Capability | `bucket` | `directory_bucket` | `table_bucket` | `vector_bucket` |
+|---|---|---|---|---|
+| Versioning | Yes | **No** | Tables-managed | **No** |
+| Object Lock | Yes | **No** | No | **No** |
+| Replication | Yes | **No** | No | **No** |
+| Block Public Access | Yes | **Unconfirmed** | **Unconfirmed** | **Unconfirmed** |
+| Resource policy | Yes | Yes | Yes | Yes |
+| Encryption (SSE-S3) | Yes | Yes (default) | Yes | Yes |
+| Encryption (SSE-KMS) | Yes | Yes | TBD | TBD |
+
+Controls for `directory_bucket` assets live under `controls/s3express/`.
+Controls for `table_bucket` assets live under `controls/s3tables/`.
+Controls for `vector_bucket` assets live under `controls/s3vectors/`.
+
+### `identity.s3express.*` — CreateSession scope signals
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `identity.s3express.create_session_unrestricted` | bool | IAM role grants `s3express:CreateSession` with `Resource: *` — can obtain data-plane credentials for any Directory Bucket in the account. |
+
+### `storage.is_production` — production account gate
+
+| Field | Type | Meaning |
+|-------|------|---------|
+| `storage.is_production` | bool | The bucket is in a production account (env tag, account name, or OU). Used by resilience controls that fire only on production assets. |
+
+### Collector requirements for sub-namespace buckets
+
+| Namespace | List API | Policy API | Detail API |
+|---|---|---|---|
+| `s3express:` | `s3:ListDirectoryBuckets` | `s3express:GetBucketPolicy` | — |
+| `s3tables:` | `s3tables:ListTableBuckets` | `s3tables:GetTableBucketPolicy` | `s3tables:ListTables` |
+| `s3vectors:` | `s3vectors:ListVectorBuckets` | `s3vectors:GetVectorBucketPolicy` | `s3vectors:ListVectorBucketIndexes` |
 
 ---
 
