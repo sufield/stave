@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.S3.SSEC.DISABLED.001
+name: SSE-C Must Be Disabled on S3 Buckets
+description: >
+  S3 buckets must have SSE-C (server-side encryption with
+  customer-provided keys) disabled. SSE-C allows any principal
+  with s3:PutObject to encrypt objects with an externally-held
+  key that AWS never stores. Ransomware syndicates use this to
+  encrypt data without needing KMS access — the data is
+  irrecoverable without the attacker's key. Unlike BYOKM
+  ransomware (CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001), SSE-C
+  requires no KMS permissions and bypasses all SCP controls on
+  kms:ImportKeyMaterial. AWS began disabling SSE-C by default
+  for new buckets in April 2026. Technique documented by Farris,
+  extended from the BYOKM ransomware kill chain.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03", "DSP-10"]
+scope_tags:
+  - aws
+  - s3
+  - ransomware
+taxonomy:
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: impact
+observation_fields:
+  - storage.kind
+  - storage.encryption.ssec_disabled
+remediation:
+  description: >
+    Bucket allows SSE-C uploads. Any principal with s3:PutObject
+    can encrypt objects with an externally-held key, enabling
+    ransomware without KMS involvement.
+  action: >
+    Disable SSE-C on the bucket. As of April 2026, AWS disables
+    SSE-C by default for new buckets and existing buckets in
+    accounts without SSE-C-encrypted data. For buckets that still
+    allow SSE-C, disable it via the S3 console or API. Verify
+    existing objects are not SSE-C-encrypted before disabling.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "ssec_disabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.ssec_disabled
+      op: ne
+      value: true
+defect: >
+  SSE-C is enabled on the bucket.
+infection: >
+  Any principal with s3:PutObject can encrypt objects using a
+  customer-provided key that AWS never stores. The attacker holds
+  the only copy of the encryption key.
+failure: >
+  Attacker encrypts objects with SSE-C using their own key, then
+  demands ransom. Unlike KMS-based ransomware, no court order or
+  AWS intervention can recover the data — the key never existed
+  in AWS systems. No SCP on KMS actions prevents this vector.
+tests:
+  - name: "ssec enabled fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            ssec_disabled: false
+  - name: "ssec disabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::prod-data-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            ssec_disabled: true

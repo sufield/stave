@@ -11,6 +11,7 @@ package expand
 
 import (
 	"cmp"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"slices"
@@ -107,20 +108,51 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 		if readErr != nil {
 			continue
 		}
-		text := string(data)
-		for _, svc := range services {
-			if _, ok := have[svc]; ok {
-				continue
-			}
-			found := false
-			for _, prefix := range []string{"aws_", "gcp_", "azure_"} {
-				if strings.Contains(text, prefix+svc) {
-					found = true
-					break
+		
+		var snap struct {
+			Assets []struct {
+				Type string `json:"type"`
+			} `json:"assets"`
+			Snapshots []struct {
+				Assets []struct {
+					Type string `json:"type"`
+				} `json:"assets"`
+			} `json:"snapshots"`
+		}
+		
+		if err := json.Unmarshal(data, &snap); err != nil {
+			continue
+		}
+		
+		for _, a := range snap.Assets {
+			for _, svc := range services {
+				if _, ok := have[svc]; ok {
+					continue
+				}
+				for _, prefix := range []string{"aws_", "gcp_", "azure_"} {
+					target := prefix + svc
+					if a.Type == target || strings.HasPrefix(a.Type, target+"_") || strings.HasPrefix(a.Type, target+".") {
+						have[svc] = struct{}{}
+						break
+					}
 				}
 			}
-			if found {
-				have[svc] = struct{}{}
+		}
+		
+		for _, s := range snap.Snapshots {
+			for _, a := range s.Assets {
+				for _, svc := range services {
+					if _, ok := have[svc]; ok {
+						continue
+					}
+					for _, prefix := range []string{"aws_", "gcp_", "azure_"} {
+						target := prefix + svc
+						if a.Type == target || strings.HasPrefix(a.Type, target+"_") || strings.HasPrefix(a.Type, target+".") {
+							have[svc] = struct{}{}
+							break
+						}
+					}
+				}
 			}
 		}
 	}

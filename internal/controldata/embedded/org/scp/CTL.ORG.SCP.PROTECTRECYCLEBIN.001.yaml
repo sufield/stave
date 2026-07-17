@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.PROTECTRECYCLEBIN.001
+name: SCP Protects Recycle Bin Rules from Deletion
+description: >
+  An SCP must deny rbin:DeleteRule and rbin:UpdateRule to prevent
+  Recycle Bin retention rules from being deleted or shortened by
+  an attacker. Without this meta-invariant, an attacker with
+  admin access can disable Recycle Bin before deleting volumes or
+  snapshots, eliminating the recovery path. The SCP should use a
+  role-based or tag-based exception for authorized Recycle Bin
+  management.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "CC6.1"
+  ccm_v4: ["BCR-01", "BCR-11"]
+scope_tags:
+  - aws
+  - iam
+  - organizations
+  - ransomware
+taxonomy:
+  - account-governance
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: impact
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_recyclebin_modify
+remediation:
+  description: >
+    No SCP prevents deletion or modification of Recycle Bin
+    retention rules.
+  action: >
+    Add an SCP denying rbin:DeleteRule and rbin:UpdateRule
+    across all member accounts. Use a role-based or tag-based
+    condition for authorized Recycle Bin management.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_recyclebin_modify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_recyclebin_modify
+      op: ne
+      value: true
+defect: >
+  No SCP protects Recycle Bin rules from deletion.
+infection: >
+  Recycle Bin retention rules are modifiable by any admin in
+  any member account. An attacker can delete or shorten rules
+  before destroying data.
+failure: >
+  Attacker disables Recycle Bin rules, then deletes EBS volumes
+  and snapshots. Without retention rules, deleted resources are
+  immediately and irrecoverably destroyed. The recovery path
+  that Recycle Bin was supposed to provide does not exist.
+tests:
+  - name: "no recyclebin protection fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_recyclebin_modify: false
+  - name: "recyclebin protection passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_recyclebin_modify: true

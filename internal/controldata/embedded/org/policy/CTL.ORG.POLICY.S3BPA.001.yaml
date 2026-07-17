@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.POLICY.S3BPA.001
+name: S3 BPA Organizational Policy Enabled at Org Root
+description: >
+  An S3 Block Public Access organizational policy must be enabled
+  at the organization root. Unlike IAM organizational policies, S3
+  BPA organizational policy does not follow deny-trumps-allow — an
+  enable at the root can be overridden on specific accounts for
+  legacy public buckets. The policy is all-or-nothing: it enables
+  all four S3 BPA settings (BlockPublicAcls, IgnorePublicAcls,
+  BlockPublicPolicy, RestrictPublicBuckets) or none. This is a
+  third enforcement mechanism alongside SCPs
+  (CTL.ORG.SCP.PROTECTBPA.001) and per-account BPA
+  (CTL.S3.ACCOUNT.PAB.001). The organizational policy ensures BPA
+  is the default for all accounts without requiring per-account
+  configuration.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-01", "IVS-06"]
+scope_tags:
+  - aws
+  - s3
+  - organizations
+taxonomy:
+  - account-governance
+  - data-protection
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.kind
+  - identity.org_policy.s3_bpa_enabled
+remediation:
+  description: >
+    No S3 BPA organizational policy exists at the organization
+    root. Member accounts can create publicly accessible buckets
+    unless individually configured.
+  action: >
+    Enable the S3 BPA organizational policy at the organization
+    root. This enables all four BPA settings across all member
+    accounts by default. Use account-level overrides for legacy
+    accounts that require public bucket access.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "org_policy": {
+          "s3_bpa_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.org_policy.s3_bpa_enabled
+      op: ne
+      value: true
+defect: >
+  No S3 BPA organizational policy at the org root.
+infection: >
+  Member accounts default to allowing public bucket access.
+  Each account must be individually configured, creating
+  configuration drift risk across the organization.
+failure: >
+  New or misconfigured member account creates a publicly
+  accessible S3 bucket. Without an organizational policy, the
+  exposure is not prevented by default.
+tests:
+  - name: "no s3 bpa org policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          org_policy:
+            s3_bpa_enabled: false
+  - name: "s3 bpa org policy enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          org_policy:
+            s3_bpa_enabled: true

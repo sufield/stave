@@ -67,6 +67,9 @@ func SignAssets(assets []asset.Asset, privateKey ed25519.PrivateKey, hostname, v
 
 // VerifyAssets checks an inline attestation against the assets array.
 func VerifyAssets(assets []asset.Asset, attestation *InlineAttestation, publicKey ed25519.PublicKey) error {
+	if len(publicKey) != ed25519.PublicKeySize {
+		return fmt.Errorf("invalid public key: expected %d bytes, got %d", ed25519.PublicKeySize, len(publicKey))
+	}
 	if attestation == nil {
 		return errors.New("no attestation present")
 	}

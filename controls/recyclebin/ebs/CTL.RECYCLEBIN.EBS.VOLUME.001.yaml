@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.RECYCLEBIN.EBS.VOLUME.001
+name: Recycle Bin Rule Exists for EBS Volumes
+description: >
+  A Recycle Bin retention rule must exist for EBS volumes.
+  Previously Recycle Bin only supported snapshots; it now
+  supports EBS volumes directly. Without a retention rule,
+  deleted EBS volumes are immediately and irrecoverably
+  destroyed. Recycle Bin is not enabled by default — it must be
+  explicitly configured. Combined with SCP protection
+  (CTL.ORG.SCP.PROTECTRECYCLEBIN.001), this ensures deleted
+  volumes are recoverable and the recovery mechanism itself
+  cannot be disabled by an attacker.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "CC6.1"
+  ccm_v4: ["BCR-01", "BCR-11"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+  - ransomware
+taxonomy:
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: resilience
+observation_fields:
+  - account.has_ebs_volumes
+  - account.recyclebin.ebs_volume_rule_exists
+remediation:
+  description: >
+    Account has EBS volumes but no Recycle Bin retention rule for
+    the ebs:volume resource type. Deleted volumes are
+    irrecoverable.
+  action: >
+    Create a Recycle Bin retention rule with resource type
+    ebs:volume. Set the retention period to at least 7 days.
+    Protect the rule from deletion with an SCP denying
+    rbin:DeleteRule and rbin:UpdateRule.
+  example: |
+    {
+      "account": {
+        "has_ebs_volumes": true,
+        "recyclebin": {
+          "ebs_volume_rule_exists": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.has_ebs_volumes
+      op: eq
+      value: true
+    - field: properties.account.recyclebin.ebs_volume_rule_exists
+      op: ne
+      value: true
+defect: >
+  No Recycle Bin rule for EBS volumes.
+infection: >
+  Deleted EBS volumes are immediately destroyed with no
+  retention period. There is no recovery path for accidental
+  or malicious deletion.
+failure: >
+  Attacker deletes EBS volumes after exfiltrating data or
+  encrypting attached instances. Without Recycle Bin, the
+  volumes are irrecoverable. Combined with snapshot deletion
+  (CTL.EC2.EBS.ALARM.DELETESNAPSHOT.001), all copies of the
+  data are destroyed.
+tests:
+  - name: "has volumes no recycle bin rule fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          has_ebs_volumes: true
+          recyclebin:
+            ebs_volume_rule_exists: false
+  - name: "has volumes with recycle bin rule passes"
+    verdict: PASS
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          has_ebs_volumes: true
+          recyclebin:
+            ebs_volume_rule_exists: true
+  - name: "no volumes passes regardless"
+    verdict: PASS
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          has_ebs_volumes: false
+          recyclebin:
+            ebs_volume_rule_exists: false

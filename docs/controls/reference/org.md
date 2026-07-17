@@ -215,6 +215,21 @@ All organization member accounts are directly under the root — no Organization
 
 ---
 
+### CTL.ORG.POLICY.S3BPA.001
+
+**S3 BPA Organizational Policy Enabled at Org Root**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+An S3 Block Public Access organizational policy must be enabled at the organization root. Unlike IAM organizational policies, S3 BPA organizational policy does not follow deny-trumps-allow — an enable at the root can be overridden on specific accounts for legacy public buckets. The policy is all-or-nothing: it enables all four S3 BPA settings (BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets) or none. This is a third enforcement mechanism alongside SCPs (CTL.ORG.SCP.PROTECTBPA.001) and per-account BPA (CTL.S3.ACCOUNT.PAB.001). The organizational policy ensures BPA is the default for all accounts without requiring per-account configuration.
+
+**Remediation:** Enable the S3 BPA organizational policy at the organization root. This enables all four BPA settings across all member accounts by default. Use account-level overrides for legacy accounts that require public bucket access.
+
+---
+
 ### CTL.ORG.RCP.KMSSECRETSPERIMETER.001
 
 **RCP Does Not Restrict KMS and Secrets Manager External Access**
@@ -482,6 +497,21 @@ No SCP prevents deletion of AWS Backup vaults and recovery points. An attacker w
 No SCP prevents disabling Block Public Access for S3, AMI sharing, or EBS snapshots. Existing controls check whether BPA is enabled; this control checks whether BPA is PROTECTED from being disabled. The distinction matters: BPA enabled without SCP protection is distance-one from BPA disabled — one API call away. This is a META-INVARIANT. The SCP should deny s3:PutBucketPublicAccessBlock, s3:PutAccountPublicAccessBlock, ec2:DisableImageBlockPublicAccess, and ec2:DisableSnapshotBlockPublicAccess with a role-based exception for cloud engineering.
 
 **Remediation:** Add an SCP that denies s3:PutBucketPublicAccessBlock, s3:PutAccountPublicAccessBlock, ec2:DisableImageBlockPublicAccess, and ec2:DisableSnapshotBlockPublicAccess. Exempt a cloud engineering role via aws:PrincipalArn condition for legitimate BPA changes.
+
+---
+
+### CTL.ORG.SCP.PROTECTRECYCLEBIN.001
+
+**SCP Protects Recycle Bin Rules from Deletion**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CP-9; soc2: CC6.1;
+
+An SCP must deny rbin:DeleteRule and rbin:UpdateRule to prevent Recycle Bin retention rules from being deleted or shortened by an attacker. Without this meta-invariant, an attacker with admin access can disable Recycle Bin before deleting volumes or snapshots, eliminating the recovery path. The SCP should use a role-based or tag-based exception for authorized Recycle Bin management.
+
+**Remediation:** Add an SCP denying rbin:DeleteRule and rbin:UpdateRule across all member accounts. Use a role-based or tag-based condition for authorized Recycle Bin management.
 
 ---
 

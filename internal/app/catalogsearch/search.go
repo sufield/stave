@@ -48,7 +48,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 		if f.Severity != "" && !ctl.Severity.Matches(f.Severity) {
 			continue
 		}
-		if f.AttackStage != "" && string(ctl.AttackStage()) != f.AttackStage {
+		if f.AttackStage != "" && !strings.EqualFold(string(ctl.AttackStage()), f.AttackStage) {
 			continue
 		}
 		if profileFilter != "" && !hasFramework(ctl, profileFilter) {

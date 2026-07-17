@@ -48,6 +48,10 @@ func Sign(snapshotPath string, privateKey ed25519.PrivateKey, keyID, signedAt st
 
 // Verify checks an Ed25519 signature against a snapshot file.
 func Verify(snapshotPath string, publicKey ed25519.PublicKey) error {
+	if len(publicKey) != ed25519.PublicKeySize {
+		return fmt.Errorf("invalid public key: expected %d bytes, got %d", ed25519.PublicKeySize, len(publicKey))
+	}
+
 	data, err := os.ReadFile(snapshotPath) //nolint:gosec // G304: snapshotPath is caller-supplied; CLI validates via fsutil.CleanUserPath
 	if err != nil {
 		return fmt.Errorf("read snapshot: %w", err)

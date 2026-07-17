@@ -1,0 +1,31 @@
+id: s3_ssec_ransomware_path
+description: >
+  S3-native ransomware via SSE-C: buckets allow customer-provided
+  encryption keys AND lack ransomware resilience controls
+  (versioning, Object Lock). An attacker with s3:PutObject
+  encrypts objects using SSE-C with a key only they hold. Unlike
+  BYOKM ransomware (byokm_ransomware_kill_chain), SSE-C requires
+  no KMS permissions, bypasses all SCP controls on KMS actions,
+  and the encryption key never exists in AWS systems — no court
+  order or AWS intervention can recover the data. The only
+  defense is disabling SSE-C (available since April 2026) and
+  ensuring versioning/Object Lock preserves pre-encryption
+  copies. Technique documented by Farris as the S3-native
+  companion to the BYOKM kill chain.
+controls:
+  - CTL.S3.SSEC.DISABLED.001
+  - CTL.S3.VERSION.001
+  - CTL.S3.LOCK.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.s3_bucket_encryption_config
+    fallback: fail_closed
+    diagnostic: >
+      S3 bucket encryption configuration not captured. Cannot
+      determine whether SSE-C is disabled. Buckets created
+      before April 2026 may still allow SSE-C by default.
