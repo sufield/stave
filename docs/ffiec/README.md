@@ -22,6 +22,7 @@ Stave's snapshot-based evaluation produces the point-in-time compliance
 evidence that FFIEC examiners require:
 
 ```bash
+# doctest:skip — requires observations.json bundle
 stave apply --profile ffiec --input observations.json \
   --include-all --format json > evidence/ffiec-$(date +%Y%m%d).json
 ```

@@ -5,6 +5,7 @@ Contribute a new control to the Stave catalog.
 ## Interactive scaffolding
 
 ```bash
+# doctest:skip — interactive commands
 # Create a new control interactively
 stave forge new
 
@@ -18,6 +19,7 @@ stave forge paths --asset-type s3_bucket
 ## Test the control
 
 ```bash
+# doctest:skip — requires a control YAML to exist
 # Scaffold pass/fail fixtures
 stave forge scaffold CTL.S3.MY_CONTROL.001
 

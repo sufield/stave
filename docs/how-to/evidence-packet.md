@@ -7,6 +7,7 @@ cryptographic signature tying them together.
 ## Create a bundle
 
 ```bash
+# doctest:skip — requires observation data
 # Run evaluation and bundle the results
 stave bundle audit \
   --observations ./snapshots/ \
@@ -16,6 +17,7 @@ stave bundle audit \
 ## Sign and verify
 
 ```bash
+# doctest:skip — requires observation data and key setup
 # One-time key setup
 stave attest keygen
 
@@ -29,6 +31,7 @@ stave attest verify --observations ./snapshots/
 ## Sanitize before sharing
 
 ```bash
+# doctest:skip — requires observation data
 # Remove infrastructure identifiers
 stave sanitize --observations ./snapshots/ --output ./sanitized/
 ```

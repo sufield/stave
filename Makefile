@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
+.PHONY: all build build-dev test test-fast test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
 # Binary name
 BINARY=stave
 
@@ -198,6 +198,15 @@ test-shard: sync-schemas sync-controls sync-alternatives
 ## ./cmd/stave (testscript fixtures spawn the binary).
 test-integration: sync-schemas sync-controls sync-alternatives
 	$(GOTEST) -timeout 15m ./internal/... ./cmd/apply/... ./cmd/evaluate/...
+
+## test-docs: Verify CLI commands in docs/ still parse and run.
+##
+## Extracts stave invocations from Markdown code blocks, builds the
+## binary, and executes each command. Blocks annotated with
+## # doctest:skip are reported but not run. Uses the integration
+## build tag so regular `go test ./...` skips these.
+test-docs: build
+	$(GOTEST) -tags=integration -v -count=1 -timeout 5m ./internal/docsverify/...
 
 ## test-e2e: Binary-driven E2E tests only.
 ##

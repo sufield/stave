@@ -71,3 +71,11 @@ dependencies:
       - path: docs/how-to/use-templates.md
         last_audited: ""
     auto_regen: false
+
+  # --- Auto-test: make test-docs catches CLI flag drift in docs ---
+
+  - sources: ["cmd/**/*.go"]
+    docs: ["docs/**/*.md"]
+    auto_regen: false
+    mode: auto-test
+    note: CLI flag changes break doc examples; make test-docs catches this

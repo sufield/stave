@@ -9,6 +9,7 @@ safeguard checks.
 ## Quick Start
 
 ```bash
+# doctest:skip — requires observations.json bundle
 # Evaluate observations against the HIPAA profile
 stave apply --profile hipaa --input observations.json --include-all
 

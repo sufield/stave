@@ -6,6 +6,7 @@ assessment. Instead of assembling flags manually, pick a template.
 ## Find the right template
 
 ```bash
+# doctest:skip — recommend requires observation data
 # See which template fits your snapshot
 stave recommend --snapshot ./observations/
 
@@ -26,9 +27,13 @@ stave template list
 ## Run a template
 
 ```bash
+# doctest:skip — creates stave-values.yaml in working tree
 # Initialize with parameters
 stave template init critical-findings --param severity_threshold=high
+```
 
+```bash
+# doctest:skip — --values flag not yet implemented
 # Run the assessment
 stave apply --values ./stave-values.yaml --snapshot ./observations/
 ```
@@ -36,12 +41,16 @@ stave apply --values ./stave-values.yaml --snapshot ./observations/
 ## Custom templates
 
 ```bash
+# doctest:skip — creates files in working tree
 # Scaffold a new template
 stave template new my-org-assessment
 
 # Fork a built-in for customization
 stave template eject critical-findings
+```
 
+```bash
+# doctest:skip — requires template fixture files
 # Verify a template
 stave template verify my-org-assessment
 ```

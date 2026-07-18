@@ -122,6 +122,7 @@ SELECT ?control ?severity WHERE {
 ## Import from Stave
 
 ```bash
+# doctest:skip — requires prior assessment output
 # JSON-LD export — universal RDF format
 stave graph export --output assessment.json --format jsonld --out graph.jsonld
 

@@ -27,8 +27,8 @@ Each filter emits **one object per resource** with the obs.v0.1 asset shape:
 1. **Scaffold the filter:**
 
    ```bash
+   # doctest:skip — creates files in working tree
    stave transform --scaffold kms-keys
-   # → internal/adapters/aws/transform/filters/kms-keys.jq
    ```
 
 2. **Get a sample input** (the raw AWS CLI output your filter consumes):

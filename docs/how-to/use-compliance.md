@@ -6,6 +6,7 @@ NIST 800-53, CIS, FFIEC, ISO 27001, and more.
 ## Check compliance posture
 
 ```bash
+# doctest:skip — requires observation data; flag names may differ from CLI
 # Evaluate against a framework
 stave compliance --framework cis-aws-v3 --observations ./snapshots/
 
@@ -24,6 +25,7 @@ full list with coverage details.
 ## Scorecard
 
 ```bash
+# doctest:skip — requires observation data
 # Posture across several frameworks at once
 stave scorecard --observations ./snapshots/
 ```

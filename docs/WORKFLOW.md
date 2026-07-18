@@ -73,6 +73,7 @@ job, never Stave's.
 ## Step 5 — Apply: evaluate per service group, get findings fast
 
 ```bash
+# doctest:skip — requires observation data
 stave apply --services iam -o ./observations      # IAM findings in seconds
 stave apply --services s3  -o ./observations      # then S3, …
 stave apply -o ./observations                     # full catalog over everything converted
@@ -90,6 +91,7 @@ Remediate the criticals first (each finding carries a `remediation` hint and a p
 ## Step 7 — Check: did the fixes work?
 
 ```bash
+# doctest:skip — requires observation data
 stave check --before ./observations --after ./observations-fixed
 ```
 
@@ -105,6 +107,7 @@ the diff between two is the proof of remediation.
 ## The whole loop, copy-paste
 
 ```bash
+# doctest:skip — requires observation data
 stave discover --services iam,s3,ec2,lambda,cloudtrail   # 1. what to collect + signals
 stave plan     --services iam,s3,ec2,lambda,cloudtrail   # 2. what gets checked
 # 3. collect raw snapshots with your tools (commands printed by discover)

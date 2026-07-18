@@ -13,6 +13,7 @@ stave packs show iam
 ## Run with a pack
 
 ```bash
+# doctest:skip — requires observation data
 stave apply --pack iam --observations ./snapshots/
 stave apply --pack fedramp_moderate --observations ./snapshots/
 ```

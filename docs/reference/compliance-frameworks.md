@@ -23,6 +23,7 @@ These YAML files drive `stave compare` and `stave compliance` output.
 ## Compliance commands
 
 ```bash
+# doctest:skip — requires observation data; compare uses --from/--to not --frameworks
 # Check posture against a framework
 stave compliance --framework cis-aws-v3
 

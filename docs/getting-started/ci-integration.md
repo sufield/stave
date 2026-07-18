@@ -24,6 +24,7 @@ for a complete workflow.
 ## CI gate (fail on findings)
 
 ```bash
+# doctest:skip — requires observation data
 # Exit 3 if violations found, exit 0 if clean
 stave ci gate --observations ./snapshots/
 
@@ -35,6 +36,7 @@ stave ci baseline check --observations ./snapshots/
 ## Pre-commit hook
 
 ```bash
+# doctest:skip — --in expects a single file, not a directory
 # See integrations/pre-commit/ for setup
 stave validate --in controls/
 ```
