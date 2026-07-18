@@ -674,6 +674,14 @@
           "type": "string",
           "minLength": 1
         },
+        "controls_failing": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Control IDs that are currently failing in this near-miss chain."
+        },
         "description": {
           "type": "string"
         }

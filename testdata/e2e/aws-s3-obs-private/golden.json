@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "4567fff8b40aedbd2770885cf3041d46907159fc98202a14573315a4fe82d5a8",
+    "policy_fingerprint": "c8a5800992935659c6b11b8a77125dfeec6cc024b99130e7ff91e2145da7cf26",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -122,12 +122,18 @@
           "chain_id": "s3_ssec_ransomware_path",
           "chain_severity": "critical",
           "missing_control": "CTL.S3.LOCK.001",
+          "controls_failing": [
+            "CTL.S3.SSEC.DISABLED.001"
+          ],
           "description": "S3-native ransomware via SSE-C: buckets allow customer-provided encryption keys AND lack ransomware resilience controls (versioning, Object Lock). An attacker with s3:PutObject encrypts objects using SSE-C with a key only they hold. Unlike BYOKM ransomware (byokm_ransomware_kill_chain), SSE-C requires no KMS permissions, bypasses all SCP controls on KMS actions, and the encryption key never exists in AWS systems — no court order or AWS intervention can recover the data. The only defense is disabling SSE-C (available since April 2026) and ensuring versioning/Object Lock preserves pre-encryption copies. Technique documented by Farris as the S3-native companion to the BYOKM kill chain.\n"
         },
         {
           "chain_id": "s3_ssec_ransomware_path",
           "chain_severity": "critical",
           "missing_control": "CTL.S3.VERSION.001",
+          "controls_failing": [
+            "CTL.S3.SSEC.DISABLED.001"
+          ],
           "description": "S3-native ransomware via SSE-C: buckets allow customer-provided encryption keys AND lack ransomware resilience controls (versioning, Object Lock). An attacker with s3:PutObject encrypts objects using SSE-C with a key only they hold. Unlike BYOKM ransomware (byokm_ransomware_kill_chain), SSE-C requires no KMS permissions, bypasses all SCP controls on KMS actions, and the encryption key never exists in AWS systems — no court order or AWS intervention can recover the data. The only defense is disabling SSE-C (available since April 2026) and ensuring versioning/Object Lock preserves pre-encryption copies. Technique documented by Farris as the S3-native companion to the BYOKM kill chain.\n"
         }
       ],
@@ -754,12 +760,18 @@
           "chain_id": "bedrock_rag_phi_exposure",
           "chain_severity": "critical",
           "missing_control": "CTL.BEDROCK.KB.MARKER.INDEXES.001",
+          "controls_failing": [
+            "CTL.S3.MARKER.PHI.001"
+          ],
           "description": "Bedrock knowledge base indexes an S3 bucket AND that bucket carries the data-classification=phi marker. RAG retrieval through the agent connected to this knowledge base returns PHI to whoever queries the agent. Same compound shape as cognito_unauth_phi_s3 but on the AI-data axis: each side is a fact-recording marker (KB indexes bucket X; bucket X is PHI), neither a violation alone — the dangerous combination is the join on a shared bucket ARN. The Bedrock side stamps target_bucket_arn on the knowledge base; the S3 side's scope is its own ARN (asset.ID), which the resolver returns when the property path is absent on the storage asset.\n"
         },
         {
           "chain_id": "cognito_unauth_phi_s3",
           "chain_severity": "critical",
           "missing_control": "CTL.COGNITO.IDPOOL.UNAUTH.S3.001",
+          "controls_failing": [
+            "CTL.S3.MARKER.PHI.001"
+          ],
           "description": "Cognito identity pool admits anonymous AWS credentials AND its unauthenticated role carries S3 actions AND the action target is an S3 bucket tagged data-classification=phi. The compound describes an internet-to-PHI data path that no individual control catches: UNAUTH.S3 alone fires on any S3 access (over-broad signal); the PHI marker alone is the desired state. Their conjunction over a shared bucket ARN — surfaced via scope_field on the bucket's identity — is the HIPAA-reportable shape.\n"
         }
       ],
