@@ -19,10 +19,22 @@ controls:
   - CTL.IAM.IDENTITY.BLASTRADIUS.004
 escalation_threshold: 3
 compound_severity: critical
+complexity: dependent
+complexity_rationale: >
+  Requires an application-layer SSRF vulnerability to initiate
+  credential theft via IMDS. The configuration prerequisites
+  (IMDSv1, public IP, overpermissioned role) are necessary but
+  not sufficient — the entry point is outside the snapshot.
 preconditions:
   - network_access_ec2
 postconditions:
   - data_access
+compensating_controls:
+  - control_id: CTL.VPC.NACL.DENY.001
+    effect: blocks_path
+    rationale: >
+      Network ACL denying ingress to the instance prevents the
+      SSRF entry point regardless of IMDS and role configuration.
 implicit_dependencies:
   - source: reasoning.souffle.reachable_resource
     fallback: fail_closed

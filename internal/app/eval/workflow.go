@@ -570,10 +570,11 @@ func annotateExploitability(report *evaluation.ComplianceReport) {
 		nmEntries = append(nmEntries, nmEntry{
 			controlIDs: cidSet,
 			nearMiss: evaluation.NearMissEntry{
-				ChainID:        nm.ChainID,
-				ChainSeverity:  nm.Severity,
-				MissingControl: nm.MissingControl,
-				Description:    nm.Description,
+				ChainID:         nm.ChainID,
+				ChainSeverity:   nm.Severity,
+				MissingControl:  nm.MissingControl,
+				ControlsFailing: nm.ControlsFailing,
+				Description:     nm.Description,
 			},
 		})
 	}

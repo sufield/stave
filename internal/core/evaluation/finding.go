@@ -1265,10 +1265,11 @@ const (
 // NearMissEntry records that a finding is one control away from
 // completing a compound chain.
 type NearMissEntry struct {
-	ChainID        kernel.ChainID   `json:"chain_id"`
-	ChainSeverity  policy.Severity  `json:"chain_severity"`
-	MissingControl kernel.ControlID `json:"missing_control"`
-	Description    string           `json:"description"`
+	ChainID         kernel.ChainID     `json:"chain_id"`
+	ChainSeverity   policy.Severity    `json:"chain_severity"`
+	MissingControl  kernel.ControlID   `json:"missing_control"`
+	ControlsFailing []kernel.ControlID `json:"controls_failing,omitempty"`
+	Description     string             `json:"description"`
 }
 
 // ChainMembershipEntry records that a finding contributed to a fired chain.

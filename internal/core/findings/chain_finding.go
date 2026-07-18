@@ -50,6 +50,7 @@ type CompoundFinding struct {
 	Narrative             string               `json:"narrative"`
 	AttackStages          []kernel.AttackStage `json:"attack_stages,omitempty"`
 	Confidence            string               `json:"confidence,omitempty"`
+	CompensatingNote      string               `json:"compensating_note,omitempty"`
 	FreshnessReason       string               `json:"freshness_reason,omitempty"`
 	DependencyDiagnostics []string             `json:"dependency_diagnostics,omitempty"`
 }

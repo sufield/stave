@@ -356,11 +356,19 @@ func buildFindingProperties(f *remediation.Finding, alts []map[string]any) map[s
 	if len(f.NearMissChains) > 0 {
 		nm := make([]map[string]any, len(f.NearMissChains))
 		for i, n := range f.NearMissChains {
-			nm[i] = map[string]any{
+			entry := map[string]any{
 				"chain_id":        string(n.ChainID),
 				"chain_severity":  n.ChainSeverity.String(),
 				"missing_control": string(n.MissingControl),
 			}
+			if len(n.ControlsFailing) > 0 {
+				ids := make([]string, len(n.ControlsFailing))
+				for j, cid := range n.ControlsFailing {
+					ids[j] = string(cid)
+				}
+				entry["controls_failing"] = ids
+			}
+			nm[i] = entry
 		}
 		props["stave/near_miss_chains"] = nm
 	}

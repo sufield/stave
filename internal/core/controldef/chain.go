@@ -40,6 +40,67 @@ type ChainDefinition struct {
 	// depends on that are not member controls. The Fallback field on each
 	// entry determines evaluator behavior when the dependency has not run.
 	ImplicitDependencies []ImplicitDependency `yaml:"implicit_dependencies,omitempty" json:"implicit_dependencies,omitempty"`
+
+	// Complexity classifies how difficult the chain is to exploit.
+	// Human-authored per chain; validated by lint.
+	Complexity          ChainComplexity `yaml:"complexity,omitempty"           json:"complexity,omitempty"`
+	ComplexityRationale string          `yaml:"complexity_rationale,omitempty" json:"complexity_rationale,omitempty"`
+
+	// CompensatingControls lists controls that, when passing, reduce
+	// the chain's exploitability even if all member controls fail.
+	CompensatingControls []CompensatingControl `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
+}
+
+// ChainComplexity classifies how difficult a chain is to exploit.
+type ChainComplexity string
+
+const (
+	// ComplexityAutomated means exploitation can be fully automated
+	// with known tooling (Stratus Red Team, Pacu). No application
+	// vulnerability required.
+	ComplexityAutomated ChainComplexity = "automated"
+
+	// ComplexityManual means exploitation requires manual steps:
+	// lateral movement, social engineering, multi-step credential
+	// theft.
+	ComplexityManual ChainComplexity = "manual"
+
+	// ComplexityDependent means exploitation requires a precondition
+	// outside the configuration snapshot (an application vulnerability,
+	// a compromised insider, a supply chain attack).
+	ComplexityDependent ChainComplexity = "dependent"
+)
+
+// IsValid reports whether the complexity is one of the recognized values.
+func (c ChainComplexity) IsValid() bool {
+	switch c {
+	case ComplexityAutomated, ComplexityManual, ComplexityDependent:
+		return true
+	default:
+		return false
+	}
+}
+
+// CompensatingControl declares a control that, when passing, reduces
+// the chain's exploitability.
+type CompensatingControl struct {
+	ControlID string             `yaml:"control_id" json:"control_id"`
+	Effect    CompensatingEffect `yaml:"effect"     json:"effect"`
+	Rationale string             `yaml:"rationale"  json:"rationale"`
+}
+
+// CompensatingEffect determines how a passing compensating control
+// modifies chain exploitability.
+type CompensatingEffect string
+
+const (
+	EffectDowngrade CompensatingEffect = "downgrades_to_one_away"
+	EffectBlocks    CompensatingEffect = "blocks_path"
+)
+
+// IsValid reports whether the effect is recognized.
+func (e CompensatingEffect) IsValid() bool {
+	return e == EffectDowngrade || e == EffectBlocks
 }
 
 // ImplicitDependency declares a computation this chain's correctness

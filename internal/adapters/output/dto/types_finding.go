@@ -158,10 +158,11 @@ type ChainMembershipEntryDTO struct {
 
 // NearMissEntryDTO mirrors evaluation.NearMissEntry.
 type NearMissEntryDTO struct {
-	ChainID        string `json:"chain_id"`
-	ChainSeverity  string `json:"chain_severity"`
-	MissingControl string `json:"missing_control"`
-	Description    string `json:"description,omitempty"`
+	ChainID         string   `json:"chain_id"`
+	ChainSeverity   string   `json:"chain_severity"`
+	MissingControl  string   `json:"missing_control"`
+	ControlsFailing []string `json:"controls_failing,omitempty"`
+	Description     string   `json:"description,omitempty"`
 }
 
 // SourceRefDTO mirrors asset.SourceRef.

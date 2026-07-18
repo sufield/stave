@@ -312,12 +312,16 @@ func fromChainMembershipEntry(e evaluation.ChainMembershipEntry) ChainMembership
 }
 
 func fromNearMissEntry(e evaluation.NearMissEntry) NearMissEntryDTO {
-	return NearMissEntryDTO{
+	dto := NearMissEntryDTO{
 		ChainID:        string(e.ChainID),
 		ChainSeverity:  e.ChainSeverity.String(),
 		MissingControl: string(e.MissingControl),
 		Description:    e.Description,
 	}
+	for _, cid := range e.ControlsFailing {
+		dto.ControlsFailing = append(dto.ControlsFailing, string(cid))
+	}
+	return dto
 }
 
 func fromExceptedFindings(fs []evaluation.ExceptedFinding) []ExceptedFindingDTO {

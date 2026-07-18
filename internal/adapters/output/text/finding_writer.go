@@ -368,7 +368,16 @@ func (w *FindingWriter) writeOneAwayFinding(d *drawer, num int, f *remediation.F
 	d.f("   %s\n", f.ControlName)
 	d.f("   Asset: %s (%s/%s)\n", f.AssetID, f.AssetVendor, f.AssetType)
 	for _, nm := range f.NearMissChains {
-		d.f("   Chain %s — missing: %s\n", nm.ChainID, nm.MissingControl)
+		d.f("   Chain %s\n", nm.ChainID)
+		if len(nm.ControlsFailing) > 0 {
+			d.f("     FAILING (%d %s active):\n",
+				len(nm.ControlsFailing), pluralize(len(nm.ControlsFailing), "prerequisite", "prerequisites"))
+			for _, cid := range nm.ControlsFailing {
+				d.f("       ✗ %s\n", cid)
+			}
+		}
+		d.f("     HOLDING (gate preventing full exploitation):\n")
+		d.f("       ✓ %s\n", nm.MissingControl)
 	}
 }
 
