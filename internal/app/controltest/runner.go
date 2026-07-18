@@ -106,7 +106,7 @@ func runControl(ctl *policy.ControlDefinition, eval policy.PredicateEval) Result
 func runCase(ctl *policy.ControlDefinition, tc *policy.ControlTest, eval policy.PredicateEval) CaseResult {
 	cr := CaseResult{
 		Name:            tc.Name,
-		ExpectedVerdict: tc.Verdict,
+		ExpectedVerdict: strings.ToUpper(strings.TrimSpace(tc.Verdict)),
 	}
 
 	// Build asset from test case.

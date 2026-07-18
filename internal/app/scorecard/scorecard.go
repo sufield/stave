@@ -93,7 +93,10 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 
 	// Sort by readiness ascending (worst first).
 	slices.SortFunc(report.Frameworks, func(a, b FrameworkScore) int {
-		return cmp.Compare(a.ReadinessPct, b.ReadinessPct)
+		if n := cmp.Compare(a.ReadinessPct, b.ReadinessPct); n != 0 {
+			return n
+		}
+		return cmp.Compare(a.Framework, b.Framework)
 	})
 
 	return report

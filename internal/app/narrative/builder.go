@@ -348,7 +348,10 @@ func chainDeactivationOrder(controlIDs []kernel.ControlID) []string {
 		order[i] = string(id)
 	}
 	slices.SortFunc(order, func(a, b string) int {
-		return stageOrder(a) - stageOrder(b)
+		if n := stageOrder(a) - stageOrder(b); n != 0 {
+			return n
+		}
+		return cmp.Compare(a, b)
 	})
 	return order
 }

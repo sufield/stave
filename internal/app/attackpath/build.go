@@ -165,6 +165,7 @@ func Build(input BuildInput) *Graph {
 		return cmp.Or(
 			cmp.Compare(a.FromChain, b.FromChain),
 			cmp.Compare(a.ToChain, b.ToChain),
+			cmp.Compare(a.ViaCapability, b.ViaCapability),
 		)
 	})
 

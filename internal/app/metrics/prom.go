@@ -20,10 +20,13 @@ type Input struct {
 
 // Write produces Prometheus text format metrics to w.
 func Write(w io.Writer, in Input) {
-	a := in.Assessment
-
 	// Posture score.
 	writeGauge(w, "stave_posture_score", "Current posture score (0-100)", in.PostureScore)
+
+	if in.Assessment == nil {
+		return
+	}
+	a := in.Assessment
 
 	// Findings by severity.
 	severityCounts := countBySeverity(a.Findings)

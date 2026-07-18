@@ -1,7 +1,9 @@
 package capabilities
 
+import "slices"
+
 // synonymMap translates the words users actually type into the
-// catalog's canonical vocabulary. "Is my bucket open?" should
+// catalog's vocabulary. "Is my bucket open?" should
 // surface the public-access capabilities; "orphaned policies"
 // should surface the ghost-reference detection. Keys are the
 // terms users type; values are the canonical Stave terms they
@@ -100,5 +102,6 @@ func ExpandQuery(tokens []string) []string {
 	for k := range seen {
 		out = append(out, k)
 	}
+	slices.Sort(out)
 	return out
 }
