@@ -1,7 +1,0 @@
-Demo complete.
-
-  Findings:    12 on writeup  →  9 on remediated
-  AI findings: 5 on writeup  →  0 on remediated
-  Chains:      3 on writeup  →  0 on remediated
-  Catalog:     2650 controls across 74 AWS service domains
-  Source:      github.com/sufield/stave
