@@ -126,45 +126,30 @@
           "chain_id": "s3_ransomware_resilience_path",
           "chain_severity": "high",
           "missing_control": "CTL.S3.VERSION.001",
-          "controls_failing": [
-            "CTL.S3.LOCK.001"
-          ],
           "description": "S3 data lacks ransomware resilience: buckets have no versioning, no Object Lock, and lifecycle policies that conflict with versioning by expiring noncurrent versions aggressively. An attacker can overwrite or encrypt S3 objects, and without versioning the originals are destroyed. Even with versioning, aggressive lifecycle expiration deletes noncurrent versions, destroying the recovery path. Farris identifies a fundamental AWS limitation: the IAM action to enable and disable versioning is the same (s3:PutBucketVersioning), so no SCP can selectively deny disabling versioning. Object Lock is the compensating control — it prevents modification or deletion of objects regardless of IAM permissions.\n"
         },
         {
           "chain_id": "s3_ransomware_resilience_path",
           "chain_severity": "high",
           "missing_control": "CTL.S3.VERSIONING.LIFECYCLE.CONFLICT.001",
-          "controls_failing": [
-            "CTL.S3.LOCK.001"
-          ],
           "description": "S3 data lacks ransomware resilience: buckets have no versioning, no Object Lock, and lifecycle policies that conflict with versioning by expiring noncurrent versions aggressively. An attacker can overwrite or encrypt S3 objects, and without versioning the originals are destroyed. Even with versioning, aggressive lifecycle expiration deletes noncurrent versions, destroying the recovery path. Farris identifies a fundamental AWS limitation: the IAM action to enable and disable versioning is the same (s3:PutBucketVersioning), so no SCP can selectively deny disabling versioning. Object Lock is the compensating control — it prevents modification or deletion of objects regardless of IAM permissions.\n"
         },
         {
           "chain_id": "s3_ssec_ransomware_path",
           "chain_severity": "critical",
           "missing_control": "CTL.S3.SSEC.DISABLED.001",
-          "controls_failing": [
-            "CTL.S3.LOCK.001"
-          ],
           "description": "S3-native ransomware via SSE-C: buckets allow customer-provided encryption keys AND lack ransomware resilience controls (versioning, Object Lock). An attacker with s3:PutObject encrypts objects using SSE-C with a key only they hold. Unlike BYOKM ransomware (byokm_ransomware_kill_chain), SSE-C requires no KMS permissions, bypasses all SCP controls on KMS actions, and the encryption key never exists in AWS systems — no court order or AWS intervention can recover the data. The only defense is disabling SSE-C (available since April 2026) and ensuring versioning/Object Lock preserves pre-encryption copies. Technique documented by Farris as the S3-native companion to the BYOKM kill chain.\n"
         },
         {
           "chain_id": "s3_ssec_ransomware_path",
           "chain_severity": "critical",
           "missing_control": "CTL.S3.VERSION.001",
-          "controls_failing": [
-            "CTL.S3.LOCK.001"
-          ],
           "description": "S3-native ransomware via SSE-C: buckets allow customer-provided encryption keys AND lack ransomware resilience controls (versioning, Object Lock). An attacker with s3:PutObject encrypts objects using SSE-C with a key only they hold. Unlike BYOKM ransomware (byokm_ransomware_kill_chain), SSE-C requires no KMS permissions, bypasses all SCP controls on KMS actions, and the encryption key never exists in AWS systems — no court order or AWS intervention can recover the data. The only defense is disabling SSE-C (available since April 2026) and ensuring versioning/Object Lock preserves pre-encryption copies. Technique documented by Farris as the S3-native companion to the BYOKM kill chain.\n"
         },
         {
           "chain_id": "s3_versioning_unmanaged",
           "chain_severity": "high",
           "missing_control": "CTL.S3.VERSIONING.NOEXPIRY.001",
-          "controls_failing": [
-            "CTL.S3.LOCK.001"
-          ],
           "description": "S3 bucket has versioning enabled but neither version lifecycle management nor object lock — the worst of both worlds. Versioning without NoncurrentVersionExpiration means unbounded version accumulation (storage cost grows without ceiling). Versioning without Object Lock means any identity with s3:DeleteObjectVersion can permanently delete all versions (versioning provides no protection against a deliberate attacker). Together: the bucket pays the cost of versioning but gets neither the cost control of lifecycle management nor the deletion protection of object lock.\n"
         }
       ],
@@ -354,9 +339,6 @@
           "chain_id": "s3_phi_retention_vulnerable",
           "chain_severity": "critical",
           "missing_control": "CTL.S3.LIFECYCLE.002",
-          "controls_failing": [
-            "CTL.S3.LOCK.002"
-          ],
           "description": "PHI bucket has a retention-vulnerable composition: object lock is not in COMPLIANCE mode (CTL.S3.LOCK.002 — GOVERNANCE mode or no lock at all permits administrator-side deletion) AND the bucket's lifecycle rules permit expiration before the minimum retention period (CTL.S3.LIFECYCLE.002). Either failure individually is a PHI-retention concern; their co-presence is the canonical \"write- once intent vs effective deletion paths\" shape that the AWS compound authoring plan's sub-family 6 names. Compliance frameworks (HIPAA, PCI-DSS retention requirements, SOX, FedRAMP audit retention) require the WORM intent the LOCK control enforces; the LIFECYCLE rules are the cheapest path to lose data that was supposed to be locked. Threshold of 2 because each leg is a configuration concern on its own but the conjunction describes a bucket where the audit/compliance retention story is structurally broken — the bucket carries the PHI tag (the catalog's intent signal) but neither defense holds.\n"
         }
       ],

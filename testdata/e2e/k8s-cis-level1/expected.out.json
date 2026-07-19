@@ -1811,36 +1811,24 @@
           "chain_id": "k8s_anonymous_access_path",
           "chain_severity": "critical",
           "missing_control": "CTL.K8S.APISERVER.ANON.001",
-          "controls_failing": [
-            "CTL.K8S.KUBELET.ANON.001"
-          ],
           "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         },
         {
           "chain_id": "k8s_anonymous_access_path",
           "chain_severity": "critical",
           "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
-          "controls_failing": [
-            "CTL.K8S.KUBELET.ANON.001"
-          ],
           "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         },
         {
           "chain_id": "k8s_anonymous_access_path",
           "chain_severity": "critical",
           "missing_control": "CTL.K8S.APISERVER.ANON.001",
-          "controls_failing": [
-            "CTL.K8S.KUBELET.ANON.001"
-          ],
           "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         },
         {
           "chain_id": "k8s_anonymous_access_path",
           "chain_severity": "critical",
           "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
-          "controls_failing": [
-            "CTL.K8S.KUBELET.ANON.001"
-          ],
           "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         }
       ],
@@ -1996,36 +1984,24 @@
           "chain_id": "k8s_anonymous_access_path",
           "chain_severity": "critical",
           "missing_control": "CTL.K8S.APISERVER.ANON.001",
-          "controls_failing": [
-            "CTL.K8S.KUBELET.ANON.001"
-          ],
           "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         },
         {
           "chain_id": "k8s_anonymous_access_path",
           "chain_severity": "critical",
           "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
-          "controls_failing": [
-            "CTL.K8S.KUBELET.ANON.001"
-          ],
           "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         },
         {
           "chain_id": "k8s_anonymous_access_path",
           "chain_severity": "critical",
           "missing_control": "CTL.K8S.APISERVER.ANON.001",
-          "controls_failing": [
-            "CTL.K8S.KUBELET.ANON.001"
-          ],
           "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         },
         {
           "chain_id": "k8s_anonymous_access_path",
           "chain_severity": "critical",
           "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
-          "controls_failing": [
-            "CTL.K8S.KUBELET.ANON.001"
-          ],
           "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n"
         }
       ],

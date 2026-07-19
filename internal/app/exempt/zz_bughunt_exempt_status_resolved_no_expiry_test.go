@@ -10,15 +10,15 @@ func TestBugHunt_ComputeStatus_ResolvedFinding_NoExpiryDate(t *testing.T) {
 	file := &AcceptanceFile{
 		Acknowledgments: []AcknowledgmentEntry{
 			{
-				ControlID: "CTL.A.001",
-				AssetID:   "asset-1",
+				ControlID:  "CTL.A.001",
+				AssetID:    "asset-1",
 				ExpiryDate: "", // No expiry date set
-				Status:    "active",
-				Reason:    "legacy exception",
+				Status:     "active",
+				Reason:     "legacy exception",
 			},
 		},
 	}
-	
+
 	// Finding is resolved (not in active findings map)
 	activeFindings := map[string]struct{}{}
 

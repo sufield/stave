@@ -98,18 +98,12 @@
           "chain_id": "rds_auth_weakness",
           "chain_severity": "high",
           "missing_control": "CTL.RDS.AUTH.MASTERUSER.001",
-          "controls_failing": [
-            "CTL.RDS.IAMAUTH.001"
-          ],
           "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n"
         },
         {
           "chain_id": "rds_auth_weakness",
           "chain_severity": "high",
           "missing_control": "CTL.SECRETSMANAGER.POLICY.PUBLIC.001",
-          "controls_failing": [
-            "CTL.RDS.IAMAUTH.001"
-          ],
           "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n"
         }
       ],
