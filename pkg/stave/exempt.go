@@ -16,12 +16,13 @@ import (
 // AcknowledgmentInput parameterizes [AddAcknowledgment]. Compensating is a
 // comma-separated list of compensating control IDs (split internally).
 type AcknowledgmentInput struct {
-	ControlID    string
-	AssetID      string
-	Reason       string
-	Approver     string
-	Expires      string
-	Compensating string
+	ControlID     string
+	AssetID       string
+	Reason        string
+	Approver      string
+	Expires       string
+	Compensating  string
+	ReviewCadence string // e.g. "annual", "quarterly", "90d"
 }
 
 // ExceptionInput parameterizes [AddException].
@@ -47,12 +48,15 @@ func AddAcknowledgment(file string, in AcknowledgmentInput) error {
 		seg, p, _ = strings.Cut(p, ",")
 		comps = append(comps, seg)
 	}
+	reviewBy := computeReviewBy(in.ReviewCadence, time.Now().UTC())
 	if addErr := f.AddAcknowledgment(appexempt.AcknowledgmentEntry{
 		ControlID:            in.ControlID,
 		AssetID:              in.AssetID,
 		Reason:               in.Reason,
 		Approver:             in.Approver,
 		ExpiryDate:           in.Expires,
+		ReviewBy:             reviewBy,
+		ReviewCadence:        in.ReviewCadence,
 		CompensatingControls: comps,
 	}, appexempt.NewTimestamp(ports.RealClock{})); addErr != nil {
 		return fmt.Errorf("add acknowledgment: %w", addErr)
@@ -61,6 +65,29 @@ func AddAcknowledgment(file string, in AcknowledgmentInput) error {
 		return fmt.Errorf("save acceptance file: %w", saveErr)
 	}
 	return nil
+}
+
+// computeReviewBy derives the next review date from a cadence string.
+// Returns "" if cadence is empty.
+func computeReviewBy(cadence string, now time.Time) string {
+	if cadence == "" {
+		return ""
+	}
+	switch strings.ToLower(cadence) {
+	case "annual", "yearly":
+		return now.AddDate(1, 0, 0).Format("2006-01-02")
+	case "semi-annual", "biannual":
+		return now.AddDate(0, 6, 0).Format("2006-01-02")
+	case "quarterly":
+		return now.AddDate(0, 3, 0).Format("2006-01-02")
+	case "monthly":
+		return now.AddDate(0, 1, 0).Format("2006-01-02")
+	default:
+		if d, err := time.ParseDuration(cadence); err == nil {
+			return now.Add(d).Format("2006-01-02")
+		}
+		return ""
+	}
 }
 
 // AddException appends an operational suppression to the acceptance file. It

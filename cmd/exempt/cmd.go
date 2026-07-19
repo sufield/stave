@@ -51,13 +51,14 @@ Subcommands:
 // --- acknowledge ---
 
 type acknowledgeOptions struct {
-	ControlID    string
-	AssetID      string
-	Reason       string
-	Approver     string
-	Expires      string
-	Compensating string
-	File         string
+	ControlID     string
+	AssetID       string
+	Reason        string
+	Approver      string
+	Expires       string
+	Compensating  string
+	ReviewCadence string
+	File          string
 }
 
 func newAcknowledgeCmd() *cobra.Command {
@@ -84,12 +85,13 @@ Exit Codes:
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if err := stave.AddAcknowledgment(opts.File, stave.AcknowledgmentInput{
-				ControlID:    opts.ControlID,
-				AssetID:      opts.AssetID,
-				Reason:       opts.Reason,
-				Approver:     opts.Approver,
-				Expires:      opts.Expires,
-				Compensating: opts.Compensating,
+				ControlID:     opts.ControlID,
+				AssetID:       opts.AssetID,
+				Reason:        opts.Reason,
+				Approver:      opts.Approver,
+				Expires:       opts.Expires,
+				Compensating:  opts.Compensating,
+				ReviewCadence: opts.ReviewCadence,
 			}); err != nil {
 				return err //nolint:wrapcheck // facade already wrapped; preserve exit 4.
 			}
@@ -106,6 +108,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.Approver, "approver", "", "identity of approving authority (required)")
 	cmd.Flags().StringVar(&opts.Expires, "expires", "", "expiry date YYYY-MM-DD (required)")
 	cmd.Flags().StringVar(&opts.Compensating, "compensating", "", "comma-separated compensating control IDs")
+	cmd.Flags().StringVar(&opts.ReviewCadence, "review-cadence", "", "review cadence (annual, quarterly, monthly, or duration like 90d)")
 	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
 
 	cliflags.MustMarkRequired(cmd, "control-id")

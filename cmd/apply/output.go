@@ -77,8 +77,14 @@ func (r *Reporter) ReportApply(res stave.StandardResult) error {
 // user-facing summary, so the --new-only path applies the same exit-code gate
 // after rendering its own signal-filtered view. nil for allow/advisory;
 // ui.ErrViolationsFound for a block (non-compliant) state.
+//
+// In compound-only mode, exit 0 when no compound findings exist even if
+// atomic findings triggered a BLOCK gate.
 func gateViolations(res stave.StandardResult) error {
 	if res.Gate == gateAllow || res.Gate == gateAdvisory {
+		return nil
+	}
+	if res.CompoundOnlyMode && res.CompoundFindingCount == 0 {
 		return nil
 	}
 	return ui.ErrViolationsFound

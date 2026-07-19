@@ -43,6 +43,8 @@ type AcknowledgmentEntry struct {
 	Approver             string       `yaml:"acknowledged_by" json:"acknowledged_by"`
 	AcknowledgedDate     string       `yaml:"acknowledged_date" json:"acknowledged_date"`
 	ExpiryDate           string       `yaml:"expiry_date" json:"expiry_date"`
+	ReviewBy             string       `yaml:"review_by,omitempty" json:"review_by,omitempty"`
+	ReviewCadence        string       `yaml:"review_cadence,omitempty" json:"review_cadence,omitempty"`
 	CompensatingControls []string     `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
 	Status               string       `yaml:"status" json:"status"`
 	AuditTrail           []AuditEvent `yaml:"audit_trail" json:"audit_trail"`
@@ -402,6 +404,14 @@ func (f *AcceptanceFile) Validate() []string {
 		if a.ExpiryDate != "" {
 			if _, err := time.Parse("2006-01-02", a.ExpiryDate); err != nil {
 				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: invalid expiry_date %q", i, a.ExpiryDate))
+			}
+		}
+		if a.ReviewBy != "" {
+			reviewDate, err := time.Parse("2006-01-02", a.ReviewBy)
+			if err != nil {
+				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: invalid review_by %q", i, a.ReviewBy))
+			} else if a.IsActive() && reviewDate.Before(time.Now().UTC()) {
+				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: overdue for review (was due %s)", i, a.ReviewBy))
 			}
 		}
 	}

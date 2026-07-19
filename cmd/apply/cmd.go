@@ -118,6 +118,7 @@ type Options struct {
 	GraphFindingsDir   string
 	Verbose            bool
 	Auto               bool // --auto: print severity plan, then evaluate
+	IncludeAtomic      bool // --include-atomic: show per-control findings alongside compound
 }
 
 // IsNewOnlyMode reports whether the run is in new-only mode —
@@ -281,6 +282,7 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.BoolVar(&o.SkipFreshness, "skip-freshness", false, "Disable snapshot freshness qualification (all findings report original confidence)")
 	f.StringVar(&o.GraphFindingsDir, "graph-findings", "", "Directory of pre-computed Soufflé .csv output for graph-based chain detection")
 	f.BoolVarP(&o.Verbose, "verbose", "v", false, "Show full evidence, reasoning, and remediation for each finding")
+	f.BoolVar(&o.IncludeAtomic, "include-atomic", false, "Include per-control (atomic) findings in output (default: compound findings only)")
 	f.BoolVar(&o.Auto, "auto", false, "Run discover→plan→evaluate: resolve services, show severity plan, evaluate in weighted order")
 }
 

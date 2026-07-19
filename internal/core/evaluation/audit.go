@@ -360,6 +360,12 @@ type ComplianceReport struct {
 	Metadata             Metadata                      `json:"-"`
 	Checks               []ResourceCheck               `json:"checks,omitempty"`
 	EvidencePackage      *evidence.EvidencePackage     `json:"evidence_package,omitempty"`
+
+	// CompoundOnlyMode signals that atomic findings were suppressed from
+	// output (compound-only default). Renderers use this to emit the
+	// suppressed count in the summary line.
+	CompoundOnlyMode      bool `json:"compound_only_mode,omitempty"`
+	SuppressedAtomicCount int  `json:"suppressed_atomic_count,omitempty"`
 }
 
 // GetFindingByResource retrieves a finding for a specific control/asset pair.

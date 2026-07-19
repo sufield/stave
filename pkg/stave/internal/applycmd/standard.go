@@ -93,6 +93,11 @@ type StandardRequest struct {
 	// GraphFindingsDir points to pre-computed Soufflé .csv output.
 	// When set, graph-based chain findings are appended to the report.
 	GraphFindingsDir string
+
+	// IncludeAtomic includes per-control (atomic) findings in output.
+	// When false (default), only compound chain findings are rendered;
+	// atomic findings still evaluate but are suppressed from output.
+	IncludeAtomic bool
 }
 
 // StandardResult is the rendered outcome of a standard evaluation. Everything
@@ -107,6 +112,8 @@ type StandardResult struct {
 	HasSLABreach         bool
 	HasCriticalSLABreach bool
 	LapsedExemptionCount int
+	CompoundFindingCount int  // number of compound chain findings
+	CompoundOnlyMode     bool // true when atomic findings suppressed
 }
 
 // EvaluateStandard runs the default `apply` pipeline: load exemption/
@@ -219,7 +226,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		out, warnings, err = evaluateNewOnly(ctx, req, report, now)
 	} else {
 		sanitizer := sanitize.Policy{SanitizeIDs: req.SanitizeIDs, PathMode: sanitize.PathMode(req.PathMode)}.NewSanitizer()
-		out, err = renderReport(ctx, req.Format, req.Verbose, sanitizer, report, result.Controls)
+		out, err = renderReport(ctx, req.Format, req.Verbose, req.IncludeAtomic, sanitizer, report, result.Controls)
 	}
 	if err != nil {
 		return StandardResult{}, err
@@ -247,6 +254,8 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		HasSLABreach:         report.HasAnySLABreach(),
 		HasCriticalSLABreach: report.HasCriticalSLABreach(),
 		LapsedExemptionCount: len(lapsed),
+		CompoundFindingCount: len(report.ChainFindings),
+		CompoundOnlyMode:     !req.IncludeAtomic,
 	}, nil
 }
 
@@ -302,15 +311,28 @@ func checkStaleness(ctx context.Context, obsDir, assertRecent string, now time.T
 }
 
 // renderReport runs the output pipeline (marshaler + enricher + coverage)
-// into a byte buffer. Shared shape with profile mode's writeResults.
-func renderReport(ctx context.Context, format string, verbose bool, sanitizer kernel.Sanitizer, report *evaluation.ComplianceReport, controls []policy.ControlDefinition) ([]byte, error) {
+// into a byte buffer. When includeAtomic is false, per-control findings are
+// suppressed from the output (compound-only default mode).
+func renderReport(ctx context.Context, format string, verbose bool, includeAtomic bool, sanitizer kernel.Sanitizer, report *evaluation.ComplianceReport, controls []policy.ControlDefinition) ([]byte, error) {
 	marshaler, err := buildFindingWriter(format, verbose)
 	if err != nil {
 		return nil, err
 	}
 	enricher := remediation.NewPlanner()
+
+	atomicCount := len(report.Findings)
 	enrichFn := func(rep *evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
-		return appeval.Enrich(enricher, sanitizer, rep)
+		enriched, enrichErr := appeval.Enrich(enricher, sanitizer, rep)
+		if enrichErr != nil {
+			return enriched, fmt.Errorf("enrich findings: %w", enrichErr)
+		}
+		if !includeAtomic {
+			enriched.Result.CompoundOnlyMode = true
+			enriched.Result.SuppressedAtomicCount = atomicCount
+			enriched.Findings = nil
+			enriched.MarkerFindings = nil
+		}
+		return enriched, nil
 	}
 	pipeline := &appeval.OutputPipeline{
 		Marshaler:       marshaler,
