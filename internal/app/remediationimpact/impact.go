@@ -160,50 +160,52 @@ func Analyze(in Input) (*Report, error) {
 		ScoreDelta:        scoreAfter - scoreBefore,
 	}
 
-	// Efficiency metric.
 	if in.PredictedDelta != 0 || len(in.PredictedClosed) > 0 {
-		realized := scoreAfter - scoreBefore
-		var ratio float64
-		var verdict EfficiencyVerdict
-		if in.PredictedDelta != 0 {
-			if realized <= 0 {
-				ratio = 0
-				verdict = VerdictIncomplete
-			} else {
-				ratio = realized / in.PredictedDelta
-				if ratio < 0 {
-					ratio = 0
-				}
-				verdict = VerdictComplete
-				if ratio < 0.5 {
-					verdict = VerdictIncomplete
-				} else if ratio < 0.9 {
-					verdict = VerdictPartial
-				}
-			}
-		}
-
-		var stillOpen []string
-		for _, ctlID := range in.PredictedClosed {
-			k := findingKey{ControlID: kernel.ControlID(ctlID)}
-			for ak := range afterKeys {
-				if ak.ControlID == k.ControlID {
-					stillOpen = append(stillOpen, ctlID)
-					break
-				}
-			}
-		}
-
-		r.Efficiency = &Efficiency{
-			PredictedDelta: in.PredictedDelta,
-			RealizedDelta:  realized,
-			Ratio:          ratio,
-			Verdict:        verdict,
-			StillOpen:      stillOpen,
-		}
+		r.Efficiency = computeEfficiency(in, scoreAfter-scoreBefore, afterKeys)
 	}
 
 	return r, nil
+}
+
+func computeEfficiency(in Input, realized float64, afterKeys map[findingKey]*remediation.Finding) *Efficiency {
+	ratio, verdict := classifyEfficiency(in.PredictedDelta, realized)
+
+	var stillOpen []string
+	for _, ctlID := range in.PredictedClosed {
+		target := kernel.ControlID(ctlID)
+		for ak := range afterKeys {
+			if ak.ControlID == target {
+				stillOpen = append(stillOpen, ctlID)
+				break
+			}
+		}
+	}
+
+	return &Efficiency{
+		PredictedDelta: in.PredictedDelta,
+		RealizedDelta:  realized,
+		Ratio:          ratio,
+		Verdict:        verdict,
+		StillOpen:      stillOpen,
+	}
+}
+
+func classifyEfficiency(predicted, realized float64) (float64, EfficiencyVerdict) {
+	if predicted == 0 {
+		return 0, ""
+	}
+	if realized <= 0 {
+		return 0, VerdictIncomplete
+	}
+	ratio := max(realized/predicted, 0)
+	switch {
+	case ratio < 0.5:
+		return ratio, VerdictIncomplete
+	case ratio < 0.9:
+		return ratio, VerdictPartial
+	default:
+		return ratio, VerdictComplete
+	}
 }
 
 func buildKeySet(findings []remediation.Finding) map[findingKey]*remediation.Finding {
