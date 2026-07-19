@@ -25,6 +25,7 @@ description: |-
       --format, -f         Output format: text or json (default: text)
       --strict             Treat warnings as errors (exit 2)
       --fix-hints          Print remediation hints after issues
+      --check              Additional checks: collector-contract
       --quiet              Suppress output
       --template           Custom output template
 
@@ -55,6 +56,9 @@ usage: stave validate [flags]
 options:
     - name: assert-recent
       usage: Fail if no snapshot newer than this duration (e.g. 48h)
+    - name: check
+      default_value: '[]'
+      usage: 'Additional checks: collector-contract'
     - name: controls
       shorthand: i
       default_value: controls

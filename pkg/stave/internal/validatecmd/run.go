@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"slices"
 	"time"
 
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
@@ -17,8 +18,11 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
 	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
+	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/app/staleness"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
+	"github.com/sufield/stave/internal/collectorcontract"
+	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -45,6 +49,7 @@ type Request struct {
 	Format          string
 	Template        string
 	AssertRecent    string
+	Check           []string
 }
 
 // Result is the rendered outcome of project validation.
@@ -106,6 +111,16 @@ func Run(ctx context.Context, req Request, label LabelFunc, tmpl TemplateFunc, p
 		return Result{}, err
 	}
 
+	// Contract check (--check collector-contract).
+	var contractReport *collectorcontract.Report
+	if slices.Contains(req.Check, "collector-contract") {
+		cr, cerr := runContractCheck(ctx, req, &buf, rep)
+		if cerr != nil {
+			return Result{}, cerr
+		}
+		contractReport = cr
+	}
+
 	res := Result{Output: buf.Bytes()}
 
 	// Staleness check: --assert-recent. Output is already rendered above; a
@@ -122,6 +137,16 @@ func Run(ctx context.Context, req Request, label LabelFunc, tmpl TemplateFunc, p
 	}
 
 	res.ExitErr = rep.ExitStatus(result)
+
+	// Contract violations override exit status.
+	if contractReport != nil {
+		if contractReport.HasViolations() {
+			res.ExitErr = fmt.Errorf("determine exit status: %w", appcontracts.ErrValidationFailed)
+		} else if req.Strict && contractReport.HasWarnings() && res.ExitErr == nil {
+			res.ExitErr = fmt.Errorf("determine exit status: %w", appcontracts.ErrValidationWarnings)
+		}
+	}
+
 	return res, nil
 }
 
@@ -228,6 +253,81 @@ func checkStaleness(ctx context.Context, req Request, params validateParams) (bo
 		return true, sr.Message, nil
 	}
 	return false, "", nil
+}
+
+// runContractCheck loads observations and validates them against the embedded
+// collector contract. The rendered output is appended to buf.
+func runContractCheck(ctx context.Context, req Request, buf *bytes.Buffer, rep *Reporter) (*collectorcontract.Report, error) {
+	contract, err := collectorcontract.Load()
+	if err != nil {
+		return nil, fmt.Errorf("load collector contract: %w", err)
+	}
+
+	repo := observations.NewObservationLoader()
+	loaded, err := repo.LoadSnapshots(ctx, req.ObservationsDir)
+	if err != nil {
+		return nil, fmt.Errorf("load observations for contract check: %w", err)
+	}
+
+	report := collectorcontract.ValidateSnapshots(loaded.Snapshots, contract)
+
+	if err := writeContractReport(buf, report, rep.Format, req.FixHints); err != nil {
+		return nil, err
+	}
+
+	return report, nil
+}
+
+// writeContractReport appends the contract check section to the output buffer.
+func writeContractReport(w io.Writer, r *collectorcontract.Report, format string, fixHints bool) error {
+	if err := collectorcontract.WriteReport(w, r, format, fixHints); err != nil {
+		return fmt.Errorf("render contract report: %w", err)
+	}
+	return nil
+}
+
+// ValidateContentContract runs the collector contract against raw observation
+// data (single-file mode). Parses the observation, validates, renders output.
+func ValidateContentContract(data []byte, format string, fixHints bool) (Result, error) {
+	loader := observations.NewObservationLoader()
+	snap, err := loader.LoadSnapshotFromReader(context.Background(), bytes.NewReader(data), "stdin")
+	if err != nil {
+		return Result{}, fmt.Errorf("parse observation for contract check: %w", err)
+	}
+
+	contract, err := collectorcontract.Load()
+	if err != nil {
+		return Result{}, fmt.Errorf("load collector contract: %w", err)
+	}
+
+	report := collectorcontract.ValidateSnapshots([]asset.Snapshot{snap}, contract)
+
+	var buf bytes.Buffer
+	if err := writeContractReport(&buf, report, format, fixHints); err != nil {
+		return Result{}, err
+	}
+
+	var exitErr error
+	if report.HasViolations() {
+		exitErr = fmt.Errorf("collector contract: %w", appcontracts.ErrValidationFailed)
+	}
+	return Result{Output: buf.Bytes(), ExitErr: exitErr}, nil
+}
+
+// ContractViolationCount loads observations and returns the count of contract
+// violations. Used by apply's pre-flight warning.
+func ContractViolationCount(ctx context.Context, obsDir string) (int, error) {
+	contract, err := collectorcontract.Load()
+	if err != nil {
+		return 0, fmt.Errorf("load collector contract: %w", err)
+	}
+	repo := observations.NewObservationLoader()
+	loaded, err := repo.LoadSnapshots(ctx, obsDir)
+	if err != nil {
+		return 0, fmt.Errorf("load observations for contract check: %w", err)
+	}
+	report := collectorcontract.ValidateSnapshots(loaded.Snapshots, contract)
+	return report.ViolationCount(), nil
 }
 
 // builtinCatalog loads the embedded builtin control catalog with the standard

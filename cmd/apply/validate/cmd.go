@@ -37,6 +37,7 @@ Inputs:
   --format, -f         Output format: text or json (default: text)
   --strict             Treat warnings as errors (exit 2)
   --fix-hints          Print remediation hints after issues
+  --check              Additional checks: collector-contract
   --quiet              Suppress output
   --template           Custom output template
 

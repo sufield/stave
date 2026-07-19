@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:787088d7544b3cd7",
+      "finding_id": "sha256:422dce43a2492a35",
       "control_id": "CTL.CLOUDTRAIL.STOP.DETECT.001",
       "control_name": "CloudTrail Trails Must Be Actively Logging in All Regions",
       "control_description": "CloudTrail must be actively logging and configured as a multi-region trail. Stopping CloudTrail is the first action attackers take after gaining access — it eliminates the audit trail of subsequent actions.\n",
@@ -297,9 +297,9 @@
         "trail.is_logging",
         "trail.is_multi_region_trail"
       ],
-      "headline_finding_id": "sha256:787088d7544b3cd7",
+      "headline_finding_id": "sha256:422dce43a2492a35",
       "member_finding_ids": [
-        "sha256:787088d7544b3cd7"
+        "sha256:422dce43a2492a35"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

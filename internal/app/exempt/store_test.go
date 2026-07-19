@@ -122,7 +122,7 @@ func TestLoadSave_RoundTrip(t *testing.T) {
 	_ = f.AddAcknowledgment(AcknowledgmentEntry{
 		ControlID: "CTL.A", AssetID: "arn:a", Reason: "test", Approver: "alice", ExpiryDate: "2026-09-01",
 	}, "2025-11-15T14:00:00Z")
-	_ = f.AddException(ExceptionEntry{ControlID: "CTL.B", AssetID: "arn:b", Reason: "migration"})
+	_ = f.AddException(ExceptionEntry{ControlID: "CTL.B", AssetID: "arn:b", Reason: "migration"}, "2025-11-15T14:00:00Z")
 	_ = f.AddExemption(ExemptionEntry{AssetPattern: "arn:aws:s3:::sandbox-*", Reason: "sandbox"})
 
 	if err := Save(path, f, "test", "2025-11-15T14:00:00Z"); err != nil {

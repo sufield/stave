@@ -45,6 +45,9 @@ type options struct {
 	Template string
 	FixHints bool
 
+	// Additional checks
+	Check []string
+
 	// Staleness
 	AssertRecent string
 
@@ -78,6 +81,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.SchemaVersion, "schema-version", "", "Contract schema version override")
 	f.StringVar(&o.Kind, "kind", "", "Contract kind: control|observation|finding")
 	f.StringVar(&o.Template, "template", "", "Custom output template")
+	f.StringSliceVar(&o.Check, "check", nil, "Additional checks: collector-contract")
 	f.StringVar(&o.AssertRecent, "assert-recent", "", "Fail if no snapshot newer than this duration (e.g. 48h)")
 }
 

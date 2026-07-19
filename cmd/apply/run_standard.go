@@ -70,6 +70,8 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		reportFormat = "json"
 	}
 
+	warnContractViolations(ctx, cfg.ObservationsDir, sio)
+
 	rt := ui.NewRuntime(sio.Stdout, sio.Stderr)
 	rt.Quiet = sio.Quiet
 
@@ -152,4 +154,22 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		return reportErr
 	}
 	return rep.CheckSLAPolicy(SLAPolicy(opts.SLAPolicy), res)
+}
+
+// warnContractViolations runs the collector contract check and prints a
+// warning to stderr if violations exist. Never fails the command.
+func warnContractViolations(ctx context.Context, obsDir string, sio StandardIO) {
+	n := stave.ContractViolationCount(ctx, obsDir)
+	if n > 0 {
+		fmt.Fprintf(sio.Stderr,
+			"warning: %d collector contract violation%s found — run stave validate --check collector-contract for details\n",
+			n, plural(n))
+	}
+}
+
+func plural(n int) string {
+	if n == 1 {
+		return ""
+	}
+	return "s"
 }

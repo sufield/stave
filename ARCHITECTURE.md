@@ -60,6 +60,43 @@ Enforced by `internal/app/architecture_dependency_test.go`.
 | CLI command registration | `cmd/commands.go` (`WireCommands()`) |
 | Dependency wiring | `cmd/cmdutil/compose/infra.go` (`Provider`) |
 
+## Design Invariant: Pipeline Processing Order
+
+The evaluation pipeline processes stages in this order:
+
+1. Snapshot ingestion (observation schema normalization)
+2. Fact extraction (boolean field computation by collectors)
+3. CEL predicate evaluation per control per asset
+4. Chain detection via threshold logic (DetectChains)
+5. Graph construction via pre/postcondition matching
+6. Datalog transitive reachability (Soufflé)
+7. Distance classification (partial conjunction evaluator)
+8. Implicit dependency annotation
+9. Choke point analysis + severity elevation
+
+This order is the triangular matrix order from the Axiomatic
+Design analysis: each stage consumes only the outputs of
+earlier stages, never later ones. Reordering stages violates
+the Independence Axiom (Axiom 1) and introduces circular
+dependencies that break deterministic evaluation.
+
+Reference: `docs-internal/architecture/axiomatic-design.md`
+
+## Design Rationale: Three Reasoning Engines
+
+Stave uses three reasoning engines:
+
+| Engine | Computation class | What it answers |
+|---|---|---|
+| CEL | Local predicate (per-resource) | "Is this resource misconfigured?" |
+| Datalog (Soufflé) | Transitive closure (global graph) | "Can this role reach that resource?" |
+| Z3 (SMT) | Satisfiability (semantic equivalence) | "Is this control version equivalent to the previous?" |
+
+Each engine serves a distinct functional requirement that the
+other two cannot satisfy. The Information Axiom (Axiom 2)
+confirms this is the minimum set — removing any engine loses
+a capability no other engine can provide.
+
 ## Command Trace: `stave apply`
 
 1. `cmd/stave/main.go` -- entry point

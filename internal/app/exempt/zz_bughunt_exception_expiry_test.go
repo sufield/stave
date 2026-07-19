@@ -14,7 +14,7 @@ func TestBugHunt_ExceptionExpiryValidation(t *testing.T) {
 		AssetID:    "arn:aws:s3:::my-bucket",
 		ExpiryDate: "invalid-date",
 		Reason:     "legacy",
-	})
+	}, "2026-01-01T00:00:00Z")
 	if err == nil {
 		t.Errorf("expected error when adding exception with invalid expiry date format, got nil")
 	}
@@ -25,7 +25,7 @@ func TestBugHunt_ExceptionExpiryValidation(t *testing.T) {
 		AssetID:    "arn:aws:s3:::my-bucket",
 		ExpiryDate: "2027-01-15",
 		Reason:     "legacy",
-	})
+	}, "2026-01-01T00:00:00Z")
 	if err != nil {
 		t.Errorf("unexpected error adding valid exception: %v", err)
 	}

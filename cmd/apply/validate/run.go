@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -54,6 +55,7 @@ func runValidateProject(ctx context.Context, in Input) error {
 		Format:          in.Format,
 		Template:        in.Opts.Template,
 		AssertRecent:    in.Opts.AssertRecent,
+		Check:           in.Opts.Check,
 	}, enabledPacks, packLoadErr, ui.SeverityLabel, ui.ExecuteTemplate)
 	done()
 
@@ -109,7 +111,25 @@ func runValidateSingleFile(in Input) error {
 	if _, werr := in.Out.Write(res.Output); werr != nil {
 		return fmt.Errorf("write validation output: %w", werr)
 	}
+
+	if slices.Contains(in.Opts.Check, "collector-contract") && isObservationKind(kind) {
+		ccRes, cerr := stave.ValidateContentContract(data, in.Format, in.Opts.FixHints)
+		if cerr != nil {
+			return fmt.Errorf("contract check: %w", cerr)
+		}
+		if _, werr := in.Out.Write(ccRes.Output); werr != nil {
+			return fmt.Errorf("write contract output: %w", werr)
+		}
+		if ccRes.ExitErr != nil {
+			return ccRes.ExitErr //nolint:wrapcheck // facade exit-code sentinel.
+		}
+	}
+
 	return res.ExitErr //nolint:wrapcheck // facade exit-code sentinel; preserve mapping.
+}
+
+func isObservationKind(kind string) bool {
+	return kind == "observation" || kind == ""
 }
 
 // discoverEnabledPacks reads the project's enabled control packs from

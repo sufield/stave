@@ -285,7 +285,7 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 }
 
 // AddException adds an operational suppression.
-func (f *AcceptanceFile) AddException(entry ExceptionEntry) error {
+func (f *AcceptanceFile) AddException(entry ExceptionEntry, timestamp string) error {
 	if entry.ControlID == "" {
 		return errors.New("control_id is required")
 	}
@@ -293,10 +293,28 @@ func (f *AcceptanceFile) AddException(entry ExceptionEntry) error {
 		return errors.New("asset_id is required")
 	}
 	if entry.ExpiryDate != "" {
-		if _, err := time.Parse("2006-01-02", entry.ExpiryDate); err != nil {
+		expiry, err := time.Parse("2006-01-02", entry.ExpiryDate)
+		if err != nil {
 			return fmt.Errorf("invalid expiry_date %q: expected YYYY-MM-DD", entry.ExpiryDate)
 		}
+		ts, tsErr := time.Parse(time.RFC3339, timestamp)
+		if tsErr != nil {
+			return fmt.Errorf("cannot validate expiry: invalid timestamp %q: %w", timestamp, tsErr)
+		}
+		tsDate := time.Date(ts.Year(), ts.Month(), ts.Day(), 0, 0, 0, 0, time.UTC)
+		if expiry.Before(tsDate) {
+			return fmt.Errorf("expiry_date %s is in the past", entry.ExpiryDate)
+		}
 	}
+
+	for i := range f.Exceptions {
+		if f.Exceptions[i].ControlID == entry.ControlID && f.Exceptions[i].AssetID == entry.AssetID {
+			f.Exceptions[i].ExpiryDate = entry.ExpiryDate
+			f.Exceptions[i].Reason = entry.Reason
+			return nil
+		}
+	}
+
 	f.Exceptions = append(f.Exceptions, entry)
 	return nil
 }
@@ -305,6 +323,12 @@ func (f *AcceptanceFile) AddException(entry ExceptionEntry) error {
 func (f *AcceptanceFile) AddExemption(entry ExemptionEntry) error {
 	if entry.AssetPattern == "" {
 		return errors.New("asset_pattern is required")
+	}
+	for i := range f.Exemptions {
+		if f.Exemptions[i].AssetPattern == entry.AssetPattern {
+			f.Exemptions[i].Reason = entry.Reason
+			return nil
+		}
 	}
 	f.Exemptions = append(f.Exemptions, entry)
 	return nil

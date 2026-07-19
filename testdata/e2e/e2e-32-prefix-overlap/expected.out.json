@@ -25,7 +25,7 @@
   "status": "NON_COMPLIANT",
   "findings": [
     {
-      "finding_id": "sha256:358ff78b07aa346c",
+      "finding_id": "sha256:99a082153b1d6e3b",
       "control_id": "CTL.EXP.VISIBILITY.003",
       "control_name": "Public Read Allowed Only for Approved Prefixes",
       "control_description": "Public read access must be limited to explicitly approved prefixes. All other prefixes are private by default.\n",
@@ -181,9 +181,9 @@
         "overlap_with",
         "protected_prefix"
       ],
-      "headline_finding_id": "sha256:358ff78b07aa346c",
+      "headline_finding_id": "sha256:99a082153b1d6e3b",
       "member_finding_ids": [
-        "sha256:358ff78b07aa346c"
+        "sha256:99a082153b1d6e3b"
       ],
       "consolidated_score": 10,
       "consolidated_blast_radius": 1

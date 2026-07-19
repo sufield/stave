@@ -1,0 +1,540 @@
+# Collector Contract
+#
+# Axiom 1 boundary between the collector (Physical Domain) and the
+# evaluation engine (Functional Domain). Each entry specifies the
+# semantic postcondition a collector MUST satisfy when producing a
+# boolean field. The CEL predicate engine trusts these fields without
+# re-evaluating the underlying policy. A collector that violates a
+# postcondition produces a wrong verdict — a SILENT_RISK at the
+# interface boundary.
+#
+# Scope: pre-computed boolean fields where the collector makes a
+# semantic judgment (policy interpretation, classification, state
+# derivation). Raw API fields (strings, counts, timestamps) are
+# outside this contract — their meaning is literal.
+#
+# null_semantics for all boolean fields: null or absent means
+# "the collector did not evaluate this field." It does NOT mean
+# false. Predicates that test `op: eq, value: false` will not
+# match null — this is by design. A missing field is an unknown,
+# not a safe state.
+
+version: "1.0"
+
+contracts:
+
+  # ─── SCP / RCP / Boundary Policy Deny Booleans ───────────────
+  #
+  # Group postcondition (applies to ALL denies_* fields):
+  #
+  #   MUST be true if ANY policy in scope (SCP, RCP, permission
+  #   boundary) contains a Deny for the named action(s).
+  #
+  #   NotAction handling: a Deny with NotAction lists the EXCEPTIONS
+  #   to the deny. {"Effect":"Deny","NotAction":["sts:AssumeRoot"]}
+  #   denies everything EXCEPT AssumeRoot — so denies_assume_root
+  #   is FALSE for this statement (AssumeRoot is the exception, not
+  #   the denied action). Collectors MUST NOT invert NotAction.
+  #
+  #   Condition handling: if the Deny has Conditions (e.g.
+  #   aws:PrincipalArn), the deny is conditional. The field SHOULD
+  #   still be true — the predicate evaluates the deny's existence,
+  #   not its effective scope. Conditional vs unconditional is a
+  #   separate field concern.
+
+  - field: denies_assume_root
+    type: boolean
+    postcondition: >
+      True if any SCP/RCP/boundary denies sts:AssumeRoot.
+      NotAction in Deny = deny everything except listed;
+      AssumeRoot in NotAction means it is NOT denied.
+    hazop_reference: "HAZOP deviation 1: NotAction vs Action"
+    consumers:
+      - CTL.IAM.SCP.ASSUMEROOT.001
+      - CTL.IAM.BOUNDARY.PAYER.ASSUMEROOT.001
+
+  - field: denies_leave_org
+    type: boolean
+    postcondition: >
+      True if any SCP denies organizations:LeaveOrganization.
+    consumers:
+      - CTL.ORG.SCP.DENY.LEAVEORG.001
+
+  - field: denies_close_account
+    type: boolean
+    postcondition: >
+      True if any SCP denies account:CloseAccount.
+    consumers:
+      - CTL.ORG.SCP.DENY.CLOSEACCOUNT.001
+
+  - field: denies_iam_create_user
+    type: boolean
+    postcondition: >
+      True if any SCP denies iam:CreateUser.
+    consumers:
+      - CTL.ORG.SCP.DENY.CREATEUSER.001
+
+  - field: denies_kms_import_key_material
+    type: boolean
+    postcondition: >
+      True if any SCP denies kms:ImportKeyMaterial.
+    consumers:
+      - CTL.ORG.SCP.DENY.IMPORTKEYMATERIAL.001
+
+  - field: denies_trail_disruption
+    type: boolean
+    postcondition: >
+      True if any SCP denies both cloudtrail:StopLogging
+      AND cloudtrail:DeleteTrail.
+    consumers:
+      - CTL.ORG.SCP.ANTITAKEOVER.001
+
+  - field: denies_guardduty_disable
+    type: boolean
+    postcondition: >
+      True if any SCP denies guardduty:DeleteDetector
+      and guardduty:DisableOrganizationAdminAccount.
+    consumers:
+      - CTL.ORG.SCP.DENY.GUARDDUTY.001
+
+  - field: denies_config_modify
+    type: boolean
+    postcondition: >
+      True if any SCP denies config:StopConfigurationRecorder
+      and config:DeleteConfigurationRecorder.
+    consumers:
+      - CTL.ORG.SCP.DENY.CONFIG.001
+
+  - field: denies_cloudtrail_modify
+    type: boolean
+    postcondition: >
+      True if any SCP denies cloudtrail:StopLogging,
+      cloudtrail:DeleteTrail, and cloudtrail:UpdateTrail.
+    consumers:
+      - CTL.ORG.SCP.DENY.CLOUDTRAIL.001
+
+  - field: denies_root_access_key
+    type: boolean
+    postcondition: >
+      True if any SCP denies iam:CreateAccessKey for root.
+    consumers:
+      - CTL.ORG.SCP.DENY.ROOTACCESSKEY.001
+
+  - field: denies_get_federation_token
+    type: boolean
+    postcondition: >
+      True if any SCP denies sts:GetFederationToken.
+    consumers:
+      - CTL.ORG.SCP.DENY.FEDERATIONTOKEN.001
+
+  - field: denies_ri_purchase
+    type: boolean
+    postcondition: >
+      True if any SCP denies ec2:PurchaseReservedInstancesOffering
+      and related RI purchase actions.
+    consumers:
+      - CTL.ORG.SCP.DENY.RIPURCHASE.001
+
+  - field: denies_savings_plan_create
+    type: boolean
+    postcondition: >
+      True if any SCP denies savingsplans:CreateSavingsPlan.
+    consumers:
+      - CTL.ORG.SCP.DENY.SAVINGSPLAN.001
+
+  - field: denies_service_agreements
+    type: boolean
+    postcondition: >
+      True if any SCP denies aws-marketplace:AcceptAgreementApprovalRequest
+      and related marketplace agreement actions.
+    consumers:
+      - CTL.ORG.SCP.DENY.AGREEMENTS.001
+
+  - field: denies_iam_escalation
+    type: boolean
+    postcondition: >
+      True if any SCP denies the IAM privilege escalation
+      vector actions (CreatePolicyVersion, SetDefaultPolicyVersion,
+      AttachUserPolicy, etc.).
+    consumers:
+      - CTL.ORG.SCP.DENY.IAMESCALATION.001
+
+  - field: denies_igw_creation
+    type: boolean
+    postcondition: >
+      True if any SCP denies ec2:CreateInternetGateway
+      and ec2:AttachInternetGateway.
+    consumers:
+      - CTL.ORG.SCP.DENY.IGW.001
+
+  - field: denies_external_principal
+    type: boolean
+    postcondition: >
+      True if any SCP denies actions that allow external
+      principal access (ram:CreateResourceShare with
+      external principals, etc.).
+    consumers:
+      - CTL.ORG.SCP.DENY.EXTERNALPRINCIPAL.001
+
+  - field: denies_bpa_disable
+    type: boolean
+    postcondition: >
+      True if any SCP denies s3:PutBucketPublicAccessBlock
+      and s3:PutAccountPublicAccessBlock when removing
+      restrictions.
+    consumers:
+      - CTL.ORG.SCP.DENY.BPADISABLE.001
+
+  - field: denies_ebs_encryption_disable
+    type: boolean
+    postcondition: >
+      True if any SCP denies ec2:DisableEbsEncryptionByDefault.
+    consumers:
+      - CTL.ORG.SCP.DENY.EBSENCRYPTION.001
+
+  - field: denies_backup_vault_delete
+    type: boolean
+    postcondition: >
+      True if any SCP denies backup:DeleteBackupVault
+      and backup:DeleteRecoveryPoint.
+    consumers:
+      - CTL.ORG.SCP.DENY.BACKUPVAULT.001
+
+  - field: denies_kms_schedule_key_deletion
+    type: boolean
+    postcondition: >
+      True if any SCP denies kms:ScheduleKeyDeletion.
+    consumers:
+      - CTL.ORG.SCP.DENY.KMSDELETE.001
+
+  - field: denies_kms_create_key_external
+    type: boolean
+    postcondition: >
+      True if any SCP denies kms:CreateKey with external
+      key material origin.
+    consumers:
+      - CTL.ORG.SCP.DENY.KMSEXTERNAL.001
+
+  - field: denies_kms_replicate_key
+    type: boolean
+    postcondition: >
+      True if any SCP denies kms:ReplicateKey.
+    consumers:
+      - CTL.ORG.SCP.DENY.KMSREPLICATE.001
+
+  - field: denies_kms_delete_key_material
+    type: boolean
+    postcondition: >
+      True if any SCP denies kms:DeleteImportedKeyMaterial.
+    consumers:
+      - CTL.ORG.SCP.DENY.KMSDELETEMATERIAL.001
+
+  - field: denies_kms_secrets_external
+    type: boolean
+    postcondition: >
+      True if any SCP denies using external KMS keys
+      for secrets encryption.
+    consumers:
+      - CTL.ORG.SCP.DENY.KMSSECRETS.001
+
+  - field: denies_access_analyzer_delete
+    type: boolean
+    postcondition: >
+      True if any SCP denies accessanalyzer:DeleteAnalyzer.
+    consumers:
+      - CTL.ORG.SCP.DENY.ACCESSANALYZER.001
+
+  - field: denies_recyclebin_modify
+    type: boolean
+    postcondition: >
+      True if any SCP denies rbin:DeleteRule and rbin:UpdateRule.
+    consumers:
+      - CTL.ORG.SCP.DENY.RECYCLEBIN.001
+
+  - field: denies_guardduty_ipset_modify
+    type: boolean
+    postcondition: >
+      True if any SCP denies guardduty:CreateIPSet and
+      guardduty:UpdateIPSet (trusted IP list manipulation).
+    consumers:
+      - CTL.ORG.SCP.DENY.GUARDDUTYIPSET.001
+
+  - field: denies_guardduty_modify
+    type: boolean
+    postcondition: >
+      True if any SCP denies guardduty:UpdateDetector
+      and related detector modification actions.
+    consumers:
+      - CTL.ORG.SCP.DENY.GUARDDUTYMODIFY.001
+
+  - field: denies_eventbridge_rule_modify
+    type: boolean
+    postcondition: >
+      True if any SCP denies events:DeleteRule,
+      events:DisableRule, events:RemoveTargets.
+    consumers:
+      - CTL.ORG.SCP.DENY.EVENTBRIDGE.001
+
+  - field: denies_critical_role_modify
+    type: boolean
+    postcondition: >
+      True if any SCP denies iam:DeleteRole,
+      iam:DetachRolePolicy, etc. for critical roles.
+    consumers:
+      - CTL.ORG.SCP.DENY.CRITICALROLE.001
+
+  - field: denies_modify_userdata
+    type: boolean
+    postcondition: >
+      True if any SCP denies ec2:ModifyInstanceAttribute
+      for userData modification.
+    consumers:
+      - CTL.ORG.SCP.DENY.USERDATA.001
+
+  - field: denies_confused_deputy_assume_role
+    type: boolean
+    postcondition: >
+      True if any SCP denies sts:AssumeRole when
+      confused deputy conditions are not met.
+    consumers:
+      - CTL.ORG.SCP.DENY.CONFUSEDDEPUTY.001
+
+  - field: denies_accesskey_without_sourceip
+    type: boolean
+    postcondition: >
+      True if any SCP denies actions when aws:SourceIp
+      condition is not present for access key usage.
+    consumers:
+      - CTL.ORG.SCP.DENY.ACCESSKEYNOSOURCEIP.001
+
+  - field: denies_lambda_public
+    type: boolean
+    postcondition: >
+      True if any SCP denies lambda:AddPermission with
+      public principal.
+    consumers:
+      - CTL.ORG.SCP.DENY.LAMBDAPUBLIC.001
+
+  - field: denies_traffic_mirror_create
+    type: boolean
+    postcondition: >
+      True if any SCP denies ec2:CreateTrafficMirrorTarget
+      and related traffic mirror actions.
+    consumers:
+      - CTL.ORG.SCP.DENY.TRAFFICMIRROR.001
+
+  - field: denies_vpc_management
+    type: boolean
+    postcondition: >
+      True if any SCP denies VPC management actions
+      (CreateVpc, DeleteVpc, etc.) outside approved roles.
+    consumers:
+      - CTL.ORG.SCP.DENY.VPCMANAGEMENT.001
+
+  - field: denies_external_source
+    type: boolean
+    postcondition: >
+      True if any SCP denies actions that allow external
+      source configurations.
+    consumers:
+      - CTL.ORG.SCP.DENY.EXTERNALSOURCE.001
+
+  # Service-scope deny booleans (SCP denies all actions for
+  # a service to prevent shadow infrastructure)
+
+  - field: denies_lightsail
+    type: boolean
+    postcondition: >
+      True if any SCP denies lightsail:* (all Lightsail actions).
+
+  - field: denies_evs
+    type: boolean
+    postcondition: >
+      True if any SCP denies evs:* (all EVS actions).
+
+  - field: denies_airflow
+    type: boolean
+    postcondition: >
+      True if any SCP denies airflow:* (all MWAA actions).
+
+  - field: denies_amplify
+    type: boolean
+    postcondition: >
+      True if any SCP denies amplify:* (all Amplify actions).
+
+  - field: denies_apprunner
+    type: boolean
+    postcondition: >
+      True if any SCP denies apprunner:* (all App Runner actions).
+
+  - field: denies_batch
+    type: boolean
+    postcondition: >
+      True if any SCP denies batch:* (all Batch actions).
+
+  - field: denies_elasticbeanstalk
+    type: boolean
+    postcondition: >
+      True if any SCP denies elasticbeanstalk:* (all EB actions).
+
+  - field: denies_elasticmapreduce
+    type: boolean
+    postcondition: >
+      True if any SCP denies elasticmapreduce:* (all EMR actions).
+
+  - field: denies_sagemaker
+    type: boolean
+    postcondition: >
+      True if any SCP denies sagemaker:* (all SageMaker actions).
+
+  # ─── Resource State Booleans ──────────────────────────────────
+
+  - field: has_public_ip
+    type: boolean
+    postcondition: >
+      Explicitly true/false for EC2 instances and RDS instances.
+      False means "evaluated, no public IP." Never null when the
+      resource type supports public IPs.
+    hazop_reference: "HAZOP deviation 2: null vs false"
+    consumers:
+      - CTL.EC2.PUBLIC.001
+      - CTL.RDS.PUBLIC.001
+
+  - field: is_encrypted
+    type: boolean
+    postcondition: >
+      Explicitly true/false for any resource that supports
+      encryption at rest (EBS, S3, RDS, DynamoDB, SQS, SNS,
+      Kinesis, EFS, etc.). True = encryption enabled with
+      any key type (AWS-managed or CMK).
+
+  - field: imdsv2_required
+    type: boolean
+    postcondition: >
+      True only if HttpTokens == "required" on the EC2
+      instance or EKS node group metadata options.
+      "optional" = false. Absent metadata options = false.
+    consumers:
+      - CTL.EC2.IMDSV2.001
+      - CTL.EKS.NODEGROUP.IMDSV2.001
+
+  - field: public_read
+    type: boolean
+    postcondition: >
+      True if any grant allows public read (bucket policy
+      Principal:*, bucket/object ACL AllUsers READ). False
+      if S3 Block Public Access overrides the grant. The
+      fold: (policy_grants OR acl_grants) AND NOT bpa_blocks.
+    consumers:
+      - CTL.S3.PUBLIC.READ.001
+
+  - field: account_public_access_fully_blocked
+    type: boolean
+    postcondition: >
+      True only if all four S3 account-level BPA settings
+      are enabled (BlockPublicAcls, IgnorePublicAcls,
+      BlockPublicPolicy, RestrictPublicBuckets).
+
+  - field: vpc_bpa_enforced
+    type: boolean
+    postcondition: >
+      True if a declarative policy enforces VPC BPA
+      organization-wide. Derived from declarative policy
+      set, not from individual VPC settings.
+    consumers:
+      - CTL.ORG.DP.VPC.BPA.001
+
+  - field: ssl_enforced
+    type: boolean
+    postcondition: >
+      True if the resource requires SSL/TLS for all
+      connections (RDS require_ssl parameter, Redshift
+      require_ssl, ElastiCache in-transit encryption).
+
+  - field: tls_enforced
+    type: boolean
+    postcondition: >
+      True if TLS is required for the connection endpoint
+      (API Gateway, ALB HTTPS listener, etc.).
+
+  - field: mfa_enforced
+    type: boolean
+    postcondition: >
+      True if MFA is required for the authentication path
+      (IAM user console access, S3 delete with MFA, etc.).
+
+  - field: https_enforced
+    type: boolean
+    postcondition: >
+      True if HTTPS is required and HTTP requests are
+      redirected or rejected (CloudFront viewer protocol,
+      ALB redirect rule, API Gateway).
+
+  - field: approval_enforced
+    type: boolean
+    postcondition: >
+      True if a manual approval step is required in the
+      pipeline or workflow before deployment proceeds.
+
+  - field: confused_deputy_enforced
+    type: boolean
+    postcondition: >
+      True if the trust policy includes aws:SourceArn
+      or aws:SourceAccount conditions that prevent
+      confused deputy attacks.
+
+  - field: snapshot_before_delete_enforced
+    type: boolean
+    postcondition: >
+      True if deletion protection or snapshot-before-delete
+      is enabled (RDS, Aurora, DocumentDB, Neptune).
+
+  # ─── Classification Booleans ──────────────────────────────────
+
+  - field: has_data_access_actions
+    type: boolean
+    postcondition: >
+      True if the IAM policy's effective permissions include
+      any action classified as DataAccess in the sensitive
+      action registry. Wildcard actions (s3:*, s3:Get*) MUST
+      be expanded against the registry before classification.
+    hazop_reference: "HAZOP deviation 3: registry fail-open"
+    consumers:
+      - CTL.IAM.POLICY.THIRDPARTY.DATAACCESS.001
+
+  - field: has_credential_exposure_actions
+    type: boolean
+    postcondition: >
+      True if the IAM policy's effective permissions include
+      any action classified as CredentialExposure in the
+      sensitive action registry. Same wildcard expansion rule.
+    consumers:
+      - CTL.IAM.POLICY.CREDENTIALEXPOSURE.001
+
+  - field: has_admin_access
+    type: boolean
+    postcondition: >
+      True if the policy grants Action:* on Resource:* with
+      Effect:Allow. Condition keys do not negate admin status.
+
+  - field: is_effectively_public
+    type: boolean
+    postcondition: >
+      True if the resource is reachable from the internet
+      through any path (direct public IP, public subnet
+      with IGW route, public endpoint). Derived from
+      network topology, not a single field.
+
+  - field: is_dormant
+    type: boolean
+    postcondition: >
+      True if the resource has had no API activity or
+      invocations within the dormancy threshold period.
+      Derived from CloudTrail/access advisor data.
+
+  - field: is_orphan
+    type: boolean
+    postcondition: >
+      True if the resource has no active references
+      (security group with no ENIs, EBS volume with no
+      attachments, Lambda with no triggers, etc.).

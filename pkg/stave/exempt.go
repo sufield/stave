@@ -70,15 +70,16 @@ func AddException(file string, in ExceptionInput) error {
 	if err != nil {
 		return fmt.Errorf("load acceptance file: %w", err)
 	}
+	ts := appexempt.NewTimestamp(ports.RealClock{})
 	if addErr := f.AddException(appexempt.ExceptionEntry{
 		ControlID:  in.ControlID,
 		AssetID:    in.AssetID,
 		ExpiryDate: in.Expires,
 		Reason:     in.Reason,
-	}); addErr != nil {
+	}, ts); addErr != nil {
 		return fmt.Errorf("add exception: %w", addErr)
 	}
-	if saveErr := appexempt.Save(file, f, "stave exempt except", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
+	if saveErr := appexempt.Save(file, f, "stave exempt except", ts); saveErr != nil {
 		return fmt.Errorf("save acceptance file: %w", saveErr)
 	}
 	return nil

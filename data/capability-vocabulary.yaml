@@ -1,0 +1,311 @@
+# Capability Vocabulary — Information Axiom (Axiom 2) Minimum Set
+#
+# Audited 2026-07-19 against 660 chains.
+# Result: 60 capabilities, zero dead. All 60 serve a function.
+#
+# Three tiers:
+#   composing       — both produced and consumed; these ARE the graph edges
+#   entry_points    — consumed only; seeded by observations, not by chains
+#   terminal_outcomes — produced only; consumed by reports and humans
+#
+# A capability needs at least one producer (postcondition) AND one
+# consumer (precondition) to create a cross-chain graph edge. Entry
+# points and terminal outcomes are one-sided by design — they anchor
+# the graph's sources and sinks.
+
+version: "1.0"
+audit_date: "2026-07-19"
+chain_count: 660
+capability_count: 60
+
+# --- COMPOSING (20) ---
+# Both produced and consumed. These create graph edges between chains.
+# Sorted by total references (consumers + producers) descending.
+
+composing:
+  - name: ungoverned_operation
+    description: Operation executes outside governance controls (SCP/RCP/boundary)
+    consumers: 210
+    producers: 21
+
+  - name: iam_credential_theft
+    description: IAM credentials (access key, session token, OIDC) obtained by attacker
+    consumers: 79
+    producers: 77
+
+  - name: ec2_code_execution
+    description: Attacker can execute arbitrary code on an EC2 instance
+    consumers: 2
+    producers: 66
+
+  - name: data_access
+    description: Attacker can read sensitive data from any storage service
+    consumers: 12
+    producers: 56
+
+  - name: network_access_vpc
+    description: Attacker has network-level access to resources inside a VPC
+    consumers: 32
+    producers: 14
+
+  - name: s3_data_access
+    description: Attacker can read objects from S3 buckets
+    consumers: 10
+    producers: 22
+
+  - name: service_disruption
+    description: Attacker can degrade or deny service availability
+    consumers: 1
+    producers: 28
+
+  - name: initial_access
+    description: Attacker gains first foothold in the environment
+    consumers: 8
+    producers: 17
+
+  - name: container_code_execution
+    description: Attacker can execute code inside a container (ECS/EKS/Fargate)
+    consumers: 20
+    producers: 4
+
+  - name: network_access_ec2
+    description: Attacker has network-level access to EC2 instances
+    consumers: 13
+    producers: 10
+
+  - name: data_in_transit_exposure
+    description: Data transmitted without encryption or with weak TLS
+    consumers: 3
+    producers: 17
+
+  - name: rds_data_access
+    description: Attacker can query or dump RDS database contents
+    consumers: 2
+    producers: 13
+
+  - name: resource_policy_escalation
+    description: Resource policy grants more access than the IAM principal should have
+    consumers: 9
+    producers: 5
+
+  - name: cross_account_injection
+    description: Attacker in one account can affect resources in another
+    consumers: 6
+    producers: 5
+
+  - name: automation_hijack
+    description: Attacker can subvert automated workflows (CI/CD, Lambda triggers, Step Functions)
+    consumers: 5
+    producers: 3
+
+  - name: vpc_instance_compromise
+    description: Attacker has full control of an instance inside a VPC
+    consumers: 1
+    producers: 6
+
+  - name: data_warehouse_compromise
+    description: Attacker can access or manipulate data warehouse contents (Redshift, Athena)
+    consumers: 1
+    producers: 2
+
+  - name: credential_access
+    description: Attacker can retrieve stored credentials (not IAM — app/DB/service creds)
+    consumers: 2
+    producers: 1
+
+  - name: k8s_service_account_token
+    description: Attacker has a Kubernetes service account token with cluster access
+    consumers: 2
+    producers: 1
+
+  - name: supply_chain_compromise
+    description: Attacker has poisoned a dependency (layer, image, package, pipeline artifact)
+    consumers: 1
+    producers: 1
+
+# --- ENTRY POINTS (14) ---
+# Consumed only — no producer chain needed. These are facts derived
+# from observations (snapshots, API responses, network scans).
+# Sorted by consumer count descending.
+
+entry_points:
+  - name: internet_access
+    description: Resource is reachable from the public internet
+    consumers: 169
+
+  - name: kms_encryption_configured
+    description: Resource has KMS encryption enabled (key exists and is usable)
+    consumers: 24
+
+  - name: network_access_rds
+    description: Attacker has network-level access to RDS endpoints
+    consumers: 16
+
+  - name: network_access_lambda
+    description: Attacker can invoke Lambda functions (via URL, API Gateway, or event source)
+    consumers: 14
+
+  - name: scp_governance_configured
+    description: Organization has SCPs actively governing the account
+    consumers: 3
+
+  - name: s3_delete_bucket_permission
+    description: Principal has permission to delete S3 buckets
+    consumers: 3
+
+  - name: shadow_infrastructure
+    description: Unmanaged infrastructure exists outside IaC/governance (Lightsail, EVS)
+    consumers: 2
+
+  - name: az_failure
+    description: An availability zone is unavailable or degraded
+    consumers: 1
+
+  - name: bucket_name_available_for_registration
+    description: A referenced S3 bucket name is unregistered and claimable
+    consumers: 1
+
+  - name: cloudfront_origin_configured
+    description: CloudFront distribution has an origin pointing to a backend resource
+    consumers: 1
+
+  - name: cross_account_destination_configured
+    description: A cross-account log/event destination is configured
+    consumers: 1
+
+  - name: network_access_eks
+    description: Attacker has network-level access to EKS API server or nodes
+    consumers: 1
+
+  - name: no_router_update_permission
+    description: Principal lacks permission to update VPC route tables
+    consumers: 1
+
+  - name: s3_replication_configured
+    description: S3 bucket has cross-region or cross-account replication enabled
+    consumers: 1
+
+# --- TERMINAL OUTCOMES (26) ---
+# Produced only — no consumer chain. These are the end-states that
+# chains escalate toward. Consumed by reports, severity scoring,
+# and human review.
+# Sorted by producer count descending.
+
+terminal_outcomes:
+  - name: audit_trail_destroyed
+    description: Attacker can erase or tamper with audit logs (CloudTrail, Config, CloudWatch)
+    producers: 108
+
+  - name: data_destruction
+    description: Attacker can permanently destroy data (delete, encrypt-ransom, corrupt)
+    producers: 97
+
+  - name: shadow_admin_access
+    description: Attacker has admin-equivalent access through non-obvious paths
+    producers: 29
+
+  - name: invisible_data_exfiltration
+    description: Data leaves the environment without triggering detection
+    producers: 13
+
+  - name: encryption_bypass
+    description: Encryption control is ineffective (wrong key, weak config, bypassed)
+    producers: 13
+
+  - name: k8s_cluster_admin
+    description: Attacker has cluster-admin equivalent in Kubernetes
+    producers: 6
+
+  - name: kms_key_compromise
+    description: Attacker controls a KMS key (can decrypt, sign, or deny access)
+    producers: 6
+
+  - name: control_plane_code_execution
+    description: Attacker can execute code in the control plane (EKS master, OpenSearch plugins)
+    producers: 5
+
+  - name: secret_store_access
+    description: Attacker can read secrets from Secrets Manager or Parameter Store
+    producers: 4
+
+  - name: aws_root_access
+    description: Attacker has root account credentials or equivalent access
+    producers: 3
+
+  - name: data_exfiltration
+    description: Attacker has exfiltrated data to an external destination
+    producers: 3
+
+  - name: database_compromise
+    description: Attacker has full access to a database (DocumentDB, Neptune, RDS)
+    producers: 3
+
+  - name: db_credential_theft
+    description: Attacker has obtained database credentials
+    producers: 3
+
+  - name: org_admin_access
+    description: Attacker has AWS Organizations management account access
+    producers: 3
+
+  - name: cdn_bypass_data_access
+    description: Attacker accesses origin data bypassing CDN protections
+    producers: 1
+
+  - name: cross_account_data_exfiltration
+    description: Data exfiltrated via cross-account trust relationships
+    producers: 1
+
+  - name: data_exfiltration_via_hijack
+    description: Data exfiltrated by hijacking a legitimate data flow
+    producers: 1
+
+  - name: data_stream_capture
+    description: Attacker can intercept or redirect a data stream
+    producers: 1
+
+  - name: detection_blindness
+    description: Security detection is completely non-functional
+    producers: 1
+
+  - name: detection_evasion
+    description: Attacker can act without triggering detection mechanisms
+    producers: 1
+
+  - name: detection_fragmented
+    description: Detection exists but is split across tools with no correlation
+    producers: 1
+
+  - name: detection_without_response
+    description: Detection fires but no automated or human response follows
+    producers: 1
+
+  - name: domain_takeover
+    description: Attacker can claim a dangling DNS record and serve content
+    producers: 1
+
+  - name: indirect_data_rerouting
+    description: Attacker reroutes data flows without direct access to the data
+    producers: 1
+
+  - name: lateral_movement
+    description: Attacker moves from one compromised resource to another
+    producers: 1
+
+  - name: security_telemetry_exfiltration
+    description: Security monitoring data itself is exfiltrated or redirected
+    producers: 1
+
+# --- VOCABULARY RULES ---
+#
+# Adding a composing capability: MUST have both a producer chain
+# (postcondition) and a consumer chain (precondition) before adding.
+# A capability without a graph edge violates the Information Axiom.
+#
+# Adding an entry point: document the observation source that seeds
+# it. No producer chain needed — entry points anchor the graph.
+#
+# Adding a terminal outcome: document what report/scoring consumes
+# it. No consumer chain needed — terminal outcomes are sinks.
+#
+# Reference: docs-internal/architecture/axiomatic-design.md

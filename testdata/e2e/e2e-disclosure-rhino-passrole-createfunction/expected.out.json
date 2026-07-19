@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:a70fbaf32b503c41",
+      "finding_id": "sha256:07d1168a24095b76",
       "control_id": "CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001",
       "control_name": "Principal Must Not Escalate via Lambda CreateFunction Execution Role",
       "control_description": "Principals with iam:PassRole on a role R, lambda:CreateFunction, and a path to invoke the function (lambda:InvokeFunction directly, creation of a function URL, or wiring to another trigger) can escalate to R's permissions. The created Lambda executes under R, so any code the principal uploads runs with R's authority. When R's effective permissions exceed the principal's own, this is a privilege escalation path. Rhino Security Labs' iam__privesc_scan and Prowler's iam_policy_allows_privilege_escalation both enumerate this technique. The invocation step is folded into the .present boolean upstream — a CreateFunction grant without any invocation path is not an escalation; the diagnostic fields expose which invocation vector was observed.\n",
@@ -221,9 +221,9 @@
         "identity.escalation.passrole_createfunction",
         "identity.escalation.passrole_createfunction.present"
       ],
-      "headline_finding_id": "sha256:a70fbaf32b503c41",
+      "headline_finding_id": "sha256:07d1168a24095b76",
       "member_finding_ids": [
-        "sha256:a70fbaf32b503c41"
+        "sha256:07d1168a24095b76"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2

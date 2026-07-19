@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:2c5e7d89626a2f02",
+      "finding_id": "sha256:0ec4c4e78859e9eb",
       "control_id": "CTL.ID.KUBE.001",
       "control_name": "Cluster-Admin Binding Detected",
       "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
@@ -152,9 +152,9 @@
       "shared_keys": [
         "binds_to_cluster_admin"
       ],
-      "headline_finding_id": "sha256:2c5e7d89626a2f02",
+      "headline_finding_id": "sha256:0ec4c4e78859e9eb",
       "member_finding_ids": [
-        "sha256:2c5e7d89626a2f02"
+        "sha256:0ec4c4e78859e9eb"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
