@@ -126,7 +126,10 @@ func Predict(in Input) *Prediction {
 }
 
 func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.Time) map[string]float64 {
-	cutoff := now.Add(-lookback)
+	var cutoff time.Time
+	if lookback > 0 {
+		cutoff = now.Add(-lookback)
+	}
 	type fkey struct{ ctl, ast string }
 	type mttrWindow struct {
 		sev     string
@@ -152,7 +155,7 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 		for k, w := range open {
 			if _, ok := currentKeys[k]; !ok {
 				w.closeAt = a.Run.EvalTime
-				if !w.closeAt.Before(cutoff) {
+				if cutoff.IsZero() || !w.closeAt.Before(cutoff) {
 					closed = append(closed, *w)
 				}
 				delete(open, k)

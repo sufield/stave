@@ -1318,9 +1318,7 @@ func SortFindings(fs []Finding) {
 func StableFindingID(ctlID kernel.ControlID, astID asset.ID) kernel.FindingID {
 	h := sha256.New()
 	h.Write([]byte("finding:"))
-	h.Write([]byte(ctlID))
-	h.Write([]byte(":"))
-	h.Write([]byte(astID))
+	h.Write([]byte(fmt.Sprintf("%d:%s:%d:%s", len(ctlID), ctlID, len(astID), astID)))
 	return kernel.FindingID("sha256:" + hex.EncodeToString(h.Sum(nil))[:16])
 }
 

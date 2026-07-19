@@ -607,13 +607,17 @@ func annotateExploitability(report *evaluation.ComplianceReport) {
 // property path prefixes to determine which IAM policy layer the
 // operator should change to remediate the finding.
 func annotateDecidingLayer(report *evaluation.ComplianceReport) {
-	for i := range report.Findings {
-		f := &report.Findings[i]
-		if len(f.ReasoningTrace) == 0 {
-			continue
+	classify := func(fs []evaluation.Finding) {
+		for i := range fs {
+			f := &fs[i]
+			if len(f.ReasoningTrace) == 0 {
+				continue
+			}
+			f.DecidingLayer = inferDecidingLayer(f.ReasoningTrace)
 		}
-		f.DecidingLayer = inferDecidingLayer(f.ReasoningTrace)
 	}
+	classify(report.Findings)
+	classify(report.MarkerFindings)
 }
 
 func inferDecidingLayer(trace []evaluation.MatchedClause) evaluation.DecidingLayer {

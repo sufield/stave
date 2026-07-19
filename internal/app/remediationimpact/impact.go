@@ -221,6 +221,9 @@ func computeSimpleScore(a *report.Assessment) float64 {
 		return 0
 	}
 	if a.Summary.TotalAssets == 0 {
+		if a.Summary.Violations > 0 {
+			return 0
+		}
 		return 100
 	}
 	rate := float64(a.Summary.Violations) / float64(a.Summary.TotalAssets)

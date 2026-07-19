@@ -47,42 +47,38 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 		}
 		report.TotalActive++
 
-		// Expiry-date arithmetic lives on AcknowledgmentEntry —
-		// DaysRemaining handles the parse + diff, ExpiryClassification
-		// applies the threshold buckets the status report wants.
 		daysRemaining, ok := ack.DaysRemaining(now)
-		if !ok {
-			continue
-		}
-		switch ack.ExpiryClassification(now) {
-		case "expired":
-			report.AlreadyExpired++
-			report.ExpiredItems = append(report.ExpiredItems, ExpiryItem{
-				ControlID:     ack.ControlID,
-				AssetID:       ack.AssetID,
-				ExpiryDate:    ack.ExpiryDate,
-				DaysRemaining: daysRemaining,
-				Reason:        ack.Reason,
-			})
-		case "expiring_soon":
-			report.ExpiringDays30++
-			report.ExpiringDays60++
-			report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
-				ControlID:     ack.ControlID,
-				AssetID:       ack.AssetID,
-				ExpiryDate:    ack.ExpiryDate,
-				DaysRemaining: daysRemaining,
-				Reason:        ack.Reason,
-			})
-		case "expiring_60d":
-			report.ExpiringDays60++
-			report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
-				ControlID:     ack.ControlID,
-				AssetID:       ack.AssetID,
-				ExpiryDate:    ack.ExpiryDate,
-				DaysRemaining: daysRemaining,
-				Reason:        ack.Reason,
-			})
+		if ok {
+			switch ack.ExpiryClassification(now) {
+			case "expired":
+				report.AlreadyExpired++
+				report.ExpiredItems = append(report.ExpiredItems, ExpiryItem{
+					ControlID:     ack.ControlID,
+					AssetID:       ack.AssetID,
+					ExpiryDate:    ack.ExpiryDate,
+					DaysRemaining: daysRemaining,
+					Reason:        ack.Reason,
+				})
+			case "expiring_soon":
+				report.ExpiringDays30++
+				report.ExpiringDays60++
+				report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
+					ControlID:     ack.ControlID,
+					AssetID:       ack.AssetID,
+					ExpiryDate:    ack.ExpiryDate,
+					DaysRemaining: daysRemaining,
+					Reason:        ack.Reason,
+				})
+			case "expiring_60d":
+				report.ExpiringDays60++
+				report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
+					ControlID:     ack.ControlID,
+					AssetID:       ack.AssetID,
+					ExpiryDate:    ack.ExpiryDate,
+					DaysRemaining: daysRemaining,
+					Reason:        ack.Reason,
+				})
+			}
 		}
 
 		key := ack.ControlID + "@" + ack.AssetID

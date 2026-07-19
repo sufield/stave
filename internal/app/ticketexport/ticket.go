@@ -39,9 +39,7 @@ func Generate(findings []remediation.Finding) []Ticket {
 // StableTicketID computes a deterministic ticket ID from control_id + asset_id.
 func StableTicketID(controlID, assetID string) string {
 	h := sha256.New()
-	h.Write([]byte(controlID))
-	h.Write([]byte("+"))
-	h.Write([]byte(assetID))
+	h.Write([]byte(fmt.Sprintf("%d:%s:%d:%s", len(controlID), controlID, len(assetID), assetID)))
 	return "TKT-" + hex.EncodeToString(h.Sum(nil))[:12]
 }
 
