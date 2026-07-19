@@ -364,8 +364,13 @@ type ComplianceReport struct {
 	// CompoundOnlyMode signals that atomic findings were suppressed from
 	// output (compound-only default). Renderers use this to emit the
 	// suppressed count in the summary line.
-	CompoundOnlyMode      bool `json:"compound_only_mode,omitempty"`
-	SuppressedAtomicCount int  `json:"suppressed_atomic_count,omitempty"`
+	CompoundOnlyMode      bool            `json:"compound_only_mode,omitempty"`
+	SuppressedAtomicCount int             `json:"suppressed_atomic_count,omitempty"`
+	SuppressedBySeverity  *SeverityCounts `json:"suppressed_by_severity,omitempty"`
+
+	// UnchainedHighSeverity lists control IDs of critical/high findings
+	// not covered by any compound chain — potential blind spots.
+	UnchainedHighSeverity []string `json:"unchained_high_severity,omitempty"`
 }
 
 // GetFindingByResource retrieves a finding for a specific control/asset pair.

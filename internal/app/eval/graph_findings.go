@@ -227,3 +227,31 @@ func col(cols []string, i int) string {
 	}
 	return ""
 }
+
+// markDegradedGraphEdges flags graph findings that reference assets with
+// is_expired=true or is_dormant=true in the latest snapshot. These assets
+// represent trust relationships that may not be exploitable.
+func markDegradedGraphEdges(gf []findings.CompoundFinding, snapshots []asset.Snapshot) {
+	if len(gf) == 0 || len(snapshots) == 0 {
+		return
+	}
+	latest := snapshots[len(snapshots)-1]
+	degraded := make(map[asset.ID]string)
+	for i := range latest.Assets {
+		a := &latest.Assets[i]
+		if v, _ := a.Properties["is_expired"].(bool); v {
+			degraded[a.ID] = "referenced asset has is_expired=true"
+		} else if v, _ := a.Properties["is_dormant"].(bool); v {
+			degraded[a.ID] = "referenced asset has is_dormant=true"
+		}
+	}
+	if len(degraded) == 0 {
+		return
+	}
+	for i := range gf {
+		if reason, ok := degraded[gf[i].AssetID]; ok {
+			gf[i].DegradedEdge = true
+			gf[i].DegradedEdgeReason = reason
+		}
+	}
+}

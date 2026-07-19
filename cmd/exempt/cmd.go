@@ -368,7 +368,8 @@ Exit Codes:
 // --- validate ---
 
 type validateOptions struct {
-	File string
+	File   string
+	Strict bool
 }
 
 func newValidateCmd() *cobra.Command {
@@ -379,6 +380,9 @@ func newValidateCmd() *cobra.Command {
 		Short: "Validate the acceptance file",
 		Long: `Validate the acceptance file for required fields, date formats, and structural correctness.
 
+Overdue exemption reviews are surfaced as warnings by default.
+With --strict, overdue reviews are treated as errors.
+
 Exit Codes:
   0   Validation passed
   2   Invalid input
@@ -387,27 +391,38 @@ Exit Codes:
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			validationErrors, err := stave.ValidateAcceptances(opts.File)
+			result, err := stave.ValidateAcceptances(opts.File)
 			if err != nil {
 				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 			}
 			w := cmd.OutOrStdout()
-			if len(validationErrors) == 0 {
+			hasErrors := len(result.Errors) > 0
+			hasWarnings := len(result.Warnings) > 0
+			if !hasErrors && !hasWarnings {
 				if _, werr := fmt.Fprintln(w, "Acceptance file is valid."); werr != nil {
 					return fmt.Errorf("write output: %w", werr)
 				}
 				return nil
 			}
-			for _, e := range validationErrors {
+			for _, e := range result.Errors {
 				if _, werr := fmt.Fprintf(w, "  ERROR: %s\n", e); werr != nil {
 					return werr
 				}
 			}
-			return errors.New("validation failed")
+			for _, warn := range result.Warnings {
+				if _, werr := fmt.Fprintf(w, "  WARNING: %s\n", warn); werr != nil {
+					return werr
+				}
+			}
+			if hasErrors || (opts.Strict && hasWarnings) {
+				return errors.New("validation failed")
+			}
+			return nil
 		},
 	}
 
 	cmd.Flags().StringVar(&opts.File, "file", opts.File, "path to acceptance file")
+	cmd.Flags().BoolVar(&opts.Strict, "strict", false, "treat overdue reviews as errors")
 
 	return cmd
 }

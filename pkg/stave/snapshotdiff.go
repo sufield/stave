@@ -145,6 +145,10 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 		return
 	}
 
+	if r.ScopeWarning != nil {
+		fmt.Fprintf(w, "WARNING: %s\n\n", r.ScopeWarning.Message)
+	}
+
 	// Risk summary.
 	if r.RiskSummary.Increasing > 0 || r.RiskSummary.Decreasing > 0 {
 		fmt.Fprintln(w, "RISK SUMMARY")

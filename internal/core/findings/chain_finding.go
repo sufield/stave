@@ -53,6 +53,12 @@ type CompoundFinding struct {
 	CompensatingNote      string               `json:"compensating_note,omitempty"`
 	FreshnessReason       string               `json:"freshness_reason,omitempty"`
 	DependencyDiagnostics []string             `json:"dependency_diagnostics,omitempty"`
+
+	// DegradedEdge marks graph-sourced findings that reference expired
+	// or dormant assets — the underlying trust relationship may not
+	// be exploitable.
+	DegradedEdge       bool   `json:"degraded_edge,omitempty"`
+	DegradedEdgeReason string `json:"degraded_edge_reason,omitempty"`
 }
 
 // SeverityLabel returns the canonical lowercase severity string

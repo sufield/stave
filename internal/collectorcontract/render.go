@@ -22,6 +22,7 @@ func WriteText(w io.Writer, r *Report, fixHints bool) error {
 	fmt.Fprintf(w, "  Not evaluated: %d\n", r.Null)
 	fmt.Fprintf(w, "  Missing:       %d\n", r.Missing)
 	fmt.Fprintf(w, "  Wrong type:    %d\n", r.WrongType)
+	fmt.Fprintf(w, "  Coverage:      %d%%\n", r.CoveragePercent())
 
 	if fixHints && len(r.Violations) > 0 {
 		type fieldGroup struct {
@@ -98,20 +99,22 @@ func WriteJSON(w io.Writer, r *Report) error {
 		Consumers []string `json:"consumers,omitempty"`
 	}
 	type jsonContract struct {
-		FieldsChecked int             `json:"fields_checked"`
-		Pass          int             `json:"pass"`
-		NotEvaluated  int             `json:"not_evaluated"`
-		Missing       int             `json:"missing"`
-		WrongType     int             `json:"wrong_type"`
-		Violations    []jsonViolation `json:"violations,omitempty"`
+		FieldsChecked   int             `json:"fields_checked"`
+		Pass            int             `json:"pass"`
+		NotEvaluated    int             `json:"not_evaluated"`
+		Missing         int             `json:"missing"`
+		WrongType       int             `json:"wrong_type"`
+		CoveragePercent int             `json:"coverage_percent"`
+		Violations      []jsonViolation `json:"violations,omitempty"`
 	}
 
 	jc := jsonContract{
-		FieldsChecked: r.FieldsChecked,
-		Pass:          r.Pass,
-		NotEvaluated:  r.Null,
-		Missing:       r.Missing,
-		WrongType:     r.WrongType,
+		FieldsChecked:   r.FieldsChecked,
+		Pass:            r.Pass,
+		NotEvaluated:    r.Null,
+		Missing:         r.Missing,
+		WrongType:       r.WrongType,
+		CoveragePercent: r.CoveragePercent(),
 	}
 	for _, v := range r.Violations {
 		statusStr := "unknown"

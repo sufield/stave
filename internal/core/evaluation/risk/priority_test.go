@@ -94,6 +94,35 @@ func TestPriorityScore_DimensionOrdering(t *testing.T) {
 	}
 }
 
+func TestPriorityScore_BonusesCantFlipSeverity(t *testing.T) {
+	// HAZOP deviation 2: at the same complexity and environment tier,
+	// choke-point and precedent bonuses must never let LOW outrank CRITICAL.
+	tiers := []EnvironmentTier{TierDev, TierStaging, TierProduction, TierCritical}
+	complexities := []policy.ChainComplexity{
+		policy.ComplexityAutomated, policy.ComplexityManual, policy.ComplexityDependent,
+	}
+	for _, tier := range tiers {
+		for _, cx := range complexities {
+			low := PriorityScore(PriorityInput{
+				Severity:             policy.SeverityLow,
+				Complexity:           cx,
+				EnvironmentTier:      tier,
+				SharedChainCount:     100,
+				HasIncidentPrecedent: true,
+			})
+			critical := PriorityScore(PriorityInput{
+				Severity:        policy.SeverityCritical,
+				Complexity:      cx,
+				EnvironmentTier: tier,
+			})
+			if low >= critical {
+				t.Errorf("tier=%d cx=%s: LOW maxed (%f) outranks CRITICAL bare (%f)",
+					tier, cx, low, critical)
+			}
+		}
+	}
+}
+
 func TestPrioritizeFindings_SortOrder(t *testing.T) {
 	chains := map[kernel.ChainID]*policy.ChainDefinition{
 		"chain_auto": {

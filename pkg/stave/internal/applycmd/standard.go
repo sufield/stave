@@ -31,6 +31,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -321,6 +322,16 @@ func renderReport(ctx context.Context, format string, verbose bool, includeAtomi
 	enricher := remediation.NewPlanner()
 
 	atomicCount := len(report.Findings)
+	severityCounts := evaluation.CountBySeverity(report.Findings)
+
+	atomicControlIDs := make([]kernel.ControlID, 0, len(report.Findings))
+	atomicSeverities := make(map[kernel.ControlID]policy.Severity, len(report.Findings))
+	for i := range report.Findings {
+		cid := report.Findings[i].ControlID
+		atomicControlIDs = append(atomicControlIDs, cid)
+		atomicSeverities[cid] = report.Findings[i].ControlSeverity
+	}
+
 	enrichFn := func(rep *evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
 		enriched, enrichErr := appeval.Enrich(enricher, sanitizer, rep)
 		if enrichErr != nil {
@@ -329,6 +340,9 @@ func renderReport(ctx context.Context, format string, verbose bool, includeAtomi
 		if !includeAtomic {
 			enriched.Result.CompoundOnlyMode = true
 			enriched.Result.SuppressedAtomicCount = atomicCount
+			enriched.Result.SuppressedBySeverity = &severityCounts
+			enriched.Result.UnchainedHighSeverity = risk.LintUnchainedHighSeverity(
+				atomicControlIDs, atomicSeverities, rep.ChainFindings)
 			enriched.Findings = nil
 			enriched.MarkerFindings = nil
 		}

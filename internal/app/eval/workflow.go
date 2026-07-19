@@ -409,6 +409,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		if err != nil && w.Logger != nil {
 			w.Logger.Warn("graph findings ingestion failed", "dir", graphFindingsDir, "err", err)
 		}
+		markDegradedGraphEdges(graphFindings, snapshots)
 		report.ChainFindings = append(report.ChainFindings, graphFindings...)
 	}
 

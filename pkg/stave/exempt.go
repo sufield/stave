@@ -203,18 +203,21 @@ func AcceptanceHistory(file, format string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// ExemptValidationResult separates structural errors from overdue-review warnings.
+type ExemptValidationResult struct {
+	Errors   []string
+	Warnings []string
+}
+
 // ValidateAcceptances checks the acceptance file for required fields, date
 // formats, and structural correctness, cross-referencing compensating
-// controls against the built-in catalog. It returns the list of validation
-// errors (empty when valid). It is the library entry point behind
-// `stave exempt validate`.
-func ValidateAcceptances(file string) ([]string, error) {
+// controls against the built-in catalog. It is the library entry point
+// behind `stave exempt validate`.
+func ValidateAcceptances(file string) (*ExemptValidationResult, error) {
 	f, err := appexempt.Load(file)
 	if err != nil {
 		return nil, fmt.Errorf("load acceptance file: %w", err)
 	}
-	// Load the built-in catalog for compensating-control validation. Catalog
-	// load errors are tolerated: the field/date checks are still useful.
 	knownIDs := make(map[string]struct{})
 	store := ctlbuiltin.NewControlStore(controldata.FS, ".", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
 	if controls, loadErr := store.All(); loadErr == nil {
@@ -222,9 +225,10 @@ func ValidateAcceptances(file string) ([]string, error) {
 			knownIDs[string(controls[i].ID)] = struct{}{}
 		}
 	}
-	errs := f.ValidateWithCatalog(knownIDs)
-	errs = append(errs, f.OverdueReviews(time.Now().UTC())...)
-	return errs, nil
+	return &ExemptValidationResult{
+		Errors:   f.ValidateWithCatalog(knownIDs),
+		Warnings: f.OverdueReviews(time.Now().UTC()),
+	}, nil
 }
 
 // exemptRenderUpcoming renders the upcoming-expiry report. Moved verbatim

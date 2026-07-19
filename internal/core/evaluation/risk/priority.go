@@ -20,20 +20,20 @@ type PriorityInput struct {
 }
 
 // PriorityScore computes a numeric priority from multiple dimensions.
-// Higher = more urgent.
-//
-// Formula:
-//
-//	score = base_severity × complexity_mult × environment_mult
-//	      + choke_point_bonus + precedent_bonus
+// Higher = more urgent. Bonuses are multiplicative so LOW-severity
+// can never outrank CRITICAL at the same complexity/environment tier.
 func PriorityScore(in PriorityInput) float64 {
 	base := float64(in.Severity.Weight())
-	score := base * complexityMultiplier(in.Complexity) * EnvironmentMultiplier(in.EnvironmentTier)
-	score += float64(in.SharedChainCount) * 10
-	if in.HasIncidentPrecedent {
-		score += 25
+	pre := base * complexityMultiplier(in.Complexity) * EnvironmentMultiplier(in.EnvironmentTier)
+	chokeMult := 1.0 + float64(in.SharedChainCount)*0.05
+	if chokeMult > 1.5 {
+		chokeMult = 1.5
 	}
-	return score
+	precedentMult := 1.0
+	if in.HasIncidentPrecedent {
+		precedentMult = 1.25
+	}
+	return pre * chokeMult * precedentMult
 }
 
 func complexityMultiplier(c policy.ChainComplexity) float64 {

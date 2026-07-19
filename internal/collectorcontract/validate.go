@@ -56,6 +56,14 @@ func (r *Report) ViolationCount() int {
 	return r.Missing + r.WrongType
 }
 
+// CoveragePercent returns the percentage of checked fields that passed.
+func (r *Report) CoveragePercent() int {
+	if r.FieldsChecked == 0 {
+		return 0
+	}
+	return r.Pass * 100 / r.FieldsChecked
+}
+
 // ValidateSnapshots checks all assets in the provided snapshots against the
 // contract. Only checks fields that actually appear in each asset's properties
 // or are expected based on the field name pattern.

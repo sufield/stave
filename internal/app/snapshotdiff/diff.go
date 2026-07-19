@@ -29,8 +29,16 @@ type NewAsset struct {
 
 // RemovedAsset records an asset present in before but not after.
 type RemovedAsset struct {
-	AssetID   asset.ID `json:"asset_id"`
-	AssetType string   `json:"asset_type"`
+	AssetID         asset.ID `json:"asset_id"`
+	AssetType       string   `json:"asset_type"`
+	MayBeOutOfScope bool     `json:"may_be_out_of_scope,omitempty"`
+}
+
+// ScopeWarning signals that the before/after snapshots were produced
+// by different tools or source types, so removed assets may reflect a
+// scope change rather than actual resource deletion.
+type ScopeWarning struct {
+	Message string `json:"message"`
 }
 
 // DiffResult holds the structured diff between two snapshots.
@@ -43,6 +51,7 @@ type DiffResult struct {
 	NewAssets       []NewAsset       `json:"new_assets"`
 	RemovedAssets   []RemovedAsset   `json:"removed_assets"`
 	RiskSummary     RiskSummary      `json:"risk_summary"`
+	ScopeWarning    *ScopeWarning    `json:"scope_warning,omitempty"`
 }
 
 // RiskSummary aggregates risk direction counts from property changes.
@@ -59,6 +68,13 @@ func Diff(before, after asset.Snapshot) *DiffResult {
 		AfterTime:    after.CapturedAt,
 		BeforeAssets: len(before.Assets),
 		AfterAssets:  len(after.Assets),
+	}
+
+	scopeChanged := detectScopeChange(before, after)
+	if scopeChanged {
+		result.ScopeWarning = &ScopeWarning{
+			Message: "snapshot source metadata changed — removed assets may reflect a scope change, not resource deletion",
+		}
 	}
 
 	// Index assets by ID.
@@ -94,8 +110,9 @@ func Diff(before, after asset.Snapshot) *DiffResult {
 
 		if inBefore && !inAfter {
 			result.RemovedAssets = append(result.RemovedAssets, RemovedAsset{
-				AssetID:   bAsset.ID,
-				AssetType: string(bAsset.Type),
+				AssetID:         bAsset.ID,
+				AssetType:       string(bAsset.Type),
+				MayBeOutOfScope: scopeChanged,
 			})
 			continue
 		}
@@ -242,4 +259,20 @@ func jsonEqual(a, b any) bool {
 	default:
 		return a == b
 	}
+}
+
+// detectScopeChange returns true when the before/after snapshots have
+// different GeneratedBy metadata, signalling a collector scope change.
+func detectScopeChange(before, after asset.Snapshot) bool {
+	bg := before.GeneratedBy
+	ag := after.GeneratedBy
+	if bg == nil && ag == nil {
+		return false
+	}
+	if bg == nil || ag == nil {
+		return true
+	}
+	return bg.SourceType != ag.SourceType ||
+		bg.Tool != ag.Tool ||
+		bg.Provider != ag.Provider
 }
