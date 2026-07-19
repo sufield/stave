@@ -11,6 +11,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/observations"
 	catalogdiff "github.com/sufield/stave/internal/app/catalogdiff"
 	"github.com/sufield/stave/internal/app/snapshotdiff"
+	"github.com/sufield/stave/internal/core/diff"
 )
 
 // DiffCatalogs compares two control-catalog directories and renders the
@@ -106,7 +107,14 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 				currentAsset = string(c.AssetID)
 				fmt.Fprintf(w, "  %s\n", c.AssetID)
 			}
-			fmt.Fprintf(w, "    %s:\n", c.Property)
+			riskTag := ""
+			switch c.RiskDirection {
+			case diff.RiskIncreasing:
+				riskTag = " [RISK+]"
+			case diff.RiskDecreasing:
+				riskTag = " [RISK-]"
+			}
+			fmt.Fprintf(w, "    %s:%s\n", c.Property, riskTag)
 			fmt.Fprintf(w, "      before: %v\n", c.Before)
 			fmt.Fprintf(w, "      after:  %v\n", c.After)
 		}
@@ -134,5 +142,16 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 
 	if len(r.PropertyChanges) == 0 && len(r.NewAssets) == 0 && len(r.RemovedAssets) == 0 {
 		fmt.Fprintln(w, "No differences found.")
+		return
+	}
+
+	// Risk summary.
+	if r.RiskSummary.Increasing > 0 || r.RiskSummary.Decreasing > 0 {
+		fmt.Fprintln(w, "RISK SUMMARY")
+		fmt.Fprintln(w, strings.Repeat("─", 55))
+		fmt.Fprintf(w, "  Risk-increasing changes: %d\n", r.RiskSummary.Increasing)
+		fmt.Fprintf(w, "  Risk-decreasing changes: %d\n", r.RiskSummary.Decreasing)
+		fmt.Fprintf(w, "  Neutral changes:         %d\n", r.RiskSummary.Neutral)
+		fmt.Fprintln(w)
 	}
 }

@@ -1,0 +1,143 @@
+// reasoning/souffle/iam/federation.dl — Federation edge types for
+// transitive external reachability analysis.
+//
+// Models OIDC, SAML, and cross-account trust as edges from external
+// identity sources into the IAM access graph. The existing
+// transitive_assume closure in rules.dl handles internal role chains;
+// this file extends the graph OUTWARD to external identity providers,
+// enabling queries like "can github.com transitively reach S3 bucket X?"
+//
+// Pipeline: same as schema.dl — facts extracted from observations
+// by extract.go, consumed here via .input declarations.
+//
+// =============================================================
+// DESIGN NOTE (Axiomatic Design — DP8 Gap 2):
+//
+// Per-resource controls (CTL.IAM.OIDC.PROVIDER.AUDIT.001 etc.) check
+// whether each federation source is known and approved. They CANNOT
+// answer transitive federation-to-data questions because that requires
+// graph traversal. These rules provide that traversal by composing
+// external_reach edges with the existing transitive_assume closure.
+//
+// Independence Axiom: these rules depend on schema.dl and rules.dl
+// (transitive_assume, reachable_resource) but do not modify them.
+// =============================================================
+
+#include "schema.dl"
+#include "rules.dl"
+
+// =====================================================
+// Input relations — OIDC and SAML federation facts.
+// Extracted from IAM OIDC/SAML provider observations.
+// =====================================================
+
+// OIDC provider trust: an external identity source can assume a role.
+.decl oidc_trust(
+    account_id: symbol,
+    provider_url: symbol,
+    role_arn: symbol,
+    subject_restricted: number
+)
+.input oidc_trust
+
+// SAML provider trust: an external IdP can assume a role.
+.decl saml_trust(
+    account_id: symbol,
+    provider_arn: symbol,
+    entity_id: symbol,
+    role_arn: symbol
+)
+.input saml_trust
+
+// =====================================================
+// Derived: external_reach — the entry edge from outside
+// AWS into an IAM role. Unifies OIDC, SAML, and cross-
+// account trust into a common "external source can reach
+// this role" relation.
+// =====================================================
+
+.decl external_reach(
+    external_source: symbol,
+    role_arn: symbol,
+    mechanism: symbol,
+    restricted: number
+)
+.output external_reach
+
+// OIDC → role
+external_reach(provider_url, role_arn, "oidc", subject_restricted) :-
+    oidc_trust(_, provider_url, role_arn, subject_restricted).
+
+// SAML → role (always considered restricted — SAML has assertion-level scoping)
+external_reach(entity_id, role_arn, "saml", 1) :-
+    saml_trust(_, _, entity_id, role_arn).
+
+// Cross-account trust → role (unrestricted unless condition keys are present)
+external_reach(target, role_arn, "cross_account", 0) :-
+    cross_account_assumes(role_arn, target).
+
+// =====================================================
+// Transitive external reachability — an external source
+// can transitively reach a resource if:
+//   1. It can reach a role (external_reach), AND
+//   2. That role can reach the resource (via existing
+//      reachable_resource from rules.dl)
+//
+// The path_length tracks hops: 1 = direct (external →
+// role → resource), 2+ = via role chains.
+// =====================================================
+
+.decl external_transitive_reach(
+    external_source: symbol,
+    resource: symbol,
+    path_length: number,
+    unrestricted_hops: number
+)
+.output external_transitive_reach
+
+// Base case: external source reaches a role that directly has a resource.
+external_transitive_reach(src, res, 1, unr) :-
+    external_reach(src, role, _, restricted),
+    reachable_resource(role, res),
+    unr = 1 - restricted.
+
+// Recursive case: external source reaches a role, that role assumes
+// another role (transitive_assume), and THAT role has the resource.
+external_transitive_reach(src, res, 2, unr) :-
+    external_reach(src, role1, _, restricted),
+    transitive_assume(role1, role2),
+    reachable_resource(role2, res),
+    unr = 1 - restricted.
+
+// =====================================================
+// Unrestricted external reach — subset of external
+// transitive reach where at least one hop is unrestricted.
+// This is the highest-severity finding: an unrestricted
+// OIDC trust with transitive reach = any identity from
+// the provider can reach the resource.
+// =====================================================
+
+.decl unrestricted_external_reach(
+    external_source: symbol,
+    resource: symbol,
+    path_length: number
+)
+.output unrestricted_external_reach
+
+unrestricted_external_reach(src, res, path_length) :-
+    external_transitive_reach(src, res, path_length, unr),
+    unr > 0.
+
+// =====================================================
+// Federation summary — aggregated view for controls.
+// =====================================================
+
+.decl federation_source_reach_count(
+    external_source: symbol,
+    resource_count: number
+)
+.output federation_source_reach_count
+
+federation_source_reach_count(src, n) :-
+    external_reach(src, _, _, _),
+    n = count : { external_transitive_reach(src, _, _, _) }.

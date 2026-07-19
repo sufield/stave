@@ -8,14 +8,16 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/diff"
 )
 
 // PropertyChange records a change to a single property.
 type PropertyChange struct {
-	AssetID  asset.ID `json:"asset_id"`
-	Property string   `json:"property"`
-	Before   any      `json:"before"`
-	After    any      `json:"after"`
+	AssetID       asset.ID           `json:"asset_id"`
+	Property      string             `json:"property"`
+	Before        any                `json:"before"`
+	After         any                `json:"after"`
+	RiskDirection diff.RiskDirection `json:"risk_direction"`
 }
 
 // NewAsset records an asset present in after but not before.
@@ -40,6 +42,14 @@ type DiffResult struct {
 	PropertyChanges []PropertyChange `json:"property_changes"`
 	NewAssets       []NewAsset       `json:"new_assets"`
 	RemovedAssets   []RemovedAsset   `json:"removed_assets"`
+	RiskSummary     RiskSummary      `json:"risk_summary"`
+}
+
+// RiskSummary aggregates risk direction counts from property changes.
+type RiskSummary struct {
+	Increasing int `json:"increasing"`
+	Decreasing int `json:"decreasing"`
+	Neutral    int `json:"neutral"`
 }
 
 // Diff compares two snapshots and returns the structured differences.
@@ -93,6 +103,20 @@ func Diff(before, after asset.Snapshot) *DiffResult {
 		// Both present: diff properties.
 		changes := diffProperties(id, bAsset.Properties, aAsset.Properties, "")
 		result.PropertyChanges = append(result.PropertyChanges, changes...)
+	}
+
+	// Classify risk direction for each property change and build summary.
+	for i := range result.PropertyChanges {
+		pc := &result.PropertyChanges[i]
+		pc.RiskDirection = diff.ClassifyRisk(pc.Property, pc.Before, pc.After)
+		switch pc.RiskDirection {
+		case diff.RiskIncreasing:
+			result.RiskSummary.Increasing++
+		case diff.RiskDecreasing:
+			result.RiskSummary.Decreasing++
+		default:
+			result.RiskSummary.Neutral++
+		}
 	}
 
 	return result

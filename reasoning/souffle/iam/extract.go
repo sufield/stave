@@ -115,6 +115,10 @@ var declaredInputs = []string{
 	// G9 — cross-account resource policy grants, emitted by
 	// emitCrossAccountAccessFacts below.
 	"grants_cross_account_access",
+	// G10 — federation trust facts, emitted by
+	// emitFederationFacts below.
+	"oidc_trust",
+	"saml_trust",
 }
 
 // G3 default config — mirrors data/stave-authorization.yaml.
@@ -246,6 +250,17 @@ func main() {
 		fail("emit cross-account access facts: %v", err)
 	}
 	for k, v := range g9stats {
+		stats[k] = v
+	}
+
+	// G10 — federation trust facts. Reads has_type + trusts_service +
+	// has_delegated_principal to identify OIDC/SAML provider assets
+	// and emit oidc_trust/saml_trust facts.
+	g10stats, err := emitFederationFacts(opts.out)
+	if err != nil {
+		fail("emit federation facts: %v", err)
+	}
+	for k, v := range g10stats {
 		stats[k] = v
 	}
 
@@ -854,6 +869,94 @@ func sortedKeys(m map[string]struct{}) []string {
 	}
 	slices.Sort(out)
 	return out
+}
+
+// emitFederationFacts reads has_type.facts and can_assume.facts to identify
+// OIDC and SAML provider assets, then emits oidc_trust.facts and saml_trust.facts.
+//
+// The OIDC/SAML provider assets are identified by their asset type:
+//   - aws_iam_oidc_provider → oidc_trust facts
+//   - aws_iam_saml_provider → saml_trust facts
+//
+// For each provider, can_assume edges targeting it identify the roles
+// that trust it. The provider URL/entity ID is the asset ID.
+func emitFederationFacts(outDir string) (map[string]int, error) {
+	counts := map[string]int{}
+
+	// Read has_type to find OIDC and SAML provider assets.
+	types, err := readFactPairs(filepath.Join(outDir, "has_type.facts"))
+	if err != nil {
+		return nil, fmt.Errorf("read has_type.facts: %w", err)
+	}
+
+	oidcProviders := map[string]struct{}{}
+	samlProviders := map[string]struct{}{}
+	for _, p := range types {
+		switch p.Object {
+		case "aws_iam_oidc_provider":
+			oidcProviders[p.Subject] = struct{}{}
+		case "aws_iam_saml_provider":
+			samlProviders[p.Subject] = struct{}{}
+		}
+	}
+
+	// Read can_assume to find roles trusting these providers.
+	assumes, err := readFactPairs(filepath.Join(outDir, "can_assume.facts"))
+	if err != nil {
+		return nil, fmt.Errorf("read can_assume.facts: %w", err)
+	}
+
+	// Read has_condition to check subject restrictions on OIDC trusts.
+	conditions, err := readFactPairs(filepath.Join(outDir, "has_condition.facts"))
+	if err != nil {
+		return nil, fmt.Errorf("read has_condition.facts: %w", err)
+	}
+	conditionsByPrincipal := map[string][]string{}
+	for _, c := range conditions {
+		conditionsByPrincipal[c.Subject] = append(conditionsByPrincipal[c.Subject], c.Object)
+	}
+
+	var oidcRows, samlRows []string
+
+	for _, edge := range assumes {
+		roleARN := edge.Subject
+		providerID := edge.Object
+
+		if _, isOIDC := oidcProviders[providerID]; isOIDC {
+			// Determine if subject-restricted by checking for condition keys
+			// like "token.actions.githubusercontent.com:sub" on the role.
+			restricted := 0
+			for _, cond := range conditionsByPrincipal[roleARN] {
+				if strings.Contains(cond, ":sub") || strings.Contains(cond, ":aud") {
+					restricted = 1
+					break
+				}
+			}
+			acct := accountFromARN(roleARN)
+			// oidc_trust(account_id, provider_url, role_arn, subject_restricted)
+			oidcRows = append(oidcRows,
+				fmt.Sprintf("%s\t%s\t%s\t%d", acct, providerID, roleARN, restricted))
+		}
+
+		if _, isSAML := samlProviders[providerID]; isSAML {
+			acct := accountFromARN(roleARN)
+			// saml_trust(account_id, provider_arn, entity_id, role_arn)
+			samlRows = append(samlRows,
+				fmt.Sprintf("%s\t%s\t%s\t%s", acct, providerID, providerID, roleARN))
+		}
+	}
+
+	slices.Sort(oidcRows)
+	slices.Sort(samlRows)
+
+	if err := writeLines(filepath.Join(outDir, "oidc_trust.facts"), oidcRows, counts, "oidc_trust"); err != nil {
+		return nil, err
+	}
+	if err := writeLines(filepath.Join(outDir, "saml_trust.facts"), samlRows, counts, "saml_trust"); err != nil {
+		return nil, err
+	}
+
+	return counts, nil
 }
 
 // runExportSIR invokes `stave export-sir --format jsonl --controls ... --observations ...`
