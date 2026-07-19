@@ -109,30 +109,45 @@
           "chain_id": "chegg_root_credential_path",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.CRED.ROTATION.001",
+          "controls_failing": [
+            "CTL.IAM.ROOT.MFA.001"
+          ],
           "description": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n"
         },
         {
           "chain_id": "chegg_root_credential_path",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
+          "controls_failing": [
+            "CTL.IAM.ROOT.MFA.001"
+          ],
           "description": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n"
         },
         {
           "chain_id": "root_compromise_path",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.POLICY.ADMIN.001",
+          "controls_failing": [
+            "CTL.IAM.ROOT.MFA.001"
+          ],
           "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         },
         {
           "chain_id": "root_compromise_path",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
+          "controls_failing": [
+            "CTL.IAM.ROOT.MFA.001"
+          ],
           "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         },
         {
           "chain_id": "root_compromise_path",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.ROOT.HWMFA.001",
+          "controls_failing": [
+            "CTL.IAM.ROOT.MFA.001"
+          ],
           "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
         }
       ],
