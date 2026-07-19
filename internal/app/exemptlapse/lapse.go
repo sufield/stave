@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -35,28 +36,30 @@ type LapsedFinding struct {
 
 // Input configures the lapse detection.
 type Input struct {
-	AcknowledgedFindings []policy.AcknowledgedFinding
-	EvalTime             time.Time
+	Findings []evaluation.Finding
+	EvalTime time.Time
 }
 
-// Detect scans acknowledged findings for expired exemptions and
-// produces LapsedFinding entries.
+// Detect scans suppressed findings for expired or invalid exemptions
+// and produces LapsedFinding entries.
 func Detect(in Input) []LapsedFinding {
 	var lapsed []LapsedFinding
 
-	for i := range in.AcknowledgedFindings {
-		af := &in.AcknowledgedFindings[i]
+	for i := range in.Findings {
+		f := &in.Findings[i]
 
-		if af.Valid {
+		if f.Status != evaluation.FindingSuppressed {
+			continue
+		}
+		if f.Suppression == nil || f.Suppression.Valid {
+			continue
+		}
+		if f.Suppression.InvalidReason != "expired" && f.Suppression.InvalidReason != "compensating_controls_failing" {
 			continue
 		}
 
-		if af.InvalidReason != "expired" && af.InvalidReason != "compensating_controls_failing" {
-			continue
-		}
-
-		expiry, err := time.Parse("2006-01-02", af.ExpiryDate)
-		if err != nil && af.InvalidReason == "expired" {
+		expiry, err := time.Parse("2006-01-02", f.Suppression.ExpiryDate)
+		if err != nil && f.Suppression.InvalidReason == "expired" {
 			continue
 		}
 
@@ -65,11 +68,7 @@ func Detect(in Input) []LapsedFinding {
 			daysSince = max(0, int(in.EvalTime.Sub(expiry).Hours()/24))
 		}
 
-		// Findings without a recorded severity (zero value) are treated
-		// as Medium for governance purposes — an unreviewed risk
-		// acceptance with unknown severity should still surface, and
-		// "medium" is the historical default this lapse path emitted.
-		originalSev := af.Severity
+		originalSev := f.ControlSeverity
 		if !originalSev.IsSet() {
 			originalSev = policy.SeverityMedium
 		}
@@ -82,19 +81,19 @@ func Detect(in Input) []LapsedFinding {
 		}
 
 		var compensatingNote string
-		if af.InvalidReason == "compensating_controls_failing" {
+		if f.Suppression.InvalidReason == "compensating_controls_failing" {
 			compensatingNote = "Compensating control is failing"
 		}
 
 		lf := LapsedFinding{
 			FindingType:        "EXEMPTION_LAPSED",
-			ControlID:          af.ControlID,
-			AssetID:            af.AssetID,
+			ControlID:          f.ControlID,
+			AssetID:            f.AssetID,
 			Severity:           effectiveSev.BucketName(),
 			OriginalSeverity:   originalSev.BucketName(),
-			ExemptionID:        string(af.ControlID) + "@" + string(af.AssetID),
-			GrantedAt:          af.AcknowledgedDate,
-			ExpiredAt:          af.ExpiryDate,
+			ExemptionID:        string(f.ControlID) + "@" + string(f.AssetID),
+			GrantedAt:          f.Suppression.AcknowledgedDate,
+			ExpiredAt:          f.Suppression.ExpiryDate,
 			DaysSinceExpiry:    daysSince,
 			SeverityBumpReason: bumpReason,
 			CompensatingNote:   compensatingNote,

@@ -86,7 +86,7 @@ func TestGoldenSchemaFiles_ControlsAccepted(t *testing.T) {
 	}
 }
 
-// TestGhostSchemaVersions_Rejected ensures deprecated, future, and malformed
+// TestGhostSchemaVersions_Rejected ensures unsupported, future, and malformed
 // schema versions are correctly rejected with UNSUPPORTED_SCHEMA_VERSION.
 func TestGhostSchemaVersions_Rejected(t *testing.T) {
 	t.Parallel()
@@ -96,7 +96,7 @@ func TestGhostSchemaVersions_Rejected(t *testing.T) {
 		name    string
 		version string
 	}{
-		{"deprecated v0.0", "obs.v0.0"},
+		{"unsupported v0.0", "obs.v0.0"},
 		{"future v2", "obs.v2"},
 		{"future v99", "obs.v99"},
 		{"wrong kind", "ctrl.v1"},
@@ -125,7 +125,7 @@ func TestGhostSchemaVersions_Rejected(t *testing.T) {
 		name    string
 		version string
 	}{
-		{"deprecated v0", "ctrl.v0"},
+		{"unsupported v0", "ctrl.v0"},
 		{"future v99", "ctrl.v99"},
 		{"wrong kind", "obs.v0.1"},
 		{"empty version", ""},

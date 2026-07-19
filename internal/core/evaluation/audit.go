@@ -341,25 +341,23 @@ type SkippedControl struct {
 // compose them with violation findings, but never affect posture
 // or exit codes on their own.
 type ComplianceReport struct {
-	Run                  RunInfo                       `json:"run"`
-	Summary              ComplianceSummary             `json:"summary"`
-	SecurityState        SecurityState                 `json:"security_state"`
-	RiskSignals          findings.ThresholdItems       `json:"risk_signals,omitempty"`
-	Findings             []Finding                     `json:"findings"`
-	MarkerFindings       []Finding                     `json:"marker_findings,omitempty"`
-	Issues               []Issue                       `json:"issues,omitempty"`
-	ChainFindings        []findings.CompoundFinding    `json:"chain_findings,omitempty"`
-	NearMissChains       []findings.NearMissChain      `json:"near_miss_chains,omitempty"`
-	AttackStageSummary   map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
-	TopExposures         []findings.ExposureRank       `json:"top_exposures,omitempty"`
-	InputFreshness       *InputFreshness               `json:"input_freshness,omitempty"`
-	ExceptedFindings     []ExceptedFinding             `json:"excepted_findings,omitempty"`
-	AcknowledgedFindings []policy.AcknowledgedFinding  `json:"acknowledged_findings,omitempty"`
-	SkippedControls      []SkippedControl              `json:"skipped_controls,omitempty"`
-	ExemptedAssets       []asset.ExemptedAsset         `json:"exempted_assets,omitempty"`
-	Metadata             Metadata                      `json:"-"`
-	Checks               []ResourceCheck               `json:"checks,omitempty"`
-	EvidencePackage      *evidence.EvidencePackage     `json:"evidence_package,omitempty"`
+	Run                RunInfo                       `json:"run"`
+	Summary            ComplianceSummary             `json:"summary"`
+	SecurityState      SecurityState                 `json:"security_state"`
+	RiskSignals        findings.ThresholdItems       `json:"risk_signals,omitempty"`
+	Findings           []Finding                     `json:"findings"`
+	MarkerFindings     []Finding                     `json:"marker_findings,omitempty"`
+	Issues             []Issue                       `json:"issues,omitempty"`
+	ChainFindings      []findings.CompoundFinding    `json:"chain_findings,omitempty"`
+	NearMissChains     []findings.NearMissChain      `json:"near_miss_chains,omitempty"`
+	AttackStageSummary map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
+	TopExposures       []findings.ExposureRank       `json:"top_exposures,omitempty"`
+	InputFreshness     *InputFreshness               `json:"input_freshness,omitempty"`
+	SkippedControls    []SkippedControl              `json:"skipped_controls,omitempty"`
+	ExemptedAssets     []asset.ExemptedAsset         `json:"exempted_assets,omitempty"`
+	Metadata           Metadata                      `json:"-"`
+	Checks             []ResourceCheck               `json:"checks,omitempty"`
+	EvidencePackage    *evidence.EvidencePackage     `json:"evidence_package,omitempty"`
 
 	// CompoundOnlyMode signals that atomic findings were suppressed from
 	// output (compound-only default). Renderers use this to emit the

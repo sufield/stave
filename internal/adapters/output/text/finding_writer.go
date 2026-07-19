@@ -75,7 +75,6 @@ func (w *FindingWriter) marshalVerbose(enriched *appcontracts.EnrichedResult) ([
 	w.writeRemediationGroups(d, remFindings)
 	w.writeSkippedControls(d, result.SkippedControls)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
-	w.writeExceptedFindings(d, result.ExceptedFindings)
 
 	if d.err != nil {
 		return nil, d.err
@@ -282,21 +281,6 @@ func writeExemptedAssets(d *drawer, skipped []asset.ExemptedAsset) {
 	d.f("\nExempted Assets: %d\n", len(skipped))
 	for _, s := range skipped {
 		d.f("  - %s: %s\n", s.ID, s.Reason)
-	}
-}
-
-func (w *FindingWriter) writeExceptedFindings(d *drawer, excepted []evaluation.ExceptedFinding) {
-	if len(excepted) == 0 {
-		return
-	}
-	d.f("\nExcepted Findings: %d\n", len(excepted))
-	for i := range excepted {
-		s := &excepted[i]
-		d.f("  - %s on %s: %s", s.ControlID, s.AssetID, s.Reason)
-		if s.HasExpiry() {
-			d.f(" (expires %s)", s.Expires)
-		}
-		d.f("\n")
 	}
 }
 

@@ -221,14 +221,6 @@ type RemediationSpecDTO struct {
 	Example     string `json:"example,omitempty"`
 }
 
-// ExceptedFindingDTO mirrors evaluation.ExceptedFinding.
-type ExceptedFindingDTO struct {
-	ControlID kernel.ControlID `json:"control_id"`
-	AssetID   asset.ID         `json:"asset_id"`
-	Reason    string           `json:"reason"`
-	Expires   string           `json:"expires,omitempty"`
-}
-
 // SkippedControlDTO mirrors evaluation.SkippedControl.
 type SkippedControlDTO struct {
 	ControlID   kernel.ControlID `json:"control_id"`

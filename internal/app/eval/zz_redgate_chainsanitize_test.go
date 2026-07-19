@@ -11,8 +11,7 @@ import (
 // Test_RedGate_ChainSanitize asserts the CORRECT behavior: under
 // --sanitize, Enrich must mask asset identifiers carried on
 // report.ChainFindings (CompoundFinding.AssetID, ContributingAssets),
-// just as it masks RiskSignals, ExceptedFindings, AcknowledgedFindings,
-// TopExposures, and Metadata.ResolvedPaths.
+// just as it masks RiskSignals, TopExposures, and Metadata.ResolvedPaths.
 //
 // sanitizeResultSidecars (enrich.go:66) enumerates every other
 // identifier-bearing sidecar but omits ChainFindings. ChainFindings is

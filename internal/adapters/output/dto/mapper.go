@@ -25,7 +25,6 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		ChainFindings:     fromCompoundFindings(e.ChainFindings),
 		NearMissChains:    fromNearMissChains(e.NearMissChains),
 		Issues:            fromIssues(e.Issues),
-		ExceptedFindings:  fromExceptedFindings(e.ExceptedFindings),
 		RemediationGroups: fromRemediationGroups(e.RemediationGroups),
 		SkippedControls:   fromSkippedControls(e.SkippedControls),
 		ExemptedAssets:    fromExemptedAssets(e.ExemptedAssets),

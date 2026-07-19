@@ -70,9 +70,6 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 	if dto.ExemptedAssets != nil {
 		t.Error("ExemptedAssets should be nil for empty input")
 	}
-	if dto.ExceptedFindings != nil {
-		t.Error("ExceptedFindings should be nil for empty input")
-	}
 	if dto.RemediationGroups != nil {
 		t.Error("RemediationGroups should be nil for empty input")
 	}
@@ -271,32 +268,6 @@ func TestMapSlice_Transform(t *testing.T) {
 	result := mapSlice([]int{1, 2, 3}, func(i int) int { return i * 2 })
 	if len(result) != 3 || result[0] != 2 || result[1] != 4 || result[2] != 6 {
 		t.Errorf("mapSlice([1,2,3], *2) = %v", result)
-	}
-}
-
-func TestFromExceptedFindings_Empty(t *testing.T) {
-	t.Parallel()
-	result := fromExceptedFindings(nil)
-	if result != nil {
-		t.Error("fromExceptedFindings(nil) should be nil")
-	}
-	result = fromExceptedFindings([]evaluation.ExceptedFinding{})
-	if result != nil {
-		t.Error("fromExceptedFindings([]) should be nil")
-	}
-}
-
-func TestFromExceptedFindings_WithData(t *testing.T) {
-	t.Parallel()
-	input := []evaluation.ExceptedFinding{
-		{ControlID: "CTL.A", AssetID: "res-1", Reason: "known", Expires: mustParseExpiry("2027-01-01")},
-	}
-	result := fromExceptedFindings(input)
-	if len(result) != 1 {
-		t.Fatalf("len = %d, want 1", len(result))
-	}
-	if result[0].ControlID != "CTL.A" || result[0].Reason != "known" || result[0].Expires != "2027-01-01" {
-		t.Errorf("result[0] = %+v", result[0])
 	}
 }
 
@@ -578,12 +549,4 @@ func TestFromRemediationSpec(t *testing.T) {
 	if dto.Description != "fix it" || dto.Action != "do something" || dto.Example != "example code" {
 		t.Errorf("dto = %+v", dto)
 	}
-}
-
-func mustParseExpiry(s string) policy.ExpiryDate {
-	d, err := policy.ParseExpiryDate(s)
-	if err != nil {
-		panic(err)
-	}
-	return d
 }

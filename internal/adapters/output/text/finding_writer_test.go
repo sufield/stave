@@ -11,7 +11,6 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 
 	appeval "github.com/sufield/stave/internal/app/eval"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/sanitize"
@@ -112,9 +111,6 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		ExemptedAssets: []asset.ExemptedAsset{
 			{ID: "skip-secret", Pattern: "*", Reason: "scoped out"},
 		},
-		ExceptedFindings: []evaluation.ExceptedFinding{
-			{ControlID: "CTL.SUP.001", AssetID: "supp-res", Reason: "approved", Expires: mustParseExpiry("2027-01-01")},
-		},
 	}
 
 	enriched, err := appeval.Enrich(enricher, sanitizer, &result)
@@ -133,7 +129,6 @@ func TestFindingWriter_ViolationsWithSections(t *testing.T) {
 		"Remediation Groups",
 		"Skipped Controls: 1",
 		"Exempted Assets: 1",
-		"Excepted Findings: 1",
 	}
 	for _, want := range contains {
 		if !strings.Contains(out, want) {
@@ -219,12 +214,4 @@ func TestFindingWriter_ViolationDomainSummary(t *testing.T) {
 			t.Fatalf("missing %q in output:\n%s", want, out)
 		}
 	}
-}
-
-func mustParseExpiry(s string) policy.ExpiryDate {
-	d, err := policy.ParseExpiryDate(s)
-	if err != nil {
-		panic(err)
-	}
-	return d
 }

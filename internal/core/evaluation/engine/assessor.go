@@ -559,20 +559,8 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		s.auditTime,
 	)
 
-	// Apply acknowledgments. exceptedFindings is passed in so the
-	// compensating-control validation can distinguish "this cc
-	// genuinely passed" from "this cc was excepted from evaluation
-	// and we don't actually know its state". Treating an excepted
-	// control as passing would let an acknowledgment pretend its
-	// safety net is in place while no signal exists.
-	//
-	// coverage records every (asset, control) pair we actually
-	// evaluated this run. Acknowledgment validation consults it so
-	// a compensating control absent from the catalog (operator
-	// names CTL.X but no such control was evaluated) reads as
-	// "unevaluated" rather than silently treated as passing.
 	coverage := newEvaluationCoverage(snap.Checks)
-	activeFindings, acknowledgedFindings := applyAcknowledgments(
+	activeFindings = applyAcknowledgments(
 		activeFindings,
 		exceptedFindings,
 		s.assessor.acknowledgments,
@@ -580,16 +568,12 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		coverage,
 	)
 
-	// Calculate environmental risk based on pending violations.
-	// Pass Exemptions so the risk pipeline filters exempted assets
-	// the same way the main finding pipeline does — otherwise an
-	// exempted asset can still flip overall posture to AT_RISK
-	// through risk signals. Pass SuppressedFindings derived from
-	// excepted/acknowledged findings for the same reason: a fully
-	// acknowledged report must not surface AT_RISK posture via
-	// upcoming threshold signals on findings the operator has
-	// already accepted.
-	suppressed := buildSuppressionSet(exceptedFindings, acknowledgedFindings)
+	// Merge all findings into one slice: active + excepted + acknowledged.
+	allFindings := make([]evaluation.Finding, 0, len(activeFindings)+len(exceptedFindings))
+	allFindings = append(allFindings, activeFindings...)
+	allFindings = append(allFindings, exceptedFindings...)
+
+	suppressed := buildSuppressionSet(allFindings)
 	riskSignals := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                s.assessor.Controls(),
 		Snapshots:               s.snapshots,
@@ -600,7 +584,13 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		SuppressedFindings:      suppressed,
 	})
 
-	posture := evaluation.DeriveSecurityState(len(activeFindings), riskSignals)
+	activeCount := 0
+	for i := range allFindings {
+		if allFindings[i].Status == evaluation.FindingActive {
+			activeCount++
+		}
+	}
+	posture := evaluation.DeriveSecurityState(activeCount, riskSignals)
 
 	report := evaluation.ComplianceReport{
 		Run: evaluation.RunInfo{
@@ -616,17 +606,15 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 		Summary: evaluation.ComplianceSummary{
 			TotalAssets:      s.collector.SeenAssetCount(),
 			ExposedResources: s.collector.NonCompliantAssetCount(),
-			Violations:       len(activeFindings),
+			Violations:       activeCount,
 		},
-		SecurityState:        posture,
-		RiskSignals:          riskSignals,
-		Findings:             activeFindings,
-		MarkerFindings:       markerFindings,
-		ExceptedFindings:     exceptedFindings,
-		AcknowledgedFindings: acknowledgedFindings,
-		SkippedControls:      snap.SkippedControls,
-		ExemptedAssets:       snap.ExemptedAssets,
-		Checks:               snap.Checks,
+		SecurityState:   posture,
+		RiskSignals:     riskSignals,
+		Findings:        allFindings,
+		MarkerFindings:  markerFindings,
+		SkippedControls: snap.SkippedControls,
+		ExemptedAssets:  snap.ExemptedAssets,
+		Checks:          snap.Checks,
 	}
 
 	if s.opts.GenerateEvidence && len(s.snapshots) > 0 {
@@ -695,23 +683,21 @@ func partitionFindings(
 	findings []evaluation.Finding,
 	exceptions *policy.ExceptionConfig,
 	now time.Time,
-) ([]evaluation.Finding, []evaluation.ExceptedFinding) {
-	var active []evaluation.Finding
-	var excepted []evaluation.ExceptedFinding
+) (active, excepted []evaluation.Finding) {
 	for i := range findings {
-		f := &findings[i]
-		// ExceptionConfig.ShouldExcept is nil-safe on a nil
-		// receiver (returns nil); see the nil-receiver contract
-		// documented on NewAssessor.
+		f := findings[i]
 		if rule := exceptions.ShouldExcept(f.ControlID, f.AssetID, now); rule != nil {
-			excepted = append(excepted, evaluation.ExceptedFinding{
-				ControlID: f.ControlID,
-				AssetID:   f.AssetID,
-				Reason:    rule.Reason,
-				Expires:   rule.Expires,
-			})
+			f.Status = evaluation.FindingSuppressed
+			f.Suppression = &evaluation.Suppression{
+				Kind:    "exemption",
+				Reason:  rule.Reason,
+				Expires: rule.Expires,
+				Valid:   true,
+			}
+			excepted = append(excepted, f)
 		} else {
-			active = append(active, *f)
+			f.Status = evaluation.FindingActive
+			active = append(active, f)
 		}
 	}
 	return active, excepted
@@ -723,28 +709,17 @@ func partitionFindings(
 // finding pipeline already filtered out. Invalid acknowledgments
 // (expired, compensating-control failing) are NOT suppressed:
 // their findings stay active and risk should still surface.
-func buildSuppressionSet(
-	excepted []evaluation.ExceptedFinding,
-	acknowledged []policy.AcknowledgedFinding,
-) map[risk.SuppressionKey]struct{} {
-	// Always return a non-nil map. risk.ComputeItems and downstream
-	// consumers only READ from this set (`_, ok := s[k]`) — a nil
-	// map is safe for reads, but returning a non-nil empty map
-	// prevents an accidental future writer from triggering a
-	// "assignment to entry in nil map" panic. Cheap; the map header
-	// allocates on first key write anyway.
-	out := make(map[risk.SuppressionKey]struct{}, len(excepted)+len(acknowledged))
-	if len(excepted) == 0 && len(acknowledged) == 0 {
-		return out
-	}
-	for i := range excepted {
-		out[risk.SuppressionKey{ControlID: excepted[i].ControlID, AssetID: excepted[i].AssetID}] = struct{}{}
-	}
-	for i := range acknowledged {
-		if !acknowledged[i].IsValid() {
+func buildSuppressionSet(findings []evaluation.Finding) map[risk.SuppressionKey]struct{} {
+	out := make(map[risk.SuppressionKey]struct{})
+	for i := range findings {
+		f := &findings[i]
+		if f.Status != evaluation.FindingSuppressed {
 			continue
 		}
-		out[risk.SuppressionKey{ControlID: acknowledged[i].ControlID, AssetID: acknowledged[i].AssetID}] = struct{}{}
+		if f.Suppression != nil && !f.Suppression.Valid {
+			continue
+		}
+		out[risk.SuppressionKey{ControlID: f.ControlID, AssetID: f.AssetID}] = struct{}{}
 	}
 	return out
 }
@@ -802,36 +777,25 @@ func newEvaluationCoverage(checks []evaluation.ResourceCheck) EvaluationCoverage
 }
 
 func applyAcknowledgments(
-	findings []evaluation.Finding,
-	exceptedFindings []evaluation.ExceptedFinding,
+	activeFindings []evaluation.Finding,
+	exceptedFindings []evaluation.Finding,
 	acks *policy.AcknowledgmentConfig,
 	now time.Time,
 	coverage EvaluationCoverage,
-) ([]evaluation.Finding, []policy.AcknowledgedFinding) {
+) []evaluation.Finding {
 	if acks == nil {
-		return findings, nil
+		return activeFindings
 	}
 
-	// Build per-asset failing-control sets from the active (non-excepted)
-	// findings. The earlier shape used a single global set keyed by
-	// ControlID, so a failure of CTL.X on asset B invalidated every
-	// acknowledgment for CTL.X on asset A — even though A's compensating
-	// control was passing on A. Per-asset partitioning preserves the
-	// original intent: a compensating control is "passing" relative to
-	// the asset whose acknowledgment we're validating.
 	failingByAsset := make(map[asset.ID]map[kernel.ControlID]struct{})
-	for i := range findings {
-		assetID := findings[i].AssetID
+	for i := range activeFindings {
+		assetID := activeFindings[i].AssetID
 		if failingByAsset[assetID] == nil {
 			failingByAsset[assetID] = make(map[kernel.ControlID]struct{})
 		}
-		failingByAsset[assetID][findings[i].ControlID] = struct{}{}
+		failingByAsset[assetID][activeFindings[i].ControlID] = struct{}{}
 	}
 
-	// Excepted controls are tracked separately so we can distinguish
-	// "passed" from "filtered". A compensating control that was
-	// excepted on this asset has no verification signal — treating
-	// it as passing was the bug.
 	exceptedByAsset := make(map[asset.ID]map[kernel.ControlID]struct{})
 	for i := range exceptedFindings {
 		ef := &exceptedFindings[i]
@@ -841,89 +805,75 @@ func applyAcknowledgments(
 		exceptedByAsset[ef.AssetID][ef.ControlID] = struct{}{}
 	}
 
-	var active []evaluation.Finding
-	var acknowledged []policy.AcknowledgedFinding
+	var result []evaluation.Finding
 
-	for i := range findings {
-		f := &findings[i]
+	for i := range activeFindings {
+		f := activeFindings[i]
 		rule := acks.FindRule(f.ControlID, f.AssetID)
 		if rule == nil {
-			active = append(active, *f)
+			result = append(result, f)
 			continue
 		}
 
-		af := policy.AcknowledgedFinding{
-			FindingID:        string(f.FindingID),
-			ControlID:        f.ControlID,
-			AssetID:          f.AssetID,
-			Severity:         f.ControlSeverity,
-			Rationale:        rule.Rationale,
-			AcknowledgedBy:   rule.AcknowledgedBy,
-			AcknowledgedDate: rule.AcknowledgedDate,
-			ExpiryDate:       rule.ExpiryDate,
-		}
-
-		// Check expiry.
 		if rule.IsExpired(now) {
-			af.MarkExpired()
-			acknowledged = append(acknowledged, af)
-			active = append(active, *f) // revert to active
+			f.Status = evaluation.FindingSuppressed
+			f.Suppression = &evaluation.Suppression{
+				Kind:             "acknowledgment",
+				Rationale:        rule.Rationale,
+				AcknowledgedBy:   rule.AcknowledgedBy,
+				AcknowledgedDate: rule.AcknowledgedDate,
+				ExpiryDate:       rule.ExpiryDate,
+				Valid:            false,
+				InvalidReason:    "expired",
+			}
+			result = append(result, f)
 			continue
 		}
 
-		// Check compensating controls scoped to *this* asset's failures.
-		// A different asset's failure of the same control does not
-		// invalidate this acknowledgment. A compensating control
-		// that was excepted on this asset has no verification
-		// signal, so it does not count as passing — we record its
-		// status as "excepted" to surface the gap rather than
-		// silently treating absence as success.
 		assetFailing := failingByAsset[f.AssetID]
 		assetExcepted := exceptedByAsset[f.AssetID]
 		allCompPassing := true
 		for _, cc := range rule.CompensatingControls {
-			var status string
 			_, hasFailing := assetFailing[cc]
 			_, hasExcepted := assetExcepted[cc]
 			switch {
 			case hasFailing:
-				status = "fail"
 				allCompPassing = false
 			case hasExcepted:
-				status = "excepted"
 				allCompPassing = false
 			case !coverage.Contains(f.AssetID, cc):
-				// Compensating control not in the recorded check set
-				// for this asset — typically a typo in the
-				// acknowledgment rule or a control that was filtered
-				// out before evaluation. Treating absence as "pass"
-				// (the previous default) let an acknowledgment stand
-				// on a control that was never verified. Surface as
-				// "unevaluated" so the gap is visible and the
-				// acknowledgment is invalidated.
-				status = "unevaluated"
 				allCompPassing = false
-			default:
-				status = "pass"
 			}
-			af.CompensatingControls = append(af.CompensatingControls,
-				policy.CompensatingControlStatus{ControlID: cc, Status: status})
 		}
 
 		if !allCompPassing {
-			af.MarkCompensatingFailed()
-			acknowledged = append(acknowledged, af)
-			active = append(active, *f) // revert to active
+			f.Status = evaluation.FindingSuppressed
+			f.Suppression = &evaluation.Suppression{
+				Kind:             "acknowledgment",
+				Rationale:        rule.Rationale,
+				AcknowledgedBy:   rule.AcknowledgedBy,
+				AcknowledgedDate: rule.AcknowledgedDate,
+				ExpiryDate:       rule.ExpiryDate,
+				Valid:            false,
+				InvalidReason:    "compensating_controls_failing",
+			}
+			result = append(result, f)
 			continue
 		}
 
-		// Valid acknowledgment.
-		af.MarkValid()
-		acknowledged = append(acknowledged, af)
-		// Finding is NOT added to active — it's acknowledged.
+		f.Status = evaluation.FindingSuppressed
+		f.Suppression = &evaluation.Suppression{
+			Kind:             "acknowledgment",
+			Rationale:        rule.Rationale,
+			AcknowledgedBy:   rule.AcknowledgedBy,
+			AcknowledgedDate: rule.AcknowledgedDate,
+			ExpiryDate:       rule.ExpiryDate,
+			Valid:            true,
+		}
+		result = append(result, f)
 	}
 
-	return active, acknowledged
+	return result
 }
 
 // hasEmptyPolicy reports whether this assessor has no controls

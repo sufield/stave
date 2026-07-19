@@ -3,7 +3,6 @@ package evaluation
 import (
 	"testing"
 
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -227,25 +226,5 @@ func TestClassifySafetyStatus_Constants(t *testing.T) {
 	}
 	if StateNonCompliant != "NON_COMPLIANT" {
 		t.Fatal("StateNonCompliant")
-	}
-}
-
-// ---------------------------------------------------------------------------
-// ExceptedFinding
-// ---------------------------------------------------------------------------
-
-func TestExceptedFindingFields(t *testing.T) {
-	expires, _ := policy.ParseExpiryDate("2026-12-31")
-	ef := ExceptedFinding{
-		ControlID: "CTL.A.001",
-		AssetID:   "bucket-1",
-		Reason:    "accepted risk",
-		Expires:   expires,
-	}
-	if ef.ControlID != "CTL.A.001" {
-		t.Fatal("ControlID")
-	}
-	if ef.Reason != "accepted risk" {
-		t.Fatal("Reason")
 	}
 }

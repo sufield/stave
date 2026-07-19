@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -16,6 +15,29 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 )
+
+// FindingStatus classifies a finding's lifecycle state.
+type FindingStatus string
+
+const (
+	// FindingActive means the finding is a current violation.
+	FindingActive FindingStatus = "ACTIVE"
+	// FindingSuppressed means the finding was excepted or acknowledged.
+	FindingSuppressed FindingStatus = "SUPPRESSED"
+)
+
+// Suppression records why a finding was suppressed (excepted or acknowledged).
+type Suppression struct {
+	Kind             string            `json:"kind"`
+	Reason           string            `json:"reason,omitempty"`
+	Expires          policy.ExpiryDate `json:"expires,omitempty"`
+	AcknowledgedBy   string            `json:"acknowledged_by,omitempty"`
+	AcknowledgedDate string            `json:"acknowledged_date,omitempty"`
+	ExpiryDate       string            `json:"expiry_date,omitempty"`
+	Rationale        string            `json:"rationale,omitempty"`
+	Valid            bool              `json:"valid"`
+	InvalidReason    string            `json:"invalid_reason,omitempty"`
+}
 
 // Finding represents a detected control violation.
 // A Finding is purely factual: evidence + classification, no advice.
@@ -151,6 +173,14 @@ type Finding struct {
 	// projection succeeds; empty otherwise (omitempty preserves
 	// the prior wire shape for consumers that don't read it).
 	ContributingFactIDs []string `json:"contributing_fact_ids,omitempty"`
+
+	// Status classifies the finding lifecycle: ACTIVE (violation) or
+	// SUPPRESSED (excepted/acknowledged). Zero value treated as ACTIVE.
+	Status FindingStatus `json:"status,omitempty"`
+
+	// Suppression records why a suppressed finding was exempted.
+	// Nil on active findings.
+	Suppression *Suppression `json:"suppression,omitempty"`
 }
 
 // findingShadow is the wire-format projection used by Finding's
@@ -1343,42 +1373,4 @@ func NewFindingFromMetadata(m policy.ControlMetadata) Finding {
 		Scope:              m.Scope,
 		CorpusReference:    m.CorpusReference,
 	}
-}
-
-// ExceptedFinding records a finding that was excepted, with audit trail.
-type ExceptedFinding struct {
-	ControlID kernel.ControlID  `json:"control_id"`
-	AssetID   asset.ID          `json:"asset_id"`
-	Reason    string            `json:"reason"`
-	Expires   policy.ExpiryDate `json:"expires"`
-}
-
-// HasExpiry reports whether this exception carries an expiry
-// date. Replaces the (!s.Expires.IsZero()) probe in renderers so
-// the field check stays on the type that owns Expires.
-func (e *ExceptedFinding) HasExpiry() bool {
-	return e != nil && !e.Expires.IsZero()
-}
-
-// WriteText renders the exception as a single grep-friendly text
-// line: "<control> on <asset> — <reason>" with " (expires <date>)"
-// appended when an expiry is recorded. Centralises the renderer
-// so callers stop reaching into Expires / Reason directly.
-//
-// Returns no error by design (matches AcknowledgedFinding.WriteDetails):
-// the writer is a human-facing terminal renderer where partial-flush
-// failures are recovered by the surrounding command-loop frame, and
-// threading an error through every renderer call would force every
-// caller to handle an error that ultimately gets logged once at the
-// CLI boundary. Wire-format / contract-bearing output uses the
-// marshaler paths in adapters/, which DO return errors.
-func (e *ExceptedFinding) WriteText(w io.Writer) {
-	if e == nil {
-		return
-	}
-	fmt.Fprintf(w, "%s on %s — %s", e.ControlID, e.AssetID, e.Reason)
-	if e.HasExpiry() {
-		fmt.Fprintf(w, " (expires %s)", e.Expires)
-	}
-	fmt.Fprintln(w)
 }

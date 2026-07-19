@@ -63,21 +63,12 @@ func TestEnrich_SanitizesReasoningTraceAndDelta(t *testing.T) {
 
 // TestEnrich_SanitizesSidecars verifies that --sanitize masks asset
 // identifiers across the sidecar collections (RiskSignals,
-// ExceptedFindings, AcknowledgedFindings, TopExposures) plus the
-// resolved-paths metadata. Without this, --sanitize hides
-// identifiers in Findings but leaks them through every other
-// collection in the assembled assessment.
+// TopExposures) plus the resolved-paths metadata.
 func TestEnrich_SanitizesSidecars(t *testing.T) {
 	enricher := &stubEnricher{findings: nil}
 	res := &evaluation.ComplianceReport{
 		RiskSignals: findings.ThresholdItems{
 			{AssetID: asset.ID("arn:aws:s3:::risky"), DueAt: time.Now()},
-		},
-		ExceptedFindings: []evaluation.ExceptedFinding{
-			{AssetID: asset.ID("arn:aws:s3:::excepted"), Reason: "ack"},
-		},
-		AcknowledgedFindings: []policy.AcknowledgedFinding{
-			{AssetID: asset.ID("arn:aws:s3:::ack")},
 		},
 		TopExposures: []findings.ExposureRank{
 			{AssetID: asset.ID("arn:aws:s3:::top"), ExposureScore: 1},
@@ -96,12 +87,6 @@ func TestEnrich_SanitizesSidecars(t *testing.T) {
 
 	if got := string(enriched.Result.RiskSignals[0].AssetID); got != "ID:arn:aws:s3:::risky" {
 		t.Errorf("RiskSignals AssetID = %q, want ID:-prefixed", got)
-	}
-	if got := string(enriched.Result.ExceptedFindings[0].AssetID); got != "ID:arn:aws:s3:::excepted" {
-		t.Errorf("ExceptedFindings AssetID = %q, want ID:-prefixed", got)
-	}
-	if got := string(enriched.Result.AcknowledgedFindings[0].AssetID); got != "ID:arn:aws:s3:::ack" {
-		t.Errorf("AcknowledgedFindings AssetID = %q, want ID:-prefixed", got)
 	}
 	if got := string(enriched.Result.TopExposures[0].AssetID); got != "ID:arn:aws:s3:::top" {
 		t.Errorf("TopExposures AssetID = %q, want ID:-prefixed", got)

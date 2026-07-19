@@ -6,8 +6,7 @@
 // External Go consumers should NOT import this package — use
 // pkg/stave.Apply and the public Assessment surface instead. The
 // internal report carries fields (RiskSignals, AttackStageSummary,
-// TopExposures, ExceptedFindings, AcknowledgedFindings,
-// SkippedControls, ExemptedAssets, Metadata, Checks, EvidencePackage,
+// TopExposures, SkippedControls, ExemptedAssets, Metadata, Checks, EvidencePackage,
 // run-metadata) that are intentionally absent from the public API
 // because they couple library callers to engine refactor velocity.
 //

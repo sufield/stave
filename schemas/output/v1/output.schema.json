@@ -298,44 +298,6 @@
             "additionalProperties": true
           }
         },
-        "excepted_findings": {
-          "type": "array",
-          "title": "Excepted Findings",
-          "description": "Findings that matched a exception rule. These were evaluated but excluded from the violation count.",
-          "items": {
-            "type": "object",
-            "title": "Excepted Finding Entry",
-            "description": "A finding that was excepted by an exception rule.",
-            "required": [
-              "control_id",
-              "asset_id",
-              "reason"
-            ],
-            "properties": {
-              "control_id": {
-                "type": "string",
-                "title": "Control Identifier",
-                "description": "Unique identifier of the excepted control."
-              },
-              "asset_id": {
-                "type": "string",
-                "title": "Asset Identifier",
-                "description": "Unique identifier of the excepted asset."
-              },
-              "reason": {
-                "type": "string",
-                "title": "Suppression Reason",
-                "description": "Reason the finding was excepted."
-              },
-              "expires": {
-                "type": "string",
-                "title": "Suppression Expiry",
-                "description": "Date when the exception expires (YYYY-MM-DD)."
-              }
-            },
-            "additionalProperties": true
-          }
-        },
         "remediation_groups": {
           "type": "array",
           "title": "Remediation Groups",

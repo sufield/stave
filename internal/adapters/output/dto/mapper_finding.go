@@ -324,20 +324,6 @@ func fromNearMissEntry(e evaluation.NearMissEntry) NearMissEntryDTO {
 	return dto
 }
 
-func fromExceptedFindings(fs []evaluation.ExceptedFinding) []ExceptedFindingDTO {
-	if len(fs) == 0 {
-		return nil
-	}
-	return mapSlice(fs, func(f evaluation.ExceptedFinding) ExceptedFindingDTO {
-		return ExceptedFindingDTO{
-			ControlID: f.ControlID,
-			AssetID:   f.AssetID,
-			Reason:    f.Reason,
-			Expires:   f.Expires.String(),
-		}
-	})
-}
-
 func fromRemediationGroups(gs []remediation.Group) []RemediationGroupDTO {
 	if len(gs) == 0 {
 		return nil

@@ -57,14 +57,9 @@ func PrepareMarkerFindings(enricher remediation.FindingEnricher, sanitizer kerne
 	return toEnrichedFindings(findings)
 }
 
-// sanitizeResultSidecars masks asset identifiers and resolved paths
-// across the report sidecars that flow into the assessment alongside
-// the main Findings collection. Without this, --sanitize hides
-// identifiers in Findings but leaks them through RiskSignals,
-// ExceptedFindings, AcknowledgedFindings, TopExposures, ChainFindings
-// (CompoundFinding.AssetID + ContributingAssets), and
-// Metadata.ResolvedPaths — which all carry the same identifier shapes
-// the main collection does. Mutates the result copy in place.
+// sanitizeResultSidecars masks asset identifiers across report sidecars
+// (RiskSignals, TopExposures, ChainFindings, Metadata.ResolvedPaths).
+// Findings (including suppressed) are sanitized by the main loop.
 func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) {
 	if len(r.RiskSignals) > 0 {
 		signals := make(findings.ThresholdItems, len(r.RiskSignals))
@@ -74,23 +69,6 @@ func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) 
 			signals[i] = item
 		}
 		r.RiskSignals = signals
-	}
-	if len(r.ExceptedFindings) > 0 {
-		excepted := make([]evaluation.ExceptedFinding, len(r.ExceptedFindings))
-		for i, ef := range r.ExceptedFindings {
-			ef.AssetID = asset.ID(s.ID(string(ef.AssetID)))
-			excepted[i] = ef
-		}
-		r.ExceptedFindings = excepted
-	}
-	if len(r.AcknowledgedFindings) > 0 {
-		acks := make([]policy.AcknowledgedFinding, len(r.AcknowledgedFindings))
-		for i := range r.AcknowledgedFindings {
-			a := r.AcknowledgedFindings[i]
-			a.AssetID = asset.ID(s.ID(string(a.AssetID)))
-			acks[i] = a
-		}
-		r.AcknowledgedFindings = acks
 	}
 	if len(r.TopExposures) > 0 {
 		exposures := make([]findings.ExposureRank, len(r.TopExposures))

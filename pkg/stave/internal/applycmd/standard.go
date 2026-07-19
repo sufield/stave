@@ -241,8 +241,8 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 	}
 
 	lapsed := exemptlapse.Detect(exemptlapse.Input{
-		AcknowledgedFindings: report.AcknowledgedFindings,
-		EvalTime:             now,
+		Findings: report.Findings,
+		EvalTime: now,
 	})
 
 	outcome := evaluation.EnforcementPolicy{}.Evaluate(report.SecurityState)

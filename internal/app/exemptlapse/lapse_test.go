@@ -5,28 +5,29 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
-	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
 var now = time.Date(2026, 4, 15, 0, 0, 0, 0, time.UTC)
 
 func TestDetect_ExpiredExemptionProducesLapsed(t *testing.T) {
-	acknowledged := []policy.AcknowledgedFinding{
+	findings := []evaluation.Finding{
 		{
-			ControlID:        kernel.ControlID("CTL.S3.PUBLIC.001"),
-			AssetID:          asset.ID("arn:aws:s3:::prod-bucket"),
-			ExpiryDate:       "2026-01-01",
-			AcknowledgedDate: "2025-10-01",
-			Valid:            false,
-			InvalidReason:    "expired",
+			ControlID: kernel.ControlID("CTL.S3.PUBLIC.001"),
+			AssetID:   asset.ID("arn:aws:s3:::prod-bucket"),
+			Status:    evaluation.FindingSuppressed,
+			Suppression: &evaluation.Suppression{
+				Kind:             "acknowledgment",
+				ExpiryDate:       "2026-01-01",
+				AcknowledgedDate: "2025-10-01",
+				Valid:            false,
+				InvalidReason:    "expired",
+			},
 		},
 	}
 
-	result := Detect(Input{
-		AcknowledgedFindings: acknowledged,
-		EvalTime:             now,
-	})
+	result := Detect(Input{Findings: findings, EvalTime: now})
 
 	if len(result) != 1 {
 		t.Fatalf("lapsed = %d, want 1", len(result))
@@ -40,20 +41,21 @@ func TestDetect_ExpiredExemptionProducesLapsed(t *testing.T) {
 }
 
 func TestDetect_SeverityBumpAfter30Days(t *testing.T) {
-	acknowledged := []policy.AcknowledgedFinding{
+	findings := []evaluation.Finding{
 		{
-			ControlID:     "CTL.A.001",
-			AssetID:       "asset1",
-			ExpiryDate:    "2026-03-01", // 45 days before now
-			Valid:         false,
-			InvalidReason: "expired",
+			ControlID: "CTL.A.001",
+			AssetID:   "asset1",
+			Status:    evaluation.FindingSuppressed,
+			Suppression: &evaluation.Suppression{
+				Kind:          "acknowledgment",
+				ExpiryDate:    "2026-03-01",
+				Valid:         false,
+				InvalidReason: "expired",
+			},
 		},
 	}
 
-	result := Detect(Input{
-		AcknowledgedFindings: acknowledged,
-		EvalTime:             now,
-	})
+	result := Detect(Input{Findings: findings, EvalTime: now})
 
 	if len(result) != 1 {
 		t.Fatalf("lapsed = %d, want 1", len(result))
@@ -67,20 +69,21 @@ func TestDetect_SeverityBumpAfter30Days(t *testing.T) {
 }
 
 func TestDetect_CompensatingControlFailureSurfaces(t *testing.T) {
-	acknowledged := []policy.AcknowledgedFinding{
+	findings := []evaluation.Finding{
 		{
-			ControlID:     "CTL.A.001",
-			AssetID:       "asset1",
-			ExpiryDate:    "2026-05-01",
-			Valid:         false,
-			InvalidReason: "compensating_controls_failing",
+			ControlID: "CTL.A.001",
+			AssetID:   "asset1",
+			Status:    evaluation.FindingSuppressed,
+			Suppression: &evaluation.Suppression{
+				Kind:          "acknowledgment",
+				ExpiryDate:    "2026-05-01",
+				Valid:         false,
+				InvalidReason: "compensating_controls_failing",
+			},
 		},
 	}
 
-	result := Detect(Input{
-		AcknowledgedFindings: acknowledged,
-		EvalTime:             now,
-	})
+	result := Detect(Input{Findings: findings, EvalTime: now})
 
 	if len(result) != 1 {
 		t.Fatalf("lapsed = %d, want 1", len(result))
@@ -91,20 +94,20 @@ func TestDetect_CompensatingControlFailureSurfaces(t *testing.T) {
 }
 
 func TestDetect_ActiveExemptionStillSuppresses(t *testing.T) {
-	acknowledged := []policy.AcknowledgedFinding{
+	findings := []evaluation.Finding{
 		{
-			ControlID:     "CTL.A.001",
-			AssetID:       "asset1",
-			ExpiryDate:    "2026-12-31",
-			Valid:         true,
-			InvalidReason: "",
+			ControlID: "CTL.A.001",
+			AssetID:   "asset1",
+			Status:    evaluation.FindingSuppressed,
+			Suppression: &evaluation.Suppression{
+				Kind:       "acknowledgment",
+				ExpiryDate: "2026-12-31",
+				Valid:      true,
+			},
 		},
 	}
 
-	result := Detect(Input{
-		AcknowledgedFindings: acknowledged,
-		EvalTime:             now,
-	})
+	result := Detect(Input{Findings: findings, EvalTime: now})
 
 	if len(result) != 0 {
 		t.Errorf("lapsed = %d, want 0 (active exemption)", len(result))

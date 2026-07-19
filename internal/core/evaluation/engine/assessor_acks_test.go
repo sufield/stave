@@ -13,10 +13,7 @@ import (
 // TestApplyAcknowledgments_AssetAAckSurvivesAssetBFailure pins the
 // per-asset partitioning fix: an acknowledgment for (CTL.X, A) whose
 // compensating control CTL.Y is passing on A must remain valid even
-// when a different asset B has CTL.Y failing. The earlier shape used
-// a single global "any failure of CTL.Y" set, so B's failure
-// invalidated A's acknowledgment despite A's compensating control
-// being healthy on its own asset.
+// when a different asset B has CTL.Y failing.
 func TestApplyAcknowledgments_AssetAAckSurvivesAssetBFailure(t *testing.T) {
 	now := time.Now()
 
@@ -33,29 +30,32 @@ func TestApplyAcknowledgments_AssetAAckSurvivesAssetBFailure(t *testing.T) {
 
 	findings := []evaluation.Finding{
 		{FindingID: "f1", ControlID: "CTL.X", AssetID: asset.ID("asset-A")},
-		{FindingID: "f2", ControlID: "CTL.Y", AssetID: asset.ID("asset-B")}, // B fails CTL.Y
+		{FindingID: "f2", ControlID: "CTL.Y", AssetID: asset.ID("asset-B")},
 	}
 
-	// CTL.Y was evaluated on asset-A (the absence of a finding for it
-	// is what we want to count as "passing"). The new "unevaluated"
-	// status fires only when a compensating control was never
-	// evaluated; EvaluationCoverage distinguishes those two cases.
 	coverage := EvaluationCoverage{
 		"asset-A": {"CTL.X": {}, "CTL.Y": {}},
 		"asset-B": {"CTL.Y": {}},
 	}
 
-	active, ackd := applyAcknowledgments(findings, nil, acks, now, coverage)
+	result := applyAcknowledgments(findings, nil, acks, now, coverage)
 
-	// A's ack for CTL.X must be valid: CTL.Y passes on A.
-	if len(ackd) != 1 {
-		t.Fatalf("expected 1 acknowledged finding, got %d", len(ackd))
+	// A's CTL.X should be suppressed (valid ack).
+	var suppressed, active []evaluation.Finding
+	for _, f := range result {
+		if f.Status == evaluation.FindingSuppressed {
+			suppressed = append(suppressed, f)
+		} else {
+			active = append(active, f)
+		}
 	}
-	if !ackd[0].Valid {
-		t.Errorf("A's acknowledgment must remain valid; got InvalidReason=%q",
-			ackd[0].InvalidReason)
+
+	if len(suppressed) != 1 {
+		t.Fatalf("expected 1 suppressed finding, got %d", len(suppressed))
 	}
-	// B's CTL.Y finding stays active (no ack covers it).
+	if suppressed[0].Suppression == nil || !suppressed[0].Suppression.Valid {
+		t.Error("A's acknowledgment must remain valid")
+	}
 	if len(active) != 1 {
 		t.Fatalf("expected 1 active finding, got %d", len(active))
 	}
@@ -65,9 +65,7 @@ func TestApplyAcknowledgments_AssetAAckSurvivesAssetBFailure(t *testing.T) {
 }
 
 // TestApplyAcknowledgments_AckInvalidatedByOwnAssetFailure confirms
-// the partitioning still rejects the ack when the same asset's own
-// compensating control is failing — that is the original intent of
-// the compensating-control check, and we must not regress it.
+// the ack is rejected when the same asset's compensating control fails.
 func TestApplyAcknowledgments_AckInvalidatedByOwnAssetFailure(t *testing.T) {
 	now := time.Now()
 
@@ -84,22 +82,30 @@ func TestApplyAcknowledgments_AckInvalidatedByOwnAssetFailure(t *testing.T) {
 
 	findings := []evaluation.Finding{
 		{FindingID: "f1", ControlID: "CTL.X", AssetID: asset.ID("asset-A")},
-		{FindingID: "f2", ControlID: "CTL.Y", AssetID: asset.ID("asset-A")}, // A's own CTL.Y fails
+		{FindingID: "f2", ControlID: "CTL.Y", AssetID: asset.ID("asset-A")},
 	}
 
 	coverage := EvaluationCoverage{
 		"asset-A": {"CTL.X": {}, "CTL.Y": {}},
 	}
 
-	_, ackd := applyAcknowledgments(findings, nil, acks, now, coverage)
-	if len(ackd) != 1 {
-		t.Fatalf("expected 1 acknowledged record, got %d", len(ackd))
+	result := applyAcknowledgments(findings, nil, acks, now, coverage)
+
+	var suppressed []evaluation.Finding
+	for _, f := range result {
+		if f.Status == evaluation.FindingSuppressed {
+			suppressed = append(suppressed, f)
+		}
 	}
-	if ackd[0].Valid {
+
+	if len(suppressed) != 1 {
+		t.Fatalf("expected 1 suppressed record, got %d", len(suppressed))
+	}
+	if suppressed[0].Suppression == nil || suppressed[0].Suppression.Valid {
 		t.Error("ack must be invalid when own-asset compensating control fails")
 	}
-	if ackd[0].InvalidReason != "compensating_controls_failing" {
+	if suppressed[0].Suppression.InvalidReason != "compensating_controls_failing" {
 		t.Errorf("InvalidReason = %q, want compensating_controls_failing",
-			ackd[0].InvalidReason)
+			suppressed[0].Suppression.InvalidReason)
 	}
 }

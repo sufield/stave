@@ -75,9 +75,7 @@ type Config struct {
 
 	// AcknowledgmentRules suppresses findings for control/asset
 	// pairs explicitly accepted as residual risk. Acknowledged
-	// findings are not omitted from the assessment — they are
-	// retained on Assessment.AcknowledgedFindings (when surfaced)
-	// so audit posture is preserved.
+	// findings remain in the findings array with status SUPPRESSED.
 	AcknowledgmentRules *AcknowledgmentConfig
 
 	// SLAConfig parameterizes SLA breach detection. When non-nil,
