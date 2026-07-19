@@ -407,11 +407,8 @@ func (f *AcceptanceFile) Validate() []string {
 			}
 		}
 		if a.ReviewBy != "" {
-			reviewDate, err := time.Parse("2006-01-02", a.ReviewBy)
-			if err != nil {
+			if _, err := time.Parse("2006-01-02", a.ReviewBy); err != nil {
 				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: invalid review_by %q", i, a.ReviewBy))
-			} else if a.IsActive() && reviewDate.Before(time.Now().UTC()) {
-				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: overdue for review (was due %s)", i, a.ReviewBy))
 			}
 		}
 	}
@@ -434,6 +431,26 @@ func (f *AcceptanceFile) Validate() []string {
 		}
 	}
 	return errs
+}
+
+// OverdueReviews returns warnings for active acknowledgments whose review_by
+// date has passed.
+func (f *AcceptanceFile) OverdueReviews(now time.Time) []string {
+	var warnings []string
+	for i := range f.Acknowledgments {
+		a := &f.Acknowledgments[i]
+		if a.ReviewBy == "" || !a.IsActive() {
+			continue
+		}
+		reviewDate, err := time.Parse("2006-01-02", a.ReviewBy)
+		if err != nil {
+			continue
+		}
+		if reviewDate.Before(now) {
+			warnings = append(warnings, fmt.Sprintf("acknowledgment[%d]: overdue for review (was due %s)", i, a.ReviewBy))
+		}
+	}
+	return warnings
 }
 
 // Upcoming returns acknowledgments expiring within the given number of days from now.

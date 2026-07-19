@@ -165,6 +165,7 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 		"util":              {}, // small pure-functional utilities
 		"version":           {}, // version-string constants
 		"yamlutil":          {}, // yaml parsing helpers
+		"collectorcontract": {}, // collector contract validation; loaded by pkg/stave facade
 	}
 
 	entries, err := os.ReadDir(internalDir)

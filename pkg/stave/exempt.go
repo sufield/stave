@@ -222,7 +222,9 @@ func ValidateAcceptances(file string) ([]string, error) {
 			knownIDs[string(controls[i].ID)] = struct{}{}
 		}
 	}
-	return f.ValidateWithCatalog(knownIDs), nil
+	errs := f.ValidateWithCatalog(knownIDs)
+	errs = append(errs, f.OverdueReviews(time.Now().UTC())...)
+	return errs, nil
 }
 
 // exemptRenderUpcoming renders the upcoming-expiry report. Moved verbatim
