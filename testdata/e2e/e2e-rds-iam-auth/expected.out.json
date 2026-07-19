@@ -35,7 +35,177 @@
       "threshold_hours": 168
     }
   ],
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "sha256:f238d8a1f8dde254",
+      "control_id": "CTL.RDS.IAMAUTH.001",
+      "control_name": "RDS Must Enable IAM Authentication",
+      "control_description": "RDS instances should enable IAM database authentication. IAM auth eliminates long-lived database passwords and integrates with AWS identity governance for centralized access control and audit.\n",
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "database.access.iam_authentication_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "database.kind",
+            "actual_value": "instance",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "hipaa": "164.312(d)"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "RDS instance does not have IAM authentication enabled. Database access relies on long-lived passwords that are harder to rotate and audit.",
+        "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately",
+        "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"access\": {\n      \"iam_authentication_enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-4233e63a00340e1b",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
+      },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "rds_auth_weakness",
+          "chain_severity": "high",
+          "missing_control": "CTL.RDS.AUTH.MASTERUSER.001",
+          "controls_failing": [
+            "CTL.RDS.IAMAUTH.001"
+          ],
+          "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n"
+        },
+        {
+          "chain_id": "rds_auth_weakness",
+          "chain_severity": "high",
+          "missing_control": "CTL.SECRETSMANAGER.POLICY.PUBLIC.001",
+          "controls_failing": [
+            "CTL.RDS.IAMAUTH.001"
+          ],
+          "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n"
+        }
+      ],
+      "sla_deadline_hours": 1440,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 51.369863013698634,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "database.access.iam_authentication_enabled eq false",
+          "observation_key": "database.access.iam_authentication_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "database.kind eq \"instance\"",
+          "observation_key": "database.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "phi-database",
+          "type": "aws_rds_instance",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.RDS.IAMAUTH.001",
+          "control_name": "RDS Must Enable IAM Authentication",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "IAM database authentication is enabled = false",
+              "observation_key": "database.access.iam_authentication_enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "database.kind = \"instance\"",
+              "observation_key": "database.kind",
+              "observed_value": "instance"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "database.access.iam_authentication_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set database.access.iam_authentication_enabled to true"
+          },
+          {
+            "path": "database.kind",
+            "current_value": "instance",
+            "required_value": "any value other than instance",
+            "has_safe_default": false,
+            "description": "Change database.kind away from instance"
+          }
+        ],
+        "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "rds"
+      ],
+      "delta": [
+        {
+          "property_label": "access IAM authentication",
+          "property_path": "database.access.iam_authentication_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "0a0bcc997816",
+        "a9451ecb8ffd",
+        "49c07ccbae19",
+        "1470d7ec8502",
+        "1d77db92bd62",
+        "eafe976c4f29"
+      ]
+    }
+  ],
   "near_miss_chains": [
     {
       "chain": "rds_auth_weakness",
@@ -73,6 +243,24 @@
       ],
       "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "fix_plan": {
+        "id": "fix-4233e63a00340e1b",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
+      },
+      "contributing_controls": [
+        "CTL.RDS.IAMAUTH.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [

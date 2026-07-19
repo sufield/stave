@@ -852,16 +852,16 @@ docs-commands-catalog-check:
 	  echo "skip: $(COMMANDS_CATALOG) not present in this checkout"; \
 	fi
 
-## attack-stage-check: Reject deprecated attack_stage values in control YAMLs
+## attack-stage-check: Reject invalid attack_stage values in control YAMLs
 ##
 ## The canonical 12-stage taxonomy is enforced by the JSON Schema enum
-## under params.attack_stage. This guard catches deprecated literals
+## under params.attack_stage. This guard catches unsupported literals
 ## before the schema validation kicks in, so the failure message is
 ## obvious rather than buried in a validator backtrace.
 attack-stage-check:
 	@bad=$$(grep -rEln '^[[:space:]]*attack_stage:[[:space:]]*(defense_evasion|credential_theft|data_access|reconnaissance|data_in_transit_exposure|command_and_control|none)[[:space:]]*$$' controls/ || true); \
 	if [ -n "$$bad" ]; then \
-		echo "ERROR: deprecated attack_stage values found in:"; echo "$$bad"; \
+		echo "ERROR: invalid attack_stage values found in:"; echo "$$bad"; \
 		echo "Migration map: defense_evasion->detection_evasion, credential_theft->credential_access, data_access->collection, reconnaissance->discovery, data_in_transit_exposure->exfiltration, command_and_control->REMOVED, none->REMOVE the params block"; \
 		exit 2; \
 	fi

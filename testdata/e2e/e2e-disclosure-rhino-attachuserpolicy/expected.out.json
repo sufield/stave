@@ -35,7 +35,189 @@
       "threshold_hours": 168
     }
   ],
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "sha256:91e80e20c706fc85",
+      "control_id": "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001",
+      "control_name": "Principal Must Not Escalate via iam:AttachUserPolicy On Self",
+      "control_description": "A principal with `iam:AttachUserPolicy` whose Resource field includes its own user ARN can attach any managed policy — including `arn:aws:iam::aws:policy/AdministratorAccess` — to itself and become admin with a single API call. This is Rhino Security Labs privilege-escalation technique #1 (\"IAM — Attach to user\") and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. No other permission is required; self-scoped AttachUserPolicy is a one-step path to full admin.\nScope: gated on `identity.kind == \"user\"`. The `iam:AttachUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:AttachRolePolicy` on self, a separate technique that will require its own `CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001` control in a future iteration.\n",
+      "asset_id": "arn:aws:iam::111122223333:user/eve",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2018-05-01T00:00:00Z",
+        "last_seen_unsafe_at": "2018-05-11T00:00:00Z",
+        "unsafe_duration_hours": 67488,
+        "misconfigurations": [
+          {
+            "property": "identity.escalation.attach_user_policy_self.present",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "identity.kind",
+            "actual_value": "user",
+            "operator": "eq",
+            "unsafe_value": "user"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 67488 hours (SLA: 0 hours). Exposed since 2018-05-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "fedramp_moderate": "AC-6(5)",
+        "iso_27001_2022": "A.8.3",
+        "nist_800_53_r5": "AC-6(5)",
+        "pci_dss_v4.0": "7.2.1",
+        "soc2": "CC6.1"
+      },
+      "control_compliance_ccm_v4": [
+        "IAM-02",
+        "IAM-05",
+        "IAM-16"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Principal has `iam:AttachUserPolicy` scoped to its own user ARN (either explicitly by ARN, by `\"*\"`, or by a user-set that includes it). It can attach any managed policy to itself, including `AdministratorAccess`, and become admin without any further vulnerability.",
+        "action": "Remove `iam:AttachUserPolicy` from the principal, or scope its Resource field to user ARNs that do not include the principal itself (admin-only bootstrap roles, for example). Enforce at the organization level with an SCP that denies `iam:AttachUserPolicy` on `${aws:PrincipalArn}`. Also consider a permissions boundary on the principal that prevents the attached policy from taking effect.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"escalation\": {\n      \"attach_user_policy_self\": {\n        \"present\": false\n      }\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-3007c7be8b5a54c2",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:user/eve",
+          "asset_type": "aws_iam_user"
+        },
+        "action": "Remove `iam:AttachUserPolicy` from the principal, or scope its Resource field to user ARNs that do not include the principal itself (admin-only bootstrap roles, for example). Enforce at the organization level with an SCP that denies `iam:AttachUserPolicy` on `${aws:PrincipalArn}`. Also consider a permissions boundary on the principal that prevents the attached policy from taking effect."
+      },
+      "chain_membership": [
+        {
+          "chain_id": "iam_privesc_by_attachment",
+          "chain_severity": "critical",
+          "stage_span": [
+            "privilege_escalation"
+          ],
+          "narrative": "IAM privilege escalation via policy attachment. A user or role has iam:AttachUserPolicy, iam:AttachRolePolicy, or iam:AttachGroupPolicy permission — enabling them to attach an admin-grade managed policy to any principal they can reach, including themselves. This is a single-API-call escalation path documented in Rhino Security's CloudGoat and Bishop Fox's IAM Vulnerable. The escalation is latent: the principal currently has low privileges, but one API call (AttachUserPolicy) grants full admin. No runtime exploit is required — the configuration alone enables the path. Threshold of 1: AttachUserPolicy alone is sufficient for escalation. The inline-policy member is an amplifier — if the account also has roles with inline policies (shadow permissions), the escalation target surface is broader than managed-policy auditing reveals.\n"
+        }
+      ],
+      "exploitability": "exploitable",
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 67416,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 5,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1.5,
+        "blind_multiplier": 5,
+        "days_blind": 2812
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.escalation.attach_user_policy_self.present eq true",
+          "observation_key": "identity.escalation.attach_user_policy_self.present",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "identity.kind eq \"user\"",
+          "observation_key": "identity.kind",
+          "operator": "eq",
+          "expected_value": "user",
+          "observed_value": "user"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::111122223333:user/eve",
+          "type": "aws_iam_user",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::111122223333:user/eve"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001",
+          "control_name": "Principal Must Not Escalate via iam:AttachUserPolicy On Self",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "identity.escalation.attach_user_policy_self.present = true",
+              "observation_key": "identity.escalation.attach_user_policy_self.present",
+              "observed_value": true
+            },
+            {
+              "clause": "identity.kind = \"user\"",
+              "observation_key": "identity.kind",
+              "observed_value": "user"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.escalation.attach_user_policy_self.present",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set identity.escalation.attach_user_policy_self.present to false"
+          },
+          {
+            "path": "identity.kind",
+            "current_value": "user",
+            "required_value": "any value other than user",
+            "has_safe_default": false,
+            "description": "Change identity.kind away from user"
+          }
+        ],
+        "action": "Remove `iam:AttachUserPolicy` from the principal, or scope its Resource field to user ARNs that do not include the principal itself (admin-only bootstrap roles, for example). Enforce at the organization level with an SCP that denies `iam:AttachUserPolicy` on `${aws:PrincipalArn}`. Also consider a permissions boundary on the principal that prevents the attached policy from taking effect."
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "iam_inline_policy_allows_privilege_escalation",
+          "coverage": "covered",
+          "note": "One of 24 per-technique controls covering the aggregated Prowler check."
+        },
+        {
+          "tool": "prowler",
+          "check_id": "iam_policy_allows_privilege_escalation",
+          "coverage": "covered",
+          "note": "One of 24 per-technique controls covering the aggregated Prowler check."
+        }
+      ],
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ],
+      "delta": [
+        {
+          "property_label": "escalation attach user policy self present",
+          "property_path": "identity.escalation.attach_user_policy_self.present",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "67b01eac2855",
+        "bc221045e7d2",
+        "67486f8db858",
+        "c47403c89712",
+        "5509d330af36",
+        "9f84ceb7427d"
+      ],
+      "deciding_layer": "identity_policy"
+    }
+  ],
   "chain_findings": [
     {
       "chain": "iam_privesc_by_attachment",
@@ -64,12 +246,30 @@
         "identity.escalation.attach_user_policy_self",
         "identity.escalation.attach_user_policy_self.present"
       ],
-      "headline_finding_id": "sha256:d559f129a8f080ad",
+      "headline_finding_id": "sha256:91e80e20c706fc85",
       "member_finding_ids": [
-        "sha256:d559f129a8f080ad"
+        "sha256:91e80e20c706fc85"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2.5
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:iam::111122223333:user/eve",
+      "asset_type": "aws_iam_user",
+      "fix_plan": {
+        "id": "fix-3007c7be8b5a54c2",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:user/eve",
+          "asset_type": "aws_iam_user"
+        },
+        "action": "Remove `iam:AttachUserPolicy` from the principal, or scope its Resource field to user ARNs that do not include the principal itself (admin-only bootstrap roles, for example). Enforce at the organization level with an SCP that denies `iam:AttachUserPolicy` on `${aws:PrincipalArn}`. Also consider a permissions boundary on the principal that prevents the attached policy from taking effect."
+      },
+      "contributing_controls": [
+        "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [

@@ -30,7 +30,7 @@ const (
 type Suppression struct {
 	Kind             string            `json:"kind"`
 	Reason           string            `json:"reason,omitempty"`
-	Expires          policy.ExpiryDate `json:"expires,omitempty"`
+	Expires          policy.ExpiryDate `json:"expires"`
 	AcknowledgedBy   string            `json:"acknowledged_by,omitempty"`
 	AcknowledgedDate string            `json:"acknowledged_date,omitempty"`
 	ExpiryDate       string            `json:"expiry_date,omitempty"`

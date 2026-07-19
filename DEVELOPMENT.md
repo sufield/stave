@@ -250,7 +250,7 @@ Golden diff categories (from `regengoldens`):
 | `make consistency-check` | Verify ALL derived artifacts match canonical sources |
 | `make stale-terminology-check` | Reject stale `internal/domain` references |
 | `make check-unsafe-writes` | Forbid unsafe file writes in cmd/app |
-| `make attack-stage-check` | Reject deprecated `attack_stage` values |
+| `make attack-stage-check` | Reject invalid `attack_stage` values |
 | `make domain-check` | Soft-enum check on `domain:` values |
 | `make clig-check` | Verify CLI follows clig.dev guidelines |
 | `make determinism` | Verify `apply --profile` output is deterministic |
