@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:9207cf5a2d570a93",
+      "finding_id": "sha256:e51e4ddb900af7ed",
       "control_id": "CTL.S3.ENCRYPT.004",
       "control_name": "Sensitive Data Requires KMS Encryption",
       "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
@@ -294,7 +294,7 @@
       ]
     },
     {
-      "finding_id": "sha256:dadfd5157be0d0b8",
+      "finding_id": "sha256:ab9de20a5941ad4a",
       "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
       "control_description": "When a shared S3 bucket uses prefix-based tenant isolation, every app-signer identity that produces presigned URLs must enforce the tenant prefix.  An identity that allows path traversal (../) or disables prefix enforcement lets one tenant read or overwrite another tenant's objects.\n",
@@ -567,7 +567,7 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:02d90e8201e8abe3",
+      "issue_id": "sha256:37cbea81f2101ef3",
       "asset_id": "shopify-merchant-assets",
       "shared_keys": [
         "identities",
@@ -578,10 +578,10 @@
         "storage.tags.tenant_mode",
         "storage.tags.tenant_prefix"
       ],
-      "headline_finding_id": "sha256:9207cf5a2d570a93",
+      "headline_finding_id": "sha256:ab9de20a5941ad4a",
       "member_finding_ids": [
-        "sha256:9207cf5a2d570a93",
-        "sha256:dadfd5157be0d0b8"
+        "sha256:ab9de20a5941ad4a",
+        "sha256:e51e4ddb900af7ed"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

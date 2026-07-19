@@ -60,7 +60,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:a7a74bf5125e7649",
+      "finding_id": "sha256:376e39368f12e633",
       "control_id": "CTL.S3.SSEC.DISABLED.001",
       "control_name": "SSE-C Must Be Disabled on S3 Buckets",
       "control_description": "S3 buckets must have SSE-C (server-side encryption with customer-provided keys) disabled. SSE-C allows any principal with s3:PutObject to encrypt objects with an externally-held key that AWS never stores. Ransomware syndicates use this to encrypt data without needing KMS access — the data is irrecoverable without the attacker's key. Unlike BYOKM ransomware (CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001), SSE-C requires no KMS permissions and bypasses all SCP controls on kms:ImportKeyMaterial. AWS began disabling SSE-C by default for new buckets in April 2026. Technique documented by Farris, extended from the BYOKM ransomware kill chain.\n",
@@ -221,7 +221,7 @@
       ]
     },
     {
-      "finding_id": "sha256:61892044892b1214",
+      "finding_id": "sha256:512810c9af350b7b",
       "control_id": "CTL.S3.ACCESSLOG.DESTINATION.001",
       "control_name": "S3 Access Log Destination Must Be in Same Account or Org",
       "control_description": "When S3 server access logging is enabled, the log destination bucket must be in the same account or organization. An attacker can redirect access logs to their own bucket, capturing every S3 request path — which may contain sensitive data in query strings and object keys. Technique: hackingthe.cloud S3 server access logs exfiltration.\n",
@@ -389,7 +389,7 @@
       ]
     },
     {
-      "finding_id": "sha256:3db4f35a105643f4",
+      "finding_id": "sha256:b0b49d8a424e3ef5",
       "control_id": "CTL.S3.OWNERSHIP.001",
       "control_name": "S3 Object Ownership Must Be Bucket Owner Enforced",
       "control_description": "S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.\n",
@@ -566,7 +566,7 @@
       ]
     },
     {
-      "finding_id": "sha256:b936b79fdeb08edf",
+      "finding_id": "sha256:3d3ef963982605b2",
       "control_id": "CTL.S3.LIFECYCLE.MULTIPART.001",
       "control_name": "S3 Bucket Must Abort Incomplete Multipart Uploads",
       "control_description": "S3 bucket has no lifecycle rule that aborts incomplete multipart uploads. An attacker who can initiate uploads (s3:PutObject) can start millions of multipart uploads and never complete them. The incomplete parts accumulate storage costs indefinitely — there is no automatic cleanup. This is a denial-of-wallet vector: the attacker pays nothing (no completed objects), the bucket owner pays for every stored part. A lifecycle rule with AbortIncompleteMultipartUpload and a short DaysAfterInitiation threshold (e.g. 7 days) limits exposure.\n",
@@ -704,7 +704,7 @@
   ],
   "marker_findings": [
     {
-      "finding_id": "sha256:89c6271ba857d310",
+      "finding_id": "sha256:51706647a7a32c2b",
       "control_id": "CTL.S3.MARKER.PHI.001",
       "control_name": "S3 Bucket Tagged data-classification=phi (Marker)",
       "control_description": "Fact-recording marker for S3 buckets tagged data-classification=phi. Emits an informational finding (NOT a violation) on every PHI-tagged bucket so cross-resource chains can compose it with violation findings on related identities or resources. Examples: a Cognito unauth role with s3:GetObject targeting a PHI bucket; an IAM role outside the covered entity that can AssumeRole to a principal that reaches a PHI bucket. PHI tagging on its own is the desired state — never a finding to triage. The marker exists so the chain engine can join \"violation on the access side\" with \"data classification on the storage side\" without forcing the collector to denormalise every join shape into a per-asset boolean.\n",
@@ -898,9 +898,9 @@
         "storage.encryption",
         "storage.encryption.ssec_disabled"
       ],
-      "headline_finding_id": "sha256:a7a74bf5125e7649",
+      "headline_finding_id": "sha256:376e39368f12e633",
       "member_finding_ids": [
-        "sha256:a7a74bf5125e7649"
+        "sha256:376e39368f12e633"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -913,9 +913,9 @@
         "storage.logging.destination_in_org",
         "storage.logging.enabled"
       ],
-      "headline_finding_id": "sha256:61892044892b1214",
+      "headline_finding_id": "sha256:512810c9af350b7b",
       "member_finding_ids": [
-        "sha256:61892044892b1214"
+        "sha256:512810c9af350b7b"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -927,9 +927,9 @@
         "storage.object_ownership",
         "storage.object_ownership.rule"
       ],
-      "headline_finding_id": "sha256:3db4f35a105643f4",
+      "headline_finding_id": "sha256:b0b49d8a424e3ef5",
       "member_finding_ids": [
-        "sha256:3db4f35a105643f4"
+        "sha256:b0b49d8a424e3ef5"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -941,9 +941,9 @@
         "storage.lifecycle",
         "storage.lifecycle.aborts_incomplete_multipart"
       ],
-      "headline_finding_id": "sha256:b936b79fdeb08edf",
+      "headline_finding_id": "sha256:3d3ef963982605b2",
       "member_finding_ids": [
-        "sha256:b936b79fdeb08edf"
+        "sha256:3d3ef963982605b2"
       ],
       "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1

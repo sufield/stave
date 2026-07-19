@@ -57,7 +57,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:3c9f26547751f70d",
+      "finding_id": "sha256:bc825cd88087a441",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
       "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
@@ -343,7 +343,7 @@
       ]
     },
     {
-      "finding_id": "sha256:f6ac60f0d6c3d25c",
+      "finding_id": "sha256:0b06eab88bd23d57",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
       "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
@@ -625,7 +625,7 @@
       ]
     },
     {
-      "finding_id": "sha256:4c7e17b570d69026",
+      "finding_id": "sha256:bae55134b6df196b",
       "control_id": "CTL.S3.PUBLIC.002",
       "control_name": "No Public S3 Buckets With Sensitive Data",
       "control_description": "S3 buckets tagged with sensitive data classifications (PHI, PII, confidential) must not allow any public access.\n",
@@ -1038,7 +1038,7 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:aba1e8d48aa3ec67",
+      "issue_id": "sha256:6c0b01ed4d88ed72",
       "asset_id": "phi-data-bucket",
       "shared_keys": [
         "storage.access",
@@ -1047,10 +1047,10 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:3c9f26547751f70d",
+      "headline_finding_id": "sha256:bae55134b6df196b",
       "member_finding_ids": [
-        "sha256:3c9f26547751f70d",
-        "sha256:4c7e17b570d69026"
+        "sha256:bae55134b6df196b",
+        "sha256:bc825cd88087a441"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -1062,9 +1062,9 @@
         "storage.access",
         "storage.access.public_read"
       ],
-      "headline_finding_id": "sha256:f6ac60f0d6c3d25c",
+      "headline_finding_id": "sha256:0b06eab88bd23d57",
       "member_finding_ids": [
-        "sha256:f6ac60f0d6c3d25c"
+        "sha256:0b06eab88bd23d57"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

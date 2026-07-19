@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:f78119ae6823a874",
+      "finding_id": "sha256:711b00f64f319ea1",
       "control_id": "CTL.VPC.FLOWLOG.001",
       "control_name": "VPC Flow Logging Must Be Enabled",
       "control_description": "VPC flow logs capture information about IP traffic going to and from network interfaces. Without flow logs, network-level access patterns cannot be audited and unauthorized traffic goes undetected.\n",
@@ -432,9 +432,9 @@
         "network.flow_log.enabled",
         "network.kind"
       ],
-      "headline_finding_id": "sha256:f78119ae6823a874",
+      "headline_finding_id": "sha256:711b00f64f319ea1",
       "member_finding_ids": [
-        "sha256:f78119ae6823a874"
+        "sha256:711b00f64f319ea1"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2

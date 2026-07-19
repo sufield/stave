@@ -158,7 +158,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:db73b532f51cfd39",
+      "finding_id": "sha256:2800eb48122cc299",
       "control_id": "CTL.K8S.APISERVER.ANON.001",
       "control_name": "API Server Anonymous Authentication Must Be Disabled",
       "control_description": "The Kubernetes API server must not allow anonymous authentication. Anonymous auth permits unauthenticated requests to the API, enabling reconnaissance and potential cluster compromise.\n",
@@ -327,7 +327,7 @@
       ]
     },
     {
-      "finding_id": "sha256:1ad204c40a48268a",
+      "finding_id": "sha256:9dcfcfe15fc34c87",
       "control_id": "CTL.K8S.APISERVER.ANON.001",
       "control_name": "API Server Anonymous Authentication Must Be Disabled",
       "control_description": "The Kubernetes API server must not allow anonymous authentication. Anonymous auth permits unauthenticated requests to the API, enabling reconnaissance and potential cluster compromise.\n",
@@ -498,7 +498,7 @@
       ]
     },
     {
-      "finding_id": "sha256:aea5c891baf7d41e",
+      "finding_id": "sha256:af6a9f9d852405fb",
       "control_id": "CTL.K8S.APISERVER.AUDIT.001",
       "control_name": "API Server Audit Logging Must Be Enabled",
       "control_description": "The Kubernetes API server must have audit logging enabled. Without audit logs, security-relevant API calls are not recorded.\n",
@@ -668,7 +668,7 @@
       ]
     },
     {
-      "finding_id": "sha256:644608e3122eb9d7",
+      "finding_id": "sha256:8ff3e12f197be53a",
       "control_id": "CTL.K8S.APISERVER.AUDIT.001",
       "control_name": "API Server Audit Logging Must Be Enabled",
       "control_description": "The Kubernetes API server must have audit logging enabled. Without audit logs, security-relevant API calls are not recorded.\n",
@@ -840,7 +840,7 @@
       ]
     },
     {
-      "finding_id": "sha256:c0a83f4566913a64",
+      "finding_id": "sha256:80ff53d31be69cb8",
       "control_id": "CTL.K8S.APISERVER.AUTHZ.001",
       "control_name": "API Server Must Use RBAC Authorization",
       "control_description": "The API server authorization mode must include RBAC and must not include AlwaysAllow. RBAC enforces fine-grained access control; AlwaysAllow permits any authenticated user to perform any action.\n",
@@ -1022,7 +1022,7 @@
       ]
     },
     {
-      "finding_id": "sha256:08c3e2a2b62a00e5",
+      "finding_id": "sha256:0ef0bcf1ea2fef95",
       "control_id": "CTL.K8S.ETCD.CERT.001",
       "control_name": "etcd Must Use TLS Certificates",
       "control_description": "etcd must be configured with TLS certificate and key files. Without TLS, all cluster state (including Secrets) is transmitted in cleartext.\n",
@@ -1220,7 +1220,7 @@
       ]
     },
     {
-      "finding_id": "sha256:8dda0d0e5b96b16d",
+      "finding_id": "sha256:c6c04647997eea82",
       "control_id": "CTL.K8S.ETCD.CERT.001",
       "control_name": "etcd Must Use TLS Certificates",
       "control_description": "etcd must be configured with TLS certificate and key files. Without TLS, all cluster state (including Secrets) is transmitted in cleartext.\n",
@@ -1418,7 +1418,7 @@
       ]
     },
     {
-      "finding_id": "sha256:7f736839dc3ec9ca",
+      "finding_id": "sha256:af17e0fe3400d821",
       "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
       "control_name": "etcd Client Certificate Authentication Must Be Enabled",
       "control_description": "etcd must require client certificate authentication. Without it, any client with network access to etcd can read and write all cluster state.\n",
@@ -1585,7 +1585,7 @@
       ]
     },
     {
-      "finding_id": "sha256:edef89b486119e9f",
+      "finding_id": "sha256:a94153e9e4c9881c",
       "control_id": "CTL.K8S.ETCD.CLIENT.AUTH.001",
       "control_name": "etcd Client Certificate Authentication Must Be Enabled",
       "control_description": "etcd must require client certificate authentication. Without it, any client with network access to etcd can read and write all cluster state.\n",
@@ -1752,7 +1752,7 @@
       ]
     },
     {
-      "finding_id": "sha256:f3723452f0162be4",
+      "finding_id": "sha256:a78ecfcbb4c04df1",
       "control_id": "CTL.K8S.KUBELET.ANON.001",
       "control_name": "Kubelet Anonymous Authentication Must Be Disabled",
       "control_description": "The kubelet must not allow anonymous authentication. Anonymous auth permits unauthenticated requests to the kubelet API, enabling pod listing, log access, and command execution on the node.\n",
@@ -1937,7 +1937,7 @@
       ]
     },
     {
-      "finding_id": "sha256:0209659134a1ad3e",
+      "finding_id": "sha256:d014f5062d66dab5",
       "control_id": "CTL.K8S.KUBELET.ANON.001",
       "control_name": "Kubelet Anonymous Authentication Must Be Disabled",
       "control_description": "The kubelet must not allow anonymous authentication. Anonymous auth permits unauthenticated requests to the kubelet API, enabling pod listing, log access, and command execution on the node.\n",
@@ -2126,7 +2126,7 @@
       ]
     },
     {
-      "finding_id": "sha256:1e91e0304ceaaee3",
+      "finding_id": "sha256:e180744a2c4ef122",
       "control_id": "CTL.K8S.KUBELET.AUTHZ.001",
       "control_name": "Kubelet Must Not Use AlwaysAllow Authorization",
       "control_description": "The kubelet authorization mode must not be set to AlwaysAllow. AlwaysAllow permits any authenticated request without RBAC checks.\n",
@@ -2277,7 +2277,7 @@
       ]
     },
     {
-      "finding_id": "sha256:e78c7fdb7b886a6a",
+      "finding_id": "sha256:1259dc715a6c4dbf",
       "control_id": "CTL.K8S.KUBELET.READONLY.001",
       "control_name": "Kubelet Read-Only Port Must Be Disabled",
       "control_description": "The kubelet read-only port (default 10255) must be disabled by setting it to 0. The read-only port exposes node and pod metrics without authentication.\n",
@@ -2542,23 +2542,23 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:94fe179ee995fff5",
+      "issue_id": "sha256:9918c6471a3b6846",
       "asset_id": "apiserver-dev-01",
       "shared_keys": [
         "apiserver.anonymous_auth_enabled",
         "apiserver.audit_log_enabled",
         "type"
       ],
-      "headline_finding_id": "sha256:aea5c891baf7d41e",
+      "headline_finding_id": "sha256:2800eb48122cc299",
       "member_finding_ids": [
-        "sha256:aea5c891baf7d41e",
-        "sha256:db73b532f51cfd39"
+        "sha256:2800eb48122cc299",
+        "sha256:af6a9f9d852405fb"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
-      "issue_id": "sha256:b83a5ff5dea5aba9",
+      "issue_id": "sha256:49e095ad0c059966",
       "asset_id": "apiserver-staging-01",
       "shared_keys": [
         "apiserver.anonymous_auth_enabled",
@@ -2566,11 +2566,11 @@
         "apiserver.authorization_mode",
         "type"
       ],
-      "headline_finding_id": "sha256:1ad204c40a48268a",
+      "headline_finding_id": "sha256:80ff53d31be69cb8",
       "member_finding_ids": [
-        "sha256:1ad204c40a48268a",
-        "sha256:644608e3122eb9d7",
-        "sha256:c0a83f4566913a64"
+        "sha256:80ff53d31be69cb8",
+        "sha256:8ff3e12f197be53a",
+        "sha256:9dcfcfe15fc34c87"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -2584,16 +2584,16 @@
         "etcd.key_file",
         "type"
       ],
-      "headline_finding_id": "sha256:08c3e2a2b62a00e5",
+      "headline_finding_id": "sha256:0ef0bcf1ea2fef95",
       "member_finding_ids": [
-        "sha256:08c3e2a2b62a00e5",
-        "sha256:7f736839dc3ec9ca"
+        "sha256:0ef0bcf1ea2fef95",
+        "sha256:af17e0fe3400d821"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
-      "issue_id": "sha256:c39044750f7e5a6e",
+      "issue_id": "sha256:2028a12e4b451d18",
       "asset_id": "etcd-staging-01",
       "shared_keys": [
         "etcd.cert_file",
@@ -2601,10 +2601,10 @@
         "etcd.key_file",
         "type"
       ],
-      "headline_finding_id": "sha256:8dda0d0e5b96b16d",
+      "headline_finding_id": "sha256:a94153e9e4c9881c",
       "member_finding_ids": [
-        "sha256:8dda0d0e5b96b16d",
-        "sha256:edef89b486119e9f"
+        "sha256:a94153e9e4c9881c",
+        "sha256:c6c04647997eea82"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -2616,9 +2616,9 @@
         "kubelet.anonymous_auth_enabled",
         "type"
       ],
-      "headline_finding_id": "sha256:f3723452f0162be4",
+      "headline_finding_id": "sha256:a78ecfcbb4c04df1",
       "member_finding_ids": [
-        "sha256:f3723452f0162be4"
+        "sha256:a78ecfcbb4c04df1"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -2632,11 +2632,11 @@
         "kubelet.read_only_port",
         "type"
       ],
-      "headline_finding_id": "sha256:0209659134a1ad3e",
+      "headline_finding_id": "sha256:d014f5062d66dab5",
       "member_finding_ids": [
-        "sha256:0209659134a1ad3e",
-        "sha256:1e91e0304ceaaee3",
-        "sha256:e78c7fdb7b886a6a"
+        "sha256:1259dc715a6c4dbf",
+        "sha256:d014f5062d66dab5",
+        "sha256:e180744a2c4ef122"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

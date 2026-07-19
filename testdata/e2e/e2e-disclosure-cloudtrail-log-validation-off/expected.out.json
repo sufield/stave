@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:f7495e202aca489b",
+      "finding_id": "sha256:c7b55217c33dcfa6",
       "control_id": "CTL.CLOUDTRAIL.LOG.VALIDATION.001",
       "control_name": "CloudTrail Log File Validation Must Be Enabled",
       "control_description": "CloudTrail log file validation must be enabled to detect whether log files have been modified or deleted after delivery to S3. Without validation, forensic investigators cannot determine if logs were tampered with.\n",
@@ -215,9 +215,9 @@
       "shared_keys": [
         "trail.log_file_validation_enabled"
       ],
-      "headline_finding_id": "sha256:f7495e202aca489b",
+      "headline_finding_id": "sha256:c7b55217c33dcfa6",
       "member_finding_ids": [
-        "sha256:f7495e202aca489b"
+        "sha256:c7b55217c33dcfa6"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

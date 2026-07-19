@@ -26,7 +26,7 @@
   "status": "NON_COMPLIANT",
   "findings": [
     {
-      "finding_id": "sha256:48f82fbfef4ef963",
+      "finding_id": "sha256:da00d85d52e88d30",
       "control_id": "CTL.EXP.RECURRENCE.001",
       "control_name": "Unsafe Exposure Recurrence Limit",
       "control_description": "An asset must not have too many unsafe episodes within a rolling window.",
@@ -104,9 +104,9 @@
       "issue_id": "sha256:8f6f6c9b92ce88f1",
       "asset_id": "res:aws:s3:bucket:recurring-bucket",
       "shared_keys": [],
-      "headline_finding_id": "sha256:48f82fbfef4ef963",
+      "headline_finding_id": "sha256:da00d85d52e88d30",
       "member_finding_ids": [
-        "sha256:48f82fbfef4ef963"
+        "sha256:da00d85d52e88d30"
       ],
       "consolidated_score": 10,
       "consolidated_blast_radius": 1

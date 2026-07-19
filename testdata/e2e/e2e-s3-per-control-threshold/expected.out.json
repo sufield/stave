@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:7be5cea97128ef73",
+      "finding_id": "sha256:f2d91f0fa848baf6",
       "control_id": "CTL.TEST.OVERRIDE.001",
       "control_name": "Immediate Violation (0h override)",
       "control_description": "Tests per-control max_unsafe_duration=0h overriding CLI default.",
@@ -170,9 +170,9 @@
         "storage.access",
         "storage.access.public_read"
       ],
-      "headline_finding_id": "sha256:7be5cea97128ef73",
+      "headline_finding_id": "sha256:f2d91f0fa848baf6",
       "member_finding_ids": [
-        "sha256:7be5cea97128ef73"
+        "sha256:f2d91f0fa848baf6"
       ],
       "consolidated_score": 10.001141552511415,
       "consolidated_blast_radius": 1

@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:35b88bd6b6ef8743",
+      "finding_id": "sha256:f2f1698933a6f843",
       "control_id": "CTL.S3.ACL.ESCALATION.001",
       "control_name": "No Public ACL Modification",
       "control_description": "S3 bucket ACLs must not be writable by AllUsers or AuthenticatedUsers. WRITE_ACP permission enables attackers to modify the ACL itself, granting themselves FULL_CONTROL and escalating to read, write, and delete all objects.\n",
@@ -205,7 +205,7 @@
       ]
     },
     {
-      "finding_id": "sha256:73aa40948c106572",
+      "finding_id": "sha256:c66d01e10488bf2d",
       "control_id": "CTL.S3.ACL.ESCALATION.001",
       "control_name": "No Public ACL Modification",
       "control_description": "S3 bucket ACLs must not be writable by AllUsers or AuthenticatedUsers. WRITE_ACP permission enables attackers to modify the ACL itself, granting themselves FULL_CONTROL and escalating to read, write, and delete all objects.\n",
@@ -372,9 +372,9 @@
         "storage.access.authenticated_admin",
         "storage.access.public_admin"
       ],
-      "headline_finding_id": "sha256:35b88bd6b6ef8743",
+      "headline_finding_id": "sha256:f2f1698933a6f843",
       "member_finding_ids": [
-        "sha256:35b88bd6b6ef8743"
+        "sha256:f2f1698933a6f843"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -387,9 +387,9 @@
         "storage.access.authenticated_admin",
         "storage.access.public_admin"
       ],
-      "headline_finding_id": "sha256:73aa40948c106572",
+      "headline_finding_id": "sha256:c66d01e10488bf2d",
       "member_finding_ids": [
-        "sha256:73aa40948c106572"
+        "sha256:c66d01e10488bf2d"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

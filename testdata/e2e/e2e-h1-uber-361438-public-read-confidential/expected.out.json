@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:3f665eca42cfc415",
+      "finding_id": "sha256:4a31c11e56526eda",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
       "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
@@ -282,7 +282,7 @@
       ]
     },
     {
-      "finding_id": "sha256:79defb15a797b64c",
+      "finding_id": "sha256:559f89f285377f74",
       "control_id": "CTL.S3.PUBLIC.002",
       "control_name": "No Public S3 Buckets With Sensitive Data",
       "control_description": "S3 buckets tagged with sensitive data classifications (PHI, PII, confidential) must not allow any public access.\n",
@@ -647,10 +647,10 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:3f665eca42cfc415",
+      "headline_finding_id": "sha256:4a31c11e56526eda",
       "member_finding_ids": [
-        "sha256:3f665eca42cfc415",
-        "sha256:79defb15a797b64c"
+        "sha256:4a31c11e56526eda",
+        "sha256:559f89f285377f74"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:41db1ea55da728c1",
+      "finding_id": "sha256:c1339e3a1fa2c686",
       "control_id": "CTL.S3.AUTH.WRITE.001",
       "control_name": "No Authenticated-Users Write Access",
       "control_description": "S3 buckets must not grant write or delete access to all authenticated AWS users. AuthenticatedUsers scope means any AWS account holder worldwide can upload, overwrite, or delete objects — enabling data injection, ransomware, and supply chain poisoning.\n",
@@ -172,9 +172,9 @@
         "storage.access",
         "storage.access.authenticated_write"
       ],
-      "headline_finding_id": "sha256:41db1ea55da728c1",
+      "headline_finding_id": "sha256:c1339e3a1fa2c686",
       "member_finding_ids": [
-        "sha256:41db1ea55da728c1"
+        "sha256:c1339e3a1fa2c686"
       ],
       "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1

@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:2fb1907cd3250569",
+      "finding_id": "sha256:5a77f1b08fc0807f",
       "control_id": "CTL.RDS.SSL.001",
       "control_name": "RDS Must Require SSL Connections",
       "control_description": "RDS instances must enforce SSL/TLS for all client connections. Without require_ssl, database traffic travels unencrypted over the network, exposing query data and credentials to interception.\n",
@@ -244,9 +244,9 @@
         "database.encryption.require_ssl",
         "database.kind"
       ],
-      "headline_finding_id": "sha256:2fb1907cd3250569",
+      "headline_finding_id": "sha256:5a77f1b08fc0807f",
       "member_finding_ids": [
-        "sha256:2fb1907cd3250569"
+        "sha256:5a77f1b08fc0807f"
       ],
       "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1

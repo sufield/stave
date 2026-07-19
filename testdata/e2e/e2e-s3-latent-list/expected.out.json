@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:6a2dc24c7add828f",
+      "finding_id": "sha256:d201dfd7d5ce5673",
       "control_id": "CTL.S3.PUBLIC.006",
       "control_name": "No Latent Public Bucket Listing",
       "control_description": "S3 bucket has a policy or ACL that would allow public listing if the public access block were removed. The public access block is currently the only control preventing directory enumeration. This is a latent vulnerability — one configuration change away from exposing all object keys.\n",
@@ -227,9 +227,9 @@
         "storage.access",
         "storage.access.latent_public_list"
       ],
-      "headline_finding_id": "sha256:6a2dc24c7add828f",
+      "headline_finding_id": "sha256:d201dfd7d5ce5673",
       "member_finding_ids": [
-        "sha256:6a2dc24c7add828f"
+        "sha256:d201dfd7d5ce5673"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

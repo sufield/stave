@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:06806d8c6fea7531",
+      "finding_id": "sha256:a8222fd552af24c0",
       "control_id": "CTL.S3.ACCESS.GRANTS.001",
       "control_name": "S3 Access Grants Must Not Grant Broad Permissions",
       "control_description": "S3 Access Grants provide temporary credentials scoped to a bucket or prefix. An Access Grant with READWRITE permission on a broad scope (entire bucket or wildcard prefix) bypasses bucket policy restrictions.\n",
@@ -234,7 +234,7 @@
       ]
     },
     {
-      "finding_id": "sha256:548b689caded6b8d",
+      "finding_id": "sha256:df88e34d4506646a",
       "control_id": "CTL.S3.ACCESS.GRANTS.002",
       "control_name": "S3 Access Grants Identity Center Must Be Attached",
       "control_description": "When S3 Access Grants are enabled, IAM Identity Center should be attached to the Access Grants instance. Without Identity Center, grants can only target IAM principals — losing the benefit of centralized identity governance and SSO-based access control.\n",
@@ -424,10 +424,10 @@
         "storage.access_grants.identity_center_attached",
         "storage.access_grants.instance_exists"
       ],
-      "headline_finding_id": "sha256:06806d8c6fea7531",
+      "headline_finding_id": "sha256:a8222fd552af24c0",
       "member_finding_ids": [
-        "sha256:06806d8c6fea7531",
-        "sha256:548b689caded6b8d"
+        "sha256:a8222fd552af24c0",
+        "sha256:df88e34d4506646a"
       ],
       "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1

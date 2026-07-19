@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:35117df1ab0a73d3",
+      "finding_id": "sha256:5119bfbfcde82950",
       "control_id": "CTL.GCS.PUBLIC.001",
       "control_name": "No Public GCS Bucket Read",
       "control_description": "GCS buckets must not allow public read access. Detects buckets where IAM bindings include allUsers or allAuthenticatedUsers with read permissions, or where uniform bucket-level access is disabled and object ACLs may grant public access.\n",
@@ -222,9 +222,9 @@
         "storage.access",
         "storage.access.public_read"
       ],
-      "headline_finding_id": "sha256:35117df1ab0a73d3",
+      "headline_finding_id": "sha256:5119bfbfcde82950",
       "member_finding_ids": [
-        "sha256:35117df1ab0a73d3"
+        "sha256:5119bfbfcde82950"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

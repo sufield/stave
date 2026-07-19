@@ -150,7 +150,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:c7eaa76ebb5859b2",
+      "finding_id": "sha256:62b56ebd58737170",
       "control_id": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
       "control_name": "Encrypted Bucket With Public Access — Encryption Is Cosmetic",
       "control_description": "An S3 bucket has server-side encryption enabled but also allows public read access. Encryption protects data at rest on disk, but any principal who can read the object via GetObject receives the plaintext — S3 decrypts transparently on read. When the bucket is publicly readable, encryption provides zero confidentiality benefit: the data is served unencrypted over HTTPS to anyone who requests it. The encryption creates a false sense of data protection in audit output. Individually, the encryption control passes and the public-access control fails — the compound finding is that the passing encryption control is meaningless because the data is publicly readable.\n",
@@ -364,7 +364,7 @@
       ]
     },
     {
-      "finding_id": "sha256:a43a2ae5ed908e4d",
+      "finding_id": "sha256:3584f6efa3006130",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
       "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
@@ -536,7 +536,7 @@
       ]
     },
     {
-      "finding_id": "sha256:ddb02acd5d0fb01e",
+      "finding_id": "sha256:8426952c35a4d534",
       "control_id": "CTL.S3.SSEC.DISABLED.001",
       "control_name": "SSE-C Must Be Disabled on S3 Buckets",
       "control_description": "S3 buckets must have SSE-C (server-side encryption with customer-provided keys) disabled. SSE-C allows any principal with s3:PutObject to encrypt objects with an externally-held key that AWS never stores. Ransomware syndicates use this to encrypt data without needing KMS access — the data is irrecoverable without the attacker's key. Unlike BYOKM ransomware (CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001), SSE-C requires no KMS permissions and bypasses all SCP controls on kms:ImportKeyMaterial. AWS began disabling SSE-C by default for new buckets in April 2026. Technique documented by Farris, extended from the BYOKM ransomware kill chain.\n",
@@ -697,7 +697,7 @@
       ]
     },
     {
-      "finding_id": "sha256:e49090ac630ed983",
+      "finding_id": "sha256:628a248b2a165956",
       "control_id": "CTL.S3.ACCESSLOG.DESTINATION.001",
       "control_name": "S3 Access Log Destination Must Be in Same Account or Org",
       "control_description": "When S3 server access logging is enabled, the log destination bucket must be in the same account or organization. An attacker can redirect access logs to their own bucket, capturing every S3 request path — which may contain sensitive data in query strings and object keys. Technique: hackingthe.cloud S3 server access logs exfiltration.\n",
@@ -865,7 +865,7 @@
       ]
     },
     {
-      "finding_id": "sha256:c600c7fe517e8f5d",
+      "finding_id": "sha256:3cdcbb32597687cc",
       "control_id": "CTL.S3.ACCOUNT.PAB.001",
       "control_name": "Account-Level Block Public Access Must Be Enabled",
       "control_description": "The AWS account must have S3 Block Public Access enabled at the account level. Account-level PAB overrides all bucket and object settings, providing a hard ceiling that prevents any S3 resource in the account from being made public regardless of bucket policies, ACLs, or access point policies. Without account-level PAB, each bucket's public access depends on its own settings, and a single misconfigured bucket or object ACL can expose data. Account-level PAB is the strongest single defense against accidental public exposure.\n",
@@ -1016,7 +1016,7 @@
       ]
     },
     {
-      "finding_id": "sha256:8df0e432ac4c38e4",
+      "finding_id": "sha256:20f4787c23563a66",
       "control_id": "CTL.S3.MFADELETE.001",
       "control_name": "MFA Delete Must Be Enabled on S3 Buckets",
       "control_description": "S3 buckets should have MFA Delete enabled on versioned buckets. MFA Delete requires a second factor to permanently delete object versions, preventing unauthorized or accidental data destruction.\n",
@@ -1194,7 +1194,7 @@
       ]
     },
     {
-      "finding_id": "sha256:4deaa2ba101afbc5",
+      "finding_id": "sha256:6150ff1a4077a347",
       "control_id": "CTL.S3.NETWORK.VPC.001",
       "control_name": "VPC Endpoint or IP Condition Required",
       "control_description": "S3 bucket access must be restricted by a VPC endpoint condition (aws:SourceVpce) or an IP address condition (aws:SourceIp) in the bucket policy. Without network-level restrictions, the bucket is reachable from any network path. This control enforces transmission security for PHI workloads.\n",
@@ -1364,7 +1364,7 @@
       ]
     },
     {
-      "finding_id": "sha256:377505bf614ff60b",
+      "finding_id": "sha256:3a62131e5fd78893",
       "control_id": "CTL.S3.OWNERSHIP.001",
       "control_name": "S3 Object Ownership Must Be Bucket Owner Enforced",
       "control_description": "S3 buckets must have Object Ownership set to BucketOwnerEnforced, which disables ACLs entirely. When ACLs are disabled, the bucket owner automatically owns every object regardless of who uploaded it, and access is controlled exclusively through IAM and bucket policies. This eliminates the entire class of ACL-based exposure: public grants, privilege escalation via WRITE_ACP, and object-level ACL overrides. Since April 2023 new buckets default to BucketOwnerEnforced, but buckets created before this date may still have ACLs enabled.\n",
@@ -1541,7 +1541,7 @@
       ]
     },
     {
-      "finding_id": "sha256:96f5d0e38950552e",
+      "finding_id": "sha256:00384739b18eacbf",
       "control_id": "CTL.S3.PAB.BLOCKPUBLICACLS.001",
       "control_name": "S3 Bucket Block Public ACLs Flag Must Be Enabled",
       "control_description": "The `BlockPublicAcls` flag of the bucket's Public Access Block configuration rejects any new ACL grant that would make the bucket or its objects publicly accessible. When this specific flag is `false`, new PUT-ACL calls that grant `READ`, `WRITE`, `READ_ACP`, or `WRITE_ACP` to `http://acs.amazonaws.com/groups/global/AllUsers` or `.../AuthenticatedUsers` succeed rather than being rejected at the API boundary. The umbrella `CTL.S3.CONTROLS.001` fires when any of the four PAB flags is off; this control narrows the finding to the specific flag so remediation is a one-command fix rather than requiring the operator to enumerate which of the four is missing. Prowler and ScoutSuite both report the four flags independently.\n",
@@ -1697,7 +1697,7 @@
       ]
     },
     {
-      "finding_id": "sha256:184e616d42d418ff",
+      "finding_id": "sha256:c358d84cf9632745",
       "control_id": "CTL.S3.PAB.BLOCKPUBLICPOLICY.001",
       "control_name": "S3 Bucket Block Public Policy Flag Must Be Enabled",
       "control_description": "The `BlockPublicPolicy` flag of the bucket's Public Access Block configuration rejects any new bucket-policy update that would evaluate as public under AWS `PolicyStatus.IsPublic`. When this specific flag is `false`, a `PutBucketPolicy` call with `Principal: \"*\"` and no restricting Condition succeeds rather than being rejected at the API boundary. The umbrella `CTL.S3.CONTROLS.001` fires when any of the four PAB flags is off; this control narrows the finding to the specific flag so remediation targets the policy-write path rather than the full PAB tuple. Prowler and ScoutSuite both report the four flags independently.\n",
@@ -1853,7 +1853,7 @@
       ]
     },
     {
-      "finding_id": "sha256:5162c97d09aac8a6",
+      "finding_id": "sha256:de268b4bf103fe52",
       "control_id": "CTL.S3.PAB.IGNOREPUBLICACLS.001",
       "control_name": "S3 Bucket Ignore Public ACLs Flag Must Be Enabled",
       "control_description": "The `IgnorePublicAcls` flag of the bucket's Public Access Block configuration causes S3 to disregard any existing ACL grant that would make the bucket or its objects publicly accessible, even if the grant is already in place. When this specific flag is `false`, historical ACL grants to `AllUsers` or `AuthenticatedUsers` stay effective — enabling `BlockPublicAcls` alone does not neutralize grants that were made before the flag was enabled. The umbrella `CTL.S3.CONTROLS.001` fires when any of the four PAB flags is off; this control narrows the finding to the specific flag so the operator knows that the fix is not \"block new ACLs\" but \"ignore the ones already there.\" Prowler and ScoutSuite both report the four flags independently.\n",
@@ -2009,7 +2009,7 @@
       ]
     },
     {
-      "finding_id": "sha256:c54e72c5a695247a",
+      "finding_id": "sha256:b65fc582ac7f5df4",
       "control_id": "CTL.S3.PAB.RESTRICTPUBLICBUCKETS.001",
       "control_name": "S3 Bucket Restrict Public Buckets Flag Must Be Enabled",
       "control_description": "The `RestrictPublicBuckets` flag of the bucket's Public Access Block configuration restricts evaluation of any existing public bucket policy: when the flag is on, public grants in the bucket policy are limited to AWS service principals and authorized AWS services (e.g., CloudFront OAC). When this specific flag is `false`, historical `Principal: \"*\"` grants stay fully effective — enabling `BlockPublicPolicy` alone does not neutralize policies that were in place before the flag was turned on. The umbrella `CTL.S3.CONTROLS.001` fires when any of the four PAB flags is off; this control narrows the finding to the specific flag so the operator knows the fix is not \"block new public policies\" but \"restrict the ones already there.\" Prowler and ScoutSuite both report the four flags independently.\n",
@@ -2165,7 +2165,7 @@
       ]
     },
     {
-      "finding_id": "sha256:2c3f8fbefdfd953f",
+      "finding_id": "sha256:01da09fff80d72fc",
       "control_id": "CTL.S3.LIFECYCLE.MULTIPART.001",
       "control_name": "S3 Bucket Must Abort Incomplete Multipart Uploads",
       "control_description": "S3 bucket has no lifecycle rule that aborts incomplete multipart uploads. An attacker who can initiate uploads (s3:PutObject) can start millions of multipart uploads and never complete them. The incomplete parts accumulate storage costs indefinitely — there is no automatic cleanup. This is a denial-of-wallet vector: the attacker pays nothing (no completed objects), the bucket owner pays for every stored part. A lifecycle rule with AbortIncompleteMultipartUpload and a short DaysAfterInitiation threshold (e.g. 7 days) limits exposure.\n",
@@ -2388,15 +2388,35 @@
         "storage.encryption.at_rest_enabled",
         "storage.encryption.ssec_disabled"
       ],
-      "headline_finding_id": "sha256:a43a2ae5ed908e4d",
+      "headline_finding_id": "sha256:3584f6efa3006130",
       "member_finding_ids": [
-        "sha256:4deaa2ba101afbc5",
-        "sha256:a43a2ae5ed908e4d",
-        "sha256:c7eaa76ebb5859b2",
-        "sha256:ddb02acd5d0fb01e"
+        "sha256:3584f6efa3006130",
+        "sha256:6150ff1a4077a347",
+        "sha256:62b56ebd58737170",
+        "sha256:8426952c35a4d534"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
+    },
+    {
+      "issue_id": "sha256:0a96ba4d3876668d",
+      "asset_id": "public-test-bucket",
+      "shared_keys": [
+        "storage.controls.public_access_block",
+        "storage.controls.public_access_block.block_public_acls",
+        "storage.controls.public_access_block.block_public_policy",
+        "storage.controls.public_access_block.ignore_public_acls",
+        "storage.controls.public_access_block.restrict_public_buckets"
+      ],
+      "headline_finding_id": "sha256:00384739b18eacbf",
+      "member_finding_ids": [
+        "sha256:00384739b18eacbf",
+        "sha256:b65fc582ac7f5df4",
+        "sha256:c358d84cf9632745",
+        "sha256:de268b4bf103fe52"
+      ],
+      "consolidated_score": 76.02739726027397,
+      "consolidated_blast_radius": 1
     },
     {
       "issue_id": "sha256:262cfd9371f56a08",
@@ -2406,29 +2426,9 @@
         "storage.versioning.enabled",
         "storage.versioning.mfa_delete_enabled"
       ],
-      "headline_finding_id": "sha256:8df0e432ac4c38e4",
+      "headline_finding_id": "sha256:20f4787c23563a66",
       "member_finding_ids": [
-        "sha256:8df0e432ac4c38e4"
-      ],
-      "consolidated_score": 76.02739726027397,
-      "consolidated_blast_radius": 1
-    },
-    {
-      "issue_id": "sha256:c5934f25b675bfbd",
-      "asset_id": "public-test-bucket",
-      "shared_keys": [
-        "storage.controls.public_access_block",
-        "storage.controls.public_access_block.block_public_acls",
-        "storage.controls.public_access_block.block_public_policy",
-        "storage.controls.public_access_block.ignore_public_acls",
-        "storage.controls.public_access_block.restrict_public_buckets"
-      ],
-      "headline_finding_id": "sha256:184e616d42d418ff",
-      "member_finding_ids": [
-        "sha256:184e616d42d418ff",
-        "sha256:5162c97d09aac8a6",
-        "sha256:96f5d0e38950552e",
-        "sha256:c54e72c5a695247a"
+        "sha256:20f4787c23563a66"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -2440,9 +2440,9 @@
         "storage.controls",
         "storage.controls.account_public_access_fully_blocked"
       ],
-      "headline_finding_id": "sha256:c600c7fe517e8f5d",
+      "headline_finding_id": "sha256:3cdcbb32597687cc",
       "member_finding_ids": [
-        "sha256:c600c7fe517e8f5d"
+        "sha256:3cdcbb32597687cc"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -2454,9 +2454,9 @@
         "storage.object_ownership",
         "storage.object_ownership.rule"
       ],
-      "headline_finding_id": "sha256:377505bf614ff60b",
+      "headline_finding_id": "sha256:3a62131e5fd78893",
       "member_finding_ids": [
-        "sha256:377505bf614ff60b"
+        "sha256:3a62131e5fd78893"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -2469,9 +2469,9 @@
         "storage.logging.destination_in_org",
         "storage.logging.enabled"
       ],
-      "headline_finding_id": "sha256:e49090ac630ed983",
+      "headline_finding_id": "sha256:628a248b2a165956",
       "member_finding_ids": [
-        "sha256:e49090ac630ed983"
+        "sha256:628a248b2a165956"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -2483,9 +2483,9 @@
         "storage.lifecycle",
         "storage.lifecycle.aborts_incomplete_multipart"
       ],
-      "headline_finding_id": "sha256:2c3f8fbefdfd953f",
+      "headline_finding_id": "sha256:01da09fff80d72fc",
       "member_finding_ids": [
-        "sha256:2c3f8fbefdfd953f"
+        "sha256:01da09fff80d72fc"
       ],
       "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1

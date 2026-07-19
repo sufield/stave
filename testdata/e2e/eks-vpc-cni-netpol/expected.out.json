@@ -38,7 +38,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:57ffb8e773b33d9a",
+      "finding_id": "sha256:1b8fb2a23da8252f",
       "control_id": "CTL.EKS.VPC.CNI.NETPOL.TTL.001",
       "control_name": "EKS VPC CNI NetworkPolicy Must Have Completed Pod Firewall Cleanup",
       "control_description": "EKS clusters with VPC CNI NetworkPolicy enforcement must have completed pod firewall rule cleanup configured. VPC CNI creates per-IP firewall rules on nodes. Pod completion does not trigger rule removal — only pod deletion does. Without TTL controller or explicit flush, completed pod IPs are recycled with stale rules.\n",
@@ -258,9 +258,9 @@
         "addons.vpc_cni.pod_completion_firewall_flush",
         "feature_gates.ttl_after_finished_controller"
       ],
-      "headline_finding_id": "sha256:57ffb8e773b33d9a",
+      "headline_finding_id": "sha256:1b8fb2a23da8252f",
       "member_finding_ids": [
-        "sha256:57ffb8e773b33d9a"
+        "sha256:1b8fb2a23da8252f"
       ],
       "consolidated_score": 75.2054794520548,
       "consolidated_blast_radius": 1

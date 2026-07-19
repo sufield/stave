@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:2a489a7678baa433",
+      "finding_id": "sha256:74dc161b537011bf",
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "control_name": "No FULL_CONTROL ACL Grants to Public",
       "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.\n",
@@ -208,7 +208,7 @@
       ]
     },
     {
-      "finding_id": "sha256:e1ee3d00f05f9f46",
+      "finding_id": "sha256:5cad7e06b5a14aae",
       "control_id": "CTL.S3.ACL.FULLCONTROL.001",
       "control_name": "No FULL_CONTROL ACL Grants to Public",
       "control_description": "S3 bucket ACLs must not grant FULL_CONTROL to AllUsers or AuthenticatedUsers. FULL_CONTROL is the worst-case ACL misconfiguration — the grantee can read, write, and delete objects and modify the ACL itself.\n",
@@ -378,9 +378,9 @@
         "storage.access.has_full_control_authenticated",
         "storage.access.has_full_control_public"
       ],
-      "headline_finding_id": "sha256:2a489a7678baa433",
+      "headline_finding_id": "sha256:74dc161b537011bf",
       "member_finding_ids": [
-        "sha256:2a489a7678baa433"
+        "sha256:74dc161b537011bf"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -393,9 +393,9 @@
         "storage.access.has_full_control_authenticated",
         "storage.access.has_full_control_public"
       ],
-      "headline_finding_id": "sha256:e1ee3d00f05f9f46",
+      "headline_finding_id": "sha256:5cad7e06b5a14aae",
       "member_finding_ids": [
-        "sha256:e1ee3d00f05f9f46"
+        "sha256:5cad7e06b5a14aae"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

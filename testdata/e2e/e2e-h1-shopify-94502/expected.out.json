@@ -157,7 +157,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:d81c1dac4e7e312a",
+      "finding_id": "sha256:5ff31ca00d60035c",
       "control_id": "CTL.S3.CONTROLS.001",
       "control_name": "Public Access Block Must Be Enabled",
       "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
@@ -332,7 +332,7 @@
       ]
     },
     {
-      "finding_id": "sha256:748776a78c800b08",
+      "finding_id": "sha256:4208a462c582cb2c",
       "control_id": "CTL.S3.CONTROLS.001",
       "control_name": "Public Access Block Must Be Enabled",
       "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
@@ -507,7 +507,7 @@
       ]
     },
     {
-      "finding_id": "sha256:d14260350514a42e",
+      "finding_id": "sha256:01ffa42b0dc78777",
       "control_id": "CTL.S3.CONTROLS.001",
       "control_name": "Public Access Block Must Be Enabled",
       "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
@@ -684,7 +684,7 @@
       ]
     },
     {
-      "finding_id": "sha256:85b25efe79473e4b",
+      "finding_id": "sha256:2a93f12f82459cae",
       "control_id": "CTL.S3.ENCRYPT.004",
       "control_name": "Sensitive Data Requires KMS Encryption",
       "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
@@ -933,7 +933,7 @@
       ]
     },
     {
-      "finding_id": "sha256:d6768aae03c059be",
+      "finding_id": "sha256:43b35c1b0184fc08",
       "control_id": "CTL.S3.ENCRYPT.004",
       "control_name": "Sensitive Data Requires KMS Encryption",
       "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
@@ -1182,7 +1182,7 @@
       ]
     },
     {
-      "finding_id": "sha256:a7ac33d3a9f8b48e",
+      "finding_id": "sha256:97d0355fc7d11de3",
       "control_id": "CTL.S3.ENCRYPT.004",
       "control_name": "Sensitive Data Requires KMS Encryption",
       "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
@@ -1433,7 +1433,7 @@
       ]
     },
     {
-      "finding_id": "sha256:5414a7d05efd5406",
+      "finding_id": "sha256:d2aba1c371d267b2",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
       "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
@@ -1776,7 +1776,7 @@
       ]
     },
     {
-      "finding_id": "sha256:482a1ac6937bd145",
+      "finding_id": "sha256:3cf4e55c2fb2effc",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
       "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
@@ -2119,7 +2119,7 @@
       ]
     },
     {
-      "finding_id": "sha256:0b92ba3d2504b8d5",
+      "finding_id": "sha256:74e6f47359fecaf5",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
       "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
@@ -2464,7 +2464,7 @@
       ]
     },
     {
-      "finding_id": "sha256:afd4d52b25be3baa",
+      "finding_id": "sha256:56fd962fa2dcfc97",
       "control_id": "CTL.S3.PUBLIC.003",
       "control_name": "No Public Write Access",
       "control_description": "S3 buckets must not allow public write or delete access. Public write enables data injection, ransomware, and policy takeover.\n",
@@ -2633,7 +2633,7 @@
       ]
     },
     {
-      "finding_id": "sha256:9885b41f3e8e5b79",
+      "finding_id": "sha256:102bb228aa52908f",
       "control_id": "CTL.S3.PUBLIC.004",
       "control_name": "No Public Read via Bucket Policy",
       "control_description": "S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
@@ -2801,7 +2801,7 @@
       ]
     },
     {
-      "finding_id": "sha256:e9b8512b9fed396b",
+      "finding_id": "sha256:c5d34c218d09701a",
       "control_id": "CTL.S3.PUBLIC.004",
       "control_name": "No Public Read via Bucket Policy",
       "control_description": "S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
@@ -2969,7 +2969,7 @@
       ]
     },
     {
-      "finding_id": "sha256:94fd30ba678b6000",
+      "finding_id": "sha256:2cc8155fb0e69ce2",
       "control_id": "CTL.S3.PUBLIC.004",
       "control_name": "No Public Read via Bucket Policy",
       "control_description": "S3 bucket policies must not grant read access to an anonymous or wildcard principal. A Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:GetObject without a restricting Condition enables any unauthenticated caller to read objects. This is distinct from CTL.S3.PUBLIC.001, which fires on the composite public_read signal regardless of mechanism; this control narrows to the bucket-policy path so the finding points the operator at the policy specifically. For ACL-based public read, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
@@ -3323,31 +3323,15 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:51217ad41d32ff58",
-      "asset_id": "shopify-owned-1",
-      "shared_keys": [
-        "storage.access",
-        "storage.access.public_read",
-        "storage.access.read_via_resource"
-      ],
-      "headline_finding_id": "sha256:5414a7d05efd5406",
-      "member_finding_ids": [
-        "sha256:5414a7d05efd5406",
-        "sha256:9885b41f3e8e5b79"
-      ],
-      "consolidated_score": 100,
-      "consolidated_blast_radius": 1
-    },
-    {
       "issue_id": "sha256:94beec8e6c7d048b",
       "asset_id": "shopify-owned-1",
       "shared_keys": [
         "storage.controls",
         "storage.controls.public_access_fully_blocked"
       ],
-      "headline_finding_id": "sha256:d81c1dac4e7e312a",
+      "headline_finding_id": "sha256:5ff31ca00d60035c",
       "member_finding_ids": [
-        "sha256:d81c1dac4e7e312a"
+        "sha256:5ff31ca00d60035c"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -3361,9 +3345,25 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:85b25efe79473e4b",
+      "headline_finding_id": "sha256:2a93f12f82459cae",
       "member_finding_ids": [
-        "sha256:85b25efe79473e4b"
+        "sha256:2a93f12f82459cae"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
+    {
+      "issue_id": "sha256:d156e8262cdeeeb6",
+      "asset_id": "shopify-owned-1",
+      "shared_keys": [
+        "storage.access",
+        "storage.access.public_read",
+        "storage.access.read_via_resource"
+      ],
+      "headline_finding_id": "sha256:102bb228aa52908f",
+      "member_finding_ids": [
+        "sha256:102bb228aa52908f",
+        "sha256:d2aba1c371d267b2"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -3376,10 +3376,10 @@
         "storage.access.public_read",
         "storage.access.read_via_resource"
       ],
-      "headline_finding_id": "sha256:482a1ac6937bd145",
+      "headline_finding_id": "sha256:3cf4e55c2fb2effc",
       "member_finding_ids": [
-        "sha256:482a1ac6937bd145",
-        "sha256:e9b8512b9fed396b"
+        "sha256:3cf4e55c2fb2effc",
+        "sha256:c5d34c218d09701a"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -3391,9 +3391,9 @@
         "storage.controls",
         "storage.controls.public_access_fully_blocked"
       ],
-      "headline_finding_id": "sha256:748776a78c800b08",
+      "headline_finding_id": "sha256:4208a462c582cb2c",
       "member_finding_ids": [
-        "sha256:748776a78c800b08"
+        "sha256:4208a462c582cb2c"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -3407,15 +3407,15 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:d6768aae03c059be",
+      "headline_finding_id": "sha256:43b35c1b0184fc08",
       "member_finding_ids": [
-        "sha256:d6768aae03c059be"
+        "sha256:43b35c1b0184fc08"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
     },
     {
-      "issue_id": "sha256:154e2ecfd035558d",
+      "issue_id": "sha256:27bef4f13b73d427",
       "asset_id": "shopify-writeable-1",
       "shared_keys": [
         "storage.access",
@@ -3423,11 +3423,11 @@
         "storage.access.public_write",
         "storage.access.read_via_resource"
       ],
-      "headline_finding_id": "sha256:0b92ba3d2504b8d5",
+      "headline_finding_id": "sha256:2cc8155fb0e69ce2",
       "member_finding_ids": [
-        "sha256:0b92ba3d2504b8d5",
-        "sha256:94fd30ba678b6000",
-        "sha256:afd4d52b25be3baa"
+        "sha256:2cc8155fb0e69ce2",
+        "sha256:56fd962fa2dcfc97",
+        "sha256:74e6f47359fecaf5"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -3441,9 +3441,9 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:a7ac33d3a9f8b48e",
+      "headline_finding_id": "sha256:97d0355fc7d11de3",
       "member_finding_ids": [
-        "sha256:a7ac33d3a9f8b48e"
+        "sha256:97d0355fc7d11de3"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -3455,9 +3455,9 @@
         "storage.controls",
         "storage.controls.public_access_fully_blocked"
       ],
-      "headline_finding_id": "sha256:d14260350514a42e",
+      "headline_finding_id": "sha256:01ffa42b0dc78777",
       "member_finding_ids": [
-        "sha256:d14260350514a42e"
+        "sha256:01ffa42b0dc78777"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

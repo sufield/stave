@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:365df8283b5f6f06",
+      "finding_id": "sha256:f238d8a1f8dde254",
       "control_id": "CTL.RDS.IAMAUTH.001",
       "control_name": "RDS Must Enable IAM Authentication",
       "control_description": "RDS instances should enable IAM database authentication. IAM auth eliminates long-lived database passwords and integrates with AWS identity governance for centralized access control and audit.\n",
@@ -237,9 +237,9 @@
         "database.access.iam_authentication_enabled",
         "database.kind"
       ],
-      "headline_finding_id": "sha256:365df8283b5f6f06",
+      "headline_finding_id": "sha256:f238d8a1f8dde254",
       "member_finding_ids": [
-        "sha256:365df8283b5f6f06"
+        "sha256:f238d8a1f8dde254"
       ],
       "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1

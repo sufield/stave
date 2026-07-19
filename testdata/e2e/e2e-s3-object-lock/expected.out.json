@@ -57,7 +57,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:b6d05ff1963bda95",
+      "finding_id": "sha256:3e189185000dfa7b",
       "control_id": "CTL.S3.LOCK.001",
       "control_name": "Compliance-Tagged Buckets Must Have Object Lock Enabled",
       "control_description": "S3 buckets tagged with any compliance framework (soc2, gdpr, hipaa, pci-dss, etc.) must have S3 Object Lock enabled. Object Lock provides WORM (Write Once Read Many) protection, preventing objects from being deleted or overwritten for a specified retention period. Regulatory frameworks require immutable storage for audit logs, compliance records, and protected data.\n",
@@ -290,7 +290,7 @@
       ]
     },
     {
-      "finding_id": "sha256:48c4da7865eb8989",
+      "finding_id": "sha256:e834e3c4abeddae7",
       "control_id": "CTL.S3.LOCK.002",
       "control_name": "PHI Buckets Must Use COMPLIANCE Mode Object Lock",
       "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must use COMPLIANCE mode, not GOVERNANCE mode. COMPLIANCE mode prevents ANY user, including the root account, from deleting or overwriting protected objects during the retention period. GOVERNANCE mode allows users with special permissions to override retention, which is insufficient for HIPAA-regulated PHI data where tamper-proof storage is required.\n",
@@ -489,7 +489,7 @@
       ]
     },
     {
-      "finding_id": "sha256:72a8a7272fee0dad",
+      "finding_id": "sha256:22e38995b13201d9",
       "control_id": "CTL.S3.LOCK.003",
       "control_name": "PHI Object Lock Retention Must Meet Minimum Period",
       "control_description": "S3 buckets tagged with data-classification=phi that have Object Lock enabled must have a default retention period of at least 2190 days (6 years) to meet HIPAA minimum retention requirements. Shorter retention periods risk premature expiration of WORM protection, allowing deletion or modification of PHI data before the regulatory retention period has elapsed.\n",
@@ -749,9 +749,9 @@
         "storage.tags",
         "storage.tags.compliance"
       ],
-      "headline_finding_id": "sha256:b6d05ff1963bda95",
+      "headline_finding_id": "sha256:3e189185000dfa7b",
       "member_finding_ids": [
-        "sha256:b6d05ff1963bda95"
+        "sha256:3e189185000dfa7b"
       ],
       "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1
@@ -766,9 +766,9 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:48c4da7865eb8989",
+      "headline_finding_id": "sha256:e834e3c4abeddae7",
       "member_finding_ids": [
-        "sha256:48c4da7865eb8989"
+        "sha256:e834e3c4abeddae7"
       ],
       "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1
@@ -783,9 +783,9 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:72a8a7272fee0dad",
+      "headline_finding_id": "sha256:22e38995b13201d9",
       "member_finding_ids": [
-        "sha256:72a8a7272fee0dad"
+        "sha256:22e38995b13201d9"
       ],
       "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1

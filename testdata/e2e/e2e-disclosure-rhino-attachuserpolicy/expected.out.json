@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:91e80e20c706fc85",
+      "finding_id": "sha256:d559f129a8f080ad",
       "control_id": "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001",
       "control_name": "Principal Must Not Escalate via iam:AttachUserPolicy On Self",
       "control_description": "A principal with `iam:AttachUserPolicy` whose Resource field includes its own user ARN can attach any managed policy — including `arn:aws:iam::aws:policy/AdministratorAccess` — to itself and become admin with a single API call. This is Rhino Security Labs privilege-escalation technique #1 (\"IAM — Attach to user\") and is covered by Prowler's iam_policy_allows_privilege_escalation and Pacu's iam__privesc_scan. No other permission is required; self-scoped AttachUserPolicy is a one-step path to full admin.\nScope: gated on `identity.kind == \"user\"`. The `iam:AttachUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:AttachRolePolicy` on self, a separate technique that will require its own `CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001` control in a future iteration.\n",
@@ -246,9 +246,9 @@
         "identity.escalation.attach_user_policy_self",
         "identity.escalation.attach_user_policy_self.present"
       ],
-      "headline_finding_id": "sha256:91e80e20c706fc85",
+      "headline_finding_id": "sha256:d559f129a8f080ad",
       "member_finding_ids": [
-        "sha256:91e80e20c706fc85"
+        "sha256:d559f129a8f080ad"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2.5

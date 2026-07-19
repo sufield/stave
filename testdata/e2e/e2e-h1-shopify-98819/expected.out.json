@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:a01a06a82cb5f0fe",
+      "finding_id": "sha256:af9d35c15e590549",
       "control_id": "CTL.S3.AUTH.READ.001",
       "control_name": "No Authenticated-Users Read Access",
       "control_description": "S3 buckets must not grant read access to all authenticated AWS users. AuthenticatedUsers scope means any AWS account can read objects, which is nearly as dangerous as fully public access.\n",
@@ -183,7 +183,7 @@
       ]
     },
     {
-      "finding_id": "sha256:f9fdbdcd4b8389a7",
+      "finding_id": "sha256:9aaf245c02e36ddd",
       "control_id": "CTL.S3.POLICY.WRITE.001",
       "control_name": "No Public Write via Bucket Policy",
       "control_description": "S3 bucket policies must not grant write access to an anonymous or wildcard principal. Policy-based write access — a Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:PutObject or s3:DeleteObject without a restricting Condition — enables attackers to upload malicious objects, overwrite existing content, or hold data ransom. This is distinct from CTL.S3.PUBLIC.003, which fires on the composite public_write signal regardless of mechanism; this control narrows to the policy path so the finding points the operator at the bucket policy specifically. For ACL-based public write, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
@@ -376,17 +376,17 @@
   ],
   "issues": [
     {
-      "issue_id": "sha256:30269a94dc078840",
+      "issue_id": "sha256:0341dc4be475c884",
       "asset_id": "shopify-internal-assets",
       "shared_keys": [
         "storage.access",
         "storage.access.authenticated_read",
         "storage.access.write_via_resource"
       ],
-      "headline_finding_id": "sha256:a01a06a82cb5f0fe",
+      "headline_finding_id": "sha256:9aaf245c02e36ddd",
       "member_finding_ids": [
-        "sha256:a01a06a82cb5f0fe",
-        "sha256:f9fdbdcd4b8389a7"
+        "sha256:9aaf245c02e36ddd",
+        "sha256:af9d35c15e590549"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

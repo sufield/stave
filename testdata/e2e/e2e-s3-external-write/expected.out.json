@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:2bec0e386177280b",
+      "finding_id": "sha256:ee4c80dd4c4d9128",
       "control_id": "CTL.S3.ACCESS.003",
       "control_name": "No External Write Access",
       "control_description": "S3 buckets must not grant write or delete permissions to external AWS accounts. Cross-account read access may be acceptable for analytics or auditing, but write access from external accounts creates data integrity and supply chain risks.\n",
@@ -199,9 +199,9 @@
         "storage.access",
         "storage.access.has_external_write"
       ],
-      "headline_finding_id": "sha256:2bec0e386177280b",
+      "headline_finding_id": "sha256:ee4c80dd4c4d9128",
       "member_finding_ids": [
-        "sha256:2bec0e386177280b"
+        "sha256:ee4c80dd4c4d9128"
       ],
       "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1

@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:253091218eb6daa8",
+      "finding_id": "sha256:1085b35868f2aa53",
       "control_id": "CTL.S3.ENCRYPT.003",
       "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
       "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
@@ -247,7 +247,7 @@
       ]
     },
     {
-      "finding_id": "sha256:fcc6bceefefac3c7",
+      "finding_id": "sha256:b769a7ff8dfcfcc7",
       "control_id": "CTL.S3.ENCRYPT.003",
       "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
       "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
@@ -458,9 +458,9 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:253091218eb6daa8",
+      "headline_finding_id": "sha256:1085b35868f2aa53",
       "member_finding_ids": [
-        "sha256:253091218eb6daa8"
+        "sha256:1085b35868f2aa53"
       ],
       "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
@@ -475,9 +475,9 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:fcc6bceefefac3c7",
+      "headline_finding_id": "sha256:b769a7ff8dfcfcc7",
       "member_finding_ids": [
-        "sha256:fcc6bceefefac3c7"
+        "sha256:b769a7ff8dfcfcc7"
       ],
       "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1

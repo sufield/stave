@@ -600,7 +600,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:4b8c49734af61142",
+      "finding_id": "sha256:1ef24f4b1722c2da",
       "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
       "control_name": "CloudTrail Must Be Enabled in All Regions",
       "control_description": "CloudTrail must be configured as a multi-region trail. A single-region trail misses API activity in other regions, leaving gaps in the audit record that prevent forensic investigation of unauthorized access.\n",
@@ -816,7 +816,7 @@
       ]
     },
     {
-      "finding_id": "sha256:1e0760bada715362",
+      "finding_id": "sha256:6134dbda9f63cc84",
       "control_id": "CTL.COGNITO.COMPLIANCE.LOGRETENTION.001",
       "control_name": "Cognito Authentication Logs Retained Below Compliance Window",
       "control_description": "CloudWatch log group receiving Cognito authentication event logs has retention set shorter than the applicable compliance framework requires (typically 1 year for SOC 2, 6 years for HIPAA, 1 year for PCI-DSS). Authentication audit trail expires before the compliance window closes.\n",
@@ -961,7 +961,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:9177171a5f85406a",
+      "finding_id": "sha256:e0cdef23fb6c4d87",
       "control_id": "CTL.COGNITO.COMPLIANCE.NOCMK.001",
       "control_name": "Cognito User Pool Not Encrypted with Customer-Managed KMS Key",
       "control_description": "Cognito user pool processing PII does not use a customer-managed KMS key for encryption. Default AWS-managed encryption protects data at rest but the customer has no key-policy control, no audit visibility into decryption, and no revocation path.\n",
@@ -1106,7 +1106,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:34c06fb9e802898e",
+      "finding_id": "sha256:f63270f865ccdca3",
       "control_id": "CTL.COGNITO.COMPLIANCE.REGION.001",
       "control_name": "Cognito User Pool in Non-Compliant Region",
       "control_description": "Cognito user pool deployed in an AWS region that's not on the organization's approved-region list. For data-residency- regulated workloads (GDPR for EU users, HIPAA for US-only PHI), pools in off-policy regions are immediate compliance violations.\n",
@@ -1251,7 +1251,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:91403ff60365ae5c",
+      "finding_id": "sha256:8207839575561af5",
       "control_id": "CTL.COGNITO.LOCKOUT.NONE.001",
       "control_name": "Cognito User Pool Has No Brute-Force Lockout",
       "control_description": "Cognito user pool has neither account-level lockout configured nor advanced security features enabled to provide adaptive auth. Failed-login attempts can continue indefinitely with no throttling beyond Cognito's per-account rate limits. Brute- force and credential-stuffing attacks face no application-side resistance.\n",
@@ -1406,7 +1406,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:a73625cd410ebe3c",
+      "finding_id": "sha256:7d6fcdbe63b2e2aa",
       "control_id": "CTL.COGNITO.MFA.001",
       "control_name": "Cognito User Pool Must Enforce MFA",
       "control_description": "Cognito user pools handling PHI must enforce multi-factor authentication. Without MFA, a compromised password grants full access to the application and any PHI it serves.\n",
@@ -1563,7 +1563,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:0793f3f437d47e0b",
+      "finding_id": "sha256:34714cf3bd590adf",
       "control_id": "CTL.COGNITO.VERIFY.EMAIL.001",
       "control_name": "Cognito User Pool Does Not Auto-Verify Email",
       "control_description": "Cognito user pool does not auto-verify the email attribute. Users register with whatever email they type, including emails they don't control. Account recovery flows that target the email send recovery codes to the unverified address — the listed owner may never receive the message.\n",
@@ -1708,7 +1708,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:aa66250e8a1dc01c",
+      "finding_id": "sha256:907f5ebb544ca67d",
       "control_id": "CTL.CONFIG.ENABLED.001",
       "control_name": "AWS Config Must Be Recording All Resource Types",
       "control_description": "AWS Config must be enabled and recording all supported resource types. Without Config, configuration changes are not tracked and drift from the desired security baseline cannot be detected.\n",
@@ -1870,7 +1870,7 @@
       ]
     },
     {
-      "finding_id": "sha256:686a676fcb4f9731",
+      "finding_id": "sha256:3f85e00c948e6e1d",
       "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
       "control_name": "Root Account Must Not Have Access Keys",
       "control_description": "The AWS root account must not have active access keys. Root access keys provide unrestricted programmatic access. Use IAM users or roles for programmatic access instead.\n",
@@ -2075,7 +2075,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:d1659912ae8d6344",
+      "finding_id": "sha256:052c211befd32e5f",
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "control_name": "Root Account Must Have MFA Enabled",
       "control_description": "The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.\n",
@@ -2254,7 +2254,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:fba6f7d5386fd116",
+      "finding_id": "sha256:c5e576440e1e0be5",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -2735,7 +2735,7 @@
       ]
     },
     {
-      "finding_id": "sha256:17349c4885bbbf27",
+      "finding_id": "sha256:4812e97092464e8f",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -3216,7 +3216,7 @@
       ]
     },
     {
-      "finding_id": "sha256:3185d0eb2bbaceac",
+      "finding_id": "sha256:0129e5a362e047fe",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -3697,7 +3697,7 @@
       ]
     },
     {
-      "finding_id": "sha256:af8c305d7f6cb7c5",
+      "finding_id": "sha256:b106b976cc9116a1",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -4178,7 +4178,7 @@
       ]
     },
     {
-      "finding_id": "sha256:a4bf3639df324044",
+      "finding_id": "sha256:da517c9842ffce25",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -4659,7 +4659,7 @@
       ]
     },
     {
-      "finding_id": "sha256:ed99033e8732bb59",
+      "finding_id": "sha256:6bd42b92fb0ee85f",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -5140,7 +5140,7 @@
       ]
     },
     {
-      "finding_id": "sha256:36884977227ced38",
+      "finding_id": "sha256:1572c598c3af0903",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -5621,7 +5621,7 @@
       ]
     },
     {
-      "finding_id": "sha256:d31af2b5b9ba5e57",
+      "finding_id": "sha256:b9930b21679c40a0",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -6102,7 +6102,7 @@
       ]
     },
     {
-      "finding_id": "sha256:727437d51f4736c2",
+      "finding_id": "sha256:94df5f3ed24ec65f",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -6583,7 +6583,7 @@
       ]
     },
     {
-      "finding_id": "sha256:391660da1076673d",
+      "finding_id": "sha256:7e800af87b875001",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -7064,7 +7064,7 @@
       ]
     },
     {
-      "finding_id": "sha256:9f1e10992c15eec3",
+      "finding_id": "sha256:cab61f604b885906",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -7545,7 +7545,7 @@
       ]
     },
     {
-      "finding_id": "sha256:a15cad92a330db8f",
+      "finding_id": "sha256:034670cf8f739391",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -8026,7 +8026,7 @@
       ]
     },
     {
-      "finding_id": "sha256:fb7c2b386d60a0b2",
+      "finding_id": "sha256:7cf6d820f2986f04",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -8507,7 +8507,7 @@
       ]
     },
     {
-      "finding_id": "sha256:4531365b744d20db",
+      "finding_id": "sha256:7455fb7044e7870e",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -8988,7 +8988,7 @@
       ]
     },
     {
-      "finding_id": "sha256:dc34486cd9cc9321",
+      "finding_id": "sha256:fa26058d8ac4f1e4",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -9469,7 +9469,7 @@
       ]
     },
     {
-      "finding_id": "sha256:dc60eb7320fe380a",
+      "finding_id": "sha256:e502bb73b770c21d",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -9950,7 +9950,7 @@
       ]
     },
     {
-      "finding_id": "sha256:997240ee3367ff19",
+      "finding_id": "sha256:97c33f8ea2169d14",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -10431,7 +10431,7 @@
       ]
     },
     {
-      "finding_id": "sha256:f7599326e7bbef71",
+      "finding_id": "sha256:42cbb4e21f49a5c0",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -10912,7 +10912,7 @@
       ]
     },
     {
-      "finding_id": "sha256:48517dac959fa1f8",
+      "finding_id": "sha256:c0f5cb72db9be4e1",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -11393,7 +11393,7 @@
       ]
     },
     {
-      "finding_id": "sha256:efd9bcc962167259",
+      "finding_id": "sha256:d3ef7dcdfcc045c1",
       "control_id": "CTL.IAM.SCP.CREATEACCOUNT.001",
       "control_name": "SCPs Must Restrict Unauthorized IAM User and Account Creation",
       "control_description": "AWS Organizations must have an SCP restricting who can create IAM users (iam:CreateUser) and new AWS accounts (organizations:CreateAccount). Without this restriction, any principal with these permissions can create persistent identities that survive credential rotation and incident response. MITRE ATT\u0026CK T1136/T1136.003 documents account creation as a primary persistence technique after initial compromise. An attacker-created IAM user has separate credentials unknown to the incident response team. An attacker-created AWS account starts with no monitoring infrastructure deployed — a fresh environment inside the organization's trust boundary but outside its detection field.\n",
@@ -11874,7 +11874,7 @@
       ]
     },
     {
-      "finding_id": "sha256:9ac53f47bd4f1f1b",
+      "finding_id": "sha256:75740d5355c3f7bc",
       "control_id": "CTL.RDS.ENCRYPT.001",
       "control_name": "RDS Storage Encryption Must Be Enabled",
       "control_description": "RDS instances must have storage encryption enabled. Unencrypted database storage exposes data at rest to unauthorized access if the underlying storage is compromised.\n",
@@ -12035,7 +12035,7 @@
       ]
     },
     {
-      "finding_id": "sha256:6d6e5d5f2078bd42",
+      "finding_id": "sha256:771b0060b1dfe78b",
       "control_id": "CTL.RDS.PUBLIC.001",
       "control_name": "RDS Instances Must Not Be Publicly Accessible",
       "control_description": "RDS instances must not have public accessibility enabled. A publicly accessible database is reachable from the internet, exposing it to brute force attacks, SQL injection, and unauthorized data access.\n",
@@ -12231,7 +12231,7 @@
       ]
     },
     {
-      "finding_id": "sha256:897152591c28cfe7",
+      "finding_id": "sha256:a3eef7cab1e10092",
       "control_id": "CTL.SECRETS.ALARM.PUTVALUE.001",
       "control_name": "No CloudWatch Alarm for Secrets Manager PutSecretValue",
       "control_description": "No CloudWatch alarm monitors CloudTrail for PutSecretValue API calls. PutSecretValue replaces the secret's credential value — the database password, API key, or token changes. Without an alarm, credential modification is invisible. An attacker with PutSecretValue permission can replace a production database password with one they control, and every service that retrieves the secret then authenticates with the attacker's password. The alarm should ideally filter rotation-initiated PutSecretValue calls (userIdentity = rotation Lambda ARN) and alert only on manual or non-rotation modifications.\n",
@@ -12396,7 +12396,7 @@
       ]
     },
     {
-      "finding_id": "sha256:8c2a3420bc45fd23",
+      "finding_id": "sha256:9c44ec0099474087",
       "control_id": "CTL.SECRETS.ALARM.ROTATION.FAILURE.001",
       "control_name": "No CloudWatch Alarm for Secrets Manager Rotation Failure",
       "control_description": "No CloudWatch alarm monitors the RotationFailed event (Secrets Manager → CloudWatch Events / EventBridge) or CloudTrail RotateSecret error events. When rotation fails the credential doesn't change, the next rotation attempt may also fail, and the credential becomes static while rotation appears configured. Companion to CTL.SECRETS.GHOST.ROTATIONLAMBDA.001 and CTL.SECRETS.ROTATION.STALE.001 (SM-1): the SM-1 controls detect rotation already broken (state); this alarm detects rotation failing now (event), enabling minutes-level response.\n",
@@ -12562,7 +12562,7 @@
       ]
     },
     {
-      "finding_id": "sha256:753e28ece29a2eab",
+      "finding_id": "sha256:37646d52c69ed411",
       "control_id": "CTL.SECRETS.AUDIT.DATAEVENTS.001",
       "control_name": "CloudTrail Data Events Not Enabled for Secrets Manager",
       "control_description": "CloudTrail is not configured to log Secrets Manager data events (GetSecretValue, PutSecretValue, DeleteSecret). Management events (CreateSecret, DescribeSecret, UpdateSecret) are logged by default but the most sensitive operation — GetSecretValue, the credential read — is not. For secrets containing database passwords, API keys, and service credentials, data events are the only credential-access audit trail. Higher severity than SQS/SNS data-event controls (medium): credential access is the most sensitive data access operation in AWS.\n",
@@ -12745,7 +12745,7 @@
       ]
     },
     {
-      "finding_id": "sha256:81f43f35236b5e56",
+      "finding_id": "sha256:0666bc99aefde132",
       "control_id": "CTL.VPC.FLOWLOG.001",
       "control_name": "VPC Flow Logging Must Be Enabled",
       "control_description": "VPC flow logs capture information about IP traffic going to and from network interfaces. Without flow logs, network-level access patterns cannot be audited and unauthorized traffic goes undetected.\n",
@@ -13001,7 +13001,7 @@
       ]
     },
     {
-      "finding_id": "sha256:81b8ce81c12cc518",
+      "finding_id": "sha256:ddd33066f2bdbb9b",
       "control_id": "CTL.APIGATEWAY.TLS.001",
       "control_name": "API Gateway Must Enforce TLS 1.2",
       "control_description": "API Gateway stages must enforce TLS 1.2 or higher. Allowing older TLS versions exposes API traffic to known cryptographic attacks (BEAST, POODLE, etc).\n",
@@ -13148,7 +13148,7 @@
       ]
     },
     {
-      "finding_id": "sha256:a52edc7322ea1dde",
+      "finding_id": "sha256:af518097b3e2d97f",
       "control_id": "CTL.BACKUP.EXISTS.001",
       "control_name": "Critical Resources Must Have Backups",
       "control_description": "Resources tagged as critical or containing PHI must have at least one backup configured. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent and unrecoverable.\n",
@@ -13321,7 +13321,7 @@
       ]
     },
     {
-      "finding_id": "sha256:f237d540e872de4d",
+      "finding_id": "sha256:0b4d5c7bfe071fa1",
       "control_id": "CTL.CLOUDTRAIL.ENCRYPT.001",
       "control_name": "CloudTrail Logs Must Be Encrypted with KMS",
       "control_description": "CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Default S3 encryption (SSE-S3) does not provide key revocation capability needed for breach response.\n",
@@ -13468,7 +13468,7 @@
       ]
     },
     {
-      "finding_id": "sha256:1bb3180bd93c6975",
+      "finding_id": "sha256:214659e26c251a18",
       "control_id": "CTL.CLOUDTRAIL.VALIDATION.001",
       "control_name": "CloudTrail Log File Validation Must Be Enabled",
       "control_description": "CloudTrail must have log file integrity validation enabled. Without validation, an attacker who gains access to the log bucket can modify or delete log entries to cover their tracks.\n",
@@ -13618,7 +13618,7 @@
       ]
     },
     {
-      "finding_id": "sha256:801f9bd87a66bd5f",
+      "finding_id": "sha256:2a5fc959374667ad",
       "control_id": "CTL.CLOUDWATCH.RETENTION.001",
       "control_name": "CloudWatch Log Groups Must Have Retention Policy",
       "control_description": "CloudWatch Logs log groups must have a retention policy configured. Without a retention policy, logs are kept indefinitely (incurring cost) or may be deleted manually without audit trail.\n",
@@ -13780,7 +13780,7 @@
       ]
     },
     {
-      "finding_id": "sha256:c2ed914d02c8ae20",
+      "finding_id": "sha256:e9b363ca3c6d71c8",
       "control_id": "CTL.CONFIG.RULES.001",
       "control_name": "AWS Config Must Have Active Rules",
       "control_description": "AWS Config must have active Config Rules to evaluate resource compliance. Recording without rules provides change history but no automated drift detection.\n",
@@ -13936,7 +13936,7 @@
       ]
     },
     {
-      "finding_id": "sha256:57cf047d8c46d33b",
+      "finding_id": "sha256:d9f6cc25fda49cd7",
       "control_id": "CTL.DYNAMODB.ENCRYPT.001",
       "control_name": "DynamoDB Must Use Customer-Managed KMS Encryption",
       "control_description": "DynamoDB tables must use a customer-managed KMS key for encryption at rest. The default AWS-owned key does not support key revocation, audit of key usage, or cross-account key policies.\n",
@@ -14101,7 +14101,7 @@
       ]
     },
     {
-      "finding_id": "sha256:9ba0b33d2248da3a",
+      "finding_id": "sha256:96a7c0a77f297fc8",
       "control_id": "CTL.ELASTICACHE.TRANSIT.001",
       "control_name": "ElastiCache Must Have In-Transit Encryption Enabled",
       "control_description": "ElastiCache clusters must have in-transit encryption enabled. Without TLS, cache traffic travels in plaintext between the application and the cache nodes, exposing cached PHI data.\n",
@@ -14247,7 +14247,7 @@
       ]
     },
     {
-      "finding_id": "sha256:571de1d96c48afd6",
+      "finding_id": "sha256:b819a30f4697bdbc",
       "control_id": "CTL.ELB.HTTPS.001",
       "control_name": "Load Balancer Must Redirect HTTP to HTTPS",
       "control_description": "Load balancers serving PHI must redirect all HTTP traffic to HTTPS. Allowing plaintext HTTP exposes data in transit to interception.\n",
@@ -14368,7 +14368,7 @@
       ]
     },
     {
-      "finding_id": "sha256:45813734adb9d32e",
+      "finding_id": "sha256:74d69f22c86c4375",
       "control_id": "CTL.ELB.TLS.001",
       "control_name": "Load Balancer Must Use TLS 1.2 or Higher",
       "control_description": "Application and Network Load Balancers must use TLS 1.2 or higher for HTTPS listeners. Older TLS versions have known vulnerabilities.\n",
@@ -14490,7 +14490,7 @@
       ]
     },
     {
-      "finding_id": "sha256:1e9883ff6455c056",
+      "finding_id": "sha256:731afa06851a95e6",
       "control_id": "CTL.KMS.POLICY.001",
       "control_name": "KMS Key Policy Must Restrict Access to Specific Roles",
       "control_description": "KMS key policies must not grant wildcard principal access. A key policy with Principal \"*\" allows any IAM entity in the account (or any account if conditions are missing) to use the key, defeating the purpose of customer-managed encryption.\n",
@@ -14639,7 +14639,7 @@
       ]
     },
     {
-      "finding_id": "sha256:d3c473c720840e6d",
+      "finding_id": "sha256:b4d964067e113fd4",
       "control_id": "CTL.RDS.BACKUP.001",
       "control_name": "RDS Automated Backups Must Be Enabled",
       "control_description": "RDS instances must have automated backups enabled with a retention period of at least 7 days. Without backups, data loss from accidental deletion, corruption, or ransomware is permanent.\n",
@@ -14780,7 +14780,7 @@
       ]
     },
     {
-      "finding_id": "sha256:4faec0c040d11d18",
+      "finding_id": "sha256:cead780e52f296ed",
       "control_id": "CTL.SECRETSMANAGER.ENCRYPT.001",
       "control_name": "Secrets Must Be Encrypted with Customer-Managed KMS Key",
       "control_description": "Secrets Manager secrets must be encrypted with a customer-managed KMS key. The default AWS-managed key does not support key revocation or cross-account key policies needed for breach response.\n",
@@ -14926,7 +14926,7 @@
       ]
     },
     {
-      "finding_id": "sha256:284126ed74a244f3",
+      "finding_id": "sha256:dd6e5dd0fd0af0a2",
       "control_id": "CTL.SNS.ENCRYPT.001",
       "control_name": "SNS Topics Must Be Encrypted with KMS",
       "control_description": "SNS topics must use server-side encryption with a KMS key. Unencrypted topics expose message payloads at rest, which may contain PHI or other sensitive notification data.\n",
@@ -15067,7 +15067,7 @@
       ]
     },
     {
-      "finding_id": "sha256:63bc7609a3b16aa7",
+      "finding_id": "sha256:bf4f115856ce2987",
       "control_id": "CTL.SQS.ENCRYPT.001",
       "control_name": "SQS Queues Must Be Encrypted with KMS",
       "control_description": "SQS queues must use server-side encryption with a KMS key. Unencrypted queues expose message payloads at rest, which may contain PHI or other sensitive data.\n",
@@ -15228,7 +15228,7 @@
       ]
     },
     {
-      "finding_id": "sha256:99ff439877cf27fd",
+      "finding_id": "sha256:148f24eb553e95eb",
       "control_id": "CTL.BACKUP.MULTIAZ.001",
       "control_name": "Critical Resources Must Be Multi-AZ",
       "control_description": "Resources tagged as critical must be deployed across multiple Availability Zones. Single-AZ deployment has a single point of failure that causes unavailability during AZ outages.\n",
@@ -15370,7 +15370,7 @@
       ]
     },
     {
-      "finding_id": "sha256:826ab06811b86f5a",
+      "finding_id": "sha256:b40320bfc85d7c23",
       "control_id": "CTL.BACKUP.REPLICATION.001",
       "control_name": "Critical Data Must Have Cross-Region Replication",
       "control_description": "Data classified as critical or PHI must have cross-region replication configured for disaster recovery. Single-region data is vulnerable to regional outages and cannot meet recovery time objectives (RTO) for multi-region failover.\n",
@@ -15512,7 +15512,7 @@
       ]
     },
     {
-      "finding_id": "sha256:0eea80a827ddcfa6",
+      "finding_id": "sha256:b5244908533bf69b",
       "control_id": "CTL.ELB.CROSSZONE.001",
       "control_name": "Load Balancer Must Have Cross-Zone Load Balancing Enabled",
       "control_description": "Load balancers must distribute traffic across all registered targets in all enabled Availability Zones. Without cross-zone balancing, uneven distribution can cause availability issues during AZ failures.\n",
@@ -15630,7 +15630,7 @@
       ]
     },
     {
-      "finding_id": "sha256:be85087768aeabce",
+      "finding_id": "sha256:626cc63f11b9d50e",
       "control_id": "CTL.ELB.LOG.001",
       "control_name": "Load Balancer Access Logging Must Be Enabled",
       "control_description": "Load balancer access logging must be enabled for audit and forensic analysis. Without access logs, request patterns and potential unauthorized access cannot be investigated after an incident.\n",
@@ -15746,7 +15746,7 @@
       ]
     },
     {
-      "finding_id": "sha256:2653bff61b751ad6",
+      "finding_id": "sha256:50793c4e75e4c5bb",
       "control_id": "CTL.RDS.LOG.001",
       "control_name": "RDS Audit Logging Must Be Enabled",
       "control_description": "RDS instances must export audit logs to CloudWatch. Without audit logging, database access patterns cannot be monitored and unauthorized queries are undetectable.\n",
@@ -15907,7 +15907,7 @@
       ]
     },
     {
-      "finding_id": "sha256:c215d91c260588c6",
+      "finding_id": "sha256:4ed88062af74072f",
       "control_id": "CTL.RDS.MULTIAZ.001",
       "control_name": "RDS Instances Must Use Multi-AZ Deployment",
       "control_description": "Production RDS instances must use Multi-AZ deployment for high availability. Single-AZ instances have a single point of failure that can cause data unavailability during AZ outages.\n",
@@ -16096,7 +16096,7 @@
       ]
     },
     {
-      "finding_id": "sha256:7ea0b9680c5e0447",
+      "finding_id": "sha256:03c2d1fc2abdcdcf",
       "control_id": "CTL.SECRETSMANAGER.ACCESS.001",
       "control_name": "Secrets Must Have Rotation Enabled",
       "control_description": "Secrets Manager secrets must have automatic rotation enabled. Long-lived secrets that are never rotated increase the blast radius of credential leaks and prevent timely revocation.\n",
@@ -17368,9 +17368,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:fba6f7d5386fd116",
+      "headline_finding_id": "sha256:c5e576440e1e0be5",
       "member_finding_ids": [
-        "sha256:fba6f7d5386fd116"
+        "sha256:c5e576440e1e0be5"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17381,25 +17381,25 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:17349c4885bbbf27",
+      "headline_finding_id": "sha256:4812e97092464e8f",
       "member_finding_ids": [
-        "sha256:17349c4885bbbf27"
+        "sha256:4812e97092464e8f"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
     },
     {
-      "issue_id": "sha256:962f9aa7601dd20a",
+      "issue_id": "sha256:eb32b4394f465960",
       "asset_id": "aws-account-root",
       "shared_keys": [
         "identity.root",
         "identity.root.has_access_keys",
         "identity.root.mfa_enabled"
       ],
-      "headline_finding_id": "sha256:686a676fcb4f9731",
+      "headline_finding_id": "sha256:052c211befd32e5f",
       "member_finding_ids": [
-        "sha256:686a676fcb4f9731",
-        "sha256:d1659912ae8d6344"
+        "sha256:052c211befd32e5f",
+        "sha256:3f85e00c948e6e1d"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -17410,9 +17410,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:3185d0eb2bbaceac",
+      "headline_finding_id": "sha256:0129e5a362e047fe",
       "member_finding_ids": [
-        "sha256:3185d0eb2bbaceac"
+        "sha256:0129e5a362e047fe"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17423,9 +17423,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:af8c305d7f6cb7c5",
+      "headline_finding_id": "sha256:b106b976cc9116a1",
       "member_finding_ids": [
-        "sha256:af8c305d7f6cb7c5"
+        "sha256:b106b976cc9116a1"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17436,9 +17436,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:a4bf3639df324044",
+      "headline_finding_id": "sha256:da517c9842ffce25",
       "member_finding_ids": [
-        "sha256:a4bf3639df324044"
+        "sha256:da517c9842ffce25"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17451,10 +17451,10 @@
         "compliance.kind",
         "compliance.recording_enabled"
       ],
-      "headline_finding_id": "sha256:aa66250e8a1dc01c",
+      "headline_finding_id": "sha256:907f5ebb544ca67d",
       "member_finding_ids": [
-        "sha256:aa66250e8a1dc01c",
-        "sha256:c2ed914d02c8ae20"
+        "sha256:907f5ebb544ca67d",
+        "sha256:e9b363ca3c6d71c8"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2.5
@@ -17473,13 +17473,13 @@
         "secret.monitoring.alarm_rotation_failure",
         "secret.monitoring.cloudtrail_data_events"
       ],
-      "headline_finding_id": "sha256:753e28ece29a2eab",
+      "headline_finding_id": "sha256:37646d52c69ed411",
       "member_finding_ids": [
-        "sha256:4faec0c040d11d18",
-        "sha256:753e28ece29a2eab",
-        "sha256:7ea0b9680c5e0447",
-        "sha256:897152591c28cfe7",
-        "sha256:8c2a3420bc45fd23"
+        "sha256:03c2d1fc2abdcdcf",
+        "sha256:37646d52c69ed411",
+        "sha256:9c44ec0099474087",
+        "sha256:a3eef7cab1e10092",
+        "sha256:cead780e52f296ed"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 3
@@ -17490,9 +17490,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:ed99033e8732bb59",
+      "headline_finding_id": "sha256:6bd42b92fb0ee85f",
       "member_finding_ids": [
-        "sha256:ed99033e8732bb59"
+        "sha256:6bd42b92fb0ee85f"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17503,9 +17503,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:36884977227ced38",
+      "headline_finding_id": "sha256:1572c598c3af0903",
       "member_finding_ids": [
-        "sha256:36884977227ced38"
+        "sha256:1572c598c3af0903"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17516,9 +17516,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:d31af2b5b9ba5e57",
+      "headline_finding_id": "sha256:b9930b21679c40a0",
       "member_finding_ids": [
-        "sha256:d31af2b5b9ba5e57"
+        "sha256:b9930b21679c40a0"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17529,9 +17529,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:727437d51f4736c2",
+      "headline_finding_id": "sha256:94df5f3ed24ec65f",
       "member_finding_ids": [
-        "sha256:727437d51f4736c2"
+        "sha256:94df5f3ed24ec65f"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17546,11 +17546,11 @@
         "audit_trail.log_file_validation_enabled",
         "audit_trail.multi_region_enabled"
       ],
-      "headline_finding_id": "sha256:4b8c49734af61142",
+      "headline_finding_id": "sha256:1ef24f4b1722c2da",
       "member_finding_ids": [
-        "sha256:1bb3180bd93c6975",
-        "sha256:4b8c49734af61142",
-        "sha256:f237d540e872de4d"
+        "sha256:0b4d5c7bfe071fa1",
+        "sha256:1ef24f4b1722c2da",
+        "sha256:214659e26c251a18"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2.5
@@ -17561,9 +17561,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:391660da1076673d",
+      "headline_finding_id": "sha256:7e800af87b875001",
       "member_finding_ids": [
-        "sha256:391660da1076673d"
+        "sha256:7e800af87b875001"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17575,9 +17575,9 @@
         "identity.auth",
         "identity.auth.mfa_enforced"
       ],
-      "headline_finding_id": "sha256:a73625cd410ebe3c",
+      "headline_finding_id": "sha256:7d6fcdbe63b2e2aa",
       "member_finding_ids": [
-        "sha256:a73625cd410ebe3c"
+        "sha256:7d6fcdbe63b2e2aa"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -17593,13 +17593,13 @@
         "identity.cognito.in_approved_region",
         "identity.cognito.uses_cmk_encryption"
       ],
-      "headline_finding_id": "sha256:0793f3f437d47e0b",
+      "headline_finding_id": "sha256:34714cf3bd590adf",
       "member_finding_ids": [
-        "sha256:0793f3f437d47e0b",
-        "sha256:1e0760bada715362",
-        "sha256:34c06fb9e802898e",
-        "sha256:91403ff60365ae5c",
-        "sha256:9177171a5f85406a"
+        "sha256:34714cf3bd590adf",
+        "sha256:6134dbda9f63cc84",
+        "sha256:8207839575561af5",
+        "sha256:e0cdef23fb6c4d87",
+        "sha256:f63270f865ccdca3"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 3
@@ -17610,9 +17610,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:9f1e10992c15eec3",
+      "headline_finding_id": "sha256:cab61f604b885906",
       "member_finding_ids": [
-        "sha256:9f1e10992c15eec3"
+        "sha256:cab61f604b885906"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17623,9 +17623,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:a15cad92a330db8f",
+      "headline_finding_id": "sha256:034670cf8f739391",
       "member_finding_ids": [
-        "sha256:a15cad92a330db8f"
+        "sha256:034670cf8f739391"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17636,9 +17636,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:fb7c2b386d60a0b2",
+      "headline_finding_id": "sha256:7cf6d820f2986f04",
       "member_finding_ids": [
-        "sha256:fb7c2b386d60a0b2"
+        "sha256:7cf6d820f2986f04"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17649,15 +17649,15 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:4531365b744d20db",
+      "headline_finding_id": "sha256:7455fb7044e7870e",
       "member_finding_ids": [
-        "sha256:4531365b744d20db"
+        "sha256:7455fb7044e7870e"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
     },
     {
-      "issue_id": "sha256:67ea1884f309e4dd",
+      "issue_id": "sha256:ad9ea7a7bd73eadd",
       "asset_id": "phi-database",
       "shared_keys": [
         "database.access",
@@ -17671,13 +17671,13 @@
         "database.logging",
         "database.logging.audit_log_enabled"
       ],
-      "headline_finding_id": "sha256:6d6e5d5f2078bd42",
+      "headline_finding_id": "sha256:75740d5355c3f7bc",
       "member_finding_ids": [
-        "sha256:2653bff61b751ad6",
-        "sha256:6d6e5d5f2078bd42",
-        "sha256:9ac53f47bd4f1f1b",
-        "sha256:c215d91c260588c6",
-        "sha256:d3c473c720840e6d"
+        "sha256:4ed88062af74072f",
+        "sha256:50793c4e75e4c5bb",
+        "sha256:75740d5355c3f7bc",
+        "sha256:771b0060b1dfe78b",
+        "sha256:b4d964067e113fd4"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -17688,9 +17688,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:dc34486cd9cc9321",
+      "headline_finding_id": "sha256:fa26058d8ac4f1e4",
       "member_finding_ids": [
-        "sha256:dc34486cd9cc9321"
+        "sha256:fa26058d8ac4f1e4"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17701,9 +17701,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:dc60eb7320fe380a",
+      "headline_finding_id": "sha256:e502bb73b770c21d",
       "member_finding_ids": [
-        "sha256:dc60eb7320fe380a"
+        "sha256:e502bb73b770c21d"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17714,9 +17714,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:997240ee3367ff19",
+      "headline_finding_id": "sha256:97c33f8ea2169d14",
       "member_finding_ids": [
-        "sha256:997240ee3367ff19"
+        "sha256:97c33f8ea2169d14"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17727,9 +17727,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:f7599326e7bbef71",
+      "headline_finding_id": "sha256:42cbb4e21f49a5c0",
       "member_finding_ids": [
-        "sha256:f7599326e7bbef71"
+        "sha256:42cbb4e21f49a5c0"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17740,9 +17740,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:48517dac959fa1f8",
+      "headline_finding_id": "sha256:c0f5cb72db9be4e1",
       "member_finding_ids": [
-        "sha256:48517dac959fa1f8"
+        "sha256:c0f5cb72db9be4e1"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17755,9 +17755,9 @@
         "network.flow_log.enabled",
         "network.kind"
       ],
-      "headline_finding_id": "sha256:81f43f35236b5e56",
+      "headline_finding_id": "sha256:0666bc99aefde132",
       "member_finding_ids": [
-        "sha256:81f43f35236b5e56"
+        "sha256:0666bc99aefde132"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17768,9 +17768,9 @@
       "shared_keys": [
         "scp.has_create_account_restriction"
       ],
-      "headline_finding_id": "sha256:efd9bcc962167259",
+      "headline_finding_id": "sha256:d3ef7dcdfcc045c1",
       "member_finding_ids": [
-        "sha256:efd9bcc962167259"
+        "sha256:d3ef7dcdfcc045c1"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
@@ -17783,10 +17783,10 @@
         "loadbalancer.encryption.http_to_https_redirect",
         "loadbalancer.encryption.tls_1_2_or_higher"
       ],
-      "headline_finding_id": "sha256:45813734adb9d32e",
+      "headline_finding_id": "sha256:74d69f22c86c4375",
       "member_finding_ids": [
-        "sha256:45813734adb9d32e",
-        "sha256:571de1d96c48afd6"
+        "sha256:74d69f22c86c4375",
+        "sha256:b819a30f4697bdbc"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -17798,9 +17798,9 @@
         "log_group.has_retention_policy",
         "log_group.kind"
       ],
-      "headline_finding_id": "sha256:801f9bd87a66bd5f",
+      "headline_finding_id": "sha256:2a5fc959374667ad",
       "member_finding_ids": [
-        "sha256:801f9bd87a66bd5f"
+        "sha256:2a5fc959374667ad"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1.5
@@ -17811,9 +17811,9 @@
       "shared_keys": [
         "backup.has_backup"
       ],
-      "headline_finding_id": "sha256:a52edc7322ea1dde",
+      "headline_finding_id": "sha256:af518097b3e2d97f",
       "member_finding_ids": [
-        "sha256:a52edc7322ea1dde"
+        "sha256:af518097b3e2d97f"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -17826,9 +17826,9 @@
         "messaging.encryption.encrypted",
         "messaging.kind"
       ],
-      "headline_finding_id": "sha256:284126ed74a244f3",
+      "headline_finding_id": "sha256:dd6e5dd0fd0af0a2",
       "member_finding_ids": [
-        "sha256:284126ed74a244f3"
+        "sha256:dd6e5dd0fd0af0a2"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -17841,9 +17841,9 @@
         "api.encryption.tls_enforced",
         "api.kind"
       ],
-      "headline_finding_id": "sha256:81b8ce81c12cc518",
+      "headline_finding_id": "sha256:ddd33066f2bdbb9b",
       "member_finding_ids": [
-        "sha256:81b8ce81c12cc518"
+        "sha256:ddd33066f2bdbb9b"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -17855,9 +17855,9 @@
         "cryptography.policy",
         "cryptography.policy.has_wildcard_principal"
       ],
-      "headline_finding_id": "sha256:1e9883ff6455c056",
+      "headline_finding_id": "sha256:731afa06851a95e6",
       "member_finding_ids": [
-        "sha256:1e9883ff6455c056"
+        "sha256:731afa06851a95e6"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -17870,9 +17870,9 @@
         "database.encryption.sse_type",
         "database.kind"
       ],
-      "headline_finding_id": "sha256:57cf047d8c46d33b",
+      "headline_finding_id": "sha256:d9f6cc25fda49cd7",
       "member_finding_ids": [
-        "sha256:57cf047d8c46d33b"
+        "sha256:d9f6cc25fda49cd7"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -17885,9 +17885,9 @@
         "messaging.encryption.encrypted",
         "messaging.kind"
       ],
-      "headline_finding_id": "sha256:63bc7609a3b16aa7",
+      "headline_finding_id": "sha256:bf4f115856ce2987",
       "member_finding_ids": [
-        "sha256:63bc7609a3b16aa7"
+        "sha256:bf4f115856ce2987"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -17900,9 +17900,9 @@
         "cache.encryption.in_transit_enabled",
         "cache.kind"
       ],
-      "headline_finding_id": "sha256:9ba0b33d2248da3a",
+      "headline_finding_id": "sha256:96a7c0a77f297fc8",
       "member_finding_ids": [
-        "sha256:9ba0b33d2248da3a"
+        "sha256:96a7c0a77f297fc8"
       ],
       "consolidated_score": 76.02739726027397,
       "consolidated_blast_radius": 1
@@ -17914,9 +17914,9 @@
         "loadbalancer.logging",
         "loadbalancer.logging.access_log_enabled"
       ],
-      "headline_finding_id": "sha256:be85087768aeabce",
+      "headline_finding_id": "sha256:626cc63f11b9d50e",
       "member_finding_ids": [
-        "sha256:be85087768aeabce"
+        "sha256:626cc63f11b9d50e"
       ],
       "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1
@@ -17928,9 +17928,9 @@
         "loadbalancer.availability",
         "loadbalancer.availability.cross_zone_enabled"
       ],
-      "headline_finding_id": "sha256:0eea80a827ddcfa6",
+      "headline_finding_id": "sha256:b5244908533bf69b",
       "member_finding_ids": [
-        "sha256:0eea80a827ddcfa6"
+        "sha256:b5244908533bf69b"
       ],
       "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1
@@ -17942,9 +17942,9 @@
         "availability.kind",
         "availability.multi_az"
       ],
-      "headline_finding_id": "sha256:99ff439877cf27fd",
+      "headline_finding_id": "sha256:148f24eb553e95eb",
       "member_finding_ids": [
-        "sha256:99ff439877cf27fd"
+        "sha256:148f24eb553e95eb"
       ],
       "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1
@@ -17956,9 +17956,9 @@
         "replication.cross_region_enabled",
         "replication.kind"
       ],
-      "headline_finding_id": "sha256:826ab06811b86f5a",
+      "headline_finding_id": "sha256:b40320bfc85d7c23",
       "member_finding_ids": [
-        "sha256:826ab06811b86f5a"
+        "sha256:b40320bfc85d7c23"
       ],
       "consolidated_score": 50.68493150684932,
       "consolidated_blast_radius": 1

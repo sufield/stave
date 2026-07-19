@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:d1659912ae8d6344",
+      "finding_id": "sha256:052c211befd32e5f",
       "control_id": "CTL.IAM.ROOT.MFA.001",
       "control_name": "Root Account Must Have MFA Enabled",
       "control_description": "The AWS root account must have multi-factor authentication enabled. Root has unrestricted access to all resources. Compromise without MFA is the highest-severity identity risk.\n",
@@ -306,9 +306,9 @@
         "identity.root",
         "identity.root.mfa_enabled"
       ],
-      "headline_finding_id": "sha256:d1659912ae8d6344",
+      "headline_finding_id": "sha256:052c211befd32e5f",
       "member_finding_ids": [
-        "sha256:d1659912ae8d6344"
+        "sha256:052c211befd32e5f"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

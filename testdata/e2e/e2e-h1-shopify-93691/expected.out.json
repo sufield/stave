@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:210cb8b46711f55b",
+      "finding_id": "sha256:6c492b59638cff70",
       "control_id": "CTL.S3.WRITE.SCOPE.001",
       "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
       "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
@@ -231,9 +231,9 @@
         "s3_upload.operation",
         "type"
       ],
-      "headline_finding_id": "sha256:210cb8b46711f55b",
+      "headline_finding_id": "sha256:6c492b59638cff70",
       "member_finding_ids": [
-        "sha256:210cb8b46711f55b"
+        "sha256:6c492b59638cff70"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

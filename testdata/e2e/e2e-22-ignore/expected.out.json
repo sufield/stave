@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:696705523d5ed7ce",
+      "finding_id": "sha256:4902782f5331c4a1",
       "control_id": "CTL.ID.KUBE.003",
       "control_name": "Binding to system:unauthenticated",
       "control_description": "Bindings that grant permissions to system:unauthenticated allow anonymous access.\nApplies to: k8s.clusterrolebinding, k8s.rolebinding resources\n",
@@ -156,9 +156,9 @@
       "shared_keys": [
         "binds_to_system_unauthenticated"
       ],
-      "headline_finding_id": "sha256:696705523d5ed7ce",
+      "headline_finding_id": "sha256:4902782f5331c4a1",
       "member_finding_ids": [
-        "sha256:696705523d5ed7ce"
+        "sha256:4902782f5331c4a1"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

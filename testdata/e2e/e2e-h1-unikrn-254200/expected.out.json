@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:30cb3aa1f0378f75",
+      "finding_id": "sha256:aa1b9f3d7a3af352",
       "control_id": "CTL.S3.TENANT.ISOLATION.001",
       "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
       "control_description": "When a shared S3 bucket uses prefix-based tenant isolation, every app-signer identity that produces presigned URLs must enforce the tenant prefix.  An identity that allows path traversal (../) or disables prefix enforcement lets one tenant read or overwrite another tenant's objects.\n",
@@ -313,7 +313,7 @@
       ]
     },
     {
-      "finding_id": "sha256:0a7ad2a7c249ba40",
+      "finding_id": "sha256:78ce34e52b74511f",
       "control_id": "CTL.S3.WRITE.SCOPE.001",
       "control_name": "S3 Signed Upload Must Bind To Exact Object Key",
       "control_description": "Signed upload policies must restrict write permission to a single exact object key. Prefix-wide permissions (e.g., starts-with $key files/) enable arbitrary overwrite and cross-tenant tampering.\n",
@@ -510,9 +510,9 @@
         "storage.tags.tenant_mode",
         "storage.tags.tenant_prefix"
       ],
-      "headline_finding_id": "sha256:30cb3aa1f0378f75",
+      "headline_finding_id": "sha256:aa1b9f3d7a3af352",
       "member_finding_ids": [
-        "sha256:30cb3aa1f0378f75"
+        "sha256:aa1b9f3d7a3af352"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -525,9 +525,9 @@
         "s3_upload.operation",
         "type"
       ],
-      "headline_finding_id": "sha256:0a7ad2a7c249ba40",
+      "headline_finding_id": "sha256:78ce34e52b74511f",
       "member_finding_ids": [
-        "sha256:0a7ad2a7c249ba40"
+        "sha256:78ce34e52b74511f"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

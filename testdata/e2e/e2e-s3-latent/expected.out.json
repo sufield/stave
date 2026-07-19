@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:e2cd995700dd0179",
+      "finding_id": "sha256:6695057fb6ba7bfc",
       "control_id": "CTL.S3.PUBLIC.005",
       "control_name": "No Latent Public Read Exposure",
       "control_description": "S3 buckets must not have latent public read exposure where a public mechanism (policy or ACL) is masked only by Public Access Block. Removing PAB would immediately expose the bucket.",
@@ -300,9 +300,9 @@
         "storage.access",
         "storage.access.latent_public_read"
       ],
-      "headline_finding_id": "sha256:e2cd995700dd0179",
+      "headline_finding_id": "sha256:6695057fb6ba7bfc",
       "member_finding_ids": [
-        "sha256:e2cd995700dd0179"
+        "sha256:6695057fb6ba7bfc"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

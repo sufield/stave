@@ -127,7 +127,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:4213b4640ec19233",
+      "finding_id": "sha256:110e414455e3bc90",
       "control_id": "CTL.S3.PUBLIC.001",
       "control_name": "No Public S3 Bucket Read",
       "control_description": "S3 buckets must not allow public read access. Detects buckets with anonymous read exposure via policy or ACL.\n",
@@ -375,7 +375,7 @@
       ]
     },
     {
-      "finding_id": "sha256:a8db07ec8df71531",
+      "finding_id": "sha256:8218589e0925ab34",
       "control_id": "CTL.S3.PUBLIC.002",
       "control_name": "No Public S3 Buckets With Sensitive Data",
       "control_description": "S3 buckets tagged with sensitive data classifications (PHI, PII, confidential) must not allow any public access.\n",
@@ -680,7 +680,7 @@
       ]
     },
     {
-      "finding_id": "sha256:5ce777d4af066e45",
+      "finding_id": "sha256:5a873d8eb8cde8b0",
       "control_id": "CTL.S3.PUBLIC.007",
       "control_name": "No Public Read via Identity Policy",
       "control_description": "IAM identity-based policies attached to users or roles must not grant broad read access to S3 buckets that is effectively public — for example, a policy attached to a widely-assumed role or to a role trusted by a public federated identity provider. This is distinct from CTL.S3.PUBLIC.004 (resource-based bucket policy granting public read); the identity-policy path is a separate AWS evaluation branch and deserves its own finding so the operator fixes the right artifact.\n",
@@ -857,7 +857,7 @@
       ]
     },
     {
-      "finding_id": "sha256:5d1205a18974cf1c",
+      "finding_id": "sha256:57df27170b09b334",
       "control_id": "CTL.S3.PUBLIC.008",
       "control_name": "No Public List via Identity Policy",
       "control_description": "IAM identity-based policies attached to users or roles must not grant broad list access (s3:ListBucket) that is effectively public. Anonymous-or-near-anonymous listing enables enumeration of the bucket contents, which typically precedes targeted object exfiltration. This is distinct from the ACL-based list exposure covered by CTL.S3.PUBLIC.LIST.001 / .002 and from resource-based list grants; the identity-policy path is its own finding.\n",
@@ -1034,7 +1034,7 @@
       ]
     },
     {
-      "finding_id": "sha256:2d804935b823b211",
+      "finding_id": "sha256:0c7496876a83eab0",
       "control_id": "CTL.S3.PUBLIC.LIST.001",
       "control_name": "No Public S3 Bucket Listing",
       "control_description": "S3 buckets must not allow anonymous listing of objects. Public listing exposes object keys, enabling targeted data exfiltration.\n",
@@ -1210,7 +1210,7 @@
       ]
     },
     {
-      "finding_id": "sha256:3e039dfc23916f37",
+      "finding_id": "sha256:33ffc073ed9589d5",
       "control_id": "CTL.S3.PUBLIC.LIST.002",
       "control_name": "Anonymous S3 Listing Must Be Explicitly Intended",
       "control_description": "Anonymous bucket listing increases exposure surface even when objects are public by design. Listing must be explicitly intended via tag.\n",
@@ -1519,7 +1519,7 @@
       ]
     },
     {
-      "finding_id": "sha256:583ae8ba1a6a68ff",
+      "finding_id": "sha256:b451f681d7484b4c",
       "control_id": "CTL.S3.CONTROLS.001",
       "control_name": "Public Access Block Must Be Enabled",
       "control_description": "S3 buckets must have the public access block fully enabled. When disabled, the bucket has no safety net against accidental public exposure from policy or ACL changes. This detects the enabling condition for public access, not the exposure itself.\n",
@@ -1705,7 +1705,7 @@
       ]
     },
     {
-      "finding_id": "sha256:43ab6c2fa0c5cc92",
+      "finding_id": "sha256:157305de6965b009",
       "control_id": "CTL.S3.ENCRYPT.003",
       "control_name": "PHI Buckets Must Use SSE-KMS with Customer-Managed Key",
       "control_description": "S3 buckets tagged with data-classification=phi must use SSE-KMS encryption with a customer-managed key (CMK), not the default AWS-managed key or SSE-S3. This ensures the organization controls key rotation, access policies, and audit logging for PHI data at rest.\n",
@@ -1919,7 +1919,7 @@
       ]
     },
     {
-      "finding_id": "sha256:83f15999648c5a1f",
+      "finding_id": "sha256:babb968fba11fe49",
       "control_id": "CTL.S3.ENCRYPT.004",
       "control_name": "Sensitive Data Requires KMS Encryption",
       "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
@@ -2179,7 +2179,7 @@
       ]
     },
     {
-      "finding_id": "sha256:04376e057daa240f",
+      "finding_id": "sha256:5036e761f5449f30",
       "control_id": "CTL.S3.GOVERNANCE.001",
       "control_name": "Data Classification Tag Required",
       "control_description": "S3 buckets must have a data-classification tag. Without this tag, tag-conditional controls for PHI, PII, confidential data, backup integrity, and compliance retention cannot evaluate — the bucket silently passes all sensitivity-gated checks regardless of actual content.\n",
@@ -2461,16 +2461,16 @@
         "storage.tags.data-classification",
         "storage.tags.public_list_intended"
       ],
-      "headline_finding_id": "sha256:2d804935b823b211",
+      "headline_finding_id": "sha256:0c7496876a83eab0",
       "member_finding_ids": [
-        "sha256:2d804935b823b211",
-        "sha256:3e039dfc23916f37",
-        "sha256:4213b4640ec19233",
-        "sha256:43ab6c2fa0c5cc92",
-        "sha256:5ce777d4af066e45",
-        "sha256:5d1205a18974cf1c",
-        "sha256:83f15999648c5a1f",
-        "sha256:a8db07ec8df71531"
+        "sha256:0c7496876a83eab0",
+        "sha256:110e414455e3bc90",
+        "sha256:157305de6965b009",
+        "sha256:33ffc073ed9589d5",
+        "sha256:57df27170b09b334",
+        "sha256:5a873d8eb8cde8b0",
+        "sha256:8218589e0925ab34",
+        "sha256:babb968fba11fe49"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -2482,9 +2482,9 @@
         "storage.controls",
         "storage.controls.public_access_fully_blocked"
       ],
-      "headline_finding_id": "sha256:583ae8ba1a6a68ff",
+      "headline_finding_id": "sha256:b451f681d7484b4c",
       "member_finding_ids": [
-        "sha256:583ae8ba1a6a68ff"
+        "sha256:b451f681d7484b4c"
       ],
       "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
@@ -2496,9 +2496,9 @@
         "storage.tags",
         "storage.tags.data-classification"
       ],
-      "headline_finding_id": "sha256:04376e057daa240f",
+      "headline_finding_id": "sha256:5036e761f5449f30",
       "member_finding_ids": [
-        "sha256:04376e057daa240f"
+        "sha256:5036e761f5449f30"
       ],
       "consolidated_score": 25.684931506849317,
       "consolidated_blast_radius": 1

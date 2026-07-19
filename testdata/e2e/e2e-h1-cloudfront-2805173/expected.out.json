@@ -117,7 +117,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:a3acb432af776825",
+      "finding_id": "sha256:4b0d58ab67a9a658",
       "control_id": "CTL.IAM.NEP.ADMIN.001",
       "control_name": "Net Effective Permissions Must Not Include Admin-Equivalent Actions",
       "control_description": "After resolving all policy layers (SCPs, permission boundaries, identity-based policies, explicit denies), a principal not designated as administrative must not have admin-equivalent effective permissions. This is distinct from CTL.IAM.POLICY.ADMIN.001 which checks policy content — this control checks the resolved effective permissions after organizational constraints are applied. A principal may have an AdminAccess policy attached but be effectively constrained by an SCP.\n",
@@ -251,7 +251,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:0d2f8798db3789f3",
+      "finding_id": "sha256:f7a465294db267e6",
       "control_id": "CTL.IAM.NEP.ESCALATION.001",
       "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
       "control_description": "After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access — neither individual role appears dangerous, but the chain is the finding.\n",
@@ -384,7 +384,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:c6ed7d32277555dd",
+      "finding_id": "sha256:fd3a86f1e3250ba0",
       "control_id": "CTL.IAM.NEP.ESCALATION.001",
       "control_name": "No Principal May Have Net Effective Permissions to Escalate Privileges",
       "control_description": "After resolving all policy layers including transitive role assumption chains, no non-administrative principal may have effective permissions to escalate beyond their intended privilege scope. Escalation is detected in two forms: direct escalation primitives (iam:CreatePolicyVersion, iam:AttachRolePolicy, etc.) in the resolved effective allow set, and transitive escalation through role chains that reach higher privilege levels than the principal's direct permissions. A developer role that can assume a pipeline role that can assume an admin role has effective admin access — neither individual role appears dangerous, but the chain is the finding.\n",
@@ -519,7 +519,7 @@
       "deciding_layer": "identity_policy"
     },
     {
-      "finding_id": "sha256:d028664301f23de0",
+      "finding_id": "sha256:4b423e6e9933438a",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function — and any attacker who compromises or invokes it — access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
@@ -1381,7 +1381,7 @@
       ]
     },
     {
-      "finding_id": "sha256:3bd75724de9608f7",
+      "finding_id": "sha256:7eed0d1a5f640038",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function — and any attacker who compromises or invokes it — access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
@@ -2243,7 +2243,7 @@
       ]
     },
     {
-      "finding_id": "sha256:3589e399b5df2a40",
+      "finding_id": "sha256:1e6db8c71dfed17e",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function — and any attacker who compromises or invokes it — access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
@@ -3105,7 +3105,7 @@
       ]
     },
     {
-      "finding_id": "sha256:da5eaa3c60700baa",
+      "finding_id": "sha256:929886d410c5d116",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function — and any attacker who compromises or invokes it — access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
@@ -3967,7 +3967,7 @@
       ]
     },
     {
-      "finding_id": "sha256:e4433a0bee175ad8",
+      "finding_id": "sha256:d6eb6fcda8c4aeff",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function — and any attacker who compromises or invokes it — access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
@@ -4829,7 +4829,7 @@
       ]
     },
     {
-      "finding_id": "sha256:4942c3d80f3e1e24",
+      "finding_id": "sha256:7d92311055f29761",
       "control_id": "CTL.LAMBDA.ROLE.LEASTPRIV.001",
       "control_name": "Lambda Execution Role Must Follow Least Privilege",
       "control_description": "Lambda function execution roles must not have overly broad permissions. An over-privileged execution role grants the function — and any attacker who compromises or invokes it — access to AWS resources beyond what the function requires. Common violations include admin policies, wildcard resource ARNs on sensitive actions, or managed policies like AmazonS3FullAccess attached to functions that only need read access to a single bucket. When combined with a public function URL or a compromised dependency, an over-privileged role converts a single function compromise into account-wide lateral movement.\n",
@@ -6481,9 +6481,9 @@
         "identity.nep",
         "identity.nep.has_escalation_path"
       ],
-      "headline_finding_id": "sha256:0d2f8798db3789f3",
+      "headline_finding_id": "sha256:f7a465294db267e6",
       "member_finding_ids": [
-        "sha256:0d2f8798db3789f3"
+        "sha256:f7a465294db267e6"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -6496,10 +6496,10 @@
         "identity.nep.has_escalation_path",
         "identity.nep.is_admin"
       ],
-      "headline_finding_id": "sha256:a3acb432af776825",
+      "headline_finding_id": "sha256:4b0d58ab67a9a658",
       "member_finding_ids": [
-        "sha256:a3acb432af776825",
-        "sha256:c6ed7d32277555dd"
+        "sha256:4b0d58ab67a9a658",
+        "sha256:fd3a86f1e3250ba0"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -6511,9 +6511,9 @@
         "compute.execution_role",
         "compute.execution_role.is_overprivileged"
       ],
-      "headline_finding_id": "sha256:d028664301f23de0",
+      "headline_finding_id": "sha256:4b423e6e9933438a",
       "member_finding_ids": [
-        "sha256:d028664301f23de0"
+        "sha256:4b423e6e9933438a"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1.5
@@ -6525,9 +6525,9 @@
         "compute.execution_role",
         "compute.execution_role.is_overprivileged"
       ],
-      "headline_finding_id": "sha256:3bd75724de9608f7",
+      "headline_finding_id": "sha256:7eed0d1a5f640038",
       "member_finding_ids": [
-        "sha256:3bd75724de9608f7"
+        "sha256:7eed0d1a5f640038"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1.5
@@ -6539,9 +6539,9 @@
         "compute.execution_role",
         "compute.execution_role.is_overprivileged"
       ],
-      "headline_finding_id": "sha256:3589e399b5df2a40",
+      "headline_finding_id": "sha256:1e6db8c71dfed17e",
       "member_finding_ids": [
-        "sha256:3589e399b5df2a40"
+        "sha256:1e6db8c71dfed17e"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1.5
@@ -6553,9 +6553,9 @@
         "compute.execution_role",
         "compute.execution_role.is_overprivileged"
       ],
-      "headline_finding_id": "sha256:da5eaa3c60700baa",
+      "headline_finding_id": "sha256:929886d410c5d116",
       "member_finding_ids": [
-        "sha256:da5eaa3c60700baa"
+        "sha256:929886d410c5d116"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1.5
@@ -6567,9 +6567,9 @@
         "compute.execution_role",
         "compute.execution_role.is_overprivileged"
       ],
-      "headline_finding_id": "sha256:e4433a0bee175ad8",
+      "headline_finding_id": "sha256:d6eb6fcda8c4aeff",
       "member_finding_ids": [
-        "sha256:e4433a0bee175ad8"
+        "sha256:d6eb6fcda8c4aeff"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1.5
@@ -6581,9 +6581,9 @@
         "compute.execution_role",
         "compute.execution_role.is_overprivileged"
       ],
-      "headline_finding_id": "sha256:4942c3d80f3e1e24",
+      "headline_finding_id": "sha256:7d92311055f29761",
       "member_finding_ids": [
-        "sha256:4942c3d80f3e1e24"
+        "sha256:7d92311055f29761"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1.5

@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:f9c72f4bd60a083f",
+      "finding_id": "sha256:9e45e8a562f94bd1",
       "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
       "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
       "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
@@ -233,9 +233,9 @@
         "s3_ref.bucket_exists",
         "s3_ref.bucket_owned"
       ],
-      "headline_finding_id": "sha256:f9c72f4bd60a083f",
+      "headline_finding_id": "sha256:9e45e8a562f94bd1",
       "member_finding_ids": [
-        "sha256:f9c72f4bd60a083f"
+        "sha256:9e45e8a562f94bd1"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

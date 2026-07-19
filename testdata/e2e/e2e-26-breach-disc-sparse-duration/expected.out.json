@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:bee4ecb18ecc1193",
+      "finding_id": "sha256:c59b38ec05f57190",
       "control_id": "CTL.EXP.DURATION.001",
       "control_name": "Unsafe Exposure Duration Bound",
       "control_description": "An asset must not remain unsafe beyond the configured time window.",
@@ -148,9 +148,9 @@
       "shared_keys": [
         "public"
       ],
-      "headline_finding_id": "sha256:bee4ecb18ecc1193",
+      "headline_finding_id": "sha256:c59b38ec05f57190",
       "member_finding_ids": [
-        "sha256:bee4ecb18ecc1193"
+        "sha256:c59b38ec05f57190"
       ],
       "consolidated_score": 10.273972602739727,
       "consolidated_blast_radius": 1

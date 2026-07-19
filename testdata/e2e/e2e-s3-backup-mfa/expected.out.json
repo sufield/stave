@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:868297706ac7ad78",
+      "finding_id": "sha256:167992b3fb5769a7",
       "control_id": "CTL.S3.VERSION.002",
       "control_name": "Backup Buckets Must Have MFA Delete Enabled",
       "control_description": "S3 buckets tagged with backup=true must have MFA delete enabled. MFA delete requires multi-factor authentication to permanently delete object versions, protecting against ransomware attacks and accidental mass deletion of backup data. Without MFA delete, any principal with s3:DeleteObject permission can permanently destroy backup versions.\n",
@@ -203,9 +203,9 @@
         "storage.versioning",
         "storage.versioning.mfa_delete_enabled"
       ],
-      "headline_finding_id": "sha256:868297706ac7ad78",
+      "headline_finding_id": "sha256:167992b3fb5769a7",
       "member_finding_ids": [
-        "sha256:868297706ac7ad78"
+        "sha256:167992b3fb5769a7"
       ],
       "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1

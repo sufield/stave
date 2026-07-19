@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:99e24f781f3cd3ad",
+      "finding_id": "sha256:c7b59aedfe481c1a",
       "control_id": "CTL.S3.MRAP.PAB.001",
       "control_name": "Multi-Region Access Point Must Have Block Public Access Enabled",
       "control_description": "MRAPs have their own PAB settings independent of bucket PAB. A bucket can have PAB enabled while the MRAP has PAB disabled.\n",
@@ -207,7 +207,7 @@
       ]
     },
     {
-      "finding_id": "sha256:4dc192f371721197",
+      "finding_id": "sha256:6b8f542fb7375365",
       "control_id": "CTL.S3.MRAP.POLICY.001",
       "control_name": "Multi-Region Access Point Policy Must Not Be Public",
       "control_description": "MRAPs can have their own resource policy evaluated independently of the bucket policy. A public MRAP policy creates a public access path.\n",
@@ -369,9 +369,9 @@
       "shared_keys": [
         "storage.mrap_policy_is_public"
       ],
-      "headline_finding_id": "sha256:4dc192f371721197",
+      "headline_finding_id": "sha256:6b8f542fb7375365",
       "member_finding_ids": [
-        "sha256:4dc192f371721197"
+        "sha256:6b8f542fb7375365"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -382,9 +382,9 @@
       "shared_keys": [
         "storage.mrap_public_access_blocked"
       ],
-      "headline_finding_id": "sha256:99e24f781f3cd3ad",
+      "headline_finding_id": "sha256:c7b59aedfe481c1a",
       "member_finding_ids": [
-        "sha256:99e24f781f3cd3ad"
+        "sha256:c7b59aedfe481c1a"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

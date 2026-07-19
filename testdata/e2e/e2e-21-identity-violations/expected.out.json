@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:ef0bb60baf0caf2b",
+      "finding_id": "sha256:95c6b01113a36b40",
       "control_id": "CTL.ID.KUBE.001",
       "control_name": "Cluster-Admin Binding Detected",
       "control_description": "Detects ClusterRoleBindings that bind to the cluster-admin ClusterRole.\nApplies to: k8s.clusterrolebinding resources\n",
@@ -159,7 +159,7 @@
       ]
     },
     {
-      "finding_id": "sha256:696705523d5ed7ce",
+      "finding_id": "sha256:4902782f5331c4a1",
       "control_id": "CTL.ID.KUBE.003",
       "control_name": "Binding to system:unauthenticated",
       "control_description": "Bindings that grant permissions to system:unauthenticated allow anonymous access.\nApplies to: k8s.clusterrolebinding, k8s.rolebinding resources\n",
@@ -278,9 +278,9 @@
       "shared_keys": [
         "binds_to_cluster_admin"
       ],
-      "headline_finding_id": "sha256:ef0bb60baf0caf2b",
+      "headline_finding_id": "sha256:95c6b01113a36b40",
       "member_finding_ids": [
-        "sha256:ef0bb60baf0caf2b"
+        "sha256:95c6b01113a36b40"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -291,9 +291,9 @@
       "shared_keys": [
         "binds_to_system_unauthenticated"
       ],
-      "headline_finding_id": "sha256:696705523d5ed7ce",
+      "headline_finding_id": "sha256:4902782f5331c4a1",
       "member_finding_ids": [
-        "sha256:696705523d5ed7ce"
+        "sha256:4902782f5331c4a1"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

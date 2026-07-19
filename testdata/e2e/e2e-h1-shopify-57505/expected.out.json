@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:7c8eec65335883d8",
+      "finding_id": "sha256:cf3715dd8dedd963",
       "control_id": "CTL.S3.PUBLIC.LIST.002",
       "control_name": "Anonymous S3 Listing Must Be Explicitly Intended",
       "control_description": "Anonymous bucket listing increases exposure surface even when objects are public by design. Listing must be explicitly intended via tag.\n",
@@ -392,9 +392,9 @@
         "storage.tags",
         "storage.tags.public_list_intended"
       ],
-      "headline_finding_id": "sha256:7c8eec65335883d8",
+      "headline_finding_id": "sha256:cf3715dd8dedd963",
       "member_finding_ids": [
-        "sha256:7c8eec65335883d8"
+        "sha256:cf3715dd8dedd963"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

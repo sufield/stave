@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:9c8e6d678102035a",
+      "finding_id": "sha256:65ef75fbd95bfde6",
       "control_id": "CTL.S3.CDN.EXPOSURE.001",
       "control_name": "Private Bucket Must Not Be Publicly Exposed Via CloudFront",
       "control_description": "A bucket with Block Public Access enabled can still serve objects publicly through CloudFront if the bucket policy grants access to the cloudfront.amazonaws.com service principal. This creates a false sense of security — the bucket appears private but objects are accessible via the CloudFront distribution URL.\n",
@@ -264,7 +264,7 @@
       ]
     },
     {
-      "finding_id": "sha256:cbf48381fc3f897a",
+      "finding_id": "sha256:b265f86a67aa1fad",
       "control_id": "CTL.S3.CDN.OAC.001",
       "control_name": "CloudFront Access Must Use OAC Not Legacy OAI",
       "control_description": "When S3 objects are served via CloudFront, Origin Access Control (OAC) should be used instead of the legacy Origin Access Identity (OAI). OAC supports SSE-KMS, SigV4, and all S3 features. OAI is a legacy mechanism that does not support KMS encryption and is being deprecated.\n",
@@ -424,9 +424,9 @@
         "storage.controls",
         "storage.controls.public_access_fully_blocked"
       ],
-      "headline_finding_id": "sha256:9c8e6d678102035a",
+      "headline_finding_id": "sha256:65ef75fbd95bfde6",
       "member_finding_ids": [
-        "sha256:9c8e6d678102035a"
+        "sha256:65ef75fbd95bfde6"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -438,9 +438,9 @@
         "storage.cdn_access.cloudfront_oai",
         "storage.cdn_access.cloudfront_oai.enabled"
       ],
-      "headline_finding_id": "sha256:cbf48381fc3f897a",
+      "headline_finding_id": "sha256:b265f86a67aa1fad",
       "member_finding_ids": [
-        "sha256:cbf48381fc3f897a"
+        "sha256:b265f86a67aa1fad"
       ],
       "consolidated_score": 51.369863013698634,
       "consolidated_blast_radius": 1

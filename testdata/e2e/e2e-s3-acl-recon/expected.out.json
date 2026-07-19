@@ -37,7 +37,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:fe26f93edf61a8f9",
+      "finding_id": "sha256:29f49666e1b53342",
       "control_id": "CTL.S3.ACL.RECON.001",
       "control_name": "No Public ACL Readability",
       "control_description": "S3 bucket ACLs should not be readable by unauthenticated users. READ_ACP permission enables attackers to enumerate ACL grants, discover which principals have access, and find escalation paths.\n",
@@ -172,9 +172,9 @@
         "storage.access",
         "storage.access.acl_public_read"
       ],
-      "headline_finding_id": "sha256:fe26f93edf61a8f9",
+      "headline_finding_id": "sha256:29f49666e1b53342",
       "member_finding_ids": [
-        "sha256:fe26f93edf61a8f9"
+        "sha256:29f49666e1b53342"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

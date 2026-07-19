@@ -47,7 +47,7 @@
   ],
   "findings": [
     {
-      "finding_id": "sha256:3f681faeae812358",
+      "finding_id": "sha256:ea9689c4bc53a48c",
       "control_id": "CTL.S3.NETWORK.001",
       "control_name": "Public-Principal Policies Must Have Network Conditions",
       "control_description": "S3 bucket policies that grant access to Principal * (any AWS principal) must include network-scoping conditions such as aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or aws:PrincipalOrgID. Without these conditions, the bucket is accessible to anyone on the internet. This control detects policies where wildcard principals are used without network restrictions.\n",
@@ -175,7 +175,7 @@
       ]
     },
     {
-      "finding_id": "sha256:a23f10a9461112c1",
+      "finding_id": "sha256:ee4cd939b4bd87d3",
       "control_id": "CTL.S3.NETWORK.001",
       "control_name": "Public-Principal Policies Must Have Network Conditions",
       "control_description": "S3 bucket policies that grant access to Principal * (any AWS principal) must include network-scoping conditions such as aws:SourceIp, aws:sourceVpce, aws:SourceVpc, or aws:PrincipalOrgID. Without these conditions, the bucket is accessible to anyone on the internet. This control detects policies where wildcard principals are used without network restrictions.\n",
@@ -311,9 +311,9 @@
         "storage.access",
         "storage.access.effective_network_scope"
       ],
-      "headline_finding_id": "sha256:3f681faeae812358",
+      "headline_finding_id": "sha256:ea9689c4bc53a48c",
       "member_finding_ids": [
-        "sha256:3f681faeae812358"
+        "sha256:ea9689c4bc53a48c"
       ],
       "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
@@ -325,9 +325,9 @@
         "storage.access",
         "storage.access.effective_network_scope"
       ],
-      "headline_finding_id": "sha256:a23f10a9461112c1",
+      "headline_finding_id": "sha256:ee4cd939b4bd87d3",
       "member_finding_ids": [
-        "sha256:a23f10a9461112c1"
+        "sha256:ee4cd939b4bd87d3"
       ],
       "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
