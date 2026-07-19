@@ -92,12 +92,18 @@
           "chain_id": "ubiquiti_insider_tampering_path",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.SCP.CLOUDTRAIL.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.LOG.VALIDATION.001"
+          ],
           "description": "Ubiquiti incident shape (2020): employee cloned GitHub via VPN, then altered AWS logs to hide presence and evidence. After leaking false details to a security blogger, Ubiquiti's stock lost $4B. Invariants: CloudTrail must be protected from modification by SCP, and log integrity must be verifiable. This chain fires when CloudTrail protection SCPs are absent AND critical role protection is missing.\n"
         },
         {
           "chain_id": "ubiquiti_insider_tampering_path",
           "chain_severity": "critical",
           "missing_control": "CTL.ORG.SCP.PROTECTROLES.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.LOG.VALIDATION.001"
+          ],
           "description": "Ubiquiti incident shape (2020): employee cloned GitHub via VPN, then altered AWS logs to hide presence and evidence. After leaking false details to a security blogger, Ubiquiti's stock lost $4B. Invariants: CloudTrail must be protected from modification by SCP, and log integrity must be verifiable. This chain fires when CloudTrail protection SCPs are absent AND critical role protection is missing.\n"
         }
       ],
