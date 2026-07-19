@@ -1,7 +1,7 @@
 # Exercise CI workflow commands: baseline, gate, diff, fix
 
 # Generate evaluation output first
-! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json --include-atomic
 cp stdout evaluation.json
 
 # CI baseline save

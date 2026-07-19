@@ -3,6 +3,9 @@ synopsis: Validate the acceptance file
 description: |-
     Validate the acceptance file for required fields, date formats, and structural correctness.
 
+    Overdue exemption reviews are surfaced as warnings by default.
+    With --strict, overdue reviews are treated as errors.
+
     Exit Codes:
       0   Validation passed
       2   Invalid input
@@ -16,6 +19,9 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for validate
+    - name: strict
+      default_value: "false"
+      usage: treat overdue reviews as errors
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -62,10 +68,6 @@ inherited_options:
       default_value: "false"
       usage: |
         In --help, list only development-only commands (default: hide them from the listing)
-    - name: strict
-      default_value: "false"
-      usage: |
-        Enable strict integrity checks for embedded registries and references
     - name: verbose
       shorthand: v
       default_value: "0"

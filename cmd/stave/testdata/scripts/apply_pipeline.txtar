@@ -1,7 +1,7 @@
 # Exercise the full apply evaluation pipeline with all output formats
 
 # JSON output with violations (exit 3)
-! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format json --include-atomic
 stdout '"schema_version": "out.v0.1"'
 stdout '"status": "NON_COMPLIANT"'
 stdout '"findings"'
@@ -11,10 +11,10 @@ stdout '"misconfigurations"'
 stdout '"remediation"'
 
 # Text output with violations
-! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format text
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format text --include-atomic
 
 # SARIF output with violations
-! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format sarif
+! exec stave apply --controls controls --observations observations --max-unsafe 24h --now 2026-01-11T00:00:00Z --format sarif --include-atomic
 stdout 'runs'
 stdout 'results'
 

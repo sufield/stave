@@ -30,6 +30,9 @@ options:
       usage: help for acknowledge
     - name: reason
       usage: rationale for accepting this risk (required)
+    - name: review-cadence
+      usage: |
+        review cadence (annual, quarterly, monthly, or duration like 90d)
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"

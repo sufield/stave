@@ -103,6 +103,10 @@ options:
     - name: include-all
       default_value: "false"
       usage: Disable health scope filtering
+    - name: include-atomic
+      default_value: "false"
+      usage: |
+        Include per-control (atomic) findings in output (default: compound findings only)
     - name: input
       usage: Path to observations bundle file (required with --profile)
     - name: integrity-manifest
