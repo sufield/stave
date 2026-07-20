@@ -2842,6 +2842,21 @@ An IAM role trusted by three or more distinct compute service principals (lambda
 
 ---
 
+### CTL.IAM.ROLE.DANGEROUS.MANAGED.001
+
+**IAM Roles Must Not Use Managed Policies Granting Dangerous Actions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.3;
+
+No IAM role should have a managed policy that grants actions classified as dangerous in the sensitive action registry. Unlike FULLACCESS.MANAGED.001 (which matches policy names ending in *FullAccess), this control matches policy ACTIONS against the registry — catching dangerous policies with innocuous names like AWSManagedBudgetsSpendLimitManagementAccess (which grants organizations:AttachPolicy/DetachPolicy for SCP mutation). The name check is a fast heuristic; this action check is the ground truth.
+
+**Remediation:** Replace the managed policy with a scoped policy that does not grant dangerous actions. If the workload genuinely requires organizations:AttachPolicy or similar, document the exception and scope it to the minimum required resources.
+
+---
+
 ### CTL.IAM.ROLE.ENTROPY.INCOMPLETE.001
 
 **Complete Data Required for Entitlement Entropy Assessment**

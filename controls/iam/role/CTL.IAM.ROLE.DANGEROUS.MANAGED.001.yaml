@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLE.DANGEROUS.MANAGED.001
+name: IAM Roles Must Not Use Managed Policies Granting Dangerous Actions
+description: >
+  No IAM role should have a managed policy that grants actions
+  classified as dangerous in the sensitive action registry.
+  Unlike FULLACCESS.MANAGED.001 (which matches policy names
+  ending in *FullAccess), this control matches policy ACTIONS
+  against the registry — catching dangerous policies with
+  innocuous names like AWSManagedBudgetsSpendLimitManagementAccess
+  (which grants organizations:AttachPolicy/DetachPolicy for
+  SCP mutation). The name check is a fast heuristic; this
+  action check is the ground truth.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.3"
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.policies.has_dangerous_managed_policy
+remediation:
+  description: >
+    IAM role has a managed policy granting actions classified as
+    dangerous (PrivilegeEscalation, CredentialExposure,
+    ResourceExposure, or organization mutation) in the sensitive
+    action registry.
+  action: >
+    Replace the managed policy with a scoped policy that does not
+    grant dangerous actions. If the workload genuinely requires
+    organizations:AttachPolicy or similar, document the exception
+    and scope it to the minimum required resources.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policies": {
+          "has_dangerous_managed_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.policies.has_dangerous_managed_policy
+      op: eq
+      value: true
+tests:
+  - name: "role with AWSManagedBudgetsSpendLimitManagementAccess fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/BudgetsSpendLimitRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_dangerous_managed_policy: true
+            managed_policy_names:
+              - "AWSManagedBudgetsSpendLimitManagementAccess"
+  - name: "role with scoped policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/custom-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_dangerous_managed_policy: false
+  - name: "role with null dangerous flag passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/legacy-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_dangerous_managed_policy: null

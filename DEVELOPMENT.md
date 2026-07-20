@@ -24,7 +24,7 @@ These terms are enforced. Using the wrong term is a review rejection.
 | `--eval-time` | `--now` | Evaluation reference timestamp flag |
 | observation | snapshot (ambiguous) | An observation is a captured state |
 | domain | service (in control YAML) | 86 domains, not AWS service names |
-| `internal/core` | `internal/domain` | Renamed long ago; `stale-terminology-check` enforces |
+| `internal/core` | former `domain` package | Renamed long ago; `stale-terminology-check` enforces |
 
 ---
 
@@ -248,7 +248,7 @@ Golden diff categories (from `regengoldens`):
 | Target | What It Does |
 |--------|-------------|
 | `make consistency-check` | Verify ALL derived artifacts match canonical sources |
-| `make stale-terminology-check` | Reject stale `internal/domain` references |
+| `make stale-terminology-check` | Reject stale pre-rename package references |
 | `make check-unsafe-writes` | Forbid unsafe file writes in cmd/app |
 | `make attack-stage-check` | Reject invalid `attack_stage` values |
 | `make domain-check` | Soft-enum check on `domain:` values |

@@ -414,8 +414,8 @@ check-unsafe-writes:
 	fi; \
 	echo "OK: no unsafe os.Create/os.WriteFile on user paths in cmd/ or internal/app/"
 
-## check: Run all checks (fmt, vet, lint, terminology, deadcode, test)
-check: fmt vet lint stale-terminology-check check-unsafe-writes deadcode-check test
+## check: Run all checks (fmt, vet, lint, terminology, deadcode, control content, test)
+check: fmt vet lint stale-terminology-check check-unsafe-writes deadcode-check attack-stage-check domain-check test
 
 ## semantic-diff: Run CEL vs reference differential on S3 controls + iam_condition_bypass chain
 ## Use ARGS for additional flags: make semantic-diff ARGS="-symbolic -v"

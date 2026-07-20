@@ -511,6 +511,20 @@ contracts:
     consumers:
       - CTL.IAM.POLICY.CREDENTIALEXPOSURE.001
 
+  - field: has_dangerous_managed_policy
+    type: boolean
+    null_semantics: not_evaluated
+    postcondition: >
+      True if any attached managed policy grants actions classified
+      as PrivilegeEscalation, CredentialExposure, ResourceExposure,
+      or organization mutation (organizations:AttachPolicy,
+      organizations:DetachPolicy) in the sensitive action registry.
+      Unlike has_fullaccess_managed_policy (name pattern match),
+      this field matches policy ACTIONS against the registry
+      regardless of policy name. Same wildcard expansion rule.
+    consumers:
+      - CTL.IAM.ROLE.DANGEROUS.MANAGED.001
+
   - field: has_admin_access
     type: boolean
     postcondition: >
