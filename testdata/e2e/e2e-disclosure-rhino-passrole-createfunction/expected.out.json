@@ -63,9 +63,9 @@
         "identity.escalation.passrole_createfunction",
         "identity.escalation.passrole_createfunction.present"
       ],
-      "headline_finding_id": "sha256:07d1168a24095b76",
+      "headline_finding_id": "sha256:a70fbaf32b503c41",
       "member_finding_ids": [
-        "sha256:07d1168a24095b76"
+        "sha256:a70fbaf32b503c41"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
