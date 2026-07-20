@@ -16,6 +16,7 @@ classification: state_assertion
 applicable_asset_types:
   - aws_ec2_elastic_ip
 params: {}
+  attack_stage: persistence
 remediation:
   description: Elastic IP is not associated with any resource.
   action: Associate the EIP with an instance or release it.

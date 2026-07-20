@@ -36,6 +36,8 @@ applicable_asset_types:
   - aws_rds_instance
   - aws_redshift_cluster
   - aws_opensearch_domain
+params:
+  attack_stage: discovery
 observation_fields:
   - governance.data_classification
   - governance.publicly_accessible

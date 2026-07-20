@@ -41,6 +41,8 @@ classification: state_assertion
 applicable_asset_types:
   - aws_iam_user
   - aws_iam_role
+params:
+  attack_stage: privilege_escalation
 observation_fields:
   - identity.oauth.create_token.present
   - identity.policies.has_admin_access

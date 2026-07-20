@@ -33,6 +33,8 @@ type: unsafe_state
 classification: state_assertion
 applicable_asset_types:
   - aws_vpc_endpoint
+params:
+  attack_stage: detection_evasion
 observation_fields:
   - network.kind
   - network.endpoint.private_dns_enabled
