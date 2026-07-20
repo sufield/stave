@@ -373,6 +373,8 @@ var defaultActions = []ActionClassification{
 	{Action: "eks-auth:AssumeRoleForPodIdentity", Categories: []ActionRiskCategory{ActionCredentialExposure}, Source: "stave"},
 
 	// --- DataAccess additions: GenAI ---
+	{Action: "bedrock-mantle:CreateInference", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+	{Action: "bedrock-mantle:CallWithBearerToken", Categories: []ActionRiskCategory{ActionDataAccess, ActionCredentialExposure}, Source: "stave"},
 	{Action: "bedrock:InvokeModel", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
 	{Action: "bedrock:InvokeModelWithResponseStream", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
 	{Action: "bedrock:Converse", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
@@ -467,6 +469,7 @@ var defaultActions = []ActionClassification{
 	{Action: "organizations:LeaveOrganization", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "organizations:RemoveAccountFromOrganization", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "organizations:DeletePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "organizations:AttachPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "organizations:DetachPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "organizations:DisablePolicyType", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "account:CloseAccount", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},

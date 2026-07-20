@@ -62,6 +62,7 @@ const (
 	// bound to the target role.
 	HopTypeLambdaInvokeExisting HopType = "lambda_invoke_existing"
 	HopTypeCfnUpdateExisting    HopType = "cfn_update_existing"
+	HopTypeEksPodExec           HopType = "eks_pod_exec"
 )
 
 // RoleHop is one step in a transitive role assumption chain.
@@ -295,6 +296,14 @@ var serviceExecPrimitives = []serviceExec{
 			"cloudformation:CreateStack",
 			"cloudformation:UpdateStack",
 			"cloudformation:CreateChangeSet",
+		},
+	},
+	{
+		HopType:          HopTypeEksPodExec,
+		ServicePrincipal: "pods.eks.amazonaws.com",
+		TriggerActions: []string{
+			"eks:CreatePodIdentityAssociation",
+			"eks:UpdatePodIdentityAssociation",
 		},
 	},
 }

@@ -362,3 +362,25 @@ managed_policies:
     type: managed_policy
     deprecated_date: "2026-05-09"
     source: iamtrail
+
+# New AWS-managed policies observed via IAMTrail. Tracked for audit:
+# roles using these are exercising new AWS capabilities that may
+# need control coverage. Source: IAMTrail quarterly sync 2026-07-20.
+new_managed_policies:
+  - name: WellArchitectedAgentResourceScanning
+    first_seen: "2026-07-14"
+    note: "read-only scanning agent (100+ services); no control needed"
+    source: iamtrail
+  - name: AWSIAMRoleManagerServiceRolePolicy
+    first_seen: "2026-07-15"
+    source: iamtrail
+  - name: AWSManagedAccountUserEntitlementAccess
+    first_seen: "2026-07-17"
+    source: iamtrail
+  - name: AWSManagedBudgetsSpendLimitManagementAccess
+    first_seen: "2026-07-17"
+    note: "grants organizations:AttachPolicy/DetachPolicy — SCP mutation"
+    source: iamtrail
+  - name: AWSBudgetsSpendLimitMemberRolePolicy
+    first_seen: "2026-07-19"
+    source: iamtrail
