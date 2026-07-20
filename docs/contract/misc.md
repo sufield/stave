@@ -144,7 +144,7 @@ policies on IAM roles used by CI/CD pipelines.
 | `identity.trust.oidc.has_admin_permissions` | bool | Role has AdministratorAccess or wildcard actions |
 
 **Controls:** CTL.IAM.TRUST.OIDC.001 (unscoped trust), .002 (wildcard sub),
-.003 (admin permissions). See [Supply Chain Ingress](supply-chain-ingress.md).
+.003 (admin permissions).
 
 ---
 

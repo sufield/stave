@@ -96,7 +96,7 @@ the library API rather than the file boundary. That is the
 older integration shape; the file-boundary path (a
 `query.smt2`) is what would unblock cvc5 / Yices verdicts and
 match the architecture described in
-[`projects/stave-guide/explanation/files-as-the-boundary.md`](../../projects/stave-guide/explanation/files-as-the-boundary.md).
+[files-as-the-boundary](https://www.systeminvariant.dev/docs/explanation/files-as-the-boundary).
 
 ## Spec-only InfoSec iterations (none found)
 

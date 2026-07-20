@@ -142,8 +142,7 @@ path was terminated. This provides formal proof of safety for auditors.
 
 **Controls:** CTL.EXPOSURE.ANON.001 (sensitive reachable), .002 (deep chain),
 .003 (no auth boundary), .004 (no inspection boundary), .PARTIAL.001
-(unresolved path). See [Unauthenticated Reachability](unauthenticated-reachability.md)
-and [Extractor Guide: Reachability](extractor-reachability.md).
+(unresolved path). See [Extractor Guide: Reachability](../extractor-reachability.md).
 
 ---
 

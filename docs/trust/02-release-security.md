@@ -31,7 +31,7 @@ It is never bundled into the Stave Go binary, the Docker image, or
 any of the OS packages listed below. Operators that want the Z3
 backend install it independently — see [Enable the Z3
 Solver](https://www.systeminvariant.dev/docs/how-to/enable-z3-solver) for the install steps and
-the [Z3 Solver explainer](../../../docs-content/explanation/z3-solver.md) for what each backend does.
+the [Z3 Solver explainer](https://www.systeminvariant.dev/docs/explanation/z3-solver) for what each backend does.
 
 This split is intentional:
 
@@ -434,7 +434,7 @@ SBOM inspection is recommended for dependency review and compliance auditing.
 | **License compliance**           | Automated `go-licenses` check in CI; forbidden licenses (GPL, AGPL, SSPL, LGPL) fail build  |
 | **Dependency monitoring**        | Dependabot for Go modules and GitHub Actions                                                |
 | **Vulnerability scanning**       | govulncheck runs on every PR                                                                |
-| **No network access at runtime** | Stave makes zero network connections (see [Security and Trust](./01-security-and-trust.md)) |
+| **No network access at runtime** | Stave makes zero network connections                                                        |
 
 ---
 

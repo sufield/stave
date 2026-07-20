@@ -243,5 +243,5 @@ scope is verified.
 ## Where to read next
 
 - [Architecture Overview](overview.md) — the pipeline this document scopes
-- [Fact Export reference](../../../projects/stave-guide/reference/fact-export.md) — the SIR's projected scope (separate boundary, separate doc)
-- [How to use a reasoning engine with Stave facts](../../../projects/stave-guide/how-to/reasoning-engines.md) — composing UNSAT verdicts with the scope caveat
+- [Fact Export reference](https://www.systeminvariant.dev/docs/reference/fact-export) — the SIR's projected scope (separate boundary, separate doc)
+- [How to use a reasoning engine with Stave facts](https://www.systeminvariant.dev/docs/how-to/controls/reasoning-engines) — composing UNSAT verdicts with the scope caveat
