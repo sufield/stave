@@ -25,6 +25,8 @@ type: unsafe_state
 classification: state_assertion
 applicable_asset_types:
   - aws_bedrock_knowledge_base
+params:
+  attack_stage: privilege_escalation
 compliance:
   nist_800_53_r5: "AC-6"
   soc2: "CC6.1"

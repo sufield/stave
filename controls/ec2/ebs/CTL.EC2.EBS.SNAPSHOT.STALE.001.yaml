@@ -32,6 +32,8 @@ type: unsafe_state
 classification: state_assertion
 applicable_asset_types:
   - aws_ebs_snapshot
+params:
+  attack_stage: persistence
 observation_fields:
   - compute.kind
   - compute.ebs.snapshot_id

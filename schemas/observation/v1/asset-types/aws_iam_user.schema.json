@@ -173,7 +173,7 @@
           "additionalProperties": true,
           "properties": {
             "has_admin_access": {
-              "description": "Read by control(s): CTL.IAM.CROSSCLOUD.ADMIN.001, CTL.IAM.POLICY.ADMIN.001",
+              "description": "Read by control(s): CTL.IAM.POLICY.ADMIN.001",
               "type": [
                 "boolean",
                 "null"

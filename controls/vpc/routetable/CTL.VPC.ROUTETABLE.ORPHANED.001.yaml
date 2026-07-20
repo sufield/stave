@@ -27,6 +27,8 @@ type: unsafe_state
 classification: state_assertion
 applicable_asset_types:
   - aws_vpc_route_table
+params:
+  attack_stage: persistence
 observation_fields:
   - network.kind
   - network.routetable.association_count

@@ -14,17 +14,17 @@ import (
 
 // AllTactics is the complete ATT&CK enterprise tactic list.
 var AllTactics = []TacticDef{
-	{ID: "TA0001", Name: "Initial Access", StaveID: "initial_access"},
-	{ID: "TA0002", Name: "Execution", StaveID: "execution"},
-	{ID: "TA0003", Name: "Persistence", StaveID: "persistence"},
-	{ID: "TA0004", Name: "Privilege Escalation", StaveID: "privilege_escalation"},
-	{ID: "TA0005", Name: "Defense Evasion", StaveID: "detection_evasion"},
-	{ID: "TA0006", Name: "Credential Access", StaveID: "credential_access"},
-	{ID: "TA0007", Name: "Discovery", StaveID: "discovery"},
-	{ID: "TA0008", Name: "Lateral Movement", StaveID: "lateral_movement"},
-	{ID: "TA0009", Name: "Collection", StaveID: "collection"},
-	{ID: "TA0010", Name: "Exfiltration", StaveID: "exfiltration"},
-	{ID: "TA0040", Name: "Impact", StaveID: "impact"},
+	{ID: "TA0001", Name: "Initial Access", StaveID: string(kernel.AttackStageInitialAccess)},
+	{ID: "TA0002", Name: "Execution", StaveID: string(kernel.AttackStageExecution)},
+	{ID: "TA0003", Name: "Persistence", StaveID: string(kernel.AttackStagePersistence)},
+	{ID: "TA0004", Name: "Privilege Escalation", StaveID: string(kernel.AttackStagePrivilegeEscalation)},
+	{ID: "TA0005", Name: "Defense Evasion", StaveID: string(kernel.AttackStageDetectionEvasion)},
+	{ID: "TA0006", Name: "Credential Access", StaveID: string(kernel.AttackStageCredentialAccess)},
+	{ID: "TA0007", Name: "Discovery", StaveID: string(kernel.AttackStageDiscovery)},
+	{ID: "TA0008", Name: "Lateral Movement", StaveID: string(kernel.AttackStageLateralMovement)},
+	{ID: "TA0009", Name: "Collection", StaveID: string(kernel.AttackStageCollection)},
+	{ID: "TA0010", Name: "Exfiltration", StaveID: string(kernel.AttackStageExfiltration)},
+	{ID: "TA0040", Name: "Impact", StaveID: string(kernel.AttackStageImpact)},
 }
 
 // TacticDef maps ATT&CK tactic ID to name and Stave string.

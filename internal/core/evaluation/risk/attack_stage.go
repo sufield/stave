@@ -11,18 +11,18 @@ import (
 // allAttackStages lists the MITRE ATT&CK-aligned stages that Stave recognizes.
 // Access via AttackStages() so the slice cannot be mutated by callers.
 var allAttackStages = []kernel.AttackStage{
-	"initial_access",
-	"execution",
-	"credential_access",
-	"persistence",
-	"privilege_escalation",
-	"lateral_movement",
-	"discovery",
-	"collection",
-	"exfiltration",
-	"detection_evasion",
-	"impact",
-	"resilience",
+	kernel.AttackStageInitialAccess,
+	kernel.AttackStageExecution,
+	kernel.AttackStageCredentialAccess,
+	kernel.AttackStagePersistence,
+	kernel.AttackStagePrivilegeEscalation,
+	kernel.AttackStageLateralMovement,
+	kernel.AttackStageDiscovery,
+	kernel.AttackStageCollection,
+	kernel.AttackStageExfiltration,
+	kernel.AttackStageDetectionEvasion,
+	kernel.AttackStageImpact,
+	kernel.AttackStageResilience,
 }
 
 // AttackStages returns a defensive copy of the recognised attack
@@ -94,18 +94,18 @@ func BuildAttackStageSummary(
 // ordering. Lower index = earlier in the chain. Unrecognized stages
 // sort after all known stages.
 var killChainOrder = map[kernel.AttackStage]int{
-	"initial_access":       0,
-	"execution":            1,
-	"credential_access":    2,
-	"persistence":          3,
-	"privilege_escalation": 4,
-	"discovery":            5,
-	"lateral_movement":     6,
-	"collection":           7,
-	"exfiltration":         8,
-	"detection_evasion":    9,
-	"impact":               10,
-	"resilience":           11,
+	kernel.AttackStageInitialAccess:       0,
+	kernel.AttackStageExecution:           1,
+	kernel.AttackStageCredentialAccess:    2,
+	kernel.AttackStagePersistence:         3,
+	kernel.AttackStagePrivilegeEscalation: 4,
+	kernel.AttackStageDiscovery:           5,
+	kernel.AttackStageLateralMovement:     6,
+	kernel.AttackStageCollection:          7,
+	kernel.AttackStageExfiltration:        8,
+	kernel.AttackStageDetectionEvasion:    9,
+	kernel.AttackStageImpact:              10,
+	kernel.AttackStageResilience:          11,
 }
 
 // SortStagesByKillChain returns a copy of stages sorted by kill chain

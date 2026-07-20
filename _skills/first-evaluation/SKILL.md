@@ -64,9 +64,8 @@ jq . /tmp/stave-demo/obs/*.json > /dev/null && echo "valid JSON"
 ```
 ./stave apply --observations /tmp/stave-demo/obs/ --eval-time 2026-01-02T00:00:00Z
 ```
-**Expected: 2 violations** on `demo-user`:
+**Expected: 1 violation** on `demo-user`:
 - `CTL.IAM.POLICY.ADMIN.001` (the user has admin access)
-- `CTL.IAM.CROSSCLOUD.ADMIN.001`
 
 Exit code **3** = violations found (0 = clean, 2 = input error, 3 = violations, 4 = internal).
 

@@ -49,6 +49,8 @@ type: unsafe_state
 classification: state_assertion
 applicable_asset_types:
   - aws_oscal_report
+params:
+  attack_stage: discovery
 observation_fields:
   - oscal_report.present
   - oscal_report.months_since_period_end

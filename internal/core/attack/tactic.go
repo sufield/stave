@@ -10,18 +10,18 @@ import "github.com/sufield/stave/internal/core/kernel"
 // attackStageToTactic maps Stave attack stage strings to ATT&CK tactic IDs.
 // Source: docs/ontology/attack-stages.json
 var attackStageToTactic = map[kernel.AttackStage]string{
-	"initial_access":       "TA0001",
-	"execution":            "TA0002",
-	"persistence":          "TA0003",
-	"privilege_escalation": "TA0004",
-	"detection_evasion":    "TA0005",
-	"credential_access":    "TA0006",
-	"discovery":            "TA0007",
-	"lateral_movement":     "TA0008",
-	"collection":           "TA0009",
-	"exfiltration":         "TA0010",
-	"impact":               "TA0040",
-	"resilience":           "x_stave_resilience",
+	kernel.AttackStageInitialAccess:       "TA0001",
+	kernel.AttackStageExecution:           "TA0002",
+	kernel.AttackStagePersistence:         "TA0003",
+	kernel.AttackStagePrivilegeEscalation: "TA0004",
+	kernel.AttackStageDetectionEvasion:    "TA0005",
+	kernel.AttackStageCredentialAccess:    "TA0006",
+	kernel.AttackStageDiscovery:           "TA0007",
+	kernel.AttackStageLateralMovement:     "TA0008",
+	kernel.AttackStageCollection:          "TA0009",
+	kernel.AttackStageExfiltration:        "TA0010",
+	kernel.AttackStageImpact:              "TA0040",
+	kernel.AttackStageResilience:          "x_stave_resilience",
 }
 
 // ToATTCKTacticID translates a Stave attack stage to an ATT&CK tactic ID.
@@ -64,17 +64,17 @@ func ToKillChainPhases(stages []kernel.AttackStage) []map[string]string {
 // large export with hundreds of chain findings this map was being
 // rebuilt thousands of times per call to ToKillChainPhases.
 var staveToKillChainPhases = map[kernel.AttackStage]string{ //nolint:gosec // G101: not credentials — ATT&CK tactic names
-	"initial_access":       "initial-access",
-	"execution":            "execution",
-	"persistence":          "persistence",
-	"privilege_escalation": "privilege-escalation",
-	"detection_evasion":    "defense-evasion",
-	"credential_access":    "credential-access",
-	"discovery":            "discovery",
-	"lateral_movement":     "lateral-movement",
-	"collection":           "collection",
-	"exfiltration":         "exfiltration",
-	"impact":               "impact",
+	kernel.AttackStageInitialAccess:       "initial-access",
+	kernel.AttackStageExecution:           "execution",
+	kernel.AttackStagePersistence:         "persistence",
+	kernel.AttackStagePrivilegeEscalation: "privilege-escalation",
+	kernel.AttackStageDetectionEvasion:    "defense-evasion",
+	kernel.AttackStageCredentialAccess:    "credential-access",
+	kernel.AttackStageDiscovery:           "discovery",
+	kernel.AttackStageLateralMovement:     "lateral-movement",
+	kernel.AttackStageCollection:          "collection",
+	kernel.AttackStageExfiltration:        "exfiltration",
+	kernel.AttackStageImpact:              "impact",
 }
 
 func staveToKillChainPhase(stage kernel.AttackStage) string {

@@ -97,7 +97,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 		ChainID:  "CHAIN.BUCKET.CROSS_ACCOUNT_DEST.001",
 		Severity: policy.SeverityMedium,
 		Columns:  5,
-		Stages:   []kernel.AttackStage{"collection"},
+		Stages:   []kernel.AttackStage{kernel.AttackStageCollection},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Router %q (%s) sends data to bucket %q in account %s, different from source account %s.",
 				col(cols, 0), col(cols, 2), col(cols, 1), col(cols, 4), col(cols, 3))
@@ -108,7 +108,7 @@ var graphChainRegistry = map[string]graphChainSpec{
 		ChainID:  "CHAIN.LATERAL.RESOURCE_POLICY.001",
 		Severity: policy.SeverityHigh,
 		Columns:  5,
-		Stages:   []kernel.AttackStage{"lateral_movement", "collection"},
+		Stages:   []kernel.AttackStage{kernel.AttackStageLateralMovement, kernel.AttackStageCollection},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q assumes role %q, which has resource-policy grant (%s, type %s) to %q. Cross-type lateral movement: role trust chain into resource policy grant.",
 				col(cols, 0), col(cols, 1), col(cols, 3), col(cols, 4), col(cols, 2))

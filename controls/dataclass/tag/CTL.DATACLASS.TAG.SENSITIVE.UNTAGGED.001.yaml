@@ -39,6 +39,8 @@ applicable_asset_types:
   - aws_sagemaker_notebook
   - aws_opensearch_domain
   - aws_redshift_cluster
+params:
+  attack_stage: discovery
 observation_fields:
   - governance.is_sensitive_service
   - governance.data_classification

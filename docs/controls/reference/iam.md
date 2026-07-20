@@ -571,21 +571,6 @@ Production resources must have no transitive access path from non-production env
 
 ---
 
-### CTL.IAM.CROSSCLOUD.ADMIN.001
-
-**No Full Admin Policies Across Any Cloud Provider**
-
-- **Severity:** critical
-- **Type:** unsafe_state
-- **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
-
-No IAM policy on any cloud provider should grant unrestricted administrative access (Action: *, Resource: * or equivalent). This control extends CTL.IAM.POLICY.ADMIN.001 beyond AWS to Azure (Contributor/Owner at subscription scope) and GCP (roles/owner, roles/editor at project scope). The same least-privilege principle applies regardless of cloud provider.
-
-**Remediation:** Replace admin policies with scoped policies granting only required permissions. Use cloud-specific access analyzers to identify unused permissions.
-
----
-
 ### CTL.IAM.CROSSCLOUD.MFA.001
 
 **MFA Must Be Enforced Across All Cloud Providers**

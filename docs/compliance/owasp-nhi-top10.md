@@ -206,7 +206,6 @@ IAM admin/escalation surface:
 - `CTL.IAM.NEP.BOUNDARY.001` — NEP boundary breach
 - `CTL.IAM.NEP.ESCALATION.001` — NEP escalation path
 - `CTL.IAM.NEP.PHI.001` — NEP reaches PHI scope
-- `CTL.IAM.CROSSCLOUD.ADMIN.001` — Cross-cloud admin reach
 - `CTL.IAM.ROOT.USAGE.001` — Root identity used for non-root operations
 - `CTL.IAM.ROLE.LAMBDA.SCOPING.001` — Lambda role over-scoped
 - `CTL.IAM.ZT.PERIMETER.001` — Zero-trust perimeter check

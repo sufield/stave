@@ -27,4 +27,7 @@ const ( //nolint:gosec // G101 false positive: ATT&CK stage names, not credentia
 	AttackStagePrivilegeEscalation AttackStage = "privilege_escalation"
 	AttackStageLateralMovement     AttackStage = "lateral_movement"
 	AttackStageImpact              AttackStage = "impact"
+	AttackStageCollection          AttackStage = "collection"
+	AttackStageDiscovery           AttackStage = "discovery"
+	AttackStageExecution           AttackStage = "execution"
 )

@@ -31,6 +31,8 @@ type: unsafe_state
 classification: state_assertion
 applicable_asset_types:
   - aws_account
+params:
+  attack_stage: credential_access
 observation_fields:
   - account.oauth.has_oauth_grants
   - account.oauth.any_revocation_capable_identity

@@ -23,6 +23,8 @@ classification: state_assertion
 applicable_asset_types:
   - aws_s3_bucket
   - aws_sagemaker_model_package
+params:
+  attack_stage: initial_access
 compliance:
   nist_800_53_r5: "SI-7"
   soc2: "CC7.1"

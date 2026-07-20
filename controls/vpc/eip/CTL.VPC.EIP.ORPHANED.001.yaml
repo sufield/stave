@@ -28,6 +28,8 @@ type: unsafe_state
 classification: state_assertion
 applicable_asset_types:
   - aws_ec2_elastic_ip
+params:
+  attack_stage: persistence
 observation_fields:
   - network.kind
   - network.eip.allocation_id
