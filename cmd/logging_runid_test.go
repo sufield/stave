@@ -12,7 +12,7 @@ import (
 )
 
 func TestAttachRunIDFromPlan(t *testing.T) {
-	originalDefault := logging.DefaultLogger()
+	originalDefault := slog.Default()
 	t.Cleanup(func() {
 		logging.SetDefaultLogger(originalDefault)
 	})
@@ -37,7 +37,7 @@ func TestAttachRunIDFromPlan(t *testing.T) {
 }
 
 func TestAttachRunIDFromPlanNil(t *testing.T) {
-	originalDefault := logging.DefaultLogger()
+	originalDefault := slog.Default()
 	t.Cleanup(func() {
 		logging.SetDefaultLogger(originalDefault)
 	})

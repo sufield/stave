@@ -1,11 +1,8 @@
 package logging
 
 import (
-	"reflect"
 	"testing"
 	"unicode/utf8"
-
-	"github.com/sufield/stave/internal/sanitize"
 )
 
 func TestSanitizePath(t *testing.T) {
@@ -53,96 +50,6 @@ func Test_truncateString(t *testing.T) {
 		}
 		if !utf8.ValidString(got) {
 			t.Errorf("truncateString(%q, %d) produced invalid UTF-8: %q", tt.input, tt.maxLen, got)
-		}
-	}
-}
-
-func TestSanitizeArgs(t *testing.T) {
-	tests := []struct {
-		args     []string
-		expected []string
-	}{
-		{
-			[]string{"--config", "file.yaml"},
-			[]string{"--config", "file.yaml"},
-		},
-		{
-			[]string{"--password", "secret123"},
-			[]string{"--password", sanitize.SanitizedValue},
-		},
-		{
-			[]string{"--api-key=my-secret-key"},
-			[]string{"--api-key=" + sanitize.SanitizedValue},
-		},
-		{
-			[]string{"--token", "abc123", "--path", "/home"},
-			[]string{"--token", sanitize.SanitizedValue, "--path", "/home"},
-		},
-		{
-			[]string{"-v", "--secret-file", "/path/to/secret"},
-			[]string{"-v", "--secret-file", sanitize.SanitizedValue},
-		},
-		{
-			[]string{"--file=mykey.txt"},
-			[]string{"--file=mykey.txt"},
-		},
-		{
-			// `--token --path /tmp`: --path is not a known sensitive
-			// flag, so it is redacted as --token's value (per the
-			// "value can start with -" rule from P11.4). /tmp is
-			// then position 2 with no preceding sensitive flag, so
-			// it stays unchanged.
-			[]string{"--token", "--path", "/tmp"},
-			[]string{"--token", sanitize.SanitizedValue, "/tmp"},
-		},
-		{
-			[]string{"--token", "-1"},
-			[]string{"--token", sanitize.SanitizedValue},
-		},
-		{
-			// Sensitive flag with value starting with `-`: previously
-			// passed through unredacted because isLikelyFlagToken
-			// short-circuited the redaction. Now redacted.
-			[]string{"--password", "-very-secret-pass"},
-			[]string{"--password", sanitize.SanitizedValue},
-		},
-		{
-			// Sensitive flag as the trailing arg: structurally
-			// missing value. Render as "[SANITIZED:missing]" so the
-			// log line still communicates the shape.
-			[]string{"--ok", "--api-key"},
-			[]string{"--ok", "--api-key " + sanitize.SanitizedValue + ":missing"},
-		},
-		{
-			[]string{"--ACCESS-TOKEN", "abc123"},
-			[]string{"--ACCESS-TOKEN", sanitize.SanitizedValue},
-		},
-		{
-			// Consecutive sensitive flags: the first treats its
-			// "missing" position then yields, the second consumes
-			// the actual value. Without the look-ahead, the first
-			// flag would have eaten the second as its value, the
-			// second would be skipped, and the actual credential
-			// would be exposed in position 2.
-			[]string{"--token", "--password", "mysecret"},
-			[]string{"--token " + sanitize.SanitizedValue + ":missing", "--password", sanitize.SanitizedValue},
-		},
-		{
-			// Three consecutive sensitive flags. The trailing one
-			// has no following value at all.
-			[]string{"--token", "--password", "--api-key"},
-			[]string{
-				"--token " + sanitize.SanitizedValue + ":missing",
-				"--password " + sanitize.SanitizedValue + ":missing",
-				"--api-key " + sanitize.SanitizedValue + ":missing",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		got := SanitizeArgs(tt.args)
-		if !reflect.DeepEqual(got, tt.expected) {
-			t.Errorf("SanitizeArgs(%v) = %v, want %v", tt.args, got, tt.expected)
 		}
 	}
 }

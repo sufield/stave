@@ -123,11 +123,6 @@ func SetDefaultLogger(logger *slog.Logger) {
 	slog.SetDefault(logger)
 }
 
-// DefaultLogger returns the global slog default logger.
-func DefaultLogger() *slog.Logger {
-	return slog.Default()
-}
-
 // WithRunID returns the logger enriched with run_id, or the logger
 // unchanged when runID is blank.
 func WithRunID(logger *slog.Logger, runID string) *slog.Logger {

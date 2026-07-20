@@ -250,7 +250,7 @@ func TestNewLogger_RedactsSensitiveKeys(t *testing.T) {
 }
 
 func TestSetDefaultLogger(t *testing.T) {
-	original := DefaultLogger()
+	original := slog.Default()
 	t.Cleanup(func() {
 		SetDefaultLogger(original)
 	})
@@ -259,9 +259,9 @@ func TestSetDefaultLogger(t *testing.T) {
 	logger := slog.New(slog.NewTextHandler(&buf, nil))
 	SetDefaultLogger(logger)
 
-	got := DefaultLogger()
+	got := slog.Default()
 	if got != logger {
-		t.Fatalf("DefaultLogger() mismatch: got %p want %p", got, logger)
+		t.Fatalf("slog.Default() mismatch: got %p want %p", got, logger)
 	}
 }
 
