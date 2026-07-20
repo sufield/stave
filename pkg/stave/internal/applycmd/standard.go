@@ -326,10 +326,16 @@ func renderReport(ctx context.Context, format string, verbose bool, includeAtomi
 
 	atomicControlIDs := make([]kernel.ControlID, 0, len(report.Findings))
 	atomicSeverities := make(map[kernel.ControlID]policy.Severity, len(report.Findings))
+	atomicFailures := make([]risk.FailingControl, 0, len(report.Findings))
 	for i := range report.Findings {
 		cid := report.Findings[i].ControlID
 		atomicControlIDs = append(atomicControlIDs, cid)
 		atomicSeverities[cid] = report.Findings[i].ControlSeverity
+		atomicFailures = append(atomicFailures, report.Findings[i].ToFailingControl())
+	}
+	controlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
+	for i := range controls {
+		controlLookup[controls[i].ID] = &controls[i]
 	}
 
 	enrichFn := func(rep *evaluation.ComplianceReport) (appcontracts.EnrichedResult, error) {
@@ -343,6 +349,8 @@ func renderReport(ctx context.Context, format string, verbose bool, includeAtomi
 			enriched.Result.SuppressedBySeverity = &severityCounts
 			enriched.Result.UnchainedHighSeverity = risk.LintUnchainedHighSeverity(
 				atomicControlIDs, atomicSeverities, rep.ChainFindings)
+			enriched.Result.ChainSuggestions = risk.SuggestChains(
+				atomicFailures, rep.ChainFindings, controlLookup)
 			enriched.Findings = nil
 			enriched.MarkerFindings = nil
 		}

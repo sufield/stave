@@ -369,6 +369,10 @@ type ComplianceReport struct {
 	// UnchainedHighSeverity lists control IDs of critical/high findings
 	// not covered by any compound chain — potential blind spots.
 	UnchainedHighSeverity []string `json:"unchained_high_severity,omitempty"`
+
+	// ChainSuggestions lists candidate chain definitions inferred from
+	// unchained controls that co-fail on the same asset(s).
+	ChainSuggestions []findings.ChainSuggestion `json:"chain_suggestions,omitempty"`
 }
 
 // GetFindingByResource retrieves a finding for a specific control/asset pair.

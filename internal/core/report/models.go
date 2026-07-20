@@ -42,6 +42,7 @@ type AssessmentRequest struct {
 	Issues             []evaluation.Issue
 	SkippedControls    []evaluation.SkippedControl
 	ExemptedAssets     []asset.ExemptedAsset
+	ChainSuggestions   []findings.ChainSuggestion
 }
 
 // HasFindings reports whether the assessment carries at least one
@@ -251,6 +252,7 @@ type Assessment struct {
 	RemediationGroups  []remediation.Group           `json:"remediation_groups,omitempty"`
 	SkippedControls    []evaluation.SkippedControl   `json:"skipped_controls,omitempty"`
 	ExemptedAssets     []asset.ExemptedAsset         `json:"exempted_assets,omitempty"`
+	ChainSuggestions   []findings.ChainSuggestion    `json:"chain_suggestions,omitempty"`
 	CoveragePosture    *coverage.CoverageIndex       `json:"-"`
 	Extensions         *evaluation.Extensions        `json:"extensions,omitempty"`
 }
@@ -274,6 +276,7 @@ func NewAssessment(req AssessmentRequest) *Assessment {
 		Issues:             req.Issues,
 		SkippedControls:    emptyIfNil(req.SkippedControls),
 		ExemptedAssets:     emptyIfNil(req.ExemptedAssets),
+		ChainSuggestions:   req.ChainSuggestions,
 	}
 }
 

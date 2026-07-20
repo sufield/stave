@@ -72,6 +72,15 @@ func (c *CompoundFinding) SeverityLabel() string {
 	return c.Severity.String()
 }
 
+// ChainSuggestion is a candidate chain definition inferred from
+// unchained high-severity controls that co-fail on the same asset(s).
+type ChainSuggestion struct {
+	ControlIDs []kernel.ControlID `json:"control_ids"`
+	AssetIDs   []asset.ID         `json:"asset_ids"`
+	Reason     string             `json:"reason"`
+	MaxSev     policy.Severity    `json:"max_severity"`
+}
+
 // NearMissChain represents a chain that is exactly one control short
 // of firing. The controls that ARE failing are tracked alongside the
 // single missing control that would complete the chain.
