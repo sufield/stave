@@ -75,7 +75,7 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 			passing = 0 // all observed controls are failing
 		}
 
-		readiness := 0.0
+		readiness := 100.0
 		if total > 0 {
 			readiness = float64(passing) / float64(total) * 100
 		}

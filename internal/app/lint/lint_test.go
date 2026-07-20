@@ -1,6 +1,7 @@
 package lint
 
 import (
+	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -148,6 +149,28 @@ runtime: "go1.26"
 		if d.RuleID != "CTL_NONDETERMINISTIC_FIELD" {
 			t.Errorf("expected CTL_NONDETERMINISTIC_FIELD, got %s", d.RuleID)
 		}
+	}
+}
+
+func TestWalkDeterminism_ForbiddenValue(t *testing.T) {
+	l := NewLinter()
+	root := mustParse(t, `
+id: CTL.AWS.PUBLIC.001
+predicate:
+  all:
+    - left: properties.created_at
+      op: gte
+      right: now
+`)
+	diags := l.walkDeterminism("test.yaml", root)
+	if len(diags) != 1 {
+		t.Fatalf("expected 1 diagnostic for value 'now', got %d: %v", len(diags), diags)
+	}
+	if diags[0].RuleID != "CTL_NONDETERMINISTIC_FIELD" {
+		t.Errorf("expected CTL_NONDETERMINISTIC_FIELD, got %s", diags[0].RuleID)
+	}
+	if !strings.Contains(diags[0].Message, `field "now"`) {
+		t.Errorf("expected error message to mention 'now', got: %s", diags[0].Message)
 	}
 }
 

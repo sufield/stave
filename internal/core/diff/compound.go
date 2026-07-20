@@ -25,6 +25,7 @@ func ComputeCompoundImpact(baseline, current CompoundInput) *RiskDelta {
 			delta.ChainsActivated = append(delta.ChainsActivated, ChainActivation{
 				ChainID:  string(id),
 				Severity: cf.Severity.String(),
+				Cause:    controlIDStrings(cf.ControlsFailing),
 			})
 		}
 	}

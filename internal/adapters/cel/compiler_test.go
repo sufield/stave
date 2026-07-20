@@ -689,3 +689,80 @@ func TestCompile_OpPresent_NonBoolValue_Errors(t *testing.T) {
 		t.Error("OpPresent with non-bool, non-string-bool value should fail compilation")
 	}
 }
+
+func TestCompile_AsymmetricNullSemantics(t *testing.T) {
+	t.Parallel()
+	compiler, err := NewCompiler()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// The core invariant: OpEq is fail-OPEN (absent field → false),
+	// OpNe is fail-CLOSED (absent field → true). This asymmetry is
+	// the structural resolution of the SILENT_RISK behavioral concern.
+
+	eqPred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.storage.encryption.at_rest_enabled"), Op: predicate.OpEq, Value: policy.Bool(true)},
+		},
+	}
+	nePred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.storage.encryption.at_rest_enabled"), Op: predicate.OpNe, Value: policy.Bool(true)},
+		},
+	}
+
+	eqCP, err := compiler.Compile(eqPred)
+	if err != nil {
+		t.Fatalf("compile eq: %v", err)
+	}
+	neCP, err := compiler.Compile(nePred)
+	if err != nil {
+		t.Fatalf("compile ne: %v", err)
+	}
+
+	// Case: field absent (extractor drift / new property not yet populated)
+	absent := map[string]any{
+		"storage": map[string]any{"kind": "bucket"},
+	}
+
+	eqResult, err := evaluateWithParams(eqCP, absent, nil, nil)
+	if err != nil {
+		t.Fatalf("eval eq/absent: %v", err)
+	}
+	if eqResult {
+		t.Error("OpEq must be fail-OPEN: absent field → false (no false-positive violation)")
+	}
+
+	neResult, err := evaluateWithParams(neCP, absent, nil, nil)
+	if err != nil {
+		t.Fatalf("eval ne/absent: %v", err)
+	}
+	if !neResult {
+		t.Error("OpNe must be fail-CLOSED: absent field → true (missing safety property = violation)")
+	}
+
+	// Case: field present and matching
+	present := map[string]any{
+		"storage": map[string]any{
+			"kind":       "bucket",
+			"encryption": map[string]any{"at_rest_enabled": true},
+		},
+	}
+
+	eqResult, err = evaluateWithParams(eqCP, present, nil, nil)
+	if err != nil {
+		t.Fatalf("eval eq/present: %v", err)
+	}
+	if !eqResult {
+		t.Error("OpEq with present matching field should return true")
+	}
+
+	neResult, err = evaluateWithParams(neCP, present, nil, nil)
+	if err != nil {
+		t.Fatalf("eval ne/present: %v", err)
+	}
+	if neResult {
+		t.Error("OpNe with present matching field should return false")
+	}
+}

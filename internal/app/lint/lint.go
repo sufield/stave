@@ -144,22 +144,29 @@ func (l *Linter) checkVersion(path string, root *yaml.Node) []Diagnostic {
 
 func (l *Linter) walkDeterminism(path string, n *yaml.Node) []Diagnostic {
 	var diags []Diagnostic
-	walk(n, func(k, _ *yaml.Node) {
-		trimmed := strings.TrimSpace(k.Value)
-		var key string
-		if strings.EqualFold(trimmed, "now") {
-			key = "now"
-		} else if strings.EqualFold(trimmed, "timestamp") {
-			key = "timestamp"
-		} else if strings.EqualFold(trimmed, "generated_at") {
-			key = "generated_at"
-		} else if strings.EqualFold(trimmed, "runtime") {
-			key = "runtime"
+	walk(n, func(k, v *yaml.Node) {
+		check := func(node *yaml.Node) {
+			if node == nil || node.Kind != yaml.ScalarNode {
+				return
+			}
+			trimmed := strings.TrimSpace(node.Value)
+			var key string
+			if strings.EqualFold(trimmed, "now") {
+				key = "now"
+			} else if strings.EqualFold(trimmed, "timestamp") {
+				key = "timestamp"
+			} else if strings.EqualFold(trimmed, "generated_at") {
+				key = "generated_at"
+			} else if strings.EqualFold(trimmed, "runtime") {
+				key = "runtime"
+			}
+			if key != "" {
+				diags = append(diags, newDiag(path, node.Line, node.Column, "CTL_NONDETERMINISTIC_FIELD",
+					fmt.Sprintf("field %q is not allowed in control contracts", node.Value), SeverityError))
+			}
 		}
-		if key != "" {
-			diags = append(diags, newDiag(path, k.Line, k.Column, "CTL_NONDETERMINISTIC_FIELD",
-				fmt.Sprintf("field %q is not allowed in control contracts", k.Value), SeverityError))
-		}
+		check(k)
+		check(v)
 	})
 	return diags
 }

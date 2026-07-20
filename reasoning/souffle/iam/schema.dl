@@ -129,6 +129,15 @@
 .decl self_registration_unrestricted(pool: symbol, flag: symbol)
 .input self_registration_unrestricted
 
+// has_trust_condition — condition keys on the role's trust policy
+// that gate role assumption. Emitted per (role, condition_key) when
+// the trust policy requires MFA, external_id, or other conditions.
+// When not populated (current state), condition-aware queries
+// degrade to the unconditional transitive_assume — see rules.dl
+// Caveat 3. Populate by extending sirfacts trust-policy parsing.
+.decl has_trust_condition(role: symbol, condition_key: symbol)
+.input has_trust_condition
+
 .decl contributed_by(asset: symbol, control: symbol)
 .input contributed_by
 
@@ -290,6 +299,7 @@ _g0_input_count("cross_account_assumes", n) :- n = count : { cross_account_assum
 _g0_input_count("has_delegated_principal", n) :- n = count : { has_delegated_principal(_, _) }.
 _g0_input_count("has_tag",             n) :- n = count : { has_tag(_, _) }.
 _g0_input_count("has_condition",       n) :- n = count : { has_condition(_, _) }.
+_g0_input_count("has_trust_condition", n) :- n = count : { has_trust_condition(_, _) }.
 _g0_input_count("resource_policy_principal", n) :- n = count : { resource_policy_principal(_, _) }.
 _g0_input_count("resource_policy_action",    n) :- n = count : { resource_policy_action(_, _) }.
 _g0_input_count("grants_cross_account_access", n) :- n = count : { grants_cross_account_access(_, _, _, _) }.

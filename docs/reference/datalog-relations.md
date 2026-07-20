@@ -32,6 +32,7 @@ Run: `go run ./internal/tools/gendatalogdocs`
 | [`maps_auth_to`](#maps_auth_to) | `pool: symbol, role: symbol` | input |  |
 | [`allows_unauthenticated`](#allows_unauthenticated) | `pool: symbol, flag: symbol` | input |  |
 | [`self_registration_unrestricted`](#self_registration_unrestricted) | `pool: symbol, flag: symbol` | input |  |
+| [`has_trust_condition`](#has_trust_condition) | `role: symbol, condition_key: symbol` | input | condition keys on the role's trust policy |
 | [`contributed_by`](#contributed_by) | `asset: symbol, control: symbol` | input |  |
 | [`is_decommissioned`](#is_decommissioned) | `asset: symbol, flag: symbol` | input |  |
 | [`is_provisioned`](#is_provisioned) | `asset: symbol, flag: symbol` | input |  |
@@ -60,6 +61,7 @@ Run: `go run ./internal/tools/gendatalogdocs`
 | Relation | Parameters | Kind | Description |
 |----------|-----------|------|-------------|
 | [`transitive_assume`](#transitive_assume) | `principal_id: symbol, role_id: symbol` | output | closure of can_assume over role |
+| [`unconditional_assume`](#unconditional_assume) | `principal_id: symbol, role_id: symbol` | output | subset of transitive_assume |
 | [`reachable_action`](#reachable_action) | `principal_id: symbol, action: symbol` | output | the principal's |
 | [`reachable_resource`](#reachable_resource) | `principal_id: symbol, resource_pattern: symbol` | output |  |
 | [`reachable_deny_action`](#reachable_deny_action) | `principal_id: symbol, action: symbol` | output | Same shape for the Deny side. Sirfacts emits has_deny_* |
@@ -343,6 +345,23 @@ Input relations — verbatim SIR-facts vocabulary.
 ```datalog
 .decl self_registration_unrestricted(pool: symbol, flag: symbol)
 ```
+
+### has_trust_condition
+
+**Source:** `reasoning/souffle/iam/schema.dl`
+
+**Kind:** input
+
+```datalog
+.decl has_trust_condition(role: symbol, condition_key: symbol)
+```
+
+has_trust_condition — condition keys on the role's trust policy
+that gate role assumption. Emitted per (role, condition_key) when
+the trust policy requires MFA, external_id, or other conditions.
+When not populated (current state), condition-aware queries
+degrade to the unconditional transitive_assume — see rules.dl
+Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### contributed_by
 
@@ -641,6 +660,25 @@ closure terminates when no new tuples are derived),
 but we still bound the explicit privesc_chain depth
 in reachability.dl per AWS's documented role-chain
 limits.
+
+### unconditional_assume
+
+**Source:** `reasoning/souffle/iam/rules.dl`
+
+**Kind:** output
+
+```datalog
+.decl unconditional_assume(principal_id: symbol, role_id: symbol)
+```
+
+unconditional_assume — subset of transitive_assume
+restricted to paths where NO intermediate role requires
+MFA, external_id, or other trust-policy conditions.
+When has_trust_condition is unpopulated (current state),
+this equals transitive_assume — every edge is
+unconditional. When populated, CIA queries can switch
+from transitive_assume to unconditional_assume to answer
+"what can P reach WITHOUT meeting any conditions?"
 
 ### reachable_action
 

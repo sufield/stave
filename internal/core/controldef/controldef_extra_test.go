@@ -419,6 +419,38 @@ func TestCheckEffectivenessTriggered(t *testing.T) {
 	}
 }
 
+func TestCheckEffectivenessRespectsAppliesToAssetType(t *testing.T) {
+	t.Parallel()
+	controls := []ControlDefinition{
+		{
+			ID:                   kernel.ControlID("CTL.TEST.001"),
+			Name:                 "test s3 control",
+			ApplicableAssetTypes: []kernel.AssetType{"aws_s3_bucket"},
+		},
+	}
+	// The snapshot contains only an IAM role asset (not S3 bucket)
+	snapshots := []asset.Snapshot{
+		{
+			Assets: []asset.Asset{
+				{
+					ID:   "arn:aws:iam::123456789012:role/my-role",
+					Type: kernel.AssetType("aws_iam_role"),
+				},
+			},
+		},
+	}
+	// The evaluator says any asset is unsafe
+	eval := func(_ ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		return true, nil
+	}
+	issues := CheckEffectiveness(controls, snapshots, eval)
+	// Under buggy code, it evaluates the rule on aws_iam_role, gets true, and thinks the control triggered (0 issues).
+	// Under correct code, since aws_iam_role is not applicable, the control is never evaluated/triggered on it (1 issue).
+	if len(issues) != 1 {
+		t.Fatalf("expected 1 issue (control never matched applicable asset type), got %d", len(issues))
+	}
+}
+
 // ---------------------------------------------------------------------------
 // ExtractMisconfigurations
 // ---------------------------------------------------------------------------

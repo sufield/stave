@@ -62,6 +62,9 @@ func CheckEffectiveness(controls []ControlDefinition, snapshots []asset.Snapshot
 func isTriggered(ctl *ControlDefinition, snapshots []asset.Snapshot, eval PredicateEval) bool {
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
+			if !ctl.AppliesToAssetType(a.Type) {
+				continue
+			}
 			unsafe, err := eval(*ctl, a, snap.Identities)
 			if err == nil && unsafe {
 				return true

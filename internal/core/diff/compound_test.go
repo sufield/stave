@@ -12,7 +12,11 @@ func TestComputeCompoundImpact_ChainActivated(t *testing.T) {
 	baseline := CompoundInput{}
 	current := CompoundInput{
 		Findings: []findings.CompoundFinding{
-			{ChainID: "capital_one_path", Severity: controldef.SeverityCritical},
+			{
+				ChainID:         "capital_one_path",
+				Severity:        controldef.SeverityCritical,
+				ControlsFailing: []kernel.ControlID{"CTL.IAM.001", "CTL.EC2.001"},
+			},
 		},
 	}
 
@@ -21,11 +25,15 @@ func TestComputeCompoundImpact_ChainActivated(t *testing.T) {
 	if len(delta.ChainsActivated) != 1 {
 		t.Fatalf("want 1 activated chain, got %d", len(delta.ChainsActivated))
 	}
-	if delta.ChainsActivated[0].ChainID != "capital_one_path" {
-		t.Errorf("want capital_one_path, got %s", delta.ChainsActivated[0].ChainID)
+	act := delta.ChainsActivated[0]
+	if act.ChainID != "capital_one_path" {
+		t.Errorf("want capital_one_path, got %s", act.ChainID)
 	}
-	if delta.ChainsActivated[0].Severity != "critical" {
-		t.Errorf("want critical, got %s", delta.ChainsActivated[0].Severity)
+	if act.Severity != "critical" {
+		t.Errorf("want critical, got %s", act.Severity)
+	}
+	if len(act.Cause) != 2 {
+		t.Errorf("want 2 causes (failing controls), got %d", len(act.Cause))
 	}
 }
 

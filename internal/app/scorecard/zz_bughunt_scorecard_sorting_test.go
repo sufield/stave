@@ -27,3 +27,20 @@ func TestBugHunt_Compute_FrameworkSortDeterminism(t *testing.T) {
 		t.Errorf("expected NIST second, got %s", report.Frameworks[1].Framework)
 	}
 }
+
+func TestBugHunt_Compute_PerfectCompliance(t *testing.T) {
+	frameworks := []string{"hipaa"}
+	var findings []remediation.Finding
+
+	report := Compute(findings, frameworks)
+	if len(report.Frameworks) != 1 {
+		t.Fatalf("expected 1 framework score, got %d", len(report.Frameworks))
+	}
+
+	f := report.Frameworks[0]
+	// Under buggy code: zero findings for a framework results in ReadinessPct = 0.0 (0% compliant).
+	// Under correct code: zero findings (perfect compliance) should report 100.0% readiness.
+	if f.ReadinessPct != 100.0 {
+		t.Errorf("expected 100.0%% readiness for zero findings, got %f", f.ReadinessPct)
+	}
+}

@@ -36,7 +36,113 @@
       "threshold_hours": 1
     }
   ],
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "sha256:a8ba929203c7bc7e",
+      "control_id": "CTL.EXP.DURATION.001",
+      "control_name": "Unsafe Exposure Duration Bound",
+      "control_description": "An asset must not remain unsafe beyond the configured time window.",
+      "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
+      "source": {
+        "file": "main.tf",
+        "line": 42
+      },
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-01T02:00:00Z",
+        "unsafe_duration_hours": 240,
+        "threshold_hours": 1,
+        "misconfigurations": [
+          {
+            "property": "public",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 1 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "fix_plan": {
+        "id": "fix-87e9af3ab9a06ede",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "exploitability": "reachable",
+      "exposure_score": 10.273972602739727,
+      "score_breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "public eq true",
+          "observation_key": "public",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "res:aws:s3:bucket:disappearing-bucket",
+          "type": "storage_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.EXP.DURATION.001",
+          "control_name": "Unsafe Exposure Duration Bound",
+          "reasoning": [
+            {
+              "clause": "the resource is public = true",
+              "observation_key": "public",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "public",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set public to false"
+          }
+        ],
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "classification": "aggregate_check",
+      "contributing_fact_ids": [
+        "edad202355db",
+        "22b33f74963c",
+        "492d297aa4dc",
+        "671e6c5c7ec2",
+        "47670ed33d14",
+        "2e737a601a80",
+        "54afb643ba66"
+      ]
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:9d5df7bb7d47b974",
@@ -44,12 +150,30 @@
       "shared_keys": [
         "public"
       ],
-      "headline_finding_id": "sha256:01094f7d39ad000f",
+      "headline_finding_id": "sha256:a8ba929203c7bc7e",
       "member_finding_ids": [
-        "sha256:01094f7d39ad000f"
+        "sha256:a8ba929203c7bc7e"
       ],
       "consolidated_score": 10.273972602739727,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+      "asset_type": "storage_bucket",
+      "fix_plan": {
+        "id": "fix-87e9af3ab9a06ede",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:disappearing-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "contributing_controls": [
+        "CTL.EXP.DURATION.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [

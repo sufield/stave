@@ -67,6 +67,23 @@ transitive_assume(P, R) :- can_assume(P, R).
 transitive_assume(P, R) :- transitive_assume(P, R1), can_assume(R1, R).
 
 // =====================================================
+// unconditional_assume — subset of transitive_assume
+// restricted to paths where NO intermediate role requires
+// MFA, external_id, or other trust-policy conditions.
+// When has_trust_condition is unpopulated (current state),
+// this equals transitive_assume — every edge is
+// unconditional. When populated, CIA queries can switch
+// from transitive_assume to unconditional_assume to answer
+// "what can P reach WITHOUT meeting any conditions?"
+// =====================================================
+
+.decl unconditional_assume(principal_id: symbol, role_id: symbol)
+.output unconditional_assume
+
+unconditional_assume(P, R) :- can_assume(P, R), !has_trust_condition(R, _).
+unconditional_assume(P, R) :- unconditional_assume(P, R1), can_assume(R1, R), !has_trust_condition(R, _).
+
+// =====================================================
 // reachable_action / reachable_resource — the principal's
 // own emitted facts plus all facts on transitively-
 // assumable roles. The CIA queries reason over these
@@ -280,6 +297,7 @@ violation_i(P, R, A) :-
 .output _g1_derived_count
 
 _g1_derived_count("transitive_assume",      n) :- n = count : { transitive_assume(_, _) }.
+_g1_derived_count("unconditional_assume",   n) :- n = count : { unconditional_assume(_, _) }.
 _g1_derived_count("reachable_action",       n) :- n = count : { reachable_action(_, _) }.
 _g1_derived_count("reachable_resource",     n) :- n = count : { reachable_resource(_, _) }.
 _g1_derived_count("reachable_deny_action",  n) :- n = count : { reachable_deny_action(_, _) }.
