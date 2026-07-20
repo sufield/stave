@@ -525,6 +525,19 @@ contracts:
     consumers:
       - CTL.IAM.ROLE.DANGEROUS.MANAGED.001
 
+  - field: public_invoke_has_source_condition
+    type: boolean
+    null_semantics: not_evaluated
+    postcondition: >
+      True if every resource-policy statement granting
+      lambda:InvokeFunction to Principal "*" includes an
+      aws:SourceAccount or aws:SourceArn condition key.
+      False if at least one public-invoke statement lacks both
+      conditions. Null when the collector did not evaluate
+      resource policies.
+    consumers:
+      - CTL.LAMBDA.POLICY.PUBLIC.001
+
   - field: has_admin_access
     type: boolean
     postcondition: >

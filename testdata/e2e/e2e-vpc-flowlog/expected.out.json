@@ -35,7 +35,272 @@
       "threshold_hours": 168
     }
   ],
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "sha256:711b00f64f319ea1",
+      "control_id": "CTL.VPC.FLOWLOG.001",
+      "control_name": "VPC Flow Logging Must Be Enabled",
+      "control_description": "VPC flow logs capture information about IP traffic going to and from network interfaces. Without flow logs, network-level access patterns cannot be audited and unauthorized traffic goes undetected.\n",
+      "asset_id": "vpc-test-001",
+      "asset_type": "aws_vpc",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "network.flow_log.enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "network.kind",
+            "actual_value": "vpc",
+            "operator": "eq",
+            "unsafe_value": "vpc"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "3.9",
+        "cis_aws_v3.0": "3.7",
+        "fedramp_moderate": "AU-2",
+        "hipaa": "164.312(b)",
+        "nist_800_53_r5": "AU-2",
+        "pci_dss_v4.0": "1.2.1",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-12"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "VPC does not have flow logging enabled. Network traffic patterns are invisible to audit and forensic analysis.",
+        "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs",
+        "example": "{\n  \"network\": {\n    \"kind\": \"vpc\",\n    \"flow_log\": {\n      \"enabled\": true\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-4fcd1ab13604e79c",
+        "target": {
+          "asset_id": "vpc-test-001",
+          "asset_type": "aws_vpc"
+        },
+        "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
+      },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EXPOSURE.EXFIL.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EXPOSURE.EXFIL.002",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CONFIG.ENABLED.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "vpc_dns_exfiltration",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.DNSFIREWALL.ENABLED.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
+        },
+        {
+          "chain_id": "vpc_dns_exfiltration",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
+        },
+        {
+          "chain_id": "vpc_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
+        },
+        {
+          "chain_id": "vpc_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
+        },
+        {
+          "chain_id": "vpc_no_inspection",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.NETWORK.FIREWALL.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
+        },
+        {
+          "chain_id": "vpc_no_inspection",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
+        }
+      ],
+      "sla_deadline_hours": 336,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 2,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "network.flow_log.enabled eq false",
+          "observation_key": "network.flow_log.enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "network.kind eq \"vpc\"",
+          "observation_key": "network.kind",
+          "operator": "eq",
+          "expected_value": "vpc",
+          "observed_value": "vpc"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "vpc-test-001",
+          "type": "aws_vpc",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.VPC.FLOWLOG.001",
+          "control_name": "VPC Flow Logging Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "VPC Flow Logs are enabled = false",
+              "observation_key": "network.flow_log.enabled",
+              "observed_value": false
+            },
+            {
+              "clause": "network.kind = \"vpc\"",
+              "observation_key": "network.kind",
+              "observed_value": "vpc"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "network.flow_log.enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set network.flow_log.enabled to true"
+          },
+          {
+            "path": "network.kind",
+            "current_value": "vpc",
+            "required_value": "any value other than vpc",
+            "has_safe_default": false,
+            "description": "Change network.kind away from vpc"
+          }
+        ],
+        "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "vpc"
+      ],
+      "delta": [
+        {
+          "property_label": "VPC flow logging",
+          "property_path": "network.flow_log.enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "c07c0381866d",
+        "322910b6cf4e",
+        "8869a449ff22",
+        "febeba2f0447",
+        "7abc74e0b5d1",
+        "70f526a6ebe6"
+      ]
+    }
+  ],
   "near_miss_chains": [
     {
       "chain": "data_exfiltration_path",
@@ -173,6 +438,24 @@
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 2
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "vpc-test-001",
+      "asset_type": "aws_vpc",
+      "fix_plan": {
+        "id": "fix-4fcd1ab13604e79c",
+        "target": {
+          "asset_id": "vpc-test-001",
+          "asset_type": "aws_vpc"
+        },
+        "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
+      },
+      "contributing_controls": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [

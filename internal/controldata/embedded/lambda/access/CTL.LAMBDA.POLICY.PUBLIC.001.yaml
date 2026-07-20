@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.POLICY.PUBLIC.001
+name: Lambda Public Invoke Must Have Source Condition
+description: >
+  Lambda resource-based policies granting lambda:InvokeFunction to
+  all principals ("*") must include an aws:SourceAccount or
+  aws:SourceArn condition. Without a source condition, ANY caller
+  from ANY account can invoke the function — unrestricted public
+  execution with the function's full IAM role. A source condition
+  scopes the grant to a specific account or resource, converting a
+  fully open function into a service-to-service integration.
+  CTL.LAMBDA.INVOKE.PUBLIC.001 flags all public invoke grants; this
+  control distinguishes the truly unrestricted subset where no
+  source condition limits the blast radius.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  mitre_attack: "T1648"
+  aws_security_hub: "Lambda.1"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - lambda
+taxonomy:
+  - network-perimeter
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_function
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    Lambda function has a resource-based policy granting public invoke
+    permission without an aws:SourceAccount or aws:SourceArn condition.
+    Any caller in any AWS account or unauthenticated can invoke the
+    function.
+  action: >
+    Add an aws:SourceArn or aws:SourceAccount condition to the public
+    invoke statement, or replace Principal "*" with the specific
+    service principal and add source scoping:
+    aws lambda add-permission --function-name <name>
+    --principal s3.amazonaws.com --source-arn arn:aws:s3:::my-bucket
+    --statement-id <sid> --action lambda:InvokeFunction
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "policy": {
+          "public_invoke": true,
+          "public_invoke_has_source_condition": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.policy.public_invoke
+      op: eq
+      value: true
+    - field: properties.compute.policy.public_invoke_has_source_condition
+      op: eq
+      value: false
+tests:
+  - name: "public invoke without source condition fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:open-function"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          policy:
+            public_invoke: true
+            public_invoke_has_source_condition: false
+  - name: "public invoke with source condition passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:scoped-function"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          policy:
+            public_invoke: true
+            public_invoke_has_source_condition: true
+  - name: "no public invoke passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:private-function"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          policy:
+            public_invoke: false
+            public_invoke_has_source_condition: false

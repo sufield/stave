@@ -126,9 +126,9 @@
         "trail.is_logging",
         "trail.is_multi_region_trail"
       ],
-      "headline_finding_id": "sha256:787088d7544b3cd7",
+      "headline_finding_id": "sha256:422dce43a2492a35",
       "member_finding_ids": [
-        "sha256:787088d7544b3cd7"
+        "sha256:422dce43a2492a35"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1

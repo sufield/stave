@@ -1,0 +1,48 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.INCOMPLETE.001
+name: Complete Data Required for Lambda Assessment
+description: >
+  The observation snapshot is missing required Lambda function
+  properties. Without compute.policy.public_invoke the engine
+  cannot evaluate public-access controls and will silently skip
+  them — producing a false-clean posture report. This control
+  fires when the data is absent so the gap is visible.
+domain: compute
+severity: info
+compliance:
+  ccm_v4: ["DCS-06"]
+scope_tags:
+  - aws
+  - lambda
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: absence_check
+applicable_asset_types:
+  - aws_lambda_function
+params: {}
+remediation:
+  description: >
+    Observation is missing Lambda function policy properties.
+  action: >
+    Ensure the extractor calls aws lambda get-policy for each
+    function and maps the resource policy to compute.policy
+    observation properties.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "policy": {
+          "public_invoke": false,
+          "public_invoke_has_source_condition": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.policy.public_invoke
+      op: missing
+      value: true
