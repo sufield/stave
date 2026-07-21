@@ -10,7 +10,7 @@ description: >
   when the RCP data perimeter exists for s3: but not
   for the sub-namespaces.
 controls:
-  - CTL.ORG.RCP.PERIMETER.ORGID.001
+  - CTL.ORG.RCP.PRINCIPALORGID.001
   - CTL.S3EXPRESS.POLICY.PUBLIC.001
   - CTL.S3TABLES.POLICY.PUBLIC.001
 escalation_threshold: 1

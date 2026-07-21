@@ -380,6 +380,20 @@ Lambda functions configured for VPC access must reference subnets and security g
 
 ---
 
+### CTL.LAMBDA.INCOMPLETE.001
+
+**Complete Data Required for Lambda Assessment**
+
+- **Severity:** info
+- **Type:** unsafe_state
+- **Domain:** compute
+
+The observation snapshot is missing required Lambda function properties. Without compute.policy.public_invoke the engine cannot evaluate public-access controls and will silently skip them — producing a false-clean posture report. This control fires when the data is absent so the gap is visible.
+
+**Remediation:** Ensure the extractor calls aws lambda get-policy for each function and maps the resource policy to compute.policy observation properties.
+
+---
+
 ### CTL.LAMBDA.INVOKE.PUBLIC.001
 
 **Lambda Functions Must Not Have Public Invoke Permissions**
@@ -1066,6 +1080,21 @@ Lambda function resource policies should carry no more than the configured thres
 Lambda resource policies that grant invocation rights to principals outside the function's own account must include an aws:PrincipalOrgID condition (or an equivalently scoping condition) that restricts the grant to specific AWS organizations or accounts. Without such a condition, any principal in the named external account can invoke the function — which means a compromise of any IAM identity in that account becomes a path to invoking the function and exercising the function's execution-role permissions. The pattern most often seen in the field is a one-shot AddPermission call that named an external account during a partner integration and never tightened the principal scope or added a condition; the policy remains in force long after the integration is decommissioned, the partner team has rotated, or the external account itself has changed ownership. Adding an aws:PrincipalOrgID, aws:SourceAccount, or aws:SourceArn condition limits the grant to the organization or specific source the integration actually required.
 
 **Remediation:** Add aws:PrincipalOrgID, aws:SourceAccount, or aws:SourceArn condition to each cross-account statement.
+
+---
+
+### CTL.LAMBDA.POLICY.PUBLIC.001
+
+**Lambda Public Invoke Must Have Source Condition**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** aws_security_hub: Lambda.1; mitre_attack: T1648; nist_800_53_r5: AC-3;
+
+Lambda resource-based policies granting lambda:InvokeFunction to all principals ("*") must include an aws:SourceAccount or aws:SourceArn condition. Without a source condition, ANY caller from ANY account can invoke the function — unrestricted public execution with the function's full IAM role. A source condition scopes the grant to a specific account or resource, converting a fully open function into a service-to-service integration. CTL.LAMBDA.INVOKE.PUBLIC.001 flags all public invoke grants; this control distinguishes the truly unrestricted subset where no source condition limits the blast radius.
+
+**Remediation:** Add an aws:SourceArn or aws:SourceAccount condition to the public invoke statement, or replace Principal "*" with the specific service principal and add source scoping: aws lambda add-permission --function-name <name> --principal s3.amazonaws.com --source-arn arn:aws:s3:::my-bucket --statement-id <sid> --action lambda:InvokeFunction
 
 ---
 
