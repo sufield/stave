@@ -45,7 +45,316 @@
       "threshold_hours": 168
     }
   ],
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "sha256:af9d35c15e590549",
+      "control_id": "CTL.S3.AUTH.READ.001",
+      "control_name": "No Authenticated-Users Read Access",
+      "control_description": "S3 buckets must not grant read access to all authenticated AWS users. AuthenticatedUsers scope means any AWS account can read objects, which is nearly as dangerous as fully public access.\n",
+      "asset_id": "shopify-internal-assets",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-11-15T00:00:00Z",
+        "last_seen_unsafe_at": "2015-11-23T00:00:00Z",
+        "unsafe_duration_hours": 89040,
+        "misconfigurations": [
+          {
+            "property": "storage.access.authenticated_read",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 89040 hours (SLA: 0 hours). Exposed since 2015-11-15T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "DSP-17",
+        "IAM-16"
+      ],
+      "exposure": {
+        "type": "authenticated_read",
+        "principal_scope": "authenticated"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket grants read access to the AuthenticatedUsers group. Any AWS account holder worldwide can read objects, which is nearly as dangerous as fully public access.",
+        "action": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"authenticated_read\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-4266448eeaffaebf",
+        "target": {
+          "asset_id": "shopify-internal-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true."
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 88704,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3710
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.authenticated_read eq true",
+          "observation_key": "storage.access.authenticated_read",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-internal-assets",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.AUTH.READ.001",
+          "control_name": "No Authenticated-Users Read Access",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the bucket allows authenticated-users read = true",
+              "observation_key": "storage.access.authenticated_read",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.authenticated_read",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.access.authenticated_read to false"
+          }
+        ],
+        "action": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket's ACL grants READ permission to the AWS-managed AuthenticatedUsers group, which includes every principal with any valid AWS credential across every AWS account in the world. The bucket is not public to anonymous internet users, but it is effectively public to any AWS account holder.\n",
+      "infection": "Many operators read \"AuthenticatedUsers\" and assume it means \"our account's users\" — it does not. Anyone who signs up for a free AWS account can authenticate and read this bucket's objects. The attack surface is therefore millions of AWS accounts worldwide, accessible via `aws s3 cp s3://bucket/key -` with no other requirement than an AWS login. Automated scanners specifically look for AuthenticatedUsers grants because they are a frequent misunderstanding.\n",
+      "failure": "Data exposure to every AWS account holder globally. Distinct from anonymous-internet exposure but operationally nearly as serious: automated mass-harvest via AWS CLI, researchers indexing exposed buckets, and targeted attackers pretending to be routine AWS customers all exploit this class.\n",
+      "delta": [
+        {
+          "property_label": "authenticated-users read access",
+          "property_path": "storage.access.authenticated_read",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "5f8d4f7928d6",
+        "771a2d3c841a",
+        "7a1898bb85d7",
+        "9aee82257d75",
+        "eb5b4f1f649a",
+        "c547498043c7",
+        "c2e9e3d5769e",
+        "36b7e14f5439",
+        "cf999c825fc9",
+        "32d0109cc906",
+        "cf999c825fc9",
+        "31987c213b4a"
+      ]
+    },
+    {
+      "finding_id": "sha256:9aaf245c02e36ddd",
+      "control_id": "CTL.S3.POLICY.WRITE.001",
+      "control_name": "No Public Write via Bucket Policy",
+      "control_description": "S3 bucket policies must not grant write access to an anonymous or wildcard principal. Policy-based write access — a Statement with Effect Allow, Principal \"*\" or AWS: \"*\", and an Action such as s3:PutObject or s3:DeleteObject without a restricting Condition — enables attackers to upload malicious objects, overwrite existing content, or hold data ransom. This is distinct from CTL.S3.PUBLIC.003, which fires on the composite public_write signal regardless of mechanism; this control narrows to the policy path so the finding points the operator at the bucket policy specifically. For ACL-based public write, see CTL.S3.ACL.FULLCONTROL.001 (FULL_CONTROL grants) and CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).\n",
+      "asset_id": "shopify-internal-assets",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2015-11-15T00:00:00Z",
+        "last_seen_unsafe_at": "2015-11-23T00:00:00Z",
+        "unsafe_duration_hours": 89040,
+        "misconfigurations": [
+          {
+            "property": "storage.access.write_via_resource",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "resource"
+        ],
+        "temporal_risk": "Asset non-compliant for 89040 hours (SLA: 0 hours). Exposed since 2015-11-15T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance_ccm_v4": [
+        "DSP-07",
+        "DSP-17"
+      ],
+      "exposure": {
+        "type": "policy_public_write",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bucket policy grants s3:PutObject, s3:DeleteObject, or equivalent write action to an anonymous or wildcard principal. Any unauthenticated caller can upload, overwrite, or delete objects.",
+        "action": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write.",
+        "example": "{\n  \"storage\": {\n    \"access\": {\n      \"write_via_resource\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-7e7d91623b0cd9df",
+        "target": {
+          "asset_id": "shopify-internal-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write."
+      },
+      "chain_membership": [
+        {
+          "chain_id": "latimes_writable_bucket_path",
+          "chain_severity": "critical",
+          "stage_span": [
+            "initial_access"
+          ],
+          "narrative": "LA Times incident shape (2018): publicly writable S3 bucket served by a website. Attacker wrote cryptominer JavaScript to the bucket, which was served to all website visitors. The invariant: no S3 bucket permits public write access. This is a supply chain attack via content injection, not a data exfiltration.\n"
+        }
+      ],
+      "exploitability": "exploitable",
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 88968,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1.5,
+        "blind_multiplier": 5,
+        "days_blind": 3710
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "storage.access.write_via_resource eq true",
+          "observation_key": "storage.access.write_via_resource",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "shopify-internal-assets",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.POLICY.WRITE.001",
+          "control_name": "No Public Write via Bucket Policy",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the bucket policy grants write to a public principal = true",
+              "observation_key": "storage.access.write_via_resource",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "storage.access.write_via_resource",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set storage.access.write_via_resource to false"
+          }
+        ],
+        "action": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "The bucket policy contains a Statement with Effect \"Allow\", Principal \"*\" (or AWS: \"*\"), and a write action such as s3:PutObject, s3:DeleteObject, or s3:*. No restricting Condition narrows the principal to a specific account, VPC, IP range, or organization.\n",
+      "infection": "Any unauthenticated HTTP caller can issue PUT or DELETE against the bucket, including object overwrites of existing keys. Object uploads do not require listing permissions, so attackers do not need to enumerate to exploit — they upload crafted objects against guessed or leaked keys, or write fresh malicious content for serving. In combination with public read on the same bucket, an attacker can replace JavaScript, documents, or binaries that legitimate users download.\n",
+      "failure": "Content takeover. Attackers can inject malicious objects, overwrite trusted artifacts, or hold data ransom by deleting and re-uploading encrypted copies. If the bucket backs a website, CDN, or software distribution, every downstream consumer receives attacker-controlled content until the bucket is remediated and the content re-validated.\n",
+      "delta": [
+        {
+          "property_label": "access write via resource",
+          "property_path": "storage.access.write_via_resource",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "5f8d4f7928d6",
+        "771a2d3c841a",
+        "7a1898bb85d7",
+        "9aee82257d75",
+        "eb5b4f1f649a",
+        "c547498043c7",
+        "c2e9e3d5769e",
+        "36b7e14f5439",
+        "cf999c825fc9",
+        "32d0109cc906",
+        "cf999c825fc9",
+        "31987c213b4a"
+      ]
+    }
+  ],
   "chain_findings": [
     {
       "chain": "latimes_writable_bucket_path",
@@ -81,6 +390,67 @@
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "shopify-internal-assets",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-4266448eeaffaebf",
+        "target": {
+          "asset_id": "shopify-internal-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Remove the ACL grant to AuthenticatedUsers. Replace with specific IAM principals or use bucket policy with explicit account IDs. Enable S3 Public Access Block with IgnorePublicAcls set to true."
+      },
+      "contributing_controls": [
+        "CTL.S3.AUTH.READ.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "shopify-internal-assets",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-7e7d91623b0cd9df",
+        "target": {
+          "asset_id": "shopify-internal-assets",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Remove or constrain the policy statement granting write actions to Principal \"*\" or AWS: \"*\". If broad write access is genuinely required, add a restricting Condition on aws:PrincipalOrgID, aws:SourceVpc, or a fixed aws:SourceIp CIDR. Enable S3 Public Access Block with BlockPublicPolicy set to true to reject future policies that grant public write."
+      },
+      "contributing_controls": [
+        "CTL.S3.POLICY.WRITE.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [

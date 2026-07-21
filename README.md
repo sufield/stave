@@ -59,14 +59,25 @@ security assessment job. Instead of assembling controls, chains,
 and parameters manually, pick a template and go.
 
 ```bash
-# See which template fits your snapshot
-stave recommend --snapshot ./observations/
-
-# Initialize with parameters
-stave template init critical-findings --param severity_threshold=high
+# Zero arguments — sensible defaults (critical-findings template,
+# severity_threshold=high, writes stave-values.yaml)
+stave template init
 
 # Run the assessment
 stave apply --values ./stave-values.yaml --snapshot ./observations/
+```
+
+Arguments are overrides, not requirements:
+
+```bash
+# Override the template type
+stave template init independent-audit
+
+# Override a parameter
+stave template init --param severity_threshold=critical
+
+# See which template fits your snapshot
+stave recommend --snapshot ./observations/
 ```
 
 ### Built-in templates
@@ -79,11 +90,11 @@ stave apply --values ./stave-values.yaml --snapshot ./observations/
 | `breach-reconstruction` | Timeline reconstruction after a security incident | 60 |
 | `bucket-hijacking-assessment` | Evaluate router-to-S3 destination bindings for namespace hijacking | 70 |
 
-`critical-findings` is the front door — it always matches and
-dynamically selects controls based on which services appear in your
-snapshot. No configuration needed; if the catalog has IAM controls
-and your snapshot has IAM resources, those controls run. Adding a
-new service to the catalog automatically expands coverage.
+`critical-findings` is the default — zero arguments selects it.
+It dynamically selects controls based on which services appear in
+your snapshot. No configuration needed; if the catalog has IAM
+controls and your snapshot has IAM resources, those controls run.
+Adding a new service to the catalog automatically expands coverage.
 
 ### Filtered output
 

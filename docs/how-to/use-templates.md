@@ -28,8 +28,19 @@ stave template list
 
 ```bash
 # doctest:skip — creates stave-values.yaml in working tree
-# Initialize with parameters
-stave template init critical-findings --param severity_threshold=high
+# Zero arguments — defaults to critical-findings, severity_threshold=high
+stave template init
+```
+
+Arguments are overrides, not requirements:
+
+```bash
+# doctest:skip — creates stave-values.yaml in working tree
+# Override the template type
+stave template init independent-audit
+
+# Override a parameter
+stave template init --param severity_threshold=critical
 ```
 
 ```bash
