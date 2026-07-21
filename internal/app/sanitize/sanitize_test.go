@@ -190,8 +190,8 @@ func TestSanitize_AccountIDHashesCount(t *testing.T) {
 				Properties: map[string]any{
 					"arn1": "arn:aws:s3:::bucket-123456789012", // 1 account ID
 					"arn2": "arn:aws:s3:::bucket-987654321098", // 1 account ID
-					"safe": "arn:aws:s3:::bucket-no-id",       // 0 account IDs
-					"num":  42,                                // 0 account IDs
+					"safe": "arn:aws:s3:::bucket-no-id",        // 0 account IDs
+					"num":  42,                                 // 0 account IDs
 				},
 			},
 		},
