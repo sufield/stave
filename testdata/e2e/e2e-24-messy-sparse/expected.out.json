@@ -43,9 +43,9 @@
       "shared_keys": [
         "binds_to_cluster_admin"
       ],
-      "headline_finding_id": "sha256:0ec4c4e78859e9eb",
+      "headline_finding_id": "sha256:2c5e7d89626a2f02",
       "member_finding_ids": [
-        "sha256:0ec4c4e78859e9eb"
+        "sha256:2c5e7d89626a2f02"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
