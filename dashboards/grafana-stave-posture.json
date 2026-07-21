@@ -1,0 +1,176 @@
+{
+  "__inputs": [],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "9.0.0" },
+    { "type": "panel", "id": "timeseries", "name": "Time series" },
+    { "type": "panel", "id": "table", "name": "Table" },
+    { "type": "panel", "id": "gauge", "name": "Gauge" },
+    { "type": "panel", "id": "barchart", "name": "Bar chart" }
+  ],
+  "annotations": { "list": [] },
+  "description": "Stave security posture dashboard. Import via Settings > JSON Model. Data source: Loki/Elasticsearch ingesting stave telemetry NDJSON.",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "Active Findings by Severity",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum by (severity) (count_over_time({job=\"stave\"} | json | verdict=\"violation\" [$__interval]))",
+          "legendFormat": "{{severity}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20 }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "critical" }, "properties": [{ "id": "color", "value": { "fixedColor": "#E02F44", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "high" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "medium" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FADE2A", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "low" }, "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }] }
+        ]
+      }
+    },
+    {
+      "title": "Compound Chain Status",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "expr": "{job=\"stave\"} | json | compound_chains != \"\" | line_format \"{{.compound_chains}}\" | label_format chain={{.compound_chains}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "exposure_score", "desc": true }]
+      }
+    },
+    {
+      "title": "Total Active Findings",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "expr": "count(count_over_time({job=\"stave\"} | json | verdict=\"violation\" [24h]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "orange", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Critical Findings",
+      "type": "gauge",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 8 },
+      "targets": [
+        {
+          "expr": "count(count_over_time({job=\"stave\"} | json | severity=\"critical\" [24h]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "title": "Top Controls by Exposure Score",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (control_id) (max_over_time({job=\"stave\"} | json | unwrap exposure_score [$__interval])))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 80 },
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "barWidth": 0.8
+      }
+    },
+    {
+      "title": "Remediation Velocity",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "expr": "sum(count_over_time({job=\"stave\"} | json | verdict=\"resolved\" [$__interval]))",
+          "legendFormat": "Resolved"
+        },
+        {
+          "expr": "sum(count_over_time({job=\"stave\"} | json | verdict=\"violation\" [$__interval]))",
+          "legendFormat": "New violations"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10 }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "Resolved" }, "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "New violations" }, "properties": [{ "id": "color", "value": { "fixedColor": "#E02F44", "mode": "fixed" } }] }
+        ]
+      }
+    },
+    {
+      "title": "Exploitability Distribution",
+      "type": "barchart",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "expr": "sum by (exploitability) (count_over_time({job=\"stave\"} | json | exploitability != \"\" [$__interval]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 80 }
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "exploitable" }, "properties": [{ "id": "color", "value": { "fixedColor": "#E02F44", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "one_away" }, "properties": [{ "id": "color", "value": { "fixedColor": "#FF9830", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "reachable" }, "properties": [{ "id": "color", "value": { "fixedColor": "#73BF69", "mode": "fixed" } }] }
+        ]
+      }
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["stave", "security", "posture"],
+  "templating": { "list": [] },
+  "time": { "from": "now-7d", "to": "now" },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Stave Security Posture",
+  "uid": "stave-posture",
+  "version": 1
+}

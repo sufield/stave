@@ -103,6 +103,10 @@ type Finding struct {
 	// Reachability — populated when IAM data is in the snapshot.
 	Reachability *ReachabilityContext `json:"reachability,omitempty"`
 
+	// SharedRoleContext — populated by the shared role index enrichment
+	// for controls that detect shared execution roles (e.g. CTL.LAMBDA.ROLE.SHARED.001).
+	SharedRoleContext *SharedRoleContext `json:"shared_role,omitempty"`
+
 	// Confidence qualifies the certainty of this finding's verdict.
 	// HIGH (default) means the finding is based on fresh data.
 	// LOW means the input snapshot is stale — the verdict may no
@@ -1259,6 +1263,15 @@ type ReachabilityContext struct {
 	HighestPrivilegePrincipal  kernel.PrincipalRef `json:"highest_privilege_principal,omitempty"`
 	ExternalPrincipalReachable bool                `json:"external_principal_reachable,omitempty"`
 	BlastRadiusScore           kernel.BlastRadius  `json:"blast_radius_score"`
+}
+
+// SharedRoleContext carries the sharing count and peer list for
+// findings on shared-role controls. Populated by the shared role
+// index enrichment when the observation snapshot contains role ARNs.
+type SharedRoleContext struct {
+	RoleARN      string     `json:"role_arn"`
+	SharingCount int        `json:"sharing_count"`
+	PeerAssetIDs []asset.ID `json:"peer_asset_ids,omitempty"`
 }
 
 // Exploitability classifies a finding's position in the attack graph.

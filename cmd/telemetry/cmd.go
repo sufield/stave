@@ -17,6 +17,7 @@ import (
 
 type options struct {
 	InputPath   string
+	HistoryDir  string
 	Severity    string
 	ResourceARN string
 }
@@ -58,7 +59,10 @@ Exit Codes:
   stave telemetry --in assessment.json --severity critical,high
 
   # Scope to one resource
-  stave telemetry --in assessment.json --resource arn:aws:s3:::prod-bucket`,
+  stave telemetry --in assessment.json --resource arn:aws:s3:::prod-bucket
+
+  # Time-series from a history directory (multiple assessment files)
+  stave telemetry --history ./assessments/`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -68,6 +72,7 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVar(&opts.InputPath, "in", "", "Path to assessment JSON (default: stdin)")
+	cmd.Flags().StringVar(&opts.HistoryDir, "history", "", "Directory of assessment JSON files for time-series output")
 	cmd.Flags().StringVar(&opts.Severity, "severity", "", "Comma-separated severity filter (e.g., critical,high)")
 	cmd.Flags().StringVar(&opts.ResourceARN, "resource", "", "Scope to a specific resource ARN")
 
@@ -75,6 +80,10 @@ Exit Codes:
 }
 
 func run(stdout io.Writer, opts *options) error {
+	if opts.HistoryDir != "" {
+		return runHistory(stdout, opts)
+	}
+
 	data, err := readInput(opts.InputPath)
 	if err != nil {
 		return err
@@ -85,6 +94,17 @@ func run(stdout io.Writer, opts *options) error {
 		return err //nolint:wrapcheck // stave.MapTelemetry already wraps ("parse assessment" / "encode telemetry event")
 	}
 
+	if _, err := stdout.Write(out); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	return nil
+}
+
+func runHistory(stdout io.Writer, opts *options) error {
+	out, err := stave.MapTelemetryHistory(opts.HistoryDir, opts.Severity, opts.ResourceARN)
+	if err != nil {
+		return err //nolint:wrapcheck
+	}
 	if _, err := stdout.Write(out); err != nil {
 		return fmt.Errorf("write output: %w", err)
 	}

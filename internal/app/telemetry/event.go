@@ -20,6 +20,11 @@ type Event struct {
 	PolicyFingerprint  string    `json:"policy_fingerprint"`
 	ControlFingerprint string    `json:"control_fingerprint,omitempty"`
 	EnvironmentalScore *float64  `json:"environmental_score,omitempty"`
+	ExposureScore      float64   `json:"exposure_score,omitempty"`
+	CompoundChains     []string  `json:"compound_chains,omitempty"`
+	AttackStage        string    `json:"attack_stage,omitempty"`
+	Exploitability     string    `json:"exploitability,omitempty"`
+	UnsafeDurationDays float64   `json:"unsafe_duration_days,omitempty"`
 	WindowID           *string   `json:"window_id,omitempty"`
 	Status             string    `json:"status"`
 }

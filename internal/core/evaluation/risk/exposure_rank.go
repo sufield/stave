@@ -20,6 +20,7 @@ type RankInput struct {
 	Exposure             *policy.Exposure
 	UnsafeDurationHours  float64
 	ChainMembershipCount int
+	SharedRoleCount      int // dynamic blast override from shared role index; 0 = use control default
 }
 
 // ChainBonus returns the multiplicative boost applied to a finding
@@ -121,6 +122,9 @@ func RankExposures(
 					blast = bm
 				}
 			}
+		}
+		if f.SharedRoleCount > 1 {
+			blast = max(blast, SharedRoleBlastMultiplier(f.SharedRoleCount))
 		}
 		// Skip findings whose effective base score is non-positive.
 		// Severity.Weight() returns 0 for SeverityNone (and a control

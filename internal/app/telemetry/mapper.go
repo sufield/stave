@@ -37,6 +37,8 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 			ResourceType:      string(f.AssetType),
 			Verdict:           "violation",
 			PolicyFingerprint: string(a.Run.PolicyFingerprint),
+			ExposureScore:     float64(f.ExposureScore),
+			Exploitability:    string(f.Exploitability),
 			Status:            string(a.Status),
 		}
 		if controlFPs != nil {
@@ -44,6 +46,15 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 		}
 		if score := computeEnvironmentalScore(f); score > 0 {
 			e.EnvironmentalScore = &score
+		}
+		if dwell := f.DwellDays(); dwell > 0 {
+			e.UnsafeDurationDays = dwell
+		}
+		for _, cm := range f.ChainMembership {
+			e.CompoundChains = append(e.CompoundChains, string(cm.ChainID))
+			if len(cm.StageSpan) > 0 && e.AttackStage == "" {
+				e.AttackStage = string(cm.StageSpan[0])
+			}
 		}
 		events = append(events, e)
 	}

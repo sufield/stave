@@ -2676,6 +2676,21 @@ IAM policies using NotAction that allow IAM write actions (iam:PutRolePolicy, ia
 
 ---
 
+### CTL.IAM.POLICY.SHADOW.DENY.001
+
+**Policy Deny Statement Shadowed by Broader Allow**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; soc2: CC6.1;
+
+A Deny statement is bypassed by an Allow statement with non-overlapping conditions. The Deny appears protective but does not fully block the action. Detected by the Z3 shadow query which asserts Allow(request) ∧ ¬Deny(request) and produces a concrete witness when satisfiable.
+
+**Remediation:** Extend the Deny statement's condition keys to cover the same scope as the Allow, or narrow the Allow to respect the Deny's intended restriction.
+
+---
+
 ### CTL.IAM.POLICY.SOD.001
 
 **IAM Roles Must Not Combine Data Access and IAM Management**

@@ -425,6 +425,11 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	annotateExploitability(report)
 	annotateDecidingLayer(report)
 
+	// Shared role index: compute cross-asset role sharing counts
+	// from snapshot data and annotate findings on shared-role controls.
+	sharedRoleIdx := risk.ComputeSharedRoleIndex(snapshots)
+	annotateSharedRoles(report, sharedRoleIdx, snapshots)
+
 	// Build attack stage summary from violation failures only —
 	// marker findings carry no attack-stage semantics on their own.
 	report.AttackStageSummary = risk.BuildAttackStageSummary(failures[:violationCount], controlLookup)
@@ -434,7 +439,11 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// chain-bonus factor feeds into per-finding scores.
 	rankInputs := make([]risk.RankInput, len(report.Findings))
 	for i := range report.Findings {
-		rankInputs[i] = report.Findings[i].ToRankInput()
+		ri := report.Findings[i].ToRankInput()
+		if report.Findings[i].SharedRoleContext != nil {
+			ri.SharedRoleCount = report.Findings[i].SharedRoleContext.SharingCount
+		}
+		rankInputs[i] = ri
 	}
 	report.TopExposures = risk.RankExposures(rankInputs, controlLookup, 0)
 
@@ -674,4 +683,32 @@ func hasAnyPrefix(s string, prefixes ...string) bool {
 func EnrichReport(report *evaluation.ComplianceReport, controls []policy.ControlDefinition, chainDefs []policy.ChainDefinition, snapshots []asset.Snapshot) {
 	w := &AuditWorkflow{Logger: slog.Default()}
 	w.enrichWithRiskReasoning(report, controls, chainDefs, "", snapshots)
+}
+
+// sharedRoleControlIDs lists controls that detect shared execution roles.
+var sharedRoleControlIDs = map[kernel.ControlID]bool{
+	"CTL.LAMBDA.ROLE.SHARED.001": true,
+}
+
+// annotateSharedRoles enriches shared-role findings with the actual
+// sharing count and peer list from the shared role index.
+func annotateSharedRoles(report *evaluation.ComplianceReport, idx risk.SharedRoleIndex, snapshots []asset.Snapshot) {
+	if len(idx) == 0 {
+		return
+	}
+	for i := range report.Findings {
+		f := &report.Findings[i]
+		if !sharedRoleControlIDs[f.ControlID] {
+			continue
+		}
+		count, roleARN, peers := idx.SharingCount(f.AssetID, snapshots)
+		if count <= 1 {
+			continue
+		}
+		f.SharedRoleContext = &evaluation.SharedRoleContext{
+			RoleARN:      roleARN,
+			SharingCount: count,
+			PeerAssetIDs: peers,
+		}
+	}
 }

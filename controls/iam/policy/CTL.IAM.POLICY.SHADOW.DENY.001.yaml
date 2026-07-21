@@ -1,0 +1,47 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.SHADOW.DENY.001
+name: Policy Deny Statement Shadowed by Broader Allow
+description: >
+  A Deny statement is bypassed by an Allow statement with
+  non-overlapping conditions. The Deny appears protective but
+  does not fully block the action. Detected by the Z3 shadow
+  query which asserts Allow(request) ∧ ¬Deny(request) and
+  produces a concrete witness when satisfiable.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_policy
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    A Deny statement is shadowed by a broader Allow statement.
+  action: >
+    Extend the Deny statement's condition keys to cover the
+    same scope as the Allow, or narrow the Allow to respect
+    the Deny's intended restriction.
+  example: |
+    {
+      "identity": {
+        "policy": {
+          "shadow_deny_detected": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policy.shadow_deny_detected
+      op: eq
+      value: true
