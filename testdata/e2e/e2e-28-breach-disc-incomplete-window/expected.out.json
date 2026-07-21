@@ -30,9 +30,9 @@
       "issue_id": "sha256:8f6f6c9b92ce88f1",
       "asset_id": "res:aws:s3:bucket:recurring-bucket",
       "shared_keys": [],
-      "headline_finding_id": "sha256:da00d85d52e88d30",
+      "headline_finding_id": "sha256:48f82fbfef4ef963",
       "member_finding_ids": [
-        "sha256:da00d85d52e88d30"
+        "sha256:48f82fbfef4ef963"
       ],
       "consolidated_score": 10,
       "consolidated_blast_radius": 1

@@ -181,3 +181,27 @@ func TestSanitizeAccountIDs_NestedArrayInMap(t *testing.T) {
 		t.Errorf("deeply nested account ID was not sanitized: %v", principals[0])
 	}
 }
+
+func TestSanitize_AccountIDHashesCount(t *testing.T) {
+	snaps := []asset.Snapshot{{
+		Assets: []asset.Asset{
+			{
+				ID: "test",
+				Properties: map[string]any{
+					"arn1": "arn:aws:s3:::bucket-123456789012", // 1 account ID
+					"arn2": "arn:aws:s3:::bucket-987654321098", // 1 account ID
+					"safe": "arn:aws:s3:::bucket-no-id",       // 0 account IDs
+					"num":  42,                                // 0 account IDs
+				},
+			},
+		},
+	}}
+
+	r := Sanitize(snaps, DefaultConfig())
+
+	// Under buggy code, AccountIDHashes counts every top-level property (4).
+	// Under correct code, it should only count the actual account ID replacements (2).
+	if r.AccountIDHashes != 2 {
+		t.Errorf("expected 2 account ID hashes, got %d", r.AccountIDHashes)
+	}
+}

@@ -89,11 +89,11 @@ func hasFramework(ctl *policy.ControlDefinition, profileLower string) bool {
 }
 
 func extractDomain(controlID string) string {
-	_, rest, ok := strings.Cut(controlID, ".")
-	if !ok {
-		return ""
+	cleanID := controlID
+	if len(controlID) > 4 && strings.EqualFold(controlID[:4], "CTL.") {
+		cleanID = controlID[4:]
 	}
-	prov, _, _ := strings.Cut(rest, ".")
+	prov, _, _ := strings.Cut(cleanID, ".")
 	return toLower(prov)
 }
 

@@ -40,13 +40,38 @@ func AnnotateFindings(findings []remediation.Finding, idx *access.ResourceAccess
 // []evaluation.Finding slices without round-tripping through
 // []remediation.Finding.
 func BuildContext(entries []access.ResourceAccessEntry) *evaluation.ReachabilityContext {
+	// Deduplicate entries by PrincipalARN.
+	merged := make(map[string]*access.ResourceAccessEntry)
+	for i := range entries {
+		e := &entries[i]
+		m, ok := merged[e.PrincipalARN]
+		if !ok {
+			m = &access.ResourceAccessEntry{
+				PrincipalARN: e.PrincipalARN,
+			}
+			merged[e.PrincipalARN] = m
+		}
+		if e.IsPublic {
+			m.IsPublic = true
+		}
+		if e.IsCrossAccount {
+			m.IsCrossAccount = true
+		}
+		m.Actions = append(m.Actions, e.Actions...)
+	}
+
+	uniqueEntries := make([]access.ResourceAccessEntry, 0, len(merged))
+	for _, m := range merged {
+		uniqueEntries = append(uniqueEntries, *m)
+	}
+
 	ctx := &evaluation.ReachabilityContext{
-		TotalReachablePrincipals: len(entries),
+		TotalReachablePrincipals: len(uniqueEntries),
 	}
 
 	var highestScore float64
-	for i := range entries {
-		e := &entries[i]
+	for i := range uniqueEntries {
+		e := &uniqueEntries[i]
 
 		if e.IsPublic || e.IsCrossAccount {
 			ctx.ExternalPrincipalReachable = true

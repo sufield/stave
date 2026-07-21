@@ -31,3 +31,21 @@ func TestBugHunt_Search_DomainFilter_StrictMatch(t *testing.T) {
 		}
 	}
 }
+
+func TestBugHunt_Search_DomainFilter_BareControlID(t *testing.T) {
+	controls := []policy.ControlDefinition{
+		{
+			ID:       kernel.ControlID("S3.PUBLIC.001"), // bare control ID without CTL. prefix
+			Name:     "S3 Control without CTL prefix",
+			Severity: policy.SeverityHigh,
+		},
+	}
+
+	results := Search(controls, Filter{Domain: "s3"})
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result for bare S3 control ID, got %d", len(results))
+	}
+	if results[0].Domain != "s3" {
+		t.Errorf("expected extracted domain to be 's3', got %q", results[0].Domain)
+	}
+}

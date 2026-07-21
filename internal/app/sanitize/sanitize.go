@@ -190,8 +190,9 @@ func hashToken(value string) string {
 func sanitizeAccountIDs(props map[string]any) int {
 	n := 0
 	for key, val := range props {
-		props[key] = sanitizeAccountIDValue(val)
-		n++
+		newVal, count := sanitizeAccountIDValue(val)
+		props[key] = newVal
+		n += count
 	}
 	return n
 }
@@ -202,19 +203,27 @@ func sanitizeAccountIDs(props map[string]any) int {
 // composable with array iteration: arrays are mutated in place, but
 // string elements need a return path because slices can't take a
 // pointer to an element typed as `any` directly.
-func sanitizeAccountIDValue(val any) any {
+func sanitizeAccountIDValue(val any) (any, int) {
 	switch v := val.(type) {
 	case string:
-		return accountIDRegexp.ReplaceAllStringFunc(v, hashToken)
+		count := 0
+		res := accountIDRegexp.ReplaceAllStringFunc(v, func(s string) string {
+			count++
+			return hashToken(s)
+		})
+		return res, count
 	case map[string]any:
-		sanitizeAccountIDs(v)
-		return v
+		count := sanitizeAccountIDs(v)
+		return v, count
 	case []any:
+		totalCount := 0
 		for i := range v {
-			v[i] = sanitizeAccountIDValue(v[i])
+			newVal, count := sanitizeAccountIDValue(v[i])
+			v[i] = newVal
+			totalCount += count
 		}
-		return v
+		return v, totalCount
 	default:
-		return val
+		return val, 0
 	}
 }

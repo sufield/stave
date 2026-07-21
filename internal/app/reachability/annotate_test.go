@@ -116,3 +116,32 @@ func TestBlastRadiusScore(t *testing.T) {
 		t.Errorf("blast_radius = %.0f, want 80 (2priv*20 + 5total*2 + external*30)", r.BlastRadiusScore)
 	}
 }
+
+func TestBuildContext_DeduplicatesPrincipals(t *testing.T) {
+	idx := access.NewResourceAccessIndex()
+	// Same principal granted access via two different statements/entries.
+	idx.AddEntry("res", access.ResourceAccessEntry{
+		PrincipalARN: "arn:aws:iam::123:role/AdminRole",
+		Actions:      []string{"s3:*"}, // privileged
+	})
+	idx.AddEntry("res", access.ResourceAccessEntry{
+		PrincipalARN: "arn:aws:iam::123:role/AdminRole",
+		Actions:      []string{"s3:GetObject"},
+	})
+
+	findings := []remediation.Finding{
+		{Finding: evaluation.Finding{AssetID: "res"}},
+	}
+	AnnotateFindings(findings, idx)
+
+	r := findings[0].Reachability
+	if r == nil {
+		t.Fatal("expected reachability")
+	}
+	if r.TotalReachablePrincipals != 1 {
+		t.Errorf("expected 1 unique reachable principal, got %d", r.TotalReachablePrincipals)
+	}
+	if r.PrivilegedPrincipalCount != 1 {
+		t.Errorf("expected 1 unique privileged principal, got %d", r.PrivilegedPrincipalCount)
+	}
+}
