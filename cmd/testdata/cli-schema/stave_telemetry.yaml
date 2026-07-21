@@ -29,6 +29,8 @@ options:
       shorthand: h
       default_value: "false"
       usage: help for telemetry
+    - name: history
+      usage: Directory of assessment JSON files for time-series output
     - name: in
       usage: 'Path to assessment JSON (default: stdin)'
     - name: resource
@@ -106,5 +108,8 @@ example: |4-
 
       # Scope to one resource
       stave telemetry --in assessment.json --resource arn:aws:s3:::prod-bucket
+
+      # Time-series from a history directory (multiple assessment files)
+      stave telemetry --history ./assessments/
 see_also:
     - stave - Configuration safety evaluator

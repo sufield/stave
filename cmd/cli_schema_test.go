@@ -47,7 +47,10 @@ func TestCLISchema(t *testing.T) {
 		return
 	}
 
-	got, _ := os.ReadDir(tmp)
+	got, err := os.ReadDir(tmp)
+	if err != nil {
+		t.Fatalf("read generated schema dir: %v", err)
+	}
 	for _, e := range got {
 		gotBytes, err := os.ReadFile(filepath.Join(tmp, e.Name()))
 		if err != nil {
@@ -63,7 +66,10 @@ func TestCLISchema(t *testing.T) {
 		}
 	}
 	// Catch removals/renames too.
-	want, _ := os.ReadDir(golden)
+	want, err := os.ReadDir(golden)
+	if err != nil {
+		t.Fatalf("read golden schema dir: %v", err)
+	}
 	for _, e := range want {
 		if _, err := os.Stat(filepath.Join(tmp, e.Name())); err != nil {
 			t.Errorf("%s: command disappeared (removed or renamed)", e.Name())
