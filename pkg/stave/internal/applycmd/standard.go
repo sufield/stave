@@ -105,16 +105,17 @@ type StandardRequest struct {
 // the command needs for exit routing + summary rendering crosses as a
 // primitive so the command holds no internal evaluation types.
 type StandardResult struct {
-	Output               []byte   // the report (stdout)
-	Warnings             []string // stderr-bound (new-only history warnings)
-	SecurityState        string   // COMPLIANT | AT_RISK | NON_COMPLIANT
-	Gate                 string   // ALLOW | ADVISORY | BLOCK
-	SummaryMessage       string   // outcome.SummaryMessage()
-	HasSLABreach         bool
-	HasCriticalSLABreach bool
-	LapsedExemptionCount int
-	CompoundFindingCount int  // number of compound chain findings
-	CompoundOnlyMode     bool // true when atomic findings suppressed
+	Output                     []byte   // the report (stdout)
+	Warnings                   []string // stderr-bound (new-only history warnings)
+	SecurityState              string   // COMPLIANT | AT_RISK | NON_COMPLIANT
+	Gate                       string   // ALLOW | ADVISORY | BLOCK
+	SummaryMessage             string   // outcome.SummaryMessage()
+	HasSLABreach               bool
+	HasCriticalSLABreach       bool
+	LapsedExemptionCount       int
+	CompoundFindingCount       int  // number of compound chain findings
+	CompoundOnlyMode           bool // true when atomic findings suppressed
+	UnchainedHighSeverityCount int  // critical/high findings not in any chain
 }
 
 // EvaluateStandard runs the default `apply` pipeline: load exemption/
@@ -246,17 +247,30 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 	})
 
 	outcome := evaluation.EnforcementPolicy{}.Evaluate(report.SecurityState)
+
+	var unchainedCount int
+	if !req.IncludeAtomic {
+		atomicIDs := make([]kernel.ControlID, len(report.Findings))
+		atomicSevs := make(map[kernel.ControlID]policy.Severity, len(report.Findings))
+		for i := range report.Findings {
+			atomicIDs[i] = report.Findings[i].ControlID
+			atomicSevs[report.Findings[i].ControlID] = report.Findings[i].ControlSeverity
+		}
+		unchainedCount = len(risk.LintUnchainedHighSeverity(atomicIDs, atomicSevs, report.ChainFindings))
+	}
+
 	return StandardResult{
-		Output:               out,
-		Warnings:             warnings,
-		SecurityState:        string(report.SecurityState),
-		Gate:                 string(outcome.Signal),
-		SummaryMessage:       outcome.SummaryMessage(),
-		HasSLABreach:         report.HasAnySLABreach(),
-		HasCriticalSLABreach: report.HasCriticalSLABreach(),
-		LapsedExemptionCount: len(lapsed),
-		CompoundFindingCount: len(report.ChainFindings),
-		CompoundOnlyMode:     !req.IncludeAtomic,
+		Output:                     out,
+		Warnings:                   warnings,
+		SecurityState:              string(report.SecurityState),
+		Gate:                       string(outcome.Signal),
+		SummaryMessage:             outcome.SummaryMessage(),
+		HasSLABreach:               report.HasAnySLABreach(),
+		HasCriticalSLABreach:       report.HasCriticalSLABreach(),
+		LapsedExemptionCount:       len(lapsed),
+		CompoundFindingCount:       len(report.ChainFindings),
+		CompoundOnlyMode:           !req.IncludeAtomic,
+		UnchainedHighSeverityCount: unchainedCount,
 	}, nil
 }
 

@@ -139,6 +139,11 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 	for _, w := range res.Warnings {
 		fmt.Fprintln(sio.Stderr, w)
 	}
+	if res.CompoundOnlyMode && res.UnchainedHighSeverityCount > 0 {
+		fmt.Fprintf(sio.Stderr,
+			"warning: %d critical/high finding%s not in any chain (use --include-atomic to see)\n",
+			res.UnchainedHighSeverityCount, plural(res.UnchainedHighSeverityCount))
+	}
 
 	rep := NewReporter(sio, rt)
 

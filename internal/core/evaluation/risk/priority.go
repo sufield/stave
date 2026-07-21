@@ -130,9 +130,6 @@ func buildMembershipCounts(
 	return counts
 }
 
-// chainHasIncidentRef heuristically detects whether a chain definition
-// references a named incident in its description (the description field
-// is the canonical location for incident references in chain YAML).
 func chainHasIncidentRef(def *policy.ChainDefinition) bool {
-	return def != nil && len(def.Description) > 50
+	return def != nil && def.IncidentPrecedent != nil
 }

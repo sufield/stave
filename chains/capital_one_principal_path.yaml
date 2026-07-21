@@ -29,6 +29,10 @@ preconditions:
   - network_access_ec2
 postconditions:
   - data_access
+incident_precedent:
+  name: Capital One (2019)
+  impact: 100M+ customer records exfiltrated via SSRF→IMDS→S3
+  reference: UNC2903 attribution; SCARLETEEL (2023) same shape
 compensating_controls:
   - control_id: CTL.VPC.NACL.DENY.001
     effect: blocks_path

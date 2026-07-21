@@ -49,6 +49,16 @@ type ChainDefinition struct {
 	// CompensatingControls lists controls that, when passing, reduce
 	// the chain's exploitability even if all member controls fail.
 	CompensatingControls []CompensatingControl `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
+
+	// IncidentPrecedent records a real-world breach that this chain models.
+	IncidentPrecedent *IncidentPrecedent `yaml:"incident_precedent,omitempty" json:"incident_precedent,omitempty"`
+}
+
+// IncidentPrecedent records a named real-world incident that a chain models.
+type IncidentPrecedent struct {
+	Name      string `yaml:"name"      json:"name"`
+	Impact    string `yaml:"impact"    json:"impact"`
+	Reference string `yaml:"reference" json:"reference"`
 }
 
 // ChainComplexity classifies how difficult a chain is to exploit.

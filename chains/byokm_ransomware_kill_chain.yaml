@@ -24,6 +24,10 @@ controls:
   - CTL.IAM.SCP.KMS.DELETEKEYMATERIAL.001
 escalation_threshold: 2
 compound_severity: critical
+incident_precedent:
+  name: Halcyon Codefinger (2025)
+  impact: SSE-C ransomware; attacker-controlled encryption renders data irrecoverable
+  reference: Chris Farris BYOKM technique (Nov 2024); Wiz cloud-native ransomware analysis (2025)
 preconditions:
   - iam_credential_theft
 postconditions:
