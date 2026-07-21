@@ -52,12 +52,12 @@ func TestCLISchema(t *testing.T) {
 		t.Fatalf("read generated schema dir: %v", err)
 	}
 	for _, e := range got {
-		gotBytes, err := os.ReadFile(filepath.Join(tmp, e.Name()))
-		if err != nil {
-			t.Fatal(err)
+		gotBytes, readErr := os.ReadFile(filepath.Join(tmp, e.Name()))
+		if readErr != nil {
+			t.Fatal(readErr)
 		}
-		wantBytes, err := os.ReadFile(filepath.Join(golden, e.Name()))
-		if err != nil {
+		wantBytes, readErr := os.ReadFile(filepath.Join(golden, e.Name()))
+		if readErr != nil {
 			t.Errorf("%s: new command file (command added or reparented); run -update if intended", e.Name())
 			continue
 		}
