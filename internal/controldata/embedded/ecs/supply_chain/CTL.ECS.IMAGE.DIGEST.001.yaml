@@ -34,7 +34,7 @@ remediation:
   example: |
     {
       "container": {
-        "kind": "ecs_task_definition",
+        "kind": "task_definition",
         "image": { "is_digest_pinned": true }
       }
     }
@@ -42,7 +42,7 @@ unsafe_predicate:
   all:
     - field: properties.container.kind
       op: eq
-      value: ecs_task_definition
+      value: task_definition
     - field: properties.container.image.is_digest_pinned
       op: eq
       value: false

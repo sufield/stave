@@ -31,7 +31,7 @@ remediation:
   example: |
     {
       "container": {
-        "kind": "ecs_task_definition",
+        "kind": "task_definition",
         "network": { "in_public_subnet": false }
       }
     }
@@ -39,7 +39,7 @@ unsafe_predicate:
   all:
     - field: properties.container.kind
       op: eq
-      value: ecs_task_definition
+      value: task_definition
     - field: properties.container.network.in_public_subnet
       op: eq
       value: true

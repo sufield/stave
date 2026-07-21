@@ -4,13 +4,13 @@
       "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/worker:1",
       "properties": {
         "container": {
-          "kind": "ecs_task_definition",
+          "kind": "task_definition",
           "security": {
             "has_dangerous_capabilities": false
           }
         }
       },
-      "type": "aws_ecs_task_definition",
+      "type": "aws_task_definition",
       "vendor": "aws"
     }
   ],

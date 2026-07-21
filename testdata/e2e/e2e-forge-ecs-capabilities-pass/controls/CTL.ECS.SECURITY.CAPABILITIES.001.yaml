@@ -30,13 +30,13 @@ remediation:
     = ["ALL"] and only add the specific capabilities the application requires.
 
     '
-  example: "{\n  \"container\": {\n    \"kind\": \"ecs_task_definition\",\n\
+  example: "{\n  \"container\": {\n    \"kind\": \"task_definition\",\n\
     \    \"security\": { \"has_dangerous_capabilities\": false }\n  }\n}\n"
 unsafe_predicate:
   all:
   - field: properties.container.kind
     op: eq
-    value: ecs_task_definition
+    value: task_definition
   - field: properties.container.security.has_dangerous_capabilities
     op: eq
     value: true

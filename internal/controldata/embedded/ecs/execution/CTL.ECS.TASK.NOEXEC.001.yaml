@@ -37,7 +37,7 @@ remediation:
   example: |
     {
       "container": {
-        "kind": "ecs_task",
+        "kind": "task_definition",
         "privileged_host_network": false
       }
     }
@@ -45,7 +45,7 @@ unsafe_predicate:
   all:
     - field: properties.container.kind
       op: eq
-      value: ecs_task
+      value: task_definition
     - field: properties.container.privileged_host_network
       op: eq
       value: true

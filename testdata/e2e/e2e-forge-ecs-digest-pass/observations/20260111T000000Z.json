@@ -4,13 +4,13 @@
       "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/api:1",
       "properties": {
         "container": {
-          "kind": "ecs_task_definition",
+          "kind": "task_definition",
           "image": {
             "is_digest_pinned": true
           }
         }
       },
-      "type": "aws_ecs_task_definition",
+      "type": "aws_task_definition",
       "vendor": "aws"
     }
   ],

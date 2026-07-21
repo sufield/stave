@@ -28,13 +28,13 @@ remediation:
     Update CI/CD pipelines to output digest references after image push.
 
     '
-  example: "{\n  \"container\": {\n    \"kind\": \"ecs_task_definition\",\n\
+  example: "{\n  \"container\": {\n    \"kind\": \"task_definition\",\n\
     \    \"image\": { \"is_digest_pinned\": true }\n  }\n}\n"
 unsafe_predicate:
   all:
   - field: properties.container.kind
     op: eq
-    value: ecs_task_definition
+    value: task_definition
   - field: properties.container.image.is_digest_pinned
     op: eq
     value: false

@@ -32,7 +32,7 @@ remediation:
   example: |
     {
       "container": {
-        "kind": "ecs_task_definition",
+        "kind": "task_definition",
         "security": { "has_dangerous_capabilities": false }
       }
     }
@@ -40,7 +40,7 @@ unsafe_predicate:
   all:
     - field: properties.container.kind
       op: eq
-      value: ecs_task_definition
+      value: task_definition
     - field: properties.container.security.has_dangerous_capabilities
       op: eq
       value: true

@@ -27,13 +27,13 @@ remediation:
     inbound traffic and a NAT gateway for outbound.
 
     '
-  example: "{\n  \"container\": {\n    \"kind\": \"ecs_task_definition\",\n\
+  example: "{\n  \"container\": {\n    \"kind\": \"task_definition\",\n\
     \    \"network\": { \"in_public_subnet\": false }\n  }\n}\n"
 unsafe_predicate:
   all:
   - field: properties.container.kind
     op: eq
-    value: ecs_task_definition
+    value: task_definition
   - field: properties.container.network.in_public_subnet
     op: eq
     value: true
