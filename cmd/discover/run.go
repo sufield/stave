@@ -57,6 +57,18 @@ func run(cmd *cobra.Command, o *options) error {
 		}
 	}
 
+	merged := pack.MergeRequirements(packs)
+
+	if o.policy {
+		doc, synthErr := pack.SynthesizePolicy(merged.AWSAPICalls)
+		if synthErr != nil {
+			return fmt.Errorf("synthesize policy: %w", synthErr)
+		}
+		doc = append(doc, '\n')
+		_, err = cmd.OutOrStdout().Write(doc)
+		return err
+	}
+
 	// Only count a requested service as "covered" if some pack actually touches it.
 	var coveredReq, unmatched []string
 	for _, s := range o.services {
@@ -73,7 +85,7 @@ func run(cmd *cobra.Command, o *options) error {
 		ServicesUnmatched: unmatched,
 		Packs:             names,
 		ControlCount:      len(controlIDs),
-		Requirements:      pack.MergeRequirements(packs),
+		Requirements:      merged,
 	}
 
 	r, err := NewRenderer(o.format)

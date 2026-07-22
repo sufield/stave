@@ -12,6 +12,7 @@ type options struct {
 	format      string
 	controls    string
 	controlsSet bool
+	policy      bool
 }
 
 func addFlags(cmd *cobra.Command, o *options) {
@@ -21,6 +22,8 @@ func addFlags(cmd *cobra.Command, o *options) {
 	f.StringVarP(&o.format, "format", "f", "text", "output format: text, json")
 	f.StringVarP(&o.controls, "controls", "i", "controls",
 		"control definitions directory (default: built-in catalog)")
+	f.BoolVar(&o.policy, "policy", false,
+		"output a least-privilege IAM policy document (JSON) instead of the collection manifest")
 }
 
 // Prepare validates flags at the CLI boundary (PreRunE).

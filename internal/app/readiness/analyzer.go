@@ -1,7 +1,7 @@
 package readiness
 
 import (
-	"cmp"
+	"maps"
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -22,8 +22,8 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 	observedTypes, observationCount := observed(snapshots)
 	catalogTypes := catalogAssetTypes(controls)
 
-	controlForecast, controlBlockers := classifyControls(controls, observedTypes)
-	chainForecast, chainBlockers := classifyChains(controls, chains, observedTypes)
+	controlForecast := classifyControls(controls, observedTypes)
+	chainForecast := classifyChains(controls, chains, observedTypes)
 	annotateForecastPercentages(&controlForecast)
 	annotateForecastPercentages(&chainForecast)
 
@@ -37,7 +37,7 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 		ReadinessDenominator: "can_fire + blocked (excludes indeterminate)",
 	}
 	if topN > 0 {
-		report.Actions = rankActions(controlBlockers, chainBlockers, observedTypes, topN)
+		report.Actions = rankActions(controls, chains, observedTypes, topN)
 	}
 	return report
 }
@@ -96,16 +96,11 @@ func catalogAssetTypes(controls []policy.ControlDefinition) map[kernel.AssetType
 }
 
 // classifyControls walks the control catalog and assigns each
-// control to one of three buckets. The blockers map collects,
-// for each missing asset type, the count of declared-asset-type
-// controls that would fire if it were observed. Controls
-// without ApplicableAssetTypes are NOT added to the blockers
-// map: the analyzer cannot statically predict their firing
-// behavior, and inflating the action plan with them would
-// mislead the operator.
-func classifyControls(controls []policy.ControlDefinition, observed map[kernel.AssetType]int) (ControlForecast, map[kernel.AssetType]int) {
+// control to one of three buckets. Controls without
+// ApplicableAssetTypes are indeterminate: the analyzer cannot
+// statically predict their firing behavior.
+func classifyControls(controls []policy.ControlDefinition, observed map[kernel.AssetType]int) ControlForecast {
 	forecast := ControlForecast{Total: len(controls)}
-	blockers := map[kernel.AssetType]int{}
 	for i := range controls {
 		applicable := controls[i].ApplicableAssetTypes
 		if len(applicable) == 0 {
@@ -117,43 +112,27 @@ func classifyControls(controls []policy.ControlDefinition, observed map[kernel.A
 			continue
 		}
 		forecast.Blocked++
-		// Every applicable type for this control is missing —
-		// adding any one of them would unblock the control.
-		for _, t := range applicable {
-			blockers[t]++
-		}
 	}
-	return forecast, blockers
+	return forecast
 }
 
 // classifyChains classifies every chain by whether all member
 // controls can fire. A chain is blocked if any member is
 // blocked. A chain is indeterminate if no member is blocked but
 // at least one is indeterminate (the chain may or may not fire
-// depending on engine-time evaluation). The blockers map names
-// the asset types that, if collected, would unblock the most
-// chains.
-func classifyChains(controls []policy.ControlDefinition, chains []policy.ChainDefinition, observed map[kernel.AssetType]int) (ChainForecast, map[kernel.AssetType]int) {
+// depending on engine-time evaluation).
+func classifyChains(controls []policy.ControlDefinition, chains []policy.ChainDefinition, observed map[kernel.AssetType]int) ChainForecast {
 	ctlIndex := indexControls(controls)
 	forecast := ChainForecast{Total: len(chains)}
-	blockers := map[kernel.AssetType]int{}
 
 	for i := range chains {
 		chain := &chains[i]
 		blocked := false
 		indeterminate := false
-		// Each chain member's missing asset types — collected
-		// before classification, then attributed only if the
-		// chain ends up blocked.
-		chainMissing := map[kernel.AssetType]struct{}{}
 
 		for _, memberID := range chain.ControlIDs {
 			ctl, ok := ctlIndex[memberID]
 			if !ok {
-				// Member control not found in the loaded set —
-				// treat as indeterminate rather than blocking.
-				// The runtime chain loader emits its own warning
-				// for this case.
 				indeterminate = true
 				continue
 			}
@@ -163,71 +142,130 @@ func classifyChains(controls []policy.ControlDefinition, chains []policy.ChainDe
 			}
 			if !anyObserved(ctl.ApplicableAssetTypes, observed) {
 				blocked = true
-				for _, t := range ctl.ApplicableAssetTypes {
-					chainMissing[t] = struct{}{}
-				}
 			}
 		}
 
 		switch {
 		case blocked:
 			forecast.Blocked++
-			for t := range chainMissing {
-				blockers[t]++
-			}
 		case indeterminate:
 			forecast.Indeterminate++
 		default:
 			forecast.CanFire++
 		}
 	}
-	return forecast, blockers
+	return forecast
 }
 
-// rankActions merges the per-asset-type unblock counts from
-// controls and chains and returns the top-N missing types ranked
-// by (chains_unblocked desc, controls_unblocked desc, type asc).
-// Chains rank first because they are the higher-leverage compound
-// signal; controls break ties so the secondary unlock matters
-// when chain counts equal.
-func rankActions(controlBlockers, chainBlockers map[kernel.AssetType]int, observed map[kernel.AssetType]int, topN int) []Action {
-	// Union of missing types referenced by either map.
-	missing := map[kernel.AssetType]struct{}{}
-	for t := range controlBlockers {
-		if observed[t] == 0 {
-			missing[t] = struct{}{}
+// rankActions uses a greedy weighted set cover to recommend the
+// fewest missing asset types that unblock the most controls and
+// chains. Each iteration selects the type with the highest
+// marginal value (new chains unblocked, then new controls as
+// tiebreaker). After selection, its coverage is subtracted from
+// the remaining universe so overlapping types don't double-count.
+func rankActions(controls []policy.ControlDefinition, chains []policy.ChainDefinition, observed map[kernel.AssetType]int, topN int) []Action {
+	ctlIndex := indexControls(controls)
+
+	// Collect candidate types: all applicable types not yet observed.
+	candidates := map[kernel.AssetType]struct{}{}
+	for i := range controls {
+		for _, t := range controls[i].ApplicableAssetTypes {
+			if observed[t] == 0 {
+				candidates[t] = struct{}{}
+			}
 		}
 	}
-	for t := range chainBlockers {
-		if observed[t] == 0 {
-			missing[t] = struct{}{}
-		}
-	}
-	if len(missing) == 0 {
+	if len(candidates) == 0 {
 		return nil
 	}
-	actions := make([]Action, 0, len(missing))
-	for t := range missing {
-		actions = append(actions, Action{
-			AssetType:         t,
-			ChainsUnblocked:   chainBlockers[t],
-			ControlsUnblocked: controlBlockers[t],
-			Description:       describeAction(t),
+
+	// Simulate progressively observing types.
+	simulated := maps.Clone(observed)
+	var selected []Action
+
+	for len(selected) < topN && len(candidates) > 0 {
+		var bestType kernel.AssetType
+		bestChains, bestControls := 0, 0
+
+		for t := range candidates {
+			mc, ms := marginalValue(t, controls, chains, ctlIndex, simulated)
+			better := mc > bestChains ||
+				(mc == bestChains && ms > bestControls) ||
+				(mc == bestChains && ms == bestControls && (bestType == "" || t < bestType))
+			if better {
+				bestType = t
+				bestChains = mc
+				bestControls = ms
+			}
+		}
+
+		if bestChains == 0 && bestControls == 0 {
+			break
+		}
+
+		selected = append(selected, Action{
+			AssetType:         bestType,
+			ChainsUnblocked:   bestChains,
+			ControlsUnblocked: bestControls,
+			Description:       describeAction(bestType),
 		})
+		simulated[bestType] = 1
+		delete(candidates, bestType)
 	}
-	slices.SortFunc(actions, func(a, b Action) int {
-		if n := cmp.Compare(b.ChainsUnblocked, a.ChainsUnblocked); n != 0 {
-			return n
+	return selected
+}
+
+// marginalValue computes how many NEW controls and chains become
+// unblocked by adding assetType to the simulated observation set.
+func marginalValue(
+	assetType kernel.AssetType,
+	controls []policy.ControlDefinition,
+	chains []policy.ChainDefinition,
+	ctlIndex map[kernel.ControlID]*policy.ControlDefinition,
+	simulated map[kernel.AssetType]int,
+) (newChains, newControls int) {
+	// Controls unblocked: currently blocked, would fire with assetType.
+	for i := range controls {
+		applicable := controls[i].ApplicableAssetTypes
+		if len(applicable) == 0 {
+			continue
 		}
-		if n := cmp.Compare(b.ControlsUnblocked, a.ControlsUnblocked); n != 0 {
-			return n
+		if anyObserved(applicable, simulated) {
+			continue // already unblocked
 		}
-		return cmp.Compare(a.AssetType, b.AssetType)
-	})
-	if len(actions) > topN {
-		actions = actions[:topN]
+		if slices.Contains(applicable, assetType) {
+			newControls++
+		}
 	}
-	return actions
+
+	// Chains unblocked: currently blocked, ALL members would fire
+	// after adding assetType to simulated.
+	for i := range chains {
+		chain := &chains[i]
+		wasBlocked := false
+		wouldBeUnblocked := true
+
+		for _, memberID := range chain.ControlIDs {
+			ctl, ok := ctlIndex[memberID]
+			if !ok || len(ctl.ApplicableAssetTypes) == 0 {
+				continue
+			}
+			if anyObserved(ctl.ApplicableAssetTypes, simulated) {
+				continue // member already fires
+			}
+			wasBlocked = true
+			// Would this member fire if assetType were added?
+			memberFires := slices.Contains(ctl.ApplicableAssetTypes, assetType)
+			if !memberFires {
+				wouldBeUnblocked = false
+				break
+			}
+		}
+		if wasBlocked && wouldBeUnblocked {
+			newChains++
+		}
+	}
+	return newChains, newControls
 }
 
 // describeAction returns a one-line human-friendly description

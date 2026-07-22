@@ -162,16 +162,34 @@ func TestAnalyze_ChainIndeterminate_WhenMemberHasNoApplicable(t *testing.T) {
 func TestRankActions_ChainsOutweighControls(t *testing.T) {
 	// Two missing types: one blocks more chains, the other blocks
 	// more controls. Chain blocker ranks first.
-	controlBlockers := map[kernel.AssetType]int{
-		"aws_vpc":      50, // many controls, few chains
-		"aws_iam_role": 5,  // few controls, many chains
+	controls := []policy.ControlDefinition{
+		// 5 controls needing aws_iam_role
+		ctl("CTL.IAM.001", "aws_iam_role"),
+		ctl("CTL.IAM.002", "aws_iam_role"),
+		ctl("CTL.IAM.003", "aws_iam_role"),
+		ctl("CTL.IAM.004", "aws_iam_role"),
+		ctl("CTL.IAM.005", "aws_iam_role"),
+		// 10 controls needing aws_vpc (more controls, but fewer chains)
+		ctl("CTL.VPC.001", "aws_vpc"),
+		ctl("CTL.VPC.002", "aws_vpc"),
+		ctl("CTL.VPC.003", "aws_vpc"),
+		ctl("CTL.VPC.004", "aws_vpc"),
+		ctl("CTL.VPC.005", "aws_vpc"),
+		ctl("CTL.VPC.006", "aws_vpc"),
+		ctl("CTL.VPC.007", "aws_vpc"),
+		ctl("CTL.VPC.008", "aws_vpc"),
+		ctl("CTL.VPC.009", "aws_vpc"),
+		ctl("CTL.VPC.010", "aws_vpc"),
 	}
-	chainBlockers := map[kernel.AssetType]int{
-		"aws_iam_role": 30,
-		"aws_vpc":      2,
+	// 3 chains requiring aws_iam_role, 1 chain requiring aws_vpc
+	chains := []policy.ChainDefinition{
+		{ID: "chain_iam_1", ControlIDs: []kernel.ControlID{"CTL.IAM.001"}, EscalationThreshold: 1},
+		{ID: "chain_iam_2", ControlIDs: []kernel.ControlID{"CTL.IAM.002"}, EscalationThreshold: 1},
+		{ID: "chain_iam_3", ControlIDs: []kernel.ControlID{"CTL.IAM.003"}, EscalationThreshold: 1},
+		{ID: "chain_vpc_1", ControlIDs: []kernel.ControlID{"CTL.VPC.001"}, EscalationThreshold: 1},
 	}
 	observed := map[kernel.AssetType]int{}
-	actions := rankActions(controlBlockers, chainBlockers, observed, 5)
+	actions := rankActions(controls, chains, observed, 5)
 	if len(actions) != 2 {
 		t.Fatalf("want 2 actions, got %d", len(actions))
 	}
@@ -181,10 +199,14 @@ func TestRankActions_ChainsOutweighControls(t *testing.T) {
 }
 
 func TestRankActions_TopN(t *testing.T) {
-	controlBlockers := map[kernel.AssetType]int{
-		"a": 1, "b": 2, "c": 3, "d": 4, "e": 5,
+	controls := []policy.ControlDefinition{
+		ctl("CTL.A.001", "a"),
+		ctl("CTL.B.001", "b"), ctl("CTL.B.002", "b"),
+		ctl("CTL.C.001", "c"), ctl("CTL.C.002", "c"), ctl("CTL.C.003", "c"),
+		ctl("CTL.D.001", "d"), ctl("CTL.D.002", "d"), ctl("CTL.D.003", "d"), ctl("CTL.D.004", "d"),
+		ctl("CTL.E.001", "e"), ctl("CTL.E.002", "e"), ctl("CTL.E.003", "e"), ctl("CTL.E.004", "e"), ctl("CTL.E.005", "e"),
 	}
-	actions := rankActions(controlBlockers, nil, map[kernel.AssetType]int{}, 3)
+	actions := rankActions(controls, nil, map[kernel.AssetType]int{}, 3)
 	if len(actions) != 3 {
 		t.Fatalf("topN=3 expected 3 actions, got %d", len(actions))
 	}
@@ -197,18 +219,85 @@ func TestRankActions_TopN(t *testing.T) {
 }
 
 func TestRankActions_SkipsObservedTypes(t *testing.T) {
-	// A type that is already observed must not appear in the
-	// action plan even if it was listed as a blocker — the
-	// blocker map records all member types of blocked controls,
-	// not just the missing ones.
-	controlBlockers := map[kernel.AssetType]int{
-		"aws_s3_bucket": 10,
-		"aws_iam_role":  5,
+	controls := []policy.ControlDefinition{
+		ctl("CTL.S3.001", "aws_s3_bucket"),
+		ctl("CTL.S3.002", "aws_s3_bucket"),
+		ctl("CTL.IAM.001", "aws_iam_role"),
 	}
 	observed := map[kernel.AssetType]int{"aws_s3_bucket": 3}
-	actions := rankActions(controlBlockers, nil, observed, 5)
+	actions := rankActions(controls, nil, observed, 5)
 	if len(actions) != 1 || actions[0].AssetType != "aws_iam_role" {
 		t.Errorf("observed types must not appear in action plan; got %+v", actions)
+	}
+}
+
+func TestRankActions_GreedySetCover_EliminatesRedundant(t *testing.T) {
+	// This is the key set cover test. Three actions with overlapping coverage:
+	//   Type A unblocks controls {1, 2, 3}
+	//   Type B unblocks controls {2, 3, 4}
+	//   Type C unblocks controls {4, 5}
+	// Static sort (by count): A=3, B=3, C=2 → selects A, B, C
+	// Greedy set cover: A (covers 1,2,3), marginal B drops to 1 (only 4),
+	//   C also covers 4+5 (marginal 2) → selects A, C — B is redundant.
+	controls := []policy.ControlDefinition{
+		// Controls 1,2,3 accept types A and B (overlap)
+		ctl("CTL.001", "type_a"),
+		{ID: "CTL.002", ApplicableAssetTypes: []kernel.AssetType{"type_a", "type_b"}},
+		{ID: "CTL.003", ApplicableAssetTypes: []kernel.AssetType{"type_a", "type_b"}},
+		// Control 4 accepts B and C (overlap)
+		{ID: "CTL.004", ApplicableAssetTypes: []kernel.AssetType{"type_b", "type_c"}},
+		// Control 5 accepts only C
+		ctl("CTL.005", "type_c"),
+	}
+	actions := rankActions(controls, nil, map[kernel.AssetType]int{}, 10)
+
+	// Greedy should pick A (3 controls) first, then C (2 marginal: 4,5).
+	// B is redundant — its marginal value after A is 1 (only CTL.004),
+	// but C covers CTL.004 AND CTL.005 (marginal 2 > 1).
+	if len(actions) != 3 {
+		// All 3 types get selected (B still covers something),
+		// but the ORDER matters: A first, then C, then B.
+		t.Logf("actions: %v", actions)
+	}
+	if actions[0].AssetType != "type_a" {
+		t.Errorf("first action should be type_a (3 controls), got %s", actions[0].AssetType)
+	}
+	if actions[1].AssetType != "type_c" {
+		t.Errorf("second action should be type_c (2 marginal), got %s", actions[1].AssetType)
+	}
+	// After A and C, B has marginal value 0 (all controls covered).
+	if len(actions) > 2 && actions[2].ControlsUnblocked != 0 {
+		t.Errorf("third action should have 0 marginal controls, got %d", actions[2].ControlsUnblocked)
+	}
+	// Key assertion: with topN=2, greedy covers all 5 controls in 2 picks.
+	actions2 := rankActions(controls, nil, map[kernel.AssetType]int{}, 2)
+	if len(actions2) != 2 {
+		t.Fatalf("topN=2: want 2 actions, got %d", len(actions2))
+	}
+	totalCovered := actions2[0].ControlsUnblocked + actions2[1].ControlsUnblocked
+	if totalCovered != 5 {
+		t.Errorf("2 greedy picks should cover all 5 controls, covered %d", totalCovered)
+	}
+}
+
+func TestRankActions_GreedySetCover_DuplicateCoverage(t *testing.T) {
+	// Two types cover exactly the same controls — greedy picks one,
+	// the other has 0 marginal value.
+	controls := []policy.ControlDefinition{
+		{ID: "CTL.001", ApplicableAssetTypes: []kernel.AssetType{"type_a", "type_b"}},
+		{ID: "CTL.002", ApplicableAssetTypes: []kernel.AssetType{"type_a", "type_b"}},
+		{ID: "CTL.003", ApplicableAssetTypes: []kernel.AssetType{"type_a", "type_b"}},
+	}
+	actions := rankActions(controls, nil, map[kernel.AssetType]int{}, 5)
+	if len(actions) < 1 {
+		t.Fatal("expected at least 1 action")
+	}
+	if actions[0].ControlsUnblocked != 3 {
+		t.Errorf("first pick should cover 3, got %d", actions[0].ControlsUnblocked)
+	}
+	// Second pick has 0 marginal value — either not emitted or emitted with 0.
+	if len(actions) > 1 && actions[1].ControlsUnblocked != 0 {
+		t.Errorf("second pick should have 0 marginal, got %d", actions[1].ControlsUnblocked)
 	}
 }
 
