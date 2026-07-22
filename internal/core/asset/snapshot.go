@@ -73,6 +73,7 @@ type GeneratedBy struct {
 	StaveVersion    string                       `json:"tool_version,omitempty"`
 	Provider        string                       `json:"provider,omitempty"`
 	ProviderVersion string                       `json:"provider_version,omitempty"`
+	CollectedBy     string                       `json:"collected_by,omitempty"`
 }
 
 // Snapshots is an ordered collection of observation snapshots.

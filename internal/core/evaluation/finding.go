@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
+	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -49,6 +50,7 @@ type Finding struct {
 	AssetID            asset.ID                 `json:"asset_id"`
 	AssetType          kernel.AssetType         `json:"asset_type"`
 	AssetVendor        kernel.Vendor            `json:"asset_vendor"`
+	ObservedAt         time.Time                `json:"observed_at,omitzero"`
 	Source             *asset.SourceRef         `json:"source,omitempty"`
 	Evidence           Evidence                 `json:"evidence"`
 	ControlSeverity    policy.Severity          `json:"control_severity,omitempty"`

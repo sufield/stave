@@ -85,6 +85,7 @@ func newBaseFinding(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) *
 	f.AssetType = a.Type
 	f.AssetVendor = a.Vendor
 	f.Source = a.Source
+	f.ObservedAt = t.LastObservedAt()
 	f.PostureDrift = evaluation.ComputePostureDrift(t)
 	return f
 }

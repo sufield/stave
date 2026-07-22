@@ -429,7 +429,7 @@ chain-discover: build
 	$(GOCMD) run ./reasoning/souffle/discovery/main.go ./reasoning/souffle/discovery/dedup.go ./reasoning/souffle/discovery/report.go ./reasoning/souffle/discovery/verify.go $(ARGS)
 
 ## ci: CI pipeline (tidy, check, build)
-ci: tidy check build
+ci: tidy check build ctf-coverage
 
 ## regenerate-goldens: Batch-regenerate all fixture goldens and report a categorized diff
 ##

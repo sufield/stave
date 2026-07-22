@@ -35,7 +35,196 @@
       "threshold_hours": 168
     }
   ],
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "sha256:db65ad3bd592805b",
+      "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+      "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
+      "control_description": "Any externally referenced S3 bucket must exist and be owned. Dangling references (missing or unowned buckets) enable bucket takeover and attacker-controlled content delivery.\n",
+      "asset_id": "dod-subdomain-s3-ref",
+      "asset_type": "s3_bucket_reference",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2020-07-01T00:00:00Z",
+        "last_seen_unsafe_at": "2020-07-09T00:00:00Z",
+        "unsafe_duration_hours": 48480,
+        "misconfigurations": [
+          {
+            "property": "s3_ref.bucket_exists",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "s3_ref.bucket_owned",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 48480 hours (SLA: 0 hours). Exposed since 2020-07-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance_ccm_v4": [
+        "CCC-04"
+      ],
+      "exposure": {
+        "type": "bucket_takeover",
+        "principal_scope": "public"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "An external reference (DNS CNAME, CDN origin, or application config) points to an S3 bucket that does not exist or is not owned by your account. An attacker can claim this bucket name and serve malicious content.",
+        "action": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket.",
+        "example": "{\n  \"s3_ref\": {\n    \"bucket_exists\": true,\n    \"bucket_owned\": true\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-acaa1d3ce042a70b",
+        "target": {
+          "asset_id": "dod-subdomain-s3-ref",
+          "asset_type": "s3_bucket_reference"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 48408,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 2,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 2020
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "s3_ref.bucket_exists eq false",
+          "observation_key": "s3_ref.bucket_exists",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "s3_ref.bucket_owned eq false",
+          "observation_key": "s3_ref.bucket_owned",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "dod-subdomain-s3-ref",
+          "type": "s3_bucket_reference",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.BUCKET.TAKEOVER.001",
+          "control_name": "Referenced S3 Buckets Must Exist And Be Owned",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "the referenced S3 bucket exists = false",
+              "observation_key": "s3_ref.bucket_exists",
+              "observed_value": false
+            },
+            {
+              "clause": "the referenced S3 bucket is owned by the account = false",
+              "observation_key": "s3_ref.bucket_owned",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "s3_ref.bucket_exists",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set s3_ref.bucket_exists to true"
+          },
+          {
+            "path": "s3_ref.bucket_owned",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set s3_ref.bucket_owned to true"
+          }
+        ],
+        "action": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "An external reference — DNS CNAME, CDN origin, package- manager install URL, application configuration — points at an S3 bucket that does not exist in AWS or is not owned by the referencing account. The bucket name is unclaimed; anyone can register it with `aws s3api create-bucket`.\n",
+      "infection": "An attacker claims the unclaimed bucket name and serves arbitrary content from it. Any downstream consumer following the reference — browsers resolving the CNAME, CDNs proxying the origin, package managers fetching install scripts — retrieves attacker content under a trusted-looking URL. Because the bucket's DNS and path appear legitimate (matching the original infrastructure), endpoint detection and user intuition both fail: the attacker's certificate validates, the hostname is familiar, the URL looks routine. Software-distribution takeover is the worst case: `curl | sh` style install commands execute attacker code.\n",
+      "failure": "Attacker-controlled content delivery under a trusted identity. Remediation is complex because affected downstream consumers may have cached or installed attacker-delivered artifacts during the exposure window; full recovery requires re-verifying installed software, rotating credentials potentially captured, and invalidating cached content across CDNs and browser caches.\n",
+      "delta": [
+        {
+          "property_label": "bucket exists",
+          "property_path": "s3_ref.bucket_exists",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "bucket owned",
+          "property_path": "s3_ref.bucket_owned",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "b1ff05247ec9",
+        "7d6dcbc06456",
+        "49ada3e2be21",
+        "89311be91721",
+        "6bacf7def433",
+        "ff007ff88f69",
+        "f89bd5052e47",
+        "d7207e6246f5"
+      ]
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:9dfec4c4ebb6f415",
@@ -50,6 +239,51 @@
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "dod-subdomain-s3-ref",
+      "asset_type": "s3_bucket_reference",
+      "fix_plan": {
+        "id": "fix-acaa1d3ce042a70b",
+        "target": {
+          "asset_id": "dod-subdomain-s3-ref",
+          "asset_type": "s3_bucket_reference"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Create the S3 bucket in your AWS account, or remove the DNS record, CDN origin, or application reference pointing to the unclaimed bucket."
+      },
+      "contributing_controls": [
+        "CTL.S3.BUCKET.TAKEOVER.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
