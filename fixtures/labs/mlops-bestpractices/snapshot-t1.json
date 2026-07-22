@@ -205,7 +205,8 @@
           "logging": {
             "log_group_exists": true,
             "has_been_invoked": true,
-            "role_has_log_permissions": true
+            "role_has_log_permissions": true,
+            "enabled": true
           },
           "network": {
             "in_vpc": false
@@ -217,6 +218,13 @@
           "function": {
             "vpc_configured": false,
             "has_ghost_vpc": false
+          },
+          "concurrency": {
+            "reserved_set": false,
+            "public_unlimited": true
+          },
+          "execution_role": {
+            "is_overprivileged": false
           }
         }
       }
@@ -243,7 +251,8 @@
           "logging": {
             "log_group_exists": true,
             "has_been_invoked": true,
-            "role_has_log_permissions": true
+            "role_has_log_permissions": true,
+            "enabled": true
           },
           "network": {
             "in_vpc": false
@@ -255,6 +264,13 @@
           "function": {
             "vpc_configured": false,
             "has_ghost_vpc": false
+          },
+          "concurrency": {
+            "reserved_set": false,
+            "public_unlimited": true
+          },
+          "execution_role": {
+            "is_overprivileged": true
           }
         }
       }
@@ -281,7 +297,8 @@
           "logging": {
             "log_group_exists": true,
             "has_been_invoked": false,
-            "role_has_log_permissions": true
+            "role_has_log_permissions": true,
+            "enabled": true
           },
           "network": {
             "in_vpc": false
@@ -293,6 +310,13 @@
           "function": {
             "vpc_configured": false,
             "has_ghost_vpc": false
+          },
+          "concurrency": {
+            "reserved_set": false,
+            "public_unlimited": true
+          },
+          "execution_role": {
+            "is_overprivileged": false
           }
         }
       }
@@ -319,7 +343,8 @@
           "logging": {
             "log_group_exists": true,
             "has_been_invoked": false,
-            "role_has_log_permissions": true
+            "role_has_log_permissions": true,
+            "enabled": true
           },
           "network": {
             "in_vpc": false
@@ -331,6 +356,13 @@
           "function": {
             "vpc_configured": false,
             "has_ghost_vpc": false
+          },
+          "concurrency": {
+            "reserved_set": false,
+            "public_unlimited": true
+          },
+          "execution_role": {
+            "is_overprivileged": false
           }
         }
       }
@@ -357,7 +389,8 @@
           "logging": {
             "log_group_exists": true,
             "has_been_invoked": false,
-            "role_has_log_permissions": true
+            "role_has_log_permissions": true,
+            "enabled": true
           },
           "network": {
             "in_vpc": false
@@ -369,6 +402,13 @@
           "function": {
             "vpc_configured": false,
             "has_ghost_vpc": false
+          },
+          "concurrency": {
+            "reserved_set": false,
+            "public_unlimited": true
+          },
+          "execution_role": {
+            "is_overprivileged": false
           }
         }
       }
@@ -395,7 +435,8 @@
           "logging": {
             "log_group_exists": true,
             "has_been_invoked": false,
-            "role_has_log_permissions": true
+            "role_has_log_permissions": true,
+            "enabled": true
           },
           "network": {
             "in_vpc": false
@@ -407,6 +448,13 @@
           "function": {
             "vpc_configured": false,
             "has_ghost_vpc": false
+          },
+          "concurrency": {
+            "reserved_set": false,
+            "public_unlimited": true
+          },
+          "execution_role": {
+            "is_overprivileged": false
           }
         }
       }
@@ -423,6 +471,14 @@
           },
           "dead_letter_queue": {
             "enabled": false
+          },
+          "sqs": {
+            "encrypted": false,
+            "uses_cmk": false,
+            "policy_enforces_ssl": false,
+            "is_dlq": false,
+            "has_send_activity": true,
+            "visibility_exceeds_retention": false
           },
           "policy": {
             "has_public_access": false
@@ -442,6 +498,14 @@
           },
           "dead_letter_queue": {
             "enabled": false
+          },
+          "sqs": {
+            "encrypted": false,
+            "uses_cmk": false,
+            "policy_enforces_ssl": false,
+            "is_dlq": false,
+            "has_send_activity": true,
+            "visibility_exceeds_retention": false
           },
           "policy": {
             "has_public_access": false
@@ -476,6 +540,11 @@
       "properties": {
         "identity": {
           "kind": "role",
+          "role": {
+            "reachable_resources_count": 500,
+            "can_modify_own_boundary": true,
+            "has_data_and_iam_access": true
+          },
           "escalation": {
             "passrole_createendpoint":       { "present": true, "target_role": "*" },
             "passrole_createtrainingjob":    { "present": true, "target_role": "*" },
@@ -554,6 +623,30 @@
         "identity": {
           "kind": "role",
           "escalation": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-west-2:111122223333:trail/management-events",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "s3_data_events": {
+            "write_enabled": false,
+            "read_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "vpc-default-us-west-2",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "is_default_vpc": true
         }
       }
     }
