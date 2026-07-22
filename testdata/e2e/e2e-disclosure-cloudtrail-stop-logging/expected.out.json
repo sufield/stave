@@ -38,6 +38,7 @@
   "findings": [],
   "chain_findings": [
     {
+      "finding_id": "sha256:f40f90d0dd0c7953",
       "chain": "cloudtrail_audit_blind",
       "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
       "description": "Any audit blindness — trail S3 bucket deleted, CW Logs group deleted, or trail stopped. Each independently means the audit trail is non-functional. No API calls are recorded (S3 ghost or stopped) or no real-time detection works (CW Logs ghost). The detection infrastructure for every service is blind. Threshold of 1 fires whenever any single audit-layer failure is present.\n",
