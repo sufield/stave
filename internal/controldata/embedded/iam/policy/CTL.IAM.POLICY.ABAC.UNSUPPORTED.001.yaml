@@ -21,7 +21,7 @@ scope_tags:
   - iam
 taxonomy:
   - least-privilege
-  - policy-semantics
+  - formal-semantics
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

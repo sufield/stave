@@ -21,7 +21,7 @@ scope_tags:
   - aws
   - vpc
 taxonomy:
-  - cloud-pollution
+  - resource-sprawl
   - network-isolation
 type: unsafe_state
 classification: state_assertion

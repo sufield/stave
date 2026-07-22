@@ -21,7 +21,6 @@ scope_tags:
   - ec2
 taxonomy:
   - compute-hardening
-  - supply-chain
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:
