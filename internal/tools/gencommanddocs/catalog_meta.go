@@ -78,6 +78,7 @@ var catalogAnnotations = []catalogAnnotation{
 	{Path: "gaps", Group: "Introspection", When: "Prioritizing what to collect next"},
 	{Path: "readiness", Group: "Introspection", When: "Pre-flight: will this run produce signal?"},
 	{Path: "map", Group: "Introspection", When: "Mapping coverage to ATT&CK"},
+	{Path: "toolmap", Group: "Introspection", When: "Mapping offensive tools to configuration prerequisites"},
 	{Path: "permissions principal", Group: "Introspection", When: "\"What can this identity do?\""},
 	{Path: "permissions resource", Group: "Introspection", When: "\"Who can reach this resource?\""},
 	{Path: "permissions summary", Group: "Introspection", When: "Account-wide permission overview"},

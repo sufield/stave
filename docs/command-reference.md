@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_168 commands across 13 groups._
+_169 commands across 13 groups._
 
 ## Getting Started
 
@@ -69,6 +69,7 @@ _168 commands across 13 groups._
 | `score` | Compute security posture score (0-100) |
 | `scorecard` | Multi-framework compliance scorecard |
 | `search` | Find catalog entries matching a free-form intent |
+| `toolmap` | Map offensive tools to configuration prerequisites and find coverage gaps |
 
 ## Compliance & Evidence
 

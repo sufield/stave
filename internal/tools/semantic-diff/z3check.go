@@ -14,9 +14,12 @@ import (
 
 // symbolicCheckImpl uses Z3 to prove that the CEL translation and the
 // reference semantics agree for ALL possible inputs. Each field is
-// modeled as two Bools: has_field (present?) and eq_field (equals
-// expected value?). This is sound for eq/ne operators — we only care
-// about equality, not the value space.
+// modeled as four Bools: has_field (present?), eq_field (equals
+// expected value?), empty_field (value is empty/nil?), and
+// typemismatch_field (value type differs from predicate value type?).
+// The type-mismatch variable captures the key divergence: CEL is
+// typed (mismatch → error → false), while the reference evaluator
+// uses Sprint-based comparison (type-agnostic).
 func symbolicCheckImpl(pred policy.UnsafePredicate, fields []fieldInfo) symbolicResult {
 	if len(fields) == 0 {
 		return symbolicResult{Status: "SKIP", Detail: "no fields"}
@@ -29,8 +32,10 @@ func symbolicCheckImpl(pred policy.UnsafePredicate, fields []fieldInfo) symbolic
 	for _, f := range fields {
 		name := sanitizeName(f.Path)
 		syms[f.Path] = symField{
-			hasVar: ctx.BoolConst("has_" + name),
-			eqVar:  ctx.BoolConst("eq_" + name),
+			hasVar:          ctx.BoolConst("has_" + name),
+			eqVar:           ctx.BoolConst("eq_" + name),
+			isEmptyVar:      ctx.BoolConst("empty_" + name),
+			typeMismatchVar: ctx.BoolConst("typemismatch_" + name),
 		}
 	}
 
@@ -54,7 +59,9 @@ func symbolicCheckImpl(pred policy.UnsafePredicate, fields []fieldInfo) symbolic
 			}
 			hv := m.Eval(sf.hasVar, true)
 			ev := m.Eval(sf.eqVar, true)
-			witness = append(witness, fmt.Sprintf("%s(has=%s,eq=%s)", short, hv, ev))
+			mv := m.Eval(sf.isEmptyVar, true)
+			tv := m.Eval(sf.typeMismatchVar, true)
+			witness = append(witness, fmt.Sprintf("%s(has=%s,eq=%s,empty=%s,typemismatch=%s)", short, hv, ev, mv, tv))
 		}
 		return symbolicResult{
 			Status: "DIVERGE",
@@ -66,21 +73,23 @@ func symbolicCheckImpl(pred policy.UnsafePredicate, fields []fieldInfo) symbolic
 }
 
 type symField struct {
-	hasVar z3.Bool
-	eqVar  z3.Bool
+	hasVar          z3.Bool
+	eqVar           z3.Bool
+	isEmptyVar      z3.Bool
+	typeMismatchVar z3.Bool
 }
 
 // buildFormula translates the reference (formal spec) semantics.
-// For op:eq: hasField ∧ eq_field
-// For op:ne: ¬hasField ∨ ¬eq_field
+// The reference evaluator uses Sprint-based comparison (type-agnostic),
+// so type mismatches do not affect the result.
 func buildFormula(ctx *z3.Context, pred policy.UnsafePredicate, syms map[string]symField) z3.Bool {
 	return buildPredicateFormula(ctx, pred, syms, false)
 }
 
 // buildCELFormula translates the CEL compiler's semantics.
-// For Phase 1 (S3 controls, all op:eq), identical to reference.
-// Separated so Tier 2 controls with ne/missing/present can model
-// the CEL-specific behavior independently.
+// CEL uses typed comparison: a type mismatch between the field value
+// and the predicate value causes a runtime error, which the evaluator
+// treats as false.
 func buildCELFormula(ctx *z3.Context, pred policy.UnsafePredicate, syms map[string]symField) z3.Bool {
 	return buildPredicateFormula(ctx, pred, syms, true)
 }
@@ -137,22 +146,59 @@ func buildRuleFormula(ctx *z3.Context, r policy.PredicateRule, syms map[string]s
 		return ctx.FromBool(false)
 	}
 
-	switch r.Op {
+	if celMode {
+		return buildRuleCEL(ctx, r.Op, sf)
+	}
+	return buildRuleRef(ctx, r.Op, sf)
+}
+
+// buildRuleRef encodes the reference evaluator's semantics.
+// Sprint-based comparison: type mismatches are invisible.
+func buildRuleRef(ctx *z3.Context, op predicate.Operator, sf symField) z3.Bool {
+	switch op {
 	case predicate.OpEq:
-		// hasField ∧ field == value
+		// hasField ∧ eq (Sprint comparison, type-agnostic)
 		return sf.hasVar.And(sf.eqVar)
 
 	case predicate.OpNe:
-		// ¬hasField ∨ field ≠ value
+		// ¬hasField ∨ ¬eq (Sprint comparison, type-agnostic)
 		return sf.hasVar.Not().Or(sf.eqVar.Not())
 
 	case predicate.OpMissing:
-		// ¬hasField (simplified; full missing() also checks empty)
-		return sf.hasVar.Not()
+		// ¬hasField ∨ isEmpty (isMissing checks nil/empty-string/empty-list/empty-map)
+		return sf.hasVar.Not().Or(sf.isEmptyVar)
 
 	case predicate.OpPresent:
-		// hasField
-		return sf.hasVar
+		// hasField ∧ ¬isEmpty
+		return sf.hasVar.And(sf.isEmptyVar.Not())
+
+	default:
+		return ctx.FromBool(true)
+	}
+}
+
+// buildRuleCEL encodes the CEL evaluator's semantics.
+// Typed comparison: type mismatch → runtime error → false.
+func buildRuleCEL(ctx *z3.Context, op predicate.Operator, sf symField) z3.Bool {
+	switch op {
+	case predicate.OpEq:
+		// has ∧ ¬typeMismatch ∧ eq
+		// CEL: (has(field) && field == value) — type mismatch errors → false
+		return sf.hasVar.And(sf.typeMismatchVar.Not()).And(sf.eqVar)
+
+	case predicate.OpNe:
+		// ¬has ∨ (¬typeMismatch ∧ ¬eq)
+		// CEL: (!has(field) || field != value) — if has but type mismatch,
+		// the != comparison errors; false || error → error → false
+		return sf.hasVar.Not().Or(sf.typeMismatchVar.Not().And(sf.eqVar.Not()))
+
+	case predicate.OpMissing:
+		// ¬hasField ∨ isEmpty (CEL missing() checks same emptiness conditions)
+		return sf.hasVar.Not().Or(sf.isEmptyVar)
+
+	case predicate.OpPresent:
+		// hasField ∧ ¬isEmpty
+		return sf.hasVar.And(sf.isEmptyVar.Not())
 
 	default:
 		return ctx.FromBool(true)

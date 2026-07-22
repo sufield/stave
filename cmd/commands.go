@@ -64,6 +64,7 @@ import (
 	templatenew "github.com/sufield/stave/cmd/templatecmd/newcmd"
 	templateverify "github.com/sufield/stave/cmd/templatecmd/verifycmd"
 	stavetest "github.com/sufield/stave/cmd/test"
+	stavetoolmap "github.com/sufield/stave/cmd/toolmap"
 	stavetransform "github.com/sufield/stave/cmd/transform"
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	validatemapping "github.com/sufield/stave/cmd/validatemapping"
@@ -209,6 +210,9 @@ func WireCommands(app *App) error {
 
 	// Attack path graph export
 	root.AddCommand(stavepath.NewCmd())
+
+	// Offensive tool prerequisite mapping
+	root.AddCommand(stavetoolmap.NewCmd())
 
 	// Field coverage analysis
 	root.AddCommand(stavecoverage.NewCmd())
