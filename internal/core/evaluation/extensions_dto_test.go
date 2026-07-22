@@ -2,6 +2,7 @@ package evaluation
 
 import (
 	"testing"
+	"time"
 
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -74,5 +75,48 @@ func TestToExtensions_PacksSourceRegistryFields(t *testing.T) {
 	}
 	if ext.PackRegistryHash != "abc123" {
 		t.Fatalf("PackRegistryHash = %q, want %q", ext.PackRegistryHash, "abc123")
+	}
+}
+
+func TestToExtensions_IntegrityProjected(t *testing.T) {
+	ts := time.Date(2026, 7, 22, 12, 0, 0, 0, time.UTC)
+	m := Metadata{
+		ControlSource: ControlSourceInfo{Source: ControlSourceDir},
+		ResolvedPaths: ResolvedPaths{Controls: "/ctl", Observations: "/obs"},
+		Integrity: &IntegrityStatus{
+			Verified:     true,
+			ManifestPath: "manifest.json",
+			VerifiedAt:   ts,
+		},
+	}
+	ext := m.ToExtensions()
+	if ext == nil {
+		t.Fatal("expected non-nil extensions")
+	}
+	if ext.Integrity == nil {
+		t.Fatal("expected integrity in extensions")
+	}
+	if !ext.Integrity.Verified {
+		t.Fatal("expected verified=true")
+	}
+	if ext.Integrity.ManifestPath != "manifest.json" {
+		t.Fatalf("ManifestPath = %q, want %q", ext.Integrity.ManifestPath, "manifest.json")
+	}
+	if !ext.Integrity.VerifiedAt.Equal(ts) {
+		t.Fatalf("VerifiedAt = %v, want %v", ext.Integrity.VerifiedAt, ts)
+	}
+}
+
+func TestToExtensions_NoIntegrityWhenNil(t *testing.T) {
+	m := Metadata{
+		ControlSource: ControlSourceInfo{Source: ControlSourceDir},
+		ResolvedPaths: ResolvedPaths{Controls: "/ctl", Observations: "/obs"},
+	}
+	ext := m.ToExtensions()
+	if ext == nil {
+		t.Fatal("expected non-nil extensions")
+	}
+	if ext.Integrity != nil {
+		t.Fatalf("expected nil integrity, got %+v", ext.Integrity)
 	}
 }

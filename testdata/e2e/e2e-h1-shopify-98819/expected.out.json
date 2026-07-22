@@ -357,7 +357,6 @@
   ],
   "chain_findings": [
     {
-      "finding_id": "sha256:9f90773e90534c7e",
       "chain": "latimes_writable_bucket_path",
       "asset_id": "shopify-internal-assets",
       "description": "LA Times incident shape (2018): publicly writable S3 bucket served by a website. Attacker wrote cryptominer JavaScript to the bucket, which was served to all website visitors. The invariant: no S3 bucket permits public write access. This is a supply chain attack via content injection, not a data exfiltration.\n",

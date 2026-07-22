@@ -1,6 +1,10 @@
 package evaluation
 
-import "github.com/sufield/stave/internal/core/kernel"
+import (
+	"time"
+
+	"github.com/sufield/stave/internal/core/kernel"
+)
 
 // Metadata holds typed provenance for an evaluation run: how controls were
 // selected, where they came from, and the state of the source repository.
@@ -8,6 +12,15 @@ type Metadata struct {
 	ContextName   string            `json:"context_name"`
 	ControlSource ControlSourceInfo `json:"control_source"`
 	ResolvedPaths ResolvedPaths     `json:"resolved_paths"`
+	Integrity     *IntegrityStatus  `json:"integrity,omitempty"`
+}
+
+// IntegrityStatus records whether observation integrity was verified.
+type IntegrityStatus struct {
+	Verified       bool      `json:"verified"`
+	ManifestPath   string    `json:"manifest_path,omitempty"`
+	KeyFingerprint string    `json:"key_fingerprint,omitempty"`
+	VerifiedAt     time.Time `json:"verified_at,omitzero"`
 }
 
 // ControlSourceMode identifies how controls were selected for evaluation.

@@ -73,6 +73,31 @@ func BuildEvidenceBundle(ctx context.Context, assessmentJSON []byte, observation
 	return res, nil
 }
 
+// BundleVerifyResult carries the outcome of [VerifyEvidenceBundle].
+type BundleVerifyResult struct {
+	ManifestValid  bool
+	SignatureValid bool
+	Signed         bool
+	FileCount      int
+}
+
+// VerifyEvidenceBundle checks the integrity of a .stave-bundle archive:
+// manifest SHA-256 digests and, when publicKeyPEM is provided, the Ed25519
+// signature over the manifest. It is the library entry point behind
+// `stave bundle verify`.
+func VerifyEvidenceBundle(bundleData, publicKeyPEM []byte) (BundleVerifyResult, error) {
+	res, err := evidence.Verify(bundleData, publicKeyPEM)
+	if err != nil {
+		return BundleVerifyResult{}, fmt.Errorf("verify bundle: %w", err)
+	}
+	return BundleVerifyResult{
+		ManifestValid:  res.ManifestValid,
+		SignatureValid: res.SignatureValid,
+		Signed:         res.Signed,
+		FileCount:      res.FileCount,
+	}, nil
+}
+
 // AuditBundleInput parameterizes [AssembleAuditBundle].
 type AuditBundleInput struct {
 	Framework  string

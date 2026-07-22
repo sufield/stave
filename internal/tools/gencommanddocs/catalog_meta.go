@@ -65,6 +65,7 @@ var catalogAnnotations = []catalogAnnotation{
 	{Path: "export-sir", Group: "Data & Artifacts", When: "Feeding facts to external engines (Z3/Soufflé/Clingo/etc.)"},
 	{Path: "bundle", Group: "Data & Artifacts", When: "Producing a tamper-evident evidence package"},
 	{Path: "bundle audit", Group: "Data & Artifacts", When: "Period-end audit packaging"},
+	{Path: "bundle verify", Group: "Data & Artifacts", When: "Verifying bundle integrity and signature"},
 	{Path: "metrics", Group: "Data & Artifacts", When: "Exposing posture metrics to monitoring"},
 	{Path: "telemetry", Group: "Data & Artifacts", When: "Streaming assessment events to a pipeline"},
 	{Path: "path", Group: "Data & Artifacts", When: "Visualizing compound attack paths"},

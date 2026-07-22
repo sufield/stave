@@ -292,6 +292,14 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 	assessmentCfg.BuildVersion = version.String
 	assessmentCfg.ActivePolicies = controls
 
+	if in.IntegrityManifest != "" {
+		assessmentCfg.Metadata.Integrity = &evaluation.IntegrityStatus{
+			Verified:     true,
+			ManifestPath: in.IntegrityManifest,
+			VerifiedAt:   clock.Now(),
+		}
+	}
+
 	report, _, err := wf.PerformAssessment(ctx, assessmentCfg)
 	if err != nil {
 		return nil, fmt.Errorf("perform assessment: %w", err)

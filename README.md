@@ -141,7 +141,7 @@ grounded. The word is *verifier*, not scanner: proof, not heuristics.
 
 Your AI agent has admin access. Your CSPM tool says you're compliant.
 
-![AI Security Demo](docs/talks/ai-security-2026/demo-ai-security.gif)
+![AI Security Demo](docs/images/demo-ai-security.gif)
 
 ```bash
 bash examples/demo-ai-security/run.sh

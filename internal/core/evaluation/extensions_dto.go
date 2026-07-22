@@ -2,6 +2,7 @@ package evaluation
 
 import (
 	"slices"
+	"time"
 
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -16,6 +17,16 @@ type Extensions struct {
 	ResolvedControlIDs  []kernel.ControlID `json:"resolved_control_ids,omitempty"`
 	PackRegistryVersion string             `json:"pack_registry_version,omitempty"`
 	PackRegistryHash    kernel.Digest      `json:"pack_registry_hash,omitempty"`
+	Integrity           *ExtIntegrity      `json:"integrity,omitempty"`
+}
+
+// ExtIntegrity surfaces observation integrity verification status.
+// Present only when --integrity-manifest was used and verification passed.
+type ExtIntegrity struct {
+	Verified       bool      `json:"verified"`
+	ManifestPath   string    `json:"manifest_path,omitempty"`
+	KeyFingerprint string    `json:"key_fingerprint,omitempty"`
+	VerifiedAt     time.Time `json:"verified_at,omitzero"`
 }
 
 // ToExtensions projects the internal Metadata into the report-friendly Extensions DTO.
@@ -39,6 +50,15 @@ func (m Metadata) ToExtensions() *Extensions {
 		ext.ResolvedControlIDs = slices.Clone(m.ControlSource.ResolvedControlIDs)
 		ext.PackRegistryVersion = m.ControlSource.RegistryVersion
 		ext.PackRegistryHash = m.ControlSource.RegistryHash
+	}
+
+	if m.Integrity != nil {
+		ext.Integrity = &ExtIntegrity{
+			Verified:       m.Integrity.Verified,
+			ManifestPath:   m.Integrity.ManifestPath,
+			KeyFingerprint: m.Integrity.KeyFingerprint,
+			VerifiedAt:     m.Integrity.VerifiedAt,
+		}
 	}
 
 	return ext

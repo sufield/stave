@@ -2430,7 +2430,6 @@
   ],
   "chain_findings": [
     {
-      "finding_id": "sha256:a545016c228f40e7",
       "chain": "k8s_anonymous_access_path",
       "asset_id": "apiserver-dev-01",
       "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
@@ -2450,7 +2449,6 @@
       ]
     },
     {
-      "finding_id": "sha256:7f6db413af71d499",
       "chain": "k8s_anonymous_access_path",
       "asset_id": "apiserver-staging-01",
       "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
@@ -2470,7 +2468,6 @@
       ]
     },
     {
-      "finding_id": "sha256:5f12ef4e890ff5bf",
       "chain": "k8s_etcd_exposure_path",
       "asset_id": "etcd-dev-01",
       "description": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n",
@@ -2486,7 +2483,6 @@
       ]
     },
     {
-      "finding_id": "sha256:976a642b829b26e8",
       "chain": "k8s_etcd_exposure_path",
       "asset_id": "etcd-staging-01",
       "description": "etcd exposed without TLS and without client certificate authentication. Entire cluster state (secrets, configs) readable by any actor with network access to the etcd port.\n",

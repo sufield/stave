@@ -82,6 +82,7 @@ Exit Codes:
 	cmd.Flags().BoolVar(&opts.IncludeASFF, "include-asff", false, "Include ASFF-formatted findings")
 
 	cmd.AddCommand(newAuditCmd())
+	cmd.AddCommand(newVerifyCmd())
 
 	return cmd
 }

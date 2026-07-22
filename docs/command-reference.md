@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_169 commands across 13 groups._
+_170 commands across 13 groups._
 
 ## Getting Started
 
@@ -77,6 +77,7 @@ _169 commands across 13 groups._
 |---|---|
 | `bundle` | Generate a sealed evidence bundle for air-gap GRC integration |
 | `bundle audit` | Assemble a compliance-period evidence package |
+| `bundle verify` | Verify the integrity of a sealed evidence bundle |
 | `compare` | Compare compliance posture between two frameworks |
 | `compliance` | Evaluate a snapshot against a compliance framework and report coverage |
 | `export` | Export controls and compliance evidence |

@@ -2303,7 +2303,6 @@
   ],
   "chain_findings": [
     {
-      "finding_id": "sha256:87538f4534260b95",
       "chain": "classified_data_unprotected_storage",
       "asset_id": "public-test-bucket",
       "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n",
@@ -2321,98 +2320,6 @@
       "attack_stages": [
         "exfiltration",
         "initial_access"
-      ],
-      "member_evidence": [
-        {
-          "control_id": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
-          "asset_id": "public-test-bucket",
-          "misconfigurations": [
-            {
-              "property": "storage.access.public_read",
-              "actual_value": true,
-              "operator": "eq",
-              "unsafe_value": true
-            },
-            {
-              "property": "storage.encryption.at_rest_enabled",
-              "actual_value": true,
-              "operator": "eq",
-              "unsafe_value": true
-            },
-            {
-              "property": "storage.kind",
-              "actual_value": "bucket",
-              "operator": "eq",
-              "unsafe_value": "bucket"
-            }
-          ],
-          "reasoning_trace": [
-            {
-              "predicate_expr": "storage.access.public_read eq true",
-              "observation_key": "storage.access.public_read",
-              "operator": "eq",
-              "expected_value": true,
-              "observed_value": true
-            },
-            {
-              "predicate_expr": "storage.encryption.at_rest_enabled eq true",
-              "observation_key": "storage.encryption.at_rest_enabled",
-              "operator": "eq",
-              "expected_value": true,
-              "observed_value": true
-            },
-            {
-              "predicate_expr": "storage.kind eq \"bucket\"",
-              "observation_key": "storage.kind",
-              "operator": "eq",
-              "expected_value": "bucket",
-              "observed_value": "bucket"
-            }
-          ],
-          "delta": [
-            {
-              "property_label": "public read access",
-              "property_path": "storage.access.public_read",
-              "current_value": "true",
-              "fix_action": "set to false (disable)"
-            },
-            {
-              "property_label": "encryption at rest",
-              "property_path": "storage.encryption.at_rest_enabled",
-              "current_value": "true",
-              "fix_action": "set to false (disable)"
-            }
-          ]
-        },
-        {
-          "control_id": "CTL.S3.PUBLIC.001",
-          "asset_id": "public-test-bucket",
-          "misconfigurations": [
-            {
-              "property": "storage.access.public_read",
-              "actual_value": true,
-              "operator": "eq",
-              "unsafe_value": true
-            }
-          ],
-          "reasoning_trace": [
-            {
-              "predicate_expr": "storage.access.public_read eq true",
-              "observation_key": "storage.access.public_read",
-              "operator": "eq",
-              "expected_value": true,
-              "observed_value": true
-            }
-          ],
-          "delta": [
-            {
-              "property_label": "public read access",
-              "property_path": "storage.access.public_read",
-              "current_value": "true",
-              "fix_action": "set to false (disable)"
-            }
-          ]
-        }
       ]
     }
   ],

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -25,6 +26,9 @@ func SignSnapshot(snapData []byte, privateKey ed25519.PrivateKey, keyID, hostnam
 	}
 	if err := json.Unmarshal(snapData, &snapshot); err != nil {
 		return nil, fmt.Errorf("parse snapshot: %w", err)
+	}
+	if len(snapshot.Assets) == 0 {
+		return nil, errors.New("file contains no assets array — stave attest sign operates on observation snapshots, not assessment output")
 	}
 
 	attestation, err := appatt.SignAssets(snapshot.Assets, privateKey, hostname, "stave-cli", signedAt)
