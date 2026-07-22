@@ -1,9 +1,17 @@
 package toolmap
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
 )
 
 func TestAnalyze_MinimalFixture(t *testing.T) {
@@ -42,7 +50,7 @@ unsafe_predicate:
 `)
 
 	r := NewRegistry()
-	result, err := Analyze(r, chainsDir, controlsDir)
+	result, err := Analyze(r, chainsDir, testControlLoader, controlsDir)
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
@@ -82,7 +90,7 @@ func TestAnalyze_EmptyDirs(t *testing.T) {
 	controlsDir := t.TempDir()
 
 	r := NewRegistry()
-	result, err := Analyze(r, chainsDir, controlsDir)
+	result, err := Analyze(r, chainsDir, testControlLoader, controlsDir)
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
@@ -99,6 +107,72 @@ func TestAnalyze_EmptyDirs(t *testing.T) {
 			t.Errorf("gap %s/%s should have no chain or control", g.Tool, g.Capability)
 		}
 	}
+}
+
+type testControlDTO struct {
+	ID              kernel.ControlID `yaml:"id"`
+	UnsafePredicate testPredicateDTO `yaml:"unsafe_predicate"`
+}
+
+type testPredicateDTO struct {
+	Any []testRuleDTO `yaml:"any,omitempty"`
+	All []testRuleDTO `yaml:"all,omitempty"`
+}
+
+type testRuleDTO struct {
+	Field string             `yaml:"field,omitempty"`
+	Op    predicate.Operator `yaml:"op,omitempty"`
+	Value any                `yaml:"value,omitempty"`
+	Any   []testRuleDTO      `yaml:"any,omitempty"`
+	All   []testRuleDTO      `yaml:"all,omitempty"`
+}
+
+func testControlLoader(rootDir string) ([]policy.ControlDefinition, error) {
+	var all []policy.ControlDefinition
+	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || !strings.HasSuffix(info.Name(), ".yaml") {
+			return nil
+		}
+		data, readErr := os.ReadFile(path) //nolint:gosec // test helper
+		if readErr != nil {
+			return fmt.Errorf("read %s: %w", path, readErr)
+		}
+		var dto testControlDTO
+		if yamlErr := yaml.Unmarshal(data, &dto); yamlErr != nil {
+			return fmt.Errorf("parse %s: %w", path, yamlErr)
+		}
+		ctl := policy.ControlDefinition{
+			ID:              dto.ID,
+			UnsafePredicate: convertPredicate(dto.UnsafePredicate),
+		}
+		all = append(all, ctl)
+		return nil
+	})
+	return all, err
+}
+
+func convertPredicate(p testPredicateDTO) policy.UnsafePredicate {
+	return policy.UnsafePredicate{
+		Any: convertRules(p.Any),
+		All: convertRules(p.All),
+	}
+}
+
+func convertRules(rules []testRuleDTO) []policy.PredicateRule {
+	out := make([]policy.PredicateRule, len(rules))
+	for i, r := range rules {
+		out[i] = policy.PredicateRule{
+			Field: predicate.NewFieldPath(r.Field),
+			Op:    r.Op,
+			Value: policy.NewOperand(r.Value),
+			Any:   convertRules(r.Any),
+			All:   convertRules(r.All),
+		}
+	}
+	return out
 }
 
 func writeFile(t *testing.T, dir, name, content string) {

@@ -1,7 +1,6 @@
 package toolmap
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,10 +8,11 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	yamlctl "github.com/sufield/stave/internal/adapters/controls/yaml"
-	predalias "github.com/sufield/stave/internal/adapters/predicate"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
+
+// ControlLoaderFunc loads all controls from a root directory.
+type ControlLoaderFunc func(rootDir string) ([]policy.ControlDefinition, error)
 
 // Gap describes a tool prerequisite not fully covered by
 // chains and controls.
@@ -41,7 +41,7 @@ type CoverageResult struct {
 //  2. Does any control's predicate reference the field path?
 //
 // A prerequisite with both is "covered". Anything missing is a gap.
-func Analyze(registry *Registry, chainsDir, controlsDir string) (*CoverageResult, error) {
+func Analyze(registry *Registry, chainsDir string, loadControls ControlLoaderFunc, controlsDir string) (*CoverageResult, error) {
 	chains, err := loadChains(chainsDir)
 	if err != nil {
 		return nil, fmt.Errorf("load chains: %w", err)
@@ -103,36 +103,6 @@ func loadChains(dir string) ([]policy.ChainDefinition, error) {
 		chains = append(chains, ch)
 	}
 	return chains, nil
-}
-
-func loadControls(rootDir string) ([]policy.ControlDefinition, error) {
-	loader := yamlctl.NewControlLoader(yamlctl.WithAliasResolver(predalias.ResolverFunc()))
-	var dirs []string
-	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() && path != rootDir {
-			dirs = append(dirs, path)
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("walk %s: %w", rootDir, err)
-	}
-	if len(dirs) == 0 {
-		dirs = []string{rootDir}
-	}
-
-	var all []policy.ControlDefinition
-	for _, d := range dirs {
-		controls, loadErr := loader.LoadControls(context.Background(), d)
-		if loadErr != nil {
-			continue
-		}
-		all = append(all, controls...)
-	}
-	return all, nil
 }
 
 // buildCapabilityIndex maps capability tokens to the chain IDs whose
