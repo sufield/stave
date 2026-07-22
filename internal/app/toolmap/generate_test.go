@@ -18,10 +18,7 @@ func TestGenerateSkeleton_ValidYAML(t *testing.T) {
 		FieldPath:  "properties.identity.policies.has_admin_access",
 	}
 
-	data, err := GenerateSkeleton(gap)
-	if err != nil {
-		t.Fatalf("generate: %v", err)
-	}
+	data := GenerateSkeleton(gap)
 
 	// Must parse as valid chain YAML.
 	var chain policy.ChainDefinition
@@ -44,10 +41,7 @@ func TestGenerateSkeleton_HasTODO(t *testing.T) {
 		FieldPath:  "properties.secret.access.rotation_enabled",
 	}
 
-	data, err := GenerateSkeleton(gap)
-	if err != nil {
-		t.Fatal(err)
-	}
+	data := GenerateSkeleton(gap)
 
 	if !strings.Contains(string(data), "TODO") {
 		t.Error("skeleton should contain TODO markers")
@@ -61,10 +55,7 @@ func TestGenerateSkeleton_CapabilityAnnotation(t *testing.T) {
 		FieldPath:  "properties.audit.kind",
 	}
 
-	data, err := GenerateSkeleton(gap)
-	if err != nil {
-		t.Fatal(err)
-	}
+	data := GenerateSkeleton(gap)
 
 	var chain policy.ChainDefinition
 	if err := yaml.Unmarshal(data, &chain); err != nil {

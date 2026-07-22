@@ -235,6 +235,21 @@ func collectRuleRefs(rule *policy.PredicateRule, refs []fieldRef) []fieldRef {
 		refs = collectRuleRefs(&rule.All[i], refs)
 	}
 
+	// any_match / any_identity_match nest a sub-predicate in Value.
+	// Without recursing into it, fields inside the nested predicate
+	// are invisible to coverage analysis.
+	if rule.Op == predicate.OpAnyMatch || rule.Op == predicate.OpAnyIdentityMatch {
+		parent := rule.Field.String()
+		if parent == "" && rule.Op == predicate.OpAnyIdentityMatch {
+			parent = "identities"
+		}
+		if parent != "" {
+			refs = append(refs, fieldRef{path: parent, silentRisk: true})
+			refs = collectNestedValueRefs(parent, rule.Value.Raw(), refs)
+		}
+		return refs
+	}
+
 	if rule.Field.IsZero() {
 		return refs
 	}
@@ -246,6 +261,78 @@ func collectRuleRefs(rule *policy.PredicateRule, refs []fieldRef) []fieldRef {
 	// — they handle absence correctly and are not silent-risk.
 	silentRisk := rule.Op != predicate.OpMissing && rule.Op != predicate.OpPresent
 
+	return append(refs, fieldRef{path: path, silentRisk: silentRisk})
+}
+
+// collectNestedValueRefs extracts field references from an any_match
+// nested predicate value. Handles both typed (*UnsafePredicate) from
+// tests and raw (map[string]any) from YAML loading.
+func collectNestedValueRefs(parentPath string, val any, refs []fieldRef) []fieldRef {
+	switch v := val.(type) {
+	case *policy.UnsafePredicate:
+		if v != nil {
+			refs = collectNestedPredRefs(parentPath, v, refs)
+		}
+	case policy.UnsafePredicate:
+		refs = collectNestedPredRefs(parentPath, &v, refs)
+	case map[string]any:
+		refs = collectNestedMapRefs(parentPath, v, refs)
+	}
+	return refs
+}
+
+func collectNestedPredRefs(parentPath string, pred *policy.UnsafePredicate, refs []fieldRef) []fieldRef {
+	for i := range pred.Any {
+		refs = collectNestedRuleRef(parentPath, &pred.Any[i], refs)
+	}
+	for i := range pred.All {
+		refs = collectNestedRuleRef(parentPath, &pred.All[i], refs)
+	}
+	return refs
+}
+
+func collectNestedRuleRef(parentPath string, rule *policy.PredicateRule, refs []fieldRef) []fieldRef {
+	for i := range rule.Any {
+		refs = collectNestedRuleRef(parentPath, &rule.Any[i], refs)
+	}
+	for i := range rule.All {
+		refs = collectNestedRuleRef(parentPath, &rule.All[i], refs)
+	}
+	if rule.Field.IsZero() {
+		return refs
+	}
+	path := parentPath + "." + rule.Field.String()
+	silentRisk := rule.Op != predicate.OpMissing && rule.Op != predicate.OpPresent
+	return append(refs, fieldRef{path: path, silentRisk: silentRisk})
+}
+
+// collectNestedMapRefs walks a raw map[string]any nested predicate
+// (the shape YAML produces before typed parsing).
+func collectNestedMapRefs(parentPath string, m map[string]any, refs []fieldRef) []fieldRef {
+	for _, key := range [2]string{"any", "all"} {
+		list, ok := m[key]
+		if !ok {
+			continue
+		}
+		items, ok := list.([]any)
+		if !ok {
+			continue
+		}
+		for _, item := range items {
+			ruleMap, ok := item.(map[string]any)
+			if !ok {
+				continue
+			}
+			refs = collectNestedMapRefs(parentPath, ruleMap, refs)
+		}
+	}
+	fieldStr, _ := m["field"].(string)
+	if fieldStr == "" {
+		return refs
+	}
+	path := parentPath + "." + fieldStr
+	op, _ := m["op"].(string)
+	silentRisk := op != "missing" && op != "present"
 	return append(refs, fieldRef{path: path, silentRisk: silentRisk})
 }
 

@@ -167,3 +167,184 @@ func TestAnalyze_FrameworkCoverage(t *testing.T) {
 		t.Errorf("hipaa coverage_pct = %.1f, want 100.0", fc.CoveragePct)
 	}
 }
+
+func TestCollectRuleRefs_AnyMatch_Typed(t *testing.T) {
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{
+				Field: predicate.NewFieldPath("properties.items"),
+				Op:    predicate.OpAnyMatch,
+				Value: policy.NewOperand(&policy.UnsafePredicate{
+					All: []policy.PredicateRule{
+						{Field: predicate.NewFieldPath("status"), Op: predicate.OpEq},
+						{Field: predicate.NewFieldPath("owner"), Op: predicate.OpPresent},
+					},
+				}),
+			},
+		},
+	}
+	refs := extractFieldRefs(&pred)
+	paths := make(map[string]bool)
+	for _, r := range refs {
+		paths[r.path] = r.silentRisk
+	}
+	if _, ok := paths["properties.items"]; !ok {
+		t.Error("missing parent path properties.items")
+	}
+	if _, ok := paths["properties.items.status"]; !ok {
+		t.Error("missing nested path properties.items.status")
+	}
+	if !paths["properties.items.status"] {
+		t.Error("properties.items.status should be silent-risk (eq op)")
+	}
+	if _, ok := paths["properties.items.owner"]; !ok {
+		t.Error("missing nested path properties.items.owner")
+	}
+	if paths["properties.items.owner"] {
+		t.Error("properties.items.owner should NOT be silent-risk (present op)")
+	}
+}
+
+func TestCollectRuleRefs_AnyMatch_RawMap(t *testing.T) {
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{
+				Field: predicate.NewFieldPath("identities"),
+				Op:    predicate.OpAnyMatch,
+				Value: policy.NewOperand(map[string]any{
+					"all": []any{
+						map[string]any{"field": "type", "op": "eq", "value": "app_signer"},
+						map[string]any{"field": "purpose", "op": "contains", "value": "enforce_prefix=false"},
+					},
+				}),
+			},
+		},
+	}
+	refs := extractFieldRefs(&pred)
+	paths := make(map[string]bool)
+	for _, r := range refs {
+		paths[r.path] = r.silentRisk
+	}
+	if _, ok := paths["identities"]; !ok {
+		t.Error("missing parent path identities")
+	}
+	if _, ok := paths["identities.type"]; !ok {
+		t.Error("missing nested path identities.type")
+	}
+	if _, ok := paths["identities.purpose"]; !ok {
+		t.Error("missing nested path identities.purpose")
+	}
+}
+
+func TestCollectRuleRefs_AnyIdentityMatch_ImplicitField(t *testing.T) {
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{
+				Op: predicate.OpAnyIdentityMatch,
+				Value: policy.NewOperand(&policy.UnsafePredicate{
+					Any: []policy.PredicateRule{
+						{Field: predicate.NewFieldPath("role"), Op: predicate.OpEq},
+					},
+				}),
+			},
+		},
+	}
+	refs := extractFieldRefs(&pred)
+	paths := make(map[string]bool)
+	for _, r := range refs {
+		paths[r.path] = r.silentRisk
+	}
+	if _, ok := paths["identities"]; !ok {
+		t.Error("missing implicit parent path identities")
+	}
+	if _, ok := paths["identities.role"]; !ok {
+		t.Error("missing nested path identities.role")
+	}
+}
+
+func TestCollectRuleRefs_NoAnyMatch_Unchanged(t *testing.T) {
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpEq},
+			{Field: predicate.NewFieldPath("properties.storage.tags.env"), Op: predicate.OpMissing},
+		},
+	}
+	refs := extractFieldRefs(&pred)
+	if len(refs) != 2 {
+		t.Fatalf("expected 2 refs, got %d", len(refs))
+	}
+	if refs[0].path != "properties.storage.kind" || !refs[0].silentRisk {
+		t.Errorf("ref[0] = %+v, want properties.storage.kind (silent-risk)", refs[0])
+	}
+	if refs[1].path != "properties.storage.tags.env" || refs[1].silentRisk {
+		t.Errorf("ref[1] = %+v, want properties.storage.tags.env (not silent-risk)", refs[1])
+	}
+}
+
+func TestClassify_AnyMatch_SilentRisk(t *testing.T) {
+	ctl := policy.ControlDefinition{
+		ID:       "CTL.TEST.ANYMATCH",
+		Severity: policy.SeverityHigh,
+		UnsafePredicate: policy.UnsafePredicate{
+			All: []policy.PredicateRule{
+				{Field: predicate.NewFieldPath("properties.storage.kind"), Op: predicate.OpEq},
+				{
+					Field: predicate.NewFieldPath("properties.items"),
+					Op:    predicate.OpAnyMatch,
+					Value: policy.NewOperand(&policy.UnsafePredicate{
+						All: []policy.PredicateRule{
+							{Field: predicate.NewFieldPath("status"), Op: predicate.OpEq},
+						},
+					}),
+				},
+			},
+		},
+	}
+	// Parent field present, nested field missing → SILENT_RISK
+	fields := map[string]struct{}{
+		"properties.storage.kind": {},
+		"properties.items":        {},
+	}
+	result := classifyControl(&ctl, fields, nil)
+	if result.Classification != SilentRisk {
+		t.Errorf("classification = %q, want SILENT_RISK (nested field missing)", result.Classification)
+	}
+	found := false
+	for _, f := range result.MissingFields {
+		if f == "properties.items.status" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("missing fields %v should contain properties.items.status", result.MissingFields)
+	}
+}
+
+func TestClassify_AnyMatch_Evaluable(t *testing.T) {
+	ctl := policy.ControlDefinition{
+		ID:       "CTL.TEST.ANYMATCH.OK",
+		Severity: policy.SeverityHigh,
+		UnsafePredicate: policy.UnsafePredicate{
+			All: []policy.PredicateRule{
+				{
+					Field: predicate.NewFieldPath("properties.items"),
+					Op:    predicate.OpAnyMatch,
+					Value: policy.NewOperand(&policy.UnsafePredicate{
+						All: []policy.PredicateRule{
+							{Field: predicate.NewFieldPath("status"), Op: predicate.OpEq},
+						},
+					}),
+				},
+			},
+		},
+	}
+	// Both parent and nested field present → EVALUABLE
+	fields := map[string]struct{}{
+		"properties.items":        {},
+		"properties.items.status": {},
+	}
+	result := classifyControl(&ctl, fields, nil)
+	if result.Classification != Evaluable {
+		t.Errorf("classification = %q, want EVALUABLE", result.Classification)
+	}
+}
