@@ -5,8 +5,8 @@ import (
 	"io"
 
 	"github.com/sufield/stave/cmd/cmdutil"
-	appstatus "github.com/sufield/stave/pkg/stave/status"
 	"github.com/sufield/stave/internal/util/jsonutil"
+	appstatus "github.com/sufield/stave/pkg/stave/status"
 )
 
 // Renderer is the polymorphic format-dispatch interface for

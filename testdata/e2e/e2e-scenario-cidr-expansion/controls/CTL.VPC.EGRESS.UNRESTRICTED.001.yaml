@@ -1,0 +1,141 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.EGRESS.UNRESTRICTED.001
+name: Private Subnet With Unrestricted Egress via NAT
+description: >
+  A private subnet has no internet gateway route (correctly
+  designated as private) but routes all outbound traffic through
+  a NAT gateway to 0.0.0.0/0 with no egress filtering. No
+  Network Firewall inspects egress traffic and no VPC endpoint
+  policy restricts outbound destinations. Resources in the
+  subnet can reach any internet endpoint, enabling data
+  exfiltration despite the "private" designation. The subnet is
+  private in name only — the NAT gateway provides unrestricted
+  outbound connectivity that negates the isolation benefit.
+domain: exposure
+severity: medium
+scope: atomic
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.3.1"
+  ccm_v4: ["IVS-06", "IVS-09"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+  - network-perimeter
+  - formal-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_subnet
+params:
+  attack_stage: exfiltration
+  base_impact: 5
+  blast_radius:
+    type: detection
+    scope: subnet
+    multiplier: 1.5
+observation_fields:
+  - network.subnet.is_private
+  - network.subnet.has_unrestricted_nat_egress
+  - network.subnet.egress_filtered
+remediation:
+  description: >
+    Private subnet has unrestricted egress via NAT gateway. Data
+    exfiltration is possible despite the private designation.
+  action: >
+    Add AWS Network Firewall on the NAT gateway subnet to inspect
+    and filter egress traffic. Alternatively, use VPC endpoint
+    policies to restrict outbound destinations to known-good
+    services, or replace the NAT gateway with VPC endpoints for
+    the specific AWS services the subnet needs.
+  example: |
+    {
+      "network": {
+        "kind": "subnet",
+        "subnet": {
+          "is_private": true,
+          "has_unrestricted_nat_egress": false,
+          "egress_filtered": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: subnet
+    - field: properties.network.subnet.is_private
+      op: eq
+      value: true
+    - field: properties.network.subnet.has_unrestricted_nat_egress
+      op: eq
+      value: true
+    - field: properties.network.subnet.egress_filtered
+      op: eq
+      value: false
+defect: >
+  Private subnet routes all egress through a NAT gateway with no
+  filtering. The "private" designation is misleading.
+infection: >
+  Security teams treat private subnets as isolated. Network
+  diagrams show the subnet as "no internet access" when in fact
+  full outbound connectivity exists via NAT.
+failure: >
+  Attacker with code execution in the subnet exfiltrates data to
+  any internet endpoint. The private subnet provides no barrier.
+tests:
+  - name: "private subnet with unrestricted NAT egress fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "subnet-0abc123private"
+      asset_type: aws_vpc_subnet
+      vendor: aws
+      properties:
+        network:
+          kind: subnet
+          subnet:
+            is_private: true
+            has_unrestricted_nat_egress: true
+            egress_filtered: false
+  - name: "private subnet with filtered egress passes"
+    verdict: PASS
+    asset:
+      asset_id: "subnet-0def456filtered"
+      asset_type: aws_vpc_subnet
+      vendor: aws
+      properties:
+        network:
+          kind: subnet
+          subnet:
+            is_private: true
+            has_unrestricted_nat_egress: true
+            egress_filtered: true
+  - name: "public subnet passes (different control)"
+    verdict: PASS
+    asset:
+      asset_id: "subnet-0ghi789public"
+      asset_type: aws_vpc_subnet
+      vendor: aws
+      properties:
+        network:
+          kind: subnet
+          subnet:
+            is_private: false
+            has_unrestricted_nat_egress: false
+            egress_filtered: false
+  - name: "private subnet with no NAT passes"
+    verdict: PASS
+    asset:
+      asset_id: "subnet-0jkl012nonat"
+      asset_type: aws_vpc_subnet
+      vendor: aws
+      properties:
+        network:
+          kind: subnet
+          subnet:
+            is_private: true
+            has_unrestricted_nat_egress: false
+            egress_filtered: false

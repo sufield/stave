@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.DEFAULT.INUSE.001
+name: Default Security Group Attached to Resources
+description: >
+  The VPC default security group is attached to one or more resources.
+  The default SG allows all traffic between resources attached to it
+  (inbound from same SG) and all outbound traffic. Resources should
+  use purpose-built security groups with explicit rules. Strengthens
+  CTL.VPC.SG.DEFAULT.001 which checks whether the default SG has
+  rules — this control checks whether it is actually attached.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.4"
+  soc2: "CC6.6"
+  nist_800_53_r5: "SC-7"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_security_group
+defect: >
+  Default security group is attached to resources.
+infection: >
+  The default SG allows all traffic between attached resources and all
+  outbound traffic. Resources attached to the default SG can
+  communicate freely with each other on all ports and protocols —
+  there is no network segmentation. An attacker who compromises one
+  resource can reach all others attached to the default SG. Purpose-
+  built security groups with explicit rules enforce least-privilege
+  network access.
+failure: >
+  Flat network within default SG. An attacker moves laterally between
+  all resources attached to the default security group.
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.security_group.default_sg_attached
+  - network.security_group.attached_resource_count
+remediation:
+  description: >
+    Default security group has resources attached to it.
+  action: >
+    Move resources to purpose-built security groups with explicit
+    rules. The default SG should have no attached resources.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "default_sg_attached": false,
+          "attached_resource_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.default_sg_attached
+      op: eq
+      value: true
+tests:
+  - name: default SG with attached resources fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-default-vpc123"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            default_sg_attached: true
+            attached_resource_count: 5
+  - name: default SG with no attached resources passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-default-vpc456"
+      asset_type: aws_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            default_sg_attached: false
+            attached_resource_count: 0

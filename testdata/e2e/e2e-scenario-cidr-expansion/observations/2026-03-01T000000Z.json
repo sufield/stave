@@ -1,0 +1,177 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-03-01T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "vpc-0abc1234def56789a",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "vpc_id": "vpc-0abc1234def56789a",
+          "cidr_blocks": ["10.0.0.0/16"],
+          "state": "available",
+          "flow_log": {
+            "enabled": true,
+            "traffic_type": "ALL",
+            "log_destination_type": "cloud-watch-logs"
+          },
+          "dns": {
+            "firewall_enabled": true,
+            "firewall_rule_group_count": 2,
+            "vpc_id": "vpc-0abc1234def56789a"
+          }
+        }
+      }
+    },
+    {
+      "id": "subnet-priv-a-01",
+      "type": "aws_subnet",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "subnet",
+          "subnet_id": "subnet-priv-a-01",
+          "vpc_id": "vpc-0abc1234def56789a",
+          "availability_zone": "us-east-1a",
+          "cidr_block": "10.0.1.0/24",
+          "map_public_ip_on_launch": false,
+          "tags": {
+            "Name": "app-private-01",
+            "Tier": "private"
+          }
+        }
+      }
+    },
+    {
+      "id": "subnet-priv-b-01",
+      "type": "aws_subnet",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "subnet",
+          "subnet_id": "subnet-priv-b-01",
+          "vpc_id": "vpc-0abc1234def56789a",
+          "availability_zone": "us-east-1b",
+          "cidr_block": "10.0.2.0/24",
+          "map_public_ip_on_launch": false,
+          "tags": {
+            "Name": "app-private-02",
+            "Tier": "private"
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-0app123456789abcd",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group_id": "sg-0app123456789abcd",
+          "vpc_id": "vpc-0abc1234def56789a",
+          "name": "app-sg",
+          "ingress_rules": [
+            {
+              "protocol": "tcp",
+              "from_port": 443,
+              "to_port": 443,
+              "cidr_blocks": ["10.0.0.0/16"]
+            },
+            {
+              "protocol": "tcp",
+              "from_port": 8080,
+              "to_port": 8080,
+              "cidr_blocks": ["10.0.1.0/24", "10.0.2.0/24"]
+            }
+          ],
+          "egress_rules": [
+            {
+              "protocol": "-1",
+              "from_port": 0,
+              "to_port": 0,
+              "cidr_blocks": ["0.0.0.0/0"]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "acl-0custom1234abcdef",
+      "type": "aws_vpc_network_acl",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "network_acl",
+          "nacl_id": "acl-0custom1234abcdef",
+          "vpc_id": "vpc-0abc1234def56789a",
+          "nacl": {
+            "is_custom": true,
+            "allows_all": false,
+            "rule_count": 6,
+            "associated_subnet_ids": ["subnet-priv-a-01", "subnet-priv-b-01"],
+            "inbound_rules": [
+              {"rule_number": 100, "protocol": "tcp", "port_range": {"from": 443, "to": 443}, "cidr_block": "10.0.0.0/16", "action": "allow"},
+              {"rule_number": 200, "protocol": "tcp", "port_range": {"from": 8080, "to": 8080}, "cidr_block": "10.0.1.0/24", "action": "allow"},
+              {"rule_number": 201, "protocol": "tcp", "port_range": {"from": 8080, "to": 8080}, "cidr_block": "10.0.2.0/24", "action": "allow"},
+              {"rule_number": 32767, "protocol": "-1", "cidr_block": "0.0.0.0/0", "action": "deny"}
+            ],
+            "outbound_rules": [
+              {"rule_number": 100, "protocol": "tcp", "port_range": {"from": 443, "to": 443}, "cidr_block": "0.0.0.0/0", "action": "allow"},
+              {"rule_number": 32767, "protocol": "-1", "cidr_block": "0.0.0.0/0", "action": "deny"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "vpce-0s3gateway1234abcd",
+      "type": "aws_vpc_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc_endpoint",
+          "endpoint_id": "vpce-0s3gateway1234abcd",
+          "vpc_id": "vpc-0abc1234def56789a",
+          "service_name": "com.amazonaws.us-east-1.s3",
+          "endpoint_type": "Gateway",
+          "state": "available",
+          "route_table_ids": ["rtb-priv-01"],
+          "policy": {
+            "has_policy": true,
+            "allows_anonymous": false,
+            "conditions": [
+              {"key": "aws:sourceVpce", "values": ["vpce-0s3gateway1234abcd"]}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "fl-0vpc1234abcdef567",
+      "type": "aws_flow_log",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "flow_log",
+          "flowlog": {
+            "flow_log_id": "fl-0vpc1234abcdef567",
+            "resource_id": "vpc-0abc1234def56789a",
+            "traffic_type": "ALL",
+            "captures_all": true,
+            "log_destination_type": "cloud-watch-logs",
+            "log_status": "ACTIVE"
+          }
+        }
+      }
+    }
+  ]
+}

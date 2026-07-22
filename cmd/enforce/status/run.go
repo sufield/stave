@@ -6,8 +6,8 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	appstatus "github.com/sufield/stave/pkg/stave/status"
 	"github.com/sufield/stave/internal/cli/ui"
+	appstatus "github.com/sufield/stave/pkg/stave/status"
 )
 
 // config defines the parameters for the status check.

@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/pkg/stave/compliancemapping"
 	"github.com/sufield/stave/pkg/stave"
+	"github.com/sufield/stave/pkg/stave/compliancemapping"
 )
 
 var errMappingIntegrity = errors.New("mapping integrity errors found — fix the mapping before trusting the report (run --verify-mapping for details)")

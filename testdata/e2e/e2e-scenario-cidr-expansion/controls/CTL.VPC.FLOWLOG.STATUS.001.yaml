@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.FLOWLOG.STATUS.001
+name: Flow Log Configured but Not Active
+description: >
+  Flow log record exists but its status is not ACTIVE (or the
+  deliver-status indicates failure). The configuration is present,
+  the console shows "Flow logs: enabled", dashboards report the
+  log as configured — but no records are actually being delivered.
+  Common causes: the IAM role used for delivery lost permissions
+  (modified or deleted), the destination S3 bucket was deleted or
+  had its policy changed, or the CloudWatch log group was deleted.
+  This is the "everything appears to work" pattern for network
+  visibility: every outward indicator says logging is on, and the
+  observability pipeline has actually stopped.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "3.9"
+  nist_800_53_r5: "AU-12"
+  fedramp_moderate: "AU-12"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-03", "LOG-08"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - logging
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_flow_log
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.flowlog.id
+  - network.flowlog.status
+  - network.flowlog.deliver_status
+  - network.flowlog.is_active
+remediation:
+  description: >
+    Flow log is configured but its status is not ACTIVE — records
+    are not being delivered.
+  action: >
+    Inspect the flow log's deliver-status and error messages.
+    Typical fixes: recreate or repair the IAM role the log uses
+    for delivery, restore the destination S3 bucket or
+    CloudWatch log group, or update the bucket policy /
+    retention configuration that is blocking writes. After the
+    fix, confirm the status returns to ACTIVE and that records
+    start arriving in the destination.
+  example: |
+    {
+      "network": {
+        "kind": "flow_log",
+        "flowlog": {
+          "is_active": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: flow_log
+    - field: properties.network.flowlog.is_active
+      op: eq
+      value: false

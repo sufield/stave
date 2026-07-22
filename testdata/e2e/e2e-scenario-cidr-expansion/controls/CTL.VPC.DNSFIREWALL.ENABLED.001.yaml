@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.DNSFIREWALL.ENABLED.001
+name: VPC Does Not Have DNS Firewall
+description: >
+  VPC has no Route53 Resolver DNS Firewall rule group associated.
+  DNS queries from instances in the VPC are resolved without
+  filtering. Instances can resolve domains used for command-and-
+  control (C2), malware download, cryptomining pool
+  coordination, DNS-tunneled exfiltration, and phishing
+  infrastructure. DNS is an often-overlooked egress channel —
+  even when TCP/UDP egress is restricted by security groups,
+  DNS resolution proceeds through the VPC resolver and can
+  leak data in query names or confirm target reachability to
+  attacker infrastructure.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-20"
+  fedramp_moderate: "SC-20"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.dns.firewall_enabled
+  - network.dns.firewall_rule_group_count
+  - network.dns.vpc_id
+remediation:
+  description: >
+    VPC has no Route53 Resolver DNS Firewall rule group associated.
+  action: >
+    Associate a DNS Firewall rule group with the VPC. Start with
+    the two AWS managed lists:
+    `AWSManagedDomainsMalwareDomainList` and
+    `AWSManagedDomainsBotnetCommandAndControlDomainList`. Add
+    custom rules for organization-specific blocklists (known
+    phishing lures, ex-vendor domains). Set the rule action to
+    BLOCK for malicious categories and optionally ALERT for
+    newer or lower-confidence feeds during tuning.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "dns": {
+          "firewall_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.dns.firewall_enabled
+      op: eq
+      value: false

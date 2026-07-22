@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/pkg/stave/pack"
 	"github.com/sufield/stave/pkg/stave"
+	"github.com/sufield/stave/pkg/stave/pack"
 )
 
 // catalogMeta loads the active catalog as pack.ControlMeta for resolution.
