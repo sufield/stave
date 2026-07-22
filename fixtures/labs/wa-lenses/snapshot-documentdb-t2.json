@@ -1,0 +1,61 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-22T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "wa-lens-gap-analysis",
+    "tool": "wa-lens-fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:rds:us-east-1:111122223333:cluster:wa-lens-vuln-docdb",
+      "type": "aws_documentdb_cluster",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "documentdb_cluster",
+          "config": {
+            "uses_default_admin": true,
+            "deletion_protection": false,
+            "engine_version_deprecated": true,
+            "is_production": true,
+            "audit_logs_enabled": false
+          },
+          "encryption": {
+            "at_rest_enabled": false,
+            "uses_cmk": false
+          },
+          "network": {
+            "publicly_accessible": true,
+            "security_group_open": true
+          },
+          "backup": {
+            "automated_backup_enabled": false,
+            "retention_period_days": 0
+          },
+          "availability": {
+            "multi_az": false
+          },
+          "tls": {
+            "tls_required": false,
+            "tls_disabled": true
+          },
+          "tags": {},
+          "parameter_group": {
+            "audit_logs_enabled": false
+          },
+          "profiler": {
+            "enabled": false
+          },
+          "pi": {
+            "enabled": false
+          },
+          "log": {
+            "audit_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -185,6 +185,36 @@ SageMaker training job output is configured to write to an S3 bucket that has be
 
 ---
 
+### CTL.SAGEMAKER.MLFLOW.ENCRYPT.001
+
+**SageMaker MLflow App Must Use Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-12, SC-28; soc2: CC6.7;
+
+SageMaker managed MLflow tracking server uses AWS-managed default encryption instead of a customer-managed KMS key. MLflow stores experiment metadata, model parameters, and artifact references. Without a customer KMS key, the organization cannot enforce key rotation schedules, audit key usage via CloudTrail KMS events, or revoke access by disabling the key. Default encryption provides at-rest protection but no key governance.
+
+**Remediation:** Create a customer-managed KMS key and configure the MLflow App to use it for artifact encryption.
+
+---
+
+### CTL.SAGEMAKER.MLFLOW.NETWORK.001
+
+**SageMaker MLflow App Must Use VPC-Only Network Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+SageMaker managed MLflow tracking server is configured with PublicInternetOnly network access. The MLflow UI and API are reachable over the public internet rather than restricted to VPC-internal traffic. MLflow stores experiment metadata, model parameters, metrics, and artifact references — an attacker with network access can enumerate experiments, read hyperparameters (which may encode data characteristics), and discover artifact S3 paths. The tracking server inherits its network access type from the parent SageMaker Domain — if the Domain is PublicInternetOnly, so is MLflow. Switching to VpcOnly requires recreating the Domain.
+
+**Remediation:** Recreate the SageMaker Domain with AppNetworkAccessType set to VpcOnly, then redeploy the MLflow App. All Studio apps inherit the Domain's network access type.
+
+---
+
 ### CTL.SAGEMAKER.MODEL.ISOLATION.001
 
 **SageMaker Models Must Enable Network Isolation**
@@ -410,6 +440,21 @@ SageMaker pipeline execution roles must be scoped to the minimum permissions req
 
 ---
 
+### CTL.SAGEMAKER.SPACE.SHARING.001
+
+**SageMaker Space Must Use Private Sharing**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2, AC-6; soc2: CC6.1;
+
+SageMaker Studio space is configured with non-private sharing. A shared space allows multiple user profiles to access the same JupyterLab environment, EBS storage, and running kernels. Code, data, credentials cached in the environment, and any secrets loaded into memory are visible to all users with access to the space. Shared spaces defeat per-user isolation and make it impossible to attribute actions to individual users.
+
+**Remediation:** Set the space's OwnershipSettings.OwnerUserProfileName and SpaceSharingSettings.SharingType to Private. Create per-user spaces instead of shared spaces.
+
+---
+
 ### CTL.SAGEMAKER.TRAINING.DATA.CROSSACCOUNT.001
 
 **SageMaker Training Data Source Must Not Cross Account Boundary**
@@ -542,6 +587,21 @@ SageMaker training job execution role grants s3:GetObject (or s3:*) on Resource:
 SageMaker training jobs must define VpcConfig with subnets so training traffic uses private networking rather than the public internet.
 
 **Remediation:** Define VpcConfig with subnets and security groups.
+
+---
+
+### CTL.SAGEMAKER.USERPROFILE.ROLE.001
+
+**SageMaker UserProfile Must Have Per-User Execution Role**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2, AC-6; owasp_nhi: NHI5, NHI6; soc2: CC6.1;
+
+SageMaker Studio user profile does not specify its own execution role and inherits the domain-level shared role. All actions taken by this user — training jobs, endpoints, S3 access, notebook execution — run with the same IAM permissions as every other user in the domain. Per-user execution roles are the prerequisite for least-privilege in multi-user Studio environments. Without them, CTL.SAGEMAKER.DOMAIN.SHAREDROLE.001 fires at the domain level and this control fires at the user profile level — together they identify both the systemic pattern and the specific user profiles that need role assignment.
+
+**Remediation:** Create a per-user execution role scoped to the user's workload and assign it via UpdateUserProfile --UserSettings ExecutionRole=<arn>.
 
 ---
 

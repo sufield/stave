@@ -1,0 +1,73 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-22T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "wa-lens-gap-analysis",
+    "tool": "wa-lens-fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:111122223333:task-definition/wa-lens-vuln-task:1",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "image": {
+            "from_ecr": false,
+            "uses_latest_tag": true,
+            "is_digest_pinned": false,
+            "from_trusted_registry": false,
+            "has_ghost_reference": false
+          },
+          "secrets_management": {
+            "env_has_secrets": true,
+            "uses_secrets_manager": false
+          },
+          "privileged": true,
+          "readonly_root_filesystem": false,
+          "user": "root",
+          "logging": {
+            "driver_configured": false,
+            "all_containers_logged": false,
+            "log_group_retention_set": false,
+            "log_group_encrypted_cmk": false,
+            "has_ghost_log_group": false,
+            "enabled": false
+          },
+          "resource_limits": {
+            "memory_limit_set": false,
+            "cpu_limit_set": false
+          },
+          "health_check": {
+            "defined": false
+          },
+          "exec_enabled": true,
+          "pid_mode": "host",
+          "ipc_mode": "host",
+          "cluster_config": {
+            "allows_docker_socket_mount": true,
+            "container_insights_enabled": false
+          },
+          "deployment": {
+            "circuit_breaker_enabled": false,
+            "minimum_healthy_percent": 0
+          },
+          "tags": {},
+          "network": {
+            "host_mode": true
+          },
+          "task_role": {
+            "is_shared": true
+          },
+          "exec": {
+            "enabled": true,
+            "audit_logging_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

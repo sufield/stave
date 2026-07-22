@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.QUICKSIGHT.DATASOURCE.ENCRYPT.001
+name: QuickSight Data Source Must Not Disable SSL
+description: >
+  QuickSight data source has SSL disabled for the connection
+  to the underlying data store. With SSL disabled, query
+  traffic and result sets travel unencrypted between QuickSight
+  and the data source.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03", "IVS-09"]
+scope_tags:
+  - aws
+  - quicksight
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_quicksight_datasource
+params:
+  attack_stage: collection
+remediation:
+  description: QuickSight data source has SSL disabled.
+  action: >
+    Update the data source to enable SSL. For Athena data sources,
+    SSL is managed by the Athena service. For RDS/Redshift data
+    sources, enable SSL in the connection parameters.
+  example: |
+    {
+      "analytics": {
+        "kind": "quicksight_datasource",
+        "encryption": { "ssl_disabled": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.analytics.kind
+      op: eq
+      value: quicksight_datasource
+    - field: properties.analytics.encryption.ssl_disabled
+      op: eq
+      value: true
+tests:
+  - name: SSL disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:quicksight:us-east-1:111122223333:datasource/rds-ds"
+      asset_type: aws_quicksight_datasource
+      vendor: aws
+      properties:
+        analytics:
+          kind: quicksight_datasource
+          encryption:
+            ssl_disabled: true
+  - name: SSL enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:quicksight:us-east-1:111122223333:datasource/rds-ds"
+      asset_type: aws_quicksight_datasource
+      vendor: aws
+      properties:
+        analytics:
+          kind: quicksight_datasource
+          encryption:
+            ssl_disabled: false

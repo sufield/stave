@@ -1,0 +1,132 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-22T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "wa-lens-gap-analysis",
+    "tool": "wa-lens-fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_WALensVuln",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_user_pool",
+          "auth": {
+            "mfa_enforced": false,
+            "mfa_configuration": "OFF",
+            "token_revocation_enabled": false
+          },
+          "password_policy": {
+            "minimum_length": 6,
+            "require_uppercase": false,
+            "require_lowercase": false,
+            "require_numbers": false,
+            "require_symbols": false,
+            "temporary_password_validity_days": 365
+          },
+          "advanced_security": {
+            "enabled": false,
+            "mode": "OFF"
+          },
+          "recovery": {
+            "account_recovery_configured": false
+          },
+          "verification": {
+            "email_verification_enabled": false,
+            "phone_verification_enabled": false
+          },
+          "deletion_protection": false,
+          "encryption": {
+            "uses_cmk": false
+          },
+          "logging": {
+            "user_activity_logging_enabled": false
+          },
+          "tags": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_WALensVuln2",
+      "type": "aws_cognito_user_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user_pool",
+          "auth": {
+            "mfa_enforced": false,
+            "mfa_configuration": "OFF",
+            "token_revocation_enabled": false
+          },
+          "password_policy": {
+            "minimum_length": 6,
+            "require_uppercase": false,
+            "require_lowercase": false,
+            "require_numbers": false,
+            "require_symbols": false,
+            "temporary_password_validity_days": 365
+          },
+          "advanced_security": {
+            "enabled": false,
+            "mode": "OFF"
+          },
+          "recovery": {
+            "account_recovery_configured": false
+          },
+          "verification": {
+            "email_verification_enabled": false,
+            "phone_verification_enabled": false
+          },
+          "deletion_protection": false,
+          "encryption": {
+            "uses_cmk": false
+          },
+          "logging": {
+            "user_activity_logging_enabled": false
+          },
+          "tags": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-identity:us-east-1:111122223333:identitypool/us-east-1:wa-lens-vuln-idpool",
+      "type": "aws_cognito_identity_pool",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "identity_pool",
+          "access": {
+            "allow_unauthenticated": true
+          },
+          "basic_flow_enabled": true,
+          "tags": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cognito-idp:us-east-1:111122223333:userpool/us-east-1_WALensVuln/client/wa-vuln-client",
+      "type": "aws_cognito_app_client",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "cognito_app_client",
+          "cognito": {
+            "refresh_token_rotation_enabled": false,
+            "token_validity": {
+              "refresh_token_days": 30,
+              "access_token_minutes": 60
+            }
+          },
+          "auth": {
+            "token_revocation_enabled": false
+          },
+          "tags": {}
+        }
+      }
+    }
+  ]
+}

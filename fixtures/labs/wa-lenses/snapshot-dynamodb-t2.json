@@ -1,0 +1,46 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-22T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "wa-lens-gap-analysis",
+    "tool": "wa-lens-fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:dynamodb:us-east-1:111122223333:table/wa-lens-vuln-table",
+      "type": "aws_dynamodb_table",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "table",
+          "encryption": {
+            "uses_cmk": false,
+            "enabled": true,
+            "type": "DEFAULT"
+          },
+          "backup": {
+            "has_backup_plan": false,
+            "pitr_enabled": false,
+            "continuous_backup_enabled": false
+          },
+          "deletion_protection": false,
+          "dynamodb": {
+            "contributor_insights_enabled": false,
+            "has_global_table": false,
+            "ttl_enabled": false,
+            "stream_enabled": false,
+            "alarm_read_capacity": false,
+            "alarm_write_capacity": false,
+            "alarm_throttle": false,
+            "alarm_system_errors": false,
+            "alarm_user_errors": false,
+            "alarm_replication_latency": false
+          },
+          "tags": {}
+        }
+      }
+    }
+  ]
+}

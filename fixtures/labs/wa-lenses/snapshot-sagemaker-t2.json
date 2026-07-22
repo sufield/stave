@@ -1,0 +1,63 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-22T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "wa-lens-gap-analysis",
+    "tool": "wa-lens-fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:notebook-instance/wa-lens-vuln-notebook",
+      "type": "aws_sagemaker_notebook",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_notebook",
+          "access": {
+            "root_access_enabled": true,
+            "direct_internet_access": true
+          },
+          "encryption": {
+            "volume_encrypted": false,
+            "uses_customer_kms": false
+          },
+          "network": {
+            "in_vpc": false
+          },
+          "governance": {
+            "lifecycle_config_attached": false,
+            "stopped_when_idle": false,
+            "cloudwatch_logging_enabled": false
+          },
+          "tags": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:training-job/wa-lens-vuln-training",
+      "type": "aws_sagemaker_training_job",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_training",
+          "encryption": {
+            "inter_container_encrypted": false,
+            "volume_encrypted": false,
+            "uses_customer_kms": false
+          },
+          "network": {
+            "in_vpc": false,
+            "network_isolation": false
+          },
+          "governance": {
+            "cloudwatch_logging_enabled": false,
+            "max_runtime_set": false
+          },
+          "tags": {}
+        }
+      }
+    }
+  ]
+}

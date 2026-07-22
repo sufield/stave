@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.LAKEFORMATION.DEFAULTPERM.001
+name: Lake Formation IAMAllowedPrincipals Super-Permission Must Be Revoked
+description: >
+  Lake Formation data lake has the default IAMAllowedPrincipals
+  grant active. This super-permission bypasses Lake Formation's
+  fine-grained access control entirely — any IAM principal with
+  Glue catalog permissions can read every table in the catalog
+  without Lake Formation evaluating grants. The default exists
+  for backward compatibility with pre-Lake Formation setups.
+  Leaving it active means Lake Formation grants are cosmetic:
+  they appear to restrict access but the IAMAllowedPrincipals
+  fallback lets everything through. Revoking this permission is
+  the first step in any Lake Formation deployment — without it,
+  all subsequent grant management is security theater.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04", "IAM-04"]
+scope_tags:
+  - aws
+  - lakeformation
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lakeformation_settings
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Lake Formation IAMAllowedPrincipals super-permission is active.
+    Fine-grained access controls are bypassed for all tables.
+  action: >
+    Revoke the IAMAllowedPrincipals super-permission for the
+    database: aws lakeformation batch-revoke-permissions
+    --entries '[{"Id":"1","Principal":{"DataLakePrincipalIdentifier":
+    "IAM_ALLOWED_PRINCIPALS"},"Resource":{"Database":
+    {"Name":"<db>"}}}]'. Repeat for each database. Then revoke
+    table-level IAMAllowedPrincipals grants. After revoking,
+    only explicit Lake Formation grants control access.
+  example: |
+    {
+      "governance": {
+        "kind": "lakeformation_settings",
+        "default_permissions": {
+          "iam_allowed_principals_enabled": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: lakeformation_settings
+    - field: properties.governance.default_permissions.iam_allowed_principals_enabled
+      op: eq
+      value: true
+tests:
+  - name: IAMAllowedPrincipals active fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lakeformation:us-east-1:111122223333:settings"
+      asset_type: aws_lakeformation_settings
+      vendor: aws
+      properties:
+        governance:
+          kind: lakeformation_settings
+          default_permissions:
+            iam_allowed_principals_enabled: true
+  - name: IAMAllowedPrincipals revoked passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lakeformation:us-east-1:111122223333:settings"
+      asset_type: aws_lakeformation_settings
+      vendor: aws
+      properties:
+        governance:
+          kind: lakeformation_settings
+          default_permissions:
+            iam_allowed_principals_enabled: false

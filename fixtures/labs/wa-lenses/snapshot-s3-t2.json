@@ -1,0 +1,114 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-22T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "wa-lens-gap-analysis",
+    "tool": "wa-lens-fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:s3:::wa-lens-vulnerable-bucket-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "wa-lens-vulnerable-bucket-111122223333",
+          "controls": {
+            "public_access_fully_blocked": false,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": false,
+              "ignore_public_acls": false,
+              "block_public_policy": false,
+              "restrict_public_buckets": false
+            },
+            "acl_allows_public": true,
+            "policy_allows_public": true
+          },
+          "versioning": {
+            "enabled": false,
+            "mfa_delete": false
+          },
+          "encryption": {
+            "enabled": false,
+            "uses_cmk": false,
+            "default_algorithm": "none",
+            "bucket_key_enabled": false
+          },
+          "logging": {
+            "enabled": false,
+            "target_bucket": ""
+          },
+          "lifecycle": {
+            "has_lifecycle_rules": false,
+            "abort_incomplete_multipart_days": 0,
+            "has_expiration": false,
+            "has_noncurrent_version_expiration": false
+          },
+          "replication": {
+            "enabled": false
+          },
+          "object_lock": {
+            "enabled": false
+          },
+          "cors": {
+            "has_wildcard_origin": true
+          },
+          "website": {
+            "enabled": true
+          },
+          "inventory": {
+            "has_inventory": false
+          },
+          "notifications": {
+            "has_event_notifications": false
+          },
+          "intelligent_tiering": {
+            "enabled": false
+          },
+          "tags": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::wa-lens-no-logging-bucket-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "wa-lens-no-logging-bucket-111122223333",
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete": false
+          },
+          "encryption": {
+            "enabled": true,
+            "uses_cmk": false,
+            "default_algorithm": "AES256"
+          },
+          "logging": {
+            "enabled": false
+          },
+          "lifecycle": {
+            "has_lifecycle_rules": false
+          },
+          "tags": {}
+        }
+      }
+    }
+  ]
+}

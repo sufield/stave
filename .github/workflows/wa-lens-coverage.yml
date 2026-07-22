@@ -1,0 +1,47 @@
+name: WA Lens Coverage Check
+
+on:
+  schedule:
+    # First Monday of every month at 10 AM UTC (staggered from catalog sweep at 9 AM)
+    - cron: '0 10 1-7 * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  wa-lens-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.26.5'
+          check-latest: true
+          cache: true
+
+      - name: Build Stave
+        run: make build
+
+      - name: Clone WA Lens Hub
+        run: |
+          git clone --depth 1 \
+            https://github.com/aws-samples/custom-lens-wa-hub.git \
+            /tmp/wa-lenses
+
+      - name: Run coverage check
+        run: |
+          go run ./internal/tools/walens \
+            --lens-repo-path /tmp/wa-lenses \
+            --stave-bin ./stave
+
+      - name: Commit scorecard
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs-internal/experiments/wa-lens-scorecard.md
+          git diff --cached --quiet || \
+            git commit -m "chore: monthly WA lens coverage update $(date +%Y-%m)"
+          git push

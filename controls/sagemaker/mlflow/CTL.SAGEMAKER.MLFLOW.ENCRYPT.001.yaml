@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.MLFLOW.ENCRYPT.001
+name: SageMaker MLflow App Must Use Customer-Managed KMS Key
+description: >
+  SageMaker managed MLflow tracking server uses AWS-managed
+  default encryption instead of a customer-managed KMS key.
+  MLflow stores experiment metadata, model parameters, and
+  artifact references. Without a customer KMS key, the
+  organization cannot enforce key rotation schedules, audit
+  key usage via CloudTrail KMS events, or revoke access by
+  disabling the key. Default encryption provides at-rest
+  protection but no key governance.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12, SC-28"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_mlflow_app
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    MLflow tracking server does not use a customer-managed KMS key.
+  action: >
+    Create a customer-managed KMS key and configure the MLflow App
+    to use it for artifact encryption.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_mlflow_app",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_mlflow_app
+    - field: properties.compute.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: default encryption fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:mlflow-tracking-server/default"
+      asset_type: aws_sagemaker_mlflow_app
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_mlflow_app
+          encryption:
+            uses_customer_kms: false
+  - name: customer KMS passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:mlflow-tracking-server/default"
+      asset_type: aws_sagemaker_mlflow_app
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_mlflow_app
+          encryption:
+            uses_customer_kms: true

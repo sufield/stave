@@ -1,0 +1,69 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-22T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "wa-lens-gap-analysis",
+    "tool": "wa-lens-fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:elasticache:us-east-1:111122223333:cluster:wa-lens-vuln-cluster",
+      "type": "aws_elasticache_cluster",
+      "vendor": "aws",
+      "properties": {
+        "cache": {
+          "kind": "elasticache_cluster",
+          "encryption": {
+            "at_rest_enabled": false,
+            "in_transit_enabled": false
+          },
+          "auth_token_enabled": false,
+          "elasticache": {
+            "publicly_accessible": true,
+            "engine_version_current": false,
+            "multi_az_enabled": false,
+            "auto_failover_enabled": false
+          },
+          "backup": {
+            "automatic_backup_enabled": false,
+            "retention_period_days": 0
+          },
+          "tags": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:elasticache:us-east-1:111122223333:cluster:wa-lens-vuln-cluster-2",
+      "type": "aws_elasticache_cluster",
+      "vendor": "aws",
+      "properties": {
+        "cache": {
+          "kind": "cluster",
+          "encryption": {
+            "at_rest_enabled": false,
+            "in_transit_enabled": false
+          },
+          "auth_token_enabled": false,
+          "elasticache": {
+            "publicly_accessible": true,
+            "engine_version_current": false,
+            "multi_az_enabled": false,
+            "auto_failover_enabled": false
+          },
+          "backup": {
+            "automatic_backup_enabled": false,
+            "retention_period_days": 0
+          },
+          "tags": {},
+          "engine_version": {
+            "is_eol": true,
+            "version": "5.0.6"
+          },
+          "engine": "redis"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.USERPROFILE.ROLE.001
+name: SageMaker UserProfile Must Have Per-User Execution Role
+description: >
+  SageMaker Studio user profile does not specify its own
+  execution role and inherits the domain-level shared role.
+  All actions taken by this user — training jobs, endpoints,
+  S3 access, notebook execution — run with the same IAM
+  permissions as every other user in the domain. Per-user
+  execution roles are the prerequisite for least-privilege
+  in multi-user Studio environments. Without them,
+  CTL.SAGEMAKER.DOMAIN.SHAREDROLE.001 fires at the domain
+  level and this control fires at the user profile level —
+  together they identify both the systemic pattern and the
+  specific user profiles that need role assignment.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2, AC-6"
+  owasp_nhi: "NHI5, NHI6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_user_profile
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    User profile inherits the domain execution role instead of
+    having its own per-user role.
+  action: >
+    Create a per-user execution role scoped to the user's
+    workload and assign it via UpdateUserProfile
+    --UserSettings ExecutionRole=<arn>.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_user_profile",
+        "identity": { "has_per_user_role": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_user_profile
+    - field: properties.compute.identity.has_per_user_role
+      op: eq
+      value: false
+tests:
+  - name: profile without own role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:user-profile/d-domain/user-1"
+      asset_type: aws_sagemaker_user_profile
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_user_profile
+          identity:
+            has_per_user_role: false
+  - name: profile with own role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:user-profile/d-domain/user-1"
+      asset_type: aws_sagemaker_user_profile
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_user_profile
+          identity:
+            has_per_user_role: true

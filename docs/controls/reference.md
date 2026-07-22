@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3156
-**Pack hash:** `384965f55dbb5bac7d47123f438ea6f423d8425a6b2381cfa970eb417996f88d`
+**Total controls:** 3160
+**Pack hash:** `f8cb87ca8a4248472d6cab2fdf754c6c95611b77136761e4ccbecfcd6fb00bb4`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 342 |
-| high | 1374 |
+| high | 1375 |
 | info | 19 |
 | low | 235 |
-| medium | 1186 |
+| medium | 1189 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,11 +27,11 @@ GitHub. Pick a service below.
 | compute | 1 |
 | config | 2 |
 | detection | 140 |
-| encryption | 119 |
-| exposure | 1386 |
+| encryption | 120 |
+| exposure | 1387 |
 | governance | 646 |
 | hygiene | 20 |
-| identity | 606 |
+| identity | 608 |
 | lifecycle | 31 |
 | network | 48 |
 | resilience | 36 |
@@ -132,7 +132,7 @@ GitHub. Pick a service below.
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 3 |
-| [SAGEMAKER](reference/sagemaker.md) | 36 |
+| [SAGEMAKER](reference/sagemaker.md) | 40 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |

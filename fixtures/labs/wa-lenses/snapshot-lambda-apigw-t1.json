@@ -1,0 +1,137 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-21T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "wa-lens-gap-analysis",
+    "tool": "wa-lens-fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:lambda:us-east-1:111122223333:function:wa-lens-vuln-function",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "runtime": "python3.8",
+          "runtime_deprecated": true,
+          "architecture": "x86_64",
+          "timeout_seconds": 900,
+          "memory_mb": 128,
+          "environment": {
+            "has_secrets": true,
+            "kms_encrypted": false
+          },
+          "logging": {
+            "log_group_exists": false,
+            "has_been_invoked": true,
+            "role_has_log_permissions": false,
+            "enabled": false
+          },
+          "network": {
+            "in_vpc": false
+          },
+          "vpc": {
+            "sensitive_without_vpc": true,
+            "in_vpc": false
+          },
+          "function": {
+            "vpc_configured": false,
+            "has_ghost_vpc": false
+          },
+          "concurrency": {
+            "reserved_set": false,
+            "public_unlimited": true
+          },
+          "async": {
+            "destination_on_failure": false,
+            "max_retry_attempts_set": false,
+            "dlq_configured": false
+          },
+          "code_signing": {
+            "enabled": false
+          },
+          "tracing": {
+            "active": false
+          },
+          "layers": {
+            "has_layers": true,
+            "all_layers_in_account": false
+          },
+          "url": {
+            "has_function_url": true,
+            "auth_type": "NONE"
+          },
+          "tags": {},
+          "execution_role": {
+            "is_overprivileged": true
+          },
+          "alarms": {
+            "has_errors_alarm": false,
+            "has_throttles_alarm": false,
+            "has_duration_alarm": false,
+            "has_iterator_age_alarm": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:apigateway:us-east-1::111122223333:restapis/wa-lens-vuln-api",
+      "type": "aws_apigateway_rest_api",
+      "vendor": "aws",
+      "properties": {
+        "api": {
+          "kind": "rest_api",
+          "access": {
+            "connect_route_authorized": false,
+            "has_unauthenticated_routes": true
+          },
+          "access_log": {
+            "enabled": false,
+            "destination_type": "none",
+            "format_complete": false
+          },
+          "waf": {
+            "attached": false
+          },
+          "throttling": {
+            "custom_throttle_configured": false
+          },
+          "certificates": {
+            "client_certificate_enabled": false,
+            "mutual_tls_enabled": false
+          },
+          "authorization": {
+            "has_cognito_authorizer": false,
+            "has_lambda_authorizer": false,
+            "has_iam_auth": false
+          },
+          "cors": {
+            "has_wildcard_origin": true
+          },
+          "caching": {
+            "cache_encrypted": false
+          },
+          "request_validation": {
+            "enabled": false
+          },
+          "tags": {}
+        },
+        "apigateway": {
+          "kind": "rest_api",
+          "request_validation": {
+            "enabled": false
+          },
+          "stages": {
+            "has_orphaned_or_unprotected": true
+          },
+          "throttling": {
+            "stage_throttle_configured": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -649,6 +649,78 @@
           "is_default_vpc": true
         }
       }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-west-2:111122223333:mlflow-tracking-server/fraud-detection-mlflow",
+      "type": "aws_sagemaker_mlflow_app",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_mlflow_app",
+          "network": {
+            "access_type": "PublicInternetOnly"
+          },
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-west-2:111122223333:space/d-fraud-detection/jupyter-space",
+      "type": "aws_sagemaker_space",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_space",
+          "sharing": {
+            "type": "Private"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-west-2:111122223333:user-profile/d-fraud-detection/default-user",
+      "type": "aws_sagemaker_user_profile",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_user_profile",
+          "identity": {
+            "has_per_user_role": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lakeformation:us-west-2:111122223333:settings",
+      "type": "aws_lakeformation_settings",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "lakeformation_settings",
+          "default_permissions": {
+            "iam_allowed_principals_enabled": true
+          },
+          "admin_count": 3
+        }
+      }
+    },
+    {
+      "id": "arn:aws:quicksight:us-west-2:111122223333:datasource/fraud-detection-athena",
+      "type": "aws_quicksight_datasource",
+      "vendor": "aws",
+      "properties": {
+        "analytics": {
+          "kind": "quicksight_datasource",
+          "network": {
+            "has_vpc_connection": false
+          },
+          "encryption": {
+            "ssl_disabled": false
+          }
+        }
+      }
     }
   ]
 }

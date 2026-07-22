@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.SPACE.SHARING.001
+name: SageMaker Space Must Use Private Sharing
+description: >
+  SageMaker Studio space is configured with non-private sharing.
+  A shared space allows multiple user profiles to access the
+  same JupyterLab environment, EBS storage, and running kernels.
+  Code, data, credentials cached in the environment, and any
+  secrets loaded into memory are visible to all users with access
+  to the space. Shared spaces defeat per-user isolation and make
+  it impossible to attribute actions to individual users.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_space
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    SageMaker Space sharing is not set to Private. Multiple users
+    can access the same environment.
+  action: >
+    Set the space's OwnershipSettings.OwnerUserProfileName and
+    SpaceSharingSettings.SharingType to Private. Create per-user
+    spaces instead of shared spaces.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_space",
+        "sharing": { "type": "Private" }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_space
+    - field: properties.compute.sharing.type
+      op: ne
+      value: Private
+tests:
+  - name: shared space fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:space/d-domain/shared-lab"
+      asset_type: aws_sagemaker_space
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_space
+          sharing:
+            type: Shared
+  - name: private space passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:space/d-domain/my-lab"
+      asset_type: aws_sagemaker_space
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_space
+          sharing:
+            type: Private

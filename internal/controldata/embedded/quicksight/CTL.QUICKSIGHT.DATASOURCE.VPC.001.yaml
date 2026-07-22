@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.QUICKSIGHT.DATASOURCE.VPC.001
+name: QuickSight Data Source Must Use VPC Connection
+description: >
+  QuickSight data source connects to the underlying data store
+  (Athena, RDS, Redshift) over the public network instead of
+  through a VPC connection. Without a VPC connection, query
+  traffic between QuickSight and the data store traverses the
+  public AWS network. For Athena data sources this means
+  QuickSight queries — which may return sensitive data — are
+  not scoped to VPC network controls.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - quicksight
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_quicksight_datasource
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    QuickSight data source does not use a VPC connection.
+  action: >
+    Create a VPC connection in QuickSight and update the data
+    source to use it. The VPC connection must have subnets and
+    security groups that allow access to the underlying data store.
+  example: |
+    {
+      "analytics": {
+        "kind": "quicksight_datasource",
+        "network": { "has_vpc_connection": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.analytics.kind
+      op: eq
+      value: quicksight_datasource
+    - field: properties.analytics.network.has_vpc_connection
+      op: eq
+      value: false
+tests:
+  - name: datasource without VPC fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:quicksight:us-east-1:111122223333:datasource/athena-ds"
+      asset_type: aws_quicksight_datasource
+      vendor: aws
+      properties:
+        analytics:
+          kind: quicksight_datasource
+          network:
+            has_vpc_connection: false
+  - name: datasource with VPC passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:quicksight:us-east-1:111122223333:datasource/athena-ds"
+      asset_type: aws_quicksight_datasource
+      vendor: aws
+      properties:
+        analytics:
+          kind: quicksight_datasource
+          network:
+            has_vpc_connection: true

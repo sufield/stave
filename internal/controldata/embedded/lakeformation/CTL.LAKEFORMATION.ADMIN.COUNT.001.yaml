@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.LAKEFORMATION.ADMIN.COUNT.001
+name: Lake Formation Data Lake Admin Count Must Be Minimized
+description: >
+  More than two principals are configured as Lake Formation data
+  lake administrators. Data lake admins have unrestricted access
+  to all Lake Formation resources — they can grant/revoke
+  permissions on any database, table, or column, modify the
+  catalog, and change Lake Formation settings. Each additional
+  admin widens the blast radius of a credential compromise and
+  complicates audit attribution. Two admins provide operational
+  redundancy without excessive privilege spread.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-2, AC-6(1)"
+  soc2: "CC6.1, CC6.3"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - lakeformation
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lakeformation_settings
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    More than 2 data lake administrators are configured.
+  action: >
+    Review the list of data lake admins and remove any that do
+    not require full administrative access. Use per-database
+    grants for team-level access instead of data lake admin.
+  example: |
+    {
+      "governance": {
+        "kind": "lakeformation_settings",
+        "admin_count": 2
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: lakeformation_settings
+    - field: properties.governance.admin_count
+      op: gt
+      value: 2
+tests:
+  - name: 3 admins fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lakeformation:us-east-1:111122223333:settings"
+      asset_type: aws_lakeformation_settings
+      vendor: aws
+      properties:
+        governance:
+          kind: lakeformation_settings
+          admin_count: 3
+  - name: 2 admins passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lakeformation:us-east-1:111122223333:settings"
+      asset_type: aws_lakeformation_settings
+      vendor: aws
+      properties:
+        governance:
+          kind: lakeformation_settings
+          admin_count: 2

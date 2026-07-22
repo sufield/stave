@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.MLFLOW.NETWORK.001
+name: SageMaker MLflow App Must Use VPC-Only Network Access
+description: >
+  SageMaker managed MLflow tracking server is configured with
+  PublicInternetOnly network access. The MLflow UI and API are
+  reachable over the public internet rather than restricted to
+  VPC-internal traffic. MLflow stores experiment metadata,
+  model parameters, metrics, and artifact references — an
+  attacker with network access can enumerate experiments, read
+  hyperparameters (which may encode data characteristics), and
+  discover artifact S3 paths. The tracking server inherits its
+  network access type from the parent SageMaker Domain — if the
+  Domain is PublicInternetOnly, so is MLflow. Switching to
+  VpcOnly requires recreating the Domain.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_mlflow_app
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    MLflow tracking server is accessible over the public internet.
+  action: >
+    Recreate the SageMaker Domain with AppNetworkAccessType set to
+    VpcOnly, then redeploy the MLflow App. All Studio apps inherit
+    the Domain's network access type.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_mlflow_app",
+        "network": { "access_type": "VpcOnly" }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_mlflow_app
+    - field: properties.compute.network.access_type
+      op: ne
+      value: VpcOnly
+tests:
+  - name: public internet access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:mlflow-tracking-server/default"
+      asset_type: aws_sagemaker_mlflow_app
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_mlflow_app
+          network:
+            access_type: PublicInternetOnly
+  - name: VPC-only access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:mlflow-tracking-server/default"
+      asset_type: aws_sagemaker_mlflow_app
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_mlflow_app
+          network:
+            access_type: VpcOnly

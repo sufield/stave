@@ -565,3 +565,42 @@ contracts:
       True if the resource has no active references
       (security group with no ENIs, EBS volume with no
       attachments, Lambda with no triggers, etc.).
+
+  # ─── Lake Formation ─────────────────────────────────────────
+
+  - field: iam_allowed_principals_enabled
+    type: boolean
+    postcondition: >
+      True if the Lake Formation data lake has the default
+      IAMAllowedPrincipals super-permission active on any
+      database or table. This bypasses Lake Formation's
+      fine-grained access control.
+    consumers:
+      - CTL.LAKEFORMATION.DEFAULTPERM.001
+
+  # ─── SageMaker MLflow ───────────────────────────────────────
+
+  - field: uses_customer_kms
+    type: boolean
+    postcondition: >
+      True if the resource uses a customer-managed KMS key
+      for encryption. False if using AWS-managed default
+      encryption or no encryption.
+    consumers:
+      - CTL.SAGEMAKER.MLFLOW.ENCRYPT.001
+      - CTL.SAGEMAKER.ENDPOINT.ENCRYPT.001
+      - CTL.SAGEMAKER.PIPELINE.ENCRYPT.001
+
+  # ─── SageMaker UserProfile ─────────────────────────────────
+
+  - field: has_per_user_role
+    type: boolean
+    postcondition: >
+      True if the SageMaker user profile has its own execution
+      role configured rather than inheriting the domain-level
+      shared role. The collector MUST compare the user profile's
+      ExecutionRole against the domain's DefaultUserSettings
+      ExecutionRole — if they match or the profile has no
+      override, the field is false.
+    consumers:
+      - CTL.SAGEMAKER.USERPROFILE.ROLE.001
