@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3160
-**Pack hash:** `f8cb87ca8a4248472d6cab2fdf754c6c95611b77136761e4ccbecfcd6fb00bb4`
+**Total controls:** 3164
+**Pack hash:** `637b5ed47722588186a8019b77ae967f4cf924b12500e351f7f68e8297584aab`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 342 |
-| high | 1375 |
+| high | 1377 |
 | info | 19 |
 | low | 235 |
-| medium | 1189 |
+| medium | 1191 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,9 +27,9 @@ GitHub. Pick a service below.
 | compute | 1 |
 | config | 2 |
 | detection | 140 |
-| encryption | 120 |
-| exposure | 1387 |
-| governance | 646 |
+| encryption | 121 |
+| exposure | 1388 |
+| governance | 648 |
 | hygiene | 20 |
 | identity | 608 |
 | lifecycle | 31 |
@@ -108,6 +108,7 @@ GitHub. Pick a service below.
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
 | [KMS](reference/kms.md) | 47 |
+| [LAKEFORMATION](reference/lakeformation.md) | 2 |
 | [LAMBDA](reference/lambda.md) | 91 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 5 |
@@ -123,6 +124,7 @@ GitHub. Pick a service below.
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
 | [ORG](reference/org.md) | 54 |
+| [QUICKSIGHT](reference/quicksight.md) | 2 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 72 |
 | [RECYCLEBIN](reference/recyclebin.md) | 2 |
