@@ -786,6 +786,21 @@ Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) o
 
 ---
 
+### CTL.VPC.NACL.CIDR.COVERAGE.001
+
+**Custom NACL Allow Rules Do Not Cover All Associated Subnets**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Custom Network ACL has inbound allow rules with internal CIDR sources that do not cover all subnets associated with the NACL. This typically occurs after VPC CIDR expansion — automation associates the reference subnet's NACL with new subnets but the NACL rules still reference only the original CIDR range. Traffic from uncovered subnets hits the default deny rule even though the NACL is explicitly associated, creating a silent connectivity gap that also prevents the NACL from providing the defense-in-depth filtering it was designed for.
+
+**Remediation:** Add inbound allow rules for the missing subnet CIDRs, or broaden existing rules to use the VPC CIDR (e.g. 10.0.0.0/16) instead of individual subnet CIDRs. After VPC CIDR expansion, audit all custom NACLs that use subnet-specific allow rules.
+
+---
+
 ### CTL.VPC.NACL.DEFAULT.INUSE.001
 
 **Subnet Uses Default Network ACL**
@@ -1098,6 +1113,21 @@ Web-facing resources (load balancers, web servers), application logic (app serve
 Security group inbound rule uses a CIDR block broader than /16 (65,536 addresses) that is not 0.0.0.0/0 (caught by existing controls). A /8 CIDR includes approximately 16 million IP addresses. Unless the rule references a known AWS service CIDR or organizational network, the range is broader than needed.
 
 **Remediation:** Replace broad CIDR ranges with specific subnets. A /24 (256 addresses) is precise. A /8 (16M addresses) is almost certainly too broad.
+
+---
+
+### CTL.VPC.SG.CIDR.SUBNET.COVERAGE.001
+
+**Security Group Ingress Rules Do Not Cover All VPC Subnets**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-4; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Security group has ingress rules with RFC 1918 CIDR sources that do not cover all subnets in the VPC. This typically occurs after VPC CIDR expansion — automation adds subnets in the new CIDR range but existing SG rules still reference only the original subnets. Workloads in uncovered subnets cannot reach services behind this SG on the restricted ports, and the asymmetry may mask lateral movement detection when only some internal traffic is visible to the SG.
+
+**Remediation:** Update the SG ingress rules to use the VPC's full CIDR range (e.g. 10.0.0.0/8 or the VPC CIDR) instead of individual subnet CIDRs, or add rules for the missing subnet CIDRs. After VPC CIDR expansion, audit all SGs that use subnet-specific CIDRs.
 
 ---
 

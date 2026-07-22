@@ -76,31 +76,33 @@
       "properties": {
         "network": {
           "kind": "security_group",
-          "security_group_id": "sg-0app123456789abcd",
           "vpc_id": "vpc-0abc1234def56789a",
-          "name": "app-sg",
-          "ingress_rules": [
-            {
-              "protocol": "tcp",
-              "from_port": 443,
-              "to_port": 443,
-              "cidr_blocks": ["10.0.0.0/16"]
-            },
-            {
-              "protocol": "tcp",
-              "from_port": 8080,
-              "to_port": 8080,
-              "cidr_blocks": ["10.0.1.0/24", "10.0.2.0/24"]
-            }
-          ],
-          "egress_rules": [
-            {
-              "protocol": "-1",
-              "from_port": 0,
-              "to_port": 0,
-              "cidr_blocks": ["0.0.0.0/0"]
-            }
-          ]
+          "security_group": {
+            "security_group_id": "sg-0app123456789abcd",
+            "name": "app-sg",
+            "ingress_rules": [
+              {
+                "protocol": "tcp",
+                "from_port": 443,
+                "to_port": 443,
+                "cidr_blocks": ["10.0.0.0/16"]
+              },
+              {
+                "protocol": "tcp",
+                "from_port": 8080,
+                "to_port": 8080,
+                "cidr_blocks": ["10.0.1.0/24", "10.0.2.0/24"]
+              }
+            ],
+            "egress_rules": [
+              {
+                "protocol": "-1",
+                "from_port": 0,
+                "to_port": 0,
+                "cidr_blocks": ["0.0.0.0/0"]
+              }
+            ]
+          }
         }
       }
     },

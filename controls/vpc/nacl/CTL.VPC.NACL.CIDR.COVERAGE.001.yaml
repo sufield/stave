@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NACL.CIDR.COVERAGE.001
+name: Custom NACL Allow Rules Do Not Cover All Associated Subnets
+description: >
+  Custom Network ACL has inbound allow rules with internal CIDR
+  sources that do not cover all subnets associated with the NACL.
+  This typically occurs after VPC CIDR expansion — automation
+  associates the reference subnet's NACL with new subnets but the
+  NACL rules still reference only the original CIDR range. Traffic
+  from uncovered subnets hits the default deny rule even though
+  the NACL is explicitly associated, creating a silent connectivity
+  gap that also prevents the NACL from providing the
+  defense-in-depth filtering it was designed for.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_network_acl
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.nacl.cidr_coverage.covers_all_associated_subnets
+  - network.nacl.cidr_coverage.has_cidr_rules
+  - network.nacl.cidr_coverage.uncovered_subnet_count
+remediation:
+  description: >
+    Custom NACL allow rules reference internal CIDRs that do not
+    cover all subnets associated with the NACL.
+  action: >
+    Add inbound allow rules for the missing subnet CIDRs, or
+    broaden existing rules to use the VPC CIDR (e.g. 10.0.0.0/16)
+    instead of individual subnet CIDRs. After VPC CIDR expansion,
+    audit all custom NACLs that use subnet-specific allow rules.
+  example: |
+    {
+      "network": {
+        "kind": "network_acl",
+        "nacl": {
+          "cidr_coverage": {
+            "covers_all_associated_subnets": true,
+            "has_cidr_rules": true,
+            "uncovered_subnet_count": 0
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_acl
+    - field: properties.network.nacl.cidr_coverage.has_cidr_rules
+      op: eq
+      value: true
+    - field: properties.network.nacl.cidr_coverage.covers_all_associated_subnets
+      op: eq
+      value: false
+tests:
+  - name: NACL covering all associated subnets passes
+    verdict: PASS
+    asset:
+      asset_id: "acl-full-coverage"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            cidr_coverage:
+              covers_all_associated_subnets: true
+              has_cidr_rules: true
+              uncovered_subnet_count: 0
+  - name: NACL with partial coverage fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "acl-partial-coverage"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            cidr_coverage:
+              covers_all_associated_subnets: false
+              has_cidr_rules: true
+              uncovered_subnet_count: 2
+  - name: NACL with no CIDR rules is safe
+    verdict: PASS
+    asset:
+      asset_id: "acl-no-cidr-rules"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: true
+            inbound_rules: []

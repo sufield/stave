@@ -7,5 +7,7 @@ import "github.com/sufield/stave/internal/core/asset"
 // directly to the evaluator; raw snapshots stay untouched for trace and
 // audit purposes.
 func Pipeline(snapshots []asset.Snapshot) []asset.Snapshot {
-	return EnrichBucketAPExposure(snapshots)
+	snapshots = EnrichBucketAPExposure(snapshots)
+	snapshots = EnrichVPCCIDRCoverage(snapshots)
+	return snapshots
 }

@@ -1,0 +1,561 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-01T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "gap-analysis",
+    "tool": "stave-lab",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:s3:::fraud-detection-monitoring-data-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "fraud-detection-monitoring-data-111122223333",
+          "controls": {
+            "public_access_fully_blocked": true,
+            "account_public_access_fully_blocked": false,
+            "public_access_block": {
+              "block_public_acls": true,
+              "ignore_public_acls": true,
+              "block_public_policy": true,
+              "restrict_public_buckets": true
+            }
+          },
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "kms_key_id": null,
+            "in_transit_enforced": false
+          },
+          "versioning": {
+            "enabled": true,
+            "mfa_delete_enabled": false
+          },
+          "logging": {
+            "enabled": false
+          },
+          "access": {
+            "external_accounts": [],
+            "external_account_ids": [],
+            "has_external_access": false,
+            "has_external_write": false,
+            "has_wildcard_principal": false,
+            "public_read": false,
+            "public_list": false,
+            "public_write": false,
+            "read_via_identity": false,
+            "read_via_resource": false,
+            "list_via_identity": false,
+            "authenticated_read": false,
+            "authenticated_write": false,
+            "public_admin": false,
+            "authenticated_admin": false,
+            "latent_public_read": false,
+            "latent_public_list": false,
+            "has_full_control_public": false,
+            "has_full_control_authenticated": false,
+            "has_ip_condition": false,
+            "has_vpc_condition": false,
+            "effective_network_scope": "unrestricted"
+          },
+          "lifecycle": {
+            "rules_configured": true,
+            "rule_count": 1,
+            "has_expiration": false,
+            "has_transition": false,
+            "min_expiration_days": 0,
+            "has_noncurrent_version_expiration": true
+          },
+          "object_lock": {
+            "enabled": false
+          },
+          "prefix_exposure": {
+            "has_identity_evidence": false,
+            "has_resource_evidence": false,
+            "identity_read_scopes": [],
+            "identity_source_by_scope": {},
+            "identity_read_blocked": true,
+            "resource_read_all": false,
+            "resource_read_blocked": true
+          },
+          "website": null,
+          "tags": {
+            "Name": "fraud-detection-monitoring-data-bucket"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-west-2:111122223333:domain/d-fraud-detection",
+      "type": "aws_sagemaker_domain",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_domain",
+          "identity": {
+            "auth_mode": "IAM"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-west-2:111122223333:endpoint-config/fraud-detector-endpoint-config",
+      "type": "aws_sagemaker_endpoint_config",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_endpoint_config",
+          "network": {
+            "in_vpc": false,
+            "network_isolation_enabled": false
+          },
+          "encryption": {
+            "uses_customer_kms": false
+          },
+          "governance": {
+            "data_capture_enabled": false
+          },
+          "variants": {
+            "production_variant_count": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-west-2:111122223333:pipeline/fraud-detection-pipeline",
+      "type": "aws_sagemaker_pipeline",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_pipeline",
+          "encryption": {
+            "uses_customer_kms": false
+          },
+          "identity": {
+            "execution_role": {
+              "arn": "arn:aws:iam::111122223333:role/fraud-detection-monitoring-SageMakerExecutionRole",
+              "is_overprivileged": true,
+              "has_admin_access": false,
+              "has_star_resource": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-west-2:111122223333:training-job/fraud-detection-training",
+      "type": "aws_sagemaker_training_job",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_training",
+          "network": {
+            "in_vpc": false,
+            "network_isolation_enabled": false
+          },
+          "encryption": {
+            "volume_encrypted": false,
+            "uses_customer_kms": false,
+            "inter_container_encrypted": false
+          },
+          "logging": {
+            "cloudwatch_logs_enabled": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-west-2:111122223333:model/fraud-detector-model",
+      "type": "aws_sagemaker_model",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_model",
+          "network": {
+            "in_vpc": false,
+            "network_isolation_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-west-2:111122223333:function:fraud-monitoring-results-writer",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "runtime": "python3.11",
+          "env": {
+            "kms_encrypted": false,
+            "has_env_vars": true,
+            "secret_in_env": false
+          },
+          "async": {
+            "has_async_triggers": true,
+            "dlq_configured": false,
+            "destination_on_failure": false,
+            "async_trigger_sources": ["sqs"]
+          },
+          "logging": {
+            "log_group_exists": true,
+            "has_been_invoked": true,
+            "role_has_log_permissions": true
+          },
+          "network": {
+            "in_vpc": false
+          },
+          "vpc": {
+            "sensitive_without_vpc": true,
+            "in_vpc": false
+          },
+          "function": {
+            "vpc_configured": false,
+            "has_ghost_vpc": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-west-2:111122223333:function:fraud-detection-monitoring-inference-logger",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "runtime": "python3.12",
+          "env": {
+            "kms_encrypted": false,
+            "has_env_vars": true,
+            "secret_in_env": false
+          },
+          "async": {
+            "has_async_triggers": true,
+            "dlq_configured": false,
+            "destination_on_failure": false,
+            "async_trigger_sources": ["sqs"]
+          },
+          "logging": {
+            "log_group_exists": true,
+            "has_been_invoked": true,
+            "role_has_log_permissions": true
+          },
+          "network": {
+            "in_vpc": false
+          },
+          "vpc": {
+            "sensitive_without_vpc": true,
+            "in_vpc": false
+          },
+          "function": {
+            "vpc_configured": false,
+            "has_ghost_vpc": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-west-2:111122223333:function:fraud-detection-monitoring-wait-eni-cleanup",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "runtime": "python3.12",
+          "env": {
+            "kms_encrypted": false,
+            "has_env_vars": false,
+            "secret_in_env": false
+          },
+          "async": {
+            "has_async_triggers": false,
+            "dlq_configured": false,
+            "destination_on_failure": false,
+            "async_trigger_sources": []
+          },
+          "logging": {
+            "log_group_exists": true,
+            "has_been_invoked": false,
+            "role_has_log_permissions": true
+          },
+          "network": {
+            "in_vpc": false
+          },
+          "vpc": {
+            "sensitive_without_vpc": true,
+            "in_vpc": false
+          },
+          "function": {
+            "vpc_configured": false,
+            "has_ghost_vpc": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-west-2:111122223333:function:fraud-detection-monitoring-efs-cleanup",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "runtime": "python3.12",
+          "env": {
+            "kms_encrypted": false,
+            "has_env_vars": false,
+            "secret_in_env": false
+          },
+          "async": {
+            "has_async_triggers": false,
+            "dlq_configured": false,
+            "destination_on_failure": false,
+            "async_trigger_sources": []
+          },
+          "logging": {
+            "log_group_exists": true,
+            "has_been_invoked": false,
+            "role_has_log_permissions": true
+          },
+          "network": {
+            "in_vpc": false
+          },
+          "vpc": {
+            "sensitive_without_vpc": true,
+            "in_vpc": false
+          },
+          "function": {
+            "vpc_configured": false,
+            "has_ghost_vpc": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-west-2:111122223333:function:fraud-detection-monitoring-app-cleanup",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "runtime": "python3.12",
+          "env": {
+            "kms_encrypted": false,
+            "has_env_vars": false,
+            "secret_in_env": false
+          },
+          "async": {
+            "has_async_triggers": false,
+            "dlq_configured": false,
+            "destination_on_failure": false,
+            "async_trigger_sources": []
+          },
+          "logging": {
+            "log_group_exists": true,
+            "has_been_invoked": false,
+            "role_has_log_permissions": true
+          },
+          "network": {
+            "in_vpc": false
+          },
+          "vpc": {
+            "sensitive_without_vpc": true,
+            "in_vpc": false
+          },
+          "function": {
+            "vpc_configured": false,
+            "has_ghost_vpc": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-west-2:111122223333:function:fraud-detection-monitoring-empty-bucket-lambda",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "runtime": "python3.12",
+          "env": {
+            "kms_encrypted": false,
+            "has_env_vars": false,
+            "secret_in_env": false
+          },
+          "async": {
+            "has_async_triggers": false,
+            "dlq_configured": false,
+            "destination_on_failure": false,
+            "async_trigger_sources": []
+          },
+          "logging": {
+            "log_group_exists": true,
+            "has_been_invoked": false,
+            "role_has_log_permissions": true
+          },
+          "network": {
+            "in_vpc": false
+          },
+          "vpc": {
+            "sensitive_without_vpc": true,
+            "in_vpc": false
+          },
+          "function": {
+            "vpc_configured": false,
+            "has_ghost_vpc": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sqs:us-west-2:111122223333:fraud-monitoring-results",
+      "type": "aws_sqs_queue",
+      "vendor": "aws",
+      "properties": {
+        "messaging": {
+          "kind": "queue",
+          "encryption": {
+            "encrypted": false
+          },
+          "dead_letter_queue": {
+            "enabled": false
+          },
+          "policy": {
+            "has_public_access": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sqs:us-west-2:111122223333:fraud-detection-monitoring-inference-logging",
+      "type": "aws_sqs_queue",
+      "vendor": "aws",
+      "properties": {
+        "messaging": {
+          "kind": "queue",
+          "encryption": {
+            "encrypted": false
+          },
+          "dead_letter_queue": {
+            "enabled": false
+          },
+          "policy": {
+            "has_public_access": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sns:us-west-2:111122223333:fraud-detection-drift-alerts",
+      "type": "aws_sns_topic",
+      "vendor": "aws",
+      "properties": {
+        "messaging": {
+          "kind": "topic",
+          "encryption": {
+            "encrypted": false
+          },
+          "sns": {
+            "policy_enforces_ssl": false,
+            "has_secure_transport_condition": false
+          },
+          "policy": {
+            "has_public_access": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/fraud-detection-monitoring-SageMakerExecutionRole",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "passrole_createendpoint":       { "present": true, "target_role": "*" },
+            "passrole_createtrainingjob":    { "present": true, "target_role": "*" },
+            "passrole_createprocessingjob":  { "present": true, "target_role": "*" },
+            "passrole_createnotebook":       { "present": true, "target_role": "*" },
+            "passrole_createpipeline":       { "present": true, "target_role": "*" },
+            "passrole_createfunction":       { "present": true, "target_role": "*" },
+            "passrole_createstack":          { "present": true, "target_role": "*" },
+            "passrole_createjob":            { "present": true, "target_role": "*" },
+            "passrole_runinstances":         { "present": true, "target_role": "*" },
+            "passrole_runtask":              { "present": true, "target_role": "*" },
+            "passrole_submitjob":            { "present": true, "target_role": "*" },
+            "passrole_autoscaling":          { "present": true, "target_role": "*" },
+            "editlambda":                    { "present": true },
+            "s3_putbucketpolicy":            { "present": true },
+            "create_access_key":             { "present": true },
+            "attach_role_policy":            { "present": true },
+            "put_role_policy":               { "present": true },
+            "startbuild_source_write":       { "present": true },
+            "can_escalate_to_admin":         { "present": true }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/fraud-monitoring-results-writer-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/fraud-detection-drift-monitor-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "sagemaker_presigned_url": { "present": true }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/fraud-detection-monitoring-wait-eni-cleanup-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/fraud-detection-monitoring-efs-cleanup-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {}
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/fraud-detection-monitoring-app-cleanup-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {}
+        }
+      }
+    }
+  ]
+}
