@@ -65,13 +65,15 @@ type CIDiffResponse struct {
 	Summary            CIDiffSummary     `json:"summary"`
 	NewFindings        []BaselineFinding `json:"new"`
 	ResolvedFindings   []BaselineFinding `json:"resolved"`
+	UnchangedFindings  []BaselineFinding `json:"unchanged"`
 	HasNew             bool              `json:"has_new"`
 }
 
 // CIDiffSummary represents a cidiffsummary value.
 type CIDiffSummary struct {
-	BaselineFindings int `json:"baseline_findings"`
-	CurrentFindings  int `json:"current_findings"`
-	NewFindings      int `json:"new_findings"`
-	ResolvedFindings int `json:"resolved_findings"`
+	BaselineFindings  int `json:"baseline_findings"`
+	CurrentFindings   int `json:"current_findings"`
+	NewFindings       int `json:"new_findings"`
+	ResolvedFindings  int `json:"resolved_findings"`
+	UnchangedFindings int `json:"unchanged_findings"`
 }

@@ -91,21 +91,23 @@ func BaselineCheck(ctx context.Context, req BaselineCheckRequest, deps BaselineC
 		return BaselineCheckResponse{}, fmt.Errorf("baseline_check: load baseline %s: %w", req.BaselinePath, err)
 	}
 
-	newFindings, resolved := compareFindings(baseline, current)
+	newFindings, resolved, unchanged := compareFindings(baseline, current)
 
 	return BaselineCheckResponse{
 		BaselineFile: req.BaselinePath,
 		Evaluation:   req.EvaluationPath,
 		CheckedAt:    deps.Clock.Now().UTC(),
 		Summary: BaselineCheckSummary{
-			BaselineFindings: len(baseline),
-			CurrentFindings:  len(current),
-			NewFindings:      len(newFindings),
-			ResolvedFindings: len(resolved),
+			BaselineFindings:  len(baseline),
+			CurrentFindings:   len(current),
+			NewFindings:       len(newFindings),
+			ResolvedFindings:  len(resolved),
+			UnchangedFindings: len(unchanged),
 		},
-		NewFindings:      newFindings,
-		ResolvedFindings: resolved,
-		HasNew:           len(newFindings) > 0,
+		NewFindings:       newFindings,
+		ResolvedFindings:  resolved,
+		UnchangedFindings: unchanged,
+		HasNew:            len(newFindings) > 0,
 	}, nil
 }
 
@@ -136,27 +138,29 @@ func CIDiff(ctx context.Context, req CIDiffRequest, deps CIDiffDeps) (CIDiffResp
 		return CIDiffResponse{}, fmt.Errorf("ci_diff: load baseline %s: %w", req.BaselinePath, err)
 	}
 
-	newFindings, resolved := compareFindings(baseline, current)
+	newFindings, resolved, unchanged := compareFindings(baseline, current)
 
 	return CIDiffResponse{
 		CurrentEvaluation:  req.CurrentPath,
 		BaselineEvaluation: req.BaselinePath,
 		ComparedAt:         deps.Clock.Now().UTC(),
 		Summary: CIDiffSummary{
-			BaselineFindings: len(baseline),
-			CurrentFindings:  len(current),
-			NewFindings:      len(newFindings),
-			ResolvedFindings: len(resolved),
+			BaselineFindings:  len(baseline),
+			CurrentFindings:   len(current),
+			NewFindings:       len(newFindings),
+			ResolvedFindings:  len(resolved),
+			UnchangedFindings: len(unchanged),
 		},
-		NewFindings:      newFindings,
-		ResolvedFindings: resolved,
-		HasNew:           len(newFindings) > 0,
+		NewFindings:       newFindings,
+		ResolvedFindings:  resolved,
+		UnchangedFindings: unchanged,
+		HasNew:            len(newFindings) > 0,
 	}, nil
 }
 
 // compareFindings identifies new and resolved findings between a baseline
 // and current set.
-func compareFindings(baseline, current []BaselineFinding) (newFindings, resolved []BaselineFinding) {
+func compareFindings(baseline, current []BaselineFinding) (newFindings, resolved, unchanged []BaselineFinding) {
 	type key struct {
 		ControlID string
 		AssetID   string
@@ -173,12 +177,16 @@ func compareFindings(baseline, current []BaselineFinding) (newFindings, resolved
 	}
 
 	newFindings = make([]BaselineFinding, 0)
+	unchanged = make([]BaselineFinding, 0)
 	for k, f := range curMap {
 		if _, exists := baseMap[k]; !exists {
 			newFindings = append(newFindings, f)
+		} else {
+			unchanged = append(unchanged, f)
 		}
 	}
 	slices.SortFunc(newFindings, compareBaselineFindings)
+	slices.SortFunc(unchanged, compareBaselineFindings)
 
 	resolved = make([]BaselineFinding, 0)
 	for k, f := range baseMap {
@@ -188,7 +196,7 @@ func compareFindings(baseline, current []BaselineFinding) (newFindings, resolved
 	}
 	slices.SortFunc(resolved, compareBaselineFindings)
 
-	return newFindings, resolved
+	return newFindings, resolved, unchanged
 }
 
 // compareBaselineFindings provides deterministic ordering by ControlID then AssetID.
@@ -227,21 +235,23 @@ type BaselineCheckRequest struct {
 
 // BaselineCheckResponse represents a baselinecheckresponse value.
 type BaselineCheckResponse struct {
-	BaselineFile     string               `json:"baseline_file"`
-	Evaluation       string               `json:"evaluation"`
-	CheckedAt        time.Time            `json:"checked_at"`
-	Summary          BaselineCheckSummary `json:"summary"`
-	NewFindings      []BaselineFinding    `json:"new"`
-	ResolvedFindings []BaselineFinding    `json:"resolved"`
-	HasNew           bool                 `json:"has_new"`
+	BaselineFile      string               `json:"baseline_file"`
+	Evaluation        string               `json:"evaluation"`
+	CheckedAt         time.Time            `json:"checked_at"`
+	Summary           BaselineCheckSummary `json:"summary"`
+	NewFindings       []BaselineFinding    `json:"new"`
+	ResolvedFindings  []BaselineFinding    `json:"resolved"`
+	UnchangedFindings []BaselineFinding    `json:"unchanged"`
+	HasNew            bool                 `json:"has_new"`
 }
 
 // BaselineCheckSummary represents a baselinechecksummary value.
 type BaselineCheckSummary struct {
-	BaselineFindings int `json:"baseline_findings"`
-	CurrentFindings  int `json:"current_findings"`
-	NewFindings      int `json:"new_findings"`
-	ResolvedFindings int `json:"resolved_findings"`
+	BaselineFindings  int `json:"baseline_findings"`
+	CurrentFindings   int `json:"current_findings"`
+	NewFindings       int `json:"new_findings"`
+	ResolvedFindings  int `json:"resolved_findings"`
+	UnchangedFindings int `json:"unchanged_findings"`
 }
 
 // BaselineFinding represents a baselinefinding value.

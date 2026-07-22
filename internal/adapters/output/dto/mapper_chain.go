@@ -1,28 +1,39 @@
 package dto
 
 import (
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/findings"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
-// fromCompoundFindings projects core chain findings into wire DTOs.
-// Returns nil for an empty input to keep `omitempty` JSON shape.
-func fromCompoundFindings(in []findings.CompoundFinding) []ChainFindingDTO {
+type findingKey struct {
+	controlID kernel.ControlID
+	assetID   asset.ID
+}
+
+// fromCompoundFindings projects core chain findings into wire DTOs,
+// enriching each with member evidence resolved from atomic findings.
+func fromCompoundFindings(in []findings.CompoundFinding, atomics []remediation.Finding) []ChainFindingDTO {
 	if len(in) == 0 {
 		return nil
 	}
+
+	idx := make(map[findingKey]*remediation.Finding, len(atomics))
+	for i := range atomics {
+		idx[findingKey{atomics[i].ControlID, atomics[i].AssetID}] = &atomics[i]
+	}
+
 	out := make([]ChainFindingDTO, len(in))
 	for i := range in {
-		out[i] = fromCompoundFinding(&in[i])
+		out[i] = fromCompoundFinding(&in[i], idx)
 	}
 	return out
 }
 
-// fromCompoundFinding projects one core chain finding into the DTO.
-// The Severity field is rendered via SeverityLabel() so consumers
-// don't depend on policy.Severity's enum representation. Takes a
-// pointer to avoid per-call copies of the 12-field struct.
-func fromCompoundFinding(c *findings.CompoundFinding) ChainFindingDTO {
-	return ChainFindingDTO{
+func fromCompoundFinding(c *findings.CompoundFinding, idx map[findingKey]*remediation.Finding) ChainFindingDTO {
+	dto := ChainFindingDTO{
+		FindingID:          c.FindingID,
 		ChainID:            c.ChainID,
 		AssetID:            c.AssetID,
 		ScopeID:            c.ScopeID,
@@ -36,9 +47,43 @@ func fromCompoundFinding(c *findings.CompoundFinding) ChainFindingDTO {
 		Narrative:          c.Narrative,
 		AttackStages:       c.AttackStages,
 	}
+
+	assets := c.ContributingAssets
+	if len(assets) == 0 && c.AssetID != "" {
+		assets = []asset.ID{c.AssetID}
+	}
+
+	for _, ctrlID := range c.ControlsFailing {
+		for _, astID := range assets {
+			f, ok := idx[findingKey{ctrlID, astID}]
+			if !ok {
+				continue
+			}
+			me := ChainMemberEvidenceDTO{
+				ControlID:         ctrlID,
+				AssetID:           astID,
+				Misconfigurations: f.Evidence.Misconfigurations,
+			}
+			if f.HasReasoningTrace() {
+				me.ReasoningTrace = make([]MatchedClauseDTO, len(f.ReasoningTrace))
+				for j, mc := range f.ReasoningTrace {
+					me.ReasoningTrace[j] = MatchedClauseDTO{
+						PredicateExpr:  mc.PredicateExpr,
+						ObservationKey: mc.ObservationKey.String(),
+						Operator:       string(mc.Operator),
+						ExpectedValue:  mc.ExpectedValue,
+						ObservedValue:  mc.ObservedValue,
+					}
+				}
+			}
+			me.Delta = fromDeltaPaths(f.Delta)
+			dto.MemberEvidence = append(dto.MemberEvidence, me)
+		}
+	}
+
+	return dto
 }
 
-// fromNearMissChains projects core near-miss chains into wire DTOs.
 func fromNearMissChains(in []findings.NearMissChain) []NearMissChainDTO {
 	if len(in) == 0 {
 		return nil
@@ -57,7 +102,6 @@ func fromNearMissChains(in []findings.NearMissChain) []NearMissChainDTO {
 	return out
 }
 
-// fromExposureRanks projects core exposure ranks into wire DTOs.
 func fromExposureRanks(in []findings.ExposureRank) []ExposureRankDTO {
 	if len(in) == 0 {
 		return nil
@@ -69,7 +113,6 @@ func fromExposureRanks(in []findings.ExposureRank) []ExposureRankDTO {
 	return out
 }
 
-// fromExposureRank projects one core exposure rank into the DTO.
 func fromExposureRank(r findings.ExposureRank) ExposureRankDTO {
 	return ExposureRankDTO{
 		FindingIndex:  r.FindingIndex,

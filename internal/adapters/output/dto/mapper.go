@@ -22,7 +22,7 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		RiskSignals:       fromAtRiskItems(e.RiskSignals),
 		Findings:          fromFindings(e.Findings),
 		MarkerFindings:    fromFindings(e.MarkerFindings),
-		ChainFindings:     fromCompoundFindings(e.ChainFindings),
+		ChainFindings:     fromCompoundFindings(e.ChainFindings, e.Findings),
 		NearMissChains:    fromNearMissChains(e.NearMissChains),
 		Issues:            fromIssues(e.Issues),
 		RemediationGroups: fromRemediationGroups(e.RemediationGroups),

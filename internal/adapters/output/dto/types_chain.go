@@ -2,6 +2,7 @@ package dto
 
 import (
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -12,18 +13,31 @@ import (
 // JSON tags must remain identical to the source type — the
 // schema is part of the out.v0.1 contract.
 type ChainFindingDTO struct {
-	ChainID            kernel.ChainID       `json:"chain"`
-	AssetID            asset.ID             `json:"asset_id,omitempty"`
-	ScopeID            string               `json:"scope_id,omitempty"`
-	ScopeField         string               `json:"scope_field,omitempty"`
-	ContributingAssets []asset.ID           `json:"contributing_assets,omitempty"`
-	Description        string               `json:"description,omitempty"`
-	ControlsFailing    []kernel.ControlID   `json:"controls_failing"`
-	MissingSafeguards  []kernel.ControlID   `json:"missing_safeguards,omitempty"`
-	CompoundScore      float64              `json:"compound_score"`
-	Severity           string               `json:"severity"`
-	Narrative          string               `json:"narrative"`
-	AttackStages       []kernel.AttackStage `json:"attack_stages,omitempty"`
+	FindingID          kernel.FindingID         `json:"finding_id"`
+	ChainID            kernel.ChainID           `json:"chain"`
+	AssetID            asset.ID                 `json:"asset_id,omitempty"`
+	ScopeID            string                   `json:"scope_id,omitempty"`
+	ScopeField         string                   `json:"scope_field,omitempty"`
+	ContributingAssets []asset.ID               `json:"contributing_assets,omitempty"`
+	Description        string                   `json:"description,omitempty"`
+	ControlsFailing    []kernel.ControlID       `json:"controls_failing"`
+	MissingSafeguards  []kernel.ControlID       `json:"missing_safeguards,omitempty"`
+	CompoundScore      float64                  `json:"compound_score"`
+	Severity           string                   `json:"severity"`
+	Narrative          string                   `json:"narrative"`
+	AttackStages       []kernel.AttackStage     `json:"attack_stages,omitempty"`
+	MemberEvidence     []ChainMemberEvidenceDTO `json:"member_evidence,omitempty"`
+}
+
+// ChainMemberEvidenceDTO carries the evidence from an atomic finding
+// that participates in a chain, so consumers can inspect member details
+// without --include-atomic + client-side join.
+type ChainMemberEvidenceDTO struct {
+	ControlID         kernel.ControlID          `json:"control_id"`
+	AssetID           asset.ID                  `json:"asset_id"`
+	Misconfigurations []policy.Misconfiguration `json:"misconfigurations,omitempty"`
+	ReasoningTrace    []MatchedClauseDTO        `json:"reasoning_trace,omitempty"`
+	Delta             []DeltaPathDTO            `json:"delta,omitempty"`
 }
 
 // NearMissChainDTO mirrors findings.NearMissChain for wire output.

@@ -2,6 +2,7 @@ package observations
 
 import (
 	"errors"
+	"log/slog"
 
 	"github.com/sufield/stave/internal/adapters/observations/schema"
 	"github.com/sufield/stave/internal/core/asset"
@@ -34,6 +35,10 @@ func normalizeSnapshotTypes(snapshot *asset.Snapshot) error {
 	}
 	if !snapshot.HasTimestamp() {
 		return ErrMissingTimestamp
+	}
+	if snapshot.GeneratedBy == nil || snapshot.GeneratedBy.CollectedBy == "" {
+		slog.Warn("observation missing collected_by — collector principal is unknown",
+			"captured_at", snapshot.CapturedAt)
 	}
 	for i := range snapshot.Assets {
 		snapshot.Assets[i].NormalizeProperties(normalizeProperties)

@@ -14,6 +14,10 @@
 package findings
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -37,6 +41,7 @@ import (
 // producer-side code in risk/ (DetectChains and sortFunc callbacks);
 // external consumers reach for findings.CompoundFinding directly.
 type CompoundFinding struct {
+	FindingID             kernel.FindingID     `json:"finding_id"`
 	ChainID               kernel.ChainID       `json:"chain"`
 	AssetID               asset.ID             `json:"asset_id,omitempty"`
 	ScopeID               string               `json:"scope_id,omitempty"`
@@ -79,6 +84,15 @@ type ChainSuggestion struct {
 	AssetIDs   []asset.ID         `json:"asset_ids"`
 	Reason     string             `json:"reason"`
 	MaxSev     policy.Severity    `json:"max_severity"`
+}
+
+// StableChainFindingID computes a deterministic fingerprint for a chain finding.
+// Same inputs always produce the same ID, enabling cross-run chain correlation.
+func StableChainFindingID(chainID kernel.ChainID, astID asset.ID, scopeID string) kernel.FindingID {
+	h := sha256.New()
+	h.Write([]byte("chain:"))
+	fmt.Fprintf(h, "%d:%s:%d:%s:%d:%s", len(chainID), chainID, len(astID), astID, len(scopeID), scopeID)
+	return kernel.FindingID("sha256:" + hex.EncodeToString(h.Sum(nil))[:16])
 }
 
 // NearMissChain represents a chain that is exactly one control short

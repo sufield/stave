@@ -205,9 +205,11 @@ func emitChainFinding(
 	narrative := buildNarrative(chain, failing)
 	contributing := sortedAssetIDs(b.assetsByScope[scope])
 
+	representativeAsset := contributing[0] // deterministic via sort
 	finding := findingsdata.CompoundFinding{
+		FindingID:         findingsdata.StableChainFindingID(chain.ID, representativeAsset, scope),
 		ChainID:           chain.ID,
-		AssetID:           contributing[0], // representative; deterministic via sort
+		AssetID:           representativeAsset,
 		Description:       chain.Description,
 		ControlsFailing:   failing,
 		MissingSafeguards: holding,
