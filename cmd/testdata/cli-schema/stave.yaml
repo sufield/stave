@@ -202,6 +202,7 @@ see_also:
     - stave telemetry - Emit structured NDJSON telemetry from assessment output
     - stave template - Manage assessment templates
     - stave test - Run embedded control test cases
+    - stave toolmap - Map offensive tools to configuration prerequisites and find coverage gaps
     - stave transform - Convert raw AWS CLI snapshots into obs.v0.1 observations (built-in jq)
     - stave trend - Analyze compliance posture trends across assessment runs
     - stave validate - Validate inputs without evaluation

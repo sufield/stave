@@ -19,8 +19,6 @@ package enginetest
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/adapters/controls/builtin"
-	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -54,12 +52,7 @@ func tenantSnapshotWithIdentities(a asset.Asset, identities []asset.CloudIdentit
 
 func loadTenantControls(t *testing.T) []policy.ControlDefinition {
 	t.Helper()
-	reg := builtin.NewControlStore(builtin.EmbeddedFS(), "embedded",
-		builtin.WithAliasResolver(predicate.ResolverFunc()))
-	all, err := reg.All()
-	if err != nil {
-		t.Fatalf("loading built-in controls: %v", err)
-	}
+	all := allBuiltinControls(t)
 	for _, ctl := range all {
 		if ctl.ID == "CTL.S3.TENANT.ISOLATION.001" {
 			return []policy.ControlDefinition{ctl}

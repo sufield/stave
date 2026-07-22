@@ -28,7 +28,8 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// 65 after adding `recommend` (template recommendation engine).
 	// 66 after adding `template` (init/new/verify/eject subcommands).
 	// 67 after adding `render` (JSON data + Go template = output).
-	const want = 67
+	// 68 after adding `toolmap` (offensive tool prerequisite mapping).
+	const want = 68
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}

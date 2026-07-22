@@ -151,7 +151,10 @@ func testControlLoader(rootDir string) ([]policy.ControlDefinition, error) {
 		all = append(all, ctl)
 		return nil
 	})
-	return all, err
+	if err != nil {
+		return nil, fmt.Errorf("walk %s: %w", rootDir, err)
+	}
+	return all, nil
 }
 
 func convertPredicate(p testPredicateDTO) policy.UnsafePredicate {

@@ -1,47 +1,50 @@
-name: stave discover
+name: stave toolmap
 synopsis: |
-    Resolve AWS services to the data Stave needs (the collection manifest)
+    Map offensive tools to configuration prerequisites and find coverage gaps
 description: |-
-    Discover what Stave needs from you. Tell it which AWS services you use; it
-    resolves the packs covering those services and merges their requirements into a
-    single collection manifest — the exact read-only API calls, observation signals,
-    and minimum collector IAM permissions to gather.
+    Perform a three-way join of chains × controls × offensive tool prerequisites.
 
-    "Service groups" are not a new concept: a pack is a named group of controls with
-    a requirements manifest, and a service is just a different lookup key into the
-    same packs. discover is the by-service axis; "stave pack show <name>" is the
-    by-name axis. Both produce the same manifest model.
+    For each registered tool, checks whether its configuration prerequisites are
+    detected by an existing chain (capability match) and validated by an existing
+    control (field path match). Prerequisites with both are "covered"; those
+    missing either are "gaps".
 
-    Stave never collects data or calls AWS. discover tells you WHAT to collect; you
-    collect it with your own tools (AWS CLI, Steampipe, …) and run "stave apply".
+    Inputs:
+      --chains PATH       Path to chain definitions directory (default: chains)
+      --controls PATH     Path to controls directory (default: controls)
+      --format STRING     Output format: text (default) | json
+      --generate PATH     Generate chain YAML skeletons for gaps into PATH
+      --tool NAME         Show prerequisites for a specific tool
+      --capability TOKEN  Show tools needing this capability
 
-    Inputs:  --services (required, comma-separated); --format, -f (text|json);
-             --controls, -i (catalog to resolve against).
-    Outputs: the merged collection manifest on stdout.
-
-    Exit codes: 0 = success, 2 = input error (no services/bad format), 4 = internal.
-usage: stave discover [flags]
+    Exit Codes:
+      0   Success
+      2   Invalid input
+      3   Gaps found
+      4   Internal error
+usage: stave toolmap [flags]
 options:
+    - name: capability
+      usage: show tools needing this capability
+    - name: chains
+      default_value: chains
+      usage: path to chain definitions directory
     - name: controls
       shorthand: i
       default_value: controls
-      usage: 'control definitions directory (default: built-in catalog)'
+      usage: path to controls directory
     - name: format
       shorthand: f
       default_value: text
-      usage: 'output format: text, json'
+      usage: 'output format: text | json'
+    - name: generate
+      usage: generate chain skeletons for gaps into this directory
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for discover
-    - name: policy
-      default_value: "false"
-      usage: |
-        output a least-privilege IAM policy document (JSON) instead of the collection manifest
-    - name: services
-      default_value: '[]'
-      usage: |
-        AWS services in use (comma-separated), e.g. iam,s3,ec2,lambda,cloudtrail
+      usage: help for toolmap
+    - name: tool
+      usage: show prerequisites for a specific tool
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -102,10 +105,19 @@ inherited_options:
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
-      # I use IAM, S3, EC2, Lambda and CloudTrail — what does Stave need?
-      stave discover --services iam,s3,ec2,lambda,cloudtrail
+      # Run three-way join, print gap report
+      stave toolmap
 
-      # Machine-readable manifest for CI
-      stave discover --services iam,s3 --format json
+      # JSON output for automation
+      stave toolmap --format json
+
+      # Generate chain skeletons for gaps
+      stave toolmap --generate ./generated-chains
+
+      # Show prerequisites for a specific tool
+      stave toolmap --tool pacu
+
+      # Show tools needing a capability
+      stave toolmap --capability iam_credential_theft
 see_also:
     - stave - Configuration safety evaluator

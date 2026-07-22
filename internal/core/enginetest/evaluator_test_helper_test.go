@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"testing"
 	"time"
 
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
+	"github.com/sufield/stave/internal/adapters/controls/builtin"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -14,6 +17,27 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
 )
+
+var (
+	sharedAllControls     []policy.ControlDefinition
+	sharedAllControlsOnce sync.Once
+	errSharedAllControls  error
+)
+
+// allBuiltinControls loads the full embedded control catalog once
+// and caches the result for the lifetime of the test process.
+func allBuiltinControls(t *testing.T) []policy.ControlDefinition {
+	t.Helper()
+	sharedAllControlsOnce.Do(func() {
+		reg := builtin.NewControlStore(builtin.EmbeddedFS(), "embedded",
+			builtin.WithAliasResolver(predicate.ResolverFunc()))
+		sharedAllControls, errSharedAllControls = reg.All()
+	})
+	if errSharedAllControls != nil {
+		t.Fatalf("loading built-in controls: %v", errSharedAllControls)
+	}
+	return sharedAllControls
+}
 
 // testDigester returns the default ports.Digester for domain tests.
 // This is the single point of change if the algorithm is swapped.

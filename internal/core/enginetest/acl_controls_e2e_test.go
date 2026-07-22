@@ -13,8 +13,6 @@ package enginetest
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/adapters/controls/builtin"
-	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
@@ -80,12 +78,7 @@ func aclSnapshot(assets ...asset.Asset) []asset.Snapshot {
 
 func loadACLControls(t *testing.T) []policy.ControlDefinition {
 	t.Helper()
-	reg := builtin.NewControlStore(builtin.EmbeddedFS(), "embedded",
-		builtin.WithAliasResolver(predicate.ResolverFunc()))
-	all, err := reg.All()
-	if err != nil {
-		t.Fatalf("loading built-in controls: %v", err)
-	}
+	all := allBuiltinControls(t)
 	aclIDs := map[kernel.ControlID]struct{}{
 		"CTL.S3.ACL.ESCALATION.001":  {},
 		"CTL.S3.ACL.FULLCONTROL.001": {},
