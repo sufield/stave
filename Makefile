@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
+.PHONY: all build build-dev test test-fast test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
 # Binary name
 BINARY=stave
 
@@ -886,6 +886,17 @@ domain-check:
 	for v in $$values; do \
 		case " $$canonical " in *" $$v "*) ;; *) echo "WARN: non-canonical domain '$$v' (see docs/ontology/domains.json)" ;; esac; \
 	done
+
+## ctf-coverage: Run CTF fixture coverage sweep and check for regressions
+## Fails the build if a previously-covered control or chain stops being
+## exercised by CTF fixtures. Run `ctf-coverage-update` after adding new
+## observations to capture improved coverage in the baseline.
+ctf-coverage: build
+	@../ctf/scripts/check-ctf-coverage.sh
+
+## ctf-coverage-update: Re-run sweep and update baselines
+ctf-coverage-update: build
+	@../ctf/scripts/check-ctf-coverage.sh --update
 
 ## docs-coverage: Regenerate methodology-coverage docs from control + inventory data
 docs-coverage: sync-controls sync-alternatives

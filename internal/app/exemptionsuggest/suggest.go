@@ -129,11 +129,15 @@ func Suggest(in Input) *Result {
 	assessmentCount := len(filtered)
 
 	for _, a := range sorted {
+		presentThisRun := make(map[findingKey]struct{})
 		for i := range a.Findings {
 			f := &a.Findings[i]
 			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID}
-			if _, exists := meta[k]; !exists {
-				meta[k] = &findingMeta{
+			presentThisRun[k] = struct{}{}
+
+			m, exists := meta[k]
+			if !exists {
+				m = &findingMeta{
 					controlID:   f.ControlID,
 					assetID:     f.AssetID,
 					severity:    f.SeverityLabel(),
@@ -141,6 +145,15 @@ func Suggest(in Input) *Result {
 					firstSeen:   a.Run.EvalTime,
 					appearances: make([]bool, assessmentCount),
 				}
+				meta[k] = m
+			} else if m.firstSeen.IsZero() {
+				m.firstSeen = a.Run.EvalTime
+			}
+		}
+
+		for k, m := range meta {
+			if _, present := presentThisRun[k]; !present {
+				m.firstSeen = time.Time{}
 			}
 		}
 	}

@@ -50,3 +50,41 @@ func TestBugHunt_Scorecard_PrefersCriticalFindings(t *testing.T) {
 		t.Errorf("expected CriticalFindings to be 1, got %d (ignored critical finding because low finding came first)", f.CriticalFindings)
 	}
 }
+
+func TestBugHunt_Scorecard_HeadlinePrefersHighestSeverity(t *testing.T) {
+	findings := []remediation.Finding{
+		{
+			Finding: evaluation.Finding{
+				ControlID:       kernel.ControlID("CTL.LOW.001"),
+				AssetID:         "asset-1",
+				ControlSeverity: policy.SeverityLow,
+				ControlCompliance: policy.ComplianceMapping{
+					"hipaa": "164.312",
+				},
+			},
+		},
+		{
+			Finding: evaluation.Finding{
+				ControlID:       kernel.ControlID("CTL.HIGH.001"),
+				AssetID:         "asset-2",
+				ControlSeverity: policy.SeverityHigh,
+				ControlCompliance: policy.ComplianceMapping{
+					"hipaa": "164.312",
+				},
+			},
+		},
+	}
+
+	report := Compute(findings, []string{"hipaa"})
+	if len(report.Frameworks) != 1 {
+		t.Fatalf("expected 1 framework score, got %d", len(report.Frameworks))
+	}
+
+	f := report.Frameworks[0]
+	// CTL.HIGH.001 has High severity, CTL.LOW.001 has Low severity.
+	// Since there are no Critical findings, the headline finding/next action should be CTL.HIGH.001
+	// because High is the highest severity present.
+	if f.NextAction != "CTL.HIGH.001" {
+		t.Errorf("expected NextAction to be 'CTL.HIGH.001', got %q", f.NextAction)
+	}
+}

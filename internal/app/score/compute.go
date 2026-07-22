@@ -651,7 +651,7 @@ func computeChainScore(input Input) chainResult {
 // no coverage data was supplied.
 func computeCoverageScore(input Input) float64 {
 	if input.HasCoverage {
-		return input.CoveragePct / 100.0
+		return math.Max(0, math.Min(1.0, input.CoveragePct/100.0))
 	}
 	return 1.0
 }

@@ -63,6 +63,12 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 			seen[cid] = struct{}{}
 			perControl = append(perControl, bestFinding[cid])
 		}
+		slices.SortFunc(perControl, func(a, b remediation.Finding) int {
+			if n := b.ControlSeverity.Compare(a.ControlSeverity); n != 0 {
+				return n
+			}
+			return cmp.Compare(string(a.ControlID), string(b.ControlID))
+		})
 		total := len(perControl)
 		failing := total
 		critical := perControl.CountCritical()
