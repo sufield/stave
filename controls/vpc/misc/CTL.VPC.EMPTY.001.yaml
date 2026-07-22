@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.EMPTY.001
+name: VPC Has No Active Resources
+description: >
+  VPC exists but contains no active resources (no EC2 instances,
+  no ENIs beyond the default, no NAT gateways, no endpoints).
+  Empty VPCs are cloud pollution — they consume VPC quota, create
+  confusion during incident response (is this VPC abandoned or
+  staging?), and may retain permissive security group rules or
+  route table entries that become exploitable if resources are
+  later launched into them. Empty non-default VPCs should be
+  deleted; empty default VPCs should be reviewed for deletion
+  or locked down.
+domain: hygiene
+severity: low
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - cloud-pollution
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc
+params:
+  attack_stage: discovery
+observation_fields:
+  - network.is_empty
+  - network.resource_count
+remediation:
+  description: >
+    VPC exists but has no active resources.
+  action: >
+    Delete the VPC if it is not part of a planned deployment.
+    If the VPC is intentionally empty (pre-provisioned for a
+    future workload), tag it with a justification and expected
+    deployment date.
+  example: |
+    {
+      "network": {
+        "is_empty": false,
+        "resource_count": 5
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.is_empty
+      op: eq
+      value: true
+tests:
+  - name: "empty VPC — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpc-0123456789abcdef0"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          is_empty: true
+          resource_count: 0
+  - name: "VPC with resources — passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-abcdef0123456789a"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          is_empty: false
+          resource_count: 12

@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.USER.NEWSERVICE.001
+name: IAM User Created Instead of Federated Identity
+description: >
+  A new IAM user was created in an account that uses federated
+  identity (SSO/Identity Center). IAM users in federated
+  environments indicate shadow access paths: they bypass MFA
+  enforcement, session policies, and central identity governance.
+  New IAM users should not be created when Identity Center is the
+  designated identity provider — all human access should route
+  through federation.
+domain: identity
+severity: medium
+compliance:
+  cis_aws_v3.0: "1.1"
+  nist_800_53_r5: "AC-2, IA-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.user.created_after_federation
+  - identity.user.creation_date
+remediation:
+  description: >
+    IAM user was created in an account that uses federated identity.
+  action: >
+    Delete the IAM user and provision access through Identity
+    Center instead. If the user is for automation, convert to an
+    IAM role with a service trust policy.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "user": {
+          "created_after_federation": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.user.created_after_federation
+      op: eq
+      value: true
+tests:
+  - name: "user created after federation enabled — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/shadow-user"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          user:
+            created_after_federation: true
+  - name: "user created before federation — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/legacy-user"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          user:
+            created_after_federation: false

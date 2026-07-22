@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.READONLYACCESS.001
+name: ReadOnlyAccess Managed Policy Grants Excessive Read Scope
+description: >
+  IAM entity has the AWS-managed ReadOnlyAccess policy attached.
+  ReadOnlyAccess grants Get/List/Describe on every AWS service,
+  exposing secrets (Secrets Manager GetSecretValue), credentials
+  (SSM GetParameter for SecureString), database contents (DynamoDB
+  GetItem, S3 GetObject), and billing data. It is routinely treated
+  as "safe" but functionally grants read access to every data store
+  in the account. Principals needing read access should use scoped
+  policies limited to their operational services.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: collection
+observation_fields:
+  - identity.kind
+  - identity.policies.has_readonly_access
+remediation:
+  description: >
+    IAM entity has the ReadOnlyAccess managed policy attached,
+    granting read access to all AWS services.
+  action: >
+    Replace ReadOnlyAccess with scoped read-only policies for the
+    specific services the principal needs. Use Access Analyzer to
+    generate least-privilege policies from CloudTrail activity.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policies": {
+          "has_readonly_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policies.has_readonly_access
+      op: eq
+      value: true
+tests:
+  - name: "role with ReadOnlyAccess — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/reader"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_readonly_access: true
+  - name: "role without ReadOnlyAccess — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/scoped-reader"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_readonly_access: false

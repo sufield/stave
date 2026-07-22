@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.MARKETPLACE.001
+name: SCP Does Not Restrict AWS Marketplace Subscriptions
+description: >
+  Organization SCPs do not deny aws-marketplace:Subscribe and
+  aws-marketplace:AcceptAgreementApprovalRequest in member accounts.
+  Unrestricted Marketplace access allows any member account
+  principal to subscribe to paid AMIs, SaaS products, and
+  data products — creating recurring charges, deploying
+  unvetted software into production accounts, and
+  establishing data-sharing agreements with third parties.
+  In a compromised account, an attacker can use Marketplace
+  to exfiltrate data via a controlled data product subscription
+  or deploy a trojanized AMI.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - least-privilege
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: execution
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_marketplace_subscribe
+remediation:
+  description: >
+    Organization SCPs do not restrict Marketplace subscriptions
+    in member accounts.
+  action: >
+    Add an SCP that denies aws-marketplace:Subscribe and
+    aws-marketplace:AcceptAgreementApprovalRequest for all
+    principals except a designated procurement role.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_marketplace_subscribe": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_marketplace_subscribe
+      op: ne
+      value: true
+tests:
+  - name: "organization without marketplace restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_marketplace_subscribe: false
+  - name: "organization with marketplace restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_marketplace_subscribe: true

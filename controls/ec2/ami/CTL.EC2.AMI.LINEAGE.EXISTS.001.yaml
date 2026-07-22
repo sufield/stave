@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.AMI.LINEAGE.EXISTS.001
+name: AMI Has No Documented Lineage
+description: >
+  AMI does not have documented build lineage (source AMI, build
+  pipeline, creation timestamp chain). Without lineage, the AMI
+  is an opaque binary artifact — it is impossible to determine
+  what software versions it contains, whether it was built from
+  an approved base, or whether it has been tampered with post-
+  build. AMI lineage is the compute equivalent of software bill
+  of materials (SBOM) and is required for supply chain
+  verification.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SA-12, CM-8"
+  soc2: "CC8.1"
+  ccm_v4: ["STA-04", "IPY-01"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compute-hardening
+  - supply-chain
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ami
+params:
+  attack_stage: initial_access
+observation_fields:
+  - compute.kind
+  - compute.ami.has_lineage
+  - compute.ami.source_ami_id
+remediation:
+  description: >
+    AMI does not have documented build lineage.
+  action: >
+    Tag the AMI with lineage metadata: source AMI ID, build
+    pipeline identifier, build timestamp, and base OS version.
+    Use EC2 Image Builder or a CI/CD pipeline that automatically
+    records lineage during AMI creation.
+  example: |
+    {
+      "compute": {
+        "kind": "ami",
+        "ami": {
+          "has_lineage": true,
+          "source_ami_id": "ami-base-1234"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ami
+    - field: properties.compute.ami.has_lineage
+      op: ne
+      value: true
+tests:
+  - name: "AMI without lineage — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "ami-0123456789abcdef0"
+      asset_type: aws_ami
+      vendor: aws
+      properties:
+        compute:
+          kind: ami
+          ami:
+            has_lineage: false
+  - name: "AMI with lineage — passes"
+    verdict: PASS
+    asset:
+      asset_id: "ami-abcdef0123456789a"
+      asset_type: aws_ami
+      vendor: aws
+      properties:
+        compute:
+          kind: ami
+          ami:
+            has_lineage: true
+            source_ami_id: "ami-base-1234"

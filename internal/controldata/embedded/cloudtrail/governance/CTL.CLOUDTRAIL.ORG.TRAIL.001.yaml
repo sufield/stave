@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ORG.TRAIL.001
+name: Organization Does Not Have a Centralized CloudTrail Trail
+description: >
+  The AWS Organization does not have at least one organization-level
+  CloudTrail trail. Organization trails deliver management events
+  from every member account to a central S3 bucket in the logging
+  account. Without an org trail, audit coverage depends on each
+  member account maintaining its own trail — one misconfigured or
+  deleted account-level trail creates a blind spot that the
+  security team cannot detect from the central account.
+  CTL.CLOUDTRAIL.ORG.001 checks that individual trails ARE
+  org trails; this control checks that the organization HAS one.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "3.1"
+  nist_800_53_r5: "AU-6, AU-12"
+  soc2: "CC7.1"
+  fedramp_moderate: "AU-6"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - logging
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - identity.kind
+  - audit.has_org_trail
+remediation:
+  description: >
+    Organization does not have a centralized CloudTrail trail
+    covering all member accounts.
+  action: >
+    Create an organization trail in the management account
+    targeting a central logging bucket. Enable management
+    events for all member accounts. Consider enabling data
+    events for S3 and Lambda for forensic coverage.
+  example: |
+    {
+      "identity": {
+        "kind": "organization"
+      },
+      "audit": {
+        "has_org_trail": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.audit.has_org_trail
+      op: ne
+      value: true
+tests:
+  - name: "organization without org trail fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+        audit:
+          has_org_trail: false
+  - name: "organization with org trail passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+        audit:
+          has_org_trail: true

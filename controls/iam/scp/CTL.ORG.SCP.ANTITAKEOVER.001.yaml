@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.ANTITAKEOVER.001
+name: SCP Does Not Deny Organization Takeover Actions
+description: >
+  Organization SCPs do not deny the set of API actions that
+  enable hostile takeover of the organization: organizations:LeaveOrganization
+  (member-side escape), organizations:RemoveAccountFromOrganization
+  (management-side ejection), organizations:InviteAccountToOrganization
+  (rogue member injection), and organizations:CreateAccount (shadow account
+  creation). While individual controls exist for LeaveOrganization
+  (CTL.IAM.SCP.LEAVEORG.001) and CloseAccount
+  (CTL.IAM.SCP.CLOSEACCOUNT.001), this control verifies the
+  complete anti-takeover posture — all four vectors must be
+  denied together. A single missing denial creates a takeover
+  path that the individual controls cannot detect.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - trust-boundary
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_org_takeover_actions
+remediation:
+  description: >
+    Organization SCPs do not deny the complete set of
+    takeover actions.
+  action: >
+    Add an SCP that denies organizations:LeaveOrganization,
+    organizations:RemoveAccountFromOrganization,
+    organizations:InviteAccountToOrganization, and
+    organizations:CreateAccount for all principals except
+    the designated org-admin role.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_org_takeover_actions": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_org_takeover_actions
+      op: ne
+      value: true
+tests:
+  - name: "organization without anti-takeover SCP fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_org_takeover_actions: false
+  - name: "organization with anti-takeover SCP passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_org_takeover_actions: true

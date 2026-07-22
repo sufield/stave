@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.REGIONAL.COVERAGE.001
+name: CloudTrail Not Configured as Multi-Region Trail
+description: >
+  CloudTrail trail is not configured as a multi-region trail.
+  Single-region trails only capture events in the region where
+  they are created, leaving API activity in other regions
+  invisible. An attacker operating in an unmonitored region
+  (e.g., spinning up resources in ap-southeast-1 while the trail
+  covers only us-east-1) has no audit trail. Multi-region trails
+  capture events across all AWS regions, including regions where
+  no infrastructure is intentionally deployed.
+domain: audit
+severity: high
+compliance:
+  cis_aws_v3.0: "3.1"
+  nist_800_53_r5: "AU-2, AU-12"
+  soc2: "CC7.1"
+  fedramp_moderate: "AU-2"
+  ccm_v4: ["LOG-03", "LOG-05"]
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cloudtrail_trail
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - audit_trail.kind
+  - audit_trail.is_multi_region
+remediation:
+  description: >
+    CloudTrail trail is single-region. Events in other regions
+    are not captured.
+  action: >
+    Enable multi-region logging on the trail. In the console,
+    edit the trail and set "Apply trail to all regions" to Yes.
+    Via CLI: aws cloudtrail update-trail --name <trail>
+    --is-multi-region-trail.
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "is_multi_region": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.is_multi_region
+      op: ne
+      value: true
+tests:
+  - name: "single-region trail — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/single-region"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          is_multi_region: false
+  - name: "multi-region trail — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:444455556666:trail/all-regions"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          is_multi_region: true

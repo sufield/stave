@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.RCP.COVERAGE.001
+name: "RCPs Not Attached to All Organizational Units"
+description: >
+  Resource Control Policies are enabled but not attached to every
+  organizational unit. OUs without RCPs inherit only the default
+  FullAWSAccess policy — resource-based grants in those OUs are
+  unrestricted by the organizational perimeter. An attacker who
+  compromises a workload in an unprotected OU can grant external
+  principals access via resource policies without triggering any
+  RCP deny.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - identity-perimeter
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - organization.kind
+  - organization.rcp.all_ous_covered
+remediation:
+  description: >
+    RCPs are enabled but not attached to every OU. Accounts in
+    uncovered OUs operate outside the resource-policy perimeter.
+  action: >
+    Attach a restrictive RCP to every OU in the organization. Use
+    aws organizations attach-policy --policy-id <rcp-id> --target-id <ou-id>
+    for each uncovered OU. Verify with
+    aws organizations list-policies-for-target --target-id <ou-id>
+    --filter RESOURCE_CONTROL_POLICY.
+  example: |
+    {
+      "organization": {
+        "kind": "rcp_policy_set",
+        "rcp": {
+          "all_ous_covered": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: rcp_policy_set
+    - field: properties.organization.rcp.all_ous_covered
+      op: ne
+      value: true
+tests:
+  - name: "RCP not covering all OUs fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            all_ous_covered: false
+  - name: "RCP covering all OUs passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            all_ous_covered: true

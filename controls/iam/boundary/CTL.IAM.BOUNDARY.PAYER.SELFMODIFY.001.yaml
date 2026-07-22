@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.BOUNDARY.PAYER.SELFMODIFY.001
+name: Payer Permission Boundary Must Deny Self-Modification of Boundary Policies
+description: >
+  Permission boundary in the management account does not
+  deny iam:CreatePolicy, iam:CreatePolicyVersion, and
+  iam:DeletePolicyVersion on its own boundary policy ARN. A
+  boundary that allows self-modification is advisory — the
+  bounded principal can rewrite the boundary to remove all
+  restrictions while keeping it attached. Unlike boundary
+  removal (CTL.IAM.BOUNDARY.PAYER.SELFREMOVAL.001), this
+  attack leaves the boundary attached but hollow, evading
+  detection that monitors for boundary detachment events.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 5.0
+observation_fields:
+  - identity.kind
+  - identity.account.is_management
+  - identity.role.has_boundary
+  - identity.role.boundary_denies_self_modify
+remediation:
+  description: >
+    Permission boundary in management account does not
+    deny modification of its own boundary policy.
+  action: >
+    Add an explicit Deny for iam:CreatePolicyVersion and
+    iam:DeletePolicyVersion to the boundary policy, scoped
+    to the boundary policy's own ARN. This prevents the
+    bounded principal from rewriting the boundary while it
+    remains attached.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "account": {"is_management": true},
+        "role": {
+          "has_boundary": true,
+          "boundary_denies_self_modify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.account.is_management
+      op: eq
+      value: true
+    - field: properties.identity.role.has_boundary
+      op: eq
+      value: true
+    - field: properties.identity.role.boundary_denies_self_modify
+      op: eq
+      value: false
+tests:
+  - name: "boundary without self-modify deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::999988887777:role/payer-developer"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          account:
+            is_management: true
+          role:
+            has_boundary: true
+            boundary_denies_self_modify: false
+  - name: "boundary with self-modify deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::999988887777:role/payer-developer"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          account:
+            is_management: true
+          role:
+            has_boundary: true
+            boundary_denies_self_modify: true

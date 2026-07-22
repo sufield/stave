@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.EBS.AMI.DEREGPROTECTION.001
+name: AMI Deregistration Protection Not Enabled
+description: >
+  AMI does not have deregistration protection enabled. Without
+  deregistration protection, an attacker with ec2:DeregisterImage
+  can remove the AMI, preventing new launches from the golden
+  image and forcing fallback to potentially compromised or
+  outdated alternatives. Deregistration protection is especially
+  critical for AMIs used in Auto Scaling groups and launch
+  templates where the AMI ID is a hard dependency.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9, SI-7"
+  soc2: "CC6.1"
+  ccm_v4: ["BCR-01", "STA-04"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - data-protection
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ami
+params:
+  attack_stage: resilience
+observation_fields:
+  - compute.kind
+  - compute.ami.deregistration_protection
+remediation:
+  description: >
+    AMI does not have deregistration protection enabled.
+  action: >
+    Enable deregistration protection on the AMI using
+    ec2:EnableImageDeregistrationProtection. Combine with SCP
+    restrictions on ec2:DisableImageDeregistrationProtection
+    to prevent attackers from removing the protection.
+  example: |
+    {
+      "compute": {
+        "kind": "ami",
+        "ami": {
+          "deregistration_protection": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ami
+    - field: properties.compute.ami.deregistration_protection
+      op: ne
+      value: true
+tests:
+  - name: "AMI without deregistration protection — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "ami-0123456789abcdef0"
+      asset_type: aws_ami
+      vendor: aws
+      properties:
+        compute:
+          kind: ami
+          ami:
+            deregistration_protection: false
+  - name: "AMI with deregistration protection — passes"
+    verdict: PASS
+    asset:
+      asset_id: "ami-abcdef0123456789a"
+      asset_type: aws_ami
+      vendor: aws
+      properties:
+        compute:
+          kind: ami
+          ami:
+            deregistration_protection: true

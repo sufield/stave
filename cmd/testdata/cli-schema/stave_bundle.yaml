@@ -117,3 +117,4 @@ example: |4-
 see_also:
     - stave - Configuration safety evaluator
     - stave bundle audit - Assemble a compliance-period evidence package
+    - stave bundle verify - Verify the integrity of a sealed evidence bundle

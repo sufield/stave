@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.BOUNDARY.PAYER.IDENTITYCENTER.001
+name: Payer Permission Boundary Must Deny IAM Identity Center Configuration Changes
+description: >
+  Permission boundary in the management account does not
+  deny sso:CreateInstance, sso:DeleteInstance,
+  sso-directory:*, and sso:UpdateInstanceAccessControlAttributeConfiguration.
+  IAM Identity Center is the primary identity federation surface for
+  AWS Organizations. If the management account is compromised, an
+  attacker can create a new Identity Center instance with their own
+  identity store, provision admin access to every member account,
+  and delete the original instance — replacing the entire identity
+  plane. The enablement check
+  (CTL.ORG.IDENTITYCENTER.ENABLED.001) verifies Identity Center is
+  ON, but does not prevent unauthorized reconfiguration.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+  - account-governance
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: persistence
+  base_impact: 10
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 5.0
+observation_fields:
+  - identity.kind
+  - identity.account.is_management
+  - identity.role.has_boundary
+  - identity.role.boundary_denies_identity_center_config
+remediation:
+  description: >
+    Permission boundary in management account does not
+    deny IAM Identity Center configuration changes.
+  action: >
+    Add an explicit Deny for sso:CreateInstance,
+    sso:DeleteInstance, sso-directory:*, and
+    sso:UpdateInstanceAccessControlAttributeConfiguration
+    to the permission boundary. Only the identity-admin
+    break-glass role should have these permissions.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "account": {"is_management": true},
+        "role": {
+          "has_boundary": true,
+          "boundary_denies_identity_center_config": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.account.is_management
+      op: eq
+      value: true
+    - field: properties.identity.role.has_boundary
+      op: eq
+      value: true
+    - field: properties.identity.role.boundary_denies_identity_center_config
+      op: eq
+      value: false
+tests:
+  - name: "boundary without identity center deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::999988887777:role/payer-developer"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          account:
+            is_management: true
+          role:
+            has_boundary: true
+            boundary_denies_identity_center_config: false
+  - name: "boundary with identity center deny passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::999988887777:role/payer-developer"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          account:
+            is_management: true
+          role:
+            has_boundary: true
+            boundary_denies_identity_center_config: true

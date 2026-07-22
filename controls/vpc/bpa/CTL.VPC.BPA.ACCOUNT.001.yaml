@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.BPA.ACCOUNT.001
+name: VPC Block Public Access Not Enabled
+description: >
+  Account does not have VPC Block Public Access (BPA) enabled. VPC BPA
+  is an account-level setting (launched re:Invent 2024) that prevents
+  resources in any VPC from obtaining internet connectivity through
+  Internet Gateways. Without BPA, each VPC's internet exposure depends
+  on individual IGW attachments, route tables, and security groups — a
+  single misconfiguration in any VPC grants internet access. BPA
+  enforces a network perimeter at the account level regardless of
+  per-VPC configuration, analogous to S3 Block Public Access for
+  storage.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7, AC-4"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - vpc
+  - network-perimeter
+taxonomy:
+  - network-perimeter
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.vpc_bpa.enabled
+remediation:
+  description: >
+    Account does not have VPC Block Public Access enabled. Any VPC can
+    obtain internet connectivity through an Internet Gateway.
+  action: >
+    Enable VPC Block Public Access in the VPC console or via
+    ec2:ModifyVpcBlockPublicAccessOptions. Set the internet gateway
+    block mode to "block-bidirectional" for maximum protection. Use an
+    SCP or declarative policy to prevent disabling BPA. Review
+    exclusions carefully — each exclusion reopens internet access for
+    the specified VPC or subnet.
+  example: |
+    {
+      "network": {
+        "vpc_bpa": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.vpc_bpa.enabled
+      op: ne
+      value: true
+tests:
+  - name: "BPA not enabled — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          vpc_bpa:
+            enabled: false
+  - name: "BPA enabled — passes"
+    verdict: PASS
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          vpc_bpa:
+            enabled: true

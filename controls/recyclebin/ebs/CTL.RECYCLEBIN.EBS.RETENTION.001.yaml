@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.RECYCLEBIN.EBS.RETENTION.001
+name: Recycle Bin Retention Period Below Minimum
+description: >
+  Recycle Bin retention rule for EBS resources has a retention
+  period below the recommended minimum (7 days). Short retention
+  periods give insufficient time to detect and recover from
+  ransomware or accidental deletion. A 1-day retention period
+  means a Friday deletion is unrecoverable by Monday morning.
+  The retention period should exceed the organization's mean
+  time to detect (MTTD) for data destruction events.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9, CP-10"
+  soc2: "CC6.1"
+  ccm_v4: ["BCR-01", "BCR-11"]
+scope_tags:
+  - aws
+  - ec2
+  - ebs
+  - ransomware
+taxonomy:
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: resilience
+observation_fields:
+  - account.recyclebin.ebs_retention_days
+remediation:
+  description: >
+    Recycle Bin retention period is below the recommended minimum.
+  action: >
+    Update the Recycle Bin retention rule to at least 7 days.
+    For production workloads, consider 30 days to ensure
+    detection and recovery time for sophisticated attacks.
+  example: |
+    {
+      "account": {
+        "recyclebin": {
+          "ebs_retention_days": 30
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.recyclebin.ebs_retention_days
+      op: present
+    - field: properties.account.recyclebin.ebs_retention_days
+      op: lt
+      value: 7
+tests:
+  - name: "retention 1 day — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          recyclebin:
+            ebs_retention_days: 1
+  - name: "retention 30 days — passes"
+    verdict: PASS
+    asset:
+      asset_id: "234567890123"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          recyclebin:
+            ebs_retention_days: 30

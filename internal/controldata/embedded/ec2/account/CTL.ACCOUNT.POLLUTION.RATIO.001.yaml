@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.ACCOUNT.POLLUTION.RATIO.001
+name: Account Has High Resource Pollution Ratio
+description: >
+  Account has a high ratio of unused or orphaned resources to
+  active resources. Cloud pollution — stale access keys, orphaned
+  security groups, unattached volumes, dormant Lambda functions —
+  expands the attack surface without serving any workload. A high
+  pollution ratio indicates insufficient lifecycle governance and
+  increases the probability that an attacker finds an exploitable
+  resource that no one is monitoring.
+domain: hygiene
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8, SI-12"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03", "DSP-12"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - cloud-pollution
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: discovery
+observation_fields:
+  - account.pollution_ratio
+  - account.total_resources
+  - account.orphaned_resources
+remediation:
+  description: >
+    Account has a high proportion of unused or orphaned resources.
+  action: >
+    Run a cloud pollution audit to identify stale access keys,
+    orphaned security groups, unattached EBS volumes, dormant
+    Lambda functions, and other unused resources. Delete resources
+    that have no business justification. Implement lifecycle
+    policies (DLM, Config rules) to prevent future accumulation.
+  example: |
+    {
+      "account": {
+        "pollution_ratio": 0.05,
+        "total_resources": 200,
+        "orphaned_resources": 10
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.pollution_ratio
+      op: gt
+      value: 0.20
+tests:
+  - name: "high pollution ratio — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          pollution_ratio: 0.35
+          total_resources: 100
+          orphaned_resources: 35
+  - name: "low pollution ratio — passes"
+    verdict: PASS
+    asset:
+      asset_id: "234567890123"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          pollution_ratio: 0.05
+          total_resources: 200
+          orphaned_resources: 10

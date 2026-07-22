@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.ABAC.UNSUPPORTED.001
+name: ABAC Condition Used on Service That Does Not Support It
+description: >
+  IAM policy uses tag-based condition keys (aws:ResourceTag,
+  aws:RequestTag, aws:TagKeys) on actions for an AWS service that
+  does not support ABAC. When the service ignores tag conditions,
+  the policy silently grants broader access than intended — the
+  condition is syntactically valid but semantically inert. AWS
+  documents which services support ABAC; policies referencing
+  tag conditions on non-supporting services must use resource ARN
+  restrictions instead.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+  - policy-semantics
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.policies.has_abac_on_unsupported_service
+remediation:
+  description: >
+    Policy uses tag-based ABAC conditions on a service that does
+    not support them, resulting in silently broad access.
+  action: >
+    Replace ABAC conditions with resource ARN restrictions for
+    services that do not support tag-based authorization. Consult
+    the AWS ABAC support matrix for each service in the policy.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policies": {
+          "has_abac_on_unsupported_service": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.policies.has_abac_on_unsupported_service
+      op: eq
+      value: true
+tests:
+  - name: "policy with ABAC on unsupported service — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/abac-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_abac_on_unsupported_service: true
+  - name: "policy with ABAC only on supported services — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/scoped-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policies:
+            has_abac_on_unsupported_service: false

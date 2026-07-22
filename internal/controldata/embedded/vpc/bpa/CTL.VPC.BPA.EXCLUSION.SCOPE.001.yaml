@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.BPA.EXCLUSION.SCOPE.001
+name: VPC Block Public Access Has Broad Exclusions
+description: >
+  VPC Block Public Access exclusions exist that re-enable internet
+  connectivity for VPCs or subnets. Each BPA exclusion punches a hole
+  in the account-level network perimeter — the excluded VPC or subnet
+  regains full IGW connectivity as if BPA were not enabled. Exclusions
+  should be minimal and each one should have a documented business
+  justification. A high exclusion count signals that BPA is nominally
+  enabled but not effectively enforced. This control fires when the
+  exclusion count exceeds zero, flagging each account with exclusions
+  for review.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7, CM-7"
+  fedramp_moderate: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+  - network-perimeter
+taxonomy:
+  - network-perimeter
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.vpc_bpa.enabled
+  - network.vpc_bpa.exclusion_count
+remediation:
+  description: >
+    VPC BPA has exclusions that re-enable internet connectivity for
+    specific VPCs or subnets, weakening the account-level perimeter.
+  action: >
+    Review each BPA exclusion and remove any that lack a current
+    business justification. For VPCs that genuinely require internet
+    access, prefer subnet-level exclusions over VPC-level exclusions
+    to minimize the exposed surface. Document each remaining exclusion
+    with owner, purpose, and review date.
+  example: |
+    {
+      "network": {
+        "vpc_bpa": {
+          "enabled": true,
+          "exclusion_count": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.vpc_bpa.enabled
+      op: eq
+      value: true
+    - field: properties.network.vpc_bpa.exclusion_count
+      op: gt
+      value: 0
+tests:
+  - name: "BPA with exclusions — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          vpc_bpa:
+            enabled: true
+            exclusion_count: 3
+  - name: "BPA with no exclusions — passes"
+    verdict: PASS
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          vpc_bpa:
+            enabled: true
+            exclusion_count: 0
+  - name: "BPA not enabled — passes (ACCOUNT.001 handles this)"
+    verdict: PASS
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          vpc_bpa:
+            enabled: false
+            exclusion_count: 0

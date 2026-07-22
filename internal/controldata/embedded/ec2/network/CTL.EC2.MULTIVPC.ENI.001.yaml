@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.MULTIVPC.ENI.001
+name: EC2 Instance Has ENIs in Multiple VPCs
+description: >
+  EC2 instance has network interfaces (ENIs) attached in more
+  than one VPC. Multi-VPC instances bridge network isolation
+  boundaries — traffic from a less-trusted VPC can reach a
+  more-trusted VPC through the instance's operating system
+  routing. This violates VPC isolation assumptions and creates
+  a lateral movement path that network ACLs and security groups
+  cannot prevent (the traffic never crosses a VPC boundary from
+  the network's perspective). Instances should operate within
+  a single VPC; cross-VPC communication should use VPC peering,
+  Transit Gateway, or PrivateLink.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7, AC-4"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - ec2
+  - vpc
+taxonomy:
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - compute.kind
+  - compute.network.vpc_count
+remediation:
+  description: >
+    Instance has ENIs in multiple VPCs, bridging isolation
+    boundaries.
+  action: >
+    Detach the ENI in the secondary VPC and use VPC peering,
+    Transit Gateway, or PrivateLink for cross-VPC communication.
+    If multi-homing is required (e.g., a NAT appliance), document
+    the justification and apply security group rules restricting
+    cross-VPC forwarding.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "network": {
+          "vpc_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.network.vpc_count
+      op: gt
+      value: 1
+tests:
+  - name: "instance in multiple VPCs — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "i-0123456789abcdef0"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          network:
+            vpc_count: 2
+  - name: "instance in single VPC — passes"
+    verdict: PASS
+    asset:
+      asset_id: "i-abcdef0123456789a"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          network:
+            vpc_count: 1

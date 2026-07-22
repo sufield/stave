@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.BPA.DECLARATIVE.001
+name: VPC Block Public Access Not Managed by Declarative Policy
+description: >
+  VPC Block Public Access is enabled but not enforced through an AWS
+  Organizations declarative policy. Without declarative policy
+  enforcement, BPA can be disabled by any IAM principal with
+  ec2:ModifyVpcBlockPublicAccessOptions permission — including an
+  attacker who has escalated to admin. Declarative policies enforce BPA
+  at the organization level, preventing member accounts from modifying
+  or disabling the setting regardless of their IAM permissions. This is
+  the network equivalent of S3 BPA managed via declarative policy
+  (CTL.ORG.DP.SNAPSHOT.BLOCKPUBLIC.001 pattern).
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7, CM-6"
+  fedramp_moderate: "SC-7"
+  soc2: "CC6.6, CC8.1"
+  ccm_v4: ["IVS-03", "GRC-01"]
+scope_tags:
+  - aws
+  - vpc
+  - network-perimeter
+  - organization
+taxonomy:
+  - network-perimeter
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.vpc_bpa.enabled
+  - network.vpc_bpa.managed_by_declarative_policy
+remediation:
+  description: >
+    VPC BPA is enabled but not enforced by declarative policy. An
+    attacker with admin access can disable BPA.
+  action: >
+    Create an AWS Organizations declarative policy for VPC BPA that
+    enforces block-bidirectional mode across all member accounts.
+    Declarative policies prevent member accounts from modifying the
+    setting, ensuring BPA cannot be disabled even by compromised
+    admin credentials.
+  example: |
+    {
+      "network": {
+        "vpc_bpa": {
+          "enabled": true,
+          "managed_by_declarative_policy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.vpc_bpa.enabled
+      op: eq
+      value: true
+    - field: properties.network.vpc_bpa.managed_by_declarative_policy
+      op: ne
+      value: true
+tests:
+  - name: "BPA enabled not via declarative policy — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          vpc_bpa:
+            enabled: true
+            managed_by_declarative_policy: false
+  - name: "BPA enabled via declarative policy — passes"
+    verdict: PASS
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          vpc_bpa:
+            enabled: true
+            managed_by_declarative_policy: true
+  - name: "BPA not enabled — passes (ACCOUNT.001 handles this)"
+    verdict: PASS
+    asset:
+      asset_id: "123456789012"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        network:
+          vpc_bpa:
+            enabled: false
+            managed_by_declarative_policy: false

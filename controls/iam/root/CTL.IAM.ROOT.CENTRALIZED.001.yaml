@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROOT.CENTRALIZED.001
+name: Centralized Root Management Not Enabled
+description: >
+  AWS Organizations centralized root management (AssumeRoot) is
+  not enabled. Without centralized root management, each member
+  account retains its own root credentials that must be individually
+  secured with MFA, password rotation, and access key removal.
+  Centralized root management eliminates member-account root
+  credentials entirely — the management account uses
+  sts:AssumeRoot to perform root-privileged operations in member
+  accounts on demand, creating an auditable, time-limited session
+  instead of a persistent credential. This is the strongest root
+  security posture available in AWS Organizations.
+domain: identity
+severity: high
+compliance:
+  cis_aws_v3.0: "1.1"
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  fedramp_moderate: "AC-6(5)"
+  ccm_v4: ["IAM-02", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.kind
+  - identity.root.centralized_management_enabled
+remediation:
+  description: >
+    Centralized root management is not enabled. Member accounts
+    retain individual root credentials.
+  action: >
+    Enable centralized root management in the Organizations
+    console or via the EnableRoot API. Then remove root
+    credentials (access keys, passwords, MFA) from member
+    accounts — they are no longer needed.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "root": {
+          "centralized_management_enabled": true
+        }
+      }
+    }
+payer_exempt: true
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.root.centralized_management_enabled
+      op: ne
+      value: true
+tests:
+  - name: "centralized root not enabled — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          root:
+            centralized_management_enabled: false
+  - name: "centralized root enabled — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          root:
+            centralized_management_enabled: true
