@@ -245,6 +245,7 @@ func runVerify(stdout io.Writer, snapshotPath, keyPath string) error {
 		return &ui.UserError{Err: err}
 	}
 	if !verified {
+		fmt.Fprintln(stdout, "Attestation failed: assets have been tampered with or key does not match")
 		return ui.ErrViolationsFound
 	}
 
