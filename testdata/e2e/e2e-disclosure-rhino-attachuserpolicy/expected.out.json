@@ -38,6 +38,7 @@
   "findings": [],
   "chain_findings": [
     {
+      "finding_id": "sha256:3b7e7903494ebd06",
       "chain": "iam_privesc_by_attachment",
       "asset_id": "arn:aws:iam::111122223333:user/eve",
       "description": "IAM privilege escalation via policy attachment. A user or role has iam:AttachUserPolicy, iam:AttachRolePolicy, or iam:AttachGroupPolicy permission — enabling them to attach an admin-grade managed policy to any principal they can reach, including themselves. This is a single-API-call escalation path documented in Rhino Security's CloudGoat and Bishop Fox's IAM Vulnerable. The escalation is latent: the principal currently has low privileges, but one API call (AttachUserPolicy) grants full admin. No runtime exploit is required — the configuration alone enables the path. Threshold of 1: AttachUserPolicy alone is sufficient for escalation. The inline-policy member is an amplifier — if the account also has roles with inline policies (shadow permissions), the escalation target surface is broader than managed-policy auditing reveals.\n",

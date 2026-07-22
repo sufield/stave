@@ -16261,6 +16261,7 @@
   ],
   "chain_findings": [
     {
+      "finding_id": "sha256:f6b9b5dd50ded011",
       "chain": "chegg_root_credential_path",
       "asset_id": "aws-account-root",
       "description": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n",
@@ -16276,9 +16277,113 @@
       "narrative": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n Failing: CTL.IAM.ROOT.ACCESSKEY.001, CTL.IAM.ROOT.MFA.001.",
       "attack_stages": [
         "credential_access"
+      ],
+      "member_evidence": [
+        {
+          "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
+          "asset_id": "aws-account-root",
+          "misconfigurations": [
+            {
+              "property": "identity.kind",
+              "actual_value": "account",
+              "operator": "eq",
+              "unsafe_value": "account"
+            },
+            {
+              "property": "identity.root.has_access_keys",
+              "actual_value": true,
+              "operator": "eq",
+              "unsafe_value": true
+            },
+            {
+              "property": "identity.root.has_access_keys",
+              "actual_value": true,
+              "operator": "present"
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "identity.kind eq \"account\"",
+              "observation_key": "identity.kind",
+              "operator": "eq",
+              "expected_value": "account",
+              "observed_value": "account"
+            },
+            {
+              "predicate_expr": "identity.root.has_access_keys eq true",
+              "observation_key": "identity.root.has_access_keys",
+              "operator": "eq",
+              "expected_value": true,
+              "observed_value": true
+            },
+            {
+              "predicate_expr": "identity.root.has_access_keys present",
+              "observation_key": "identity.root.has_access_keys",
+              "operator": "present",
+              "observed_value": true
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "root account access keys",
+              "property_path": "identity.root.has_access_keys",
+              "current_value": "true",
+              "fix_action": "set to false (disable)"
+            },
+            {
+              "property_label": "root account access keys",
+              "property_path": "identity.root.has_access_keys",
+              "current_value": "true",
+              "fix_action": "remove this property from the configuration"
+            }
+          ]
+        },
+        {
+          "control_id": "CTL.IAM.ROOT.MFA.001",
+          "asset_id": "aws-account-root",
+          "misconfigurations": [
+            {
+              "property": "identity.kind",
+              "actual_value": "account",
+              "operator": "eq",
+              "unsafe_value": "account"
+            },
+            {
+              "property": "identity.root.mfa_enabled",
+              "actual_value": false,
+              "operator": "ne",
+              "unsafe_value": true
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "identity.kind eq \"account\"",
+              "observation_key": "identity.kind",
+              "operator": "eq",
+              "expected_value": "account",
+              "observed_value": "account"
+            },
+            {
+              "predicate_expr": "identity.root.mfa_enabled ne true",
+              "observation_key": "identity.root.mfa_enabled",
+              "operator": "ne",
+              "expected_value": true,
+              "observed_value": false
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "root account MFA",
+              "property_path": "identity.root.mfa_enabled",
+              "current_value": "false",
+              "fix_action": "set to true"
+            }
+          ]
+        }
       ]
     },
     {
+      "finding_id": "sha256:459f2a570826ed36",
       "chain": "cognito_weakauth",
       "asset_id": "patient-portal",
       "description": "Authentication is brute-forceable in combination: the existing weak-password- policy detection plus the existing MFA- off detection plus the new lockout-absent detection. Each individually is a known weakness; together they describe a pool where credential-stuffing has no meaningful resistance — weak passwords, no second factor, no throttling. Threshold of 2 because the dangerous shape is when at least two layers are missing simultaneously.\n",
@@ -16294,9 +16399,96 @@
       "narrative": "Authentication is brute-forceable in combination: the existing weak-password- policy detection plus the existing MFA- off detection plus the new lockout-absent detection. Each individually is a known weakness; together they describe a pool where credential-stuffing has no meaningful resistance — weak passwords, no second factor, no throttling. Threshold of 2 because the dangerous shape is when at least two layers are missing simultaneously.\n Failing: CTL.COGNITO.MFA.001, CTL.COGNITO.LOCKOUT.NONE.001.",
       "attack_stages": [
         "credential_access"
+      ],
+      "member_evidence": [
+        {
+          "control_id": "CTL.COGNITO.MFA.001",
+          "asset_id": "patient-portal",
+          "misconfigurations": [
+            {
+              "property": "identity.auth.mfa_enforced",
+              "actual_value": false,
+              "operator": "ne",
+              "unsafe_value": true
+            },
+            {
+              "property": "identity.kind",
+              "actual_value": "user_pool",
+              "operator": "eq",
+              "unsafe_value": "user_pool"
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "identity.auth.mfa_enforced ne true",
+              "observation_key": "identity.auth.mfa_enforced",
+              "operator": "ne",
+              "expected_value": true,
+              "observed_value": false
+            },
+            {
+              "predicate_expr": "identity.kind eq \"user_pool\"",
+              "observation_key": "identity.kind",
+              "operator": "eq",
+              "expected_value": "user_pool",
+              "observed_value": "user_pool"
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "MFA enforcement",
+              "property_path": "identity.auth.mfa_enforced",
+              "current_value": "false",
+              "fix_action": "set to true"
+            }
+          ]
+        },
+        {
+          "control_id": "CTL.COGNITO.LOCKOUT.NONE.001",
+          "asset_id": "patient-portal",
+          "misconfigurations": [
+            {
+              "property": "identity.cognito.has_brute_force_protection",
+              "actual_value": null,
+              "field_absent": true,
+              "operator": "ne",
+              "unsafe_value": true
+            },
+            {
+              "property": "identity.kind",
+              "actual_value": "user_pool",
+              "operator": "eq",
+              "unsafe_value": "user_pool"
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "identity.cognito.has_brute_force_protection ne true",
+              "observation_key": "identity.cognito.has_brute_force_protection",
+              "operator": "ne",
+              "expected_value": true
+            },
+            {
+              "predicate_expr": "identity.kind eq \"user_pool\"",
+              "observation_key": "identity.kind",
+              "operator": "eq",
+              "expected_value": "user_pool",
+              "observed_value": "user_pool"
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "cognito has brute force protection",
+              "property_path": "identity.cognito.has_brute_force_protection",
+              "current_value": "",
+              "fix_action": "set to true"
+            }
+          ]
+        }
       ]
     },
     {
+      "finding_id": "sha256:42667f1c998de82c",
       "chain": "config_completely_blind",
       "asset_id": "config-recorder",
       "description": "Any foundational Config failure: recorder stopped, recorder role deleted, or no delivery channel configured. Each independently means Config is non-functional — the configuration compliance system provides zero value. Threshold of 1 because each member represents complete or near-complete Config failure on its own.\n",
@@ -16312,9 +16504,54 @@
       "narrative": "Any foundational Config failure: recorder stopped, recorder role deleted, or no delivery channel configured. Each independently means Config is non-functional — the configuration compliance system provides zero value. Threshold of 1 because each member represents complete or near-complete Config failure on its own.\n Failing: CTL.CONFIG.ENABLED.001.",
       "attack_stages": [
         "detection_evasion"
+      ],
+      "member_evidence": [
+        {
+          "control_id": "CTL.CONFIG.ENABLED.001",
+          "asset_id": "config-recorder",
+          "misconfigurations": [
+            {
+              "property": "compliance.kind",
+              "actual_value": "recorder",
+              "operator": "eq",
+              "unsafe_value": "recorder"
+            },
+            {
+              "property": "compliance.recording_enabled",
+              "actual_value": false,
+              "operator": "eq",
+              "unsafe_value": false
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "compliance.kind eq \"recorder\"",
+              "observation_key": "compliance.kind",
+              "operator": "eq",
+              "expected_value": "recorder",
+              "observed_value": "recorder"
+            },
+            {
+              "predicate_expr": "compliance.recording_enabled eq false",
+              "observation_key": "compliance.recording_enabled",
+              "operator": "eq",
+              "expected_value": false,
+              "observed_value": false
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "recording",
+              "property_path": "compliance.recording_enabled",
+              "current_value": "false",
+              "fix_action": "set to true (enable)"
+            }
+          ]
+        }
       ]
     },
     {
+      "finding_id": "sha256:c417cfe7794d4757",
       "chain": "config_evaluation_broken",
       "asset_id": "config-recorder",
       "description": "Any evaluation failure: no rules at all (the catalog's existing CTL.CONFIG.RULES.001), rule disabled, or rule's custom Lambda deleted. Each independently means compliance evaluation is non-functional. Config records configuration but doesn't judge it. Threshold of 1 because each member represents a complete evaluation failure on its own.\n",
@@ -16330,9 +16567,54 @@
       "narrative": "Any evaluation failure: no rules at all (the catalog's existing CTL.CONFIG.RULES.001), rule disabled, or rule's custom Lambda deleted. Each independently means compliance evaluation is non-functional. Config records configuration but doesn't judge it. Threshold of 1 because each member represents a complete evaluation failure on its own.\n Failing: CTL.CONFIG.RULES.001.",
       "attack_stages": [
         "detection_evasion"
+      ],
+      "member_evidence": [
+        {
+          "control_id": "CTL.CONFIG.RULES.001",
+          "asset_id": "config-recorder",
+          "misconfigurations": [
+            {
+              "property": "compliance.has_active_rules",
+              "actual_value": false,
+              "operator": "eq",
+              "unsafe_value": false
+            },
+            {
+              "property": "compliance.kind",
+              "actual_value": "recorder",
+              "operator": "eq",
+              "unsafe_value": "recorder"
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "compliance.has_active_rules eq false",
+              "observation_key": "compliance.has_active_rules",
+              "operator": "eq",
+              "expected_value": false,
+              "observed_value": false
+            },
+            {
+              "predicate_expr": "compliance.kind eq \"recorder\"",
+              "observation_key": "compliance.kind",
+              "operator": "eq",
+              "expected_value": "recorder",
+              "observed_value": "recorder"
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "active rules",
+              "property_path": "compliance.has_active_rules",
+              "current_value": "false",
+              "fix_action": "set to true (enable)"
+            }
+          ]
+        }
       ]
     },
     {
+      "finding_id": "sha256:4dd73fdc7941d28c",
       "chain": "eol_database_phi_exposure",
       "asset_id": "phi-database",
       "description": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n",
@@ -16349,9 +16631,96 @@
       "attack_stages": [
         "exfiltration",
         "initial_access"
+      ],
+      "member_evidence": [
+        {
+          "control_id": "CTL.RDS.ENCRYPT.001",
+          "asset_id": "phi-database",
+          "misconfigurations": [
+            {
+              "property": "database.encryption.storage_encrypted",
+              "actual_value": false,
+              "operator": "eq",
+              "unsafe_value": false
+            },
+            {
+              "property": "database.kind",
+              "actual_value": "instance",
+              "operator": "eq",
+              "unsafe_value": "instance"
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "database.encryption.storage_encrypted eq false",
+              "observation_key": "database.encryption.storage_encrypted",
+              "operator": "eq",
+              "expected_value": false,
+              "observed_value": false
+            },
+            {
+              "predicate_expr": "database.kind eq \"instance\"",
+              "observation_key": "database.kind",
+              "operator": "eq",
+              "expected_value": "instance",
+              "observed_value": "instance"
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "database encryption at rest",
+              "property_path": "database.encryption.storage_encrypted",
+              "current_value": "false",
+              "fix_action": "set to true (enable)"
+            }
+          ]
+        },
+        {
+          "control_id": "CTL.RDS.PUBLIC.001",
+          "asset_id": "phi-database",
+          "misconfigurations": [
+            {
+              "property": "database.access.publicly_accessible",
+              "actual_value": true,
+              "operator": "eq",
+              "unsafe_value": true
+            },
+            {
+              "property": "database.kind",
+              "actual_value": "instance",
+              "operator": "eq",
+              "unsafe_value": "instance"
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "database.access.publicly_accessible eq true",
+              "observation_key": "database.access.publicly_accessible",
+              "operator": "eq",
+              "expected_value": true,
+              "observed_value": true
+            },
+            {
+              "predicate_expr": "database.kind eq \"instance\"",
+              "observation_key": "database.kind",
+              "operator": "eq",
+              "expected_value": "instance",
+              "observed_value": "instance"
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "access publicly accessible",
+              "property_path": "database.access.publicly_accessible",
+              "current_value": "true",
+              "fix_action": "set to false (disable)"
+            }
+          ]
+        }
       ]
     },
     {
+      "finding_id": "sha256:6eb69e593d66a2ba",
       "chain": "root_compromise_path",
       "asset_id": "aws-account-root",
       "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n",
@@ -16368,9 +16737,113 @@
       "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n Failing: CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.ACCESSKEY.001.",
       "attack_stages": [
         "credential_access"
+      ],
+      "member_evidence": [
+        {
+          "control_id": "CTL.IAM.ROOT.MFA.001",
+          "asset_id": "aws-account-root",
+          "misconfigurations": [
+            {
+              "property": "identity.kind",
+              "actual_value": "account",
+              "operator": "eq",
+              "unsafe_value": "account"
+            },
+            {
+              "property": "identity.root.mfa_enabled",
+              "actual_value": false,
+              "operator": "ne",
+              "unsafe_value": true
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "identity.kind eq \"account\"",
+              "observation_key": "identity.kind",
+              "operator": "eq",
+              "expected_value": "account",
+              "observed_value": "account"
+            },
+            {
+              "predicate_expr": "identity.root.mfa_enabled ne true",
+              "observation_key": "identity.root.mfa_enabled",
+              "operator": "ne",
+              "expected_value": true,
+              "observed_value": false
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "root account MFA",
+              "property_path": "identity.root.mfa_enabled",
+              "current_value": "false",
+              "fix_action": "set to true"
+            }
+          ]
+        },
+        {
+          "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
+          "asset_id": "aws-account-root",
+          "misconfigurations": [
+            {
+              "property": "identity.kind",
+              "actual_value": "account",
+              "operator": "eq",
+              "unsafe_value": "account"
+            },
+            {
+              "property": "identity.root.has_access_keys",
+              "actual_value": true,
+              "operator": "eq",
+              "unsafe_value": true
+            },
+            {
+              "property": "identity.root.has_access_keys",
+              "actual_value": true,
+              "operator": "present"
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "identity.kind eq \"account\"",
+              "observation_key": "identity.kind",
+              "operator": "eq",
+              "expected_value": "account",
+              "observed_value": "account"
+            },
+            {
+              "predicate_expr": "identity.root.has_access_keys eq true",
+              "observation_key": "identity.root.has_access_keys",
+              "operator": "eq",
+              "expected_value": true,
+              "observed_value": true
+            },
+            {
+              "predicate_expr": "identity.root.has_access_keys present",
+              "observation_key": "identity.root.has_access_keys",
+              "operator": "present",
+              "observed_value": true
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "root account access keys",
+              "property_path": "identity.root.has_access_keys",
+              "current_value": "true",
+              "fix_action": "set to false (disable)"
+            },
+            {
+              "property_label": "root account access keys",
+              "property_path": "identity.root.has_access_keys",
+              "current_value": "true",
+              "fix_action": "remove this property from the configuration"
+            }
+          ]
+        }
       ]
     },
     {
+      "finding_id": "sha256:21167ba6a18e501d",
       "chain": "vpc_database_exposure",
       "asset_id": "phi-database",
       "description": "Either a subnet containing database resources has an Internet Gateway route or an RDS instance is configured as publicly accessible. The two controls check different layers — network routing vs the RDS `PubliclyAccessible` flag — but either condition alone creates a direct internet exposure path to the database. Firing on a single failure avoids the database-exposure false negative that would result from requiring both layers to fail simultaneously.\n",
@@ -16385,6 +16858,50 @@
       "narrative": "Either a subnet containing database resources has an Internet Gateway route or an RDS instance is configured as publicly accessible. The two controls check different layers — network routing vs the RDS `PubliclyAccessible` flag — but either condition alone creates a direct internet exposure path to the database. Firing on a single failure avoids the database-exposure false negative that would result from requiring both layers to fail simultaneously.\n Failing: CTL.RDS.PUBLIC.001.",
       "attack_stages": [
         "initial_access"
+      ],
+      "member_evidence": [
+        {
+          "control_id": "CTL.RDS.PUBLIC.001",
+          "asset_id": "phi-database",
+          "misconfigurations": [
+            {
+              "property": "database.access.publicly_accessible",
+              "actual_value": true,
+              "operator": "eq",
+              "unsafe_value": true
+            },
+            {
+              "property": "database.kind",
+              "actual_value": "instance",
+              "operator": "eq",
+              "unsafe_value": "instance"
+            }
+          ],
+          "reasoning_trace": [
+            {
+              "predicate_expr": "database.access.publicly_accessible eq true",
+              "observation_key": "database.access.publicly_accessible",
+              "operator": "eq",
+              "expected_value": true,
+              "observed_value": true
+            },
+            {
+              "predicate_expr": "database.kind eq \"instance\"",
+              "observation_key": "database.kind",
+              "operator": "eq",
+              "expected_value": "instance",
+              "observed_value": "instance"
+            }
+          ],
+          "delta": [
+            {
+              "property_label": "access publicly accessible",
+              "property_path": "database.access.publicly_accessible",
+              "current_value": "true",
+              "fix_action": "set to false (disable)"
+            }
+          ]
+        }
       ]
     }
   ],
