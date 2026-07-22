@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.VPC.BPA.ACCOUNT.001
+
+**VPC Block Public Access Not Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7, AC-4; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Account does not have VPC Block Public Access (BPA) enabled. VPC BPA is an account-level setting (launched re:Invent 2024) that prevents resources in any VPC from obtaining internet connectivity through Internet Gateways. Without BPA, each VPC's internet exposure depends on individual IGW attachments, route tables, and security groups — a single misconfiguration in any VPC grants internet access. BPA enforces a network perimeter at the account level regardless of per-VPC configuration, analogous to S3 Block Public Access for storage.
+
+**Remediation:** Enable VPC Block Public Access in the VPC console or via ec2:ModifyVpcBlockPublicAccessOptions. Set the internet gateway block mode to "block-bidirectional" for maximum protection. Use an SCP or declarative policy to prevent disabling BPA. Review exclusions carefully — each exclusion reopens internet access for the specified VPC or subnet.
+
+---
+
 ### CTL.VPC.BPA.BIDIRECTIONAL.001
 
 **VPC Block Public Access Must Block Both Ingress and Egress**
@@ -17,6 +32,21 @@
 VPC Block Public Access is enabled but in ingress-only mode. Ingress-only mode blocks inbound traffic from the internet but still allows outbound internet access via internet gateways. An attacker with code execution can still exfiltrate data or establish reverse shells. Bidirectional mode blocks both directions.
 
 **Remediation:** Switch to bidirectional mode via aws ec2 modify-vpc-block-public-access-options --internet-gateway-block-mode block-bidirectional. Create subnet-level exclusions for subnets that genuinely need outbound internet access.
+
+---
+
+### CTL.VPC.BPA.DECLARATIVE.001
+
+**VPC Block Public Access Not Managed by Declarative Policy**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7, CM-6; soc2: CC6.6, CC8.1;
+
+VPC Block Public Access is enabled but not enforced through an AWS Organizations declarative policy. Without declarative policy enforcement, BPA can be disabled by any IAM principal with ec2:ModifyVpcBlockPublicAccessOptions permission — including an attacker who has escalated to admin. Declarative policies enforce BPA at the organization level, preventing member accounts from modifying or disabling the setting regardless of their IAM permissions. This is the network equivalent of S3 BPA managed via declarative policy (CTL.ORG.DP.SNAPSHOT.BLOCKPUBLIC.001 pattern).
+
+**Remediation:** Create an AWS Organizations declarative policy for VPC BPA that enforces block-bidirectional mode across all member accounts. Declarative policies prevent member accounts from modifying the setting, ensuring BPA cannot be disabled even by compromised admin credentials.
 
 ---
 
@@ -35,6 +65,21 @@ VPC Block Public Access (BPA) is not enabled at the account level. BPA shipped N
 
 ---
 
+### CTL.VPC.BPA.EXCLUSION.SCOPE.001
+
+**VPC Block Public Access Has Broad Exclusions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7, CM-7; soc2: CC6.6;
+
+VPC Block Public Access exclusions exist that re-enable internet connectivity for VPCs or subnets. Each BPA exclusion punches a hole in the account-level network perimeter — the excluded VPC or subnet regains full IGW connectivity as if BPA were not enabled. Exclusions should be minimal and each one should have a documented business justification. A high exclusion count signals that BPA is nominally enabled but not effectively enforced. This control fires when the exclusion count exceeds zero, flagging each account with exclusions for review.
+
+**Remediation:** Review each BPA exclusion and remove any that lack a current business justification. For VPCs that genuinely require internet access, prefer subnet-level exclusions over VPC-level exclusions to minimize the exposed surface. Document each remaining exclusion with owner, purpose, and review date.
+
+---
+
 ### CTL.VPC.BPA.EXCLUSION.SUBNET.001
 
 **VPC BPA Exclusions Must Target Subnets Not VPCs**
@@ -47,6 +92,21 @@ VPC Block Public Access (BPA) is not enabled at the account level. BPA shipped N
 VPC Block Public Access exclusion is scoped to an entire VPC rather than a specific subnet. VPC-level exclusions disable BPA for ALL subnets in the VPC — including subnets that should remain private. Subnet-level exclusions are more precise: only the specific subnet gets public access, and new subnets added to the VPC inherit the BPA block. API: ec2:DescribeVpcBlockPublicAccessExclusions.
 
 **Remediation:** Replace the VPC-level exclusion with subnet-level exclusions targeting only the specific subnets that need public connectivity (e.g., public ALB subnets).
+
+---
+
+### CTL.VPC.BPA.MODE.001
+
+**VPC Block Public Access Mode Is Not Bidirectional**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7, AC-4; soc2: CC6.6;
+
+VPC Block Public Access is enabled but the internet gateway block mode is not "block-bidirectional". AWS supports two modes: "block-ingress" blocks inbound traffic through IGWs but permits outbound, while "block-bidirectional" blocks both directions. Ingress-only mode still permits outbound data exfiltration through IGWs — an attacker who gains code execution on an instance in a VPC with an IGW can exfiltrate data even though inbound connections are blocked. Bidirectional mode provides complete network isolation from the internet at the account level.
+
+**Remediation:** Change the VPC BPA internet gateway block mode to "block-bidirectional" via ec2:ModifyVpcBlockPublicAccessOptions. Verify that workloads requiring outbound internet access use NAT Gateways (which are not affected by BPA) rather than IGW routes.
 
 ---
 
@@ -334,6 +394,21 @@ EC2 instance has more than one Elastic IP associated. Multiple public addresses 
 Elastic IP is allocated but not associated with an instance, NAT gateway, or network interface. Orphaned EIPs are a lifecycle gap — the resource the EIP was attached to was deleted but the EIP was not released. The security relevance is the lifecycle signal: if EIPs are not cleaned up, related resources (security groups, route table entries, IAM policies referencing IPs) are likely also accumulating without review. Orphaned EIPs also carry an ongoing charge and count against the per-region limit.
 
 **Remediation:** Release the orphaned EIP with `aws ec2 release-address`. Add an allocation-age check to your housekeeping automation so EIPs that sit unassociated for longer than a defined threshold (for example seven days) are reported and released. Review neighboring resources (security groups, route tables) for matching staleness.
+
+---
+
+### CTL.VPC.EMPTY.001
+
+**VPC Has No Active Resources**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC7.1;
+
+VPC exists but contains no active resources (no EC2 instances, no ENIs beyond the default, no NAT gateways, no endpoints). Empty VPCs are cloud pollution — they consume VPC quota, create confusion during incident response (is this VPC abandoned or staging?), and may retain permissive security group rules or route table entries that become exploitable if resources are later launched into them. Empty non-default VPCs should be deleted; empty default VPCs should be reviewed for deletion or locked down.
+
+**Remediation:** Delete the VPC if it is not part of a planned deployment. If the VPC is intentionally empty (pre-provisioned for a future workload), tag it with a justification and expected deployment date.
 
 ---
 

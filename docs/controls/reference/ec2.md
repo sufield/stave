@@ -65,6 +65,21 @@ EC2 launch templates must not reference AMIs that have been deregistered. Instan
 
 ---
 
+### CTL.EC2.AMI.LINEAGE.EXISTS.001
+
+**AMI Has No Documented Lineage**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SA-12, CM-8; soc2: CC8.1;
+
+AMI does not have documented build lineage (source AMI, build pipeline, creation timestamp chain). Without lineage, the AMI is an opaque binary artifact — it is impossible to determine what software versions it contains, whether it was built from an approved base, or whether it has been tampered with post- build. AMI lineage is the compute equivalent of software bill of materials (SBOM) and is required for supply chain verification.
+
+**Remediation:** Tag the AMI with lineage metadata: source AMI ID, build pipeline identifier, build timestamp, and base OS version. Use EC2 Image Builder or a CI/CD pipeline that automatically records lineage during AMI creation.
+
+---
+
 ### CTL.EC2.AMI.PUBLIC.001
 
 **Custom AMIs Must Not Be Publicly Shared**
@@ -1081,6 +1096,21 @@ EC2 launch templates must not set AssociatePublicIpAddress to true on their netw
 EC2 launch template default version (the version used by ASGs and manual launches that do not pin a specific number) must match the template's latest version. Launch templates are versioned: every edit produces a new version, and the default version pointer is updated separately. When the default lags behind latest, security improvements that were authored into the newer versions are not applied to scale-out events, replacement launches, or any workflow that takes the default. Common drift: version 7 enforces IMDSv2 and is the latest, but the default is pinned at version 5 → every new instance launches with IMDSv1 enabled. Or version 8 updates the AMI for a published CVE fix, but version 6 is default → new instances launch with the vulnerable AMI. The version delta is a measurable governance gap: the work was done but never made authoritative.
 
 **Remediation:** Update the default version to latest after reviewing the version diff.
+
+---
+
+### CTL.EC2.MULTIVPC.ENI.001
+
+**EC2 Instance Has ENIs in Multiple VPCs**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7, AC-4; soc2: CC6.6;
+
+EC2 instance has network interfaces (ENIs) attached in more than one VPC. Multi-VPC instances bridge network isolation boundaries — traffic from a less-trusted VPC can reach a more-trusted VPC through the instance's operating system routing. This violates VPC isolation assumptions and creates a lateral movement path that network ACLs and security groups cannot prevent (the traffic never crosses a VPC boundary from the network's perspective). Instances should operate within a single VPC; cross-VPC communication should use VPC peering, Transit Gateway, or PrivateLink.
+
+**Remediation:** Detach the ENI in the secondary VPC and use VPC peering, Transit Gateway, or PrivateLink for cross-VPC communication. If multi-homing is required (e.g., a NAT appliance), document the justification and apply security group rules restricting cross-VPC forwarding.
 
 ---
 

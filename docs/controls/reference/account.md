@@ -35,3 +35,18 @@ Account-level default encryption is enabled for some storage services but not al
 
 ---
 
+### CTL.ACCOUNT.POLLUTION.RATIO.001
+
+**Account Has High Resource Pollution Ratio**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** nist_800_53_r5: CM-8, SI-12; soc2: CC7.1;
+
+Account has a high ratio of unused or orphaned resources to active resources. Cloud pollution — stale access keys, orphaned security groups, unattached volumes, dormant Lambda functions — expands the attack surface without serving any workload. A high pollution ratio indicates insufficient lifecycle governance and increases the probability that an attacker finds an exploitable resource that no one is monitoring.
+
+**Remediation:** Run a cloud pollution audit to identify stale access keys, orphaned security groups, unattached EBS volumes, dormant Lambda functions, and other unused resources. Delete resources that have no business justification. Implement lifecycle policies (DLM, Config rules) to prevent future accumulation.
+
+---
+

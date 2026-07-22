@@ -684,6 +684,36 @@ No Service Control Policy prevents organization member accounts from calling clo
 
 ---
 
+### CTL.CLOUDTRAIL.ORG.TRAIL.001
+
+**Organization Does Not Have a Centralized CloudTrail Trail**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.1; fedramp_moderate: AU-6; nist_800_53_r5: AU-6, AU-12; soc2: CC7.1;
+
+The AWS Organization does not have at least one organization-level CloudTrail trail. Organization trails deliver management events from every member account to a central S3 bucket in the logging account. Without an org trail, audit coverage depends on each member account maintaining its own trail — one misconfigured or deleted account-level trail creates a blind spot that the security team cannot detect from the central account. CTL.CLOUDTRAIL.ORG.001 checks that individual trails ARE org trails; this control checks that the organization HAS one.
+
+**Remediation:** Create an organization trail in the management account targeting a central logging bucket. Enable management events for all member accounts. Consider enabling data events for S3 and Lambda for forensic coverage.
+
+---
+
+### CTL.CLOUDTRAIL.REGIONAL.COVERAGE.001
+
+**CloudTrail Not Configured as Multi-Region Trail**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.1; fedramp_moderate: AU-2; nist_800_53_r5: AU-2, AU-12; soc2: CC7.1;
+
+CloudTrail trail is not configured as a multi-region trail. Single-region trails only capture events in the region where they are created, leaving API activity in other regions invisible. An attacker operating in an unmonitored region (e.g., spinning up resources in ap-southeast-1 while the trail covers only us-east-1) has no audit trail. Multi-region trails capture events across all AWS regions, including regions where no infrastructure is intentionally deployed.
+
+**Remediation:** Enable multi-region logging on the trail. In the console, edit the trail and set "Apply trail to all regions" to Yes. Via CLI: aws cloudtrail update-trail --name <trail> --is-multi-region-trail.
+
+---
+
 ### CTL.CLOUDTRAIL.REPLICATION.001
 
 **CloudTrail Logs Must Be Replicated to a Separate Account**

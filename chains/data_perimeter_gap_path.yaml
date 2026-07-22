@@ -1,0 +1,28 @@
+id: data_perimeter_gap_path
+description: >
+  Data perimeter is structurally incomplete: the organization lacks
+  both RCP-level and SCP-level perimeter controls that together
+  prevent data exfiltration via confused deputy, cross-org access,
+  and direct S3 data plane bypass. AWS data perimeters require
+  three layers — RCP org-id perimeter (resource policy enforcement),
+  RCP confused deputy protection (service-to-service enforcement),
+  and SCP confused deputy protection (identity policy enforcement).
+  When all three are missing, data can leave the organization via
+  any of: a misconfigured resource policy granting cross-org access,
+  a confused deputy service acting on behalf of an external account,
+  or a direct S3 data plane request bypassing identity controls.
+  The RCP and SCP controls are complementary — RCPs enforce at the
+  resource level, SCPs at the identity level. Both are needed for
+  a complete perimeter.
+controls:
+  - CTL.ORG.RCP.PRINCIPALORGID.001
+  - CTL.ORG.RCP.CONFUSEDDEPUTY.001
+  - CTL.IAM.SCP.CONFUSEDDEPUTY.001
+  - CTL.IAM.SCP.DATAPERIMETER.S3.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_exfiltration
+implicit_dependencies: []

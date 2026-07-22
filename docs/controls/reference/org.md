@@ -275,6 +275,21 @@ No RCP enforces aws:SourceOrgID or aws:SourceAccount conditions on resource-faci
 
 ---
 
+### CTL.ORG.RCP.COVERAGE.001
+
+**RCPs Not Attached to All Organizational Units**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3, AC-6; soc2: CC6.1;
+
+Resource Control Policies are enabled but not attached to every organizational unit. OUs without RCPs inherit only the default FullAWSAccess policy — resource-based grants in those OUs are unrestricted by the organizational perimeter. An attacker who compromises a workload in an unprotected OU can grant external principals access via resource policies without triggering any RCP deny.
+
+**Remediation:** Attach a restrictive RCP to every OU in the organization. Use aws organizations attach-policy --policy-id <rcp-id> --target-id <ou-id> for each uncovered OU. Verify with aws organizations list-policies-for-target --target-id <ou-id> --filter RESOURCE_CONTROL_POLICY.
+
+---
+
 ### CTL.ORG.RCP.ENABLED.001
 
 **Resource Control Policies Must Be Enabled as Organization Policy Type**
@@ -377,6 +392,21 @@ No SCP restricts marketplace subscriptions, domain registrations, or AI model ag
 Organization SCPs do not deny Amplify service usage in member accounts. Amplify provisions CloudFront distributions, S3 buckets, Lambda@Edge functions, and IAM roles behind a separate API surface. These resources are invisible to the standard CloudFront, S3, and Lambda management APIs and run outside the organization's network security monitoring. Without an SCP denying amplify:*, any IAM principal can deploy internet-facing web applications with their own CDN, storage, and compute layer.
 
 **Remediation:** Add an SCP denying amplify:* for all principals. Exclude specific accounts if Amplify is intentionally used.
+
+---
+
+### CTL.ORG.SCP.ANTITAKEOVER.001
+
+**SCP Does Not Deny Organization Takeover Actions**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+Organization SCPs do not deny the set of API actions that enable hostile takeover of the organization: organizations:LeaveOrganization (member-side escape), organizations:RemoveAccountFromOrganization (management-side ejection), organizations:InviteAccountToOrganization (rogue member injection), and organizations:CreateAccount (shadow account creation). While individual controls exist for LeaveOrganization (CTL.IAM.SCP.LEAVEORG.001) and CloseAccount (CTL.IAM.SCP.CLOSEACCOUNT.001), this control verifies the complete anti-takeover posture — all four vectors must be denied together. A single missing denial creates a takeover path that the individual controls cannot detect.
+
+**Remediation:** Add an SCP that denies organizations:LeaveOrganization, organizations:RemoveAccountFromOrganization, organizations:InviteAccountToOrganization, and organizations:CreateAccount for all principals except the designated org-admin role.
 
 ---
 
@@ -557,6 +587,21 @@ No SCP prevents Lambda functions from being made publicly invocable or using una
 Organization SCPs do not deny Lightsail service usage in member accounts. Lightsail operates outside the standard AWS governance boundary — it runs in an AWS-managed VPC, creates its own credential namespace, and is not recorded by AWS Config. Without an SCP denying lightsail:*, any IAM principal can provision shadow infrastructure invisible to the organization's CSPM, SIEM, and credential inventory.
 
 **Remediation:** Add an SCP denying lightsail:* for all principals. Exclude specific accounts if Lightsail is intentionally used.
+
+---
+
+### CTL.ORG.SCP.MARKETPLACE.001
+
+**SCP Does Not Restrict AWS Marketplace Subscriptions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.1;
+
+Organization SCPs do not deny aws-marketplace:Subscribe and aws-marketplace:AcceptAgreementApprovalRequest in member accounts. Unrestricted Marketplace access allows any member account principal to subscribe to paid AMIs, SaaS products, and data products — creating recurring charges, deploying unvetted software into production accounts, and establishing data-sharing agreements with third parties. In a compromised account, an attacker can use Marketplace to exfiltrate data via a controlled data product subscription or deploy a trojanized AMI.
+
+**Remediation:** Add an SCP that denies aws-marketplace:Subscribe and aws-marketplace:AcceptAgreementApprovalRequest for all principals except a designated procurement role.
 
 ---
 
