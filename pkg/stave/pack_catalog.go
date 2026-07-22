@@ -8,7 +8,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
 	predicates "github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/controldata"
-	"github.com/sufield/stave/internal/pack"
+	"github.com/sufield/stave/pkg/stave/pack"
 	"github.com/sufield/stave/pkg/stave/internal/applycore"
 )
 

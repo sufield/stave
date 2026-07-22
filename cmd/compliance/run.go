@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/compliancemapping"
+	"github.com/sufield/stave/pkg/stave/compliancemapping"
 	"github.com/sufield/stave/pkg/stave"
 )
 

@@ -18,6 +18,7 @@ controls:
   - CTL.EBS.AMI.DEREGPROTECTION.001
   - CTL.RECYCLEBIN.EBS.VOLUME.001
   - CTL.VPC.BPA.ACCOUNT.001
+scope: global
 escalation_threshold: 2
 compound_severity: critical
 preconditions:

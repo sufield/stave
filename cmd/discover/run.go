@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/internal/pack"
+	"github.com/sufield/stave/pkg/stave/pack"
 	"github.com/sufield/stave/pkg/stave"
 )
 

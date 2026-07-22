@@ -13,6 +13,7 @@ controls:
   - CTL.ORG.SCP.EVS.DENY.001
   - CTL.CLOUDTRAIL.EVS.BLIND.001
   - CTL.IAM.EVS.CREATE.001
+scope: global
 escalation_threshold: 2
 compound_severity: critical
 preconditions:

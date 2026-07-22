@@ -20,6 +20,16 @@ type ChainDefinition struct {
 	Preconditions       []string           `yaml:"preconditions,omitempty"  json:"preconditions,omitempty"`
 	Postconditions      []string           `yaml:"postconditions,omitempty" json:"postconditions,omitempty"`
 
+	// Scope controls how failing controls are grouped before threshold
+	// detection. When empty or "asset" (the default), chains group by
+	// asset.ID. When "global", all failures for the chain land in one
+	// bucket regardless of which asset they came from — use this for
+	// cross-asset chains whose member controls target different asset
+	// types (e.g. shadow infrastructure chains where an SCP control
+	// fires on aws_organization while a service control fires on
+	// aws_account).
+	Scope ChainScope `yaml:"scope,omitempty" json:"scope,omitempty"`
+
 	// ScopeField is the optional property path used to group failing
 	// controls before threshold detection. When empty (the default),
 	// chains group by asset.ID — the legacy behaviour. When set
@@ -27,7 +37,7 @@ type ChainDefinition struct {
 	// engine resolves the value at that path on each failing asset and
 	// uses it as the grouping key. Two failing controls on different
 	// asset.IDs that share a scope value count as co-failures on the
-	// same logical scope.
+	// same logical scope. Ignored when Scope is "global".
 	//
 	// Use this when a chain's member predicates force one logical
 	// resource to surface as multiple Stave assets (e.g., per-trigger
@@ -60,6 +70,22 @@ type IncidentPrecedent struct {
 	Impact    string `yaml:"impact"    json:"impact"`
 	Reference string `yaml:"reference" json:"reference"`
 }
+
+// ChainScope controls how failing controls are grouped before
+// threshold detection.
+type ChainScope string
+
+const (
+	// ScopeAsset groups by asset.ID (the default when empty).
+	ScopeAsset ChainScope = "asset"
+
+	// ScopeGlobal puts all failures in one bucket, enabling
+	// cross-asset-type chains.
+	ScopeGlobal ChainScope = "global"
+)
+
+// IsGlobal reports whether the chain uses global (cross-asset) grouping.
+func (s ChainScope) IsGlobal() bool { return s == ScopeGlobal }
 
 // ChainComplexity classifies how difficult a chain is to exploit.
 type ChainComplexity string
@@ -204,6 +230,9 @@ func (c *ChainDefinition) Validate() error {
 	if c.EscalationThreshold > len(c.ControlIDs) {
 		return fmt.Errorf("chain %s: escalation_threshold (%d) > control count (%d)",
 			c.ID, c.EscalationThreshold, len(c.ControlIDs))
+	}
+	if c.Scope != "" && c.Scope != ScopeAsset && c.Scope != ScopeGlobal {
+		return fmt.Errorf("chain %s: invalid scope %q (must be \"asset\" or \"global\")", c.ID, c.Scope)
 	}
 	return nil
 }

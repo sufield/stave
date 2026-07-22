@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	cm "github.com/sufield/stave/internal/compliancemapping"
+	cm "github.com/sufield/stave/pkg/stave/compliancemapping"
 )
 
 // Renderer is the format-dispatch interface for `stave compliance`.

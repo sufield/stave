@@ -318,6 +318,66 @@ func TestDetectChains_ScopeFieldNilResolverFallsBack(t *testing.T) {
 	}
 }
 
+func TestDetectChains_GlobalScope_CrossAssetTypes(t *testing.T) {
+	chain := []policy.ChainDefinition{{
+		ID:                  "shadow_infra",
+		ControlIDs:          []kernel.ControlID{"CTL.SVC.ACTIVE", "CTL.SCP.DENY", "CTL.TRAIL.BLIND"},
+		Scope:               policy.ScopeGlobal,
+		EscalationThreshold: 2,
+		CompoundSeverity:    policy.SeverityCritical,
+	}}
+	lookup := map[kernel.ControlID]*policy.ControlDefinition{
+		"CTL.SVC.ACTIVE":  {Params: policy.NewParams(map[string]any{})},
+		"CTL.SCP.DENY":    {Params: policy.NewParams(map[string]any{})},
+		"CTL.TRAIL.BLIND": {Params: policy.NewParams(map[string]any{})},
+	}
+	failures := []FailingControl{
+		{ControlID: "CTL.SVC.ACTIVE", AssetID: "arn:aws:iam::111:root"},
+		{ControlID: "CTL.SCP.DENY", AssetID: "o-abc123"},
+		{ControlID: "CTL.TRAIL.BLIND", AssetID: "arn:aws:cloudtrail:us-east-1:111:trail/mgmt"},
+	}
+
+	findings := DetectChains(failures, chain, lookup, nil)
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 finding (global scope reunites cross-asset failures), got %d", len(findings))
+	}
+	f := findings[0]
+	if f.ChainID != "shadow_infra" {
+		t.Errorf("ChainID = %q, want shadow_infra", f.ChainID)
+	}
+	if len(f.ControlsFailing) != 3 {
+		t.Errorf("ControlsFailing = %d, want 3", len(f.ControlsFailing))
+	}
+	if len(f.ContributingAssets) != 3 {
+		t.Errorf("ContributingAssets = %d, want 3 (all distinct assets)", len(f.ContributingAssets))
+	}
+	if f.ScopeID != "__global__" {
+		t.Errorf("ScopeID = %q, want __global__", f.ScopeID)
+	}
+}
+
+func TestDetectChains_GlobalScope_BelowThreshold(t *testing.T) {
+	chain := []policy.ChainDefinition{{
+		ID:                  "global_below",
+		ControlIDs:          []kernel.ControlID{"A", "B", "C"},
+		Scope:               policy.ScopeGlobal,
+		EscalationThreshold: 3,
+		CompoundSeverity:    policy.SeverityHigh,
+	}}
+	lookup := map[kernel.ControlID]*policy.ControlDefinition{
+		"A": {Params: policy.NewParams(map[string]any{})},
+		"B": {Params: policy.NewParams(map[string]any{})},
+	}
+	failures := []FailingControl{
+		{ControlID: "A", AssetID: "x"},
+		{ControlID: "B", AssetID: "y"},
+	}
+	findings := DetectChains(failures, chain, lookup, nil)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings (only 2 of 3 failing), got %d", len(findings))
+	}
+}
+
 func TestScopeAdjustedBlast_MultiplierAtOne(t *testing.T) {
 	ctl := &policy.ControlDefinition{
 		Params: policy.NewParams(map[string]any{

@@ -225,7 +225,7 @@ func emitChainFinding(
 	// every chain golden in the repo. Emit only when scope_field
 	// actually drove grouping.
 	_, isResolved := b.resolvedByScope[scope]
-	if chain.ScopeField != "" && isResolved {
+	if isResolved && (chain.ScopeField != "" || chain.Scope.IsGlobal()) {
 		finding.ScopeID = scope
 		finding.ScopeField = chain.ScopeField
 		finding.ContributingAssets = contributing
@@ -242,6 +242,9 @@ func emitChainFinding(
 // applies when the resolver is nil — defensive for tests and any caller
 // that has no asset properties at hand.
 func groupingKey(chain *policy.ChainDefinition, assetID asset.ID, resolver ScopeResolver) (string, bool) {
+	if chain.Scope.IsGlobal() {
+		return "__global__", true
+	}
 	if chain.ScopeField == "" || resolver == nil {
 		return string(assetID), false
 	}

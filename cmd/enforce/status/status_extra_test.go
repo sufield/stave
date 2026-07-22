@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"testing"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appstatus "github.com/sufield/stave/internal/app/status"
+	"github.com/sufield/stave/cmd/cmdutil"
+	appstatus "github.com/sufield/stave/pkg/stave/status"
 )
 
 func TestRunnerReport_JSON(t *testing.T) {
 	r := &Runner{}
 	var buf bytes.Buffer
 	cfg := config{
-		Format: appcontracts.FormatJSON,
+		Format: cmdutil.FormatJSON,
 		Stdout: &buf,
 	}
 	result := appstatus.Result{
@@ -31,7 +31,7 @@ func TestRunnerReport_Text(t *testing.T) {
 	r := &Runner{}
 	var buf bytes.Buffer
 	cfg := config{
-		Format: appcontracts.FormatText,
+		Format: cmdutil.FormatText,
 		Stdout: &buf,
 	}
 	result := appstatus.Result{

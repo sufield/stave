@@ -12,7 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/enforce/generate"
 	"github.com/sufield/stave/cmd/enforce/graph"
 	"github.com/sufield/stave/cmd/enforce/status"
-	appstatus "github.com/sufield/stave/internal/app/status"
+	appstatus "github.com/sufield/stave/pkg/stave/status"
 )
 
 // Factory functions for individual enforcement commands.

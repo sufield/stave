@@ -17,6 +17,7 @@ controls:
   - CTL.IAM.BOUNDARY.PAYER.SELFMODIFY.001
   - CTL.IAM.BOUNDARY.PAYER.IDENTITYCENTER.001
   - CTL.IAM.BOUNDARY.PAYER.CONTROLTOWER.001
+scope: global
 escalation_threshold: 2
 compound_severity: critical
 preconditions:

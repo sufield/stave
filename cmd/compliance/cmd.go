@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/compliancemapping"
+	"github.com/sufield/stave/pkg/stave/compliancemapping"
 )
 
 var errSnapshotRequired = errors.New("--snapshot is required (path to an observation snapshot directory, or - for stdin)")

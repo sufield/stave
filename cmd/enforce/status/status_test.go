@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	appstatus "github.com/sufield/stave/internal/app/status"
+	appstatus "github.com/sufield/stave/pkg/stave/status"
 )
 
 func TestRecommendNextCreateControlWhenMissing(t *testing.T) {

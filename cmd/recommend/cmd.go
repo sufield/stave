@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/adapters/templatefs"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/pkg/stave/snapshot"
 	tmpl "github.com/sufield/stave/pkg/stave/template"
@@ -65,7 +64,7 @@ Exit Codes:
 }
 
 func runRecommend(_ any, w io.Writer, opts *options) error {
-	allTemplates, err := templatefs.LoadAll("", templates.BuiltinTemplateFS)
+	allTemplates, err := tmpl.LoadAll("", templates.BuiltinTemplateFS)
 	if err != nil {
 		return fmt.Errorf("load templates: %w", err)
 	}

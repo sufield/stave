@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	cm "github.com/sufield/stave/internal/compliancemapping"
+	cm "github.com/sufield/stave/pkg/stave/compliancemapping"
 )
 
 func sampleReport() *cm.Report {

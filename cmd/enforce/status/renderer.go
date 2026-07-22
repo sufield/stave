@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appstatus "github.com/sufield/stave/internal/app/status"
+	"github.com/sufield/stave/cmd/cmdutil"
+	appstatus "github.com/sufield/stave/pkg/stave/status"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
@@ -42,11 +42,11 @@ func (TextRenderer) Render(w io.Writer, res appstatus.Result) error {
 // The enum is validated upstream at flag-parse time, so an unknown
 // format here is defensive: it surfaces an explicit error rather than
 // silently falling through to a default.
-func NewRenderer(format appcontracts.OutputFormat) (Renderer, error) {
+func NewRenderer(format cmdutil.OutputFormat) (Renderer, error) {
 	switch format {
-	case appcontracts.FormatJSON:
+	case cmdutil.FormatJSON:
 		return JSONRenderer{}, nil
-	case appcontracts.FormatText:
+	case cmdutil.FormatText:
 		return TextRenderer{}, nil
 	}
 	return nil, fmt.Errorf("unsupported format %q (expected: text | json)", format)

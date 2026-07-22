@@ -1,20 +1,18 @@
-package templatefs
+package template
 
 import (
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
-
-	tmpl "github.com/sufield/stave/pkg/stave/template"
 )
 
 // LoadAll resolves templates from all layers in priority order.
 // First match wins for name collisions: explicit dir > project-local >
 // user dir > embedded.
-func LoadAll(explicitDir string, embeddedFS fs.FS) ([]tmpl.Template, error) {
+func LoadAll(explicitDir string, embeddedFS fs.FS) ([]Template, error) {
 	seen := make(map[string]bool)
-	var all []tmpl.Template
+	var all []Template
 
 	dirs := []string{}
 	if explicitDir != "" {
@@ -30,7 +28,7 @@ func LoadAll(explicitDir string, embeddedFS fs.FS) ([]tmpl.Template, error) {
 		if err != nil || !info.IsDir() {
 			continue
 		}
-		ts, err := tmpl.LoadFromFS(os.DirFS(dir), ".")
+		ts, err := LoadFromFS(os.DirFS(dir), ".")
 		if err != nil {
 			return nil, fmt.Errorf("load templates from %s: %w", dir, err)
 		}
@@ -42,8 +40,7 @@ func LoadAll(explicitDir string, embeddedFS fs.FS) ([]tmpl.Template, error) {
 		}
 	}
 
-	// Embedded templates last (lowest priority)
-	embedded, err := tmpl.LoadFromFS(embeddedFS, ".")
+	embedded, err := LoadFromFS(embeddedFS, ".")
 	if err != nil {
 		return nil, fmt.Errorf("load embedded templates: %w", err)
 	}

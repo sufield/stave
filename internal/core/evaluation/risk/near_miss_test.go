@@ -93,6 +93,30 @@ func TestDetectNearMisses(t *testing.T) {
 		}
 	})
 
+	t.Run("global scope cross-asset near miss", func(t *testing.T) {
+		globalChain := []policy.ChainDefinition{{
+			ID:                  "shadow",
+			Description:         "Shadow infrastructure",
+			ControlIDs:          []kernel.ControlID{"CTL.SVC", "CTL.SCP", "CTL.TRAIL"},
+			Scope:               policy.ScopeGlobal,
+			EscalationThreshold: 2,
+			CompoundSeverity:    policy.SeverityCritical,
+		}}
+		failures := []FailingControl{
+			{ControlID: "CTL.SVC", AssetID: "account-asset"},
+		}
+		nearMisses := DetectNearMisses(failures, globalChain, nil)
+		var found int
+		for _, nm := range nearMisses {
+			if nm.ChainID == "shadow" {
+				found++
+			}
+		}
+		if found != 2 {
+			t.Fatalf("expected 2 near misses (one per holding), got %d", found)
+		}
+	})
+
 	t.Run("two controls short is not a near miss", func(t *testing.T) {
 		// phi_exposure has 3 controls, threshold 2. Zero failing = 2 short, not near miss
 		// (no failures at all → no near misses for phi_exposure)

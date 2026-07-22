@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/projctx"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
-	appstatus "github.com/sufield/stave/internal/app/status"
+	appstatus "github.com/sufield/stave/pkg/stave/status"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 
 // config defines the parameters for the status check.
 type config struct {
 	Dir    string
-	Format appcontracts.OutputFormat
+	Format cmdutil.OutputFormat
 	Stdout io.Writer
 	Stderr io.Writer
 }

@@ -16,6 +16,7 @@ controls:
   - CTL.ORG.SCP.LIGHTSAIL.DENY.001
   - CTL.CLOUDTRAIL.LIGHTSAIL.BLIND.001
   - CTL.IAM.LIGHTSAIL.CREDENTIAL.CREATE.001
+scope: global
 escalation_threshold: 2
 compound_severity: critical
 preconditions:
