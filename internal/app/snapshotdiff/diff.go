@@ -221,12 +221,15 @@ func indexAssets(assets []asset.Asset) map[asset.ID]*asset.Asset {
 // (strings, floats, booleans, maps, slices) without reflection package overhead
 // or recursive pointer/struct traversal vulnerabilities.
 func jsonEqual(a, b any) bool {
+	f1, ok1 := asFloat64(a)
+	f2, ok2 := asFloat64(b)
+	if ok1 && ok2 {
+		return f1 == f2
+	}
+
 	switch va := a.(type) {
 	case string:
 		vb, ok := b.(string)
-		return ok && va == vb
-	case float64:
-		vb, ok := b.(float64)
 		return ok && va == vb
 	case bool:
 		vb, ok := b.(bool)
@@ -258,6 +261,23 @@ func jsonEqual(a, b any) bool {
 		return b == nil
 	default:
 		return a == b
+	}
+}
+
+func asFloat64(v any) (float64, bool) {
+	switch val := v.(type) {
+	case float64:
+		return val, true
+	case int:
+		return float64(val), true
+	case int64:
+		return float64(val), true
+	case int32:
+		return float64(val), true
+	case float32:
+		return float64(val), true
+	default:
+		return 0, false
 	}
 }
 

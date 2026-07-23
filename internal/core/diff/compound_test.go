@@ -118,3 +118,36 @@ func TestComputeCompoundImpact_NetDirection(t *testing.T) {
 		t.Errorf("want RiskDecreasing, got %v", got)
 	}
 }
+
+func TestComputeCompoundImpact_ChainAssetScope(t *testing.T) {
+	// Baseline: CHAIN.1 on asset-a
+	baseline := CompoundInput{
+		Findings: []findings.CompoundFinding{
+			{
+				ChainID:  "CHAIN.1",
+				AssetID:  "asset-a",
+				Severity: controldef.SeverityHigh,
+			},
+		},
+	}
+	// Current: CHAIN.1 on asset-b
+	current := CompoundInput{
+		Findings: []findings.CompoundFinding{
+			{
+				ChainID:  "CHAIN.1",
+				AssetID:  "asset-b",
+				Severity: controldef.SeverityHigh,
+			},
+		},
+	}
+
+	delta := ComputeCompoundImpact(baseline, current)
+
+	// Since it moved assets, CHAIN.1 on asset-a is resolved, and CHAIN.1 on asset-b is activated.
+	if len(delta.ChainsActivated) != 1 {
+		t.Errorf("expected 1 activated chain, got %d", len(delta.ChainsActivated))
+	}
+	if len(delta.ChainsResolved) != 1 {
+		t.Errorf("expected 1 resolved chain, got %d", len(delta.ChainsResolved))
+	}
+}

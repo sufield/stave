@@ -271,3 +271,28 @@ func naclCoverage(t *testing.T, a asset.Asset) map[string]any {
 	}
 	return cov
 }
+
+func TestBugHunt_IsInternalCIDR_SupernetsNotInternal(t *testing.T) {
+	// A CIDR block like 10.0.0.0/7 starts inside 10.0.0.0/8, but extends into public IP space (up to 11.255.255.255).
+	// Under correct behavior: it is not fully internal, so isInternalCIDR should return false,
+	// meaning it won't be considered for internal subnet CIDR coverage comparison.
+	// Under the buggy code: since 10.0.0.0 is inside 10.0.0.0/8, it evaluates to true,
+	// and incorrectly treats the SG rule (allowing 10.0.0.0/7) as internal-only coverage.
+	
+	snap := asset.Snapshot{
+		Assets: []asset.Asset{
+			makeSubnet("subnet-1", "vpc-1", "10.0.1.0/24"),
+			makeSG("sg-1", "vpc-1", []map[string]any{
+				{"cidr_blocks": []any{"10.0.0.0/7"}, "from_port": float64(443), "to_port": float64(443)},
+			}),
+		},
+	}
+
+	out := EnrichVPCCIDRCoverage([]asset.Snapshot{snap})
+	sg := findAsset(out[0], "sg-1")
+	net := sg.Properties["network"].(map[string]any)
+	sgProps := net["security_group"].(map[string]any)
+	if _, exists := sgProps["cidr_coverage"]; exists {
+		t.Error("expected no cidr_coverage when rule CIDR is a supernet that spans outside RFC 1918 (partially public)")
+	}
+}

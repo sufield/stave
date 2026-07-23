@@ -1,6 +1,10 @@
 package diff
 
 import (
+	"cmp"
+	"slices"
+
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -20,10 +24,10 @@ func ComputeCompoundImpact(baseline, current CompoundInput) *RiskDelta {
 	currChains := indexChains(current.Findings)
 
 	// Chains activated: in current but not in baseline.
-	for id, cf := range currChains {
-		if _, was := baseChains[id]; !was {
+	for key, cf := range currChains {
+		if _, was := baseChains[key]; !was {
 			delta.ChainsActivated = append(delta.ChainsActivated, ChainActivation{
-				ChainID:  string(id),
+				ChainID:  string(key.chainID),
 				Severity: cf.Severity.String(),
 				Cause:    controlIDStrings(cf.ControlsFailing),
 			})
@@ -31,14 +35,22 @@ func ComputeCompoundImpact(baseline, current CompoundInput) *RiskDelta {
 	}
 
 	// Chains resolved: in baseline but not in current.
-	for id, cf := range baseChains {
-		if _, still := currChains[id]; !still {
+	for key, cf := range baseChains {
+		if _, still := currChains[key]; !still {
 			delta.ChainsResolved = append(delta.ChainsResolved, ChainResolution{
-				ChainID: string(id),
+				ChainID: string(key.chainID),
 				Cause:   controlIDStrings(cf.ControlsFailing),
 			})
 		}
 	}
+
+	// Sort for determinism.
+	slices.SortFunc(delta.ChainsActivated, func(a, b ChainActivation) int {
+		return cmp.Compare(a.ChainID, b.ChainID)
+	})
+	slices.SortFunc(delta.ChainsResolved, func(a, b ChainResolution) int {
+		return cmp.Compare(a.ChainID, b.ChainID)
+	})
 
 	// Distance changes: compare near-miss chains.
 	baseNM := indexNearMiss(baseline.NearMiss)
@@ -62,12 +74,23 @@ func ComputeCompoundImpact(baseline, current CompoundInput) *RiskDelta {
 	// from distance-N to distance-1).
 	for id := range currNM {
 		if _, was := baseNM[id]; !was {
-			if _, active := currChains[id]; !active {
-				delta.DistanceChanges = append(delta.DistanceChanges, DistanceChange{
-					ChainID:     string(id),
-					WasDistance: -1, // was not near-miss
-					NowDistance: 1,
-				})
+			if _, active := currChains[chainKey{chainID: id}]; !active {
+				// Wait! currChains is now map[chainKey]*findings.CompoundFinding.
+				// Since id is kernel.ChainID, we check if ANY chain with this ID is active.
+				anyActive := false
+				for k := range currChains {
+					if k.chainID == id {
+						anyActive = true
+						break
+					}
+				}
+				if !anyActive {
+					delta.DistanceChanges = append(delta.DistanceChanges, DistanceChange{
+						ChainID:     string(id),
+						WasDistance: -1, // was not near-miss
+						NowDistance: 1,
+					})
+				}
 			}
 		}
 	}
@@ -79,10 +102,17 @@ func ComputeCompoundImpact(baseline, current CompoundInput) *RiskDelta {
 	return delta
 }
 
-func indexChains(fs []findings.CompoundFinding) map[kernel.ChainID]*findings.CompoundFinding {
-	idx := make(map[kernel.ChainID]*findings.CompoundFinding, len(fs))
+type chainKey struct {
+	chainID kernel.ChainID
+	assetID asset.ID
+	scopeID string
+}
+
+func indexChains(fs []findings.CompoundFinding) map[chainKey]*findings.CompoundFinding {
+	idx := make(map[chainKey]*findings.CompoundFinding, len(fs))
 	for i := range fs {
-		idx[fs[i].ChainID] = &fs[i]
+		k := chainKey{chainID: fs[i].ChainID, assetID: fs[i].AssetID, scopeID: fs[i].ScopeID}
+		idx[k] = &fs[i]
 	}
 	return idx
 }

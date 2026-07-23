@@ -155,3 +155,24 @@ func TestDiff_DeterministicOutput(t *testing.T) {
 		t.Errorf("first change asset = %s, want a-asset", result.PropertyChanges[0].AssetID)
 	}
 }
+
+func TestBugHunt_Diff_NumericTypeCoercion(t *testing.T) {
+	before := asset.Snapshot{
+		CapturedAt: tBefore,
+		Assets: []asset.Asset{
+			{ID: "asset-1", Type: "s3", Properties: map[string]any{"x": 1}}, // int
+		},
+	}
+	after := asset.Snapshot{
+		CapturedAt: tAfter,
+		Assets: []asset.Asset{
+			{ID: "asset-1", Type: "s3", Properties: map[string]any{"x": 1.0}}, // float64
+		},
+	}
+
+	result := Diff(before, after)
+	if len(result.PropertyChanges) != 0 {
+		t.Errorf("expected 0 property changes because 1 and 1.0 are numerically equal, but got %d: %+v",
+			len(result.PropertyChanges), result.PropertyChanges)
+	}
+}

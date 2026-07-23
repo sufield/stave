@@ -337,7 +337,7 @@ var rfc1918 = []netip.Prefix{
 
 func isInternalCIDR(p netip.Prefix) bool {
 	for _, r := range rfc1918 {
-		if r.Contains(p.Addr()) {
+		if prefixContains(r, p) {
 			return true
 		}
 	}
