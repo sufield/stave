@@ -14,6 +14,10 @@ usage: stave forge lint [flags]
 options:
     - name: control
       usage: control YAML file or directory (required)
+    - name: format
+      shorthand: f
+      default_value: text
+      usage: 'output format: text | json'
     - name: help
       shorthand: h
       default_value: "false"
@@ -82,5 +86,6 @@ inherited_options:
 example: |4-
       stave forge lint --control controls/ad/CTL.AD.PASS.MINLEN.001.yaml
       stave forge lint --control controls/ --semantic --strict
+      stave forge lint --control controls/ --format json
 see_also:
     - stave forge - Author and test custom controls

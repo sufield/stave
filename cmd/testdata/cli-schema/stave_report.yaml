@@ -14,7 +14,7 @@ description: |-
       --snapshot PATH         Snapshot to assess (required)
       --sla-profile-file PATH SLA policy
       --team-manifest PATH    Team manifest
-      --format STRING         json (default) | markdown
+      --format STRING         json (default) | markdown | html | csv
       --title STRING          Report title
       --period STRING         Reporting period label
 
@@ -34,7 +34,7 @@ options:
     - name: format
       shorthand: f
       default_value: json
-      usage: 'output format: json | markdown'
+      usage: 'output format: json | markdown | html | csv'
     - name: help
       shorthand: h
       default_value: "false"

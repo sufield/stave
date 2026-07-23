@@ -6,10 +6,14 @@ description: |-
     New findings (not in the baseline) are reported. Use --fail-on-new to
     fail the CI pipeline when new violations appear.
 
+    Use --warn-on-resolved to emit a warning when baseline findings disappear.
+    Disappearing findings may indicate data loss rather than remediation.
+
     Inputs:
-      --in          Path to current evaluation JSON
-      --baseline    Path to saved baseline JSON
-      --fail-on-new Exit 3 when new findings detected (default: true)
+      --in               Path to current evaluation JSON
+      --baseline         Path to saved baseline JSON
+      --fail-on-new      Exit 3 when new findings detected (default: true)
+      --warn-on-resolved Warn when baseline findings disappear (default: false)
 
     Exit Codes:
       0    No new findings (or --fail-on-new=false)
@@ -29,6 +33,10 @@ options:
       usage: help for check
     - name: in
       usage: Path to evaluation JSON (required)
+    - name: warn-on-resolved
+      default_value: "false"
+      usage: |
+        Warn when baseline findings disappear (may indicate data loss)
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -91,5 +99,6 @@ inherited_options:
 example: |4-
       stave ci baseline check --in output/evaluation.json --baseline output/baseline.json
       stave ci baseline check --in output/evaluation.json --baseline output/baseline.json --fail-on-new=false
+      stave ci baseline check --in output/evaluation.json --baseline output/baseline.json --warn-on-resolved
 see_also:
     - stave ci baseline - Manage baseline findings for fail-on-new CI workflows

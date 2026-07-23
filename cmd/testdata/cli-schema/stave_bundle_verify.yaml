@@ -5,8 +5,9 @@ description: |-
     Ed25519 signature.
 
     Inputs:
-      --bundle PATH       Path to .stave-bundle archive (required)
-      --public-key PATH   Path to Ed25519 public key PEM (optional)
+      --bundle PATH            Path to .stave-bundle archive (required)
+      --public-key PATH        Path to Ed25519 public key PEM (optional)
+      --require-signature      Fail (exit 3) if the bundle is unsigned
 
     Outputs:
       stdout              Verification result
@@ -25,6 +26,9 @@ options:
       usage: help for verify
     - name: public-key
       usage: Path to Ed25519 public key PEM
+    - name: require-signature
+      default_value: "false"
+      usage: Fail if the bundle is unsigned
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -87,5 +91,6 @@ inherited_options:
 example: |4-
       stave bundle verify --bundle evidence.stave-bundle
       stave bundle verify --bundle evidence.stave-bundle --public-key audit.pub
+      stave bundle verify --bundle evidence.stave-bundle --require-signature
 see_also:
     - stave bundle - Generate a sealed evidence bundle for air-gap GRC integration
