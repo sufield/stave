@@ -146,6 +146,51 @@ var builtinTools = []Tool{
 			{Capability: "container_code_execution", FieldPath: "properties.compute.task_definition.network_mode", Rationale: "ecs_efs_attack exploits ECS task configuration for lateral movement"},
 		},
 	},
+	{
+		Name:        "enumerate-iam",
+		Description: "Brute-force enumeration of IAM permissions for a given set of AWS credentials",
+		Reference:   "https://github.com/andresriancho/enumerate-iam",
+		Prerequisites: []Prerequisite{
+			{Capability: "iam_credential_theft", FieldPath: "properties.identity.credential.access_key_age_days", Rationale: "enumerates which API calls succeed with stolen long-term credentials"},
+		},
+	},
+	{
+		Name:        "scoutsuite",
+		Description: "Multi-cloud security auditing tool — maps misconfigurations across AWS services",
+		Reference:   "https://github.com/nccgroup/ScoutSuite",
+		Prerequisites: []Prerequisite{
+			{Capability: "s3_data_access", FieldPath: "properties.storage.controls.public_access_fully_blocked", Rationale: "scouts s3 bucket policies and ACLs for public exposure"},
+			{Capability: "iam_credential_theft", FieldPath: "properties.identity.policies.has_admin_access", Rationale: "audits IAM policies for overprivileged roles"},
+			{Capability: "network_access_ec2", FieldPath: "properties.compute.security_group.ingress_unrestricted", Rationale: "maps security group rules for unrestricted ingress"},
+		},
+	},
+	{
+		Name:        "pmapper",
+		Description: "AWS IAM privilege escalation path finder using graph analysis",
+		Reference:   "https://github.com/nccgroup/PMapper",
+		Prerequisites: []Prerequisite{
+			{Capability: "iam_credential_theft", FieldPath: "properties.identity.escalation", Rationale: "builds IAM privilege escalation graph from policy analysis"},
+			{Capability: "iam_credential_theft", FieldPath: "properties.identity.policies.has_admin_access", Rationale: "identifies admin-equivalent roles reachable via escalation"},
+		},
+	},
+	{
+		Name:        "trufflehog",
+		Description: "Credential and secret scanner for git repos, S3 buckets, and filesystems",
+		Reference:   "https://github.com/trufflesecurity/trufflehog",
+		Prerequisites: []Prerequisite{
+			{Capability: "secret_store_access", FieldPath: "properties.secret.access.rotation_enabled", Rationale: "finds hardcoded credentials and API keys in exposed resources"},
+			{Capability: "s3_data_access", FieldPath: "properties.storage.access.public_read", Rationale: "scans publicly readable S3 buckets for leaked secrets"},
+		},
+	},
+	{
+		Name:        "endgame",
+		Description: "AWS resource policy backdoor tool — creates persistent cross-account access",
+		Reference:   "https://github.com/DavidDikworworst/endgame",
+		Prerequisites: []Prerequisite{
+			{Capability: "s3_data_access", FieldPath: "properties.storage.access.public_read", Rationale: "backdoors S3 bucket policies for persistent cross-account access"},
+			{Capability: "iam_credential_theft", FieldPath: "properties.identity.policies.service_wildcards_granted", Rationale: "exploits overly broad resource policies to create backdoor access"},
+		},
+	},
 }
 
 // ToolNamesForCapability returns tool names matching a capability,

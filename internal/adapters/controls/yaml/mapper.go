@@ -58,6 +58,7 @@ func (y yamlControlDefinition) ToDomain() (policy.ControlDefinition, error) {
 		CorpusReference:          strings.TrimSpace(y.CorpusReference),
 		IntentRationale:          strings.TrimSpace(y.IntentRationale),
 		ForbiddenState:           unsafePredicateToDomain(y.ForbiddenState),
+		VerdictOnError:           strings.TrimSpace(y.VerdictOnError),
 	}, nil
 }
 

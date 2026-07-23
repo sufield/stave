@@ -18,6 +18,8 @@ taxonomy:
   - compliance-mapping
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_cloudformation_stack
 params:
   attack_stage: detection_evasion
 remediation:

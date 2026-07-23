@@ -2,6 +2,7 @@ package forgecmd
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -29,6 +30,11 @@ type lintResult struct {
 // non-nil gating error (the command maps it to exit 4; the report is still
 // rendered). It is the library entry point behind `stave forge lint`.
 func Lint(controlPath string, semantic, strict bool) ([]byte, error) {
+	return LintWithFormat(controlPath, semantic, strict, "text")
+}
+
+// LintWithFormat is Lint with configurable output format ("text" or "json").
+func LintWithFormat(controlPath string, semantic, strict bool, format string) ([]byte, error) {
 	paths, err := collectControlPaths(controlPath)
 	if err != nil {
 		return nil, err
@@ -39,7 +45,7 @@ func Lint(controlPath string, semantic, strict bool) ([]byte, error) {
 		return nil, fmt.Errorf("init CEL: %w", celErr)
 	}
 
-	var buf bytes.Buffer
+	results := make([]lintResult, 0, len(paths))
 	totalErrors := 0
 	totalWarnings := 0
 
@@ -47,26 +53,43 @@ func Lint(controlPath string, semantic, strict bool) ([]byte, error) {
 		result := lintControl(p, celEval, semantic)
 		totalErrors += len(result.Errors)
 		totalWarnings += len(result.Warnings)
-
-		if len(result.Errors)+len(result.Warnings)+len(result.Infos) == 0 {
-			continue
-		}
-
-		fmt.Fprintf(&buf, "%s\n", result.ControlID)
-		for _, e := range result.Errors {
-			fmt.Fprintf(&buf, "  ERROR   %s\n", e)
-		}
-		for _, wn := range result.Warnings {
-			fmt.Fprintf(&buf, "  WARNING %s\n", wn)
-		}
-		for _, info := range result.Infos {
-			fmt.Fprintf(&buf, "  INFO    %s\n", info)
-		}
-		fmt.Fprintln(&buf)
+		results = append(results, result)
 	}
 
-	fmt.Fprintf(&buf, "%d error(s), %d warning(s) across %d file(s)\n",
-		totalErrors, totalWarnings, len(paths))
+	var buf bytes.Buffer
+	if format == "json" {
+		type jsonOutput struct {
+			Results  []lintResult `json:"results"`
+			Errors   int          `json:"errors"`
+			Warnings int          `json:"warnings"`
+			Files    int          `json:"files"`
+		}
+		out := jsonOutput{Results: results, Errors: totalErrors, Warnings: totalWarnings, Files: len(paths)}
+		enc := json.NewEncoder(&buf)
+		enc.SetIndent("", "  ")
+		if encErr := enc.Encode(out); encErr != nil {
+			return nil, fmt.Errorf("encode lint JSON: %w", encErr)
+		}
+	} else {
+		for _, result := range results {
+			if len(result.Errors)+len(result.Warnings)+len(result.Infos) == 0 {
+				continue
+			}
+			fmt.Fprintf(&buf, "%s\n", result.ControlID)
+			for _, e := range result.Errors {
+				fmt.Fprintf(&buf, "  ERROR   %s\n", e)
+			}
+			for _, wn := range result.Warnings {
+				fmt.Fprintf(&buf, "  WARNING %s\n", wn)
+			}
+			for _, info := range result.Infos {
+				fmt.Fprintf(&buf, "  INFO    %s\n", info)
+			}
+			fmt.Fprintln(&buf)
+		}
+		fmt.Fprintf(&buf, "%d error(s), %d warning(s) across %d file(s)\n",
+			totalErrors, totalWarnings, len(paths))
+	}
 
 	if totalErrors > 0 {
 		return buf.Bytes(), fmt.Errorf("%d lint error(s)", totalErrors)

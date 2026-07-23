@@ -16,6 +16,8 @@ taxonomy:
   - least-privilege
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_redshift_cluster
 params:
   attack_stage: initial_access
 remediation:

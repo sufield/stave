@@ -29,6 +29,8 @@ taxonomy:
 version: ctrl.v1
 type: unsafe_duration
 classification: aggregate_check
+applicable_asset_types:
+  - aws_s3_bucket
 params:
   attack_stage: initial_access
   max_unsafe_duration: 0h

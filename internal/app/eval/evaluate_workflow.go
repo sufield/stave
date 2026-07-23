@@ -158,15 +158,20 @@ func noopPredicateParser(_ any) (*policy.UnsafePredicate, error) {
 }
 
 // inconclusiveCELEvaluator is the fallback used when EvaluationRequest
-// does not set a CELEvaluator. Returning an error here matches the
-// downstream checkUnsafe semantics: each control becomes inconclusive
-// rather than silently passing as "safe". Some flows (e.g. snapshot
-// risk metrics that don't depend on per-asset findings) intentionally
-// run without a real evaluator; the inconclusive path keeps their
-// observable behavior unchanged after the Assessor's nil-precondition
-// was added.
+// does not set a CELEvaluator. When the control declares a
+// verdict_on_error, that verdict is returned without an error so the
+// engine records a definitive PASS or VIOLATION instead of marking the
+// control inconclusive. Controls without the field get the original
+// inconclusive behavior (error return).
 func inconclusiveCELEvaluator(ctl policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
-	return false, fmt.Errorf("no CEL evaluator configured (control %s, asset %s)", ctl.ID, a.ID)
+	switch ctl.VerdictOnError {
+	case "safe":
+		return false, nil
+	case "unsafe":
+		return true, nil
+	default:
+		return false, fmt.Errorf("no CEL evaluator configured (control %s, asset %s)", ctl.ID, a.ID)
+	}
 }
 
 // EvaluateLoaded evaluates already-loaded controls and snapshots.

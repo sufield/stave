@@ -215,13 +215,15 @@ func MarshalASFFWithOptions(assessment *report.Assessment, opts ASFFOptions) ([]
 	return json.MarshalIndent(findings, "", "  ")
 }
 
-// evalTimestamp returns the RFC3339 eval-time from the assessment's RunInfo,
-// falling back to the current time only when RunInfo has no eval-time set.
+// evalTimestamp returns the RFC3339 eval-time from the assessment's RunInfo.
+// Panics when EvalTime is zero — callers must ensure the assessment carries
+// a valid eval-time (all production paths set it; a zero value indicates a
+// bug in the upstream pipeline, not a missing-data condition).
 func evalTimestamp(a *report.Assessment) string {
-	if !a.Run.EvalTime.IsZero() {
-		return a.Run.EvalTime.UTC().Format(time.RFC3339)
+	if a.Run.EvalTime.IsZero() {
+		panic("ASFF: assessment has zero EvalTime — the upstream pipeline must set RunInfo.EvalTime")
 	}
-	return time.Now().UTC().Format(time.RFC3339)
+	return a.Run.EvalTime.UTC().Format(time.RFC3339)
 }
 
 // buildProductFields creates ASFF ProductFields with all compliance

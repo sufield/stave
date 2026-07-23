@@ -32,6 +32,8 @@ taxonomy:
   - trust-boundary
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_codecommit_repository
 params:
   attack_stage: exfiltration
   base_impact: 8

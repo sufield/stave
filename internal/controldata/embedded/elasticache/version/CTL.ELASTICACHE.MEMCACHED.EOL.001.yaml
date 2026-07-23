@@ -26,6 +26,8 @@ taxonomy:
   - compute-hardening
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_elasticache_cluster
 params:
   attack_stage: persistence
 remediation:

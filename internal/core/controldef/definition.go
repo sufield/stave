@@ -113,6 +113,13 @@ type ControlDefinition struct {
 	// with the predicate vocabulary they already know.
 	ForbiddenState UnsafePredicate
 
+	// VerdictOnError controls how the evaluation engine treats this
+	// control when the predicate evaluator is unavailable or errors:
+	//   "safe"   — assume safe (false positives worse than false negatives)
+	//   "unsafe" — assume unsafe (false negatives worse than false positives)
+	//   ""       — default: inconclusive (returns an error, control skipped)
+	VerdictOnError string
+
 	// prepared holds pre-calculated values to optimize the evaluation
 	// hot path. Only Prepare() (in this package) writes to it; the
 	// per-attribute accessors below are the read surface for

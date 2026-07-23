@@ -19,6 +19,8 @@ taxonomy:
   - redundancy
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_efs_filesystem
 params:
   attack_stage: resilience
 remediation:

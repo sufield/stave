@@ -131,9 +131,10 @@ linters:
           # (isTriggered, checkUnsafe, computeAssetStates) DO take
           # the struct by pointer to skip the per-call copy — those
           # are narrower internal helpers, not signature-bound
-          # boundaries. Bumped to 720 for PayerExempt +
-          # PayerCompensatingControl pointer fields (16 bytes).
-          sizeThreshold: 720
+          # boundaries. Bumped to 736 for VerdictOnError string
+          # field (HAZOP 1.4: fallback evaluator honors per-control
+          # error verdict).
+          sizeThreshold: 736
         rangeValCopy:
           sizeThreshold: 128
     govet:

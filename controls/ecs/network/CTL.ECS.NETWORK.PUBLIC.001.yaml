@@ -21,6 +21,8 @@ taxonomy:
   - network-perimeter
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_ecs_service
 params:
   attack_stage: initial_access
 remediation:

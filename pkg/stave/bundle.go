@@ -47,12 +47,15 @@ func BuildEvidenceBundle(ctx context.Context, assessmentJSON []byte, observation
 		return EvidenceBundleResult{}, fmt.Errorf("load snapshots for bundle: %w", err)
 	}
 
+	provenance := scanSnapshotAttestations(observationsDir)
+
 	bundleData, err := evidence.Build(evidence.BundleInput{
-		Assessment:    &assessment,
-		Snapshots:     loadResult.Snapshots,
-		TraceJSON:     nil,
-		PrivateKeyPEM: privateKeyPEM,
-		StaveVersion:  "edge",
+		Assessment:           &assessment,
+		Snapshots:            loadResult.Snapshots,
+		TraceJSON:            nil,
+		PrivateKeyPEM:        privateKeyPEM,
+		StaveVersion:         "edge",
+		UpstreamAttestations: provenance,
 	})
 	if err != nil {
 		return EvidenceBundleResult{}, fmt.Errorf("build bundle: %w", err)
@@ -175,6 +178,43 @@ func AssembleAuditBundle(ctx context.Context, in AuditBundleInput) (AuditBundleR
 	}
 
 	return AuditBundleResult{AssessmentCount: len(assessments), ComponentCount: len(pkg.Components)}, nil
+}
+
+// scanSnapshotAttestations scans observation JSON files for inline
+// attestation metadata to establish chain-of-custody provenance. Files
+// without attestation data are silently skipped — the bundle proceeds
+// but records no upstream provenance for those snapshots.
+func scanSnapshotAttestations(dir string) []evidence.SnapshotProvenance {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var provenance []evidence.SnapshotProvenance
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".json") {
+			continue
+		}
+		path := filepath.Join(dir, entry.Name())
+		data, readErr := os.ReadFile(path) //nolint:gosec // user-specified dir
+		if readErr != nil {
+			continue
+		}
+		var doc struct {
+			Attestation *struct {
+				SignedAt             string `json:"signed_at"`
+				PublicKeyFingerprint string `json:"public_key_fingerprint"`
+			} `json:"attestation"`
+		}
+		if json.Unmarshal(data, &doc) != nil || doc.Attestation == nil {
+			continue
+		}
+		provenance = append(provenance, evidence.SnapshotProvenance{
+			Source:               entry.Name(),
+			SignedAt:             doc.Attestation.SignedAt,
+			PublicKeyFingerprint: doc.Attestation.PublicKeyFingerprint,
+		})
+	}
+	return provenance
 }
 
 // loadPeriodAssessments loads every assessment artifact in dir whose run

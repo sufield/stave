@@ -26,6 +26,8 @@ taxonomy:
   - least-privilege
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_endpoint
 params:
   attack_stage: exfiltration
 remediation:

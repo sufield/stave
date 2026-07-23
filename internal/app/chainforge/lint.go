@@ -27,8 +27,8 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]st
 	if len(chain.ControlIDs) < 2 {
 		result.Errors = append(result.Errors, "requires at least 2 member controls")
 	}
-	if chain.EscalationThreshold < 1 {
-		result.Errors = append(result.Errors, "escalation_threshold must be >= 1")
+	if chain.EscalationThreshold < 2 {
+		result.Errors = append(result.Errors, "escalation_threshold must be >= 2 (a chain with threshold 1 is just a single-control finding)")
 	}
 	if chain.EscalationThreshold > len(chain.ControlIDs) {
 		result.Errors = append(result.Errors, fmt.Sprintf(

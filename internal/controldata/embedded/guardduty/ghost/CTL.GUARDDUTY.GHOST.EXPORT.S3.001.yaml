@@ -34,6 +34,8 @@ taxonomy:
   - trust-decay
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_guardduty_detector
 params:
   attack_stage: detection_evasion
   blast_radius:

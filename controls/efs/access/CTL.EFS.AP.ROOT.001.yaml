@@ -18,6 +18,8 @@ taxonomy:
   - compliance-mapping
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_efs_filesystem
 params:
   base_impact: 7
   attack_stage: exfiltration

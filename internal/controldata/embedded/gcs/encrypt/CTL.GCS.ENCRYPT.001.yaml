@@ -20,6 +20,8 @@ taxonomy:
   - key-management
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - gcp_storage_bucket
 params:
   attack_stage: exfiltration
 remediation:

@@ -34,6 +34,8 @@ taxonomy:
   - deprecation
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
 params:
   base_impact: 8
   attack_stage: initial_access

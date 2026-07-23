@@ -71,6 +71,10 @@ type yamlControlDefinition struct {
 	// the same wire shape as UnsafePredicate so authors can express
 	// invariants with the same any/all + rule vocabulary.
 	ForbiddenState yamlUnsafePredicate `yaml:"forbidden_state,omitempty"`
+
+	// VerdictOnError controls fallback behavior when the predicate
+	// evaluator is unavailable: "safe", "unsafe", or "" (inconclusive).
+	VerdictOnError string `yaml:"verdict_on_error,omitempty"`
 }
 
 // yamlAlternative is the YAML wire-format for policy.Alternative.

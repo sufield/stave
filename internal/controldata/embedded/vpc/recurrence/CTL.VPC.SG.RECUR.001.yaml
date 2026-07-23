@@ -21,6 +21,8 @@ taxonomy:
   - network-perimeter
 type: unsafe_recurrence
 classification: aggregate_check
+applicable_asset_types:
+  - aws_vpc
 params:
   recurrence_threshold: 2
   window_days: 30

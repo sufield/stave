@@ -32,6 +32,8 @@ taxonomy:
   - network-perimeter
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types:
+  - aws_vpc
 params:
   attack_stage: lateral_movement
 observation_fields:
