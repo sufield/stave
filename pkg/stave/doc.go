@@ -158,7 +158,7 @@
 //	ForgeSnapshotAssetCount / ForgeSnapshotAssetTypes — snapshot inspection
 //	                   for the authoring wizard.
 //	ForgeScaffold      — write pass/fail fixtures for a control.
-//	ForgeLint          — lint a control (or directory) for schema/semantics.
+//	ForgeLintWithFormat — lint a control (or directory) for schema/semantics.
 //	ForgeChainLint     — lint a chain file against a controls directory.
 //	ForgeTest          — fixture-based pass/fail assertions for a control.
 //	ForgeValidateGenerated — validate a freshly generated control YAML.

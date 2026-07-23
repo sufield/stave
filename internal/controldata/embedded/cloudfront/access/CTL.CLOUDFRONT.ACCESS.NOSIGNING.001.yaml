@@ -30,8 +30,6 @@ taxonomy:
   - compliance-mapping
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_cloudfront_distribution
 params:
   attack_stage: initial_access
 remediation:

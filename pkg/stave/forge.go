@@ -46,15 +46,10 @@ func ForgeScaffold(controlPath, snapshotPath, outDir string) ([]byte, error) {
 	return forgecmd.Scaffold(controlPath, snapshotPath, outDir) //nolint:wrapcheck // engine already wrapped; preserve exit 4.
 }
 
-// ForgeLint runs static analysis over a control YAML file/directory and
+// ForgeLintWithFormat runs static analysis over a control YAML file/directory and
 // returns the report; a non-nil error gates the run (exit 4) when errors exist
 // (or strict + warnings exist) — the report is still rendered. Library entry
 // point behind `stave forge lint`.
-func ForgeLint(controlPath string, semantic, strict bool) ([]byte, error) {
-	return forgecmd.Lint(controlPath, semantic, strict) //nolint:wrapcheck // engine already wrapped; preserve exit 4.
-}
-
-// ForgeLintWithFormat is ForgeLint with configurable output format ("text" or "json").
 func ForgeLintWithFormat(controlPath string, semantic, strict bool, format string) ([]byte, error) {
 	return forgecmd.LintWithFormat(controlPath, semantic, strict, format) //nolint:wrapcheck // engine already wrapped; preserve exit 4.
 }

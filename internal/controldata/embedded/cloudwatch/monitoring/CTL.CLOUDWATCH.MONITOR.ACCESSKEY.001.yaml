@@ -24,8 +24,6 @@ taxonomy:
   - logging
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_cloudwatch_log_group
 defect: >
   No CloudWatch alarm for IAM access key creation events.
 infection: >

@@ -16,8 +16,6 @@ taxonomy:
   - redundancy
 type: unsafe_state
 classification: parameterized_check
-applicable_asset_types:
-  - aws_autoscaling_group
 params:
   attack_stage: resilience
 remediation:

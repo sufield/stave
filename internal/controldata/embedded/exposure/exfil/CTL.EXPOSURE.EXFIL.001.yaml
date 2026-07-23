@@ -28,8 +28,6 @@ taxonomy:
   - network-isolation
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_account
 params:
   base_impact: 10
   attack_stage: exfiltration

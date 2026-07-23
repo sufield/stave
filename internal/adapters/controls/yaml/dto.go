@@ -73,7 +73,7 @@ type yamlControlDefinition struct {
 	ForbiddenState yamlUnsafePredicate `yaml:"forbidden_state,omitempty"`
 
 	// VerdictOnError controls fallback behavior when the predicate
-	// evaluator is unavailable: "safe", "unsafe", or "" (inconclusive).
+	// evaluator is unavailable: safe, fail_closed, or empty (inconclusive).
 	VerdictOnError string `yaml:"verdict_on_error,omitempty"`
 }
 

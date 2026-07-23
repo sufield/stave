@@ -30,8 +30,6 @@ taxonomy:
   - deprecation
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_sns_topic
 params:
   attack_stage: credential_access
 remediation:

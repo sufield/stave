@@ -167,7 +167,7 @@ func inconclusiveCELEvaluator(ctl policy.ControlDefinition, a asset.Asset, _ []a
 	switch ctl.VerdictOnError {
 	case "safe":
 		return false, nil
-	case "unsafe":
+	case "fail_closed":
 		return true, nil
 	default:
 		return false, fmt.Errorf("no CEL evaluator configured (control %s, asset %s)", ctl.ID, a.ID)

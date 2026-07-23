@@ -115,9 +115,9 @@ type ControlDefinition struct {
 
 	// VerdictOnError controls how the evaluation engine treats this
 	// control when the predicate evaluator is unavailable or errors:
-	//   "safe"   — assume safe (false positives worse than false negatives)
-	//   "unsafe" — assume unsafe (false negatives worse than false positives)
-	//   ""       — default: inconclusive (returns an error, control skipped)
+	//   safe        — assume safe (false positives worse than false negatives)
+	//   fail_closed — assume finding (false negatives worse than false positives)
+	//   empty       — default: inconclusive (returns an error, control skipped)
 	VerdictOnError string
 
 	// prepared holds pre-calculated values to optimize the evaluation

@@ -32,8 +32,6 @@ taxonomy:
   - network-perimeter
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_route53_hosted_zone
 params:
   attack_stage: discovery
 remediation:

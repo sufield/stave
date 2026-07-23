@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
@@ -37,6 +39,9 @@ func TestMarshalASFF_NilAssessment(t *testing.T) {
 // dto mapper instead.
 func TestMarshalASFF_ChainFindings(t *testing.T) {
 	assessment := &report.Assessment{
+		Run: evaluation.RunInfo{
+			EvalTime: time.Date(2026, 1, 15, 12, 0, 0, 0, time.UTC),
+		},
 		ChainFindings: []findings.CompoundFinding{
 			{
 				ChainID:       kernel.ChainID("chain.capital-one"),

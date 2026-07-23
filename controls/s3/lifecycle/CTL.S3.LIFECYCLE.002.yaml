@@ -21,8 +21,6 @@ taxonomy:
   - compliance-mapping
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_s3_bucket
 params:
   attack_stage: resilience
   # Minimum retention period in days. Default is 2190 (6 years, HIPAA minimum).

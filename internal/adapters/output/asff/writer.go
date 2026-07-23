@@ -93,15 +93,7 @@ func (o ASFFOptions) productARN() string {
 	return fmt.Sprintf("arn:aws:securityhub:%s:%s:product/%s/stave", region, acct, acct)
 }
 
-// MapAssessment transforms a Stave assessment into ASFF findings.
-// Returns an empty slice when assessment is nil so callers in the
-// output dispatch can pass nil during error paths without an NPE
-// at len(assessment.Findings).
-func MapAssessment(assessment *report.Assessment) []ASFFinding {
-	return MapAssessmentWithOptions(assessment, ASFFOptions{})
-}
-
-// MapAssessmentWithOptions is MapAssessment with configurable output.
+// MapAssessmentWithOptions transforms a Stave assessment into ASFF findings.
 func MapAssessmentWithOptions(assessment *report.Assessment, opts ASFFOptions) []ASFFinding {
 	if assessment == nil {
 		return []ASFFinding{}

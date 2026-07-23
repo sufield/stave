@@ -27,8 +27,6 @@ taxonomy:
   - key-management
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_iam_role
 params:
   attack_stage: privilege_escalation
   base_impact: 9

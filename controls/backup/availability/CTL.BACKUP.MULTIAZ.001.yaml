@@ -19,8 +19,6 @@ taxonomy:
   - redundancy
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_backup_vault
 params:
   attack_stage: resilience
 remediation:

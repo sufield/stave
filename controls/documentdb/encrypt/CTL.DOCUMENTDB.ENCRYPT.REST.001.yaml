@@ -18,8 +18,6 @@ taxonomy:
   - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_documentdb_cluster
 params:
   attack_stage: exfiltration
 remediation:

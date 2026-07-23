@@ -20,8 +20,6 @@ taxonomy:
   - redundancy
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_elbv2_load_balancer
 params:
   attack_stage: resilience
 remediation:

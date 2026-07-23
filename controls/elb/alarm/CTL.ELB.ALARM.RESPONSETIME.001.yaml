@@ -27,8 +27,6 @@ taxonomy:
   - monitoring
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_elbv2_load_balancer
 params:
   attack_stage: detection_evasion
 remediation:

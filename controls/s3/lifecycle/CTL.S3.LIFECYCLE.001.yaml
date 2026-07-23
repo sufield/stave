@@ -21,8 +21,6 @@ taxonomy:
   - compliance-mapping
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_s3_bucket
 params:
   attack_stage: resilience
 remediation:

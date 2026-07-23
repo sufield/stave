@@ -20,8 +20,6 @@ taxonomy:
   - logging
 type: unsafe_recurrence
 classification: aggregate_check
-applicable_asset_types:
-  - aws_s3_bucket
 params:
   recurrence_threshold: 2
   window_days: 30

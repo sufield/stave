@@ -23,8 +23,6 @@ taxonomy:
   - resource-sprawl
 type: unsafe_state
 classification: parameterized_check
-applicable_asset_types:
-  - aws_iam_policy
 params:
   attack_stage: privilege_escalation
 remediation:

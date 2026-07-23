@@ -23,8 +23,6 @@ taxonomy:
   - compliance-mapping
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types:
-  - aws_fms_policy
 params:
   attack_stage: initial_access
   blast_radius:
