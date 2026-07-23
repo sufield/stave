@@ -157,3 +157,4 @@ see_also:
     - stave capabilities catalog matrix - Show taxonomy × service cross-product with gap cells
     - stave capabilities catalog stats - Print aggregate catalog statistics
     - stave capabilities catalog taxonomy - List taxonomy categories with control counts
+    - stave capabilities catalog validate - Validate the entire control and chain catalog

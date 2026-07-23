@@ -14,10 +14,6 @@ usage: stave forge lint [flags]
 options:
     - name: control
       usage: control YAML file or directory (required)
-    - name: format
-      shorthand: f
-      default_value: text
-      usage: 'output format: text | json'
     - name: help
       shorthand: h
       default_value: "false"

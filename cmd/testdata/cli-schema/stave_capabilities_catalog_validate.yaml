@@ -1,35 +1,52 @@
-name: stave ci diff
-synopsis: Compare two evaluations and report new findings
-description: |-
-    Diff compares a current evaluation against a baseline evaluation and
-    reports newly introduced and resolved findings.
+name: stave capabilities catalog validate
+synopsis: Validate the entire control and chain catalog
+description: |
+    Validate runs combined structural checks across the control and
+    chain catalog in a single pass:
 
-    Use this in CI to fail PRs only when new violations are introduced.
+      1. Control lint   — schema, CEL syntax, completeness (forge lint)
+      2. Chain lint     — structure, member controls, capabilities
+      3. Cross-reference — chain ControlIDs exist in the loaded catalog
+      4. Duplicate detection — no two chains share the same ID
 
-    Exit Codes:
-      0   - Success
-      2   - Input error
-      3   - New findings detected (with --fail-on-new)
-      4   - Internal error
+    With --semantic, control lint includes always-firing and impossible
+    condition checks. With --strict, warnings are treated as errors.
 
-    Offline-only: reads local files; makes zero network connections; no cloud credentials.
-usage: stave ci diff [flags]
+    Inputs:
+      --controls DIR   Control catalog directory (default: controls)
+      --chains DIR     Chain catalog directory (default: chains)
+      --format F       text (default) | json
+      --semantic       Enable semantic analysis on controls
+      --strict         Treat warnings as errors
+
+    Exit codes:
+      0   No errors
+      2   Invalid input (bad flags)
+      3   Validation errors found
+      4   Internal error
+usage: stave capabilities catalog validate [flags]
 options:
-    - name: baseline
-      usage: Path to baseline evaluation JSON (required)
-    - name: current
-      usage: Path to current evaluation JSON (required)
-    - name: fail-on-new
-      default_value: "true"
-      usage: Return exit code 3 when new findings are detected
+    - name: chains
+      default_value: chains
+      usage: chain catalog directory
+    - name: controls
+      shorthand: i
+      default_value: controls
+      usage: control catalog directory
     - name: format
       shorthand: f
-      default_value: json
-      usage: Output format (json, text)
+      default_value: text
+      usage: 'output format: text | json'
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for diff
+      usage: help for validate
+    - name: semantic
+      default_value: "false"
+      usage: enable semantic analysis on controls
+    - name: strict
+      default_value: "false"
+      usage: treat warnings as errors
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -76,10 +93,6 @@ inherited_options:
       default_value: "false"
       usage: |
         In --help, list only development-only commands (default: hide them from the listing)
-    - name: strict
-      default_value: "false"
-      usage: |
-        Enable strict integrity checks for embedded registries and references
     - name: verbose
       shorthand: v
       default_value: "0"
@@ -90,8 +103,9 @@ inherited_options:
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
-      stave ci diff --current pr-evaluation.json --baseline main-evaluation.json
-      stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --format text
-      stave ci diff --current pr-evaluation.json --baseline main-evaluation.json --fail-on-new
+      stave catalog validate
+      stave catalog validate --semantic --strict
+      stave catalog validate --format json | jq '.total_errors'
+      stave catalog validate --controls controls/s3
 see_also:
-    - stave ci - CI/CD policy and baseline commands
+    - stave capabilities catalog - Print the user-facing capability catalog
