@@ -9,7 +9,7 @@ import (
 )
 
 func newLintCmd() *cobra.Command {
-	var controlPath, format string
+	var controlPath string
 	var semantic, strict bool
 
 	cmd := &cobra.Command{
@@ -38,7 +38,6 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVar(&controlPath, "control", "", "control YAML file or directory (required)")
-	cmd.Flags().StringVarP(&format, "format", "f", "text", "output format: text | json")
 	cmd.Flags().BoolVar(&semantic, "semantic", false, "enable semantic analysis (always-firing, never-firing)")
 	cmd.Flags().BoolVar(&strict, "strict", false, "treat warnings as errors")
 	_ = cmd.MarkFlagRequired("control")

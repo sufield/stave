@@ -36,6 +36,7 @@ func symbolicCheckImpl(pred policy.UnsafePredicate, fields []fieldInfo) symbolic
 			eqVar:           ctx.BoolConst("eq_" + name),
 			isEmptyVar:      ctx.BoolConst("empty_" + name),
 			typeMismatchVar: ctx.BoolConst("typemismatch_" + name),
+			gtVar:           ctx.BoolConst("gt_" + name),
 		}
 	}
 
@@ -61,7 +62,8 @@ func symbolicCheckImpl(pred policy.UnsafePredicate, fields []fieldInfo) symbolic
 			ev := m.Eval(sf.eqVar, true)
 			mv := m.Eval(sf.isEmptyVar, true)
 			tv := m.Eval(sf.typeMismatchVar, true)
-			witness = append(witness, fmt.Sprintf("%s(has=%s,eq=%s,empty=%s,typemismatch=%s)", short, hv, ev, mv, tv))
+			gv := m.Eval(sf.gtVar, true)
+			witness = append(witness, fmt.Sprintf("%s(has=%s,eq=%s,empty=%s,typemismatch=%s,gt=%s)", short, hv, ev, mv, tv, gv))
 		}
 		return symbolicResult{
 			Status: "DIVERGE",
@@ -77,6 +79,7 @@ type symField struct {
 	eqVar           z3.Bool
 	isEmptyVar      z3.Bool
 	typeMismatchVar z3.Bool
+	gtVar           z3.Bool // field value > expected value
 }
 
 // buildFormula translates the reference (formal spec) semantics.
@@ -164,6 +167,22 @@ func buildRuleRef(ctx *z3.Context, op predicate.Operator, sf symField) z3.Bool {
 		// ¬hasField ∨ ¬eq (Sprint comparison, type-agnostic)
 		return sf.hasVar.Not().Or(sf.eqVar.Not())
 
+	case predicate.OpGt:
+		// hasField ∧ gt (type-agnostic numeric comparison)
+		return sf.hasVar.And(sf.gtVar)
+
+	case predicate.OpGte:
+		// hasField ∧ (gt ∨ eq)
+		return sf.hasVar.And(sf.gtVar.Or(sf.eqVar))
+
+	case predicate.OpLt:
+		// hasField ∧ ¬gt ∧ ¬eq
+		return sf.hasVar.And(sf.gtVar.Not()).And(sf.eqVar.Not())
+
+	case predicate.OpLte:
+		// hasField ∧ (¬gt ∨ eq) ≡ hasField ∧ ¬(gt ∧ ¬eq)
+		return sf.hasVar.And(sf.gtVar.Not().Or(sf.eqVar))
+
 	case predicate.OpMissing:
 		// ¬hasField ∨ isEmpty (isMissing checks nil/empty-string/empty-list/empty-map)
 		return sf.hasVar.Not().Or(sf.isEmptyVar)
@@ -191,6 +210,22 @@ func buildRuleCEL(ctx *z3.Context, op predicate.Operator, sf symField) z3.Bool {
 		// CEL: (!has(field) || field != value) — if has but type mismatch,
 		// the != comparison errors; false || error → error → false
 		return sf.hasVar.Not().Or(sf.typeMismatchVar.Not().And(sf.eqVar.Not()))
+
+	case predicate.OpGt:
+		// has ∧ ¬typeMismatch ∧ gt
+		return sf.hasVar.And(sf.typeMismatchVar.Not()).And(sf.gtVar)
+
+	case predicate.OpGte:
+		// has ∧ ¬typeMismatch ∧ (gt ∨ eq)
+		return sf.hasVar.And(sf.typeMismatchVar.Not()).And(sf.gtVar.Or(sf.eqVar))
+
+	case predicate.OpLt:
+		// has ∧ ¬typeMismatch ∧ ¬gt ∧ ¬eq
+		return sf.hasVar.And(sf.typeMismatchVar.Not()).And(sf.gtVar.Not()).And(sf.eqVar.Not())
+
+	case predicate.OpLte:
+		// has ∧ ¬typeMismatch ∧ (¬gt ∨ eq)
+		return sf.hasVar.And(sf.typeMismatchVar.Not()).And(sf.gtVar.Not().Or(sf.eqVar))
 
 	case predicate.OpMissing:
 		// ¬hasField ∨ isEmpty (CEL missing() checks same emptiness conditions)

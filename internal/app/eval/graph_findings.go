@@ -16,22 +16,24 @@ import (
 
 // graphChainSpec maps a Soufflé output relation to finding metadata.
 type graphChainSpec struct {
-	ChainID   kernel.ChainID
-	Severity  policy.Severity
-	Columns   int
-	Stages    []kernel.AttackStage
-	Narrative func(cols []string) string
-	Resource  func(cols []string) asset.ID
+	ChainID     kernel.ChainID
+	Description string
+	Severity    policy.Severity
+	Columns     int
+	Stages      []kernel.AttackStage
+	Narrative   func(cols []string) string
+	Resource    func(cols []string) asset.ID
 }
 
 // graphChainRegistry maps Soufflé relation names to their chain specs.
 // Each entry corresponds to a .csv file in the Soufflé output directory.
 var graphChainRegistry = map[string]graphChainSpec{
 	"bucket_hijack_path": {
-		ChainID:  "CHAIN.BUCKET.HIJACK.001",
-		Severity: policy.SeverityCritical,
-		Columns:  4,
-		Stages:   []kernel.AttackStage{"initial_access", "persistence", "impact"},
+		ChainID:     "CHAIN.BUCKET.HIJACK.001",
+		Description: "S3 bucket hijack via DeleteBucket on a stream destination without SCP data perimeter",
+		Severity:    policy.SeverityCritical,
+		Columns:     4,
+		Stages:      []kernel.AttackStage{"initial_access", "persistence", "impact"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q has s3:DeleteBucket on %q which is the destination for %s %q. No SCP data perimeter blocks cross-account writes.",
 				col(cols, 0), col(cols, 1), col(cols, 3), col(cols, 2))
@@ -39,10 +41,11 @@ var graphChainRegistry = map[string]graphChainSpec{
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
 	},
 	"telemetry_hijack_path": {
-		ChainID:  "CHAIN.BUCKET.TELEMETRY_HIJACK.001",
-		Severity: policy.SeverityCritical,
-		Columns:  4,
-		Stages:   []kernel.AttackStage{"initial_access", "detection_evasion", "impact"},
+		ChainID:     "CHAIN.BUCKET.TELEMETRY_HIJACK.001",
+		Description: "Security telemetry bucket deletion blinds the monitoring pipeline",
+		Severity:    policy.SeverityCritical,
+		Columns:     4,
+		Stages:      []kernel.AttackStage{"initial_access", "detection_evasion", "impact"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q has s3:DeleteBucket on security telemetry bucket %q (destination for %s %q). Bucket deletion blinds the telemetry pipeline.",
 				col(cols, 0), col(cols, 1), col(cols, 3), col(cols, 2))
@@ -50,10 +53,11 @@ var graphChainRegistry = map[string]graphChainSpec{
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
 	},
 	"cross_account_data_destruction": {
-		ChainID:  "CHAIN.BUCKET.CROSS_ACCOUNT_DESTROY.001",
-		Severity: policy.SeverityCritical,
-		Columns:  5,
-		Stages:   []kernel.AttackStage{"initial_access", "impact"},
+		ChainID:     "CHAIN.BUCKET.CROSS_ACCOUNT_DESTROY.001",
+		Description: "Cross-account data destruction via external principal with destructive access to stream destination",
+		Severity:    policy.SeverityCritical,
+		Columns:     5,
+		Stages:      []kernel.AttackStage{"initial_access", "impact"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("External principal %q has %s on stream destination %q (router %s %q). No SCP data perimeter blocks the grant.",
 				col(cols, 0), col(cols, 4), col(cols, 1), col(cols, 3), col(cols, 2))
@@ -61,10 +65,11 @@ var graphChainRegistry = map[string]graphChainSpec{
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
 	},
 	"cross_account_policy_rewrite": {
-		ChainID:  "CHAIN.BUCKET.CROSS_ACCOUNT_REWRITE.001",
-		Severity: policy.SeverityHigh,
-		Columns:  3,
-		Stages:   []kernel.AttackStage{"privilege_escalation"},
+		ChainID:     "CHAIN.BUCKET.CROSS_ACCOUNT_REWRITE.001",
+		Description: "Cross-account bucket policy rewrite enables arbitrary further access",
+		Severity:    policy.SeverityHigh,
+		Columns:     3,
+		Stages:      []kernel.AttackStage{"privilege_escalation"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("External principal %q can rewrite the bucket policy on %q (grant type: %s), enabling arbitrary further access.",
 				col(cols, 0), col(cols, 1), col(cols, 2))
@@ -72,10 +77,11 @@ var graphChainRegistry = map[string]graphChainSpec{
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
 	},
 	"permission_asymmetry": {
-		ChainID:  "CHAIN.BUCKET.PERMISSION_ASYMMETRY.001",
-		Severity: policy.SeverityHigh,
-		Columns:  5,
-		Stages:   []kernel.AttackStage{"initial_access", "impact"},
+		ChainID:     "CHAIN.BUCKET.PERMISSION_ASYMMETRY.001",
+		Description: "Delete permission on stream destination bypasses intended permission boundary",
+		Severity:    policy.SeverityHigh,
+		Columns:     5,
+		Stages:      []kernel.AttackStage{"initial_access", "impact"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q can delete stream destination %q but lacks %s on %s %q. Bucket deletion bypasses the intended permission boundary.",
 				col(cols, 0), col(cols, 1), col(cols, 4), col(cols, 3), col(cols, 2))
@@ -83,10 +89,11 @@ var graphChainRegistry = map[string]graphChainSpec{
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
 	},
 	"dangling_destination": {
-		ChainID:  "CHAIN.BUCKET.DANGLING_DEST.001",
-		Severity: policy.SeverityHigh,
-		Columns:  3,
-		Stages:   []kernel.AttackStage{"initial_access"},
+		ChainID:     "CHAIN.BUCKET.DANGLING_DEST.001",
+		Description: "Router references non-existent bucket — attacker could create it to capture data",
+		Severity:    policy.SeverityHigh,
+		Columns:     3,
+		Stages:      []kernel.AttackStage{"initial_access"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Router %q (%s) references bucket %q which does not exist in the snapshot. An attacker could create this bucket to capture the data stream.",
 				col(cols, 0), col(cols, 2), col(cols, 1))
@@ -94,10 +101,11 @@ var graphChainRegistry = map[string]graphChainSpec{
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 0)) },
 	},
 	"cross_account_destination": {
-		ChainID:  "CHAIN.BUCKET.CROSS_ACCOUNT_DEST.001",
-		Severity: policy.SeverityMedium,
-		Columns:  5,
-		Stages:   []kernel.AttackStage{kernel.AttackStageCollection},
+		ChainID:     "CHAIN.BUCKET.CROSS_ACCOUNT_DEST.001",
+		Description: "Data routed to bucket in a different account without explicit authorization",
+		Severity:    policy.SeverityMedium,
+		Columns:     5,
+		Stages:      []kernel.AttackStage{kernel.AttackStageCollection},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Router %q (%s) sends data to bucket %q in account %s, different from source account %s.",
 				col(cols, 0), col(cols, 2), col(cols, 1), col(cols, 4), col(cols, 3))
@@ -105,10 +113,11 @@ var graphChainRegistry = map[string]graphChainSpec{
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
 	},
 	"lateral_via_resource_policy": {
-		ChainID:  "CHAIN.LATERAL.RESOURCE_POLICY.001",
-		Severity: policy.SeverityHigh,
-		Columns:  5,
-		Stages:   []kernel.AttackStage{kernel.AttackStageLateralMovement, kernel.AttackStageCollection},
+		ChainID:     "CHAIN.LATERAL.RESOURCE_POLICY.001",
+		Description: "Lateral movement via role trust chain into resource policy grant",
+		Severity:    policy.SeverityHigh,
+		Columns:     5,
+		Stages:      []kernel.AttackStage{kernel.AttackStageLateralMovement, kernel.AttackStageCollection},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Identity %q assumes role %q, which has resource-policy grant (%s, type %s) to %q. Cross-type lateral movement: role trust chain into resource policy grant.",
 				col(cols, 0), col(cols, 1), col(cols, 3), col(cols, 4), col(cols, 2))
@@ -116,15 +125,52 @@ var graphChainRegistry = map[string]graphChainSpec{
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 2)) },
 	},
 	"assume_cycle": {
-		ChainID:  "CHAIN.TRUST.CYCLE.001",
-		Severity: policy.SeverityHigh,
-		Columns:  3,
-		Stages:   []kernel.AttackStage{"privilege_escalation", "lateral_movement"},
+		ChainID:     "CHAIN.TRUST.CYCLE.001",
+		Description: "Role assumption cycle enables privilege laundering",
+		Severity:    policy.SeverityHigh,
+		Columns:     3,
+		Stages:      []kernel.AttackStage{"privilege_escalation", "lateral_movement"},
 		Narrative: func(cols []string) string {
 			return fmt.Sprintf("Trust cycle detected: %q ↔ %q (%s hops). A cycle in the role assumption graph enables privilege laundering — assume out, then assume back with different permissions.",
 				col(cols, 0), col(cols, 1), col(cols, 2))
 		},
 		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 0)) },
+	},
+	"unauthorized_access": {
+		ChainID:     "CHAIN.IAM.UNAUTHORIZED_ACCESS.001",
+		Description: "Effective access to sensitive resource without authorization",
+		Severity:    policy.SeverityHigh,
+		Columns:     3,
+		Stages:      []kernel.AttackStage{kernel.AttackStageCollection},
+		Narrative: func(cols []string) string {
+			return fmt.Sprintf("Principal %q has effective access to %q via action %q without authorization.",
+				col(cols, 0), col(cols, 1), col(cols, 2))
+		},
+		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
+	},
+	"violation_c": {
+		ChainID:     "CHAIN.CIA.CONFIDENTIALITY.001",
+		Description: "Unauthorized read access to high-sensitivity resource",
+		Severity:    policy.SeverityCritical,
+		Columns:     3,
+		Stages:      []kernel.AttackStage{kernel.AttackStageCollection, "exfiltration"},
+		Narrative: func(cols []string) string {
+			return fmt.Sprintf("Principal %q has unauthorized read action %q on high-sensitivity resource %q — confidentiality violation.",
+				col(cols, 0), col(cols, 2), col(cols, 1))
+		},
+		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
+	},
+	"violation_i": {
+		ChainID:     "CHAIN.CIA.INTEGRITY.001",
+		Description: "Unauthorized write access to high-sensitivity resource",
+		Severity:    policy.SeverityCritical,
+		Columns:     3,
+		Stages:      []kernel.AttackStage{"impact"},
+		Narrative: func(cols []string) string {
+			return fmt.Sprintf("Principal %q has unauthorized write action %q on high-sensitivity resource %q — integrity violation.",
+				col(cols, 0), col(cols, 2), col(cols, 1))
+		},
+		Resource: func(cols []string) asset.ID { return asset.ID(col(cols, 1)) },
 	},
 }
 
@@ -157,9 +203,12 @@ func ingestGraphFindings(dir string) ([]findings.CompoundFinding, error) {
 					"got", len(cols), "want", spec.Columns)
 				continue
 			}
+			resourceID := spec.Resource(cols)
 			cf := findings.CompoundFinding{
+				FindingID:     findings.StableChainFindingID(spec.ChainID, resourceID, "graph"),
 				ChainID:       spec.ChainID,
-				AssetID:       spec.Resource(cols),
+				AssetID:       resourceID,
+				Description:   spec.Description,
 				Severity:      spec.Severity,
 				Narrative:     spec.Narrative(cols),
 				AttackStages:  spec.Stages,

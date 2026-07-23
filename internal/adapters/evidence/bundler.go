@@ -23,13 +23,23 @@ import (
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
 )
 
+// SnapshotProvenance records upstream attestation metadata for a
+// snapshot that was signed before bundling. Populated by callers
+// that verify snapshot attestations.
+type SnapshotProvenance struct {
+	Source               string `json:"source"`
+	SignedAt             string `json:"signed_at"`
+	PublicKeyFingerprint string `json:"public_key_fingerprint"`
+}
+
 // BundleInput holds all data for building an evidence bundle.
 type BundleInput struct {
-	Assessment    *report.Assessment
-	Snapshots     []asset.Snapshot
-	TraceJSON     []byte // Pre-serialized logic trace
-	PrivateKeyPEM []byte // Ed25519 private key PEM (nil = unsigned)
-	StaveVersion  string
+	Assessment           *report.Assessment
+	Snapshots            []asset.Snapshot
+	TraceJSON            []byte // Pre-serialized logic trace
+	PrivateKeyPEM        []byte // Ed25519 private key PEM (nil = unsigned)
+	StaveVersion         string
+	UpstreamAttestations []SnapshotProvenance // nil = no attestation data available
 }
 
 type manifestEntry struct {
@@ -50,13 +60,14 @@ type bundleManifest struct {
 }
 
 type bundleMetadata struct {
-	SchemaVersion   string `json:"schema_version"`
-	StaveVersion    string `json:"stave_version"`
-	GeneratedAt     string `json:"generated_at"`
-	AssetsEvaluated int    `json:"assets_evaluated"`
-	FindingCount    int    `json:"findings"`
-	ChainCount      int    `json:"chain_findings"`
-	Signed          bool   `json:"signed"`
+	SchemaVersion        string               `json:"schema_version"`
+	StaveVersion         string               `json:"stave_version"`
+	GeneratedAt          string               `json:"generated_at"`
+	AssetsEvaluated      int                  `json:"assets_evaluated"`
+	FindingCount         int                  `json:"findings"`
+	ChainCount           int                  `json:"chain_findings"`
+	Signed               bool                 `json:"signed"`
+	UpstreamAttestations []SnapshotProvenance `json:"upstream_attestations,omitempty"`
 }
 
 type bundleSignature struct {
@@ -91,13 +102,14 @@ func Build(input BundleInput) ([]byte, error) {
 	// "controls evaluated" count; per-framework counts live in
 	// Summary.FrameworkReadiness if a framework was scoped.)
 	metadata := bundleMetadata{
-		SchemaVersion:   "evidence.v0.1",
-		StaveVersion:    input.StaveVersion,
-		GeneratedAt:     now,
-		AssetsEvaluated: input.Assessment.Summary.TotalAssets,
-		FindingCount:    input.Assessment.Summary.Violations,
-		ChainCount:      len(input.Assessment.ChainFindings),
-		Signed:          len(input.PrivateKeyPEM) > 0,
+		SchemaVersion:        "evidence.v0.1",
+		StaveVersion:         input.StaveVersion,
+		GeneratedAt:          now,
+		AssetsEvaluated:      input.Assessment.Summary.TotalAssets,
+		FindingCount:         input.Assessment.Summary.Violations,
+		ChainCount:           len(input.Assessment.ChainFindings),
+		Signed:               len(input.PrivateKeyPEM) > 0,
+		UpstreamAttestations: input.UpstreamAttestations,
 	}
 	metadataJSON, err := json.MarshalIndent(metadata, "", "  ")
 	if err != nil {

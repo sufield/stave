@@ -1,3 +1,4 @@
+// Package attest provides snapshot tamper detection via Ed25519 signatures.
 package attest
 
 import (

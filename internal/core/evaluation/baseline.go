@@ -91,7 +91,10 @@ func BaselineEntryFromFinding(f *Finding) BaselineEntry {
 }
 
 // CompareBaseline compares baseline and current entries, identifying introduced (new)
-// and resolved (removed) violations.
+// and resolved (removed) violations. Returns a 2-way diff (New, Resolved) using
+// typed kernel IDs. This is the domain-level comparison for the baseline artifact
+// path (stave baseline save/check). The reporting layer has a separate 3-way diff
+// (reporting.compareFindings) that adds an unchanged bucket for CI display.
 func CompareBaseline(baseEntries, curEntries []BaselineEntry) BaselineComparisonResult {
 	// Pre-allocate maps for lookups to ensure O(N+M) complexity
 	baseMap := make(map[BaselineEntryKey]BaselineEntry, len(baseEntries))

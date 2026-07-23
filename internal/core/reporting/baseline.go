@@ -158,8 +158,11 @@ func CIDiff(ctx context.Context, req CIDiffRequest, deps CIDiffDeps) (CIDiffResp
 	}, nil
 }
 
-// compareFindings identifies new and resolved findings between a baseline
-// and current set.
+// compareFindings identifies new, resolved, and unchanged findings between a
+// baseline and current set. Returns a 3-way diff using string-typed DTOs for
+// the reporting/CI display path. The domain-level baseline comparison
+// (evaluation.CompareBaseline) uses typed kernel IDs and returns only 2-way
+// (New, Resolved) — these are intentionally separate implementations.
 func compareFindings(baseline, current []BaselineFinding) (newFindings, resolved, unchanged []BaselineFinding) {
 	type key struct {
 		ControlID string

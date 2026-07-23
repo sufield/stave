@@ -110,6 +110,13 @@ type ResolutionInput struct {
 // all four policy layers: explicit denies, SCP ceiling, permission
 // boundary ceiling, and identity-based allows.
 //
+// Known limitation: VPC endpoint policies are not modeled. These
+// restrict which actions can transit a specific VPC endpoint,
+// further constraining effective permissions below what the four
+// layers here compute. Modeling them requires network topology
+// (which endpoint a principal's traffic traverses), which is
+// outside the scope of static snapshot analysis.
+//
 // This is a pure function with no side effects.
 func Resolve(input ResolutionInput) ResolvedPermissions {
 	result := ResolvedPermissions{

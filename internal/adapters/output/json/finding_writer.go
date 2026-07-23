@@ -51,7 +51,10 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	if err := validateEvaluationEnvelope(envelope, w.ValidateContract); err != nil {
 		return nil, err
 	}
-	resultDTO := dto.FromEvaluation(envelope)
+	resultDTO, dtoErr := dto.FromEvaluation(envelope)
+	if dtoErr != nil {
+		return nil, fmt.Errorf("project assessment: %w", dtoErr)
+	}
 
 	var buf bytes.Buffer
 	if err := encodeJSON(&buf, w.Indent, resultDTO); err != nil {

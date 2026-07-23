@@ -1,17 +1,18 @@
 package dto
 
 import (
+	"errors"
+
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/report"
 )
 
 // FromEvaluation projects a report.Assessment into a ResultDTO.
-// Returns the zero ResultDTO when e is nil rather than panicking on
-// e.SchemaVersion — the public marshaller calls this directly and
-// upstream callers may still hold a nil result during error paths.
-func FromEvaluation(e *report.Assessment) ResultDTO {
+// Returns an error when e is nil so callers surface the upstream
+// pipeline failure instead of producing empty-but-valid JSON.
+func FromEvaluation(e *report.Assessment) (ResultDTO, error) {
 	if e == nil {
-		return ResultDTO{}
+		return ResultDTO{}, errors.New("dto: nil assessment")
 	}
 	return ResultDTO{
 		SchemaVersion:     e.SchemaVersion,
@@ -31,7 +32,7 @@ func FromEvaluation(e *report.Assessment) ResultDTO {
 		TopExposures:      fromExposureRanks(e.TopExposures),
 		CoveragePosture:   FromCoverageIndex(e.CoveragePosture),
 		Extensions:        NewExtensionsDTO(e.Extensions),
-	}
+	}, nil
 }
 
 // fromIssues converts evaluation.Issue values into the DTO shape.

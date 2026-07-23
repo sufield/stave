@@ -278,7 +278,7 @@ func TestBugHunt_IsInternalCIDR_SupernetsNotInternal(t *testing.T) {
 	// meaning it won't be considered for internal subnet CIDR coverage comparison.
 	// Under the buggy code: since 10.0.0.0 is inside 10.0.0.0/8, it evaluates to true,
 	// and incorrectly treats the SG rule (allowing 10.0.0.0/7) as internal-only coverage.
-	
+
 	snap := asset.Snapshot{
 		Assets: []asset.Asset{
 			makeSubnet("subnet-1", "vpc-1", "10.0.1.0/24"),

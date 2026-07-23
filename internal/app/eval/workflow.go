@@ -404,6 +404,12 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// output. This must happen BEFORE annotation so graph findings
 	// are visible to annotateChainMembership and
 	// annotateExploitability.
+	//
+	// Both CEL and graph paths can detect compound conditions on the
+	// same assets. Duplicates across paths are expected by design —
+	// CEL chains fire from control-level violations while graph chains
+	// fire from Datalog-derived relations (effective_access, bucket
+	// hijack paths, etc.). No cross-path deduplication is performed.
 	if graphFindingsDir != "" {
 		graphFindings, err := ingestGraphFindings(graphFindingsDir)
 		if err != nil && w.Logger != nil {

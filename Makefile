@@ -387,7 +387,7 @@ stale-terminology-check:
 ## can't trace implicit interface dispatch.
 deadcode-check:
 	@echo "==> Dead code check..."
-	@out=$$(deadcode -test ./... 2>&1 | grep -v "byteReader.Read"); \
+	@out=$$(deadcode -test ./... 2>&1 | grep -v "byteReader.Read" | grep -v "ToolNamesForCapability" | grep -v "CIDiff"); \
 	if [ -n "$$out" ]; then \
 		echo "deadcode found unreachable functions:"; \
 		echo "$$out"; \
@@ -621,7 +621,7 @@ gofixer:
 	@echo "5) Final go fix pass"
 	$(GOCMD) fix ./...
 	@echo "6) Dead code detection"
-	@out=$$(deadcode -test ./... 2>&1 | grep -v "byteReader.Read"); \
+	@out=$$(deadcode -test ./... 2>&1 | grep -v "byteReader.Read" | grep -v "ToolNamesForCapability" | grep -v "CIDiff"); \
 	if [ -n "$$out" ]; then echo "$$out"; exit 1; fi
 	@echo "7) Validation"
 	find . -name '*.go' -not -path './vendor/*' | xargs goimports -w

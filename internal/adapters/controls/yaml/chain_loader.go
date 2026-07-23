@@ -8,6 +8,7 @@ import (
 	"slices"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	yamlv3 "gopkg.in/yaml.v3"
 )
@@ -28,6 +29,7 @@ func LoadChains(dir string, registry policy.CapabilityRegistry) ([]policy.ChainD
 	}
 
 	var chains []policy.ChainDefinition
+	idSources := make(map[kernel.ChainID]string)
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -58,6 +60,11 @@ func LoadChains(dir string, registry policy.CapabilityRegistry) ([]policy.ChainD
 		if capErr := chain.ValidateCapabilities(registry); capErr != nil {
 			return nil, fmt.Errorf("validate chain %q: %w", path, capErr)
 		}
+
+		if existing, ok := idSources[chain.ID]; ok {
+			return nil, fmt.Errorf("duplicate chain ID %q found in %q and %q", chain.ID, existing, path)
+		}
+		idSources[chain.ID] = path
 
 		chains = append(chains, chain)
 	}

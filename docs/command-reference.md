@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_170 commands across 13 groups._
+_172 commands across 13 groups._
 
 ## Getting Started
 
@@ -148,6 +148,7 @@ _170 commands across 13 groups._
 | `capabilities catalog matrix` | Show taxonomy × service cross-product with gap cells |
 | `capabilities catalog stats` | Print aggregate catalog statistics |
 | `capabilities catalog taxonomy` | List taxonomy categories with control counts |
+| `capabilities catalog validate` | Validate the entire control and chain catalog |
 | `catalog` | Print the user-facing capability catalog |
 | `catalog coverage` | Show per-service control coverage |
 | `catalog gaps` | Compare catalog against an external checklist |
@@ -155,6 +156,7 @@ _170 commands across 13 groups._
 | `catalog matrix` | Show taxonomy × service cross-product with gap cells |
 | `catalog stats` | Print aggregate catalog statistics |
 | `catalog taxonomy` | List taxonomy categories with control counts |
+| `catalog validate` | Validate the entire control and chain catalog |
 | `coverage` | Analyze observation field coverage against control predicates |
 | `discover` | Resolve AWS services to the data Stave needs (the collection manifest) |
 | `gaps` | Report which observation properties are absent + what they unlock |

@@ -250,6 +250,15 @@ func collectRuleRefs(rule *policy.PredicateRule, refs []fieldRef) []fieldRef {
 		return refs
 	}
 
+	// Cross-field operators compare rule.Field against a second field
+	// whose path is in rule.Value. When value_from_param is set the
+	// comparison target is a parameter, not a field — skip extraction.
+	if isCrossFieldOp(rule.Op) && rule.ValueFromParam == "" {
+		if other, ok := rule.Value.Raw().(string); ok && other != "" {
+			refs = append(refs, fieldRef{path: other, silentRisk: true})
+		}
+	}
+
 	if rule.Field.IsZero() {
 		return refs
 	}
@@ -334,6 +343,15 @@ func collectNestedMapRefs(parentPath string, m map[string]any, refs []fieldRef) 
 	op, _ := m["op"].(string)
 	silentRisk := op != "missing" && op != "present"
 	return append(refs, fieldRef{path: path, silentRisk: silentRisk})
+}
+
+func isCrossFieldOp(op predicate.Operator) bool {
+	switch op {
+	case predicate.OpNotSubsetOfField, predicate.OpNeqField,
+		predicate.OpNotInField, predicate.OpAnyInField:
+		return true
+	}
+	return false
 }
 
 // fieldPresent checks if a field path exists in the collected fields.

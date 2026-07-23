@@ -134,6 +134,29 @@ var builtinTools = []Tool{
 			{Capability: "rds_data_access", FieldPath: "properties.database.network.publicly_accessible", Rationale: "rds_enum targets publicly accessible databases"},
 		},
 	},
+	{
+		Name:        "cloudgoat",
+		Description: "Rhino Security Labs vulnerable-by-design AWS scenarios — 10 validated attack paths",
+		Reference:   "https://github.com/RhinoSecurityLabs/cloudgoat",
+		Prerequisites: []Prerequisite{
+			{Capability: "iam_credential_theft", FieldPath: "properties.identity.policies.has_admin_access", Rationale: "iam_privesc_by_attachment and iam_privesc_by_rollback exploit overprivileged roles"},
+			{Capability: "ec2_code_execution", FieldPath: "properties.compute.imds.version", Rationale: "cloud_breach_s3 steals metadata credentials via IMDSv1"},
+			{Capability: "s3_data_access", FieldPath: "properties.storage.access.public_read", Rationale: "cloud_breach_s3 exfiltrates from misconfigured buckets"},
+			{Capability: "secret_store_access", FieldPath: "properties.secret.access.rotation_enabled", Rationale: "codebuild_secrets and sns_secrets harvest exposed secrets"},
+			{Capability: "container_code_execution", FieldPath: "properties.compute.task_definition.network_mode", Rationale: "ecs_efs_attack exploits ECS task configuration for lateral movement"},
+		},
+	},
+}
+
+// ToolNamesForCapability returns tool names matching a capability,
+// satisfying the attackpath.ToolLookup interface.
+func (r *Registry) ToolNamesForCapability(capability string) []string {
+	tools := r.ToolsForCapability(capability)
+	names := make([]string, len(tools))
+	for i, t := range tools {
+		names[i] = t.Name
+	}
+	return names
 }
 
 func sortTools(tools []Tool) {

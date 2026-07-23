@@ -281,6 +281,51 @@ func TestCollectRuleRefs_NoAnyMatch_Unchanged(t *testing.T) {
 	}
 }
 
+func TestCollectRuleRefs_CrossFieldOp_ExtractsTargetField(t *testing.T) {
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{
+				Field: predicate.NewFieldPath("properties.storage.access.external_account_ids"),
+				Op:    predicate.OpNotSubsetOfField,
+				Value: policy.Str("properties.storage.access.allowed_accounts"),
+			},
+		},
+	}
+	refs := extractFieldRefs(&pred)
+	paths := make(map[string]bool)
+	for _, r := range refs {
+		paths[r.path] = r.silentRisk
+	}
+	if _, ok := paths["properties.storage.access.external_account_ids"]; !ok {
+		t.Error("missing primary field path")
+	}
+	if _, ok := paths["properties.storage.access.allowed_accounts"]; !ok {
+		t.Error("missing cross-field target path")
+	}
+	if !paths["properties.storage.access.allowed_accounts"] {
+		t.Error("cross-field target should be silent-risk")
+	}
+}
+
+func TestCollectRuleRefs_CrossFieldOp_SkipsParam(t *testing.T) {
+	pred := policy.UnsafePredicate{
+		All: []policy.PredicateRule{
+			{
+				Field:          predicate.NewFieldPath("properties.identity.policies.service_wildcards_granted"),
+				Op:             predicate.OpAnyInField,
+				ValueFromParam: "denied_service_wildcards",
+			},
+		},
+	}
+	refs := extractFieldRefs(&pred)
+	if len(refs) != 1 {
+		t.Fatalf("expected 1 ref (primary field only), got %d", len(refs))
+	}
+	if refs[0].path != "properties.identity.policies.service_wildcards_granted" {
+		t.Errorf("ref[0] = %q, want primary field", refs[0].path)
+	}
+}
+
 func TestClassify_AnyMatch_SilentRisk(t *testing.T) {
 	ctl := policy.ControlDefinition{
 		ID:       "CTL.TEST.ANYMATCH",

@@ -35,7 +35,10 @@ func TestFromEvaluation_MinimalEnvelope(t *testing.T) {
 		Findings:      []remediation.Finding{},
 	})
 
-	dto := FromEvaluation(env)
+	dto, err := FromEvaluation(env)
+	if err != nil {
+		t.Fatalf("FromEvaluation: %v", err)
+	}
 
 	if dto.SchemaVersion != kernel.SchemaOutput {
 		t.Errorf("SchemaVersion = %q, want %q", dto.SchemaVersion, kernel.SchemaOutput)

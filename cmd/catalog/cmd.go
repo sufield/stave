@@ -136,6 +136,7 @@ Exit codes:
 	cmd.AddCommand(newGapsCmd())
 	cmd.AddCommand(newTaxonomyCmd())
 	cmd.AddCommand(newMatrixCmd())
+	cmd.AddCommand(newValidateCmd())
 	return cmd
 }
 

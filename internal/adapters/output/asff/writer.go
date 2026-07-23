@@ -83,18 +83,19 @@ func MapAssessment(assessment *report.Assessment) []ASFFinding {
 	if assessment == nil {
 		return []ASFFinding{}
 	}
-	now := time.Now().UTC().Format(time.RFC3339)
+	timestamp := evalTimestamp(assessment)
+	version := assessment.Run.StaveVersion
 	findings := make([]ASFFinding, 0, len(assessment.Findings))
 
 	for i := range assessment.Findings {
 		f := &assessment.Findings[i]
-		findings = append(findings, mapFinding(f, now))
+		findings = append(findings, mapFinding(f, timestamp, version))
 	}
 
 	return findings
 }
 
-func mapFinding(f *remediation.Finding, timestamp string) ASFFinding {
+func mapFinding(f *remediation.Finding, timestamp, version string) ASFFinding {
 	sev := mapSeverity(f.SeverityLabel())
 
 	af := ASFFinding{
@@ -113,7 +114,7 @@ func mapFinding(f *remediation.Finding, timestamp string) ASFFinding {
 			Type: string(f.AssetType),
 			ID:   string(f.AssetID),
 		}},
-		ProductFields: buildProductFields(f),
+		ProductFields: buildProductFields(f, version),
 	}
 
 	if f.RemediationSpec.Action != "" {
@@ -178,23 +179,53 @@ func MarshalASFF(assessment *report.Assessment) ([]byte, error) {
 	if assessment == nil {
 		return []byte("[]"), nil
 	}
-	now := time.Now().UTC().Format(time.RFC3339)
+	timestamp := evalTimestamp(assessment)
 	findings := MapAssessment(assessment)
-	findings = append(findings, mapChainFindings(assessment, now)...)
+	findings = append(findings, mapChainFindings(assessment, timestamp)...)
 	return json.MarshalIndent(findings, "", "  ")
 }
 
+// evalTimestamp returns the RFC3339 eval-time from the assessment's RunInfo,
+// falling back to the current time only when RunInfo has no eval-time set.
+func evalTimestamp(a *report.Assessment) string {
+	if !a.Run.EvalTime.IsZero() {
+		return a.Run.EvalTime.UTC().Format(time.RFC3339)
+	}
+	return time.Now().UTC().Format(time.RFC3339)
+}
+
 // buildProductFields creates ASFF ProductFields with all compliance
-// citations from the finding's ComplianceMapping. GRC tools see the
-// finding mapped to every relevant framework dashboard.
-func buildProductFields(f *remediation.Finding) map[string]string {
+// citations and enrichment fields from the finding. Mirrors the
+// properties bag built by the SARIF writer's buildFindingProperties.
+func buildProductFields(f *remediation.Finding, version string) map[string]string {
+	if version == "" {
+		version = "unknown"
+	}
 	fields := map[string]string{
 		"ControlId":     string(f.ControlID),
 		"SecurityState": "NON_COMPLIANT",
 		"DurationHours": fmt.Sprintf("%.1f", f.DwellHours()),
-		"StaveVersion":  "edge",
+		"StaveVersion":  version,
 	}
-	// Add all compliance citations as separate ProductFields.
+	if f.Exploitability != "" {
+		fields["Exploitability"] = string(f.Exploitability)
+	}
+	if f.DecidingLayer != "" {
+		fields["DecidingLayer"] = string(f.DecidingLayer)
+	}
+	if f.ExposureScore > 0 {
+		fields["ExposureScore"] = fmt.Sprintf("%.2f", float64(f.ExposureScore))
+	}
+	if f.IsChainMember() {
+		fields["ChainId"] = f.PrimaryChainID()
+		fields["ChainSeverity"] = f.PrimaryChainSeverity()
+	}
+	if f.HasClassification() {
+		fields["Classification"] = string(f.Classification)
+	}
+	if f.FindingID != "" {
+		fields["FindingId"] = string(f.FindingID)
+	}
 	for fw, req := range f.ControlCompliance {
 		fields["Compliance."+string(fw)] = string(req)
 	}
