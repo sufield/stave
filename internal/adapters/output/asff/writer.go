@@ -75,33 +75,57 @@ type ASFFResource struct {
 	ID   string `json:"Id"`
 }
 
+// ASFFOptions configures the ASFF output.
+type ASFFOptions struct {
+	AccountID string // 12-digit AWS account for the ProductARN; empty uses "000000000000"
+	Region    string // AWS region for the ProductARN; empty uses "us-east-1"
+}
+
+func (o ASFFOptions) productARN() string {
+	acct := o.AccountID
+	if acct == "" {
+		acct = unknownAWSAccountID
+	}
+	region := o.Region
+	if region == "" {
+		region = "us-east-1"
+	}
+	return fmt.Sprintf("arn:aws:securityhub:%s:%s:product/%s/stave", region, acct, acct)
+}
+
 // MapAssessment transforms a Stave assessment into ASFF findings.
 // Returns an empty slice when assessment is nil so callers in the
 // output dispatch can pass nil during error paths without an NPE
 // at len(assessment.Findings).
 func MapAssessment(assessment *report.Assessment) []ASFFinding {
+	return MapAssessmentWithOptions(assessment, ASFFOptions{})
+}
+
+// MapAssessmentWithOptions is MapAssessment with configurable output.
+func MapAssessmentWithOptions(assessment *report.Assessment, opts ASFFOptions) []ASFFinding {
 	if assessment == nil {
 		return []ASFFinding{}
 	}
 	timestamp := evalTimestamp(assessment)
 	version := assessment.Run.StaveVersion
+	productARN := opts.productARN()
 	findings := make([]ASFFinding, 0, len(assessment.Findings))
 
 	for i := range assessment.Findings {
 		f := &assessment.Findings[i]
-		findings = append(findings, mapFinding(f, timestamp, version))
+		findings = append(findings, mapFinding(f, timestamp, version, productARN))
 	}
 
 	return findings
 }
 
-func mapFinding(f *remediation.Finding, timestamp, version string) ASFFinding {
+func mapFinding(f *remediation.Finding, timestamp, version, productARN string) ASFFinding {
 	sev := mapSeverity(f.SeverityLabel())
 
 	af := ASFFinding{
 		SchemaVersion: "2018-10-08",
 		ID:            fmt.Sprintf("stave/%s/%s", f.ControlID, f.AssetID),
-		ProductARN:    "arn:aws:securityhub:local:stave:product/stave/safety-engine",
+		ProductARN:    productARN,
 		GeneratorID:   "stave-logic-engine",
 		AWSAccountID:  extractAWSAccountID(string(f.AssetID)),
 		Types:         []string{"Software and Configuration Checks/Vulnerabilities/Misconfiguration"},
@@ -135,7 +159,7 @@ func mapFinding(f *remediation.Finding, timestamp, version string) ASFFinding {
 // fallback (Narrative preferred, Description as fallback) is inlined
 // here — it used to live in a separate helper that pulled the
 // risk type into its signature.
-func mapChainFindings(assessment *report.Assessment, timestamp string) []ASFFinding {
+func mapChainFindings(assessment *report.Assessment, timestamp, productARN string) []ASFFinding {
 	if assessment == nil || len(assessment.ChainFindings) == 0 {
 		return nil
 	}
@@ -150,7 +174,7 @@ func mapChainFindings(assessment *report.Assessment, timestamp string) []ASFFind
 		findings = append(findings, ASFFinding{
 			SchemaVersion: "2018-10-08",
 			ID:            fmt.Sprintf("stave/chain/%s/%s", cf.ChainID, cf.AssetID),
-			ProductARN:    "arn:aws:securityhub:local:stave:product/stave/safety-engine",
+			ProductARN:    productARN,
 			GeneratorID:   "stave-logic-engine",
 			AWSAccountID:  extractAWSAccountID(string(cf.AssetID)),
 			Types:         []string{"Software and Configuration Checks/Vulnerabilities/Compound Risk"},
@@ -176,12 +200,18 @@ func mapChainFindings(assessment *report.Assessment, timestamp string) []ASFFind
 // Returns an empty JSON array when assessment is nil rather than
 // dereferencing assessment.ChainFindings.
 func MarshalASFF(assessment *report.Assessment) ([]byte, error) {
+	return MarshalASFFWithOptions(assessment, ASFFOptions{})
+}
+
+// MarshalASFFWithOptions is MarshalASFF with configurable output.
+func MarshalASFFWithOptions(assessment *report.Assessment, opts ASFFOptions) ([]byte, error) {
 	if assessment == nil {
 		return []byte("[]"), nil
 	}
 	timestamp := evalTimestamp(assessment)
-	findings := MapAssessment(assessment)
-	findings = append(findings, mapChainFindings(assessment, timestamp)...)
+	productARN := opts.productARN()
+	findings := MapAssessmentWithOptions(assessment, opts)
+	findings = append(findings, mapChainFindings(assessment, timestamp, productARN)...)
 	return json.MarshalIndent(findings, "", "  ")
 }
 

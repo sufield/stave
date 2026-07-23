@@ -180,6 +180,10 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 	// SLA annotation is intentionally outside the cache scope —
 	// clock-dependent and cheap to re-run, so cached reports stay
 	// fresh on deadlines.
+	// SLA configuration is intentionally excluded from the cache key.
+	// SLA annotation is a post-processing step applied after cache
+	// retrieval (below), so SLA policy changes correctly apply to
+	// cached evaluations without requiring re-evaluation.
 	cacheKey := cache.Key{
 		StaveVersion:    cfg.BuildVersion,
 		EvalVersion:     engine.EvalVersion,
@@ -359,7 +363,8 @@ func (w *AuditWorkflow) prepareAuditData(ctx context.Context, cfg ObservationCon
 // enrichWithRiskReasoning runs the chain detection engine and builds
 // an attack stage summary from the evaluation results. This is the
 // inference layer — it transforms individual findings into compound
-// risk assessments.
+// risk assessments. Single-owner semantics: report is mutated in
+// place; the caller (Evaluate) is the sole owner at this point.
 //
 // snapshots feeds the [risk.ScopeResolver] used when a chain
 // declares scope_field. Without snapshots, scope_field-bearing
@@ -376,9 +381,9 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// for chain detection — chains can compose marker findings
 	// (e.g. "bucket is tagged phi") with violation findings (e.g.
 	// "Cognito unauth role grants S3 access") into cross-resource
-	// compounds. Markers stay out of the attack-stage summary so
-	// they don't invent kill-chain stages from informational
-	// signal.
+	// compounds. Markers stay out of Summary.Violations and the
+	// attack-stage summary by design: they contribute to compound
+	// risk chains but are not violations themselves.
 	failures := make([]risk.FailingControl, 0, len(report.Findings)+len(report.MarkerFindings))
 	for i := range report.Findings {
 		failures = append(failures, report.Findings[i].ToFailingControl())

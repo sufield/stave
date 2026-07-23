@@ -359,6 +359,26 @@ func extractFields(pred policy.UnsafePredicate) []fieldInfo {
 		for _, r := range rules {
 			walk(r.Any)
 			walk(r.All)
+
+			// any_match nests a sub-predicate in Value; recurse into it
+			// so fields inside the nested block are visible to diff.
+			if r.Op == predicate.OpAnyMatch || r.Op == predicate.OpAnyIdentityMatch {
+				walkNestedValue(r.Value.Raw(), &fields, seen)
+				if !r.Field.IsZero() {
+					path := r.Field.String()
+					if !seen[path] {
+						seen[path] = true
+						fields = append(fields, fieldInfo{
+							Path:      path,
+							Op:        r.Op,
+							Value:     r.Value.Raw(),
+							SafeValue: safeValue(r.Op, r.Value.Raw()),
+						})
+					}
+				}
+				continue
+			}
+
 			if r.Field.IsZero() {
 				continue
 			}
@@ -378,6 +398,78 @@ func extractFields(pred policy.UnsafePredicate) []fieldInfo {
 	walk(pred.All)
 	walk(pred.Any)
 	return fields
+}
+
+func walkNestedValue(val any, fields *[]fieldInfo, seen map[string]bool) {
+	switch v := val.(type) {
+	case *policy.UnsafePredicate:
+		if v != nil {
+			walkNestedPred(v, fields, seen)
+		}
+	case policy.UnsafePredicate:
+		walkNestedPred(&v, fields, seen)
+	case map[string]any:
+		walkNestedMap(v, fields, seen)
+	}
+}
+
+func walkNestedPred(pred *policy.UnsafePredicate, fields *[]fieldInfo, seen map[string]bool) {
+	var walk func(rules []policy.PredicateRule)
+	walk = func(rules []policy.PredicateRule) {
+		for _, r := range rules {
+			walk(r.Any)
+			walk(r.All)
+			if r.Field.IsZero() {
+				continue
+			}
+			path := r.Field.String()
+			if seen[path] {
+				continue
+			}
+			seen[path] = true
+			*fields = append(*fields, fieldInfo{
+				Path:      path,
+				Op:        r.Op,
+				Value:     r.Value.Raw(),
+				SafeValue: safeValue(r.Op, r.Value.Raw()),
+			})
+		}
+	}
+	walk(pred.All)
+	walk(pred.Any)
+}
+
+func walkNestedMap(m map[string]any, fields *[]fieldInfo, seen map[string]bool) {
+	for _, key := range [2]string{"any", "all"} {
+		list, ok := m[key]
+		if !ok {
+			continue
+		}
+		items, ok := list.([]any)
+		if !ok {
+			continue
+		}
+		for _, item := range items {
+			ruleMap, ok := item.(map[string]any)
+			if !ok {
+				continue
+			}
+			walkNestedMap(ruleMap, fields, seen)
+		}
+	}
+	fieldStr, _ := m["field"].(string)
+	if fieldStr == "" || seen[fieldStr] {
+		return
+	}
+	opStr, _ := m["op"].(string)
+	val, _ := m["value"]
+	seen[fieldStr] = true
+	*fields = append(*fields, fieldInfo{
+		Path:      fieldStr,
+		Op:        predicate.Operator(opStr),
+		Value:     val,
+		SafeValue: safeValue(predicate.Operator(opStr), val),
+	})
 }
 
 func safeValue(op predicate.Operator, unsafeVal any) any {

@@ -114,7 +114,8 @@ func main() {
 	staveBin := flag.String("stave-bin", "", "path to stave binary (default: $STAVE_BIN or ./stave)")
 	fixtureDir := flag.String("fixture-dir", "fixtures/labs/wa-lenses", "fixture directory")
 	scorecardPath := flag.String("scorecard", "docs-internal/experiments/wa-lens-scorecard.md", "scorecard path")
-	evalTime := flag.String("eval-time", "2026-07-21T12:00:00Z", "eval-time for deterministic output")
+	evalTime := flag.String("eval-time", "", "eval-time for deterministic output (default: current time)")
+	maxDelta := flag.Int("max-delta", 0, "max allowed violation increase per fixture (0 = no limit)")
 	flag.Parse()
 
 	if *staveBin == "" {
@@ -122,6 +123,11 @@ func main() {
 	}
 	if *staveBin == "" {
 		*staveBin = "./stave"
+	}
+
+	resolvedEvalTime := *evalTime
+	if resolvedEvalTime == "" {
+		resolvedEvalTime = time.Now().UTC().Format(time.RFC3339)
 	}
 
 	allStats, err := parseLensRepo(*lensRepo)
@@ -136,7 +142,7 @@ func main() {
 
 	results := make(map[string]fixtureResult)
 	for slug := range fixtureSlugs {
-		r, err := evalFixture(*staveBin, *fixtureDir, slug, *evalTime)
+		r, err := evalFixture(*staveBin, *fixtureDir, slug, resolvedEvalTime)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warning: eval %s: %v\n", slug, err)
 			continue
@@ -158,15 +164,27 @@ func main() {
 			fmt.Fprintf(os.Stderr, "REGRESSION: %s violations dropped %d → %d\n", slug, prev, cur.Violations)
 			regressed = true
 		} else if cur.Violations > prev {
-			fmt.Fprintf(os.Stderr, "improvement: %s violations rose %d → %d\n", slug, prev, cur.Violations)
+			delta := cur.Violations - prev
+			if *maxDelta > 0 && delta > *maxDelta {
+				fmt.Fprintf(os.Stderr, "REGRESSION: %s violations spiked %d → %d (delta %d > max %d)\n",
+					slug, prev, cur.Violations, delta, *maxDelta)
+				regressed = true
+			} else {
+				fmt.Fprintf(os.Stderr, "improvement: %s violations rose %d → %d\n", slug, prev, cur.Violations)
+			}
 		}
 	}
 
 	// Detect new lenses without fixtures
+	var unmappedNames []string
 	for _, s := range allStats {
 		if _, ok := lensToFixture[s.DirName]; !ok {
 			fmt.Fprintf(os.Stderr, "new lens (no fixture): %s (%d invertible practices)\n", s.DirName, s.Invertible)
+			unmappedNames = append(unmappedNames, s.DirName)
 		}
+	}
+	if len(unmappedNames) > 0 {
+		fmt.Fprintf(os.Stderr, "unmapped lenses (%d): %s\n", len(unmappedNames), strings.Join(unmappedNames, ", "))
 	}
 
 	if err := writeScorecard(*scorecardPath, allStats, results); err != nil {

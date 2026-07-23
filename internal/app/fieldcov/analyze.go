@@ -160,6 +160,8 @@ func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]str
 
 	pred := &ctl.UnsafePredicate
 	if len(pred.Any) == 0 && len(pred.All) == 0 {
+		// Evaluable = required fields are present. Does NOT assert values
+		// are correct — value correctness is the evaluation engine's job.
 		result.Classification = Evaluable
 		return result
 	}
@@ -463,9 +465,25 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 		}
 	}
 
+	// Prefer control-declared asset types over the heuristic.
+	controlAssetType := make(map[string]string, len(input.Controls))
+	for i := range input.Controls {
+		if len(input.Controls[i].ApplicableAssetTypes) > 0 {
+			controlAssetType[string(input.Controls[i].ID)] = string(input.Controls[i].ApplicableAssetTypes[0])
+		}
+	}
+
 	for field, ctls := range fieldToControls {
-		// Derive asset type from field path: properties.storage.* → s3_bucket (approximate).
-		assetType := deriveAssetType(field)
+		assetType := ""
+		for _, ctlID := range ctls {
+			if at, ok := controlAssetType[ctlID]; ok {
+				assetType = at
+				break
+			}
+		}
+		if assetType == "" {
+			assetType = deriveAssetType(field)
+		}
 		report.ShoppingList[assetType] = append(report.ShoppingList[assetType], ShoppingItem{
 			Field:       field,
 			RequiredBy:  ctls,

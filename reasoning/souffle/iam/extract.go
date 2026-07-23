@@ -38,6 +38,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -96,6 +97,11 @@ var declaredInputs = []string{
 	"has_data_event_logging",
 	"has_mfa_enforced",
 	"has_advanced_security_enabled",
+	// Implemented G-phases: G0 (schema), G3 (authorization+sensitivity),
+	// G4 (bucket hijack), G9 (cross-account), G10 (federation).
+	// Deferred G-phases: G5 (network topology), G6 (temporal patterns),
+	// G7 (service quotas), G8 (cost anomalies) — no consumers yet.
+	//
 	// G3 — emitted by emitAuthFacts/emitSensitivityFacts below,
 	// not from the JSONL stream. Listed here so preCreateEmpty
 	// is idempotent (it's a no-op for these because the G3 phase
@@ -238,9 +244,7 @@ func main() {
 	if err != nil {
 		fail("emit bucket hijack facts: %v", err)
 	}
-	for k, v := range g4stats {
-		stats[k] = v
-	}
+	maps.Copy(stats, g4stats)
 
 	// G9 — cross-account resource policy grants. Joins
 	// resource_policy_principal + resource_policy_action per
@@ -249,9 +253,7 @@ func main() {
 	if err != nil {
 		fail("emit cross-account access facts: %v", err)
 	}
-	for k, v := range g9stats {
-		stats[k] = v
-	}
+	maps.Copy(stats, g9stats)
 
 	// G10 — federation trust facts. Reads has_type + trusts_service +
 	// has_delegated_principal to identify OIDC/SAML provider assets
@@ -260,9 +262,7 @@ func main() {
 	if err != nil {
 		fail("emit federation facts: %v", err)
 	}
-	for k, v := range g10stats {
-		stats[k] = v
-	}
+	maps.Copy(stats, g10stats)
 
 	if err := preCreateEmpty(opts.out); err != nil {
 		fail("pre-create empty facts: %v", err)

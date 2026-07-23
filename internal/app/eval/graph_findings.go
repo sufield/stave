@@ -280,6 +280,11 @@ func col(cols []string, i int) string {
 // markDegradedGraphEdges flags graph findings that reference assets with
 // is_expired=true or is_dormant=true in the latest snapshot. These assets
 // represent trust relationships that may not be exploitable.
+//
+// Point-in-time semantics: uses only the latest snapshot. An asset
+// that was expired in a previous snapshot but revived in the latest
+// is NOT flagged as degraded — a revived asset represents a
+// potentially exploitable trust relationship.
 func markDegradedGraphEdges(gf []findings.CompoundFinding, snapshots []asset.Snapshot) {
 	if len(gf) == 0 || len(snapshots) == 0 {
 		return

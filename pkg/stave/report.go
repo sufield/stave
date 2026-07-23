@@ -3,8 +3,11 @@ package stave
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"html"
+	"strconv"
 	"time"
 
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
@@ -17,7 +20,7 @@ import (
 
 // ReportInput carries the inputs for [BuildReport]. ControlsDir/ChainsDir
 // default to "controls"/"chains" at the CLI; SLAFile and TeamManifest are
-// optional. Format is "json" (default) or "markdown".
+// optional. Format is "json" (default), "markdown", or "html".
 type ReportInput struct {
 	HistoryDir   string
 	SnapshotPath string
@@ -81,8 +84,56 @@ func renderReport(report *er.Report, format string) ([]byte, error) {
 		if err := er.WriteMarkdown(&buf, report); err != nil {
 			return nil, fmt.Errorf("write markdown report: %w", err)
 		}
+	case "html":
+		var md bytes.Buffer
+		if err := er.WriteMarkdown(&md, report); err != nil {
+			return nil, fmt.Errorf("write markdown for html: %w", err)
+		}
+		writeHTMLReport(&buf, report.Title, md.Bytes())
+	case "csv":
+		if err := writeCSVReport(&buf, report); err != nil {
+			return nil, fmt.Errorf("write csv report: %w", err)
+		}
 	default:
-		return nil, fmt.Errorf("unsupported format %q (expected: json | markdown)", format)
+		return nil, fmt.Errorf("unsupported format %q (expected: json | markdown | html)", format)
 	}
 	return buf.Bytes(), nil
+}
+
+func writeCSVReport(buf *bytes.Buffer, report *er.Report) error {
+	w := csv.NewWriter(buf)
+	defer w.Flush()
+	if err := w.Write([]string{"rank", "control_id", "severity", "asset_id", "dwell_hours", "remediation"}); err != nil {
+		return err
+	}
+	for i := range report.TopFindings {
+		f := &report.TopFindings[i]
+		if err := w.Write([]string{
+			strconv.Itoa(f.Rank),
+			f.ControlID,
+			f.Severity,
+			f.AssetID,
+			fmt.Sprintf("%.1f", f.DwellHours),
+			f.RemediationAction,
+		}); err != nil {
+			return err
+		}
+	}
+	return w.Error()
+}
+
+func writeHTMLReport(buf *bytes.Buffer, title string, markdown []byte) {
+	buf.WriteString(`<!doctype html><html><head><meta charset="utf-8">`)
+	buf.WriteString(`<meta name="viewport" content="width=device-width, initial-scale=1">`)
+	buf.WriteString(`<title>`)
+	buf.WriteString(html.EscapeString(title))
+	buf.WriteString(`</title><style>
+body{font-family:system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem;line-height:1.6;color:#1a1a1a;background:#fff}
+pre{background:#f5f5f5;padding:1rem;overflow-x:auto;border-radius:4px}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:.5rem;text-align:left}
+th{background:#f0f0f0}tr:nth-child(even){background:#fafafa}
+@media(prefers-color-scheme:dark){body{color:#e0e0e0;background:#1a1a1a}pre{background:#2a2a2a}th{background:#333}td{border-color:#444}tr:nth-child(even){background:#222}}
+</style></head><body><pre>`)
+	buf.Write([]byte(html.EscapeString(string(markdown))))
+	buf.WriteString(`</pre></body></html>`)
 }

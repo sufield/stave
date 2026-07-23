@@ -15,6 +15,7 @@ import (
 
 func newVerifyCmd() *cobra.Command {
 	var bundlePath, keyPath string
+	var requireSignature bool
 
 	cmd := &cobra.Command{
 		Use:   "verify",
@@ -23,8 +24,9 @@ func newVerifyCmd() *cobra.Command {
 Ed25519 signature.
 
 Inputs:
-  --bundle PATH       Path to .stave-bundle archive (required)
-  --public-key PATH   Path to Ed25519 public key PEM (optional)
+  --bundle PATH            Path to .stave-bundle archive (required)
+  --public-key PATH        Path to Ed25519 public key PEM (optional)
+  --require-signature      Fail (exit 3) if the bundle is unsigned
 
 Outputs:
   stdout              Verification result
@@ -34,22 +36,24 @@ Exit Codes:
   2   Invalid input
   3   Verification failed`,
 		Example: `  stave bundle verify --bundle evidence.stave-bundle
-  stave bundle verify --bundle evidence.stave-bundle --public-key audit.pub`,
+  stave bundle verify --bundle evidence.stave-bundle --public-key audit.pub
+  stave bundle verify --bundle evidence.stave-bundle --require-signature`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			return runVerify(cmd.OutOrStdout(), bundlePath, keyPath)
+			return runVerify(cmd.OutOrStdout(), bundlePath, keyPath, requireSignature)
 		},
 	}
 
 	cmd.Flags().StringVar(&bundlePath, "bundle", "", "Path to .stave-bundle archive (required)")
 	cmd.Flags().StringVar(&keyPath, "public-key", "", "Path to Ed25519 public key PEM")
+	cmd.Flags().BoolVar(&requireSignature, "require-signature", false, "Fail if the bundle is unsigned")
 	cliflags.MustMarkRequired(cmd, "bundle")
 
 	return cmd
 }
 
-func runVerify(stdout io.Writer, bundlePath, keyPath string) error {
+func runVerify(stdout io.Writer, bundlePath, keyPath string, requireSignature bool) error {
 	bundleData, err := os.ReadFile(fsutil.CleanUserPath(bundlePath)) //nolint:gosec // user-specified bundle path
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read bundle: %w", err)}
@@ -76,6 +80,11 @@ func runVerify(stdout io.Writer, bundlePath, keyPath string) error {
 
 	if result.Signed && keyPath != "" && !result.SignatureValid {
 		fmt.Fprintf(stdout, "Bundle verification failed: signature invalid (%d files, manifest digests OK)\n", result.FileCount)
+		return ui.ErrViolationsFound
+	}
+
+	if requireSignature && !result.Signed {
+		fmt.Fprintf(stdout, "Bundle verification failed: bundle is unsigned (--require-signature)\n")
 		return ui.ErrViolationsFound
 	}
 

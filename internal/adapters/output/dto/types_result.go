@@ -54,6 +54,13 @@ type IssueDTO struct {
 	ConsolidatedBlastRadius float64  `json:"consolidated_blast_radius"`
 }
 
+// TrendSummaryDTO carries baseline comparison counts when available.
+type TrendSummaryDTO struct {
+	NewCount       int `json:"new_count"`
+	ResolvedCount  int `json:"resolved_count"`
+	UnchangedCount int `json:"unchanged_count"`
+}
+
 // ResultDTO is the top-level evaluation output envelope content.
 type ResultDTO struct {
 	SchemaVersion     kernel.Schema            `json:"schema_version"`
@@ -72,5 +79,6 @@ type ResultDTO struct {
 	ExemptedAssets    []ExemptedAssetDTO       `json:"exempted_assets,omitempty"`
 	TopExposures      []ExposureRankDTO        `json:"top_exposures,omitempty"`
 	CoveragePosture   CoveragePostureDTO       `json:"coverage_posture,omitempty"`
+	TrendSummary      *TrendSummaryDTO         `json:"trend_summary,omitempty"`
 	Extensions        *ExtensionsDTO           `json:"extensions,omitempty"`
 }

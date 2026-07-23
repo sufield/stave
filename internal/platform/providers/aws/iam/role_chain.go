@@ -63,6 +63,10 @@ const (
 	HopTypeLambdaInvokeExisting HopType = "lambda_invoke_existing"
 	HopTypeCfnUpdateExisting    HopType = "cfn_update_existing"
 	HopTypeEksPodExec           HopType = "eks_pod_exec"
+
+	// Future hop types (require observation schemas):
+	//   HopTypeSSO — permission set → role assumption (Identity Center)
+	//   HopTypeServiceCatalog — portfolio launch constraint → role
 )
 
 // RoleHop is one step in a transitive role assumption chain.
@@ -665,6 +669,10 @@ func resolveChainRecursive(
 		//     iam.Statement parser drops, including the account-root
 		//     pattern that admits every principal in a named account.
 		// Either channel admitting the assumer is sufficient.
+		// Known limitation: when the trust policy document is absent from
+		// the snapshot, trustAllowsAssumer returns false (conservative).
+		// This correctly prevents false-positive chains but may under-
+		// report: a real trust relationship is invisible without the doc.
 		trustPolicy, _, _ := lookupTrustPolicy(input.TrustPolicies, canonicalTargetARN)
 		awsTrust, _, _ := lookupAWSPrincipalTrusts(input.AWSPrincipalTrusts, canonicalTargetARN)
 		if !trustAllowsAssumer(trustPolicy, awsTrust, currentARN) {

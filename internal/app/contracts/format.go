@@ -25,6 +25,8 @@ const (
 	// FormatCSV selects comma-separated-values output for spreadsheet
 	// or pipeline consumption.
 	FormatCSV OutputFormat = "csv"
+	// FormatHTML selects a self-contained HTML page rendered from markdown.
+	FormatHTML OutputFormat = "html"
 )
 
 // String implements fmt.Stringer (and pflag.Value.String).
@@ -36,11 +38,11 @@ func (f OutputFormat) String() string { return string(f) }
 // message; per-command parsers may still impose stricter subsets.
 func (f *OutputFormat) Set(value string) error {
 	switch OutputFormat(value) {
-	case FormatText, FormatJSON, FormatSARIF, FormatMarkdown, FormatTable, FormatCSV:
+	case FormatText, FormatJSON, FormatSARIF, FormatMarkdown, FormatTable, FormatCSV, FormatHTML:
 		*f = OutputFormat(value)
 		return nil
 	}
-	return fmt.Errorf("invalid output format %q (supported: text, json, sarif, markdown, table, csv)", value)
+	return fmt.Errorf("invalid output format %q (supported: text, json, sarif, markdown, table, csv, html)", value)
 }
 
 // Type implements pflag.Value; used by Cobra to render flag help.

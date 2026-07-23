@@ -265,6 +265,8 @@ func buildLocations(f *remediation.Finding) []sarifLocation {
 		}
 	}
 
+	// logicalLocation (cloud resource URI) rather than physicalLocation
+	// (file:line) — infrastructure findings reference cloud resources, not code.
 	return []sarifLocation{
 		{
 			LogicalLocations: []sarifLogicalLocation{

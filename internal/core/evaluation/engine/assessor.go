@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"runtime"
 	"slices"
 	"time"
@@ -355,6 +356,14 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 	// for no benefit.
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(runtime.NumCPU())
+
+	controlTimeout := 5 * time.Second
+	if envTO := os.Getenv("STAVE_CONTROL_EVAL_TIMEOUT"); envTO != "" {
+		if d, err := time.ParseDuration(envTO); err == nil && d > 0 {
+			controlTimeout = d
+		}
+	}
+
 	for i := range a.controls {
 		ctl := &a.controls[i]
 		if !ctl.IsEvaluatable() {
@@ -367,15 +376,15 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 		}
 		pos := i // captured for the error message; gctx-derived cancellation does not preserve loop position
 		g.Go(func() error {
-			// gctx is cancelled when the parent ctx is cancelled
-			// OR when any sibling goroutine returns a non-nil
-			// error. Either way the remaining controls bail out
-			// at the next per-asset cancellation check inside
-			// applyControl.
-			if err := gctx.Err(); err != nil {
+			evalCtx, cancel := context.WithTimeout(gctx, controlTimeout)
+			defer cancel()
+			if err := evalCtx.Err(); err != nil {
 				return fmt.Errorf("assess: cancelled before control %s (%d/%d): %w", ctl.ID, pos, len(a.controls), err)
 			}
-			if err := sess.applyControl(gctx, ctl, lifecycles[ctl.ID]); err != nil {
+			if err := sess.applyControl(evalCtx, ctl, lifecycles[ctl.ID]); err != nil {
+				if evalCtx.Err() != nil {
+					return fmt.Errorf("control %s (%d/%d) timed out after %s: %w", ctl.ID, pos, len(a.controls), controlTimeout, err)
+				}
 				return fmt.Errorf("apply control %s (%d/%d): %w", ctl.ID, pos, len(a.controls), err)
 			}
 			return nil

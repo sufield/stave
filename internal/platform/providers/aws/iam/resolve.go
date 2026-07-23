@@ -117,6 +117,10 @@ type ResolutionInput struct {
 // (which endpoint a principal's traffic traverses), which is
 // outside the scope of static snapshot analysis.
 //
+// Session policies (inline policies passed at assume-role time) are
+// also out of scope. They are runtime constructs — the policy
+// document is ephemeral and not captured in configuration snapshots.
+//
 // This is a pure function with no side effects.
 func Resolve(input ResolutionInput) ResolvedPermissions {
 	result := ResolvedPermissions{
@@ -695,6 +699,7 @@ func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 
 	hasAdmin := false
 	hasElevated := false
+	hasBroadDataAccess := false
 	serviceCount := make(map[string]struct{})
 	var profile RiskProfile
 
@@ -719,12 +724,13 @@ func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 			continue
 		}
 
-		// Admin indicators: full wildcard or any PrivEsc action on
-		// the core IAM policy-mutation surface.
-		if action == "*" || action == "iam:*" ||
-			action == "iam:createpolicy" || action == "iam:putuserpolicy" ||
-			action == "iam:putrolepolicy" || action == "iam:attachuserpolicy" ||
-			action == "iam:attachrolepolicy" {
+		// Admin indicators: full wildcard, iam:*, or IAM policy-
+		// mutation actions. Uses the registry's PrivEsc category
+		// for IAM-prefixed actions, plus iam:CreatePolicy (classified
+		// as ResourceExposure in the registry but functionally admin
+		// when on a broad resource). iam:PassRole and iam:CreateRole
+		// are elevated, not admin — excluded via isIAMAdminAction.
+		if action == "*" || action == "iam:*" || isIAMAdminAction(action) {
 			hasAdmin = true
 		}
 		// Elevated indicators: PassRole, broad service wildcards,
@@ -742,6 +748,9 @@ func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 		if !hasElevated && sensitiveActions.HasCredentialExposure(action) {
 			hasElevated = true
 		}
+		if sensitiveActions.HasDataAccess(action) {
+			hasBroadDataAccess = true
+		}
 
 		if idx := indexByte(action, ':'); idx > 0 {
 			serviceCount[action[:idx]] = struct{}{}
@@ -754,12 +763,32 @@ func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 		level = PrivilegeLevelAdmin
 	case hasElevated:
 		level = PrivilegeLevelElevated
-	case len(serviceCount) > 2:
+	case len(serviceCount) > 2 || hasBroadDataAccess:
 		level = PrivilegeLevelStandard
 	default:
 		level = PrivilegeLevelLimited
 	}
 	return level, profile
+}
+
+// isIAMAdminAction reports whether an IAM action grants admin-level
+// privilege when applied to a broad resource. Combines the registry's
+// PrivEsc category for IAM-prefixed actions with iam:CreatePolicy
+// (ResourceExposure in the registry but functionally admin on *).
+// Excludes iam:PassRole and iam:CreateRole — those are elevated, not
+// admin, because they require a second step (service trigger or trust
+// policy) to gain the target role's permissions.
+func isIAMAdminAction(action string) bool {
+	if !strings.HasPrefix(action, "iam:") {
+		return false
+	}
+	if action == "iam:passrole" || action == "iam:createrole" {
+		return false
+	}
+	if action == "iam:createpolicy" {
+		return true
+	}
+	return sensitiveActions.HasPrivEsc(action)
 }
 
 func indexByte(s string, b byte) int {
@@ -772,28 +801,34 @@ func indexByte(s string, b byte) int {
 }
 
 // isEffectivelyBroadResource reports whether resource is wildcard-
-// equivalent for privilege-classification purposes. A grant that
-// targets "arn:aws:iam::123:role/*" or "arn:aws:s3:::*" is
-// functionally identical to "*" when we ask "does this principal
-// have admin?" — so classification must consider the same set of
-// indicators against either form.
+// equivalent for privilege-classification purposes.
 //
 // True when:
-//   - resource is "*" (the literal full wildcard)
-//   - resource is "arn:aws:*" or any prefix that ends in "*" with
-//     no further service / account narrowing (e.g. "arn:aws:s3:::*",
-//     "arn:aws:iam::123:*", "arn:aws:iam::123:role/*")
+//   - resource is "*" or "arn:aws:*"
+//   - non-ARN wildcard (e.g. "mybucket*") — conservative
+//   - ARN with trailing "*" where the wildcard covers the resource
+//     type segment or higher (e.g. "arn:aws:s3:::*",
+//     "arn:aws:iam::123:*")
 //
-// False when the resource names a specific ARN (no trailing "*"),
-// because a single named bucket / role is a meaningfully smaller
-// blast radius and shouldn't escalate the principal to admin.
+// False when:
+//   - no trailing "*" (specific resource)
+//   - ARN with trailing "*" deep in the resource path (e.g.
+//     "arn:aws:s3:::bucket/prefix/*") — targets a sub-path
+//     within one resource, not the entire type
 func isEffectivelyBroadResource(resource string) bool {
 	if resource == "*" || resource == "arn:aws:*" {
 		return true
 	}
-	// Trailing "*" with at least one ARN segment intact — the wildcard
-	// covers the rest of a service / account scope. Conservative
-	// (over-classifies rather than under-classifies) so a future
-	// scoped-down ARN catches less, not more.
-	return resource != "" && resource[len(resource)-1] == '*'
+	if !strings.HasSuffix(resource, "*") {
+		return false
+	}
+	if !strings.HasPrefix(resource, "arn:") {
+		return true
+	}
+	// ARN: arn:partition:service:region:account:resourcetype/path
+	// Count colon-separated segments before the wildcard. A wildcard
+	// in segment ≤5 covers the resource type; deeper targets a
+	// specific sub-path.
+	beforeWild := resource[:strings.LastIndex(resource, "*")]
+	return strings.Count(beforeWild, ":") < 6
 }

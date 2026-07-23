@@ -184,8 +184,10 @@ func TestResolve_NoBoundary(t *testing.T) {
 	if result.Incomplete {
 		t.Fatalf("unexpected incomplete: %v", result.IncompleteReasons)
 	}
-	if result.PrivilegeLevel != PrivilegeLevelLimited {
-		t.Fatalf("expected limited, got %s", result.PrivilegeLevel)
+	// s3:GetObject on Resource:"*" is DataAccess on a broad resource,
+	// which promotes to Standard (HAZOP 3.6 fix).
+	if result.PrivilegeLevel != PrivilegeLevelStandard {
+		t.Fatalf("expected standard, got %s", result.PrivilegeLevel)
 	}
 }
 

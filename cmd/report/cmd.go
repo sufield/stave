@@ -55,7 +55,7 @@ Inputs:
   --snapshot PATH         Snapshot to assess (required)
   --sla-profile-file PATH SLA policy
   --team-manifest PATH    Team manifest
-  --format STRING         json (default) | markdown
+  --format STRING         json (default) | markdown | html | csv
   --title STRING          Report title
   --period STRING         Reporting period label
 
@@ -80,7 +80,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chains directory")
 	cmd.Flags().StringVar(&opts.SLAFile, "sla-profile-file", "", "SLA policy file")
 	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "team manifest")
-	cmd.Flags().VarP(&opts.Format, "format", "f", "output format: json | markdown")
+	cmd.Flags().VarP(&opts.Format, "format", "f", "output format: json | markdown | html | csv")
 	cmd.Flags().StringVar(&opts.Title, "title", "Security Posture Report", "report title")
 	cmd.Flags().StringVar(&opts.Period, "period", "", "reporting period label")
 	cmd.Flags().BoolVar(&opts.TeamBreakdown, "team-breakdown", false, "Include per-team findings breakdown in report")

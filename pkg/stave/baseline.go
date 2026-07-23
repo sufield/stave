@@ -3,7 +3,9 @@ package stave
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 
 	infrabaseline "github.com/sufield/stave/internal/adapters/baseline"
@@ -65,4 +67,23 @@ func BaselineCheck(ctx context.Context, evaluationPath, baselinePath string, fai
 		return nil, false, fmt.Errorf("write output: %w", err)
 	}
 	return buf.Bytes(), failOnNew && resp.HasNew, nil
+}
+
+// BaselineWarnResolved parses the check output and emits a warning
+// to w if any baseline findings were resolved (disappeared). This
+// is opt-in via --warn-on-resolved because disappearing findings
+// may indicate data loss rather than remediation.
+func BaselineWarnResolved(w io.Writer, checkOutput []byte) {
+	var resp struct {
+		Summary struct {
+			ResolvedFindings int `json:"resolved_findings"`
+		} `json:"summary"`
+	}
+	if err := json.Unmarshal(checkOutput, &resp); err != nil {
+		return
+	}
+	if resp.Summary.ResolvedFindings > 0 {
+		fmt.Fprintf(w, "warning: %d baseline finding(s) resolved — verify this reflects remediation, not data loss\n",
+			resp.Summary.ResolvedFindings)
+	}
 }

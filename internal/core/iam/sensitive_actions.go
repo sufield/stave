@@ -124,6 +124,12 @@ func (r *SensitiveActionRegistry) HasCredentialExposure(actionOrPattern string) 
 	return r.hasCategory(actionOrPattern, ActionCredentialExposure)
 }
 
+// HasPrivEsc returns true if the action or pattern includes any
+// PrivEsc-classified action.
+func (r *SensitiveActionRegistry) HasPrivEsc(actionOrPattern string) bool {
+	return r.hasCategory(actionOrPattern, ActionPrivEsc)
+}
+
 // CountByCategory counts actions in the given category from a list.
 func (r *SensitiveActionRegistry) CountByCategory(
 	actions []string, category ActionRiskCategory,

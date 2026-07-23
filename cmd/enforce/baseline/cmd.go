@@ -85,9 +85,10 @@ Exit Codes:
 
 func newCheckCmd() *cobra.Command {
 	var (
-		inPath       string
-		baselinePath string
-		failOnNew    = true
+		inPath         string
+		baselinePath   string
+		failOnNew      = true
+		warnOnResolved bool
 	)
 
 	cmd := &cobra.Command{
@@ -97,10 +98,14 @@ func newCheckCmd() *cobra.Command {
 New findings (not in the baseline) are reported. Use --fail-on-new to
 fail the CI pipeline when new violations appear.
 
+Use --warn-on-resolved to emit a warning when baseline findings disappear.
+Disappearing findings may indicate data loss rather than remediation.
+
 Inputs:
-  --in          Path to current evaluation JSON
-  --baseline    Path to saved baseline JSON
-  --fail-on-new Exit 3 when new findings detected (default: true)
+  --in               Path to current evaluation JSON
+  --baseline         Path to saved baseline JSON
+  --fail-on-new      Exit 3 when new findings detected (default: true)
+  --warn-on-resolved Warn when baseline findings disappear (default: false)
 
 Exit Codes:
   0    No new findings (or --fail-on-new=false)
@@ -108,7 +113,8 @@ Exit Codes:
   3    New findings detected (when --fail-on-new is true)
   4    Internal error`,
 		Example: `  stave ci baseline check --in output/evaluation.json --baseline output/baseline.json
-  stave ci baseline check --in output/evaluation.json --baseline output/baseline.json --fail-on-new=false`,
+  stave ci baseline check --in output/evaluation.json --baseline output/baseline.json --fail-on-new=false
+  stave ci baseline check --in output/evaluation.json --baseline output/baseline.json --warn-on-resolved`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		Args:          cobra.NoArgs,
@@ -116,6 +122,9 @@ Exit Codes:
 			out, hasNew, err := stave.BaselineCheck(cmd.Context(), inPath, baselinePath, failOnNew)
 			if err != nil {
 				return err //nolint:wrapcheck // facade already wrapped ("check baseline"/"write output"); preserve exit 4.
+			}
+			if warnOnResolved {
+				stave.BaselineWarnResolved(cmd.ErrOrStderr(), out)
 			}
 			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
 				return fmt.Errorf("write output: %w", werr)
@@ -130,6 +139,7 @@ Exit Codes:
 	cmd.Flags().StringVar(&inPath, "in", "", "Path to evaluation JSON (required)")
 	cmd.Flags().StringVar(&baselinePath, "baseline", "", "Path to baseline JSON (required)")
 	cmd.Flags().BoolVar(&failOnNew, "fail-on-new", failOnNew, "Return exit code 3 when new findings are detected")
+	cmd.Flags().BoolVar(&warnOnResolved, "warn-on-resolved", false, "Warn when baseline findings disappear (may indicate data loss)")
 	_ = cmd.MarkFlagRequired("in")
 	_ = cmd.MarkFlagRequired("baseline")
 
