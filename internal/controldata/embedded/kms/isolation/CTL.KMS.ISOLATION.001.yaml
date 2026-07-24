@@ -11,6 +11,7 @@ domain: exposure
 severity: critical
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_kms_key]
 scope_tags:
   - aws
   - kms

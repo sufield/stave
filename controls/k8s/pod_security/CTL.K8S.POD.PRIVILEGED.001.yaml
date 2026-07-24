@@ -19,6 +19,7 @@ taxonomy:
   - network-perimeter
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [k8s_resource]
 params:
   attack_stage: privilege_escalation
 remediation:

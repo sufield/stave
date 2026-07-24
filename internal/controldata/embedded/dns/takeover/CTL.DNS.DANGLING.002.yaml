@@ -19,6 +19,7 @@ taxonomy:
   - compliance-mapping
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [dns_zone]
 params:
   attack_stage: initial_access
 remediation:

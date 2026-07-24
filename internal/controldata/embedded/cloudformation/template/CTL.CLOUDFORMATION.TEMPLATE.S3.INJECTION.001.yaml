@@ -30,6 +30,7 @@ taxonomy:
   - ai-supply-chain
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_cloudformation_stack]
 params:
   attack_stage: privilege_escalation
 remediation:

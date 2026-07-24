@@ -26,6 +26,7 @@ taxonomy:
   - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_iam_user, aws_iam_role]
 params:
   attack_stage: collection
   base_impact: 9

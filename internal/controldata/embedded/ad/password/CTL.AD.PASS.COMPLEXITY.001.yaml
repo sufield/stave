@@ -16,6 +16,7 @@ taxonomy:
   - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_directory_service_directory]
 params:
   attack_stage: credential_access
 remediation:

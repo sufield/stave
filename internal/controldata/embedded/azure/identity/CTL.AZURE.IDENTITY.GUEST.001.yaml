@@ -17,6 +17,7 @@ taxonomy:
   - compute-hardening
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [azure_resource]
 params:
   attack_stage: persistence
 remediation:

@@ -21,6 +21,7 @@ taxonomy:
   - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_efs_file_system]
 params:
   base_impact: 7
   attack_stage: credential_access

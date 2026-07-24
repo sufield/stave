@@ -25,6 +25,7 @@ taxonomy:
   - credential-lifecycle
 type: unsafe_state
 classification: parameterized_check
+applicable_asset_types: [vsphere_vm]
 params:
   attack_stage: credential_access
 remediation:

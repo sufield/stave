@@ -22,6 +22,7 @@ taxonomy:
   - encryption-at-rest
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_opensearch_domain]
 params:
   attack_stage: exfiltration
 remediation:

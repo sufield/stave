@@ -16,6 +16,7 @@ taxonomy:
   - encryption-in-transit
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [cloudflare_zone]
 params:
   attack_stage: initial_access
 remediation:

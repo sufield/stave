@@ -30,7 +30,7 @@ apply_filtered() {
     local obs=$1
     "$stave_bin" apply \
         --observations "$obs" \
-        --eval-time 2026-05-10T12:00:00Z --format json 2>/dev/null \
+        --eval-time 2026-05-10T12:00:00Z --format json --include-atomic 2>/dev/null \
       | jq '{
             controls: ([.findings[] | select(.control_id | test("CTL\\.(ECS|VPC)"))] | map(.control_id) | sort | unique),
             chains:   ([(.chain_findings // [])[]] | map(.chain_id // .chain) | sort | unique),

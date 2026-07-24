@@ -22,6 +22,7 @@ taxonomy:
   - trust-decay
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [cisco_device]
 params:
   attack_stage: discovery
 remediation:

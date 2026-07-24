@@ -15,6 +15,7 @@ taxonomy:
   - resource-sprawl
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [github_repository]
 params:
   attack_stage: initial_access
 remediation:

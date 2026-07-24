@@ -37,6 +37,7 @@ taxonomy:
   - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_ecs_task_definition]
 params:
   attack_stage: privilege_escalation
 observation_fields:

@@ -31,7 +31,7 @@ apply_filtered() {
     "$stave_bin" apply \
         --observations "$obs" \
         --controls "$stave_root/controls/vpc/peering" \
-        --eval-time 2026-05-10T12:00:00Z --format json 2>/dev/null \
+        --eval-time 2026-05-10T12:00:00Z --format json --include-atomic 2>/dev/null \
       | jq '{
             controls: ([.findings[].control_id] | sort | unique),
             chains:   ([(.chain_findings // [])[]] | map(.chain // .chain_id) | sort | unique),

@@ -25,6 +25,7 @@ taxonomy:
   - monitoring
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_shield_subscription]
 params:
   attack_stage: resilience
   base_impact: 5

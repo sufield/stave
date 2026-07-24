@@ -32,6 +32,7 @@ taxonomy:
   - credential-lifecycle
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_apigateway_rest_api]
 params:
   attack_stage: credential_access
 remediation:

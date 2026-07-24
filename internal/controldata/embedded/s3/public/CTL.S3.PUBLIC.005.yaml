@@ -22,6 +22,7 @@ params:
   attack_stage: initial_access
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_s3_bucket]
 remediation:
   description: >
     Bucket has a policy or ACL granting public read, currently masked only

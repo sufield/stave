@@ -16,6 +16,7 @@ taxonomy:
   - logging
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [azure_resource]
 params:
   attack_stage: detection_evasion
 remediation:

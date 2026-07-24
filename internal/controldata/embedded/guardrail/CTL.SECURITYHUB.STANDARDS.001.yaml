@@ -20,6 +20,7 @@ taxonomy:
   - monitoring
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_securityhub_hub]
 params:
   base_impact: 7
   attack_stage: detection_evasion

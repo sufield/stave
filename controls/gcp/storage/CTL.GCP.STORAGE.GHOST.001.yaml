@@ -15,6 +15,7 @@ taxonomy:
   - trust-decay
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [gcp_resource]
 params:
   attack_stage: persistence
 remediation:

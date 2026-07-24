@@ -591,6 +591,36 @@ contracts:
       - CTL.SAGEMAKER.ENDPOINT.ENCRYPT.001
       - CTL.SAGEMAKER.PIPELINE.ENCRYPT.001
 
+  # ─── QuickSight DataSource ──────────────────────────────────
+
+  - field: has_vpc_connection
+    type: boolean
+    postcondition: >
+      True if the QuickSight data source connects to its
+      underlying data store through a VPC connection rather
+      than over the public AWS network.
+    consumers:
+      - CTL.QUICKSIGHT.DATASOURCE.VPC.001
+
+  - field: ssl_disabled
+    type: boolean
+    postcondition: >
+      True if the QuickSight data source has SSL disabled
+      for its connection to the underlying data store.
+    consumers:
+      - CTL.QUICKSIGHT.DATASOURCE.ENCRYPT.001
+
+  # ─── SageMaker Space ──────────────────────────────────────
+
+  - field: sharing_type
+    type: string
+    postcondition: >
+      The SharingType of the SageMaker Studio space
+      (Private or Shared). Private spaces are isolated
+      to a single user profile.
+    consumers:
+      - CTL.SAGEMAKER.SPACE.SHARING.001
+
   # ─── SageMaker UserProfile ─────────────────────────────────
 
   - field: has_per_user_role

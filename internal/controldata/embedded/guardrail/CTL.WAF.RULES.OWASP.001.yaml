@@ -42,6 +42,7 @@ taxonomy:
   - logging
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_waf_web_acl]
 params:
   base_impact: 8
   attack_stage: initial_access

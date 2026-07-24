@@ -21,6 +21,7 @@ import (
 // asset types. Prefixes not listed here are skipped — add entries as
 // confidence in the mapping grows.
 var prefixToAssetTypes = map[string][]string{
+	// AWS core
 	"S3":             {"aws_s3_bucket"},
 	"EC2":            {"aws_ec2_instance"},
 	"RDS":            {"aws_rds_instance"},
@@ -59,6 +60,70 @@ var prefixToAssetTypes = map[string][]string{
 	"ACMPCA":         {"aws_acmpca_certificate_authority"},
 	"SAGEMAKER":      {"aws_sagemaker_notebook"},
 	"LIGHTSAIL":      {"aws_lightsail_instance"},
+	// AWS extended
+	"REDSHIFT":          {"aws_redshift_cluster"},
+	"NEPTUNE":           {"aws_neptune_cluster"},
+	"DOCUMENTDB":        {"aws_documentdb_cluster"},
+	"EFS":               {"aws_efs_file_system"},
+	"NETFIREWALL":       {"aws_networkfirewall_firewall"},
+	"GLUE":              {"aws_glue_job"},
+	"CODEBUILD":         {"aws_codebuild_project"},
+	"ECR":               {"aws_ecr_repository"},
+	"MSK":               {"aws_msk_cluster"},
+	"EBS":               {"aws_ebs_volume"},
+	"EMR":               {"aws_emr_cluster"},
+	"QUICKSIGHT":        {"aws_quicksight_datasource"},
+	"ACCOUNT":           {"aws_account"},
+	"APIGW2":            {"aws_apigatewayv2_api"},
+	"ACM":               {"aws_acm_certificate"},
+	"LAKEFORMATION":     {"aws_lakeformation_data_lake"},
+	"CODEPIPELINE":      {"aws_codepipeline_pipeline"},
+	"KINESIS":           {"aws_kinesis_stream"},
+	"MACIE":             {"aws_macie2_account"},
+	"SSM":               {"aws_ssm_parameter"},
+	"SES":               {"aws_ses_identity"},
+	"CLOUD9":            {"aws_cloud9_environment"},
+	"DIRECTCONNECT":     {"aws_direct_connect_connection"},
+	"AD":                {"aws_directory_service_directory"},
+	"TRANSFER":          {"aws_transfer_server"},
+	"APPRUNNER":         {"aws_apprunner_service"},
+	"APPSTREAM":         {"aws_appstream_fleet"},
+	"ATHENA":            {"aws_athena_workgroup"},
+	"AUDITMANAGER":      {"aws_auditmanager_assessment"},
+	"BATCH":             {"aws_batch_compute_environment"},
+	"BEANSTALK":         {"aws_elasticbeanstalk_environment"},
+	"CODECOMMIT":        {"aws_codecommit_repository"},
+	"DATASYNC":          {"aws_datasync_task"},
+	"DNS":               {"dns_zone"},
+	"FIREHOSE":          {"aws_kinesis_firehose_delivery_stream"},
+	"FMS":               {"aws_fms_policy"},
+	"GLACIER":           {"aws_glacier_vault"},
+	"GLOBALACCELERATOR": {"aws_globalaccelerator_accelerator"},
+	"GRAFANA":           {"aws_grafana_workspace"},
+	"MEDIASTORE":        {"aws_mediastore_container"},
+	"MWAA":              {"aws_mwaa_environment"},
+	"RECYCLEBIN":        {"aws_rbin_rule"},
+	"SECURITYLAKE":      {"aws_securitylake_data_lake"},
+	"SERVICECATALOG":    {"aws_servicecatalog_portfolio"},
+	"WORKSPACES":        {"aws_workspaces_workspace"},
+	"DMS":               {"aws_dms_replication_instance"},
+	"EXPOSURE":          {"aws_resource"},
+	"GCS":               {"gcp_storage_bucket"},
+	"INSPECTOR":         {"aws_inspector2_account"},
+	"MQ":                {"aws_mq_broker"},
+	"RAM":               {"aws_ram_resource_share"},
+	"S3EXPRESS":         {"aws_s3_directory_bucket"},
+	"S3TABLES":          {"aws_s3_table_bucket"},
+	"S3VECTORS":         {"aws_s3_vector_bucket"},
+	"SECRETSMANAGER":    {"aws_secretsmanager_secret"},
+	// Multi-cloud
+	"GITHUB":     {"github_repository"},
+	"AZURE":      {"azure_resource"},
+	"GCP":        {"gcp_resource"},
+	"M365":       {"m365_resource"},
+	"CLOUDFLARE": {"cloudflare_zone"},
+	"VSPHERE":    {"vsphere_vm"},
+	"CISCO":      {"cisco_device"},
 }
 
 var idRe = regexp.MustCompile(`(?m)^id:\s+CTL\.([A-Z0-9]+)\.`)
@@ -86,15 +151,22 @@ func main() {
 		content := string(data)
 
 		if assetTypesRe.MatchString(content) {
-			lines := strings.SplitSeq(content, "\n")
-			for line := range lines {
+			lines := strings.Split(content, "\n")
+			for i, line := range lines {
 				trimmed := strings.TrimSpace(line)
 				if after, ok := strings.CutPrefix(trimmed, "applicable_asset_types:"); ok {
-					rest := after
-					rest = strings.TrimSpace(rest)
+					rest := strings.TrimSpace(after)
 					if rest != "" && rest != "[]" {
 						alreadySet++
 						return nil
+					}
+					// Check if next line is a block-list item with a value
+					if i+1 < len(lines) {
+						next := strings.TrimSpace(lines[i+1])
+						if strings.HasPrefix(next, "- ") && len(next) > 2 {
+							alreadySet++
+							return nil
+						}
 					}
 				}
 			}
@@ -121,16 +193,47 @@ func main() {
 
 		var newContent string
 		if assetTypesRe.MatchString(content) {
-			newContent = assetTypesRe.ReplaceAllString(content, typesYAML)
+			// Replace the applicable_asset_types key and any indented
+			// block-list items below it (  - value).
+			lines := strings.Split(content, "\n")
+			var out []string
+			skip := false
+			for _, line := range lines {
+				if strings.HasPrefix(line, "applicable_asset_types:") {
+					out = append(out, typesYAML)
+					skip = true
+					continue
+				}
+				if skip {
+					trimmed := strings.TrimSpace(line)
+					if strings.HasPrefix(trimmed, "- ") {
+						continue // drop block-list items
+					}
+					skip = false
+				}
+				out = append(out, line)
+			}
+			newContent = strings.Join(out, "\n")
 		} else {
 			lines := strings.Split(content, "\n")
 			var out []string
 			inserted := false
 			for _, line := range lines {
 				out = append(out, line)
-				if !inserted && strings.HasPrefix(line, "id:") {
+				if !inserted && strings.HasPrefix(line, "classification:") {
 					out = append(out, typesYAML)
 					inserted = true
+				}
+			}
+			if !inserted {
+				// Fallback: insert after id
+				out = nil
+				for _, line := range lines {
+					out = append(out, line)
+					if !inserted && strings.HasPrefix(line, "id:") {
+						out = append(out, typesYAML)
+						inserted = true
+					}
 				}
 			}
 			if !inserted {

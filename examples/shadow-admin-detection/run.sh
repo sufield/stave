@@ -36,7 +36,7 @@ apply_json() {
         --observations "$1" \
         --controls "$stave_root/controls/iam/entropy" \
         --eval-time "$NOW" --max-unsafe 168h \
-        --format json 2>/dev/null) || rc=$?
+        --format json --include-atomic 2>/dev/null) || rc=$?
     rc=${rc:-0}
     if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
         printf 'stave apply exited %s (unexpected)\n' "$rc" >&2

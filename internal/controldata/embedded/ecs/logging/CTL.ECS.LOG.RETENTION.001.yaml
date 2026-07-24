@@ -35,6 +35,7 @@ taxonomy:
   - trust-decay
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_ecs_task_definition]
 params:
   attack_stage: detection_evasion
 remediation:

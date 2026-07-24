@@ -37,6 +37,7 @@ taxonomy:
   - logging
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_config_recorder]
 params:
   attack_stage: privilege_escalation
   blast_radius:

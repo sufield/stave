@@ -20,6 +20,7 @@ taxonomy:
   - impersonation
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [vsphere_vm]
 params:
   attack_stage: lateral_movement
 remediation:

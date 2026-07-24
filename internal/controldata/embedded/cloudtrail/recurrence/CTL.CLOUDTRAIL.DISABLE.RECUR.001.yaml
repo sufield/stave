@@ -22,6 +22,7 @@ taxonomy:
   - detection-evasion
 type: unsafe_recurrence
 classification: aggregate_check
+applicable_asset_types: [aws_cloudtrail_trail]
 params:
   recurrence_threshold: 1
   window_days: 30

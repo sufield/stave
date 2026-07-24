@@ -16,6 +16,7 @@ taxonomy:
   - compliance-mapping
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_dynamodb_table]
 params:
   attack_stage: impact
 remediation:

@@ -26,6 +26,7 @@ taxonomy:
   - network-perimeter
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_config_recorder]
 params:
   attack_stage: resilience
   blast_radius:

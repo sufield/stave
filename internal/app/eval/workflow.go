@@ -400,6 +400,18 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 
 	// Detect chain-based compound findings.
 	if len(chainDefs) > 0 {
+		// Warn about chain ControlIDs that reference controls not in the
+		// loaded catalog — these silently never fire, producing false
+		// negatives with no diagnostic. (HAZOP 1.7)
+		for i := range chainDefs {
+			for _, cid := range chainDefs[i].ControlIDs {
+				if _, ok := controlLookup[cid]; !ok {
+					slog.Warn("chain references non-existent control — will never fire for this ID",
+						"chain", chainDefs[i].ID, "control", cid)
+				}
+			}
+		}
+
 		scopeResolver := risk.NewScopeResolverFromSnapshots(snapshots)
 		report.ChainFindings = risk.DetectChains(failures, chainDefs, controlLookup, scopeResolver)
 		report.NearMissChains = risk.DetectNearMisses(failures, chainDefs, scopeResolver)

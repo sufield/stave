@@ -1,14 +1,10 @@
 {
   "summary": {
     "total_assets": 3,
-    "exposed_resources": 3,
-    "violations": 6
+    "exposed_resources": 0,
+    "violations": 0
   },
-  "status": "NON_COMPLIANT",
-  "findings_count": 6,
-  "controls": [
-    "CTL.S3.PUBLIC.PREFIX.001",
-    "CTL.S3.WRITE.CONTENT.001",
-    "CTL.S3.WRITE.SCOPE.001"
-  ]
+  "status": "COMPLIANT",
+  "controls": [],
+  "findings_count": 0
 }

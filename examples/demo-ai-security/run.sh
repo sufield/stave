@@ -40,7 +40,7 @@ apply_json() {
     local out rc
     out=$("$STAVE" apply --observations "$1" \
         --eval-time "$NOW" --max-unsafe 168h \
-        --format json 2>/dev/null) || rc=$?
+        --format json --include-atomic 2>/dev/null) || rc=$?
     rc=${rc:-0}
     if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
         echo "stave apply exited $rc (unexpected)" >&2

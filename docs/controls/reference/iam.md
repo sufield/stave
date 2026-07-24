@@ -4465,6 +4465,21 @@ IAM roles assumed via OIDC federation (CI/CD pipelines) must have scoped permiss
 
 ---
 
+### CTL.IAM.TRUST.OIDC.AUDIENCE.001
+
+**OIDC Federation Trust Must Restrict Audience Claim**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3; owasp_nhi: NHI3; soc2: CC6.1;
+
+IAM roles that trust OIDC identity providers must include an audience (aud) condition in the trust policy. Without an audience restriction, any OIDC token issued by the provider — regardless of the intended relying party — can be used to assume the role. An attacker who obtains a token meant for a different AWS account or a non-AWS service can replay it against this role.
+
+**Remediation:** Add a StringEquals condition on the aud claim in the trust policy. For GitHub Actions use "token.actions.githubusercontent.com:aud": "sts.amazonaws.com".
+
+---
+
 ### CTL.IAM.TRUST.ORGBOUNDARY.001
 
 **Cross-Account Trust Must Restrict to Organization via PrincipalOrgID**

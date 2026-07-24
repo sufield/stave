@@ -24,6 +24,7 @@ taxonomy:
   - resource-sprawl
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_iam_user, aws_iam_role]
 defect: >
   AWS account has excessive IAM users. Threshold: 20.
 infection: >

@@ -24,7 +24,7 @@ fmt_section "Findings — ACL Privilege Escalation"
 # capture output and continue.
 "$stave_bin" apply --observations "$obs" \
     --eval-time 2026-01-15T00:00:00Z --max-unsafe 168h \
-    --format json > "$tmp" 2>/dev/null || rc=$?
+    --format json --include-atomic > "$tmp" 2>/dev/null || rc=$?
 rc=${rc:-0}
 if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
     echo "stave apply exited $rc (unexpected)" >&2

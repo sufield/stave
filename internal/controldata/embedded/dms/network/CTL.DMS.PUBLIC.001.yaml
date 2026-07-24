@@ -17,6 +17,7 @@ taxonomy:
   - network-perimeter
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_dms_replication_instance]
 params:
   attack_stage: initial_access
 remediation:

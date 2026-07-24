@@ -24,6 +24,7 @@ taxonomy:
   - monitoring
 type: unsafe_state
 classification: state_assertion
+applicable_asset_types: [aws_sqs_queue]
 params:
   attack_stage: collection
 remediation:
