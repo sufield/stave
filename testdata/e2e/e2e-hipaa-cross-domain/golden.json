@@ -7,11 +7,11 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "86c6b883be148a1eb70c4214a9f9ed348e757324295e950286ecee5bdc40dd1b",
+    "policy_fingerprint": "a2bef89019195fff240ddcb2366d3cd5576169849c542d0ae2ba5053b973b389",
     "evaluated_state": "deployed"
   },
   "summary": {
-    "total_assets": 20,
+    "total_assets": 13,
     "exposed_resources": 12,
     "violations": 29
   },
