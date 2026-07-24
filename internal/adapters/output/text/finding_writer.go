@@ -15,7 +15,6 @@ package text
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
@@ -23,7 +22,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/translation"
 	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/platform/crypto"
 )
@@ -332,4 +330,3 @@ func joinControls(ids []kernel.ControlID) string {
 	}
 	return strings.Join(parts, ", ")
 }
-
