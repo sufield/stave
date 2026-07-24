@@ -21,19 +21,13 @@ Data governance controls enforce organizational policies that prevent silent com
 | `CTL.S3.LIFECYCLE.001` | Retention-Tagged Buckets Must Have Lifecycle Rules |
 | `CTL.S3.CONTROLS.001` | Public Access Block Must Be Enabled |
 
-## Expected Findings
-
-5 violations on 1 resource.
-
----
-
 ## Run
 
 ```bash
 bash run.sh
 ```
 
-Expected: 12 findings on this fixture.
+Current expected output is in `expected/output.json`.
 
 The runner uses the standard `stave apply` + encoding verification
 pipeline. No Docker required — works in the Codespaces devcontainer

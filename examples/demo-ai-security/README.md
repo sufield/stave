@@ -21,7 +21,7 @@ the Codespaces devcontainer already has.
 |---|---|
 | 1 | `stave apply` finds 5 AI violations across Bedrock + Lambda + KB + S3 |
 | 2 | Those 5 findings compose into **3 CRITICAL compound chains** — `bedrock_agent_overpermissioned`, `bedrock_agent_tool_phi_exposure`, `bedrock_rag_phi_exposure` |
-| 3 | Stave's SIR export emits 5,300+ facts consumable by Z3 / cvc5 / Yices (already installed in the devcontainer); encoding verifier confirms every emitted fact traces to an observation property |
+| 3 | Stave's SIR export emits 6,000+ facts consumable by Z3 / cvc5 / Yices (already installed in the devcontainer); encoding verifier confirms every emitted fact traces to an observation property |
 | 4 | Five config changes flip every predicate; all chains go silent; cost is $0 + $0.050/MAU for the guardrail |
 | 5 | Component-level scanners report 6/6 PASS on the same writeup — encryption, VPC, public-access block all green. The compound detection is the gap |
 

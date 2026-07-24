@@ -21,19 +21,13 @@ This is the most commonly reported S3 vulnerability class — 7 of 25 HackerOne 
 | `CTL.S3.PUBLIC.004` | No Public Read via ACL — zero-tolerance duration |
 | `CTL.S3.CONTROLS.001` | Public Access Block Must Be Enabled |
 
-## Expected Findings
-
-3 violations on 1 resource.
-
----
-
 ## Run
 
 ```bash
 bash run.sh
 ```
 
-Expected: 9 findings on this fixture.
+Current expected output is in `expected/output.json`.
 
 The runner uses the standard `stave apply` + encoding verification
 pipeline. No Docker required — works in the Codespaces devcontainer

@@ -28,19 +28,13 @@ Direct client-to-S3 uploads via presigned URLs are common for user-facing featur
 | `CTL.S3.WRITE.CONTENT.001` | upload-api-user-avatars | Signed Upload Must Restrict Content Types |
 | `CTL.S3.WRITE.CONTENT.001` | upload-api-document-inbox | Signed Upload Must Restrict Content Types |
 
-## Expected Findings
-
-3 violations across 2 resources.
-
----
-
 ## Run
 
 ```bash
 bash run.sh
 ```
 
-Expected: 6 findings on this fixture.
+Current expected output is in `expected/output.json`.
 
 The runner uses the standard `stave apply` + encoding verification
 pipeline. No Docker required — works in the Codespaces devcontainer

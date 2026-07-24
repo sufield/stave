@@ -24,19 +24,13 @@ HIPAA requires technical safeguards for electronic PHI including encryption, aud
 | `CTL.S3.LOCK.001` | Compliance-Tagged Buckets Must Have Object Lock |
 | `CTL.S3.CONTROLS.001` | Public Access Block Must Be Enabled |
 
-## Expected Findings
-
-8 violations on 1 resource.
-
----
-
 ## Run
 
 ```bash
 bash run.sh
 ```
 
-Expected: 15 findings on this fixture.
+Current expected output is in `expected/output.json`.
 
 The runner uses the standard `stave apply` + encoding verification
 pipeline. No Docker required — works in the Codespaces devcontainer

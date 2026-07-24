@@ -913,31 +913,42 @@ docker-demo: build
 		-f ../docs-content/demo/Dockerfile \
 		-t stave-demo ..
 
-## demo-check: Verify demo scenarios produce expected finding counts AND
+## demo-check: Verify demo scenarios produce expected output AND
 ##             encoding correctness (no projector emits a fact that drifts
 ##             from the underlying observation).
+##
+##             Discovers demos via examples/demo-*/expected/output.json.
+##             Each expected file is the jq-projected summary that run.sh
+##             would print. Adding a new demo with an expected/ directory
+##             is all that's needed — no Makefile edits required.
 demo-check: build
 	@echo "Checking demo scenarios..."
-	@fail=0; \
-	for scenario in ../docs-content/demo/scenarios/*/; do \
-		name="$$(basename "$$scenario")"; \
-		expected="$$(cat "$$scenario/expected.findings.count" 2>/dev/null)"; \
-		if [ -z "$$expected" ]; then continue; fi; \
-		actual="$$(./stave apply \
-			--observations "$$scenario/observations" \
-			--now 2026-01-15T00:00:00Z \
-			--max-unsafe 12h \
-			--format json 2>/dev/null \
-			| jq '.findings | length' || echo "ERROR")"; \
-		if [ "$$actual" != "$$expected" ]; then \
-			echo "FAIL: $$name: expected $$expected findings, got $$actual"; \
-			fail=1; \
+	@fail=0; tmp_a=$$(mktemp); tmp_e=$$(mktemp); \
+	for expected in examples/demo-*/expected/output.json; do \
+		demo=$$(echo "$$expected" | sed 's|examples/\([^/]*\)/.*|\1|'); \
+		obs="examples/$$demo/fixtures/observations"; \
+		if [ ! -d "$$obs" ]; then \
+			echo "  SKIP: $$demo — no observations directory"; \
+			continue; \
+		fi; \
+		./stave apply \
+			--observations "$$obs" \
+			--eval-time 2026-01-15T00:00:00Z \
+			--max-unsafe 168h \
+			--format json --include-atomic 2>/dev/null \
+			| jq '{summary, status, controls: ([.findings[].control_id] | sort | unique), findings_count: (.findings | length)}' > "$$tmp_a"; \
+		if diff -q "$$expected" "$$tmp_a" >/dev/null 2>&1; then \
+			count=$$(jq '.findings_count' "$$tmp_a"); \
+			echo "  OK: $$demo ($$count findings)"; \
 		else \
-			echo "  OK: $$name ($$actual findings)"; \
+			echo "FAIL: $$demo"; \
+			diff "$$expected" "$$tmp_a" | head -20; \
+			fail=1; \
 		fi; \
 	done; \
+	rm -f "$$tmp_a" "$$tmp_e"; \
 	if [ "$$fail" -eq 1 ]; then exit 1; fi; \
-	echo "All demo scenarios match expected counts"
+	echo "All demo scenarios match expected output"
 	@$(MAKE) --no-print-directory verify-encoding-demos
 
 ## verify-encoding-demos: Run examples/explain/verify_encoding.py --strict
@@ -1098,27 +1109,6 @@ metrics:
 	@echo "" >> docs/metrics.yaml
 	@echo "updated: $$(date +%Y-%m-%d)" >> docs/metrics.yaml
 	@echo "Generated docs/metrics.yaml"
-
-## demo-smoke: Run every demo-* script and verify exit 0 + consistent counts
-.PHONY: demo-smoke
-demo-smoke:
-	@fail=0; \
-	for script in examples/demo-*/run.sh; do \
-		demo=$$(basename $$(dirname "$$script")); \
-		out=$$(bash "$$script" 2>&1) || rc=$$?; rc=$${rc:-0}; \
-		if [ "$$rc" -ne 0 ]; then \
-			echo "FAIL: $$demo exited $$rc"; fail=1; continue; \
-		fi; \
-		violations=$$(echo "$$out" | grep -oP '"violations":\s*\K[0-9]+' | head -1); \
-		findings=$$(echo "$$out" | grep -oP '"findings_count":\s*\K[0-9]+' | head -1); \
-		if [ -n "$$violations" ] && [ -n "$$findings" ] && [ "$$violations" != "$$findings" ]; then \
-			echo "FAIL: $$demo violations=$$violations != findings=$$findings"; fail=1; \
-		else \
-			echo "OK:   $$demo (violations=$$violations findings=$$findings)"; \
-		fi; \
-	done; \
-	if [ "$$fail" -eq 1 ]; then exit 1; fi; \
-	echo "All demo scripts pass smoke test"
 
 ## consistency-check: Verify every derived artifact matches its canonical source
 ##

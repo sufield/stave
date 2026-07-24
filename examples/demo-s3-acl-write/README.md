@@ -21,19 +21,13 @@ ACL-based access is a legacy S3 mechanism that many security tools overlook beca
 | `CTL.S3.AUTH.READ.001` | No Authenticated-Users Read Access |
 | `CTL.S3.CONTROLS.001` | Public Access Block Must Be Enabled |
 
-## Expected Findings
-
-3 violations on 1 resource.
-
----
-
 ## Run
 
 ```bash
 bash run.sh
 ```
 
-Expected: 8 findings on this fixture.
+Current expected output is in `expected/output.json`.
 
 The runner uses the standard `stave apply` + encoding verification
 pipeline. No Docker required — works in the Codespaces devcontainer

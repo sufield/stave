@@ -25,19 +25,13 @@ S3 ACL permission types beyond READ and WRITE are frequently overlooked. WRITE_A
 | `CTL.S3.CONTROLS.001` | dev-shared-workspace | Public Access Block Must Be Enabled |
 | `CTL.S3.CONTROLS.001` | legacy-partner-data | Public Access Block Must Be Enabled |
 
-## Expected Findings
-
-5 violations across 2 resources.
-
----
-
 ## Run
 
 ```bash
 bash run.sh
 ```
 
-Expected: 17 findings on this fixture.
+Current expected output is in `expected/output.json`.
 
 The runner uses the standard `stave apply` + encoding verification
 pipeline. No Docker required — works in the Codespaces devcontainer

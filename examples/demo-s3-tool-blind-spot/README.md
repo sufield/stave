@@ -22,19 +22,13 @@ Separately, a bucket with Public Access Block enabled may have an underlying pol
 | `CTL.S3.INCOMPLETE.001` | infra-deploy-artifacts | Complete Data Required — zero-tolerance |
 | `CTL.S3.PUBLIC.005` | marketing-assets-cdn | No Latent Public Read Exposure |
 
-## Expected Findings
-
-2 violations across 2 resources.
-
----
-
 ## Run
 
 ```bash
 bash run.sh
 ```
 
-Expected: 8 findings on this fixture.
+Current expected output is in `expected/output.json`.
 
 The runner uses the standard `stave apply` + encoding verification
 pipeline. No Docker required — works in the Codespaces devcontainer
