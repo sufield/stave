@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.OUTPUT.ENCRYPT.001
+name: SageMaker Training Output Must Be Encrypted with KMS
+description: >
+  SageMaker training job output in S3 must be encrypted with a
+  customer-managed KMS key. Training outputs (model artifacts,
+  evaluation metrics, checkpoints) often contain proprietary model
+  weights or derived data. Without CMK encryption, the output is
+  encrypted with the default S3 key but the account has no
+  independent key policy control, no decrypt audit trail, and no
+  ability to revoke access by rotating the key.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sagemaker_notebook]
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    SageMaker training job output in S3 is not encrypted with
+    a customer-managed KMS key.
+  action: >
+    Set OutputDataConfig.KmsKeyId in the training job
+    configuration to a customer-managed KMS key ARN. Update
+    the training role's IAM policy to allow kms:GenerateDataKey
+    and kms:Decrypt on the key.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "training": {
+          "output_s3_kms_encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_training
+    - field: properties.compute.training.output_s3_kms_encrypted
+      op: ne
+      value: true
+tests:
+  - name: unencrypted output fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-job"
+      asset_type: aws_sagemaker_notebook
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_training
+          training:
+            output_s3_kms_encrypted: false
+  - name: KMS-encrypted output passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:123456789012:training-job/my-job"
+      asset_type: aws_sagemaker_notebook
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_training
+          training:
+            output_s3_kms_encrypted: true

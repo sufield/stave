@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3165
-**Pack hash:** `34647440f7c8c20c2b4c11abb195904c6bf1f14402e84642044eca7484e96bee`
+**Total controls:** 3172
+**Pack hash:** `57ff0a9bface85654c15cf6916892488e67f951190417960a774414a076b8d76`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 342 |
-| high | 1377 |
+| high | 1384 |
 | info | 19 |
 | low | 235 |
 | medium | 1192 |
@@ -27,14 +27,14 @@ GitHub. Pick a service below.
 | compute | 1 |
 | config | 2 |
 | detection | 140 |
-| encryption | 121 |
-| exposure | 1388 |
+| encryption | 123 |
+| exposure | 1391 |
 | governance | 648 |
 | hygiene | 20 |
-| identity | 609 |
+| identity | 610 |
 | lifecycle | 31 |
 | network | 48 |
-| resilience | 36 |
+| resilience | 37 |
 | secrets | 4 |
 | storage | 8 |
 
@@ -82,12 +82,12 @@ GitHub. Pick a service below.
 | [EBS](reference/ebs.md) | 2 |
 | [EC2](reference/ec2.md) | 110 |
 | [ECR](reference/ecr.md) | 10 |
-| [ECS](reference/ecs.md) | 52 |
+| [ECS](reference/ecs.md) | 53 |
 | [EFS](reference/efs.md) | 14 |
 | [EKS](reference/eks.md) | 115 |
-| [ELASTICACHE](reference/elasticache.md) | 8 |
+| [ELASTICACHE](reference/elasticache.md) | 11 |
 | [ELB](reference/elb.md) | 80 |
-| [EMR](reference/emr.md) | 6 |
+| [EMR](reference/emr.md) | 7 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 97 |
 | [EVS](reference/evs.md) | 1 |
 | [EXPOSURE](reference/exposure.md) | 11 |
@@ -118,7 +118,7 @@ GitHub. Pick a service below.
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
 | [MQ](reference/mq.md) | 3 |
-| [MSK](reference/msk.md) | 9 |
+| [MSK](reference/msk.md) | 10 |
 | [MWAA](reference/mwaa.md) | 2 |
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
@@ -134,7 +134,7 @@ GitHub. Pick a service below.
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 3 |
-| [SAGEMAKER](reference/sagemaker.md) | 40 |
+| [SAGEMAKER](reference/sagemaker.md) | 41 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |

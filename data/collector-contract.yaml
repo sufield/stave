@@ -634,3 +634,248 @@ contracts:
       override, the field is false.
     consumers:
       - CTL.SAGEMAKER.USERPROFILE.ROLE.001
+
+  # ─── Boundary Policy Content (B10) ───────────────────────
+  #
+  # SCP/RCP policy document fields for payer invariant controls.
+  # These require the collector to parse the policy body, not
+  # just check its existence.
+
+  - field: policy_document
+    type: string
+    postcondition: >
+      The raw JSON policy document of a boundary policy
+      (SCP, RCP, or permission boundary). Collectors MUST
+      return the full JSON body, not a summary.
+    consumers:
+      - CTL.IAM.BOUNDARY.PAYER.SELFMODIFY.001
+      - CTL.IAM.BOUNDARY.PAYER.IDENTITYCENTER.001
+      - CTL.IAM.BOUNDARY.PAYER.CONTROLTOWER.001
+
+  - field: denies_s3_data_perimeter_bypass
+    type: boolean
+    postcondition: >
+      True if any SCP denies s3:* actions when
+      aws:PrincipalOrgID does not match the organization.
+    consumers:
+      - CTL.ORG.SCP.DENY.S3DATAPERIMETER.001
+
+  - field: management_principal_count
+    type: integer
+    postcondition: >
+      The total number of IAM principals (users + roles)
+      in the management account. Collectors MUST count via
+      iam:ListUsers + iam:ListRoles in the management
+      account only.
+    consumers:
+      - CTL.ORG.MGMT.PRINCIPAL.COUNT.001
+
+  # ─── RCP Conditions (B25-B26) ────────────────────────────
+
+  - field: rcp_denies_confused_deputy
+    type: boolean
+    postcondition: >
+      True if any RCP denies cross-service access when
+      confused deputy conditions (aws:SourceArn,
+      aws:SourceAccount) are not present.
+    consumers:
+      - CTL.ORG.RCP.DENY.CONFUSEDDEPUTY.001
+
+  - field: rcp_enforces_principal_org_id
+    type: boolean
+    postcondition: >
+      True if any RCP denies actions when
+      aws:PrincipalOrgID does not match the organization,
+      enforcing that only org principals can access
+      resources.
+    consumers:
+      - CTL.ORG.RCP.ENFORCE.PRINCIPALORGID.001
+
+  # ─── Exposure Fields (B14-B18) ───────────────────────────
+
+  - field: vault_policy_public
+    type: boolean
+    postcondition: >
+      True if the Backup vault access policy allows
+      public access (Principal: "*" without condition).
+    consumers:
+      - CTL.BACKUP.VAULT.PUBLIC.001
+
+  - field: glacier_policy_public
+    type: boolean
+    postcondition: >
+      True if the Glacier vault access policy allows
+      public access (Principal: "*" without condition).
+    consumers:
+      - CTL.GLACIER.VAULT.PUBLIC.001
+
+  - field: ses_authorization_policy_public
+    type: boolean
+    postcondition: >
+      True if any SES identity authorization policy
+      allows public access (Principal: "*").
+    consumers:
+      - CTL.SES.IDENTITY.PUBLIC.001
+
+  - field: lambda_layer_public
+    type: boolean
+    postcondition: >
+      True if the Lambda layer has a resource policy
+      granting access to Principal: "*".
+    consumers:
+      - CTL.LAMBDA.LAYER.PUBLIC.001
+
+  - field: elasticache_publicly_accessible
+    type: boolean
+    postcondition: >
+      True if the ElastiCache cluster is publicly
+      accessible (subnet group in public subnets with
+      no security group restriction).
+    consumers:
+      - CTL.ELASTICACHE.PUBLIC.001
+
+  # ─── Multi-Cloud Trust (B19-B24) ─────────────────────────
+
+  - field: saml_entity_id
+    type: string
+    postcondition: >
+      The SAML entity ID (Issuer) from the SAML provider
+      metadata document. Used to track which external IdP
+      is federated.
+    consumers:
+      - CTL.IAM.SAML.ENTITYID.001
+
+  - field: trust_external_cloud_principal
+    type: boolean
+    postcondition: >
+      True if the IAM role trust policy includes a
+      principal from a non-AWS cloud provider (Azure AD,
+      GCP service account, etc.).
+    consumers:
+      - CTL.IAM.TRUST.CROSSCLOUD.001
+
+  - field: org_is_member
+    type: boolean
+    postcondition: >
+      True if the account is a member of an AWS
+      Organization. False for standalone accounts.
+    consumers:
+      - CTL.ORG.MEMBERSHIP.001
+
+  - field: identity_center_enabled
+    type: boolean
+    postcondition: >
+      True if IAM Identity Center (SSO) is enabled in
+      the account/organization.
+    consumers:
+      - CTL.ORG.IDENTITYCENTER.ENABLED.001
+
+  - field: ou_depth
+    type: integer
+    postcondition: >
+      The depth of the organizational unit hierarchy
+      from the root. Flat orgs = 1.
+    consumers:
+      - CTL.ORG.OU.DEPTH.001
+
+  - field: root_email_domain
+    type: string
+    postcondition: >
+      The email domain of the root account email.
+      Collectors extract the domain portion after @.
+    consumers:
+      - CTL.ACCOUNT.ROOTEMAIL.DOMAIN.001
+
+  # ─── GuardDuty (B1) ─────────────────────────────────────
+
+  - field: finding_consistency_score
+    type: number
+    postcondition: >
+      Ratio of GuardDuty findings confirmed by multiple
+      detection methods to total findings. Range 0.0-1.0.
+      Requires guardduty:GetFindings with multi-detector
+      correlation.
+    consumers: []
+
+  - field: detection_method_count
+    type: integer
+    postcondition: >
+      Number of distinct detection methods active for
+      this GuardDuty detector (DNS logs, VPC flow logs,
+      CloudTrail, S3 data events, etc.).
+    consumers: []
+
+  # ─── Account Resource Counts (B2) ────────────────────────
+
+  - field: resource_count_by_service
+    type: object
+    postcondition: >
+      Map of service name to resource count for the
+      account. Populated from various List/Describe APIs.
+      Keys are service names (e.g., "ec2", "s3", "lambda").
+    consumers: []
+
+  # ─── CloudTrail (B3) ─────────────────────────────────────
+
+  - field: event_selector_exclusions
+    type: array
+    postcondition: >
+      List of event selector exclusion patterns from
+      cloudtrail:GetEventSelectors. Each entry is the
+      exclusion selector configuration.
+    consumers: []
+
+  # ─── IAM Sensitive Actions (B4) ──────────────────────────
+
+  - field: sensitive_action_grants
+    type: array
+    postcondition: >
+      List of sensitive actions granted by IAM policies
+      attached to this principal. Cross-referenced against
+      the sensitive action registry.
+    consumers: []
+
+  # ─── ABAC Tag Policy (B5) ───────────────────────────────
+
+  - field: tag_policy_enforced_keys
+    type: array
+    postcondition: >
+      List of tag keys enforced by the organization's
+      tag policy. From organizations:DescribeEffectivePolicy.
+    consumers: []
+
+  # ─── Key Origin Cross-Resource (B6-B7) ──────────────────
+
+  - field: kms_key_origin
+    type: string
+    postcondition: >
+      The origin of the KMS key used to encrypt this
+      resource (AWS_KMS, EXTERNAL, AWS_CLOUDHSM).
+      Requires kms:DescribeKey per resource key.
+    consumers: []
+
+  # ─── S3 Lifecycle (B8) ──────────────────────────────────
+
+  - field: lifecycle_expiration_days
+    type: integer
+    postcondition: >
+      Minimum expiration days across all lifecycle rules
+      on this S3 bucket. From
+      s3:GetBucketLifecycleConfiguration.
+    consumers: []
+
+  # ─── VPC Resource Inventory (B9) ────────────────────────
+
+  - field: vpc_resource_count
+    type: integer
+    postcondition: >
+      Total count of resources (ENIs, instances, etc.)
+      within this VPC.
+    consumers: []
+
+  - field: vpc_eni_count
+    type: integer
+    postcondition: >
+      Count of elastic network interfaces in this VPC.
+      From ec2:DescribeNetworkInterfaces filtered by VPC.
+    consumers: []

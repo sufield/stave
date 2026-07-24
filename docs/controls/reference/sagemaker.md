@@ -545,6 +545,21 @@ SageMaker training job does not send logs to CloudWatch. Without CloudWatch logg
 
 ---
 
+### CTL.SAGEMAKER.TRAINING.OUTPUT.ENCRYPT.001
+
+**SageMaker Training Output Must Be Encrypted with KMS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; soc2: CC6.1;
+
+SageMaker training job output in S3 must be encrypted with a customer-managed KMS key. Training outputs (model artifacts, evaluation metrics, checkpoints) often contain proprietary model weights or derived data. Without CMK encryption, the output is encrypted with the default S3 key but the account has no independent key policy control, no decrypt audit trail, and no ability to revoke access by rotating the key.
+
+**Remediation:** Set OutputDataConfig.KmsKeyId in the training job configuration to a customer-managed KMS key ARN. Update the training role's IAM policy to allow kms:GenerateDataKey and kms:Decrypt on the key.
+
+---
+
 ### CTL.SAGEMAKER.TRAINING.OVERPERM.PASSROLE.001
 
 **SageMaker Training Job Role Must Not Have Unrestricted iam:PassRole**

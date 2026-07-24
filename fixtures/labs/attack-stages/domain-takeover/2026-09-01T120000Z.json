@@ -1,0 +1,66 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T12:00:00.000Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_record",
+          "dns": {
+            "has_dangling_alias": true,
+            "record_type": "ALIAS",
+            "target": "d111111abcdef8.cloudfront.net"
+          }
+        }
+      },
+      "id": "arn:aws:route53:::hostedzone/Z12345/record/app.example.com/CNAME",
+      "type": "aws_route53_hosted_zone"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_record",
+          "dns": {
+            "has_dangling_s3_target": true,
+            "record_type": "CNAME",
+            "target": "api-static.s3-website-us-east-1.amazonaws.com"
+          }
+        }
+      },
+      "id": "arn:aws:route53:::hostedzone/Z12345/record/api.example.com/CNAME",
+      "type": "aws_route53_hosted_zone"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_record",
+          "dns": {
+            "has_dangling_beanstalk_target": true,
+            "record_type": "CNAME",
+            "target": "legacy-app.us-east-1.elasticbeanstalk.com"
+          }
+        }
+      },
+      "id": "arn:aws:route53:::hostedzone/Z12345/record/legacy.example.com/CNAME",
+      "type": "aws_route53_hosted_zone"
+    },
+    {
+      "vendor": "dns",
+      "properties": {
+        "dns": {
+          "kind": "cname",
+          "target_exists": false,
+          "target_owned": false,
+          "target": "old-cdn.cloudfront.net",
+          "record_type": "CNAME"
+        }
+      },
+      "id": "example.com/CNAME/cdn.example.com",
+      "type": "dns_zone"
+    }
+  ]
+}

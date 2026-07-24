@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.REPLICATION.FACTOR.001
+name: MSK Topic Replication Factor Must Be At Least 3
+description: >
+  MSK cluster default topic replication factor must be at least 3.
+  A replication factor below 3 means a single broker failure can
+  cause data loss if the remaining replicas are also unavailable.
+  Combined with min.insync.replicas < 2, producers may acknowledge
+  writes that are stored on only one broker, creating a silent
+  durability gap.
+domain: resilience
+severity: high
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  ccm_v4: ["BCR-11"]
+scope_tags:
+  - aws
+  - msk
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_msk_cluster]
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    MSK cluster default replication factor is below 3.
+  action: >
+    Set default.replication.factor >= 3 and min.insync.replicas >= 2
+    in the MSK cluster configuration. This ensures writes are
+    acknowledged only when replicated to multiple brokers.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "durability": {
+          "replication_factor_adequate": true,
+          "min_insync_replicas_adequate": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.streaming.durability.replication_factor_adequate
+      op: ne
+      value: true
+tests:
+  - name: low replication factor fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kafka:us-east-1:123456789012:cluster/my-cluster/abc"
+      asset_type: aws_msk_cluster
+      vendor: aws
+      properties:
+        streaming:
+          kind: msk_cluster
+          durability:
+            replication_factor_adequate: false
+            min_insync_replicas_adequate: false
+  - name: adequate replication passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kafka:us-east-1:123456789012:cluster/my-cluster/abc"
+      asset_type: aws_msk_cluster
+      vendor: aws
+      properties:
+        streaming:
+          kind: msk_cluster
+          durability:
+            replication_factor_adequate: true
+            min_insync_replicas_adequate: true

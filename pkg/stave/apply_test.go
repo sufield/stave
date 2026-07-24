@@ -41,9 +41,12 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 //     empty permission boundary = deny-all (AWS semantics). These
 //     surface chains/violations that were previously invisible due
 //     to case mismatch and silent privilege-level defaults.
+//   - 142/114 → 46/22 after applicable_asset_types backfill scoped
+//     non-S3 controls (IAM, Lambda, GuardDuty, etc.) away from this
+//     S3-only fixture. Only S3 controls fire on aws_s3_bucket assets.
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
-	const wantFindings = 146
-	const wantIssues = 118
+	const wantFindings = 46
+	const wantIssues = 22
 
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,

@@ -1,0 +1,71 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T13:00:00.000Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "access_keys": {
+            "has_stale_key": true,
+            "key_age_days": 180
+          },
+          "mfa": {
+            "enabled": false
+          },
+          "has_console_access": true,
+          "has_inline_policy": true,
+          "policies": {
+            "has_admin_access": false,
+            "has_self_modify": false
+          }
+        }
+      },
+      "id": "arn:aws:iam::111122223333:user/deploy-bot",
+      "type": "aws_iam_user"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "account",
+          "root": {
+            "has_access_keys": true,
+            "mfa_enabled": false
+          }
+        }
+      },
+      "id": "arn:aws:iam::111122223333:root",
+      "type": "aws_iam_user"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "ssm_document",
+          "access": {
+            "is_public": true
+          }
+        }
+      },
+      "id": "arn:aws:ssm:us-east-1:111122223333:document/RunShellScript-Custom",
+      "type": "aws_ssm_parameter"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "ssm_document",
+          "contains_secrets": true,
+          "access": {
+            "is_public": false
+          }
+        }
+      },
+      "id": "arn:aws:ssm:us-east-1:111122223333:document/Deploy-Secrets",
+      "type": "aws_ssm_parameter"
+    }
+  ]
+}

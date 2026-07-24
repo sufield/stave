@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.EPHEMERAL.KMS.001
+name: ECS Fargate Ephemeral Storage Must Be Encrypted with KMS
+description: >
+  ECS Fargate tasks with ephemeral storage must encrypt that
+  storage with a customer-managed KMS key. Fargate encrypts
+  ephemeral storage by default with an AWS-managed key, but
+  a CMK provides key policy control, decrypt audit trail,
+  and revocation capability. Without CMK encryption, data
+  written to ephemeral storage during task execution (temp
+  files, intermediate processing data, model artifacts) is
+  encrypted but the account has no independent control over
+  the key lifecycle.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.5.1"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - ecs
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_ecs_task_definition]
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    ECS Fargate task ephemeral storage is not encrypted with
+    a customer-managed KMS key.
+  action: >
+    Set ephemeralStorage.kmsKeyId in the task definition to a
+    customer-managed KMS key ARN. Update the task execution
+    role to allow kms:GenerateDataKey and kms:Decrypt on the
+    key.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "storage": {
+          "ephemeral_kms_encrypted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.storage.ephemeral_kms_encrypted
+      op: ne
+      value: true
+tests:
+  - name: ephemeral storage without KMS fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:123456789012:task-definition/app:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          storage:
+            ephemeral_kms_encrypted: false
+  - name: ephemeral storage with KMS passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:123456789012:task-definition/app:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          storage:
+            ephemeral_kms_encrypted: true

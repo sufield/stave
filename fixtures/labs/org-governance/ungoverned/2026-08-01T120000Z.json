@@ -1,0 +1,191 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.org-governance"
+  },
+  "assets": [
+    {
+      "id": "111111111111",
+      "type": "aws_account",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "in_organization": false,
+          "alternate_contacts": {
+            "security_configured": false,
+            "billing_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "111111111111/summary",
+      "type": "aws_account_summary",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "in_organization": false
+        }
+      }
+    },
+    {
+      "id": "o-ungoverned/config",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "org_config",
+          "feature_set": "CONSOLIDATED_BILLING",
+          "identity_center_enabled": false,
+          "has_ou_structure": false,
+          "has_suspended_ou": true,
+          "suspended_ou_has_deny_all_scp": false,
+          "delegated_admin": {
+            "access_analyzer_configured": false,
+            "guardduty_configured": false,
+            "securityhub_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-ungoverned/scp",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "scp_policy_set",
+          "region_restriction": {
+            "has_scp": false
+          },
+          "object_lock_retention_cap": {
+            "has_scp": false
+          },
+          "scp": {
+            "denies_amplify": false,
+            "denies_apprunner": false,
+            "denies_batch": false,
+            "denies_elasticbeanstalk": false,
+            "denies_cloud9": false,
+            "denies_deputyprevention": false,
+            "denies_elasticmapreduce": false,
+            "denies_evs": false,
+            "denies_lightsail": false,
+            "denies_airflow": false,
+            "denies_sagemaker": false,
+            "enforces_s3_account_regional_namespace": false
+          },
+          "confused_deputy_prevention": {
+            "has_scp": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-ungoverned/scp-objectlock",
+      "type": "aws_organizations_scp",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "scp_policy_set",
+          "object_lock_retention_cap": {
+            "has_scp": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-ungoverned/rcp",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "rcp_policy_set",
+          "rcp": {
+            "enabled": false,
+            "restricts_external_assume_role": false,
+            "denies_external_source": false,
+            "denies_kms_secrets_external": false,
+            "denies_external_principal": false,
+            "enforces_s3_acl_disabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-ungoverned/dp",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "declarative_policy_set",
+          "dp": {
+            "blocks_public_ami_sharing": false,
+            "enforces_imdsv2": false,
+            "blocks_public_snapshot_sharing": false
+          },
+          "declarative_policies": {
+            "vpc_bpa_enforced": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-ungoverned/trusted-access",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "org_trusted_access",
+          "trusted_access": {
+            "has_unreviewed_services": true
+          }
+        }
+      }
+    },
+    {
+      "id": "o-ungoverned/identity",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "organization",
+          "scp": {
+            "denies_service_agreements": false,
+            "restricts_cloudformation_macros": false,
+            "denies_bpa_disable": false,
+            "denies_guardduty_modify": false,
+            "denies_recyclebin_modify": false,
+            "denies_critical_role_modify": false,
+            "denies_s3express_policy_modification": false,
+            "restricts_ses_send": false,
+            "denies_backup_vault_delete": false,
+            "denies_vpc_management": false,
+            "denies_get_federation_token": false,
+            "denies_modify_userdata": false,
+            "denies_lambda_public": false
+          },
+          "org_policy": {
+            "s3_bpa_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-ungoverned/control-tower",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "control_tower",
+          "control_tower": {
+            "enabled": false,
+            "drift_detected": true
+          }
+        }
+      }
+    }
+  ]
+}

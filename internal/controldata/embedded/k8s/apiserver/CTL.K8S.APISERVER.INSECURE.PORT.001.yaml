@@ -18,7 +18,7 @@ taxonomy:
   - network-perimeter
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types: [k8s_resource]
+applicable_asset_types: [k8s_apiserver]
 params:
   attack_stage: initial_access
 remediation:

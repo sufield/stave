@@ -1,0 +1,225 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.org-governance"
+  },
+  "assets": [
+    {
+      "id": "333333333333",
+      "type": "aws_account",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "in_organization": true,
+          "alternate_contacts": {
+            "security_configured": true,
+            "billing_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "333333333333/summary",
+      "type": "aws_account_summary",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "in_organization": true
+        }
+      }
+    },
+    {
+      "id": "o-partial/config",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "org_config",
+          "feature_set": "ALL",
+          "identity_center_enabled": true,
+          "has_ou_structure": true,
+          "has_suspended_ou": true,
+          "suspended_ou_has_deny_all_scp": false,
+          "delegated_admin": {
+            "access_analyzer_configured": true,
+            "guardduty_configured": true,
+            "securityhub_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-partial/scp",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "scp_policy_set",
+          "region_restriction": {
+            "has_scp": true
+          },
+          "object_lock_retention_cap": {
+            "has_scp": false
+          },
+          "scp": {
+            "denies_amplify": true,
+            "denies_apprunner": true,
+            "denies_batch": true,
+            "denies_elasticbeanstalk": true,
+            "denies_cloud9": true,
+            "denies_deputyprevention": false,
+            "denies_elasticmapreduce": true,
+            "denies_evs": true,
+            "denies_lightsail": true,
+            "denies_airflow": true,
+            "denies_sagemaker": true,
+            "enforces_s3_account_regional_namespace": false
+          },
+          "confused_deputy_prevention": {
+            "has_scp": false
+          },
+          "delegated_admin": {
+            "access_analyzer_configured": true,
+            "guardduty_configured": true,
+            "securityhub_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-partial/scp-objectlock",
+      "type": "aws_organizations_scp",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "scp_policy_set",
+          "object_lock_retention_cap": {
+            "has_scp": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-partial/rcp",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "rcp_policy_set",
+          "rcp": {
+            "enabled": true,
+            "restricts_external_assume_role": true,
+            "denies_external_source": true,
+            "denies_kms_secrets_external": false,
+            "denies_external_principal": true,
+            "enforces_s3_acl_disabled": false
+          },
+          "delegated_admin": {
+            "access_analyzer_configured": true,
+            "guardduty_configured": true,
+            "securityhub_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-partial/dp",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "declarative_policy_set",
+          "dp": {
+            "blocks_public_ami_sharing": true,
+            "enforces_imdsv2": true,
+            "blocks_public_snapshot_sharing": false
+          },
+          "declarative_policies": {
+            "vpc_bpa_enforced": true
+          },
+          "delegated_admin": {
+            "access_analyzer_configured": true,
+            "guardduty_configured": true,
+            "securityhub_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-partial/trusted-access",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "org_trusted_access",
+          "trusted_access": {
+            "has_unreviewed_services": true
+          },
+          "delegated_admin": {
+            "access_analyzer_configured": true,
+            "guardduty_configured": true,
+            "securityhub_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "o-partial/identity",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "delegated_admin": {
+            "access_analyzer_configured": true,
+            "guardduty_configured": true,
+            "securityhub_configured": false
+          }
+        },
+        "identity": {
+          "kind": "organization",
+          "scp": {
+            "denies_service_agreements": true,
+            "restricts_cloudformation_macros": true,
+            "denies_bpa_disable": true,
+            "denies_guardduty_modify": true,
+            "denies_recyclebin_modify": false,
+            "denies_critical_role_modify": true,
+            "denies_s3express_policy_modification": false,
+            "restricts_ses_send": true,
+            "denies_backup_vault_delete": true,
+            "denies_vpc_management": true,
+            "denies_get_federation_token": true,
+            "denies_modify_userdata": true,
+            "denies_lambda_public": true
+          },
+          "org_policy": {
+            "s3_bpa_enabled": true
+          }
+        }
+      }
+    },
+    {
+      "id": "o-partial/control-tower",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "control_tower",
+          "control_tower": {
+            "enabled": true,
+            "drift_detected": true
+          }
+        },
+        "organization": {
+          "delegated_admin": {
+            "access_analyzer_configured": true,
+            "guardduty_configured": true,
+            "securityhub_configured": false
+          }
+        }
+      }
+    }
+  ]
+}

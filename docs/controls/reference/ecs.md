@@ -65,6 +65,21 @@ An ECS task definition sets the seccomp profile to Unconfined, explicitly disabl
 
 ---
 
+### CTL.ECS.EPHEMERAL.KMS.001
+
+**ECS Fargate Ephemeral Storage Must Be Encrypted with KMS**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+ECS Fargate tasks with ephemeral storage must encrypt that storage with a customer-managed KMS key. Fargate encrypts ephemeral storage by default with an AWS-managed key, but a CMK provides key policy control, decrypt audit trail, and revocation capability. Without CMK encryption, data written to ephemeral storage during task execution (temp files, intermediate processing data, model artifacts) is encrypted but the account has no independent control over the key lifecycle.
+
+**Remediation:** Set ephemeralStorage.kmsKeyId in the task definition to a customer-managed KMS key ARN. Update the task execution role to allow kms:GenerateDataKey and kms:Decrypt on the key.
+
+---
+
 ### CTL.ECS.ESCALATION.CHAIN.001
 
 **ECS EC2-Launch Task Enables Task-to-Instance-Role Escalation**

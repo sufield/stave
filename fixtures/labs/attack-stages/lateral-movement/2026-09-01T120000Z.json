@@ -1,0 +1,142 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.lateral-movement"
+  },
+  "assets": [
+    {
+      "id": "sg-lateral-flat-network",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "has_broad_eastwest_rules": true,
+            "has_unrestricted_ingress": true,
+            "has_ipv6_parity": false
+          },
+          "egress": {
+            "has_unrestricted_ipv6_egress": true
+          }
+        }
+      }
+    },
+    {
+      "id": "i-lateral-pivot-instance",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "instance": {
+            "spans_security_zones": true,
+            "source_dest_check": false,
+            "is_network_appliance": false
+          }
+        }
+      }
+    },
+    {
+      "id": "vpc-lateral-mixed-env",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "env_isolation": {
+            "mixed_environments": true
+          }
+        }
+      }
+    },
+    {
+      "id": "subnet-lateral-public-db",
+      "type": "aws_vpc_subnet",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "subnet",
+          "subnet": {
+            "has_database_resources": true,
+            "route_to_igw": true
+          }
+        }
+      }
+    },
+    {
+      "id": "rds-lateral-public",
+      "type": "aws_rds_db_instance",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "instance",
+          "access": {
+            "publicly_accessible": true
+          }
+        }
+      }
+    },
+    {
+      "id": "rds-lateral-proxy-ghost",
+      "type": "aws_rds_db_instance",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "rds_proxy",
+          "proxy": {
+            "has_ghost_proxy_secret": true
+          }
+        }
+      }
+    },
+    {
+      "id": "rds-lateral-ghost-sg",
+      "type": "aws_rds_db_instance",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "rds_instance",
+          "network": {
+            "has_ghost_sg": true
+          }
+        }
+      }
+    },
+    {
+      "id": "docdb-lateral-no-tls",
+      "type": "aws_documentdb_cluster",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "documentdb_cluster",
+          "tls": {
+            "enabled": false
+          },
+          "iam": {
+            "db_auth_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "eks-lateral-public-cluster",
+      "type": "aws_eks_cluster",
+      "vendor": "aws",
+      "properties": {
+        "endpoint": {
+          "public_access": true,
+          "public_unrestricted": true
+        },
+        "logging": {
+          "all_types_enabled": false
+        },
+        "encryption": {
+          "secrets_encrypted": false
+        }
+      }
+    }
+  ]
+}

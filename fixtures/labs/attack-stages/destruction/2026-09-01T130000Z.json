@@ -1,0 +1,110 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T13:00:00.000Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kind": "key",
+          "lifecycle": {
+            "pending_deletion": true,
+            "deletion_wait_minimum": true,
+            "deletion_wait_days": 7
+          },
+          "is_disabled": false,
+          "dependent_resource_count": 12
+        }
+      },
+      "id": "arn:aws:kms:us-east-1:111122223333:key/mrk-destruction-01",
+      "type": "aws_kms_key"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "versioning": {
+            "enabled": false,
+            "mfa_delete_enabled": false
+          },
+          "tags": {
+            "backup": "true"
+          },
+          "public_access_block": {
+            "block_public_acls": true,
+            "block_public_policy": true,
+            "ignore_public_acls": true,
+            "restrict_public_buckets": true
+          },
+          "bucket_policy": {
+            "has_policy": true,
+            "allows_public_read": false,
+            "allows_public_write": false
+          },
+          "encryption": {
+            "enabled": true,
+            "type": "aws:kms"
+          },
+          "logging": {
+            "enabled": true
+          },
+          "lifecycle": {
+            "has_rules": false
+          },
+          "object_lock": {
+            "enabled": false
+          },
+          "ownership": {
+            "object_ownership": "BucketOwnerEnforced"
+          },
+          "replication": {
+            "enabled": false
+          }
+        }
+      },
+      "id": "arn:aws:s3:::backup-critical-prod",
+      "type": "aws_s3_bucket"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "backup": {
+          "kind": "vault",
+          "plans_count": 0,
+          "lock": {
+            "enabled": false
+          },
+          "encryption": {
+            "enabled": true
+          },
+          "access_policy": {
+            "has_policy": true,
+            "allows_cross_account_delete": true
+          },
+          "notifications": {
+            "enabled": false
+          }
+        }
+      },
+      "id": "arn:aws:backup:us-east-1:111122223333:backup-vault:prod-vault",
+      "type": "aws_backup_vault"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kind": "key",
+          "is_disabled": true,
+          "dependent_resource_count": 5,
+          "lifecycle": {
+            "pending_deletion": false
+          }
+        }
+      },
+      "id": "arn:aws:kms:us-east-1:111122223333:key/mrk-destruction-02",
+      "type": "aws_kms_key"
+    }
+  ]
+}

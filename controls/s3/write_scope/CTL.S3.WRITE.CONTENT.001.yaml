@@ -19,7 +19,7 @@ taxonomy:
   - network-perimeter
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types: [aws_s3_bucket]
+applicable_asset_types: [s3_upload_policy]
 params:
   attack_stage: exfiltration
 remediation:

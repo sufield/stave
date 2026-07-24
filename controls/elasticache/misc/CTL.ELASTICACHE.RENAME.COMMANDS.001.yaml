@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.RENAME.COMMANDS.001
+name: ElastiCache Redis Must Rename Dangerous Commands
+description: >
+  ElastiCache Redis clusters must rename or disable dangerous
+  commands (FLUSHALL, FLUSHDB, CONFIG, DEBUG, KEYS). These
+  commands allow any authenticated client to wipe all data,
+  reconfigure the server, or enumerate all keys. An attacker
+  who gains cache access — through a compromised application
+  or broad security group — can use these commands for data
+  destruction or reconnaissance. Renaming them to unpredictable
+  strings mitigates this without breaking normal operations.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-05"]
+scope_tags:
+  - aws
+  - elasticache
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_elasticache_cluster]
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    ElastiCache Redis cluster has not renamed dangerous commands.
+  action: >
+    Set the rename-commands parameter in the Redis parameter group
+    to rename FLUSHALL, FLUSHDB, CONFIG, DEBUG, and KEYS to empty
+    strings or random values.
+  example: |
+    {
+      "cache": {
+        "kind": "cluster",
+        "hardening": {
+          "dangerous_commands_renamed": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: cluster
+    - field: properties.cache.hardening.dangerous_commands_renamed
+      op: ne
+      value: true
+tests:
+  - name: dangerous commands not renamed fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticache:us-east-1:123456789012:cluster:my-cache"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: cluster
+          hardening:
+            dangerous_commands_renamed: false
+  - name: dangerous commands renamed passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticache:us-east-1:123456789012:cluster:my-cache"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: cluster
+          hardening:
+            dangerous_commands_renamed: true

@@ -1,0 +1,314 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.lambda-cascade"
+  },
+  "assets": [
+    {
+      "id": "ecs-cascade-task-ghost-image",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "image": {
+            "has_ghost_reference": true,
+            "uses_latest_tag": true
+          }
+        }
+      }
+    },
+    {
+      "id": "ecr-cascade-vuln-repo",
+      "type": "aws_ecr_repository",
+      "vendor": "aws",
+      "properties": {
+        "container_registry": {
+          "kind": "repository",
+          "findings": {
+            "has_unresolved_critical_or_high": true
+          }
+        }
+      }
+    },
+    {
+      "id": "pipe-cascade-overprivileged",
+      "type": "aws_eventbridge_pipe",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "eventbridge_pipe",
+          "events": {
+            "enrichment_type": "lambda",
+            "enrichment_role_has_wildcard": true,
+            "enrichment_timeout_seconds": 900
+          }
+        }
+      }
+    },
+    {
+      "id": "bus-cascade-confused-deputy",
+      "type": "aws_eventbridge_bus",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "eventbridge_bus",
+          "events": {
+            "policy_allows_s3": true,
+            "policy_s3_has_source": false,
+            "policy_allows_cloudwatch": true,
+            "policy_cloudwatch_has_source": false
+          }
+        }
+      }
+    },
+    {
+      "id": "lambda-cascade-confused-deputy",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "function": {
+            "resource_policy": {
+              "has_unsourced_service_principal": true,
+              "cross_account": true,
+              "has_org_condition": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "domain-cascade-no-lock",
+      "type": "aws_route53_domain",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_domain",
+          "domain": {
+            "transfer_lock_enabled": false,
+            "auto_renew_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "secret-cascade-wide-blast",
+      "type": "aws_secretsmanager_secret",
+      "vendor": "aws",
+      "properties": {
+        "secret": {
+          "kind": "secret",
+          "blast_radius": {
+            "privileged_reader_count": 12,
+            "target_sensitivity": "phi",
+            "access_vector": "cross_account"
+          },
+          "access": {
+            "rotation_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "lightsail-cascade-bucket",
+      "type": "aws_lightsail_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "lightsail_bucket",
+          "access_keys": {
+            "count": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "account-cascade-lightsail",
+      "type": "aws_account",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "lightsail": {
+            "has_active_resources": true
+          }
+        },
+        "organization": {
+          "kind": "scp_policy_set",
+          "scp": {
+            "denies_lightsail": false
+          }
+        }
+      }
+    },
+    {
+      "id": "account-cascade-evs",
+      "type": "aws_account",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "evs": {
+            "has_active_environments": true
+          }
+        },
+        "organization": {
+          "kind": "scp_policy_set",
+          "scp": {
+            "denies_evs": false
+          }
+        }
+      }
+    },
+    {
+      "id": "accountsummary-cascade-standalone",
+      "type": "aws_account_summary",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "in_organization": false
+        },
+        "organization": {
+          "kind": "org_config",
+          "identity_center_enabled": false
+        }
+      }
+    },
+    {
+      "id": "user-cascade-no-mfa",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "console_access": {
+            "enabled": true,
+            "mfa_enabled": false
+          },
+          "permissions": {
+            "evs_create_environment": true,
+            "lightsail_create_bucket_access_key": true
+          },
+          "escalation": {
+            "kms_creategrant": {
+              "present": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "guardduty-cascade-disabled",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "enabled": false,
+          "findings_export": {
+            "enabled": false,
+            "has_ghost_s3": true
+          }
+        }
+      }
+    },
+    {
+      "id": "securityhub-cascade-disabled",
+      "type": "aws_securityhub_hub",
+      "vendor": "aws",
+      "properties": {
+        "security_hub": {
+          "kind": "hub",
+          "enabled": false,
+          "standards_enabled": false
+        }
+      }
+    },
+    {
+      "id": "securityhub-cascade-org",
+      "type": "aws_securityhub_hub",
+      "vendor": "aws",
+      "properties": {
+        "security_hub": {
+          "kind": "hub_organization",
+          "hub": {
+            "delegated_admin_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "trail-cascade-evs-blind",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "evs_events": {
+            "logged": false
+          },
+          "lightsail_events": {
+            "logged": false
+          }
+        },
+        "audit": {
+          "kind": "trail",
+          "trail_stopped": false,
+          "cloudtrail": {
+            "has_ghost_s3_bucket": true,
+            "has_ghost_cw_role": true,
+            "has_ghost_cw_logs": true,
+            "cw_logs_delivery_configured": false,
+            "log_validation_enabled": false
+          }
+        },
+        "compliance": {
+          "kind": "config_delivery_channel",
+          "config": {
+            "has_ghost_delivery_s3": true
+          }
+        },
+        "data": {
+          "kind": "bucket",
+          "s3": {
+            "replication": {
+              "has_ghost_destination": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "org-cascade-scp",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "scp_policy_set",
+          "scp": {
+            "denies_evs": false,
+            "denies_lightsail": false
+          }
+        }
+      }
+    },
+    {
+      "id": "org-cascade-payer",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "organization",
+          "management_account": {
+            "has_workload_principals": true
+          }
+        },
+        "guardduty": {
+          "enabled_all_active_regions": false
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T12:00:00.000Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kind": "key",
+          "is_disabled": true,
+          "dependent_resource_count": 8,
+          "lifecycle": {
+            "pending_deletion": false
+          }
+        }
+      },
+      "id": "arn:aws:kms:us-east-1:111122223333:key/key-disabled-prod",
+      "type": "aws_kms_key"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "certificate": {
+          "kind": "imported",
+          "imported_near_expiry": true,
+          "renewal_failed": false
+        }
+      },
+      "id": "arn:aws:acm:us-east-1:111122223333:certificate/expired-import",
+      "type": "aws_acm_certificate"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "acm_certificate",
+          "certificate": {
+            "key_algorithm_strong": false,
+            "key_algorithm": "RSA_1024"
+          }
+        }
+      },
+      "id": "arn:aws:acm:us-east-1:111122223333:certificate/weak-algo",
+      "type": "aws_acm_certificate"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kind": "key",
+          "state": "PendingImport",
+          "lifecycle": {
+            "pending_import": true,
+            "pending_deletion": false,
+            "age_days": 90
+          },
+          "is_disabled": false,
+          "dependent_resource_count": 0
+        }
+      },
+      "id": "arn:aws:kms:us-east-1:111122223333:key/key-pending-import",
+      "type": "aws_kms_key"
+    }
+  ]
+}

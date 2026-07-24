@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.IAM.AUTH.001
+name: ElastiCache Redis Must Use IAM Authentication
+description: >
+  ElastiCache Redis 7+ clusters should use IAM authentication
+  instead of static AUTH tokens. IAM auth provides automatic
+  credential rotation, fine-grained access control per user,
+  and CloudTrail audit of authentication events. Static AUTH
+  tokens require manual rotation and provide only cluster-level
+  access control — any client with the token has full read/write
+  access.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - elasticache
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_elasticache_cluster]
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    ElastiCache Redis cluster does not use IAM authentication.
+  action: >
+    Enable IAM authentication on the replication group. Create
+    ElastiCache users with IAM authentication type and associate
+    them with a user group attached to the cluster. Update
+    application connection code to use IAM-generated auth tokens.
+  example: |
+    {
+      "cache": {
+        "kind": "cluster",
+        "auth": {
+          "iam_auth_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: cluster
+    - field: properties.cache.auth.iam_auth_enabled
+      op: ne
+      value: true
+tests:
+  - name: no IAM auth fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticache:us-east-1:123456789012:cluster:my-cache"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: cluster
+          auth:
+            iam_auth_enabled: false
+  - name: IAM auth enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticache:us-east-1:123456789012:cluster:my-cache"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: cluster
+          auth:
+            iam_auth_enabled: true

@@ -1,0 +1,84 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T13:00:00.000Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "has_self_modify": true,
+            "has_admin_access": false
+          },
+          "access_keys": {
+            "has_stale_key": false
+          },
+          "mfa": {
+            "enabled": false
+          },
+          "has_console_access": true,
+          "has_inline_policy": true
+        }
+      },
+      "id": "arn:aws:iam::111122223333:user/shadow-admin",
+      "type": "aws_iam_user"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "policies": {
+            "has_self_modify": true,
+            "has_admin_access": false
+          },
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "sub_claim_scoped": false,
+              "audience_restricted": false,
+              "provider": "github"
+            }
+          }
+        }
+      },
+      "id": "arn:aws:iam::111122223333:role/overprivileged-lambda",
+      "type": "aws_iam_role"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "in_organization": false
+        }
+      },
+      "id": "111122223333",
+      "type": "aws_organization"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "has_self_modify": true,
+            "has_admin_access": false
+          },
+          "access_keys": {
+            "has_stale_key": true,
+            "key_age_days": 365
+          },
+          "mfa": {
+            "enabled": false
+          },
+          "has_console_access": false,
+          "has_inline_policy": true
+        }
+      },
+      "id": "arn:aws:iam::111122223333:user/ci-deployer",
+      "type": "aws_iam_user"
+    }
+  ]
+}

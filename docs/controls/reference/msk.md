@@ -125,6 +125,21 @@ MSK cluster broker endpoints must not be exposed to the public internet. Public 
 
 ---
 
+### CTL.MSK.REPLICATION.FACTOR.001
+
+**MSK Topic Replication Factor Must Be At Least 3**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; soc2: A1.2;
+
+MSK cluster default topic replication factor must be at least 3. A replication factor below 3 means a single broker failure can cause data loss if the remaining replicas are also unavailable. Combined with min.insync.replicas < 2, producers may acknowledge writes that are stored on only one broker, creating a silent durability gap.
+
+**Remediation:** Set default.replication.factor >= 3 and min.insync.replicas >= 2 in the MSK cluster configuration. This ensures writes are acknowledged only when replicated to multiple brokers.
+
+---
+
 ### CTL.MSK.VERSION.001
 
 **MSK Clusters Must Run a Supported Kafka Version**

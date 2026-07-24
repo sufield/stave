@@ -1,0 +1,567 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-15T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.detection-realism"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:444444444444:trail/main-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "trail": {
+          "is_logging": true,
+          "is_multi_region_trail": false,
+          "log_file_validation_enabled": false
+        },
+        "audit": {
+          "kind": "trail",
+          "trail_stopped": false,
+          "cloudtrail": {
+            "log_validation_enabled": false,
+            "include_global_events": false,
+            "mgmt_logs_reads": false,
+            "log_bucket_same_account": true,
+            "sns_configured": false,
+            "scp_denies_stop_logging": false,
+            "s3_read_broadly_granted": true,
+            "stop_logging_broadly_granted": true,
+            "s3_object_lock_enabled": false,
+            "s3_policy_has_source_arn": false,
+            "s3_lifecycle_too_short": true,
+            "s3_mfa_delete_enabled": false,
+            "s3_versioning_enabled": true,
+            "s3_has_lifecycle": false,
+            "s3_policy_denies_delete": false,
+            "has_s3_data_event_gap": true,
+            "digest_same_bucket": true,
+            "has_ghost_s3_bucket": true,
+            "has_ghost_cw_role": true,
+            "has_ghost_sns_topic": false,
+            "has_ghost_cw_logs": true,
+            "cw_logs_delivery_configured": false,
+            "cw_logs_encrypted_cmk": false,
+            "cw_logs_retention_compliant": false,
+            "alarm_stop_logging": false,
+            "alarm_delete_trail": false,
+            "alarm_put_event_selectors": false,
+            "alarm_guardduty": false,
+            "alarm_natgw": false,
+            "alarm_s3_policy": false,
+            "alarm_failed_login": false,
+            "alarm_org_change": false,
+            "alarm_bulk_deletion": false
+          },
+          "cloudwatch_logs": {
+            "delivery_active": false
+          }
+        },
+        "audit_trail": {
+          "kind": "trail",
+          "multi_region_enabled": false,
+          "log_file_validation_enabled": false,
+          "encryption": {
+            "encrypted": false
+          },
+          "event_selectors": {
+            "uses_advanced": false
+          },
+          "s3_data_events": {
+            "read_enabled": false,
+            "write_enabled": false
+          },
+          "data_events": {
+            "lambda": {
+              "enabled": false
+            },
+            "dynamodb": {
+              "enabled": false
+            }
+          },
+          "s3_bucket_logging_enabled": false,
+          "insights": {
+            "enabled": false
+          },
+          "is_organization_trail": false,
+          "has_cross_account_replication": false,
+          "retention": {
+            "long_term_enabled": false
+          },
+          "network_activity_events": {
+            "enabled": false
+          },
+          "lightsail_events": {
+            "logged": false
+          },
+          "amplify_data_events": {
+            "logged": false
+          },
+          "apprunner_data_events": {
+            "logged": false
+          },
+          "cloud9_data_events": {
+            "logged": false
+          },
+          "evs_events": {
+            "logged": false
+          },
+          "mwaa_data_events": {
+            "logged": false
+          }
+        },
+        "iam": {
+          "has_broad_cloudtrail_lookup": true
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:444444444444:trail/main-trail/lake",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "logging": {
+          "kind": "cloudtrail_lake_eds",
+          "lake": {
+            "retention_days_sufficient": false,
+            "kms_key_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:444444444444:trail/secondary-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit": {
+          "kind": "trail",
+          "trail_stopped": true,
+          "cloudtrail": {
+            "log_validation_enabled": true,
+            "digest_same_bucket": true,
+            "sns_configured": true,
+            "has_ghost_sns_topic": true,
+            "cw_logs_delivery_configured": true,
+            "cw_logs_encrypted_cmk": false,
+            "cw_logs_retention_compliant": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:guardduty:us-east-1:444444444444:detector/main",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "enabled": false,
+          "findings_export": {
+            "enabled": false,
+            "has_ghost_s3": true
+          },
+          "s3_protection": {
+            "enabled": false
+          },
+          "lambda_protection": {
+            "enabled": false
+          },
+          "malware_protection": {
+            "ec2_enabled": false
+          },
+          "rds_protection": {
+            "enabled": false
+          },
+          "runtime_monitoring": {
+            "enabled": false
+          },
+          "ecs_runtime_monitoring": {
+            "enabled": false
+          },
+          "notification": {
+            "has_routing": false
+          },
+          "guardduty": {
+            "auto_enable_new_accounts": false,
+            "delegated_admin_configured": false
+          }
+        },
+        "guardduty": {
+          "enabled_all_active_regions": false,
+          "org": {
+            "all_members_enrolled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:guardduty:us-east-1:444444444444:detector/enabled-nonotify",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "enabled": true,
+          "notification": {
+            "has_routing": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:guardduty:us-east-1:444444444444:detector/org",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "guardduty_organization",
+          "guardduty": {
+            "auto_enable_new_accounts": false,
+            "delegated_admin_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_recorder",
+          "recording_enabled": false,
+          "has_active_rules": false,
+          "config": {
+            "has_recorder": true,
+            "records_all_resources": false,
+            "recorder_all_regions": false,
+            "include_global_resources": false,
+            "recorder_role_trust_scoped": false,
+            "is_periodic": true,
+            "has_delivery_channel": false,
+            "has_sns_topic": false,
+            "scp_protects_config": false,
+            "stop_recorder_broadly_granted": true,
+            "put_recorder_broadly_granted": true,
+            "delete_recorder_broadly_granted": true,
+            "delete_rule_broadly_granted": true,
+            "put_remediation_broadly_granted": true,
+            "has_ghost_recorder_role": true,
+            "has_ghost_delivery_s3": true,
+            "has_ghost_delivery_sns": false,
+            "snapshot_delivery_stale": true,
+            "delivery_failure_alarm": false,
+            "delivery_s3_policy_denies_delete": false,
+            "config_coverage_complete": false,
+            "noncompliant_count": 45,
+            "has_aggregator": false,
+            "is_management_account_bucket": true,
+            "is_org_account": true,
+            "has_remediation": false,
+            "has_org_rules": false,
+            "member_can_modify_org_rules": true,
+            "delegated_admin_configured": false,
+            "centralized_remediation": false,
+            "conformance_pack_count": 0,
+            "org_conformance_pack_count": 0
+          }
+        },
+        "governance": {
+          "kind": "config_recorder",
+          "config": {
+            "has_any_remediation": false,
+            "uses_service_role": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/rules",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_rule",
+          "config": {
+            "rule_is_active": false,
+            "rule_has_evaluated": false,
+            "rule_age_days": 400,
+            "rules_all_regions": false,
+            "rule_lambda_all_errors": true,
+            "has_ghost_rule_lambda": true,
+            "noncompliant_count": 45,
+            "has_remediation": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/conformance",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_conformance_pack",
+          "config": {
+            "conformance_pack_count": 0,
+            "pack_has_disabled_rules": true,
+            "pack_params_weakened": true,
+            "pack_score_alarmed": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/remediation",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_remediation",
+          "config": {
+            "has_remediation": false,
+            "remediation_never_executed": true,
+            "remediation_retries_exhausted": true,
+            "has_ghost_remediation_role": true,
+            "has_ghost_remediation_ssm": true,
+            "noncompliant_count": 45
+          }
+        },
+        "governance": {
+          "kind": "config_remediation",
+          "config": {
+            "has_any_remediation": false,
+            "uses_service_role": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/org",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_org",
+          "config": {
+            "is_org_account": true,
+            "delegated_admin_configured": false,
+            "has_org_rules": false,
+            "member_can_modify_org_rules": true,
+            "org_conformance_pack_count": 0,
+            "centralized_remediation": false,
+            "has_aggregator": false,
+            "config_coverage_complete": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/account",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_account",
+          "config": {
+            "has_recorder": true,
+            "has_delivery_channel": false,
+            "conformance_pack_count": 0,
+            "recorder_role_trust_scoped": false,
+            "recorder_all_regions": false,
+            "delivery_failure_alarm": false,
+            "rules_all_regions": false,
+            "is_management_account_bucket": true,
+            "delete_recorder_broadly_granted": true,
+            "put_remediation_broadly_granted": true,
+            "delete_rule_broadly_granted": true,
+            "is_org_account": true,
+            "scp_protects_config": false,
+            "stop_recorder_broadly_granted": true,
+            "put_recorder_broadly_granted": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/delivery",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_delivery_channel",
+          "config": {
+            "has_ghost_delivery_sns": true,
+            "has_ghost_delivery_s3": true,
+            "delivery_s3_policy_denies_delete": false,
+            "has_sns_topic": false,
+            "snapshot_delivery_stale": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/recorder-state",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "recorder",
+          "recording_enabled": false,
+          "has_active_rules": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/config-organization",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_organization",
+          "config": {
+            "is_org_account": true,
+            "delegated_admin_configured": false,
+            "has_org_rules": false,
+            "centralized_remediation": false,
+            "org_conformance_pack_count": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/remediation-summary",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "config_remediation_summary",
+          "config": {
+            "has_any_remediation": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/org-with-rules",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_org",
+          "config": {
+            "is_org_account": true,
+            "has_org_rules": true,
+            "member_can_modify_org_rules": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:recorder/default/config-organization-with-rules",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_organization",
+          "config": {
+            "is_org_account": true,
+            "has_org_rules": true,
+            "centralized_remediation": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:444444444444:aggregator/default",
+      "type": "aws_config_aggregator",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_aggregator",
+          "config": {
+            "has_aggregator": true,
+            "aggregator_regions_complete": false,
+            "aggregator_accounts_complete": false,
+            "aggregator_storage_kms_cmk": false
+          }
+        }
+      }
+    },
+    {
+      "id": "i-detection-baseline-ec2",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "network": {
+            "has_public_ip": true,
+            "imdsv2_required": false
+          },
+          "encryption": {
+            "ebs_encrypted": false
+          },
+          "user_data": {
+            "has_secrets": false
+          },
+          "iam_profile_attached": false,
+          "ssm_managed": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::detection-baseline-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "detection-baseline-bucket",
+          "versioning": {
+            "enabled": false,
+            "mfa_delete": false
+          },
+          "logging": {
+            "enabled": false
+          },
+          "encryption": {
+            "at_rest_enabled": false,
+            "in_transit_enforced": false
+          },
+          "access": {
+            "public_read": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-detection-baseline",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "has_broad_port_range": false,
+            "high_risk_ports_exposed": false,
+            "icmp_all_types_from_internet": false,
+            "has_broad_cidr": true,
+            "is_unused": false,
+            "has_broad_eastwest_rules": false,
+            "has_unrestricted_ingress": true
+          }
+        },
+        "compute": {
+          "kind": "security_group",
+          "inbound_rules": {
+            "broad_cidr_non_http": false,
+            "high_risk_ports_unrestricted": false
+          }
+        }
+      }
+    }
+  ]
+}

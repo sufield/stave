@@ -1,0 +1,157 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.vpc-exfil"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:s3:::exfil-replication-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "name": "exfil-replication-bucket",
+          "replication": {
+            "enabled": true,
+            "destination_in_org": false,
+            "destination_public": true
+          },
+          "access": {
+            "public_read": true,
+            "write_via_resource": true,
+            "effective_network_scope": "public"
+          },
+          "cdn_access": {
+            "is_cloudfront_origin": true
+          },
+          "controls": {
+            "public_access_fully_blocked": false
+          },
+          "website": {
+            "enabled": true
+          },
+          "lifecycle": {
+            "rules_configured": false
+          }
+        },
+        "data": {
+          "kind": "bucket",
+          "s3": {
+            "replication": {
+              "has_ghost_destination": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "datasync-exfil-external",
+      "type": "aws_datasync_task",
+      "vendor": "aws",
+      "properties": {
+        "data_movement": {
+          "kind": "datasync_task",
+          "destination_in_org": false
+        }
+      }
+    },
+    {
+      "id": "alias/exfil-ghost-key",
+      "type": "aws_kms_alias",
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kind": "alias",
+          "alias_is_ghost": true,
+          "alias_is_orphan": true
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudfront::555555555555:distribution/EXFIL001",
+      "type": "aws_cloudfront_distribution",
+      "vendor": "aws",
+      "properties": {
+        "cdn": {
+          "kind": "distribution",
+          "cloudfront": {
+            "alarm_5xx": false,
+            "alarm_4xx": false,
+            "alarm_requests": false
+          }
+        }
+      }
+    },
+    {
+      "id": "firehose-exfil-ghost-dest",
+      "type": "aws_kinesis_firehose",
+      "vendor": "aws",
+      "properties": {
+        "streaming": {
+          "kind": "delivery_stream",
+          "firehose": {
+            "has_ghost_s3_destination": true
+          }
+        },
+        "data": {
+          "kind": "bucket",
+          "s3": {
+            "replication": {
+              "has_ghost_destination": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "exfil-org-identity",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "organization",
+          "scp": {
+            "has_data_perimeter_s3": false
+          }
+        }
+      }
+    },
+    {
+      "id": "redshift-exfil-cluster",
+      "type": "aws_redshift_cluster",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "redshift_cluster",
+          "snapshot_sharing": {
+            "shared_with_all": true,
+            "shared_with_external_accounts": true
+          },
+          "logging": {
+            "audit_logging_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "iam-exfil-kms-escalation",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "escalation": {
+            "kms_creategrant": {
+              "present": true
+            },
+            "kms_putkeypolicy": {
+              "present": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}
