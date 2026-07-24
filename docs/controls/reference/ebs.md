@@ -20,6 +20,21 @@ AMI does not have deregistration protection enabled. Without deregistration prot
 
 ---
 
+### CTL.EBS.ENCRYPT.KEYORIGIN.001
+
+**EBS Volume Must Use AWS-Managed or CloudHSM Key Origin**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: SC-12; soc2: CC6.1;
+
+EBS volume is encrypted with a KMS key whose origin is EXTERNAL (imported key material). External key material can expire or be deleted outside AWS, causing the volume to become inaccessible. In a ransomware scenario, an attacker who compromises the external key management system can revoke key material and render all encrypted volumes unrecoverable. AWS_KMS and AWS_CLOUDHSM origins provide durable key material that cannot be externally revoked.
+
+**Remediation:** Re-encrypt the volume using a KMS key with AWS_KMS origin. Create a snapshot, copy it with the new key, and create a new volume from the copy.
+
+---
+
 ### CTL.EBS.SNAPSHOT.DELETEPROTECTION.001
 
 **EBS Snapshot Lock Not Enabled**
