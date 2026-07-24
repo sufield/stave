@@ -977,6 +977,21 @@ RDS snapshot export converts a database snapshot to Apache Parquet format and st
 
 ---
 
+### CTL.RDS.SNAPSHOT.KEYORIGIN.001
+
+**RDS Snapshot Must Use AWS-Managed Key Origin**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: SC-12, CP-9; soc2: CC6.1;
+
+RDS snapshot is encrypted with a KMS key whose origin is EXTERNAL (imported key material). If the external key material expires or is deleted, the snapshot becomes unrestorable. In a ransomware scenario, revoking external key material renders all encrypted snapshots permanently inaccessible — destroying the backup of last resort.
+
+**Remediation:** Copy the snapshot using a KMS key with AWS_KMS origin. Delete the original snapshot after verifying the copy.
+
+---
+
 ### CTL.RDS.SNAPSHOT.PUBLIC.001
 
 **RDS Snapshots Must Not Be Publicly Accessible**

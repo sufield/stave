@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.MEMBERSHIP.001
+name: Account Must Be Member of an AWS Organization
+description: >
+  The account is not a member of an AWS Organization.
+  Standalone accounts cannot benefit from SCPs, RCPs,
+  centralized CloudTrail, consolidated billing, or
+  Identity Center. Every security guardrail that operates
+  at the organization level is absent. The account is
+  governed only by its own IAM policies — no external
+  boundary constrains what principals can do.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["GRC-01"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_account_summary]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - account.kind
+  - account.org_is_member
+remediation:
+  description: >
+    Account is not a member of an AWS Organization.
+    No SCPs, RCPs, or centralized governance applies.
+  action: >
+    Invite the account into the organization via
+    organizations:InviteAccountToOrganization or create
+    a new account within the organization.
+  example: |
+    {
+      "account": {
+        "kind": "account_summary",
+        "org_is_member": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.kind
+      op: eq
+      value: account_summary
+    - field: properties.account.org_is_member
+      op: ne
+      value: true
+tests:
+  - name: "standalone account fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:account/111122223333"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          kind: account_summary
+          org_is_member: false
+  - name: "org member account passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:account/o-abc123/111122223333"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          kind: account_summary
+          org_is_member: true

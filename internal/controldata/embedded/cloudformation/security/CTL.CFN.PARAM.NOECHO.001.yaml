@@ -24,6 +24,7 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - logging
+applicable_asset_types: [aws_cloudformation_stack]
 type: unsafe_state
 classification: state_assertion
 params:

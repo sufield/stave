@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.RDS.SNAPSHOT.KEYORIGIN.001
+name: RDS Snapshot Must Use AWS-Managed Key Origin
+description: >
+  RDS snapshot is encrypted with a KMS key whose origin is
+  EXTERNAL (imported key material). If the external key
+  material expires or is deleted, the snapshot becomes
+  unrestorable. In a ransomware scenario, revoking external
+  key material renders all encrypted snapshots permanently
+  inaccessible — destroying the backup of last resort.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12, CP-9"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03", "BCR-08"]
+scope_tags:
+  - aws
+  - rds
+  - kms
+taxonomy:
+  - encryption-at-rest
+  - key-management
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_rds_snapshot]
+params:
+  attack_stage: impact
+observation_fields:
+  - database.kind
+  - database.rds.snapshot_kms_key_origin
+remediation:
+  description: >
+    RDS snapshot uses an imported (EXTERNAL) KMS key.
+    Snapshot may become unrestorable if key material is
+    revoked.
+  action: >
+    Copy the snapshot using a KMS key with AWS_KMS origin.
+    Delete the original snapshot after verifying the copy.
+  example: |
+    {
+      "database": {
+        "kind": "rds_snapshot",
+        "rds": {
+          "snapshot_kms_key_origin": "AWS_KMS"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: rds_snapshot
+    - field: properties.database.rds.snapshot_kms_key_origin
+      op: eq
+      value: EXTERNAL
+tests:
+  - name: "external key origin fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:snapshot:prod-db-snapshot"
+      asset_type: aws_rds_snapshot
+      vendor: aws
+      properties:
+        database:
+          kind: rds_snapshot
+          rds:
+            snapshot_kms_key_origin: EXTERNAL
+  - name: "AWS_KMS key origin passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rds:us-east-1:111122223333:snapshot:prod-db-snapshot"
+      asset_type: aws_rds_snapshot
+      vendor: aws
+      properties:
+        database:
+          kind: rds_snapshot
+          rds:
+            snapshot_kms_key_origin: AWS_KMS

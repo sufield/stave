@@ -1,0 +1,250 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.observation-gaps"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:backup:us-east-1:111122223333:backup-vault:prod-backups",
+      "type": "aws_backup_vault",
+      "vendor": "aws",
+      "properties": {
+        "backup": {
+          "kind": "vault",
+          "vault_policy": {
+            "policy_public": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:glacier:us-east-1:111122223333:vaults/compliance-archive",
+      "type": "aws_glacier_vault",
+      "vendor": "aws",
+      "properties": {
+        "archive": {
+          "kind": "vault",
+          "glacier": {
+            "policy_public": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ses:us-east-1:111122223333:identity/example.com",
+      "type": "aws_ses_identity",
+      "vendor": "aws",
+      "properties": {
+        "messaging": {
+          "kind": "ses_identity",
+          "ses": {
+            "authorization_policy_public": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:111122223333:layer:shared-utils:3",
+      "type": "aws_lambda_layer_version",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "lambda_layer_version",
+          "lambda": {
+            "layer_public": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/gcp-pipeline-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "has_external_cloud_principal": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::999988887777:role/payer-developer",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "account": {
+            "is_management": true
+          },
+          "role": {
+            "has_boundary": true,
+            "boundary_denies_assume_root": false,
+            "boundary_denies_control_tower_config": false,
+            "boundary_denies_identity_center_config": false,
+            "boundary_denies_org_mutation": false,
+            "boundary_denies_self_modify": false,
+            "boundary_denies_self_removal": false
+          }
+        }
+      }
+    },
+    {
+      "id": "vpc-default-111122223333",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "vpc": {
+            "is_default": true,
+            "has_active_resources": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:guardduty:us-east-1:111122223333:detector/abc123",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "guardduty": {
+            "detection_method_count": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/prod-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "event_selectors": {
+            "has_exclusions": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/legacy-admin",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policy": {
+            "has_sensitive_action_grants": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:organizations::111122223333:organization/o-gaps001",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "organization",
+          "org": {
+            "tag_policy_enforced_key_count": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:volume/vol-gaps001",
+      "type": "aws_ebs_volume",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "ebs_volume",
+          "ebs": {
+            "kms_key_origin": "EXTERNAL"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:rds:us-east-1:111122223333:snapshot:gaps-db-snap",
+      "type": "aws_rds_snapshot",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "rds_snapshot",
+          "rds": {
+            "snapshot_kms_key_origin": "EXTERNAL"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:organizations::111122223333:account/111122223333",
+      "type": "aws_account_summary",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "kind": "account_summary",
+          "is_management": true,
+          "management_principal_count": 25
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:saml-provider/OktaIdP",
+      "type": "aws_iam_saml_provider",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "saml_provider",
+          "saml": {
+            "entity_id_tracked": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:organizations::444455556666:account/444455556666",
+      "type": "aws_account_summary",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "kind": "account_summary",
+          "org_is_member": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:organizations::111122223333:organization/o-gaps002",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "org_config",
+          "ou_depth": 5
+        }
+      }
+    },
+    {
+      "id": "arn:aws:organizations::111122223333:organization/o-gaps003",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "rcp_policy_set",
+          "rcp": {
+            "denies_confused_deputy": false,
+            "enforces_principal_org_id": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -430,6 +430,21 @@ CloudTrail trails should use advanced event selectors instead of basic event sel
 
 ---
 
+### CTL.CLOUDTRAIL.EVENTSELECTORS.EXCLUSION.001
+
+**CloudTrail Must Not Exclude Management Events**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-3; soc2: CC7.2;
+
+CloudTrail trail has event selector exclusion patterns that suppress logging of specific management event sources. Exclusions create gaps in the audit trail — an attacker who knows which events are excluded can operate undetected within those blind spots. AWS added exclusion selectors to reduce noise from high-volume read services, but any exclusion reduces forensic coverage.
+
+**Remediation:** Review and remove event selector exclusions. If exclusions are needed for cost, ensure they only apply to read-only events from known high-volume sources and never to write events.
+
+---
+
 ### CTL.CLOUDTRAIL.EVS.BLIND.001
 
 **CloudTrail Does Not Log EVS Management Events**

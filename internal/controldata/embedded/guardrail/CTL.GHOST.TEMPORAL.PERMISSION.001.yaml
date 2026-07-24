@@ -17,6 +17,7 @@ scope_tags: [aws, iam]
 taxonomy:
   - compliance-mapping
   - trust-decay
+applicable_asset_types: [aws_iam_role, aws_iam_user]
 type: unsafe_state
 classification: state_assertion
 params:

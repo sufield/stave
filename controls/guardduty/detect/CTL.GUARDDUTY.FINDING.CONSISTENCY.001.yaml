@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.FINDING.CONSISTENCY.001
+name: GuardDuty Detection Method Coverage Must Be Sufficient
+description: >
+  GuardDuty detector has fewer than 3 active detection methods.
+  GuardDuty correlates findings across VPC Flow Logs, DNS logs,
+  CloudTrail management events, CloudTrail data events, S3 data
+  events, EKS audit logs, and Lambda network activity. Each
+  disabled data source creates blind spots where threat activity
+  goes undetected. A detector with fewer than 3 methods lacks the
+  cross-signal correlation needed to distinguish true threats from
+  noise.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - monitoring
+  - detection-evasion
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_guardduty_detector]
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - threat_detection.kind
+  - threat_detection.guardduty.detection_method_count
+remediation:
+  description: >
+    GuardDuty detector has insufficient detection method
+    coverage. Threat correlation is degraded.
+  action: >
+    Enable additional GuardDuty data sources: S3 protection,
+    EKS audit logs, Lambda network activity, RDS login
+    monitoring, and runtime monitoring.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "guardduty": {
+          "detection_method_count": 6
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.guardduty.detection_method_count
+      op: lt
+      value: 3
+tests:
+  - name: "detector with 2 methods fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/abc123"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: detector
+          guardduty:
+            detection_method_count: 2
+  - name: "detector with 6 methods passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/abc123"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: detector
+          guardduty:
+            detection_method_count: 6

@@ -65,6 +65,21 @@ GuardDuty retains findings for 90 days by default. Without export to S3, finding
 
 ---
 
+### CTL.GUARDDUTY.FINDING.CONSISTENCY.001
+
+**GuardDuty Detection Method Coverage Must Be Sufficient**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+GuardDuty detector has fewer than 3 active detection methods. GuardDuty correlates findings across VPC Flow Logs, DNS logs, CloudTrail management events, CloudTrail data events, S3 data events, EKS audit logs, and Lambda network activity. Each disabled data source creates blind spots where threat activity goes undetected. A detector with fewer than 3 methods lacks the cross-signal correlation needed to distinguish true threats from noise.
+
+**Remediation:** Enable additional GuardDuty data sources: S3 protection, EKS audit logs, Lambda network activity, RDS login monitoring, and runtime monitoring.
+
+---
+
 ### CTL.GUARDDUTY.GHOST.EXPORT.S3.001
 
 **GuardDuty Export Destination S3 Bucket Deleted**

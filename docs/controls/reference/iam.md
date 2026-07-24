@@ -2702,6 +2702,21 @@ IAM policies granting sensitive actions (s3:*, kms:Decrypt, dynamodb:*, secretsm
 
 ---
 
+### CTL.IAM.POLICY.SENSITIVE.GRANTS.001
+
+**IAM Principal Must Not Have Unreviewed Sensitive Action Grants**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.3;
+
+IAM principal has policies granting actions from the sensitive action registry without compensating controls. Sensitive actions include iam:CreateUser, iam:AttachRolePolicy, sts:AssumeRole with broad scope, kms:Decrypt on shared keys, and similar privilege-escalation vectors. The sensitive action registry cross-references granted actions against known escalation patterns.
+
+**Remediation:** Review attached policies and remove sensitive action grants. Use permission boundaries to restrict access to sensitive actions. Prefer task-specific roles over broadly-scoped principals.
+
+---
+
 ### CTL.IAM.POLICY.SERVICEWILDCARD.001
 
 **No Service-Wildcard Grants on Denied Services**
@@ -3318,6 +3333,21 @@ IAM role's S3 actions (s3:*, s3:GetObject, s3:PutObject, etc.) use Resource: * â
 An IAM principal has a policy granting sagemaker:CreateNotebookInstance or sagemaker:CreateDomain. SageMaker notebook instances and Studio domains provision EC2 compute with EBS storage, optional internet access, and IAM execution roles that typically have broad S3 and KMS permissions for training data access.
 
 **Remediation:** Remove sagemaker:CreateNotebookInstance and sagemaker:CreateDomain from the principal's policies.
+
+---
+
+### CTL.IAM.SAML.ENTITYID.001
+
+**SAML Provider Must Have Tracked Entity ID**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-8; soc2: CC6.1;
+
+IAM SAML provider has no tracked entity ID (Issuer). The entity ID identifies which external identity provider is federated into the AWS account. Without tracking the entity ID, changes to the SAML metadata (provider replacement, IdP migration, entity ID rotation) go undetected. An attacker who replaces the SAML metadata with their own IdP gains federated access to the account.
+
+**Remediation:** Record the SAML entity ID and monitor for changes. Set up CloudTrail alerts for iam:UpdateSAMLProvider events.
 
 ---
 

@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.RCP.ENFORCE.PRINCIPALORGID.001
+name: "RCP Must Enforce PrincipalOrgID on Resource Access"
+description: >
+  No RCP denies resource actions when aws:PrincipalOrgID
+  does not match the organization. This is the resource-side
+  complement to SCP-based identity perimeter controls.
+  Without this RCP, resources with overly permissive resource
+  policies (Principal: *) are accessible to any AWS
+  principal, not just org members. The RCP creates a
+  resource perimeter that blocks external principal access
+  regardless of individual resource policy configuration.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - identity-perimeter
+  - trust-boundary
+payer_exempt: true
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - organization.kind
+  - organization.rcp.enforces_principal_org_id
+remediation:
+  description: >
+    No RCP enforces PrincipalOrgID on resource access.
+    Resources with public policies are accessible to
+    any AWS principal.
+  action: >
+    Create an RCP that denies resource actions when
+    aws:PrincipalOrgID does not match the organization
+    ID. Apply to all supported resource types.
+  example: |
+    {
+      "organization": {
+        "kind": "rcp_policy_set",
+        "rcp": {
+          "enforces_principal_org_id": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: rcp_policy_set
+    - field: properties.organization.rcp.enforces_principal_org_id
+      op: ne
+      value: true
+tests:
+  - name: "no PrincipalOrgID enforcement fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            enforces_principal_org_id: false
+  - name: "PrincipalOrgID enforcement present passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            enforces_principal_org_id: true

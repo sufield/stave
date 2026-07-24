@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.EVENTSELECTORS.EXCLUSION.001
+name: CloudTrail Must Not Exclude Management Events
+description: >
+  CloudTrail trail has event selector exclusion patterns that
+  suppress logging of specific management event sources. Exclusions
+  create gaps in the audit trail — an attacker who knows which
+  events are excluded can operate undetected within those blind
+  spots. AWS added exclusion selectors to reduce noise from
+  high-volume read services, but any exclusion reduces forensic
+  coverage.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-3"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-01"]
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - logging
+  - detection-evasion
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_cloudtrail_trail]
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - audit_trail.kind
+  - audit_trail.event_selectors.has_exclusions
+remediation:
+  description: >
+    CloudTrail event selectors exclude management event
+    sources. Audit coverage has gaps.
+  action: >
+    Review and remove event selector exclusions. If
+    exclusions are needed for cost, ensure they only
+    apply to read-only events from known high-volume
+    sources and never to write events.
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "event_selectors": {
+          "has_exclusions": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.event_selectors.has_exclusions
+      op: eq
+      value: true
+tests:
+  - name: "trail with exclusions fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/main-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          event_selectors:
+            has_exclusions: true
+  - name: "trail without exclusions passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/main-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          event_selectors:
+            has_exclusions: false

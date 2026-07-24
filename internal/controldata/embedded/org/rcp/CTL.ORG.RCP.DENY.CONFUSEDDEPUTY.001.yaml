@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.RCP.DENY.CONFUSEDDEPUTY.001
+name: "RCP Must Deny Cross-Service Access Without Source Conditions"
+description: >
+  No RCP denies cross-service resource access when confused
+  deputy conditions (aws:SourceArn, aws:SourceAccount) are
+  absent. This is distinct from CTL.ORG.RCP.CONFUSEDDEPUTY.001
+  which checks aws:SourceOrgID — this control checks that
+  individual service-to-service calls are scoped to a specific
+  source ARN or account. Without this, any AWS service can
+  access resources on behalf of any principal, enabling
+  cross-service confused deputy attacks.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - identity-perimeter
+  - trust-boundary
+payer_exempt: true
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - organization.kind
+  - organization.rcp.denies_confused_deputy
+remediation:
+  description: >
+    No RCP enforces SourceArn/SourceAccount conditions on
+    cross-service access. Confused deputy attacks possible.
+  action: >
+    Create an RCP that denies resource actions when
+    aws:SourceArn or aws:SourceAccount conditions are
+    absent for service-to-service calls.
+  example: |
+    {
+      "organization": {
+        "kind": "rcp_policy_set",
+        "rcp": {
+          "denies_confused_deputy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: rcp_policy_set
+    - field: properties.organization.rcp.denies_confused_deputy
+      op: ne
+      value: true
+tests:
+  - name: "no confused deputy RCP fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            denies_confused_deputy: false
+  - name: "confused deputy RCP present passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: rcp_policy_set
+          rcp:
+            denies_confused_deputy: true

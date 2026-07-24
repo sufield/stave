@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.EBS.ENCRYPT.KEYORIGIN.001
+name: EBS Volume Must Use AWS-Managed or CloudHSM Key Origin
+description: >
+  EBS volume is encrypted with a KMS key whose origin is
+  EXTERNAL (imported key material). External key material
+  can expire or be deleted outside AWS, causing the volume
+  to become inaccessible. In a ransomware scenario, an
+  attacker who compromises the external key management
+  system can revoke key material and render all encrypted
+  volumes unrecoverable. AWS_KMS and AWS_CLOUDHSM origins
+  provide durable key material that cannot be externally
+  revoked.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - ebs
+  - kms
+taxonomy:
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_ebs_volume]
+params:
+  attack_stage: impact
+observation_fields:
+  - compute.kind
+  - compute.ebs.kms_key_origin
+remediation:
+  description: >
+    EBS volume uses an imported (EXTERNAL) KMS key.
+    Key material can be revoked externally.
+  action: >
+    Re-encrypt the volume using a KMS key with AWS_KMS
+    origin. Create a snapshot, copy it with the new key,
+    and create a new volume from the copy.
+  example: |
+    {
+      "compute": {
+        "kind": "ebs_volume",
+        "ebs": {
+          "kms_key_origin": "AWS_KMS"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ebs_volume
+    - field: properties.compute.ebs.kms_key_origin
+      op: eq
+      value: EXTERNAL
+tests:
+  - name: "external key origin fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:volume/vol-abc123"
+      asset_type: aws_ebs_volume
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_volume
+          ebs:
+            kms_key_origin: EXTERNAL
+  - name: "AWS_KMS key origin passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:volume/vol-abc123"
+      asset_type: aws_ebs_volume
+      vendor: aws
+      properties:
+        compute:
+          kind: ebs_volume
+          ebs:
+            kms_key_origin: AWS_KMS

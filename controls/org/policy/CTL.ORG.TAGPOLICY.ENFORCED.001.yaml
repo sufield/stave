@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.TAGPOLICY.ENFORCED.001
+name: Organization Must Enforce Tag Policy Keys
+description: >
+  The organization has no tag policy or the tag policy enforces
+  zero keys. Tag policies are the only mechanism to enforce
+  consistent tagging across an organization — without enforced
+  keys, resources are created with arbitrary or missing tags,
+  breaking cost allocation, access control boundaries, and
+  automation that depends on tag values.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["GRC-01"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_organization]
+params:
+  attack_stage: discovery
+observation_fields:
+  - identity.kind
+  - identity.org.tag_policy_enforced_key_count
+remediation:
+  description: >
+    Organization tag policy enforces no keys. Resources
+    are created without mandatory tags.
+  action: >
+    Create an organization tag policy that enforces required
+    keys (e.g., Environment, Owner, CostCenter). Attach it
+    to the organization root or target OUs.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "org": {
+          "tag_policy_enforced_key_count": 5
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.org.tag_policy_enforced_key_count
+      op: lt
+      value: 1
+tests:
+  - name: "organization with no enforced tag keys fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          org:
+            tag_policy_enforced_key_count: 0
+  - name: "organization with enforced tag keys passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          org:
+            tag_policy_enforced_key_count: 5

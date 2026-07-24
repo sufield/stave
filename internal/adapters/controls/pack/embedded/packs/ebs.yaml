@@ -1,0 +1,4 @@
+id: ebs
+description: AWS EBS volume security controls
+controls:
+    - CTL.EBS.ENCRYPT.KEYORIGIN.001

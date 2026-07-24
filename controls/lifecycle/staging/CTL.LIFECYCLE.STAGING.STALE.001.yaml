@@ -31,6 +31,7 @@ taxonomy:
   - compliance-mapping
   - resource-sprawl
   - trust-decay
+applicable_asset_types: [aws_apigateway_rest_api, aws_cloudfront_distribution, aws_s3_bucket, aws_lambda_function, aws_ec2_instance]
 type: unsafe_state
 classification: state_assertion
 params:

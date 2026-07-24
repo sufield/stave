@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.SENSITIVE.GRANTS.001
+name: IAM Principal Must Not Have Unreviewed Sensitive Action Grants
+description: >
+  IAM principal has policies granting actions from the sensitive
+  action registry without compensating controls. Sensitive actions
+  include iam:CreateUser, iam:AttachRolePolicy,
+  sts:AssumeRole with broad scope, kms:Decrypt on shared keys,
+  and similar privilege-escalation vectors. The sensitive action
+  registry cross-references granted actions against known
+  escalation patterns.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iam_role, aws_iam_user]
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.policy.has_sensitive_action_grants
+remediation:
+  description: >
+    IAM principal has sensitive action grants that enable
+    privilege escalation paths.
+  action: >
+    Review attached policies and remove sensitive action grants.
+    Use permission boundaries to restrict access to sensitive
+    actions. Prefer task-specific roles over broadly-scoped
+    principals.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "policy": {
+          "has_sensitive_action_grants": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: in
+      value: [role, user]
+    - field: properties.identity.policy.has_sensitive_action_grants
+      op: eq
+      value: true
+tests:
+  - name: "principal with sensitive grants fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/broad-admin"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policy:
+            has_sensitive_action_grants: true
+  - name: "principal without sensitive grants passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/readonly"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          policy:
+            has_sensitive_action_grants: false

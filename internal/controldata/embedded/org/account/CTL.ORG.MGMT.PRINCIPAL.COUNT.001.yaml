@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.MGMT.PRINCIPAL.COUNT.001
+name: Management Account Must Minimize IAM Principals
+description: >
+  The management account has more than 10 IAM principals
+  (users + roles). The management account controls the
+  organization's billing, SCPs, and account lifecycle.
+  Every principal in the management account is a potential
+  path to organization-wide compromise. Best practice is
+  to restrict the management account to organization
+  administration only — all workloads belong in member
+  accounts.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - organizations
+  - iam
+taxonomy:
+  - account-governance
+  - least-privilege
+payer_exempt: true
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_account_summary]
+params:
+  attack_stage: privilege_escalation
+  management_principal_threshold: 10
+observation_fields:
+  - account.kind
+  - account.is_management
+  - account.management_principal_count
+remediation:
+  description: >
+    Management account has excessive IAM principals.
+    Each is a potential org-wide compromise path.
+  action: >
+    Migrate workloads out of the management account. Delete
+    or disable unused IAM users and roles. Use Identity
+    Center for human access.
+  example: |
+    {
+      "account": {
+        "kind": "account_summary",
+        "is_management": true,
+        "management_principal_count": 5
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.kind
+      op: eq
+      value: account_summary
+    - field: properties.account.is_management
+      op: eq
+      value: true
+    - field: properties.account.management_principal_count
+      op: gt
+      value: 10
+tests:
+  - name: "management account with 25 principals fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::999988887777:account/o-abc123/999988887777"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          kind: account_summary
+          is_management: true
+          management_principal_count: 25
+  - name: "management account with 5 principals passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::999988887777:account/o-abc123/999988887777"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          kind: account_summary
+          is_management: true
+          management_principal_count: 5
