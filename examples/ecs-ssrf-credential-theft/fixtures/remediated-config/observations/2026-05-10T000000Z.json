@@ -5,7 +5,7 @@
   "assets": [
     {
       "id": "arn:aws:ecs:us-east-1:111122223333:task-definition/payments-api:8",
-      "type": "aws_ecs_task_definition_container",
+      "type": "aws_ecs_task_definition",
       "vendor": "aws",
       "properties": {
         "container": {
@@ -25,7 +25,7 @@
     },
     {
       "id": "arn:aws:ec2:us-east-1:111122223333:security-group/sg-0abcd1234ef567",
-      "type": "aws_security_group",
+      "type": "aws_ec2_security_group",
       "vendor": "aws",
       "properties": {
         "network": {

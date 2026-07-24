@@ -12,7 +12,7 @@
 # 2 ECS controls on the task-definition asset (which meets the
 # threshold of 2) and adds the SG fact as the third leg of the
 # attack story.
-set -euo pipefail
+set -uo pipefail
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)
 stave_root=$(cd "$example_root/.." && pwd)

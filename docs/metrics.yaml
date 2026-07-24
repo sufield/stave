@@ -2,7 +2,7 @@
 # Run: make metrics
 
 catalog:
-  controls: 3173
+  controls: 3172
   services: 105
 
 chains:

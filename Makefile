@@ -1085,7 +1085,7 @@ metrics:
 	@echo "# Run: make metrics" >> docs/metrics.yaml
 	@echo "" >> docs/metrics.yaml
 	@echo "catalog:" >> docs/metrics.yaml
-	@echo "  controls: $$(find controls/ -name '*.yaml' -not -path '*/_triage/*' | wc -l | tr -d ' ')" >> docs/metrics.yaml
+	@echo "  controls: $$(find controls/ -name '*.yaml' -not -path '*/_triage/*' -not -name '_*' | wc -l | tr -d ' ')" >> docs/metrics.yaml
 	@echo "  services: $$(find controls/ -mindepth 1 -maxdepth 1 -type d -not -name '_triage' | wc -l | tr -d ' ')" >> docs/metrics.yaml
 	@echo "" >> docs/metrics.yaml
 	@echo "chains:" >> docs/metrics.yaml
@@ -1098,6 +1098,27 @@ metrics:
 	@echo "" >> docs/metrics.yaml
 	@echo "updated: $$(date +%Y-%m-%d)" >> docs/metrics.yaml
 	@echo "Generated docs/metrics.yaml"
+
+## demo-smoke: Run every demo-* script and verify exit 0 + consistent counts
+.PHONY: demo-smoke
+demo-smoke:
+	@fail=0; \
+	for script in examples/demo-*/run.sh; do \
+		demo=$$(basename $$(dirname "$$script")); \
+		out=$$(bash "$$script" 2>&1) || rc=$$?; rc=$${rc:-0}; \
+		if [ "$$rc" -ne 0 ]; then \
+			echo "FAIL: $$demo exited $$rc"; fail=1; continue; \
+		fi; \
+		violations=$$(echo "$$out" | grep -oP '"violations":\s*\K[0-9]+' | head -1); \
+		findings=$$(echo "$$out" | grep -oP '"findings_count":\s*\K[0-9]+' | head -1); \
+		if [ -n "$$violations" ] && [ -n "$$findings" ] && [ "$$violations" != "$$findings" ]; then \
+			echo "FAIL: $$demo violations=$$violations != findings=$$findings"; fail=1; \
+		else \
+			echo "OK:   $$demo (violations=$$violations findings=$$findings)"; \
+		fi; \
+	done; \
+	if [ "$$fail" -eq 1 ]; then exit 1; fi; \
+	echo "All demo scripts pass smoke test"
 
 ## consistency-check: Verify every derived artifact matches its canonical source
 ##

@@ -192,11 +192,12 @@ divider
 rm -f /tmp/demo-ai-facts.jsonl
 
 printf '%sDemo complete.%s\n\n' "$BOLD" "$NC"
-TOTAL=$(jq '.findings | length' <<<"$FINDINGS")
-printf '  Findings:    %s on writeup  →  %s on remediated\n' "$TOTAL" "$(jq '.findings | length' <<<"$REM_FINDINGS")"
+CATALOG_JSON=$("$STAVE" controls list --format json 2>/dev/null)
+CATALOG_COUNT=$(jq 'length' <<<"$CATALOG_JSON")
+SERVICE_COUNT=$(jq '[.[].domain] | unique | length' <<<"$CATALOG_JSON")
 printf '  AI findings: %s on writeup  →  %s on remediated\n' "$AI_TOTAL" "$REM_AI"
 printf '  Chains:      %s on writeup  →  %s on remediated\n' "$CHAIN_COUNT" "$REM_CHAINS"
-printf '  Catalog:     %s controls across 74 AWS service domains\n' "$(jq 'length' <<<"$("$STAVE" controls list --format json 2>/dev/null)")"
+printf '  Catalog:     %s controls across %s risk domains\n' "$CATALOG_COUNT" "$SERVICE_COUNT"
 printf '  Source:      github.com/sufield/stave\n'
 
 exit 0
