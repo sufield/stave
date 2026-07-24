@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -13,6 +12,7 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/app/controltest"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // TestResult is the outcome of running all embedded test cases on
@@ -111,7 +111,7 @@ func RunControlTests(ctx context.Context, cfg TestConfig) ([]TestResult, TestSum
 // would silently widen the run back to the whole parent directory,
 // which is exactly the failure this guards against.
 func controlIDFromFile(path string) (string, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // path is the caller-supplied control file under test (CLI/test input), not attacker-controlled
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return "", fmt.Errorf("read control file: %w", err)
 	}

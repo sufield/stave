@@ -24,10 +24,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/sufield/stave/internal/platform/fsutil"
 
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/stave"
@@ -110,7 +111,7 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 		return &ui.UserError{Err: fmt.Errorf("--format must be text | json (got %q)", opts.Format)}
 	}
 
-	raw, err := os.ReadFile(opts.File)
+	raw, err := fsutil.ReadFileLimited(opts.File)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read %s: %w", opts.File, err)}
 	}

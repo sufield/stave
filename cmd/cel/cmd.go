@@ -85,7 +85,7 @@ func runCELEval(stdout, stderr io.Writer, stdin io.Reader, expr, inputPath, asse
 	var data []byte
 	var err error
 	if useStdin {
-		data, err = io.ReadAll(stdin)
+		data, err = fsutil.LimitedReadAll(stdin, "stdin")
 	} else {
 		data, err = fsutil.ReadFileLimited(inputPath)
 	}

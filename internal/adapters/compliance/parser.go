@@ -6,9 +6,9 @@ package compliance
 import (
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -59,7 +59,7 @@ func (c Check) IsInScope() bool {
 
 // ParseFramework reads a YAML checklist file.
 func ParseFramework(path string) (*Framework, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // caller-controlled path
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("read framework: %w", err)
 	}

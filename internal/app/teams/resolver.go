@@ -4,10 +4,10 @@ package teams
 import (
 	"fmt"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -65,7 +65,7 @@ type OwnerResult struct {
 
 // LoadManifest reads a team manifest from disk.
 func LoadManifest(path string) (*Manifest, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // user-specified path
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("read team manifest: %w", err)
 	}

@@ -5,12 +5,12 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 	"text/tabwriter"
 
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
 	"gopkg.in/yaml.v3"
 )
@@ -73,7 +73,7 @@ type ServicesCoverageOptions struct {
 }
 
 func loadServicesRegistry(path string) ([]ServiceEntry, error) {
-	data, err := os.ReadFile(filepath.Clean(path))
+	data, err := fsutil.ReadFileLimited(filepath.Clean(path))
 	if err != nil {
 		return nil, fmt.Errorf("load service registry: %w", err)
 	}

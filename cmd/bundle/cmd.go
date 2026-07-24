@@ -116,7 +116,7 @@ func run(ctx context.Context, _, stderr io.Writer, opts *options) error {
 	// Load signing key if provided.
 	var privateKeyPEM []byte
 	if opts.SignKeyPath != "" {
-		keyData, readErr := os.ReadFile(fsutil.CleanUserPath(opts.SignKeyPath)) //nolint:gosec // user-specified key path
+		keyData, readErr := fsutil.ReadFileLimited(fsutil.CleanUserPath(opts.SignKeyPath))
 		if readErr != nil {
 			return fmt.Errorf("read signing key: %w", readErr)
 		}

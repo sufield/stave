@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 type options struct {
@@ -86,7 +87,7 @@ func run(w io.Writer, opts *options) error {
 		return &ui.UserError{Err: fmt.Errorf("parse JSON: %w", err)}
 	}
 
-	tmplBytes, err := os.ReadFile(opts.Template)
+	tmplBytes, err := fsutil.ReadFileLimited(opts.Template)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read template: %w", err)}
 	}

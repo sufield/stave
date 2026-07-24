@@ -10,6 +10,7 @@ import (
 
 	awstransform "github.com/sufield/stave/internal/adapters/aws/transform"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 func run(cmd *cobra.Command, o *options) error {
@@ -106,7 +107,7 @@ func readRawDir(dir string) (map[string][]byte, error) {
 		if e.IsDir() || !strings.HasSuffix(e.Name(), ".json") {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(dir, e.Name())) //nolint:gosec // dir is a user-provided input path
+		b, err := fsutil.ReadFileLimited(filepath.Join(dir, e.Name()))
 		if err != nil {
 			return nil, fmt.Errorf("read %s: %w", e.Name(), err)
 		}

@@ -3,7 +3,6 @@ package forgecmd
 import (
 	"bytes"
 	"fmt"
-	"os"
 
 	"gopkg.in/yaml.v3"
 
@@ -59,7 +58,7 @@ func loadControlIDs(dir string) map[kernel.ControlID]struct{} {
 
 	ids := make(map[kernel.ControlID]struct{}, len(paths))
 	for _, p := range paths {
-		data, readErr := os.ReadFile(fsutil.CleanUserPath(p))
+		data, readErr := fsutil.ReadFileLimited(fsutil.CleanUserPath(p))
 		if readErr != nil {
 			continue
 		}

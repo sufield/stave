@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"io/fs"
 	"log/slog"
-	"os"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -83,7 +83,7 @@ func (p *Policy) DeadlineHoursFor(severity string) float64 {
 
 // LoadFromFile reads an SLA policy from a local YAML file.
 func LoadFromFile(path string) (*Policy, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // user-specified path
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("read sla policy %q: %w", path, err)
 	}

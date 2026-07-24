@@ -119,7 +119,7 @@ func readInput(path string) ([]byte, error) {
 		}
 		return data, nil
 	}
-	data, err := io.ReadAll(os.Stdin)
+	data, err := fsutil.LimitedReadAll(os.Stdin, "stdin")
 	if err != nil {
 		return nil, fmt.Errorf("read stdin: %w", err)
 	}

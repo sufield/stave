@@ -18,7 +18,7 @@ import (
 // properties the control's predicate references) under outDir, and returns the
 // status output. It is the library entry point behind `stave forge scaffold`.
 func Scaffold(controlPath, snapshotPath, outDir string) ([]byte, error) {
-	data, err := os.ReadFile(fsutil.CleanUserPath(controlPath)) //nolint:gosec // user path
+	data, err := fsutil.ReadFileLimited(fsutil.CleanUserPath(controlPath))
 	if err != nil {
 		return nil, fmt.Errorf("read control: %w", err)
 	}

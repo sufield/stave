@@ -13,6 +13,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/kernel"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // VerifyResult holds the outcome of a bundle integrity check.
@@ -107,9 +108,13 @@ func extractTarGz(data []byte) (map[string][]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("read tar entry: %w", err)
 		}
-		content, err := io.ReadAll(tr)
+		limited := io.LimitReader(tr, fsutil.DefaultMaxInputFileBytes+1)
+		content, err := io.ReadAll(limited)
 		if err != nil {
 			return nil, fmt.Errorf("read %s: %w", hdr.Name, err)
+		}
+		if int64(len(content)) > fsutil.DefaultMaxInputFileBytes {
+			return nil, fmt.Errorf("tar entry %s exceeds %d MB size limit", hdr.Name, fsutil.DefaultMaxInputFileBytes>>20)
 		}
 		files[hdr.Name] = content
 	}

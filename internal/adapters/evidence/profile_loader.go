@@ -4,11 +4,11 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"os"
 	"path/filepath"
 	"strings"
 
 	coreevidence "github.com/sufield/stave/internal/core/evidence"
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
 
@@ -112,7 +112,7 @@ func LoadProfile(id string) (*coreevidence.FrameworkProfile, error) {
 
 // LoadProfileFromFile loads a custom framework profile from a YAML file.
 func LoadProfileFromFile(path string) (*coreevidence.FrameworkProfile, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // user-specified path
+	data, err := fsutil.ReadFileLimited(path)
 	if err != nil {
 		return nil, fmt.Errorf("read profile %s: %w", path, err)
 	}

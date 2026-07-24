@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
@@ -34,7 +33,7 @@ type fixtureResource struct {
 func Test(controlPath, passFixture, failFixture, snapshotPath string, verbose bool) ([]byte, error) {
 	start := time.Now()
 
-	data, err := os.ReadFile(fsutil.CleanUserPath(controlPath)) //nolint:gosec // user path
+	data, err := fsutil.ReadFileLimited(fsutil.CleanUserPath(controlPath))
 	if err != nil {
 		return nil, fmt.Errorf("read control: %w", err)
 	}
@@ -139,7 +138,7 @@ func Test(controlPath, passFixture, failFixture, snapshotPath string, verbose bo
 }
 
 func loadFixture(path string) ([]asset.Asset, error) {
-	data, err := os.ReadFile(fsutil.CleanUserPath(path)) //nolint:gosec // user path
+	data, err := fsutil.ReadFileLimited(fsutil.CleanUserPath(path))
 	if err != nil {
 		return nil, fmt.Errorf("read fixture %s: %w", path, err)
 	}

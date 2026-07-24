@@ -5,11 +5,11 @@ import (
 	"cmp"
 	"context"
 	"fmt"
-	"os"
 	"slices"
 	"strings"
 	"text/tabwriter"
 
+	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
 	"gopkg.in/yaml.v3"
 )
@@ -67,7 +67,7 @@ func RenderCatalogGaps(ctx context.Context, opts CatalogGapsOptions) ([]byte, er
 		return nil, fmt.Errorf("checklist file is required: %w", ErrInvalidInput)
 	}
 
-	data, err := os.ReadFile(opts.ChecklistPath)
+	data, err := fsutil.ReadFileLimited(opts.ChecklistPath)
 	if err != nil {
 		return nil, fmt.Errorf("read checklist %q: %w", opts.ChecklistPath, err)
 	}

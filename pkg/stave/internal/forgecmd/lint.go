@@ -103,7 +103,7 @@ func LintWithFormat(controlPath string, semantic, strict bool, format string) ([
 func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintResult {
 	result := lintResult{ControlID: filepath.Base(path)}
 
-	data, err := os.ReadFile(fsutil.CleanUserPath(path)) //nolint:gosec // user path
+	data, err := fsutil.ReadFileLimited(fsutil.CleanUserPath(path))
 	if err != nil {
 		result.Errors = append(result.Errors, "cannot read file: "+err.Error())
 		return result

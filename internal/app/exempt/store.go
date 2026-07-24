@@ -178,7 +178,7 @@ type AuditEvent struct {
 
 // Load reads an acceptance file from disk. Returns empty file if not found.
 func Load(path string) (*AcceptanceFile, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // user-specified path
+	data, err := fsutil.ReadFileLimited(path)
 	if os.IsNotExist(err) {
 		return &AcceptanceFile{SchemaVersion: "1"}, nil
 	}

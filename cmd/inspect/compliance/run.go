@@ -55,7 +55,7 @@ func extractCheckIDs(raw []byte) ([]string, error) { //nolint:unparam // error k
 
 func readInput(file string, stdin io.Reader) ([]byte, error) {
 	if file == "" {
-		data, err := io.ReadAll(stdin)
+		data, err := fsutil.LimitedReadAll(stdin, "stdin")
 		if err != nil {
 			return nil, fmt.Errorf("read stdin: %w", err)
 		}

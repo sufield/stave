@@ -17,6 +17,7 @@ import (
 	"github.com/sufield/stave/internal/app/auditbundle"
 	appexempt "github.com/sufield/stave/internal/app/exempt"
 	"github.com/sufield/stave/internal/core/report"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // EvidenceBundleResult carries the assembled evidence bundle bytes (and
@@ -195,7 +196,7 @@ func scanSnapshotAttestations(dir string) []evidence.SnapshotProvenance {
 			continue
 		}
 		path := filepath.Join(dir, entry.Name())
-		data, readErr := os.ReadFile(path) //nolint:gosec // user-specified dir
+		data, readErr := fsutil.ReadFileLimited(path)
 		if readErr != nil {
 			continue
 		}

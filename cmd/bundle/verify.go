@@ -3,7 +3,6 @@ package bundle
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -54,7 +53,7 @@ Exit Codes:
 }
 
 func runVerify(stdout io.Writer, bundlePath, keyPath string, requireSignature bool) error {
-	bundleData, err := os.ReadFile(fsutil.CleanUserPath(bundlePath)) //nolint:gosec // user-specified bundle path
+	bundleData, err := fsutil.ReadFileLimited(fsutil.CleanUserPath(bundlePath))
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read bundle: %w", err)}
 	}

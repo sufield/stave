@@ -12,13 +12,13 @@ package expand
 import (
 	"cmp"
 	"encoding/json"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // FilterByArchetype returns controls whose Archetype matches id,
@@ -104,7 +104,7 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 
 	have := make(map[string]struct{})
 	for _, f := range files {
-		data, readErr := os.ReadFile(filepath.Clean(f)) //nolint:gosec // CLI tool reads user-provided observation paths.
+		data, readErr := fsutil.ReadFileLimited(filepath.Clean(f))
 		if readErr != nil {
 			continue
 		}
