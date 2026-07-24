@@ -1,0 +1,65 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.TGW.DEFAULTRT.001
+name: Transit Gateway Uses Default Route Table for All Attachments
+description: >
+  All Transit Gateway VPC attachments are associated with the
+  default route table. A single shared route table means every
+  attached VPC can route to every other — the TGW is a flat
+  network bridge. Segmented route tables (one per security zone)
+  are the standard pattern for isolating production, staging,
+  development, and shared-services VPCs from each other while
+  allowing controlled cross-zone communication through explicit
+  static routes.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_transit_gateway
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.tgw.default_route_table_association
+  - network.tgw.route_table_count
+remediation:
+  description: >
+    Transit Gateway associates all VPC attachments with the default
+    route table. Network segmentation between environments is absent
+    at the TGW layer.
+  action: >
+    Create per-zone route tables (e.g., prod, staging, shared-services).
+    Disable default route table association on the TGW. Associate each
+    VPC attachment with the route table for its security zone. Configure
+    cross-zone routes only where required.
+  example: |
+    {
+      "network": {
+        "kind": "transit_gateway",
+        "tgw": {
+          "default_route_table_association": false,
+          "route_table_count": 3
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: transit_gateway
+    - field: properties.network.tgw.default_route_table_association
+      op: eq
+      value: true

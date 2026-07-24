@@ -1,0 +1,56 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-24T12:00:00Z",
+  "source": {
+    "type": "aws",
+    "account_id": "111122223333",
+    "region": "us-east-1"
+  },
+  "assets": [
+    {
+      "id": "tgw-0abc1234567890def",
+      "type": "aws_transit_gateway",
+      "name": "corp-shared-tgw",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway",
+          "tgw": {
+            "auto_accept_shared_attachments": true,
+            "flow_logs_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "tgw-rtb-0abc1234567890def",
+      "type": "aws_transit_gateway_route_table",
+      "name": "default-rt",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway_route_table",
+          "tgw": {
+            "id": "tgw-0abc1234567890def",
+            "route_table_id": "tgw-rtb-0abc1234567890def",
+            "all_to_all_routing": true,
+            "has_blackhole_routes": false,
+            "propagation_enabled": true,
+            "attached_vpc_count": 6
+          }
+        }
+      }
+    },
+    {
+      "id": "tgw-attach-0abc1234567890def",
+      "type": "aws_transit_gateway_attachment",
+      "name": "prod-vpc-attachment",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway_attachment",
+          "tgw": {
+            "attachment_appears_isolated": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.TGW.AUTOACCEPT.001
+name: Transit Gateway Auto-Accepts VPC Attachment Requests
+description: >
+  Transit Gateway has AutoAcceptSharedAttachments enabled.
+  Any VPC in a shared account can attach to the TGW without
+  approval. A rogue or compromised account in an AWS
+  Organization can attach its VPC to the shared TGW and gain
+  network reachability to every other attached VPC. Disabling
+  auto-accept forces manual or programmatic approval of each
+  attachment — the operator decides which VPCs join the
+  network fabric.
+domain: exposure
+severity: medium
+compliance:
+  cis_aws_v3.0: "5.5"
+  nist_800_53_r5: "SC-7, AC-3"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.1, CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_transit_gateway
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.tgw.auto_accept_shared_attachments
+remediation:
+  description: >
+    Transit Gateway automatically accepts VPC attachment requests
+    from shared accounts. Unapproved VPCs can join the network.
+  action: >
+    Disable AutoAcceptSharedAttachments on the Transit Gateway.
+    Approve attachment requests through a change-management process
+    or an automation pipeline that validates the requesting account
+    and VPC before accepting.
+  example: |
+    {
+      "network": {
+        "kind": "transit_gateway",
+        "tgw": {
+          "auto_accept_shared_attachments": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: transit_gateway
+    - field: properties.network.tgw.auto_accept_shared_attachments
+      op: eq
+      value: true
