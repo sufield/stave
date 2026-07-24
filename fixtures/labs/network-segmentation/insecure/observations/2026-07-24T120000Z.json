@@ -1,22 +1,20 @@
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-07-24T12:00:00Z",
-  "source": {
-    "type": "aws",
-    "account_id": "111122223333",
-    "region": "us-east-1"
-  },
+  "source": "deployed",
   "assets": [
     {
       "id": "tgw-0abc1234567890def",
       "type": "aws_transit_gateway",
-      "name": "corp-shared-tgw",
+      "vendor": "aws",
       "properties": {
         "network": {
           "kind": "transit_gateway",
           "tgw": {
             "auto_accept_shared_attachments": true,
-            "flow_logs_enabled": false
+            "flow_logs_enabled": false,
+            "default_route_table_association": true,
+            "route_table_count": 1
           }
         }
       }
@@ -24,7 +22,7 @@
     {
       "id": "tgw-rtb-0abc1234567890def",
       "type": "aws_transit_gateway_route_table",
-      "name": "default-rt",
+      "vendor": "aws",
       "properties": {
         "network": {
           "kind": "transit_gateway_route_table",
@@ -42,7 +40,7 @@
     {
       "id": "tgw-attach-0abc1234567890def",
       "type": "aws_transit_gateway_attachment",
-      "name": "prod-vpc-attachment",
+      "vendor": "aws",
       "properties": {
         "network": {
           "kind": "transit_gateway_attachment",

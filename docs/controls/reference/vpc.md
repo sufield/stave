@@ -1401,6 +1401,21 @@ A VPC whose tags or name signal network isolation (keywords such as "isolated", 
 
 ---
 
+### CTL.VPC.TGW.AUTOACCEPT.001
+
+**Transit Gateway Auto-Accepts VPC Attachment Requests**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; nist_800_53_r5: SC-7, AC-3; pci_dss_v4.0: 1.2.1; soc2: CC6.1, CC6.6;
+
+Transit Gateway has AutoAcceptSharedAttachments enabled. Any VPC in a shared account can attach to the TGW without approval. A rogue or compromised account in an AWS Organization can attach its VPC to the shared TGW and gain network reachability to every other attached VPC. Disabling auto-accept forces manual or programmatic approval of each attachment — the operator decides which VPCs join the network fabric.
+
+**Remediation:** Disable AutoAcceptSharedAttachments on the Transit Gateway. Approve attachment requests through a change-management process or an automation pipeline that validates the requesting account and VPC before accepting.
+
+---
+
 ### CTL.VPC.TGW.BLACKHOLE.001
 
 **Transit Gateway Has Blackhole Routes**
@@ -1413,6 +1428,21 @@ A VPC whose tags or name signal network isolation (keywords such as "isolated", 
 Transit Gateway route table contains blackhole routes — destinations where traffic is silently dropped with no error returned. Blackhole routes typically arise when a VPC attachment is deleted but the route persists, or when a route is intentionally added to block a CIDR. Unintentional blackholes follow the "everything appears to work" failure pattern: applications experience timeouts rather than errors, no ICMP unreachable is returned, nothing is logged for the dropped traffic. Troubleshooting is difficult because the network layer reports no failure.
 
 **Remediation:** Audit each blackhole route. For routes that reference deleted attachments, delete the stale route so traffic falls through to the correct next hop (or returns a routing error, which is troubleshootable). For intentional blocks, document the reason and consider moving the block to a security group or Network Firewall rule where it will produce a log entry.
+
+---
+
+### CTL.VPC.TGW.DEFAULTRT.001
+
+**Transit Gateway Uses Default Route Table for All Attachments**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+All Transit Gateway VPC attachments are associated with the default route table. A single shared route table means every attached VPC can route to every other — the TGW is a flat network bridge. Segmented route tables (one per security zone) are the standard pattern for isolating production, staging, development, and shared-services VPCs from each other while allowing controlled cross-zone communication through explicit static routes.
+
+**Remediation:** Create per-zone route tables (e.g., prod, staging, shared-services). Disable default route table association on the TGW. Associate each VPC attachment with the route table for its security zone. Configure cross-zone routes only where required.
 
 ---
 
