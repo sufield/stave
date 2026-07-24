@@ -9,7 +9,7 @@
 #   fp   : tg-shared via alb-1 AND alb-2, both auth+ip+waf           -> CONSISTENT   (PASS)
 #   fn   : i-abc in tg-app (auth rule) AND tg-catchall (default rule, no auth),
 #          different target groups, SAME instance, same listener     -> INCONSISTENT (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

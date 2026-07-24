@@ -7,7 +7,7 @@
 #   fp      : break-glass role with the shell action                  -> NONE     (PASS)
 #   fn_cicd : CI/CD role, lambda:* via managed policy        -> CRITICAL (FAIL)
 #   fn_agent: bedrock agent role with explicit shell action           -> CRITICAL (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"; HERE=$(pwd)
 
 build_facts() {

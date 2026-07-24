@@ -12,7 +12,7 @@
 # achieved. Z3 says "exists / not exists"; Soufflé says "how
 # wide?" with a number.
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

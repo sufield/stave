@@ -8,7 +8,7 @@
 # SAT     → a forbidden state is reachable; Z3 returns a model showing how.
 # UNSAT   → the forbidden state is provably unreachable from the exported facts.
 # unknown → solver gave up (rare with our schema; investigate timeouts).
-set -euo pipefail
+set -uo pipefail
 
 SMT2_FILE="${1:?Usage: run.sh <facts.smt2>}"
 

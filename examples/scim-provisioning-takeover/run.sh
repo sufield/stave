@@ -8,7 +8,7 @@
 #   fp   : authed endpoint + scoped handler + secured token                       -> NONE     (PASS)
 #   fn   : AWS_IAM auth but Principal:* resource policy (effectively public) +
 #          overpriv handler + secret with no resource policy                      -> TAKEOVER (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

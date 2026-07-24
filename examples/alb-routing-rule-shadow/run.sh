@@ -9,7 +9,7 @@
 #   fp   : p10 "/api/*" (no auth) before p20 "/admin/*" (auth)  -> CLEAR      (PASS)
 #   fn   : p5 host-wildcard, NO path (no auth) before p15 "/admin*" (auth)
 #          no-path normalizes to "" = /*, subsumes everything   -> SHADOWED   (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

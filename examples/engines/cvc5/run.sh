@@ -8,7 +8,7 @@
 #
 # Usage:
 #   bash run.sh <facts.smt2>
-set -euo pipefail
+set -uo pipefail
 
 SMT2_FILE="${1:?Usage: run.sh <facts.smt2>}"
 

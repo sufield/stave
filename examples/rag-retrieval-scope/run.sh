@@ -6,7 +6,7 @@
 #   vuln : wildcard prefix hr-* overmatches hr-private-records (non-source)   -> EXCEEDS (FAIL)
 #   fp   : retrieval scoped exactly to the declared source                    -> CONTAINED (PASS)
 #   fn   : non-source bucket policy grants the retrieval role (resource-based) -> EXCEEDS (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

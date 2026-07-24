@@ -9,7 +9,7 @@
 #   fp   : alb-1 (gated) -> i-abc,i-def ; nlb-1 -> i-ghi,i-jkl        -> CLEAN   (PASS)
 #   fn   : alb-1 (gated) -> i-abc (via TG) ; nlb-1 -> i-abc (IP target
 #          resolved to the instance)                                  -> BYPASS  (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

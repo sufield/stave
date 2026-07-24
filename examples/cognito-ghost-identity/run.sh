@@ -8,7 +8,7 @@
 #   vuln : external IdPs + no PreSignUp + PartnerIdP sensitive mapping -> GHOST (FAIL)
 #   fp   : external IdP + PreSignUp PRESENT + sensitive mapping        -> NONE  (PASS)
 #   fn   : two IdPs, only PartnerIdP has sensitive mapping, no gate    -> GHOST (FAIL, names PartnerIdP)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

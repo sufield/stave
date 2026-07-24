@@ -12,7 +12,7 @@
 # "$50 to block a $300 attack" instead of "fix this critical
 # finding."
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

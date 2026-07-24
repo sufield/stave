@@ -9,7 +9,7 @@
 # broadened-allow (both still scope by VPC, not VPC endpoint),
 # unsat on remediated.
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root="$script_dir"

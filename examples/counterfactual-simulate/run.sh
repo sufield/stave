@@ -11,7 +11,7 @@
 #
 # This example replaces `internal/app/simulate/` per the
 # core-audit thin-core contract.
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

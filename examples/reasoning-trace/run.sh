@@ -10,7 +10,7 @@
 #   cd demos/nodes-2026 && make demo-no-graph
 #   bash stave/examples/reasoning-trace/run.sh
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

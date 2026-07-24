@@ -13,7 +13,7 @@
 # triple per parsed pair, and the query asks whether any identity
 # carries enforce_prefix=false.
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root="$script_dir"

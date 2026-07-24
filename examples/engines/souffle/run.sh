@@ -10,7 +10,7 @@
 #
 # Usage:
 #   bash run.sh <facts.jsonl> [rule-file.dl]
-set -euo pipefail
+set -uo pipefail
 
 JSONL_FILE="${1:?Usage: run.sh <facts.jsonl> [rule-file.dl]}"
 RULE_FILE="${2:-reachability.dl}"

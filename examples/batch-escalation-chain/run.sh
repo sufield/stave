@@ -8,7 +8,7 @@
 #   fp          : Fargate CE (no EC2 env, no IMDS) + job combo               -> NONE  (PASS)
 #   fn-ecs      : EC2 CE + IMDS + job combo + instance role has only ecs:*   -> CHAIN (FAIL)
 #   fn-passrole : EC2 CE + IMDS + job combo + instance role has iam:PassRole -> CHAIN (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

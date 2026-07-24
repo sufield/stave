@@ -2,7 +2,7 @@
 # Runs external-forecast and verifies it matches core.
 # Prerequisites: python3, go.
 
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 
 # 1. Python computes the forecast.

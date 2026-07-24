@@ -8,7 +8,7 @@
 #   run.sh                  # default fixture: cognito-iteration2-unauth/remediated-config
 #   run.sh <safe-obs-dir>   # any obs dir with bool-bearing assets
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

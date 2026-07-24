@@ -28,7 +28,7 @@
 # (the bucket is intentionally public). The composition is
 # the security property; the witness names the path.
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

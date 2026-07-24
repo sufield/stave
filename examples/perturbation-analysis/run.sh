@@ -6,7 +6,7 @@
 #   stave export-controls          → invariants.json
 #   impact.py obs pair + invariants  → impact.json (regressions / improvements)
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

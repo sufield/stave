@@ -8,7 +8,7 @@
 #   obs_to_facts.py + observations/              →  facts.smt2
 #   z3 -in (cat facts.smt2 query.smt2)           →  sat / unsat per control
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

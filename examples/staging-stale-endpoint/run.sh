@@ -17,7 +17,7 @@
 # solver-decidable (dormancy is not projected as a raw fact); see the
 # query header and SMT-QUERY-GAPS.md.
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root="$script_dir"

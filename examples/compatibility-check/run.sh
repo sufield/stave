@@ -8,7 +8,7 @@
 #   run.sh                        # runs both bundled fixtures
 #   run.sh path/to/requirements.yaml
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

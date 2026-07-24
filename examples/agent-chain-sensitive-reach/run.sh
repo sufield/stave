@@ -8,7 +8,7 @@
 #   vuln : agent -> assume -> pipeline-role -> secretsmanager            -> PATH (FAIL)
 #   fp   : agent -> assume -> readonly-role -> public bucket (not sensitive) -> NONE (PASS)
 #   fn   : sagemaker -> assume -> etl -passrole-> admin-lambda -> kms key -> PATH (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

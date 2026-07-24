@@ -13,7 +13,7 @@
 # remediated-config (specific role only, replication actions
 # only).
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root="$script_dir"

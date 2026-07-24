@@ -17,7 +17,7 @@
 #   to the venv with clingo installed; default is
 #   .tools-venv at the repo root.
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)

@@ -6,7 +6,7 @@
 #   vuln : retrieval has s3:* (wildcard) embedding lacks                  -> VIOLATION (FAIL)
 #   fp   : retrieval read-only subset + bedrock:Retrieve only             -> NONE      (PASS)
 #   fn   : retrieval has secretsmanager via an attached managed policy    -> VIOLATION (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

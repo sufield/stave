@@ -8,7 +8,7 @@
 #   vuln : EC2 public IP -> role with direct secretsmanager access      -> PATH (FAIL)
 #   fp   : EC2 private IP only -> same secrets access (not internet)     -> NONE (PASS)
 #   fn   : EC2 public IP -> assume -> intermediate role -> secret (2-hop) -> PATH (FAIL)
-set -euo pipefail
+set -uo pipefail
 cd "$(dirname "$0")"
 HERE=$(pwd)
 

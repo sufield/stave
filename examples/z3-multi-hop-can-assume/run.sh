@@ -16,7 +16,7 @@
 # fewer than 20 assume-edge facts — so cvc5's finite-model-find
 # decides under tlimit.
 
-set -euo pipefail
+set -uo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 example_root=$(cd "$script_dir/.." && pwd)
