@@ -1,0 +1,25 @@
+id: elasticache_unencrypted_no_config
+description: >
+  ElastiCache cluster has no at-rest encryption AND AWS Config
+  is not recording. Without at-rest encryption, cached data
+  (sessions, credentials, PII) is stored in plaintext on the
+  cluster nodes and in any snapshots. Without Config recording,
+  the encryption posture of the cluster is not tracked — there
+  is no Config rule to flag the missing encryption and no
+  configuration timeline to detect when encryption was disabled
+  or never enabled. The combination means plaintext data at rest
+  with no compliance visibility into the misconfiguration.
+  Either control alone mitigates: enabling encryption protects
+  the data; enabling Config detects the missing encryption and
+  can trigger automated remediation.
+controls:
+  - CTL.ELASTICACHE.ENCRYPT.REST.001
+  - CTL.CONFIG.ENABLED.001
+escalation_threshold: 2
+compound_severity: high
+scope: global
+preconditions:
+  - data_access
+postconditions:
+  - data_exfiltration
+implicit_dependencies: []

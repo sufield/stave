@@ -1,0 +1,53 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-15T13:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:acm:us-east-1:111111111111:certificate/silo-test-cert",
+      "type": "aws_acm_certificate",
+      "vendor": "aws",
+      "properties": {
+        "certificate": {
+          "kind": "imported",
+          "imported_near_expiry": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:acm:us-east-1:111111111111:acme-endpoint/silo-test-acme",
+      "type": "aws_acm_acme_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "acm_acme_endpoint",
+          "acme_endpoint": {
+            "wildcard_policy": "DENY"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:111111111111:recorder/silo-test-acm",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "recorder",
+          "recording_enabled": true
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111111111111:trail/silo-test-acm",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "multi_region_enabled": true
+        }
+      }
+    }
+  ]
+}

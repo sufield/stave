@@ -1,0 +1,53 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-15T13:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "projects/silo-test/buckets/public-bucket",
+      "type": "gcp_storage_bucket",
+      "vendor": "gcp",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "access": {
+            "public_read": false
+          },
+          "controls": {
+            "uniform_access_enabled": true
+          }
+        }
+      }
+    },
+    {
+      "id": "projects/silo-test/auditLogConfig/allServices",
+      "type": "gcp_resource",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "monitoring": {
+            "kind": "audit_log_config",
+            "audit": {
+              "all_services_enabled": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "projects/silo-test/iamBindings/ghost-binding",
+      "type": "gcp_resource",
+      "vendor": "gcp",
+      "properties": {
+        "gcp": {
+          "identity": {
+            "kind": "iam_binding",
+            "binding": {
+              "has_deleted_member": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

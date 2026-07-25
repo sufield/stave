@@ -1,0 +1,64 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-15T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cloudformation:us-east-1:111111111111:stack/silo-test-stack/aaa",
+      "type": "aws_cloudformation_stack",
+      "vendor": "aws",
+      "properties": {
+        "cfn": {
+          "template_source": {
+            "kind": "s3_bucket",
+            "allows_untrusted_write": true
+          }
+        },
+        "governance": {
+          "kind": "cloudformation_stack",
+          "config": {
+            "termination_protection_enabled": false,
+            "has_stack_policy": false
+          }
+        },
+        "infrastructure": {
+          "drift_detection_enabled": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111111111111:trail/silo-test-cfn",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "multi_region_enabled": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:111111111111:recorder/silo-test-cfn",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "recorder",
+          "recording_enabled": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111111111111:user/silo-test-escalation",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "policies": {
+            "has_self_modify": true
+          }
+        }
+      }
+    }
+  ]
+}

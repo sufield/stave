@@ -1,0 +1,27 @@
+id: cloudformation_template_injection_unaudited
+description: >
+  S3 bucket hosting CloudFormation templates allows untrusted
+  write access AND CloudTrail is not enabled. The Pacu
+  cfn__resource_injection module exploits exactly this: an
+  attacker with PutObject on the template bucket injects a
+  malicious resource (IAM role, Lambda function, EC2 instance)
+  into the template. On the next stack update, CloudFormation
+  deploys the injected resource with the stack's service role
+  permissions. Without CloudTrail, the PutObject call to the
+  template bucket AND the UpdateStack API call are both
+  invisible — the supply chain compromise leaves no audit
+  trail. Either control alone mitigates: restricting template
+  bucket write access blocks the injection; enabling CloudTrail
+  records the suspicious PutObject and UpdateStack calls.
+controls:
+  - CTL.CLOUDFORMATION.TEMPLATE.S3.INJECTION.001
+  - CTL.CLOUDTRAIL.ENABLED.001
+escalation_threshold: 2
+compound_severity: critical
+scope: global
+preconditions:
+  - s3_data_access
+postconditions:
+  - supply_chain_compromise
+  - audit_trail_destroyed
+implicit_dependencies: []

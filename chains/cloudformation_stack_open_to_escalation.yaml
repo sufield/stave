@@ -1,0 +1,27 @@
+id: cloudformation_stack_open_to_escalation
+description: >
+  CloudFormation stack has no stack policy AND an IAM principal
+  has privilege escalation capability via self-modifying policy.
+  Without a stack policy, any principal with UpdateStack
+  permission can modify or replace any resource in the stack —
+  there is no resource-level protection. With an IAM escalation
+  path (a principal that can modify its own permissions), an
+  attacker who compromises a low-privilege principal escalates
+  to UpdateStack and then modifies any resource in the stack
+  without restriction. The combination chains IAM escalation
+  to unrestricted infrastructure modification. Either control
+  alone mitigates: a stack policy limits which resources can be
+  modified even with UpdateStack access; closing the IAM
+  escalation path prevents the attacker from reaching
+  UpdateStack in the first place.
+controls:
+  - CTL.CLOUDFORMATION.STACKPOLICY.001
+  - CTL.IAM.POLICY.ESCALATION.001
+escalation_threshold: 2
+compound_severity: critical
+scope: global
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - control_plane_code_execution
+implicit_dependencies: []

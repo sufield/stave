@@ -1,0 +1,27 @@
+id: acm_wildcard_issuance_unaudited
+description: >
+  ACM ACME endpoint allows wildcard certificate issuance AND
+  CloudTrail is not enabled. A wildcard certificate
+  (*.example.com) covers every subdomain — one compromised
+  private key or one leaked certificate enables impersonation
+  of any service under the domain. With ACME wildcard issuance
+  enabled, any authorized ACME client can request wildcard
+  certificates programmatically. Without CloudTrail, the
+  RequestCertificate and IssueCertificate API calls are not
+  logged — unauthorized wildcard certificate issuance leaves
+  no audit trail. The combination is unrestricted wildcard
+  cert issuance with invisible certificate operations. Either
+  control alone mitigates: disabling wildcard issuance limits
+  certificates to specific subdomains; enabling CloudTrail
+  records all certificate issuance for detection and forensics.
+controls:
+  - CTL.ACM.ACME.WILDCARD.001
+  - CTL.CLOUDTRAIL.ENABLED.001
+escalation_threshold: 2
+compound_severity: high
+scope: global
+preconditions:
+  - credential_access
+postconditions:
+  - data_in_transit_exposure
+implicit_dependencies: []

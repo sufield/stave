@@ -1,0 +1,25 @@
+id: cloudformation_unprotected_unrecorded
+description: >
+  CloudFormation stack has no termination protection AND AWS
+  Config is not recording. Without termination protection, any
+  principal with cloudformation:DeleteStack permission can
+  destroy the entire stack and all its resources in one API
+  call. Without Config recording, the resource configuration
+  history is not preserved — there is no timeline to reconstruct
+  what was deployed before the deletion. The combination means
+  infrastructure can be destroyed AND there is no configuration
+  record to rebuild from. Either control alone mitigates:
+  termination protection prevents accidental or unauthorized
+  deletion; Config recording preserves the configuration history
+  for forensics and reconstruction.
+controls:
+  - CTL.CLOUDFORMATION.TERMINATION.001
+  - CTL.CONFIG.ENABLED.001
+escalation_threshold: 2
+compound_severity: high
+scope: global
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_destruction
+implicit_dependencies: []

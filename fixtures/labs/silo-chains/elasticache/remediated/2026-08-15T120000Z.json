@@ -1,0 +1,60 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-15T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:elasticache:us-east-1:111111111111:cluster:silo-test-redis",
+      "type": "aws_elasticache_cluster",
+      "vendor": "aws",
+      "properties": {
+        "cache": {
+          "kind": "cluster",
+          "auth_token_enabled": true,
+          "encryption": {
+            "at_rest_enabled": true,
+            "in_transit_enabled": true
+          },
+          "network": {
+            "security_group_broad_ingress": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:111111111111:vpc/vpc-silo-test",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "flow_log": {
+            "enabled": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111111111111:trail/silo-test",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "multi_region_enabled": true
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:111111111111:recorder/silo-test",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "recorder",
+          "recording_enabled": true
+        }
+      }
+    }
+  ]
+}
