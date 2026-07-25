@@ -24,7 +24,81 @@
     "violations": 1
   },
   "status": "NON_COMPLIANT",
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "sha256:da00d85d52e88d30",
+      "control_id": "CTL.EXP.RECURRENCE.001",
+      "control_name": "Unsafe Exposure Recurrence Limit",
+      "control_description": "An asset must not have too many unsafe episodes within a rolling window.",
+      "asset_id": "res:aws:s3:bucket:recurring-bucket",
+      "asset_type": "storage_bucket",
+      "asset_vendor": "aws",
+      "source": {
+        "file": "main.tf",
+        "line": 42
+      },
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "exposure_window_count": 2,
+        "window_days": 90,
+        "recurrence_threshold": 2,
+        "first_exposure_window_at": "2026-01-01T00:00:00Z",
+        "last_exposure_window_at": "2026-01-11T00:00:00Z",
+        "temporal_risk": "Asset non-compliant for 24 hours (SLA: 0 hours). Exposed since 2026-01-10T00:00:00Z."
+      },
+      "posture_drift": {
+        "pattern": "intermittent",
+        "exposure_window_count": 2
+      },
+      "remediation": {
+        "description": "Resource configuration deviates from security baseline.",
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "fix_plan": {
+        "id": "fix-a01eaf73fdbdb5d7",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:recurring-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "exploitability": "reachable",
+      "exposure_score": 10,
+      "score_breakdown": {
+        "base_score": 10,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1,
+        "days_blind": 0
+      },
+      "remediation_context": {
+        "asset": {
+          "id": "res:aws:s3:bucket:recurring-bucket",
+          "type": "storage_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.EXP.RECURRENCE.001",
+          "control_name": "Unsafe Exposure Recurrence Limit"
+        },
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "classification": "aggregate_check",
+      "contributing_fact_ids": [
+        "a712aabe8c02",
+        "1a578b15e7c6",
+        "5cb3c8d5ef46",
+        "da0e0c6ff021",
+        "9a0040bd3dff",
+        "698c5f5bb726",
+        "9a0040bd3dff",
+        "698c5f5bb726"
+      ]
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:8f6f6c9b92ce88f1",
@@ -36,6 +110,24 @@
       ],
       "consolidated_score": 10,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "res:aws:s3:bucket:recurring-bucket",
+      "asset_type": "storage_bucket",
+      "fix_plan": {
+        "id": "fix-a01eaf73fdbdb5d7",
+        "target": {
+          "asset_id": "res:aws:s3:bucket:recurring-bucket",
+          "asset_type": "storage_bucket"
+        },
+        "action": "Review the misconfigured properties and revert to compliant values."
+      },
+      "contributing_controls": [
+        "CTL.EXP.RECURRENCE.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
