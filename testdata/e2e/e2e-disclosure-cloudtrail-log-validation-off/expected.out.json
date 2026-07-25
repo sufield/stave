@@ -35,7 +35,157 @@
       "threshold_hours": 168
     }
   ],
-  "findings": [],
+  "findings": [
+    {
+      "finding_id": "sha256:c7b55217c33dcfa6",
+      "control_id": "CTL.CLOUDTRAIL.LOG.VALIDATION.001",
+      "control_name": "CloudTrail Log File Validation Must Be Enabled",
+      "control_description": "CloudTrail log file validation must be enabled to detect whether log files have been modified or deleted after delivery to S3. Without validation, forensic investigators cannot determine if logs were tampered with.\n",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2024-08-01T00:00:00Z",
+        "last_seen_unsafe_at": "2024-08-11T00:00:00Z",
+        "unsafe_duration_hours": 12672,
+        "misconfigurations": [
+          {
+            "property": "trail.log_file_validation_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 12672 hours (SLA: 0 hours). Exposed since 2024-08-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_aws": "3.2",
+        "mitre_attack": "T1562.008",
+        "nist_800_53_r5": "AU-9"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-05"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CloudTrail log file validation is not enabled.",
+        "action": "aws cloudtrail update-trail --name \u003ctrail-name\u003e --enable-log-file-validation"
+      },
+      "fix_plan": {
+        "id": "fix-4ddda2232b9d8792",
+        "target": {
+          "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+          "asset_type": "aws_cloudtrail_trail"
+        },
+        "action": "aws cloudtrail update-trail --name org-audit-trail --enable-log-file-validation"
+      },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "ubiquiti_insider_tampering_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.SCP.CLOUDTRAIL.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.LOG.VALIDATION.001"
+          ],
+          "description": "Ubiquiti incident shape (2020): employee cloned GitHub via VPN, then altered AWS logs to hide presence and evidence. After leaking false details to a security blogger, Ubiquiti's stock lost $4B. Invariants: CloudTrail must be protected from modification by SCP, and log integrity must be verifiable. This chain fires when CloudTrail protection SCPs are absent AND critical role protection is missing.\n"
+        },
+        {
+          "chain_id": "ubiquiti_insider_tampering_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.ORG.SCP.PROTECTROLES.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.LOG.VALIDATION.001"
+          ],
+          "description": "Ubiquiti incident shape (2020): employee cloned GitHub via VPN, then altered AWS logs to hide presence and evidence. After leaking false details to a security blogger, Ubiquiti's stock lost $4B. Invariants: CloudTrail must be protected from modification by SCP, and log integrity must be verifiable. This chain fires when CloudTrail protection SCPs are absent AND critical role protection is missing.\n"
+        }
+      ],
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 12336,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 3,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 2.4465753424657537,
+        "days_blind": 528
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "trail.log_file_validation_enabled eq false",
+          "observation_key": "trail.log_file_validation_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+          "type": "aws_cloudtrail_trail",
+          "vendor": "aws",
+          "arn": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.CLOUDTRAIL.LOG.VALIDATION.001",
+          "control_name": "CloudTrail Log File Validation Must Be Enabled",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "trail.log_file_validation_enabled = false",
+              "observation_key": "trail.log_file_validation_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "trail.log_file_validation_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set trail.log_file_validation_enabled to true"
+          }
+        ],
+        "action": "aws cloudtrail update-trail --name org-audit-trail --enable-log-file-validation"
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cloudtrail"
+      ],
+      "delta": [
+        {
+          "property_label": "log file validation",
+          "property_path": "trail.log_file_validation_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "22c4f3f8e4f3",
+        "54bfd9358f76",
+        "eb27b8960c42",
+        "320fc99761e4",
+        "69200efff5a9",
+        "6ccccb8f55ae",
+        "2d77fefb8595"
+      ]
+    }
+  ],
   "near_miss_chains": [
     {
       "chain": "ubiquiti_insider_tampering_path",
@@ -71,6 +221,24 @@
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "fix_plan": {
+        "id": "fix-4ddda2232b9d8792",
+        "target": {
+          "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+          "asset_type": "aws_cloudtrail_trail"
+        },
+        "action": "aws cloudtrail update-trail --name org-audit-trail --enable-log-file-validation"
+      },
+      "contributing_controls": [
+        "CTL.CLOUDTRAIL.LOG.VALIDATION.001"
+      ],
+      "finding_count": 1
     }
   ],
   "top_exposures": [
