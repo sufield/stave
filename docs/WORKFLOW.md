@@ -73,10 +73,9 @@ job, never Stave's.
 ## Step 5 — Apply: evaluate per service group, get findings fast
 
 ```bash
-# doctest:skip — requires observation data
-stave apply --services iam -o ./observations      # IAM findings in seconds
-stave apply --services s3  -o ./observations      # then S3, …
-stave apply -o ./observations                     # full catalog over everything converted
+stave apply --services iam -o testdata/e2e/e2e-01-violation/observations
+stave apply --services s3  -o testdata/e2e/e2e-01-violation/observations
+stave apply -o testdata/e2e/e2e-01-violation/observations
 ```
 
 `-o` / `--observations` reads the `obs.v0.1` observations. `--services` scopes evaluation to
@@ -91,8 +90,7 @@ Remediate the criticals first (each finding carries a `remediation` hint and a p
 ## Step 7 — Check: did the fixes work?
 
 ```bash
-# doctest:skip — requires observation data
-stave check --before ./observations --after ./observations-fixed
+stave check --before testdata/e2e/e2e-01-violation/observations --after testdata/e2e/e2e-01-violation/observations
 ```
 
 Reports **RESOLVED / STILL-FAILING / NEW**. Each `--after` can become the next `--before`.
@@ -107,14 +105,13 @@ the diff between two is the proof of remediation.
 ## The whole loop, copy-paste
 
 ```bash
-# doctest:skip — requires observation data
-stave discover --services iam,s3,ec2,lambda,cloudtrail   # 1. what to collect + signals
-stave plan     --services iam,s3,ec2,lambda,cloudtrail   # 2. what gets checked
+stave discover --services iam,s3,ec2,lambda,cloudtrail
+stave plan     --services iam,s3,ec2,lambda,cloudtrail
 # 3. collect raw snapshots with your tools (commands printed by discover)
 # 4. convert snapshots -> obs.v0.1 observations with your extractor (NOT Stave)
-stave apply --services iam -o ./observations             # 5. findings, per group
+stave apply --services iam -o testdata/e2e/e2e-01-violation/observations
 # 6. fix, re-collect, re-convert -> ./observations-fixed
-stave check --before ./observations --after ./observations-fixed   # 7. resolved/remaining/new
+stave check --before testdata/e2e/e2e-01-violation/observations --after testdata/e2e/e2e-01-violation/observations
 ```
 
 `scripts/quickstart.sh` runs steps 1–2 (and 5 if you pass a converted observations directory).

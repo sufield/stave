@@ -14,7 +14,7 @@ external** — only conversion has a built-in default:
    resources, no extractor to write:
 
    ```bash
-   # doctest:skip — requires raw snapshot data
+   # doctest:skip — requires raw AWS CLI output
    stave transform -i raw/ -o observations/
    ```
 
@@ -29,7 +29,7 @@ observations come from an external extractor to catch mistakes before `apply`.
 ### Recommended workflow
 
 ```bash
-# doctest:skip — requires raw snapshot and observation data
+# doctest:skip — requires raw AWS CLI output and external extractor
 # Built-in path: collect raw snapshots, then convert
 stave transform -i raw/ -o my-obs/
 

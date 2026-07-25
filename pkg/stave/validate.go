@@ -73,7 +73,9 @@ func Validate(ctx context.Context, cfg ValidateConfig) (*ValidationResult, error
 	}
 
 	obsLoader := observations.NewObservationLoader()
-	ctlLoader := ctlyaml.NewControlLoader()
+	ctlLoader := ctlyaml.NewControlLoader(
+		ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()),
+	)
 	celEval, _, err := stavecel.NewPredicateEvalWithCompiler()
 	if err != nil {
 		return nil, fmt.Errorf("stave.Validate: init CEL evaluator: %w", err)

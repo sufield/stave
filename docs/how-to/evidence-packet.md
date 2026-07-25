@@ -7,33 +7,34 @@ cryptographic signature tying them together.
 ## Create a bundle
 
 ```bash
-# doctest:skip — requires observation data
+# doctest:skip — creates output directory and files
 # Run evaluation and bundle the results
 stave bundle audit \
-  --observations ./snapshots/ \
-  --output evidence-2026-Q2.tar.gz
+  --framework hipaa \
+  --period Q2-2026 \
+  --out evidence-2026-Q2
 ```
 
 ## Sign and verify
 
 ```bash
-# doctest:skip — requires observation data and key setup
+# doctest:skip — creates key files and requires snapshot
 # One-time key setup
-stave attest keygen
+stave attest keygen --out stave-attest
 
 # Sign a snapshot
-stave attest sign --observations ./snapshots/
+stave attest sign --snapshot ./snapshot.json --key stave-attest.pem
 
 # Verify a snapshot wasn't altered
-stave attest verify --observations ./snapshots/
+stave attest verify --snapshot ./snapshot.json --key stave-attest.pub
 ```
 
 ## Sanitize before sharing
 
 ```bash
-# doctest:skip — requires observation data
+# doctest:skip — requires single snapshot file, writes to stdout
 # Remove infrastructure identifiers
-stave sanitize --observations ./snapshots/ --output ./sanitized/
+stave sanitize --snapshot ./snapshot.json > sanitized.json
 ```
 
 See also: `stave bundle --help` for all bundling options.

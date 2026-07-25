@@ -6,12 +6,12 @@ assessment. Instead of assembling flags manually, pick a template.
 ## Find the right template
 
 ```bash
-# doctest:skip — recommend requires observation data
+# doctest:skip — recommend snapshot loading not yet wired
 # See which template fits your snapshot
 stave recommend --snapshot ./observations/
 
-# List all templates
-stave template list
+# List available templates
+stave template
 ```
 
 ## Built-in templates

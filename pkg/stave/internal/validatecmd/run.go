@@ -203,7 +203,9 @@ func parseParams(req Request) validateParams {
 // stave.Validate) instead of receiving cmd/cmdutil/compose factories.
 func executeValidateRun(ctx context.Context, req Request, params validateParams) (*appvalidation.Report, error) {
 	obsLoader := observations.NewObservationLoader()
-	ctlLoader := ctlyaml.NewControlLoader()
+	ctlLoader := ctlyaml.NewControlLoader(
+		ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()),
+	)
 	celEval, _, err := stavecel.NewPredicateEvalWithCompiler()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init CEL evaluator: %w", err)

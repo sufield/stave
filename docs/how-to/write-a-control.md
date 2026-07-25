@@ -5,29 +5,32 @@ Contribute a new control to the Stave catalog.
 ## Interactive scaffolding
 
 ```bash
-# doctest:skip — interactive commands
+# doctest:skip — interactive command
 # Create a new control interactively
 stave forge new
 
+# doctest:skip — requires bundle-format snapshot file
 # Preview a predicate before committing
 stave forge preview
 
 # Discover fields to write a predicate against
-stave forge paths --asset-type s3_bucket
+stave forge paths --asset-type aws_s3_bucket --snapshot snapshot-bundle.json
 ```
 
 ## Test the control
 
 ```bash
-# doctest:skip — requires a control YAML to exist
+# Lint a control definition
+stave forge lint --control controls/s3/access/CTL.S3.ACCESS.001.yaml
+```
+
+```bash
+# doctest:skip — requires specific control and fixture scaffolding
 # Scaffold pass/fail fixtures
 stave forge scaffold CTL.S3.MY_CONTROL.001
 
 # Run the test
 stave forge test CTL.S3.MY_CONTROL.001
-
-# Lint the control definition
-stave forge lint
 ```
 
 ## Guided walkthrough

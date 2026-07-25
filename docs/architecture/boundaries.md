@@ -151,9 +151,8 @@ This is correct temporal evaluation, not non-determinism.
   moving while the agent iterates.
 
   ```bash
-  # doctest:skip — requires observation data
-  stave apply --observations ./snapshots \
-      --eval-time "$(jq -r '.captured_at' snapshots/*.obs.json | sort | head -1)"
+  stave apply --observations testdata/e2e/e2e-01-violation/observations \
+      --eval-time "$(jq -r '.captured_at' testdata/e2e/e2e-01-violation/observations/*.json | sort | head -1)"
   ```
 
 ### Which controls are time-dependent

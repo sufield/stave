@@ -23,13 +23,16 @@ These YAML files drive `stave compare` and `stave compliance` output.
 ## Compliance commands
 
 ```bash
-# doctest:skip — requires observation data; compare uses --from/--to not --frameworks
+# Verify framework mapping integrity (no snapshot needed)
+stave compliance --verify-mapping
+
+# doctest:skip — compare and export require assessment JSON from stave apply
 # Check posture against a framework
-stave compliance --framework cis-aws-v3
+stave compliance --framework aicm-v1.1 --snapshot observations.json
 
 # Compare two frameworks
-stave compare --frameworks cis-aws-v3,nist-800-53
+stave compare --from hipaa --to fedramp_moderate --assessment findings.json
 
 # Export compliance evidence
-stave export compliance --framework hipaa
+stave export compliance --snapshot observations.json --profile hipaa
 ```

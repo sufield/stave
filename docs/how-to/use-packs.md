@@ -13,10 +13,8 @@ stave packs show iam
 ## Run with a pack
 
 ```bash
-# doctest:skip — requires observation data
-stave apply --pack iam --observations ./snapshots/
-stave apply --pack fedramp_moderate --observations ./snapshots/
+stave apply --pack entropy --observations testdata/e2e/e2e-01-violation/observations
+stave apply --pack quick --observations testdata/e2e/e2e-01-violation/observations
 ```
 
-54 built-in packs ship with the binary, covering individual services
-(iam, s3, lambda, cognito, …) and compliance standards (fedramp_moderate).
+Use `stave packs list` to see all available packs.

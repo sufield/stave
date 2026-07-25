@@ -1,20 +1,24 @@
 # Use Compliance Lenses
 
-Map Stave findings to compliance frameworks — HIPAA, SOC2, PCI-DSS,
-NIST 800-53, CIS, FFIEC, ISO 27001, and more.
+Map Stave findings to compliance frameworks — CSA AI Controls Matrix
+and more as frameworks are added.
+
+## Check mapping integrity
+
+```bash
+# Verify the framework mapping references real controls (no snapshot needed)
+stave compliance --verify-mapping
+```
 
 ## Check compliance posture
 
 ```bash
-# doctest:skip — requires observation data; flag names may differ from CLI
+# doctest:skip — requires observation snapshot and freshness-threshold config
 # Evaluate against a framework
-stave compliance --framework cis-aws-v3 --observations ./snapshots/
-
-# Compare two frameworks side by side
-stave compare --frameworks cis-aws-v3,nist-800-53
+stave compliance --framework aicm-v1.1 --snapshot ./snapshots/
 
 # Export evidence for auditors
-stave export compliance --framework hipaa --observations ./snapshots/
+stave export compliance --profile aicm-v1.1 --snapshot ./snapshot.json
 ```
 
 ## Available frameworks
@@ -25,7 +29,7 @@ full list with coverage details.
 ## Scorecard
 
 ```bash
-# doctest:skip — requires observation data
+# doctest:skip — requires observation snapshot
 # Posture across several frameworks at once
-stave scorecard --observations ./snapshots/
+stave scorecard --snapshot ./snapshots/
 ```

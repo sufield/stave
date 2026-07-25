@@ -5,6 +5,7 @@ import (
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
+	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/pkg/stave/internal/applycmd"
@@ -25,7 +26,7 @@ func AssessReadiness(ctx context.Context, req ReadinessRequest, enabledPacks []s
 		return observations.NewObservationLoader(), nil
 	}
 	ctlFactory := func() (appcontracts.ControlRepository, error) {
-		return ctlyaml.NewControlLoader(), nil
+		return ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc())), nil
 	}
 	extraChecks := func() []diag.Finding {
 		return packConfigDiagnostics(enabledPacks, packConfigLoadErr)
