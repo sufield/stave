@@ -5,26 +5,28 @@ Stave supports multiple output formats for different use cases.
 ## JSON (Default for `apply`)
 
 ```bash
-stave apply --controls ./controls --observations . --format json
+# doctest:skip — requires observation data
+stave apply --controls ./controls --observations ./observations --format json
 ```
 
 Structured output following the `out.v0.1` schema. Machine-readable, suitable for piping to `jq` or ingestion by other tools. Results go to stdout; errors and logs go to stderr.
 
 ```bash
 # Count violations
-stave apply --controls ./controls --observations . | jq '.summary.violations'
+stave apply --controls ./controls --observations ./observations | jq '.summary.violations'
 
 # List violated resource IDs
-stave apply --controls ./controls --observations . | jq -r '.findings[].resource_id'
+stave apply --controls ./controls --observations ./observations | jq -r '.findings[].resource_id'
 
 # Get unique violated control IDs
-stave apply --controls ./controls --observations . | jq -r '.findings[].control_id' | sort -u
+stave apply --controls ./controls --observations ./observations | jq -r '.findings[].control_id' | sort -u
 ```
 
 ## Text
 
 ```bash
-stave apply --controls ./controls --observations . --format text
+# doctest:skip — requires observation data
+stave apply --controls ./controls --observations ./observations --format text
 ```
 
 Human-readable output for terminal use. Includes color when the terminal supports it (respects `NO_COLOR` environment variable).
@@ -32,7 +34,8 @@ Human-readable output for terminal use. Includes color when the terminal support
 ## Quiet Mode
 
 ```bash
-stave apply --controls ./controls --observations . --quiet
+# doctest:skip — requires observation data
+stave apply --controls ./controls --observations ./observations --quiet
 ```
 
 Suppresses all output. Use the exit code to determine the result:
@@ -42,7 +45,7 @@ Suppresses all output. Use the exit code to determine the result:
 ## Writing Output to a File
 
 ```bash
-stave apply --controls ./controls --observations . > evaluation.json
+stave apply --controls ./controls --observations ./observations > evaluation.json
 ```
 
 Redirect stdout to persist output. Errors and logs still go to stderr.
@@ -52,7 +55,8 @@ Redirect stdout to persist output. Errors and logs still go to stderr.
 The `validate` command defaults to text output but supports JSON:
 
 ```bash
-stave validate --controls ./controls --observations . --format json
+# doctest:skip — requires observation data
+stave validate --controls ./controls --observations ./observations --format json
 ```
 
 ```json
@@ -77,10 +81,10 @@ The `graph coverage` command outputs in DOT (default) or JSON format:
 
 ```bash
 # DOT graph (pipe to graphviz)
-stave graph coverage --controls ./controls --observations . | dot -Tpng > coverage.png
+stave graph coverage --controls ./controls --observations ./observations | dot -Tpng > coverage.png
 
 # JSON output
-stave graph coverage --controls ./controls --observations . --format json | jq .
+stave graph coverage --controls ./controls --observations ./observations --format json | jq .
 ```
 
 ## Downstream Artifacts
@@ -119,15 +123,16 @@ Exit 3 is a success — it means the tool found what it was looking for.
 Logs go to stderr and are separate from command output:
 
 ```bash
+# doctest:skip — requires observation data
 # Verbose logging
-stave apply --controls ./controls --observations . -v
+stave apply --controls ./controls --observations ./observations -v
 
 # Debug logging
-stave apply --controls ./controls --observations . -vv
+stave apply --controls ./controls --observations ./observations -vv
 
 # JSON logs to file
-stave apply --controls ./controls --observations . --log-format json --log-file run.log
+stave apply --controls ./controls --observations ./observations --log-format json --log-file run.log
 
 # Include timestamps (breaks determinism)
-stave apply --controls ./controls --observations . --log-timestamps
+stave apply --controls ./controls --observations ./observations --log-timestamps
 ```

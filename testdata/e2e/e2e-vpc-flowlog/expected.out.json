@@ -154,6 +154,15 @@
           "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
         },
         {
+          "chain_id": "elasticache_unauthenticated_unmonitored",
+          "chain_severity": "high",
+          "missing_control": "CTL.ELASTICACHE.AUTH.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Redis cache has no AUTH token AND the VPC has no flow logs. Without AUTH, any client with network access reads and writes cached data (sessions, credentials, application state). Without flow logs, there is no record of which hosts connected to the cache endpoint. The combination is an unauthenticated data store with zero network forensics — an attacker exfiltrates cached data and the breach leaves no evidence trail. Either control alone mitigates: AUTH blocks unauthorized access; flow logs record connection attempts for post-incident investigation.\n"
+        },
+        {
           "chain_id": "vpc_dns_exfiltration",
           "chain_severity": "high",
           "missing_control": "CTL.VPC.DNSFIREWALL.ENABLED.001",
@@ -361,6 +370,16 @@
       "missing_control": "CTL.GUARDDUTY.ENABLED.001",
       "severity": "critical",
       "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "elasticache_unauthenticated_unmonitored",
+      "description": "Redis cache has no AUTH token AND the VPC has no flow logs. Without AUTH, any client with network access reads and writes cached data (sessions, credentials, application state). Without flow logs, there is no record of which hosts connected to the cache endpoint. The combination is an unauthenticated data store with zero network forensics — an attacker exfiltrates cached data and the breach leaves no evidence trail. Either control alone mitigates: AUTH blocks unauthorized access; flow logs record connection attempts for post-incident investigation.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.ELASTICACHE.AUTH.001",
+      "severity": "high",
+      "scope_id": "__global__"
     },
     {
       "chain": "vpc_dns_exfiltration",

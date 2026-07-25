@@ -378,6 +378,24 @@
       "exploitability": "one_away",
       "near_miss_chains": [
         {
+          "chain_id": "acm_wildcard_issuance_unaudited",
+          "chain_severity": "high",
+          "missing_control": "CTL.ACM.ACME.WILDCARD.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "ACM ACME endpoint allows wildcard certificate issuance AND CloudTrail is not enabled. A wildcard certificate (*.example.com) covers every subdomain — one compromised private key or one leaked certificate enables impersonation of any service under the domain. With ACME wildcard issuance enabled, any authorized ACME client can request wildcard certificates programmatically. Without CloudTrail, the RequestCertificate and IssueCertificate API calls are not logged — unauthorized wildcard certificate issuance leaves no audit trail. The combination is unrestricted wildcard cert issuance with invisible certificate operations. Either control alone mitigates: disabling wildcard issuance limits certificates to specific subdomains; enabling CloudTrail records all certificate issuance for detection and forensics.\n"
+        },
+        {
+          "chain_id": "cloudformation_template_injection_unaudited",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDFORMATION.TEMPLATE.S3.INJECTION.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "S3 bucket hosting CloudFormation templates allows untrusted write access AND CloudTrail is not enabled. The Pacu cfn__resource_injection module exploits exactly this: an attacker with PutObject on the template bucket injects a malicious resource (IAM role, Lambda function, EC2 instance) into the template. On the next stack update, CloudFormation deploys the injected resource with the stack's service role permissions. Without CloudTrail, the PutObject call to the template bucket AND the UpdateStack API call are both invisible — the supply chain compromise leaves no audit trail. Either control alone mitigates: restricting template bucket write access blocks the injection; enabling CloudTrail records the suspicious PutObject and UpdateStack calls.\n"
+        },
+        {
           "chain_id": "confused_deputy_path",
           "chain_severity": "high",
           "missing_control": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
@@ -421,6 +439,15 @@
             "CTL.CLOUDTRAIL.ENABLED.001"
           ],
           "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "elasticache_broad_access_no_audit",
+          "chain_severity": "high",
+          "missing_control": "CTL.ELASTICACHE.SG.BROAD.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "ElastiCache cluster security group allows broad ingress (0.0.0.0/0 on cache ports) AND CloudTrail is not enabled. Broad ingress means any host with network connectivity can reach the cache endpoint. Without CloudTrail, API calls that modify the cluster configuration (ModifyReplicationGroup, CreateSnapshot, DeleteCacheCluster) leave no audit record. The combination is a wide-open cache endpoint with invisible control-plane activity — an attacker can snapshot the cluster for offline data extraction and the API call is never logged. Either control alone mitigates: restricting the security group limits who can reach the endpoint; enabling CloudTrail records configuration changes for detection and forensics.\n"
         },
         {
           "chain_id": "waf_blind_evasion",
@@ -2950,6 +2977,15 @@
             "CTL.VPC.FLOWLOG.001"
           ],
           "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "elasticache_unauthenticated_unmonitored",
+          "chain_severity": "high",
+          "missing_control": "CTL.ELASTICACHE.AUTH.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Redis cache has no AUTH token AND the VPC has no flow logs. Without AUTH, any client with network access reads and writes cached data (sessions, credentials, application state). Without flow logs, there is no record of which hosts connected to the cache endpoint. The combination is an unauthenticated data store with zero network forensics — an attacker exfiltrates cached data and the breach leaves no evidence trail. Either control alone mitigates: AUTH blocks unauthorized access; flow logs record connection attempts for post-incident investigation.\n"
         },
         {
           "chain_id": "vpc_dns_exfiltration",
@@ -5754,6 +5790,46 @@
   ],
   "near_miss_chains": [
     {
+      "chain": "acm_expiring_cert_unrecorded",
+      "description": "ACM imported certificate is near expiry or already expired AND AWS Config is not recording. ACM does not auto-renew imported certificates — the owner must replace them manually before expiry. Without Config recording, there is no configuration change timeline to detect when the certificate entered the near-expiry window and no Config rule to alert on the approaching deadline. The combination means an expiring certificate with no automated detection — the first signal is a production TLS handshake failure. Either control alone mitigates: replacing the certificate before expiry prevents the outage; enabling Config detects the expiring certificate and can trigger a notification or remediation workflow.\n",
+      "controls_failing": [
+        "CTL.CONFIG.ENABLED.001"
+      ],
+      "missing_control": "CTL.ACM.CERT.EXPIRY.001",
+      "severity": "high",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "acm_wildcard_issuance_unaudited",
+      "description": "ACM ACME endpoint allows wildcard certificate issuance AND CloudTrail is not enabled. A wildcard certificate (*.example.com) covers every subdomain — one compromised private key or one leaked certificate enables impersonation of any service under the domain. With ACME wildcard issuance enabled, any authorized ACME client can request wildcard certificates programmatically. Without CloudTrail, the RequestCertificate and IssueCertificate API calls are not logged — unauthorized wildcard certificate issuance leaves no audit trail. The combination is unrestricted wildcard cert issuance with invisible certificate operations. Either control alone mitigates: disabling wildcard issuance limits certificates to specific subdomains; enabling CloudTrail records all certificate issuance for detection and forensics.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.ACM.ACME.WILDCARD.001",
+      "severity": "high",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "cloudformation_template_injection_unaudited",
+      "description": "S3 bucket hosting CloudFormation templates allows untrusted write access AND CloudTrail is not enabled. The Pacu cfn__resource_injection module exploits exactly this: an attacker with PutObject on the template bucket injects a malicious resource (IAM role, Lambda function, EC2 instance) into the template. On the next stack update, CloudFormation deploys the injected resource with the stack's service role permissions. Without CloudTrail, the PutObject call to the template bucket AND the UpdateStack API call are both invisible — the supply chain compromise leaves no audit trail. Either control alone mitigates: restricting template bucket write access blocks the injection; enabling CloudTrail records the suspicious PutObject and UpdateStack calls.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.CLOUDFORMATION.TEMPLATE.S3.INJECTION.001",
+      "severity": "critical",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "cloudformation_unprotected_unrecorded",
+      "description": "CloudFormation stack has no termination protection AND AWS Config is not recording. Without termination protection, any principal with cloudformation:DeleteStack permission can destroy the entire stack and all its resources in one API call. Without Config recording, the resource configuration history is not preserved — there is no timeline to reconstruct what was deployed before the deletion. The combination means infrastructure can be destroyed AND there is no configuration record to rebuild from. Either control alone mitigates: termination protection prevents accidental or unauthorized deletion; Config recording preserves the configuration history for forensics and reconstruction.\n",
+      "controls_failing": [
+        "CTL.CONFIG.ENABLED.001"
+      ],
+      "missing_control": "CTL.CLOUDFORMATION.TERMINATION.001",
+      "severity": "high",
+      "scope_id": "__global__"
+    },
+    {
       "chain": "cloudtrail_data_access_blind",
       "description": "No S3 data events for sensitive buckets plus either no Secrets Manager data events or no S3 bucket-policy change alarm. Data access is unaudited AND either credential access is unaudited or bucket access- control changes are unmonitored. The data access surface is blind: object reads invisible, credential reads invisible, and the API calls that would reconfigure access are unalarmed. Threshold of 2 fires when the bucket-data-events gap compounds with another audit-surface gap.\n",
       "controls_failing": [
@@ -5992,6 +6068,36 @@
       "missing_control": "CTL.GUARDDUTY.ENABLED.001",
       "severity": "critical",
       "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "elasticache_broad_access_no_audit",
+      "description": "ElastiCache cluster security group allows broad ingress (0.0.0.0/0 on cache ports) AND CloudTrail is not enabled. Broad ingress means any host with network connectivity can reach the cache endpoint. Without CloudTrail, API calls that modify the cluster configuration (ModifyReplicationGroup, CreateSnapshot, DeleteCacheCluster) leave no audit record. The combination is a wide-open cache endpoint with invisible control-plane activity — an attacker can snapshot the cluster for offline data extraction and the API call is never logged. Either control alone mitigates: restricting the security group limits who can reach the endpoint; enabling CloudTrail records configuration changes for detection and forensics.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.ELASTICACHE.SG.BROAD.001",
+      "severity": "high",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "elasticache_unauthenticated_unmonitored",
+      "description": "Redis cache has no AUTH token AND the VPC has no flow logs. Without AUTH, any client with network access reads and writes cached data (sessions, credentials, application state). Without flow logs, there is no record of which hosts connected to the cache endpoint. The combination is an unauthenticated data store with zero network forensics — an attacker exfiltrates cached data and the breach leaves no evidence trail. Either control alone mitigates: AUTH blocks unauthorized access; flow logs record connection attempts for post-incident investigation.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.ELASTICACHE.AUTH.001",
+      "severity": "high",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "elasticache_unencrypted_no_config",
+      "description": "ElastiCache cluster has no at-rest encryption AND AWS Config is not recording. Without at-rest encryption, cached data (sessions, credentials, PII) is stored in plaintext on the cluster nodes and in any snapshots. Without Config recording, the encryption posture of the cluster is not tracked — there is no Config rule to flag the missing encryption and no configuration timeline to detect when encryption was disabled or never enabled. The combination means plaintext data at rest with no compliance visibility into the misconfiguration. Either control alone mitigates: enabling encryption protects the data; enabling Config detects the missing encryption and can trigger automated remediation.\n",
+      "controls_failing": [
+        "CTL.CONFIG.ENABLED.001"
+      ],
+      "missing_control": "CTL.ELASTICACHE.ENCRYPT.REST.001",
+      "severity": "high",
+      "scope_id": "__global__"
     },
     {
       "chain": "rds_audit_blind",
