@@ -248,8 +248,10 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 
 	outcome := evaluation.EnforcementPolicy{}.Evaluate(report.SecurityState)
 
+	compoundOnly := !req.IncludeAtomic && len(report.ChainFindings) > 0
+
 	var unchainedCount int
-	if !req.IncludeAtomic {
+	if compoundOnly {
 		atomicIDs := make([]kernel.ControlID, len(report.Findings))
 		atomicSevs := make(map[kernel.ControlID]policy.Severity, len(report.Findings))
 		for i := range report.Findings {
@@ -269,7 +271,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		HasCriticalSLABreach:       report.HasCriticalSLABreach(),
 		LapsedExemptionCount:       len(lapsed),
 		CompoundFindingCount:       len(report.ChainFindings),
-		CompoundOnlyMode:           !req.IncludeAtomic,
+		CompoundOnlyMode:           compoundOnly,
 		UnchainedHighSeverityCount: unchainedCount,
 	}, nil
 }
@@ -357,7 +359,7 @@ func renderReport(ctx context.Context, format string, verbose bool, includeAtomi
 		if enrichErr != nil {
 			return enriched, fmt.Errorf("enrich findings: %w", enrichErr)
 		}
-		if !includeAtomic {
+		if !includeAtomic && len(rep.ChainFindings) > 0 {
 			enriched.Result.CompoundOnlyMode = true
 			enriched.Result.SuppressedAtomicCount = atomicCount
 			enriched.Result.SuppressedBySeverity = &severityCounts
