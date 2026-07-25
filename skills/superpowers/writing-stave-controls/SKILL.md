@@ -10,6 +10,8 @@ triggers:
   - control catalog
   - detect misconfiguration
   - add a check
+  - CSL spec
+  - twin-state pack
 requires:
   - stave (go install github.com/sufield/stave@latest)
   - superpowers:test-driven-development (recommended — same discipline)
@@ -221,10 +223,168 @@ where expected and nothing else moved.
 - **No marketing language in `description`.** Operators read the
   description in `stave apply` output; it must be operationally precise.
 
+## CSL-driven workflow (alternative entry point)
+
+When the user provides a CSL spec (YAML file matching the schema at
+`data/schemas/csl-spec.schema.json`), use this workflow instead of
+Phases 1–4 above. The CSL spec replaces the narrative definition —
+it already contains the control ID, asset type, unsafe/safe conditions,
+severity, and references.
+
+### CSL Phase A — Validate the spec
+
+```bash
+cd stave
+go run ./internal/tools/csl validate --spec path/to/spec.yaml
+```
+
+If validation fails, fix the spec before proceeding.
+
+### CSL Phase B — Generate the twin-state pack
+
+From the validated spec, generate:
+
+**1. Control YAML** → `controls/<service>/<category>/<ID>.yaml`
+
+Map CSL fields to control YAML:
+
+| CSL spec field | Control YAML field |
+|---|---|
+| `id` | `id` |
+| `service` | first scope tag |
+| `asset_type` | `applicable_asset_types[0]` |
+| `severity` | `severity` |
+| `attack_stage` | `params.attack_stage` |
+| `unsafe_condition.field` | `unsafe_predicate.all[].field` (prefix with `properties.`) |
+| `unsafe_condition.operator` | `unsafe_predicate.all[].op` |
+| `unsafe_condition.value` | `unsafe_predicate.all[].value` |
+| `references.mitre` | `corpus_reference` |
+| `references.framework` | `compliance` |
+
+Use `control-template.yaml` as the structural template. All other
+fields (description, remediation, defect, infection, failure) are
+derived from `spec.threat` and the condition descriptions.
+
+**2. Embedded tests** → in the same control YAML `tests:` block
+
+```yaml
+tests:
+  - name: writeup fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "<generated from asset_type>"
+      asset_type: <spec.asset_type>
+      vendor: aws
+      properties:
+        # nested from spec.unsafe_condition.field = spec.unsafe_condition.value
+  - name: remediated passes
+    verdict: PASS
+    asset:
+      asset_id: "<same as above>"
+      asset_type: <spec.asset_type>
+      vendor: aws
+      properties:
+        # nested from spec.safe_condition.field = spec.safe_condition.value
+```
+
+**3. Writeup fixture** → `fixtures/labs/<threat>/writeup/observations/`
+
+obs.v0.1 JSON with the asset in the unsafe state (the property at
+`spec.unsafe_condition.field` has `spec.unsafe_condition.value`).
+Two snapshots at T1 and T2 for duration-based controls.
+
+**4. Remediated fixture** → `fixtures/labs/<threat>/remediated/observations/`
+
+Same observation but with `spec.safe_condition.field` =
+`spec.safe_condition.value`.
+
+**5. repro.tf** → `fixtures/labs/<threat>/repro.tf`
+
+Terraform HCL that creates the vulnerable resource. Only generate
+for controls that check raw AWS state (not computed properties like
+escalation paths). The `.tf` file must pass `terraform validate`.
+
+**6. differential/** → `fixtures/labs/<threat>/differential/.gitkeep`
+
+Empty directory for future scanner comparison results.
+
+### CSL Phase C — Verify the pack
+
+Run the same checkpoints as Phase 5–7 of the standard workflow:
+
+```bash
+# Embedded tests
+stave test --control controls/<service>/<category>/<ID>.yaml
+
+# E2E: fires on writeup
+stave apply --controls controls/<service>/<category>/ \
+    --observations fixtures/labs/<threat>/writeup/observations \
+    --format json --eval-time 2026-01-15T00:00:00Z \
+    | jq '[.findings[] | select(.control_id == "<ID>")] | length'
+# Expected: > 0
+
+# E2E: silent on remediated
+stave apply --controls controls/<service>/<category>/ \
+    --observations fixtures/labs/<threat>/remediated/observations \
+    --format json --eval-time 2026-01-15T00:00:00Z \
+    | jq '[.findings[] | select(.control_id == "<ID>")] | length'
+# Expected: 0
+
+# Terraform (if repro.tf was generated)
+cd fixtures/labs/<threat> && terraform validate
+```
+
+### CSL Phase D — Register and report
+
+```bash
+make sync-controls
+make regenerate-goldens
+make test
+```
+
+Report:
+
+```
+Twin-state pack generated for <ID>
+  Writeup:    N finding(s) (expected)
+  Remediated: 0 findings (expected)
+  Terraform:  valid | skipped (computed property)
+  Ready to commit
+```
+
+### CSL spec format reference
+
+```yaml
+spec:
+  id: CTL.S3.ENCRYPT.001
+  service: S3
+  asset_type: aws_s3_bucket
+  threat: unencrypted_storage_at_rest
+  attack_stage: exfiltration
+  severity: high
+  unsafe_condition:
+    field: storage.encryption.at_rest_enabled
+    operator: eq
+    value: false
+  safe_condition:
+    field: storage.encryption.at_rest_enabled
+    operator: eq
+    value: true
+  invariant: "encryption_at_rest(bucket) = true"
+  references:
+    mitre: "T1530"
+    framework: "CIS AWS 2.1.1"
+```
+
+Full schema: `data/schemas/csl-spec.schema.json`
+
+Validate: `go run ./internal/tools/csl validate --spec spec.yaml`
+
 ## Supporting files
 
 - `control-template.yaml` — fillable starter; remove the `# TODO` lines
   as you complete each section
+- `data/schemas/csl-spec.schema.json` — CSL JSON Schema definition
 
 ## Related skills
 

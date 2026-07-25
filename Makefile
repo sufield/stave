@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
+.PHONY: all build build-dev test test-fast test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
 # Binary name
 BINARY=stave
 
@@ -90,6 +90,15 @@ build: sync-schemas sync-controls sync-alternatives
 ## build-dev: Build the dev binary with all commands
 build-dev: sync-schemas sync-controls sync-alternatives
 	$(GOBUILD) $(LDFLAGS) -tags stavedev -o stave-dev ./cmd/stave-dev
+
+## tools: Build development tools (separate from production binary)
+tools: sync-schemas sync-controls sync-alternatives
+	$(GOBUILD) -o bin/csl-validate ./internal/tools/csl
+	$(GOBUILD) -o bin/semantic-diff ./internal/tools/semantic-diff
+	$(GOBUILD) -o bin/triage ./internal/tools/triage
+	$(GOBUILD) -o bin/quarterly ./internal/tools/quarterly
+	$(GOBUILD) -o bin/regengoldens ./internal/tools/regengoldens
+	$(GOBUILD) -o bin/gencontroldocs ./internal/tools/gencontroldocs
 
 ## mcp: Build the MCP server binary (stave-mcp)
 mcp: sync-schemas sync-controls sync-alternatives
@@ -834,6 +843,39 @@ docs-site-check:
 sync-guide: docs-controls docs-commands
 	@cd .. && bash scripts/sync-guide.sh
 
+## sync-guide-check: Fail if any guide file duplicates a repo doc not in the sync manifest.
+## Prevents re-creation of unmanaged duplicates after reconciliation.
+GUIDE_ROOT ?= ../projects/stave-guide
+MANIFEST   ?= $(GUIDE_ROOT)/.sync-manifest.tsv
+sync-guide-check:
+	@dups=0; \
+	manifest_dests=$$(grep -v '^\s*#' $(MANIFEST) | grep -v '^\s*$$' | cut -f1); \
+	for repo_file in $$(find docs/ -name "*.md" \
+	  -not -path "docs/controls/reference/*" \
+	  -not -path "docs/ontology/*" \
+	  -not -path "docs/images/*" \
+	  | sed 's|^docs/||'); do \
+	  base=$$(basename "$$repo_file"); \
+	  guide_hits=$$(find $(GUIDE_ROOT) -name "$$base" -not -path "*/invariants-reference/catalog/*" 2>/dev/null); \
+	  for hit in $$guide_hits; do \
+	    rel=$$(echo "$$hit" | sed 's|^$(GUIDE_ROOT)/||'); \
+	    managed=false; \
+	    for dest in $$manifest_dests; do \
+	      if [ "$$dest" = "$$rel" ]; then managed=true; break; fi; \
+	    done; \
+	    if [ "$$managed" = false ] && [ "$$base" != "README.md" ]; then \
+	      echo "DRIFT: $$repo_file duplicated by $$rel (not in sync manifest)"; \
+	      dups=$$((dups + 1)); \
+	    fi; \
+	  done; \
+	done; \
+	if [ $$dups -gt 0 ]; then \
+	  echo; echo "$$dups unmanaged duplicate(s). Add to .sync-manifest.tsv or delete one copy."; \
+	  exit 1; \
+	else \
+	  echo "sync-guide-check: no unmanaged duplicates"; \
+	fi
+
 ## docs-commands-catalog: Generate the curated root commands-catalog.md
 ## from catalog_meta.go annotations + the live cobra tree. Edit the
 ## when-to-use text / grouping in catalog_meta.go, not the markdown.
@@ -1193,10 +1235,7 @@ SYNC_EXCLUDES = \
 	--exclude='dist-local/' \
 	--exclude='skills/' \
 	--exclude='*.pyc' \
-	--exclude='docs/audits/' \
-	--exclude='docs/talks/' \
 	--exclude='docs/ontology/' \
-	--exclude='docs/contrib/' \
 	--exclude='/gofixer.md' \
 	--exclude='.stave-backlog/' \
 	--exclude='docs-internal/'

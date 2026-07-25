@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://systeminvariant.dev/schemas/csl-spec",
+  "title": "Control Specification Language",
+  "description": "Input specification for generating Stave controls with twin-state packs",
+  "type": "object",
+  "required": ["spec"],
+  "properties": {
+    "spec": {
+      "type": "object",
+      "required": [
+        "id", "service", "asset_type", "threat",
+        "unsafe_condition", "safe_condition", "invariant", "references"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^CTL\\.[A-Z0-9]+\\.[A-Z0-9.]+\\.\\d{3}$",
+          "description": "Control ID following naming convention CTL.<SERVICE>.<CATEGORY>.<SHORTNAME>.<NNN>"
+        },
+        "service": {
+          "type": "string",
+          "description": "AWS service name (e.g., EKS, S3, IAM)"
+        },
+        "asset_type": {
+          "type": "string",
+          "description": "Observation asset type from collector contract (e.g., aws_s3_bucket)"
+        },
+        "threat": {
+          "type": "string",
+          "description": "Threat being detected (e.g., pod_escape_to_node, public_read_access)"
+        },
+        "attack_stage": {
+          "type": "string",
+          "enum": [
+            "reconnaissance", "initial_access", "execution",
+            "persistence", "privilege_escalation", "defense_evasion",
+            "credential_access", "discovery", "lateral_movement",
+            "collection", "exfiltration", "impact"
+          ]
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "high", "medium", "low"]
+        },
+        "unsafe_condition": {
+          "type": "object",
+          "required": ["field", "operator", "value"],
+          "properties": {
+            "field": {
+              "type": "string",
+              "description": "Property path under properties.* (e.g., storage.encryption.algorithm)"
+            },
+            "operator": {
+              "type": "string",
+              "enum": [
+                "eq", "ne", "in", "not_in", "missing", "present",
+                "any_match", "all_match", "prefix", "suffix", "regex",
+                "gt", "gte", "lt", "lte"
+              ],
+              "description": "Predicate operator"
+            },
+            "value": {
+              "description": "The unsafe value to match against"
+            }
+          },
+          "additionalProperties": false
+        },
+        "safe_condition": {
+          "type": "object",
+          "required": ["field", "operator", "value"],
+          "properties": {
+            "field": {
+              "type": "string",
+              "description": "Property path under properties.* (e.g., storage.encryption.algorithm)"
+            },
+            "operator": {
+              "type": "string",
+              "enum": [
+                "eq", "ne", "in", "not_in", "missing", "present",
+                "any_match", "all_match", "prefix", "suffix", "regex",
+                "gt", "gte", "lt", "lte"
+              ],
+              "description": "Predicate operator"
+            },
+            "value": {
+              "description": "The safe value that passes the control"
+            }
+          },
+          "additionalProperties": false
+        },
+        "detection_dependency": {
+          "type": ["string", "null"],
+          "description": "Control ID for detection-absence chain. Null = infer from graph."
+        },
+        "invariant": {
+          "type": "string",
+          "description": "Formal invariant in propositional logic notation (e.g., encryption(bucket) = KMS => data_classification(bucket) != public)"
+        },
+        "scope_constraint": {
+          "type": "object",
+          "properties": {
+            "min_resources": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Minimum resources needed for detection"
+            },
+            "resource_types": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Asset types involved in the compound check"
+            },
+            "thesis": {
+              "type": "string",
+              "description": "Why min_resources > 1 matters for this detection"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Competitive invariant — min resources needed for detection"
+        },
+        "differentiation_thesis": {
+          "type": "object",
+          "properties": {
+            "scanner_gap": {
+              "type": "string",
+              "description": "What existing scanners miss"
+            },
+            "positioning": {
+              "type": "string",
+              "description": "How Stave is different here"
+            },
+            "article_hook": {
+              "type": "string",
+              "description": "One-line hook for writing about this control"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Required for compound controls (scope_constraint.min_resources > 1)"
+        },
+        "references": {
+          "type": "object",
+          "properties": {
+            "framework": { "type": "string" },
+            "wa_lens": { "type": "string" },
+            "mitre": { "type": "string" },
+            "csa": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "data_readiness": {
+          "type": "object",
+          "properties": {
+            "fields_required": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Property paths the control needs"
+            },
+            "fields_available": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Property paths present in the collector contract"
+            },
+            "fields_missing": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Property paths not yet in the collector contract"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "if": {
+        "properties": {
+          "scope_constraint": {
+            "properties": {
+              "min_resources": { "minimum": 2 }
+            },
+            "required": ["min_resources"]
+          }
+        },
+        "required": ["scope_constraint"]
+      },
+      "then": {
+        "required": [
+          "id", "service", "asset_type", "threat",
+          "unsafe_condition", "safe_condition", "invariant",
+          "references", "differentiation_thesis"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

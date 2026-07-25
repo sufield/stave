@@ -109,3 +109,33 @@ docker run --rm -v "$(pwd):/work" -w /work ghcr.io/sigstore/cosign:v2.4.3 \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   SHA256SUMS
 ```
+
+## Reproduce the Build Locally
+
+Stave uses deterministic build flags so that anyone with the same Go version can reproduce the release binaries and compare checksums.
+
+### Requirements
+
+- **Go version**: Must match the release workflow exactly (see `go-version` in `.github/workflows/release.yml`)
+- **Build flags**: `CGO_ENABLED=0 -trimpath -buildid= -ldflags "-s -w"`
+- **Version injection**: `-X github.com/sufield/stave/internal/version.String=v<VERSION>`
+
+### Reproduce
+
+```bash
+git clone --branch vX.Y.Z https://github.com/sufield/stave.git
+cd stave
+
+make reproduce-release
+
+gh release download vX.Y.Z --repo sufield/stave --pattern "*.tar.gz" --pattern "*.zip"
+for f in *.tar.gz; do tar xzf "$f"; done
+for f in *.zip; do unzip -o "$f"; done
+sha256sum stave_*
+```
+
+### Limitations
+
+- **Archive metadata differs**: `tar.gz` and `.zip` archives include timestamps and filesystem metadata that vary between builds. Compare the raw binary checksums, not the archive checksums.
+- **Go version must match exactly**: Different Go patch versions may produce different binaries even with the same flags.
+- **OS does not matter**: Because `CGO_ENABLED=0` is set, cross-compilation from any OS produces identical binaries for a given target.

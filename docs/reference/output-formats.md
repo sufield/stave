@@ -1,24 +1,108 @@
 # Output Formats
 
-Stave produces findings in multiple formats. Use `--format` to select.
+Stave supports multiple output formats for different use cases.
 
-## Formats
+## JSON (Default for `apply`)
 
-| Format | Flag | Use case |
-|--------|------|----------|
-| Text | `--format text` | Human reading, grep, terminal |
-| JSON | `--format json` | Automation, jq pipelines, API consumption |
-| SARIF | `--format sarif` | GitHub Code Scanning, IDE integration |
-| JSONL | `--format jsonl` | Streaming, log aggregation, SIEM ingest |
+```bash
+stave apply --controls ./ctl --observations ./obs --format json
+```
 
-## Schema reference
+Structured output following the `out.v0.1` schema. Machine-readable, suitable for piping to `jq` or ingestion by other tools. Results go to stdout; errors and logs go to stderr.
 
-- **Finding schema**: see [schemas/](../../schemas/README.md)
-- **Output envelope** (`out.v0.1`): wraps findings with summary, security state, risk signals
-- **Control schema** (`ctrl.v1`): YAML control definition format
-- **Observation schema** (`obs.v0.1`): input snapshot format
+```bash
+# Count violations
+stave apply --controls ./ctl --observations ./obs | jq '.summary.violations'
 
-## Exit codes
+# List violated resource IDs
+stave apply --controls ./ctl --observations ./obs | jq -r '.findings[].resource_id'
+
+# Get unique violated control IDs
+stave apply --controls ./ctl --observations ./obs | jq -r '.findings[].control_id' | sort -u
+```
+
+## Text
+
+```bash
+stave apply --controls ./ctl --observations ./obs --format text
+```
+
+Human-readable output for terminal use. Includes color when the terminal supports it (respects `NO_COLOR` environment variable).
+
+## Quiet Mode
+
+```bash
+stave apply --controls ./ctl --observations ./obs --quiet
+```
+
+Suppresses all output. Use the exit code to determine the result:
+- `0` = no violations
+- `3` = violations found
+
+## Writing Output to a Directory
+
+```bash
+stave apply --controls ./ctl --observations ./obs --out ./results
+```
+
+Writes `evaluation.json` to the specified directory (created if it doesn't exist). Output is still printed to stdout as well.
+
+## Validation Output
+
+The `validate` command defaults to text output but supports JSON:
+
+```bash
+stave validate --controls ./ctl --observations ./obs --format json
+```
+
+```json
+{
+  "schema_version": "validate.v0.1",
+  "valid": true,
+  "errors": [],
+  "warnings": [],
+  "summary": {
+    "controls_checked": 10,
+    "snapshots_checked": 2,
+    "resource_observations_checked": 15,
+    "identity_observations_checked": 0,
+    "context_provided": false
+  }
+}
+```
+
+## Coverage Graph Output
+
+The `graph coverage` command outputs in DOT (default) or JSON format:
+
+```bash
+# DOT graph (pipe to graphviz)
+stave graph coverage --controls ./ctl --observations ./obs | dot -Tpng > coverage.png
+
+# JSON output
+stave graph coverage --controls ./ctl --observations ./obs --format json | jq .
+```
+
+## Downstream Artifacts
+
+Stave can generate enforcement artifacts from evaluation results:
+
+| Command | Output |
+|---------|--------|
+| `stave enforce --in eval.json --out ./dir --mode pab` | `dir/enforcement/aws/pab.tf` |
+| `stave enforce --in eval.json --out ./dir --mode scp` | `dir/enforcement/aws/scp.json` |
+
+## Severity Mapping
+
+| Stave severity | SARIF level | Code Scanning display |
+|---|---|---|
+| critical | error | Error (red) |
+| high | error | Error (red) |
+| medium | warning | Warning (yellow) |
+| low | note | Note (blue) |
+| info | note | Note (blue) |
+
+## Exit Codes
 
 | Code | Meaning |
 |------|---------|
@@ -29,3 +113,21 @@ Stave produces findings in multiple formats. Use `--format` to select.
 | 130 | Interrupted (SIGINT) |
 
 Exit 3 is a success — it means the tool found what it was looking for.
+
+## Logging
+
+Logs go to stderr and are separate from command output:
+
+```bash
+# Verbose logging
+stave apply --controls ./ctl --observations ./obs -v
+
+# Debug logging
+stave apply --controls ./ctl --observations ./obs -vv
+
+# JSON logs to file
+stave apply --controls ./ctl --observations ./obs --log-format json --log-file run.log
+
+# Include timestamps (breaks determinism)
+stave apply --controls ./ctl --observations ./obs --log-timestamps
+```

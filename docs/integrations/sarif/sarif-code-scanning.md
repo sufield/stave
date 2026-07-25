@@ -1,31 +1,66 @@
-# SARIF Integration: GitHub Code Scanning
+# SARIF and GitHub Code Scanning
 
-Stave findings appear directly in GitHub's Security tab
-alongside code scanning alerts.
+Stave outputs SARIF (Static Analysis Results Interchange Format),
+which GitHub code scanning consumes natively. Findings appear in
+the Security tab alongside CodeQL and other scanners.
 
-## Setup
+## Generate SARIF
 
-1. Copy [`examples/ci-gate/github-actions.yml`](../../../examples/ci-gate/github-actions.yml)
-   into your repo's `.github/workflows/` directory
-2. Configure AWS credentials as repository secrets:
-   - `STAVE_AWS_ACCESS_KEY_ID` — read-only collector key
-   - `STAVE_AWS_SECRET_ACCESS_KEY` — read-only collector secret
-   - `CONFIG_BUCKET` — S3 bucket with AWS Config snapshots
-3. Push to main
+```bash
+stave apply --observations ./observations/ --format sarif > findings.sarif
+```
 
-## What you'll see
+## Upload to GitHub code scanning
 
-Findings appear in **Security > Code Scanning**:
+### GitHub Actions
 
-- Compound chain findings (EXPLOITABLE) as **error** severity
-- Near-miss chain findings (ONE AWAY) as **warning** severity
-- Standard control violations as **warning** or **note**
+```yaml
+name: Stave Security Scan
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'terraform/**'
+      - 'observations/**'
 
-Each finding includes:
-- The control ID and description
-- The resource identifier
-- Exploitability classification and chain membership
-- Remediation guidance
+jobs:
+  stave:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Stave
+        run: go install github.com/sufield/stave/cmd/stave@latest
+
+      - name: Run evaluation
+        run: stave apply --observations ./observations/ --format sarif > findings.sarif
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: findings.sarif
+          category: stave
+```
+
+### Key points
+
+- The `security-events: write` permission is required for upload
+- The `category` field groups Stave findings separately from CodeQL
+- SARIF upload works on push events and pull requests
+- Findings appear in the repository's Security > Code scanning tab
+- PR annotations show inline findings on changed files
+
+## What SARIF includes
+
+Each finding maps to a SARIF `result` with:
+
+- `ruleId` — the control ID (e.g., `CTL.S3.BUCKET.VERSIONING.001`)
+- `level` — mapped from Stave severity (`critical`/`high` → `error`, `medium` → `warning`, `low`/`info` → `note`)
+- `message` — the finding evidence line
+- `locations` — the resource ARN as a logical location
 
 ## Severity mapping
 
@@ -39,11 +74,16 @@ Each finding includes:
 
 ## Filtering
 
-In the Code Scanning UI, filter by:
+Combine with severity thresholds to control which findings reach
+code scanning:
 
-- **Tool**: `stave` in the tool dropdown
-- **Severity**: error, warning, note
-- **Rule**: control ID (e.g., `CTL.S3.PUBLIC.001`)
+```bash
+stave apply --observations ./observations/ \
+  --format sarif \
+  --severity high > findings.sarif
+```
+
+Only `high` and `critical` findings appear in SARIF output.
 
 ## Scheduled scans
 

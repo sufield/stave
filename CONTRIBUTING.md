@@ -66,6 +66,50 @@ The local path also works for adopters who only want the CLI on
 their host (see [README Option 3](./README.md#option-3--local-install-contributors-and-power-users)
 for `go install` instructions that skip the clone).
 
+## Production vs Development Boundary
+
+Stave separates production and development tooling so adopters get a
+clean binary with only the commands they need.
+
+### What adopters get
+
+`make build` (or `go install`) produces a single binary with all
+production commands: `apply`, `validate`, `diagnose`, `ci`, `attest`,
+`bundle`, `catalog`, `enforce`, `discover`, `readiness`, and more.
+Run `stave --help` to see the full list.
+
+Development-only commands (`forge`, `generate`) are compiled in but
+hidden from the default help listing and blocked in production
+environments via the production guard (`STAVE_ENV=production`).
+
+Z3/CGO is not required. The production binary builds with
+`CGO_ENABLED=0`. The `prove` command is included but errors
+gracefully at runtime if libz3 is absent.
+
+### What contributors get
+
+Development tools live in `internal/tools/` as standalone binaries.
+They are **not** part of the `stave` binary and are invoked via
+`go run` or the `make tools` target:
+
+```bash
+make tools                # build dev tool binaries into bin/
+go run ./internal/tools/csl validate --spec spec.yaml
+go run ./internal/tools/semantic-diff --symbolic
+go run ./internal/tools/regengoldens
+```
+
+CI gate scripts live in `scripts/ci/` as bash — also not compiled.
+
+| Surface | Location | Compiled into stave? |
+|---------|----------|---------------------|
+| Production commands | `cmd/apply/`, `cmd/diagnose/`, etc. | Yes |
+| Dev-only commands | `cmd/forge/`, `cmd/initcmd/` (generate) | Yes, but hidden + guarded |
+| Development tools | `internal/tools/` (18 tools) | No |
+| CI gate scripts | `scripts/ci/` | No (bash) |
+
+To see dev-only commands: `stave --show-dev --help`.
+
 ## Running Tests
 
 ```bash
@@ -370,7 +414,7 @@ All AWS account IDs, ARNs, and bucket names under `testdata/` and `case-studies/
 
 ## Reporting Bugs
 
-When filing a bug report, include a minimal, deterministic reproduction. See the [Bug Reproduction Guide](https://www.systeminvariant.dev/docs/how-to/maintenance/bug-reports) for how to write one, and the [Bug Reproduction Template](docs/contrib/bug-repro-template.md) for a copy-paste starting point.
+When filing a bug report, include a minimal, deterministic reproduction. See the [Bug Reproduction Guide](https://www.systeminvariant.dev/docs/how-to/maintenance/bug-reports) for how to write one, and the [Bug Reproduction Template](https://www.systeminvariant.dev/docs/how-to/maintenance/bug-reports) for a copy-paste starting point.
 
 ## Getting Help
 

@@ -1,0 +1,19 @@
+spec:
+  id: CTL.S3.ENCRYPT.001
+  service: S3
+  asset_type: aws_s3_bucket
+  threat: unencrypted_storage_at_rest
+  attack_stage: exfiltration
+  severity: high
+  unsafe_condition:
+    field: storage.encryption.at_rest_enabled
+    operator: eq
+    value: false
+  safe_condition:
+    field: storage.encryption.at_rest_enabled
+    operator: eq
+    value: true
+  invariant: "encryption_at_rest(bucket) = true"
+  references:
+    mitre: "T1530"
+    framework: "CIS AWS 2.1.1"

@@ -1,30 +1,60 @@
 # Compound Chains
 
-A compound chain models a multi-step attack path. Each chain declares
-prerequisite controls — all must fire for the chain to activate. A
-single IAM overpermission finding is medium; combined with a public
-endpoint and missing logging, the chain is critical.
+Why compound risk exists and why chains are separate from controls.
 
-## How chains work
+## Single Misconfigurations Are Rarely Catastrophic
 
-1. `stave apply` evaluates individual controls against observations
-2. The chain engine checks which chains have all prerequisites satisfied
-3. Chains that fire produce compound findings with elevated severity
-4. Chain severity is derived from the component controls' combined risk
+A public S3 bucket with no data is a policy violation, not a breach. An unencrypted RDS database behind a VPC with no internet route is a compliance gap, not a data exposure. Individual misconfigurations create *conditions* for compromise — they are not compromises themselves.
 
-## Browse chains
+The catastrophic scenario is the combination: a public S3 bucket *containing PHI* with *no access logging* and *no CloudTrail data event monitoring*. Each individual control fires independently. No single control captures the compound risk that all three conditions together create a complete, undetectable exfiltration path.
+
+Chains capture this compound risk.
+
+## Why Chains Are Separate from Controls
+
+A control is a predicate about a single asset property. It answers: "is this one thing configured correctly?" A chain is a relationship between multiple controls. It answers: "do these failures *together* create a risk greater than the sum of the parts?"
+
+Making chains separate from controls preserves the single-responsibility property of controls. A control author does not need to know which chains reference their control. A chain author does not need to modify controls to create new compound risk definitions.
+
+## Escalation Thresholds
+
+A chain with 3 member controls and an `escalation_threshold: 2` activates when *any 2 of the 3* controls fail simultaneously. This models real attack paths where the attacker needs most — but not necessarily all — of the conditions to be present.
+
+The threshold also prevents chain activation from noise: a single transient failure in one control does not trigger a critical compound finding.
+
+## Capabilities and Attack Path Edges
+
+Chains carry `preconditions` and `postconditions` from a closed capability vocabulary. If chain A's postcondition matches chain B's precondition, there is a directed edge from A to B in the attack path graph.
+
+This is not a graph algorithm — it is a double loop over active chains performing set intersection. The graph structure is data, not computation. External tools (NetworkX, Neo4j) perform path finding, centrality analysis, and visualization.
+
+The capability vocabulary is closed (19 terms) because open vocabularies produce unmaintainable, inconsistent annotations. Every capability string is validated at chain load time.
+
+## Browsing Chains
+
+The catalog groups chains by family — the service prefix of the chain ID (e.g. `iam_`, `s3_`, `apigw_`). Each chain shows its compound severity and a one-line description.
 
 ```bash
-stave catalog --kind chain              # all chains, grouped by family
-stave catalog --kind chain --family iam  # just IAM chains
-stave catalog --kind chain --verbose     # full descriptions
+# All chains, grouped by family
+stave catalog --kind chain
+
+# Just one family
+stave catalog --kind chain --family iam
+
+# Full descriptions (default truncates to one phrase)
+stave catalog --kind chain --verbose
+
+# Machine-readable
+stave catalog --kind chain --format json
 ```
 
-## Chain structure
+## Rendering Chain Documentation
 
-Each chain YAML in `chains/` declares:
-- `controls`: list of prerequisite control IDs (all must fire)
-- `compound_severity`: the severity of the chain as a whole
-- `description`: what the attack path looks like end-to-end
+Chain catalog data can be rendered through templates for custom documentation:
 
-See [`chains/README.md`](../../chains/README.md) for the full chain catalog.
+```bash
+stave catalog --kind chain --format json \
+  | stave render --data - --template templates/chain-catalog.md.tmpl
+```
+
+This separates the data (which changes when chains are added) from the presentation (which changes when the documentation format changes).
