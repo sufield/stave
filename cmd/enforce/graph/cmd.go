@@ -20,6 +20,7 @@ func NewCmd() *cobra.Command {
 
 	graphCmd.AddCommand(newCoverageCmd())
 	graphCmd.AddCommand(newExportCmd())
+	graphCmd.AddCommand(newSilosCmd())
 	return graphCmd
 }
 

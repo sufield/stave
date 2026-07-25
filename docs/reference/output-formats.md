@@ -5,26 +5,26 @@ Stave supports multiple output formats for different use cases.
 ## JSON (Default for `apply`)
 
 ```bash
-stave apply --controls ./ctl --observations ./obs --format json
+stave apply --controls ./controls --observations ./observations --format json
 ```
 
 Structured output following the `out.v0.1` schema. Machine-readable, suitable for piping to `jq` or ingestion by other tools. Results go to stdout; errors and logs go to stderr.
 
 ```bash
 # Count violations
-stave apply --controls ./ctl --observations ./obs | jq '.summary.violations'
+stave apply --controls ./controls --observations ./observations | jq '.summary.violations'
 
 # List violated resource IDs
-stave apply --controls ./ctl --observations ./obs | jq -r '.findings[].resource_id'
+stave apply --controls ./controls --observations ./observations | jq -r '.findings[].resource_id'
 
 # Get unique violated control IDs
-stave apply --controls ./ctl --observations ./obs | jq -r '.findings[].control_id' | sort -u
+stave apply --controls ./controls --observations ./observations | jq -r '.findings[].control_id' | sort -u
 ```
 
 ## Text
 
 ```bash
-stave apply --controls ./ctl --observations ./obs --format text
+stave apply --controls ./controls --observations ./observations --format text
 ```
 
 Human-readable output for terminal use. Includes color when the terminal supports it (respects `NO_COLOR` environment variable).
@@ -32,27 +32,27 @@ Human-readable output for terminal use. Includes color when the terminal support
 ## Quiet Mode
 
 ```bash
-stave apply --controls ./ctl --observations ./obs --quiet
+stave apply --controls ./controls --observations ./observations --quiet
 ```
 
 Suppresses all output. Use the exit code to determine the result:
 - `0` = no violations
 - `3` = violations found
 
-## Writing Output to a Directory
+## Writing Output to a File
 
 ```bash
-stave apply --controls ./ctl --observations ./obs --out ./results
+stave apply --controls ./controls --observations ./observations > evaluation.json
 ```
 
-Writes `evaluation.json` to the specified directory (created if it doesn't exist). Output is still printed to stdout as well.
+Redirect stdout to persist output. Errors and logs still go to stderr.
 
 ## Validation Output
 
 The `validate` command defaults to text output but supports JSON:
 
 ```bash
-stave validate --controls ./ctl --observations ./obs --format json
+stave validate --controls ./controls --observations ./observations --format json
 ```
 
 ```json
@@ -77,10 +77,10 @@ The `graph coverage` command outputs in DOT (default) or JSON format:
 
 ```bash
 # DOT graph (pipe to graphviz)
-stave graph coverage --controls ./ctl --observations ./obs | dot -Tpng > coverage.png
+stave graph coverage --controls ./controls --observations ./observations | dot -Tpng > coverage.png
 
 # JSON output
-stave graph coverage --controls ./ctl --observations ./obs --format json | jq .
+stave graph coverage --controls ./controls --observations ./observations --format json | jq .
 ```
 
 ## Downstream Artifacts
@@ -120,14 +120,14 @@ Logs go to stderr and are separate from command output:
 
 ```bash
 # Verbose logging
-stave apply --controls ./ctl --observations ./obs -v
+stave apply --controls ./controls --observations ./observations -v
 
 # Debug logging
-stave apply --controls ./ctl --observations ./obs -vv
+stave apply --controls ./controls --observations ./observations -vv
 
 # JSON logs to file
-stave apply --controls ./ctl --observations ./obs --log-format json --log-file run.log
+stave apply --controls ./controls --observations ./observations --log-format json --log-file run.log
 
 # Include timestamps (breaks determinism)
-stave apply --controls ./ctl --observations ./obs --log-timestamps
+stave apply --controls ./controls --observations ./observations --log-timestamps
 ```

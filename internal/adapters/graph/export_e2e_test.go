@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/sufield/stave/internal/platform/metadata"
@@ -157,7 +158,7 @@ func TestGraphExportChainsRemoved(t *testing.T) {
 	cmd := exec.Command(bin, "graph", "--help")
 	out, _ := cmd.CombinedOutput()
 	helpText := string(out)
-	if contains(helpText, "chains") {
+	if containsSubcommand(helpText, "chains") {
 		t.Errorf("stave graph --help should not list 'chains' subcommand:\n%s", helpText)
 	}
 	// export should still be listed.
@@ -173,6 +174,19 @@ func TestGraphExportChainsRemoved(t *testing.T) {
 func contains(s, sub string) bool {
 	for i := 0; i+len(sub) <= len(s); i++ {
 		if s[i:i+len(sub)] == sub {
+			return true
+		}
+	}
+	return false
+}
+
+// containsSubcommand checks whether name appears as a Cobra subcommand name
+// in help output (indented command name at the start of a line in the
+// "Available Commands" block), not just anywhere as a substring.
+func containsSubcommand(helpText, name string) bool {
+	for line := range strings.SplitSeq(helpText, "\n") {
+		trimmed := strings.TrimLeft(line, " ")
+		if strings.HasPrefix(trimmed, name+" ") || trimmed == name {
 			return true
 		}
 	}

@@ -72,3 +72,4 @@ see_also:
     - stave - Configuration safety evaluator
     - stave graph coverage - Show which controls cover which assets
     - stave graph export - Export assessment as JSON, STIX 2.1, JSON-LD, or GraphML
+    - stave graph silos - Find services with controls but zero compound chains

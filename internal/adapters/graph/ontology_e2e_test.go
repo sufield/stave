@@ -438,7 +438,7 @@ func TestExperiment09_ChainsRemoval(t *testing.T) {
 	cmd.Dir = repoRoot
 	out, _ := cmd.CombinedOutput()
 	helpText := string(out)
-	if contains(helpText, "chains") {
+	if containsSubcommand(helpText, "chains") {
 		t.Errorf("stave graph --help should not list 'chains':\n%s", helpText)
 	}
 

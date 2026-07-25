@@ -165,6 +165,7 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 		"util":              {}, // small pure-functional utilities
 		"version":           {}, // version-string constants
 		"yamlutil":          {}, // yaml parsing helpers
+		"architecture":      {}, // ADR-as-test assertions (Extension G)
 		"collectorcontract": {}, // collector contract validation; loaded by pkg/stave facade
 	}
 

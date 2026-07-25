@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_172 commands across 13 groups._
+_173 commands across 13 groups._
 
 ## Getting Started
 
@@ -208,6 +208,7 @@ _172 commands across 13 groups._
 | `graph` | Visualize control and asset relationships |
 | `graph coverage` | Show which controls cover which assets |
 | `graph export` | Export assessment as JSON, STIX 2.1, JSON-LD, or GraphML |
+| `graph silos` | Find services with controls but zero compound chains |
 | `metrics` | Write Prometheus scrape file for node_exporter |
 | `render` | Render JSON data through a Go text/template |
 | `telemetry` | Emit structured NDJSON telemetry from assessment output |
