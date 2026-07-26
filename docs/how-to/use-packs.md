@@ -6,8 +6,8 @@ service, standard, or use case. Use them to evaluate just what matters.
 ## List available packs
 
 ```bash
-stave packs list
-stave packs show iam
+stave pack list
+stave pack show iam
 ```
 
 ## Run with a pack
@@ -17,4 +17,4 @@ stave apply --pack entropy --observations testdata/e2e/e2e-01-violation/observat
 stave apply --pack quick --observations testdata/e2e/e2e-01-violation/observations
 ```
 
-Use `stave packs list` to see all available packs.
+Use `stave pack list` to see all available packs.
