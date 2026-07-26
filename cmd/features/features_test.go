@@ -90,6 +90,9 @@ func TestFeatures_FrameworkFlags(t *testing.T) {
 }
 
 func TestFeatures_WideHasColumns(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
 	cmd := NewCmd()
 	var buf bytes.Buffer
 	cmd.SetOut(&buf)

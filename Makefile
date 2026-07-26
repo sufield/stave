@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
+.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate
 # Binary name
 BINARY=stave
 
@@ -106,20 +106,26 @@ mcp: sync-schemas sync-controls sync-alternatives
 
 ## mcp-test: Run the MCP server's protocol validation tests
 mcp-test: sync-schemas sync-controls sync-alternatives
-	$(GOTEST) ./cmd/mcp/ -count=1
+	$(GOTEST) -tags=integration ./cmd/mcp/ -count=1
 
 ## Testing pyramid:
 ##
+##   test-run         single test by name (PKG= TEST=).
 ##   test-fast        sub-minute dev iteration (`-short`, no binary spawn).
+##   test-changed     only packages with modified .go files (auto-detected).
+##   test-safe        full suite, resource-limited (-p 1, 2GB heap cap).
+##   test-watch       re-run on save via gotestsum.
 ##   test-integration internal/ tests that load fixtures but do not spawn
 ##                    the stave binary; targets the middle tier.
 ##   test-e2e         binary-driven E2E (./e2e and testscript). Slowest.
 ##   test             everything, including E2E and golden suites.
 ##   test-ci          regenerate goldens then run the full `test` target.
+##   test-slow        find the 20 slowest tests.
 ##
-## Reach for `make test-fast` while iterating on a single change. Promote
-## to `make test-integration` before opening a PR. CI runs the full
-## `test-ci` target as a final gate.
+## Reach for `make test-run` for a single test or `make test-fast` for a
+## quick sweep. Use `make test-changed` before committing. Promote to
+## `make test-integration` before opening a PR. Use `make test-safe` if
+## your machine is constrained. CI runs `test-ci` as a final gate.
 ##
 ## test: Run all tests with race detector (includes dev-only packages via build tag)
 ##
@@ -135,7 +141,7 @@ mcp-test: sync-schemas sync-controls sync-alternatives
 ## per-test latency rather than CPU work. Race-enabled binaries do extra
 ## bookkeeping per goroutine but the I/O wait dominates.
 test: sync-schemas sync-controls sync-alternatives
-	$(GOTEST) -tags stavedev -race -v -timeout 30m -parallel 16 ./...
+	$(GOTEST) -tags 'stavedev integration' -race -v -timeout 30m -parallel 16 ./...
 
 ## test-fast: Sub-minute dev feedback loop.
 ##
@@ -172,6 +178,62 @@ test-pkg:
 			done ;; \
 	esac
 	$(GOTEST) -short -timeout 5m $(PKG)
+
+## test-changed: Run tests only for packages with modified Go files.
+##
+## Discovers changed .go files from git diff (unstaged + staged vs HEAD),
+## maps them to Go package paths, and runs only those packages. Falls
+## back to test-fast if no .go files changed or if the change touches
+## embedded-data source dirs (controls/, schemas/, data/alternatives/).
+##
+##   make test-changed              # test packages with uncommitted changes
+##   make test-changed BASE=main    # test packages changed since main
+test-changed: sync-schemas sync-controls sync-alternatives
+	@base="$${BASE:-HEAD}"; \
+	changed=$$(git diff --name-only "$$base" -- '*.go' 2>/dev/null); \
+	if [ -z "$$changed" ]; then \
+		echo "No .go files changed vs $$base — nothing to test."; exit 0; \
+	fi; \
+	if echo "$$changed" | grep -qE '^(controls/|schemas/|data/alternatives/)'; then \
+		echo "Embedded-data source changed — falling back to test-fast."; \
+		$(MAKE) test-fast; exit $$?; \
+	fi; \
+	pkgs=$$(echo "$$changed" | xargs -n1 dirname | sort -u | sed 's|^|./|'); \
+	echo "Testing $$(echo "$$pkgs" | wc -w) changed package(s):"; \
+	echo "$$pkgs"; \
+	$(GOTEST) -count=1 -race -timeout 5m $$pkgs
+
+## test-safe: Resource-limited full suite for constrained machines.
+##
+## Serializes package execution (-p 1) and caps the Go heap at 2GB.
+## Use when `make test` freezes or OOM-kills your session.
+test-safe: sync-schemas sync-controls sync-alternatives
+	GOMEMLIMIT=2GiB $(GOTEST) -tags 'stavedev integration' -p 1 -parallel 2 -timeout 45m ./...
+
+## test-run: Run a single test by name.
+##
+##   make test-run PKG=./internal/core/evaluation TEST=TestChainEvaluation
+##   make test-run PKG=./cmd/apply TEST=TestApply/dry_run
+test-run:
+	@if [ -z "$(PKG)" ] || [ -z "$(TEST)" ]; then \
+		echo "Usage: make test-run PKG=./internal/core/evaluation TEST=TestName"; exit 2; \
+	fi
+	$(GOTEST) -v -count=1 -run $(TEST) $(PKG)
+
+## test-watch: Re-run tests on file save via gotestsum.
+test-watch:
+	@command -v gotestsum >/dev/null 2>&1 || { \
+		echo "gotestsum not found. Install: go install gotest.tools/gotestsum@latest"; \
+		exit 1; \
+	}
+	gotestsum --watch -- -short -p 2 ./...
+
+## test-slow: Find the 20 slowest tests in the suite.
+test-slow:
+	@echo "Running suite to find slowest tests..."
+	@$(GOTEST) -count=1 -short -timeout 10m ./... -json 2>/dev/null | \
+		jq -r 'select(.Action=="pass" and .Test!=null) | "\(.Elapsed)s\t\(.Package)\t\(.Test)"' | \
+		sort -rn | head -20
 
 ## test-shard SHARD=N: Run the same package set as CI shard N (0-3).
 ## Reproduces a CI shard failure locally without copy-pasting filters
