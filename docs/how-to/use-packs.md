@@ -7,7 +7,7 @@ service, standard, or use case. Use them to evaluate just what matters.
 
 ```bash
 stave pack list
-stave pack show iam
+stave pack show entropy
 ```
 
 ## Run with a pack
