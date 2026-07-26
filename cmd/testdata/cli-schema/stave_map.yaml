@@ -94,3 +94,4 @@ example: |4-
       stave map --output assessment.json --format navigator > layer.json
 see_also:
     - stave - Configuration safety evaluator
+    - stave map attack - Map offensive tools to configuration prerequisites and find coverage gaps

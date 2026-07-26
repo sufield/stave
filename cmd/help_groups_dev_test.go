@@ -14,13 +14,11 @@ func TestPromotedCommandsRegistered(t *testing.T) {
 		"doctor",
 		"graph",
 		"alias",
-		"schemas",
 		"capabilities",
 		"version",
 		"lint",
 		"fmt",
 		"controls",
-		"packs",
 	}
 
 	for _, use := range promoted {
@@ -30,11 +28,19 @@ func TestPromotedCommandsRegistered(t *testing.T) {
 		}
 	}
 
-	// trace is a subcommand of diagnose.
-	for _, sub := range []string{"trace"} {
-		cmd, _, err := root.Find([]string{"diagnose", sub})
-		if err != nil || cmd == nil {
-			t.Fatalf("expected command %q to be registered under diagnose", sub)
+	// trace is a subcommand of diagnose; schemas and path are
+	// subcommands of contract and graph respectively.
+	subcommands := map[string][]string{
+		"diagnose": {"trace"},
+		"contract": {"schemas"},
+		"graph":    {"path"},
+	}
+	for parent, subs := range subcommands {
+		for _, sub := range subs {
+			cmd, _, err := root.Find([]string{parent, sub})
+			if err != nil || cmd == nil {
+				t.Fatalf("expected command %q to be registered under %s", sub, parent)
+			}
 		}
 	}
 }

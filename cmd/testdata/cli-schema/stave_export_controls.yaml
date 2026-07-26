@@ -1,19 +1,45 @@
-name: stave packs show
-synopsis: Show one built-in pack and its control IDs
-description: |-
-    Show details of a single built-in control pack including its
-    control IDs, version, and description.
+name: stave export controls
+synopsis: Export the control catalog for external solver consumption
+description: |
+    Export the control catalog as a JSON document — each entry carries the
+    control's predicate tree, authored intent rationale, and the optional
+    forbidden_state block (the high-level "this configuration must never
+    exist" claim external SMT compilers consume to generate Z3
+    satisfiability queries).
 
-    Exit Codes:
-      0    Success
-      2    Unknown pack name
-      4    Internal error
-usage: stave packs show <name> [flags]
+    The export is metadata-only: no observation reads, no findings, no
+    clock. External solvers receive a pure description of "the controls
+    Stave evaluates" without inheriting any of Stave's evaluation
+    semantics. The JSON shape itself is the stable solver-import format,
+    so the top-level array is keyed `invariants` — that name is the
+    solver-side data contract, not Stave's user-facing vocabulary.
+
+    Inputs:
+      --controls, -i      Control definitions directory (default: built-in catalog)
+      --format, -f        Output format: json (default: json)
+
+    Outputs:
+      stdout: control export as a JSON document (sorted by control ID).
+      stderr: errors.
+
+    Exit codes:
+      0   success
+      2   input error (bad flag)
+      4   internal error (load failure, projection error)
+      130 SIGINT
+usage: stave export controls [flags]
 options:
+    - name: controls
+      shorthand: i
+      usage: control definitions directory (empty = built-in catalog)
+    - name: format
+      shorthand: f
+      default_value: json
+      usage: 'output format: json'
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for show
+      usage: help for controls
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -74,7 +100,13 @@ inherited_options:
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
-      stave packs show s3
-      stave packs show s3 --output json
+      # Built-in catalog → JSON to stdout
+      stave export-controls > controls.json
+
+      # Filter to controls that author a forbidden_state block
+      stave export-controls | jq '[.invariants[] | select(.forbidden_state.combine != "")]'
+
+      # Custom controls directory
+      stave export-controls --controls ./my-controls > controls.json
 see_also:
-    - stave packs - Inspect built-in control packs
+    - stave export - Export controls and compliance evidence

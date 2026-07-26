@@ -74,4 +74,5 @@ inherited_options:
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 see_also:
     - stave - Configuration safety evaluator
+    - stave contract schemas - List all contract schemas
     - stave contract show - Show the agent-facing contract for an asset type

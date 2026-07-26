@@ -1,45 +1,41 @@
-name: stave export-controls
-synopsis: Export the control catalog for external solver consumption
-description: |
-    Export the control catalog as a JSON document — each entry carries the
-    control's predicate tree, authored intent rationale, and the optional
-    forbidden_state block (the high-level "this configuration must never
-    exist" claim external SMT compilers consume to generate Z3
-    satisfiability queries).
+name: stave graph path
+synopsis: Export attack path graph data from active chain findings
+description: |-
+    Produce a structured data export describing active chain findings,
+    directed edges between chains (postcondition of A satisfies
+    precondition of B), and control remediation actions per chain.
 
-    The export is metadata-only: no observation reads, no findings, no
-    clock. External solvers receive a pure description of "the controls
-    Stave evaluates" without inheriting any of Stave's evaluation
-    semantics. The JSON shape itself is the stable solver-import format,
-    so the top-level array is keyed `invariants` — that name is the
-    solver-side data contract, not Stave's user-facing vocabulary.
+    An external program performs path finding — BFS, DFS, shortest
+    path, centrality analysis, or any other graph algorithm. Stave
+    does not implement graph algorithms.
 
     Inputs:
-      --controls, -i      Control definitions directory (default: built-in catalog)
-      --format, -f        Output format: json (default: json)
+      --output PATH     Path to stave apply JSON output (required)
+      --chains PATH     Path to chains directory (default: chains)
+      --format STRING   Output format: json (default) | dot | csv-edges
 
     Outputs:
-      stdout: control export as a JSON document (sorted by control ID).
-      stderr: errors.
+      stdout            Attack path graph in selected format
 
-    Exit codes:
-      0   success
-      2   input error (bad flag)
-      4   internal error (load failure, projection error)
-      130 SIGINT
-usage: stave export-controls [flags]
+    Exit Codes:
+      0   Graph produced
+      2   Invalid input
+      4   Internal error
+usage: stave graph path [flags]
 options:
-    - name: controls
-      shorthand: i
-      usage: control definitions directory (empty = built-in catalog)
+    - name: chains
+      default_value: chains
+      usage: path to chains directory
     - name: format
       shorthand: f
       default_value: json
-      usage: 'output format: json'
+      usage: 'output format: json | dot | csv-edges'
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for export-controls
+      usage: help for path
+    - name: output
+      usage: path to stave apply JSON output (required)
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -100,13 +96,13 @@ inherited_options:
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
-      # Built-in catalog → JSON to stdout
-      stave export-controls > controls.json
+      # Produce graph data for external analysis
+      stave path --output findings.json > attack-graph.json
 
-      # Filter to controls that author a forbidden_state block
-      stave export-controls | jq '[.invariants[] | select(.forbidden_state.combine != "")]'
+      # Graphviz visualization
+      stave path --output findings.json --format dot | dot -Tsvg > paths.svg
 
-      # Custom controls directory
-      stave export-controls --controls ./my-controls > controls.json
+      # CSV edges for Python NetworkX
+      stave path --output findings.json --format csv-edges > edges.csv
 see_also:
-    - stave - Configuration safety evaluator
+    - stave graph - Visualize control and asset relationships

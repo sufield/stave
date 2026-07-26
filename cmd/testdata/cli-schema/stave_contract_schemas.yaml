@@ -1,4 +1,4 @@
-name: stave schemas
+name: stave contract schemas
 synopsis: List all contract schemas
 description: |-
     Schemas lists every wire-format contract schema that this version of Stave
@@ -19,7 +19,7 @@ description: |-
       stave schemas --format json | jq '.data'
 
     Offline-only: reads local files; makes zero network connections; no cloud credentials.
-usage: stave schemas [flags]
+usage: stave contract schemas [flags]
 options:
     - name: format
       default_value: text
@@ -89,4 +89,4 @@ inherited_options:
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: '  stave schemas'
 see_also:
-    - stave - Configuration safety evaluator
+    - stave contract - Inspect Stave's per-asset-type input contracts

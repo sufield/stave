@@ -1,4 +1,4 @@
-name: stave export-sir
+name: stave export sir
 synopsis: Export the Stave Intermediate Representation as JSON
 description: |
     Export the Stave Intermediate Representation (SIR) for the configured
@@ -48,7 +48,7 @@ description: |
       2   input error (bad flag, malformed --eval-time)
       4   internal error (load failure, builder error)
       130 SIGINT
-usage: stave export-sir [flags]
+usage: stave export sir [flags]
 options:
     - name: allowlist-mode
       default_value: curated
@@ -72,7 +72,7 @@ options:
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for export-sir
+      usage: help for sir
     - name: observations
       shorthand: o
       default_value: observations
@@ -161,4 +161,4 @@ example: |4-
       stave export-sir --format smt2 > facts.smt2
       cat facts.smt2 query.smt2 | z3 -in
 see_also:
-    - stave - Configuration safety evaluator
+    - stave export - Export controls and compliance evidence

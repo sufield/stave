@@ -2,38 +2,57 @@ package cmd
 
 import "github.com/spf13/cobra"
 
-// wireHelpGroups assigns each registered subcommand to the help group
-// it belongs to. assignCommandGroup itself soft-skips subcommands not
-// present in this build (edition-stripped case) and surfaces wiring
-// regressions via slog.Warn, so this wrapper has nothing to bubble
-// up — every outcome is recoverable at startup.
+// wireHelpGroups assigns every registered subcommand to one of seven
+// intent-based help groups. assignCommandGroup soft-skips subcommands
+// not present in this build (edition-stripped case).
 func wireHelpGroups(root *cobra.Command) {
 	root.AddGroup(
-		&cobra.Group{ID: groupGettingStarted, Title: "Getting Started"},
-		&cobra.Group{ID: groupCore, Title: "Control Engine"},
-		&cobra.Group{ID: groupWorkflow, Title: "Workflow & CI"},
-		&cobra.Group{ID: groupArtifacts, Title: "Data & Artifacts"},
-		&cobra.Group{ID: groupIntrospection, Title: "Introspection"},
-		&cobra.Group{ID: groupSettings, Title: "Settings"},
+		&cobra.Group{ID: groupEvaluate, Title: "Evaluate"},
+		&cobra.Group{ID: groupData, Title: "Data"},
+		&cobra.Group{ID: groupControls, Title: "Controls"},
+		&cobra.Group{ID: groupCompliance, Title: "Compliance"},
+		&cobra.Group{ID: groupArtifacts, Title: "Artifacts"},
+		&cobra.Group{ID: groupAnalysis, Title: "Analysis"},
+		&cobra.Group{ID: groupSetup, Title: "Setup & Config"},
 	)
 
-	// Top-level commands grouped for the help layout. `init` is intentionally
-	// absent: there is no top-level `init` command in any current edition
-	// (the closest is `sla init`, a subcommand). Listing it here triggered
-	// a soft-skip slog.Warn on every `stave --help` invocation.
 	groupMap := map[string][]string{
-		groupGettingStarted: {"generate"},
-		groupCore:           {"validate", "apply", "diagnose", "explain", "expand"},
-		groupWorkflow:       {"ci", "snapshot", "status"},
-		groupArtifacts:      {"enforce", "report"},
-		groupIntrospection:  {"catalog", "inspect", "features", "services"},
-		groupSettings:       {"config"},
+		groupEvaluate: {
+			"plan", "apply", "validate", "check",
+			"diagnose", "explain", "expand", "bisect",
+		},
+		groupData: {
+			"discover", "transform", "snapshot", "readiness",
+			"gaps", "coverage", "sanitize", "contract",
+			"validate-mapping",
+		},
+		groupControls: {
+			"controls", "lint", "fmt", "test", "cel",
+			"template", "pack", "catalog", "search",
+			"recommend", "forge",
+		},
+		groupCompliance: {
+			"compliance", "score", "scorecard", "profile",
+			"exempt", "trend", "compare", "map",
+		},
+		groupArtifacts: {
+			"report", "export", "enforce", "bundle",
+			"attest", "telemetry", "metrics", "render",
+		},
+		groupAnalysis: {
+			"inspect", "graph", "permissions", "fingerprint", "prove",
+		},
+		groupSetup: {
+			"status", "doctor", "version", "config",
+			"capabilities", "features", "ci", "alias",
+			"generate", "services",
+		},
 	}
 	for groupID, names := range groupMap {
 		for _, name := range names {
 			assignCommandGroup(root, name, groupID)
 		}
 	}
-	assignCommandGroup(root, "completion", groupSettings)
-	root.SetHelpCommandGroupID(groupSettings)
+	assignCommandGroup(root, "completion", groupSetup)
+	root.SetHelpCommandGroupID(groupSetup)
 }

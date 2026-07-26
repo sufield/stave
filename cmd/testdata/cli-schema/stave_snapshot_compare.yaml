@@ -1,41 +1,33 @@
-name: stave path
-synopsis: Export attack path graph data from active chain findings
+name: stave snapshot compare
+synopsis: Compare two explicit snapshot files
 description: |-
-    Produce a structured data export describing active chain findings,
-    directed edges between chains (postcondition of A satisfies
-    precondition of B), and control remediation actions per chain.
-
-    An external program performs path finding — BFS, DFS, shortest
-    path, centrality analysis, or any other graph algorithm. Stave
-    does not implement graph algorithms.
+    Compare two observation snapshots and report property changes and
+    new/removed assets between them.
 
     Inputs:
-      --output PATH     Path to stave apply JSON output (required)
-      --chains PATH     Path to chains directory (default: chains)
-      --format STRING   Output format: json (default) | dot | csv-edges
-
-    Outputs:
-      stdout            Attack path graph in selected format
+      --snapshot-before PATH   Earlier snapshot JSON
+      --snapshot-after PATH    Later snapshot JSON
 
     Exit Codes:
-      0   Graph produced
+      0   Diff produced
       2   Invalid input
-      4   Internal error
-usage: stave path [flags]
+usage: stave snapshot compare [flags]
 options:
-    - name: chains
-      default_value: chains
-      usage: path to chains directory
     - name: format
       shorthand: f
-      default_value: json
-      usage: 'output format: json | dot | csv-edges'
+      default_value: text
+      usage: 'output format: text | json'
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for path
-    - name: output
-      usage: path to stave apply JSON output (required)
+      usage: help for compare
+    - name: no-pager
+      default_value: "false"
+      usage: never page output, even on a terminal
+    - name: snapshot-after
+      usage: path to after snapshot JSON
+    - name: snapshot-before
+      usage: path to before snapshot JSON
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -95,14 +87,6 @@ inherited_options:
       default_value: "false"
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
-example: |4-
-      # Produce graph data for external analysis
-      stave path --output findings.json > attack-graph.json
-
-      # Graphviz visualization
-      stave path --output findings.json --format dot | dot -Tsvg > paths.svg
-
-      # CSV edges for Python NetworkX
-      stave path --output findings.json --format csv-edges > edges.csv
+example: '  stave snapshot compare --snapshot-before snap1.json --snapshot-after snap2.json'
 see_also:
-    - stave - Configuration safety evaluator
+    - stave snapshot - Snapshot inspection commands

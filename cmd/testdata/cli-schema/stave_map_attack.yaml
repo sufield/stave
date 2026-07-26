@@ -1,18 +1,50 @@
-name: stave packs list
-synopsis: List available built-in packs
+name: stave map attack
+synopsis: |
+    Map offensive tools to configuration prerequisites and find coverage gaps
 description: |-
-    List all built-in control packs embedded in the binary. Each pack
-    is a curated set of controls for a specific domain (e.g. s3).
+    Perform a three-way join of chains × controls × offensive tool prerequisites.
+
+    For each registered tool, checks whether its configuration prerequisites are
+    detected by an existing chain (capability match) and validated by an existing
+    control (field path match). Prerequisites with both are "covered"; those
+    missing either are "gaps".
+
+    Inputs:
+      --chains PATH       Path to chain definitions directory (default: chains)
+      --controls PATH     Path to controls directory (default: controls)
+      --format STRING     Output format: text (default) | json
+      --generate PATH     Generate chain YAML skeletons for gaps into PATH
+      --tool NAME         Show prerequisites for a specific tool
+      --capability TOKEN  Show tools needing this capability
 
     Exit Codes:
-      0    Success
-      4    Internal error
-usage: stave packs list [flags]
+      0   Success
+      2   Invalid input
+      3   Gaps found
+      4   Internal error
+usage: stave map attack [flags]
 options:
+    - name: capability
+      usage: show tools needing this capability
+    - name: chains
+      default_value: chains
+      usage: path to chain definitions directory
+    - name: controls
+      shorthand: i
+      default_value: controls
+      usage: path to controls directory
+    - name: format
+      shorthand: f
+      default_value: text
+      usage: 'output format: text | json'
+    - name: generate
+      usage: generate chain skeletons for gaps into this directory
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for list
+      usage: help for attack
+    - name: tool
+      usage: show prerequisites for a specific tool
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -73,7 +105,19 @@ inherited_options:
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
-      stave packs list
-      stave packs list --output json
+      # Run three-way join, print gap report
+      stave toolmap
+
+      # JSON output for automation
+      stave toolmap --format json
+
+      # Generate chain skeletons for gaps
+      stave toolmap --generate ./generated-chains
+
+      # Show prerequisites for a specific tool
+      stave toolmap --tool pacu
+
+      # Show tools needing a capability
+      stave toolmap --capability iam_credential_theft
 see_also:
-    - stave packs - Inspect built-in control packs
+    - stave map - ATT&CK tactic coverage and gap analysis

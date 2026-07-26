@@ -18,7 +18,7 @@ exec stave capabilities
 stdout '"version"'
 
 # Schemas data goes to stdout
-exec stave schemas
+exec stave contract schemas
 stdout 'obs.v0.1'
 
 -- controls/CTL.TEST.001.yaml --

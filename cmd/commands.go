@@ -29,8 +29,6 @@ import (
 	staveexempt "github.com/sufield/stave/cmd/exempt"
 	"github.com/sufield/stave/cmd/expand"
 	staveexport "github.com/sufield/stave/cmd/export"
-	staveexportinvariants "github.com/sufield/stave/cmd/exportinvariants"
-	staveexportsir "github.com/sufield/stave/cmd/exportsir"
 	stavefeatures "github.com/sufield/stave/cmd/features"
 	stavefingerprint "github.com/sufield/stave/cmd/fingerprint"
 	staveforge "github.com/sufield/stave/cmd/forge"
@@ -77,13 +75,13 @@ import (
 )
 
 const (
-	groupGettingStarted = "getting-started"
-	groupCore           = "core-evaluation"
-	groupWorkflow       = "workflow"
-	groupArtifacts      = "artifacts"
-	groupSettings       = "settings"
-	groupIntrospection  = "introspection"
-	groupDevTools       = "dev-tools"
+	groupEvaluate   = "evaluate"
+	groupData       = "data"
+	groupControls   = "controls"
+	groupCompliance = "compliance"
+	groupArtifacts  = "artifacts"
+	groupAnalysis   = "analysis"
+	groupSetup      = "setup"
 )
 
 // WireCommands attaches the full command tree to the root command and
@@ -137,7 +135,7 @@ func WireCommands(app *App) error {
 	snapshotCmd := &cobra.Command{
 		Use:   "snapshot",
 		Short: "Snapshot inspection commands",
-		Long:  "Grouped snapshot commands: diff." + OfflineHelpSuffix,
+		Long:  "Grouped snapshot commands: diff, compare." + OfflineHelpSuffix,
 		Args:  cobra.NoArgs,
 	}
 	root.AddCommand(snapshotCmd)
@@ -165,15 +163,12 @@ func WireCommands(app *App) error {
 	root.AddCommand(staveplan.NewCmd())
 	root.AddCommand(stavetransform.NewCmd())
 	root.AddCommand(staveexport.NewCmd())
-	root.AddCommand(staveexportinvariants.NewCmd())
-	root.AddCommand(staveexportsir.NewCmd())
 
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
 	root.AddCommand(artifacts.NewLintCmd())
 	root.AddCommand(artifacts.NewFmtCmd())
-	root.AddCommand(artifacts.NewControlsCmd(f.NewCtlRepo))
-	root.AddCommand(artifacts.NewPacksCmd())
+	root.AddCommand(newControlsCmd(f.NewCtlRepo))
 
 	// Introspection
 	root.AddCommand(inspect.NewInspectCmd())
@@ -205,14 +200,9 @@ func WireCommands(app *App) error {
 	// Risk acceptance management
 	root.AddCommand(staveexempt.NewCmd())
 
-	// ATT&CK coverage map
-	root.AddCommand(stavemap.NewCmd())
-
-	// Attack path graph export
-	root.AddCommand(stavepath.NewCmd())
-
-	// Offensive tool prerequisite mapping
-	root.AddCommand(stavetoolmap.NewCmd())
+	// ATT&CK coverage map, with offensive tool prerequisite mapping
+	// (stave map attack) as a subcommand.
+	root.AddCommand(newMapCmd())
 
 	// Field coverage analysis
 	root.AddCommand(stavecoverage.NewCmd())
@@ -239,8 +229,12 @@ func WireCommands(app *App) error {
 
 	// Per-asset-type contract introspection — joins the per-asset
 	// JSON Schema, the predicate-path index, and the Steampipe
-	// mapping directory into one agent-facing view.
-	root.AddCommand(contract.NewCmd())
+	// mapping directory into one agent-facing view. `schemas` (the
+	// wire-format contract listing) is wired as a subcommand since
+	// it shares the same "input contract" vocabulary.
+	contractCmd := contract.NewCmd()
+	contractCmd.AddCommand(newSchemasCmd())
+	root.AddCommand(contractCmd)
 
 	// Steampipe→Stave mapping validation. Lets an agent confirm a
 	// generated contracts/steampipe/*.yaml is well-formed, references
@@ -265,9 +259,6 @@ func WireCommands(app *App) error {
 
 	// Multi-framework scorecard
 	root.AddCommand(stavescorecard.NewCmd())
-
-	// Snapshot diff
-	root.AddCommand(stavesnapshotdiff.NewCmd())
 
 	// Standalone sanitization
 	root.AddCommand(stavesanitize.NewCmd())
@@ -304,7 +295,11 @@ func WireCommands(app *App) error {
 
 	// Supportability
 	root.AddCommand(doctor.NewCmd())
-	root.AddCommand(enforce.NewGraphCmd())
+	graphCmd := enforce.NewGraphCmd()
+	pathCmd := stavepath.NewCmd()
+	pathCmd.Use = "path"
+	graphCmd.AddCommand(pathCmd)
+	root.AddCommand(graphCmd)
 	root.AddCommand(initalias.NewCmd(root))
 	{
 		capabilitiesCmd := newCapabilitiesCmd()
@@ -312,7 +307,6 @@ func WireCommands(app *App) error {
 		root.AddCommand(capabilitiesCmd)
 	}
 	root.AddCommand(newCompletionCmd())
-	root.AddCommand(newSchemasCmd())
 	root.AddCommand(newVersionCmd(app.Edition))
 
 	// Settings
@@ -320,8 +314,24 @@ func WireCommands(app *App) error {
 	return nil
 }
 
+// newMapCmd builds the ATT&CK coverage map command, with offensive tool
+// prerequisite mapping (stave map attack) wired as a subcommand.
+func newMapCmd() *cobra.Command {
+	mapCmd := stavemap.NewCmd()
+	toolmapCmd := stavetoolmap.NewCmd()
+	toolmapCmd.Use = "attack"
+	toolmapCmd.Short = "Map offensive tools to configuration prerequisites and find coverage gaps"
+	mapCmd.AddCommand(toolmapCmd)
+	return mapCmd
+}
+
 func wireSnapshotSubtree(snapshotCmd *cobra.Command) {
 	snapshotCmd.AddCommand(enforce.NewDiffCmd())
+
+	snapshotCompareCmd := stavesnapshotdiff.NewCmd()
+	snapshotCompareCmd.Use = "compare"
+	snapshotCompareCmd.Short = "Compare two explicit snapshot files"
+	snapshotCmd.AddCommand(snapshotCompareCmd)
 }
 
 func wireCISubtree(ciCmd *cobra.Command) {

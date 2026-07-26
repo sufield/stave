@@ -76,6 +76,7 @@ see_also:
     - stave - Configuration safety evaluator
     - stave controls alias-explain - Show expanded predicate for an alias
     - stave controls aliases - List built-in semantic predicate aliases
+    - stave controls diff - Compare two control catalog versions
     - stave controls explain - Explain a specific control
     - stave controls list - List control IDs and names
     - stave controls quality - Analyze control catalog metadata completeness and coverage gaps

@@ -29,7 +29,14 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// 66 after adding `template` (init/new/verify/eject subcommands).
 	// 67 after adding `render` (JSON data + Go template = output).
 	// 68 after adding `toolmap` (offensive tool prerequisite mapping).
-	const want = 68
+	// 67 after moving `export-sir` under `export sir` (no top-level alias).
+	// 66 after moving `export-controls` under `export controls`.
+	// 65 after moving `schemas` under `contract schemas`.
+	// 64 after removing top-level `packs` (pack list/show already exist).
+	// 63 after moving `path` under `graph path`.
+	// 62 after moving `toolmap` under `map attack`.
+	// 61 after removing top-level `diff` (split into `snapshot compare` + `controls diff`).
+	const want = 61
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}

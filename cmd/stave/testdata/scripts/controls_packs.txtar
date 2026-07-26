@@ -9,8 +9,8 @@ exec stave controls aliases
 stdout 's3.'
 
 # Packs list
-exec stave packs list
-stdout 's3'
+exec stave pack list
+stdout 'entropy'
 
 # Controls help
 exec stave controls --help
@@ -19,6 +19,6 @@ stdout 'explain'
 stdout 'aliases'
 
 # Packs help
-exec stave packs --help
+exec stave pack --help
 stdout 'list'
 stdout 'show'

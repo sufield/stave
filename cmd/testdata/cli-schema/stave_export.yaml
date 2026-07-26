@@ -4,7 +4,9 @@ description: |-
     Export Stave data to external formats.
 
     Subcommands:
+      sir          Export the Stave Intermediate Representation as JSON
       compliance   Export compliance evidence package as JSON
+      controls     Export the control catalog for external solver consumption
       ocsf         Export findings as OCSF 1.1 events
       oscal        Export findings as OSCAL 1.1.2 documents
       changes      Export remediation property changes for external tooling
@@ -76,6 +78,8 @@ see_also:
     - stave - Configuration safety evaluator
     - stave export changes - Export remediation property changes from assessment findings
     - stave export compliance - Export compliance evidence package
+    - stave export controls - Export the control catalog for external solver consumption
     - stave export ocsf - Export findings as OCSF 1.1 Compliance Finding events
     - stave export oscal - Export findings as OSCAL 1.1.2 Assessment Results JSON
+    - stave export sir - Export the Stave Intermediate Representation as JSON
     - stave export tickets - Export findings as canonical ticket records

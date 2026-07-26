@@ -217,3 +217,54 @@ func TestADR010_ExitCodeConvention(t *testing.T) {
 			"  See %s/ADR-010-exit-code-convention.md", ui.ExitViolations, adrDir)
 	}
 }
+
+func TestADR012_AliasResolverOnAllLoaders(t *testing.T) {
+	root := repoRoot(t)
+	var violations []string
+
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			base := d.Name()
+			if base == "vendor" || base == ".git" || base == "testdata" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			return fmt.Errorf("read %s: %w", path, readErr)
+		}
+		lines := strings.Split(string(data), "\n")
+		for i, line := range lines {
+			if !strings.Contains(line, "NewControlLoader(") {
+				continue
+			}
+			// Definition site — skip
+			if strings.Contains(line, "func NewControlLoader") {
+				continue
+			}
+			// Check this line and next 3 for WithAliasResolver
+			end := min(i+4, len(lines))
+			window := strings.Join(lines[i:end], "\n")
+			if !strings.Contains(window, "WithAliasResolver") {
+				rel, _ := filepath.Rel(root, path)
+				violations = append(violations, fmt.Sprintf("%s:%d", rel, i+1))
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk: %v", err)
+	}
+	for _, v := range violations {
+		t.Errorf("ADR-012 violation: NewControlLoader without WithAliasResolver at %s.\n"+
+			"  Controls with unsafe_predicate_alias silently produce no findings.\n"+
+			"  See %s/ADR-012-alias-resolver-all-loaders.md", v, adrDir)
+	}
+}

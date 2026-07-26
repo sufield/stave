@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_173 commands across 13 groups._
+_171 commands across 13 groups._
 
 ## Getting Started
 
@@ -46,6 +46,7 @@ _173 commands across 13 groups._
 | `ci fix-loop` | Run apply-before/apply-after/verify in one command |
 | `ci gate` | Enforce CI failure policy modes from config or flags |
 | `snapshot` | Snapshot inspection commands |
+| `snapshot compare` | Compare two explicit snapshot files |
 | `snapshot diff` | Compare the latest two observation snapshots |
 | `status` | Show project context and the next recommended command |
 
@@ -53,6 +54,7 @@ _173 commands across 13 groups._
 
 | Command | Description |
 |---|---|
+| `graph path` | Export attack path graph data from active chain findings |
 | `inspect` | Low-level security analysis primitives |
 | `inspect acl` | Analyze S3 ACL grants |
 | `inspect aliases` | List predicate aliases with metadata |
@@ -60,7 +62,7 @@ _173 commands across 13 groups._
 | `inspect exposure` | Classify resource exposure vectors |
 | `inspect policy` | Analyze an S3 bucket policy document |
 | `inspect risk` | Score risk from policy statement context |
-| `path` | Export attack path graph data from active chain findings |
+| `map attack` | Map offensive tools to configuration prerequisites and find coverage gaps |
 | `permissions` | Query net effective permissions from a snapshot |
 | `permissions principal` | Resolve permissions for a specific principal ARN |
 | `permissions resource` | Show who has effective access to a resource |
@@ -69,7 +71,6 @@ _173 commands across 13 groups._
 | `score` | Compute security posture score (0-100) |
 | `scorecard` | Multi-framework compliance scorecard |
 | `search` | Find catalog entries matching a free-form intent |
-| `toolmap` | Map offensive tools to configuration prerequisites and find coverage gaps |
 
 ## Compliance & Evidence
 
@@ -85,6 +86,7 @@ _173 commands across 13 groups._
 | `export compliance` | Export compliance evidence package |
 | `export ocsf` | Export findings as OCSF 1.1 Compliance Finding events |
 | `export oscal` | Export findings as OSCAL 1.1.2 Assessment Results JSON |
+| `export sir` | Export the Stave Intermediate Representation as JSON |
 | `export tickets` | Export findings as canonical ticket records |
 | `profile` | Manage compliance profiles |
 | `profile create` | Generate a starter profile YAML |
@@ -119,6 +121,7 @@ _173 commands across 13 groups._
 | `controls` | Work with control definitions |
 | `controls alias-explain` | Show expanded predicate for an alias |
 | `controls aliases` | List built-in semantic predicate aliases |
+| `controls diff` | Compare two control catalog versions |
 | `controls explain` | Explain a specific control |
 | `controls list` | List control IDs and names |
 | `controls quality` | Analyze control catalog metadata completeness and coverage gaps |
@@ -171,9 +174,6 @@ _173 commands across 13 groups._
 | `pack` | Concern packs — named control groupings and their data requirements |
 | `pack list` | List available concern packs and their control counts |
 | `pack show` | Show a pack's requirements manifest (AWS calls, signals, collector permissions) |
-| `packs` | Inspect built-in control packs |
-| `packs list` | List available built-in packs |
-| `packs show` | Show one built-in pack and its control IDs |
 | `recommend` | Recommend templates for a snapshot |
 | `template` | Manage assessment templates |
 | `template eject` | Fork a template for local customization |
@@ -189,7 +189,6 @@ _173 commands across 13 groups._
 | `attest keygen` | Generate a new Ed25519 key pair for snapshot attestation |
 | `attest sign` | Sign a snapshot's assets with an Ed25519 private key |
 | `attest verify` | Verify an attested snapshot against a public key |
-| `diff` | Compare two observation snapshots or control catalogs |
 | `fingerprint` | Policy fingerprint diagnostics |
 | `fingerprint explain` | Show the policy fingerprint preimage and diagnosis |
 | `sanitize` | Sanitize a snapshot for cross-boundary sharing |
@@ -203,8 +202,7 @@ _173 commands across 13 groups._
 | `cel` | CEL expression tools |
 | `cel eval` | Evaluate a CEL expression against observation assets |
 | `enforce` | Generate deterministic enforcement templates from evaluation output |
-| `export-controls` | Export the control catalog for external solver consumption |
-| `export-sir` | Export the Stave Intermediate Representation as JSON |
+| `export controls` | Export the control catalog for external solver consumption |
 | `graph` | Visualize control and asset relationships |
 | `graph coverage` | Show which controls cover which assets |
 | `graph export` | Export assessment as JSON, STIX 2.1, JSON-LD, or GraphML |
@@ -233,10 +231,10 @@ _173 commands across 13 groups._
 | `config set` | Set a project config value in stave.yaml |
 | `config show` | Show effective project configuration and value sources |
 | `contract` | Inspect Stave's per-asset-type input contracts |
+| `contract schemas` | List all contract schemas |
 | `contract show` | Show the agent-facing contract for an asset type |
 | `doctor` | Check local environment readiness for Stave workflows |
 | `features` | Show what Stave does and deliberately does not do |
-| `schemas` | List all contract schemas |
 | `version` | Print version and environment state |
 
 ## Project Management

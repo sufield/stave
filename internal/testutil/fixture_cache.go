@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
+	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
@@ -62,7 +63,7 @@ func LoadControlsFromDir(t *testing.T, dir string) []policy.ControlDefinition {
 		return cloneControls(cached)
 	}
 
-	loader := ctlyaml.NewControlLoader()
+	loader := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()))
 	controls, err := loader.LoadControls(context.Background(), abs)
 	if err != nil {
 		t.Skipf("load controls from %s: %v", abs, err)
