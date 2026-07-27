@@ -461,5 +461,8 @@ func writeScorecard(path string, stats []lensStats, results map[string]fixtureRe
 	}
 	fmt.Fprintf(&b, "-->\n")
 
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create scorecard dir: %w", err)
+	}
 	return os.WriteFile(path, []byte(b.String()), 0o644)
 }
