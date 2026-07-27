@@ -99,6 +99,7 @@ var facadeCleanBaseline = map[string]struct{}{
 	"profile":               {},
 	"prove":                 {},
 	"readiness":             {},
+	"recommend":             {},
 	"render":                {},
 	"report":                {},
 	"sanitize":              {},
