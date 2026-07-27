@@ -12,6 +12,8 @@
 package aws
 
 import (
+	"github.com/sufield/stave/internal/core/evaluation/derive"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -61,4 +63,59 @@ func Register() {
 		"s3:GetLifecycleConfiguration",
 		"s3:ListAllMyBuckets",
 	)
+
+	derive.VPCCIDRTypes.Subnet = "aws_subnet"
+	derive.VPCCIDRTypes.SecurityGroup = "aws_ec2_security_group"
+	derive.VPCCIDRTypes.NetworkACL = "aws_vpc_network_acl"
+	derive.BucketAPTypes.Bucket = "aws_s3_bucket"
+	derive.BucketAPTypes.AccessPoint = "aws_s3_access_point"
+
+	remediation.TypeTokens["aws_s3_bucket"] = []remediation.TokenDef{
+		{Placeholder: "<bucket>"},
+		{Placeholder: "<bucket-name>"},
+	}
+	remediation.TypeTokens["aws_iam_role"] = []remediation.TokenDef{
+		{Placeholder: "<role>"},
+		{Placeholder: "<role-name>"},
+		{Placeholder: "<role-arn>", UseFullID: true},
+	}
+	remediation.TypeTokens["aws_iam_user"] = []remediation.TokenDef{
+		{Placeholder: "<user>"},
+		{Placeholder: "<user-name>"},
+		{Placeholder: "<user-arn>", UseFullID: true},
+	}
+	remediation.TypeTokens["aws_iam_policy"] = []remediation.TokenDef{
+		{Placeholder: "<policy>"},
+		{Placeholder: "<policy-name>"},
+		{Placeholder: "<policy-arn>", UseFullID: true},
+	}
+	remediation.TypeTokens["aws_eks_cluster"] = []remediation.TokenDef{
+		{Placeholder: "<cluster>"},
+		{Placeholder: "<cluster-name>"},
+	}
+	remediation.TypeTokens["aws_kms_key"] = []remediation.TokenDef{
+		{Placeholder: "<key-id>"},
+		{Placeholder: "<key-arn>", UseFullID: true},
+	}
+	remediation.TypeTokens["aws_cloudtrail_trail"] = []remediation.TokenDef{
+		{Placeholder: "<trail-name>"},
+	}
+	remediation.TypeTokens["aws_s3_access_point"] = []remediation.TokenDef{
+		{Placeholder: "<access-point-name>"},
+	}
+	remediation.TypeTokens["aws_lambda_function"] = []remediation.TokenDef{
+		{Placeholder: "<function>"},
+		{Placeholder: "<function-name>"},
+	}
+	remediation.TypeTokens["aws_ecs_service"] = []remediation.TokenDef{
+		{Placeholder: "<service>"},
+		{Placeholder: "<service-name>"},
+	}
+	remediation.TypeTokens["aws_vpc"] = []remediation.TokenDef{
+		{Placeholder: "<vpc-id>"},
+	}
+	remediation.TypeTokens["aws_sqs_queue"] = []remediation.TokenDef{
+		{Placeholder: "<queue>"},
+		{Placeholder: "<queue-name>"},
+	}
 }

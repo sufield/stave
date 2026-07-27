@@ -101,25 +101,18 @@ func (a *AccountID) UnmarshalJSON(b []byte) error {
 }
 
 // ResourceURI is a vendor-agnostic resource identifier. The kernel
-// requires only that the value carry a recognized scheme prefix —
-// arn: (AWS), gcp:, or azure:. Schema-level interpretation (parsing
-// an ARN into account/service/resource) lives in the provider adapter
-// (internal/platform/providers/aws, etc.). The core treats the value
-// as an opaque URI.
+// requires only that the value carry a recognized scheme prefix
+// registered via RegisterURIScheme. Schema-level interpretation
+// (e.g. parsing a provider-specific URI into account/service/resource)
+// lives in the provider adapter. The core treats the value as an
+// opaque URI.
 type ResourceURI string
 
-// recognizedURISchemes are the scheme prefixes that ResourceURI
-// accepts at the kernel boundary. Provider packages register their
-// scheme via RegisterURIScheme at init time; kernel ships with the
-// historical AWS / GCP / Azure defaults as a transitional seed so
-// existing consumers continue to validate without an explicit
-// provider registration. Phase 5 of the provider-extraction plan
-// will drop the seed once the AWS provider's init() takes over.
 // uriSchemeRegistry is the concurrency-safe set of scheme prefixes that
 // ResourceURI accepts at the kernel boundary. Bundling the slice with the
-// RWMutex that guards it keeps the lock and data in one type. The kernel seeds
-// the historical arn:/gcp:/azure: defaults; providers add their scheme via
-// RegisterURIScheme from their Register() entrypoint.
+// RWMutex that guards it keeps the lock and data in one type. The kernel
+// starts empty; providers add their scheme via RegisterURIScheme from
+// their Register() entrypoint.
 type uriSchemeRegistry struct {
 	mu      sync.RWMutex
 	schemes []string
@@ -158,7 +151,7 @@ func (r *uriSchemeRegistry) snapshot() []string {
 
 // uriSchemes is the process-wide URI-scheme registry — one cohesive instance
 // rather than a loose mutex+slice pair.
-var uriSchemes = &uriSchemeRegistry{schemes: []string{"arn:", "gcp:", "azure:"}}
+var uriSchemes = &uriSchemeRegistry{}
 
 // RegisterURIScheme adds scheme to the set of prefixes ResourceURI
 // accepts. Idempotent: registering the same scheme twice is a no-op.

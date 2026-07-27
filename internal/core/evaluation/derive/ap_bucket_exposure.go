@@ -6,14 +6,13 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-const (
-	assetTypeBucket      = "aws_s3_bucket"
-	assetTypeAccessPoint = "aws_s3_access_point"
-)
+func bucketType() string      { return BucketAPTypes.Bucket }
+func accessPointType() string { return BucketAPTypes.AccessPoint }
 
-// EnrichBucketAPExposure attaches two derived fields to every aws_s3_bucket
-// asset that has at least one public-reaching aws_s3_access_point in the
-// same snapshot targeting it:
+// EnrichBucketAPExposure attaches two derived fields to every bucket asset
+// that has at least one public-reaching access point in the same snapshot
+// targeting it. The asset types it matches are configured via BucketAPTypes
+// (set by the provider at startup).
 //
 //   - storage.exposure.has_public_access_point (bool, always true when set)
 //   - storage.exposure.public_access_point_names ([]any of string, sorted)
@@ -51,7 +50,7 @@ func enrichSnapshotBucketAPExposure(snap asset.Snapshot) asset.Snapshot {
 
 	for i := range enriched.Assets {
 		a := &enriched.Assets[i]
-		if !a.IsType(assetTypeBucket) {
+		if !a.IsType(bucketType()) {
 			continue
 		}
 		storage, _ := a.Properties["storage"].(map[string]any)
@@ -73,7 +72,7 @@ func enrichSnapshotBucketAPExposure(snap asset.Snapshot) asset.Snapshot {
 func collectPublicAccessPointsByBucket(snap asset.Snapshot) map[string][]string {
 	byBucket := map[string][]string{}
 	for _, a := range snap.Assets {
-		if !a.IsType(assetTypeAccessPoint) {
+		if !a.IsType(accessPointType()) {
 			continue
 		}
 		storage, _ := a.Properties["storage"].(map[string]any)

@@ -12,19 +12,19 @@ import (
 // PrincipalRef identifies an IAM principal — a user, role, or
 // service principal. Stored as a typed string with light scheme
 // validation: must be a non-empty value carrying one of the
-// recognised URI scheme prefixes (arn:, gcp:, azure:) or a
-// service-principal hostname (anything ending in
-// .amazonaws.com or .iam.gserviceaccount.com), so the kernel can
-// reject obviously-wrong free-form strings without owning the full
-// per-cloud principal grammar (that lives in the provider adapter).
+// registered URI scheme prefixes (via RegisterURIScheme) or a
+// registered service-principal hostname suffix (via
+// RegisterPrincipalSuffix), so the kernel can reject obviously-wrong
+// free-form strings without owning the full per-cloud principal
+// grammar (that lives in the provider adapter).
 type PrincipalRef string
 
 // principalSuffixRegistry is the concurrency-safe set of service-principal
-// hostname suffixes that legitimately appear as principals but don't carry an
-// ARN scheme. Bundling the slice with the RWMutex that guards it keeps the lock
-// and the data in one type. The kernel ships it empty; provider packages
-// contribute their suffixes via RegisterPrincipalSuffix from Register() (e.g.
-// providers/aws.Register registers ".amazonaws.com").
+// hostname suffixes that legitimately appear as principals but don't carry a
+// URI scheme prefix. Bundling the slice with the RWMutex that guards it keeps
+// the lock and the data in one type. The kernel ships it empty; provider
+// packages contribute their suffixes via RegisterPrincipalSuffix from their
+// Register() entrypoint.
 type principalSuffixRegistry struct {
 	mu       sync.RWMutex
 	suffixes []string
@@ -73,7 +73,7 @@ func (p PrincipalRef) String() string { return string(p) }
 func (p PrincipalRef) IsEmpty() bool { return p == "" }
 
 // Validate enforces non-empty and a recognised prefix or suffix.
-// The deeper shape rules (arn:aws:iam::<account>:user/<name> etc.)
+// The deeper shape rules (e.g. provider-specific principal formats)
 // belong in the provider adapter — at this layer the contract is
 // only "looks like an IAM principal".
 func (p PrincipalRef) Validate() error {

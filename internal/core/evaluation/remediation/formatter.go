@@ -66,51 +66,18 @@ func buildSubstitutions(a asset.Asset) map[string]string {
 		subs["<name>"] = shortID
 	}
 
-	// Type-specific short-id tokens. One asset matches one entry.
-	switch string(a.Type) {
-	case "aws_s3_bucket":
-		subs["<bucket>"] = shortID
-		subs["<bucket-name>"] = shortID
-	case "aws_iam_role":
-		subs["<role>"] = shortID
-		subs["<role-name>"] = shortID
-		subs["<role-arn>"] = assetID
-	case "aws_iam_user":
-		subs["<user>"] = shortID
-		subs["<user-name>"] = shortID
-		subs["<user-arn>"] = assetID
-	case "aws_iam_policy":
-		subs["<policy>"] = shortID
-		subs["<policy-name>"] = shortID
-		subs["<policy-arn>"] = assetID
-	case "aws_eks_cluster":
-		subs["<cluster>"] = shortID
-		subs["<cluster-name>"] = shortID
-	case "aws_kms_key":
-		subs["<key-id>"] = shortID
-		subs["<key-arn>"] = assetID
-	case "aws_cloudtrail_trail":
-		subs["<trail-name>"] = shortID
-	case "aws_s3_access_point":
-		subs["<access-point-name>"] = shortID
-	case "aws_lambda_function":
-		subs["<function>"] = shortID
-		subs["<function-name>"] = shortID
-	case "aws_ecs_service":
-		subs["<service>"] = shortID
-		subs["<service-name>"] = shortID
-	case "aws_vpc":
-		subs["<vpc-id>"] = shortID
-	case "aws_sqs_queue":
-		subs["<queue>"] = shortID
-		subs["<queue-name>"] = shortID
+	// Type-specific tokens from provider-registered mappings.
+	for _, td := range TypeTokens[string(a.Type)] {
+		if td.UseFullID {
+			subs[td.Placeholder] = assetID
+		} else {
+			subs[td.Placeholder] = shortID
+		}
 	}
 
 	// ARN-derived account + region tokens, plus the generic <arn>
 	// token for any asset whose ID parses as an ARN. Consolidated
-	// here so the parsing decision lives in one place — the prior
-	// `strings.HasPrefix(assetID, "arn:aws:")` literal duplicated
-	// what parseARNContext already determines.
+	// here so the parsing decision lives in one place.
 	if ctx, ok := parseARNContext(assetID); ok {
 		if ctx.Account != "" {
 			subs["<account>"] = ctx.Account

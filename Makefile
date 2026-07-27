@@ -485,8 +485,24 @@ check-unsafe-writes:
 	fi; \
 	echo "OK: no unsafe os.Create/os.WriteFile on user paths in cmd/ or internal/app/"
 
+## core-cloud-ratchet: Cloud-provider references in internal/core/ must not increase.
+CORE_CLOUD_BASELINE := 98
+core-cloud-ratchet:
+	@count=$$(grep -r 'aws_\|gcp_\|azure_\|arn:\|amazonaws\|googleapi\|azure\.com' \
+		--include='*.go' internal/core/ \
+		| grep -v '_test.go\|testdata' \
+		| wc -l); \
+	echo "core cloud references: $$count  (baseline ceiling: $(CORE_CLOUD_BASELINE))"; \
+	if [ "$$count" -gt "$(CORE_CLOUD_BASELINE)" ]; then \
+		echo "ERROR: cloud-provider references in core grew ($(CORE_CLOUD_BASELINE) -> $$count)."; \
+		echo "  Move the new cloud-specific code to internal/platform/providers/ or internal/adapters/."; \
+		exit 1; \
+	elif [ "$$count" -lt "$(CORE_CLOUD_BASELINE)" ]; then \
+		echo "Decreased — update CORE_CLOUD_BASELINE in Makefile to $$count"; \
+	fi
+
 ## check: Run all checks (fmt, vet, lint, terminology, deadcode, control content, test)
-check: fmt vet lint stale-terminology-check check-unsafe-writes deadcode-check attack-stage-check domain-check test
+check: fmt vet lint stale-terminology-check check-unsafe-writes deadcode-check attack-stage-check domain-check core-cloud-ratchet test
 
 ## semantic-diff: Run CEL vs reference differential on S3 controls + iam_condition_bypass chain
 ## Use ARGS for additional flags: make semantic-diff ARGS="-symbolic -v"

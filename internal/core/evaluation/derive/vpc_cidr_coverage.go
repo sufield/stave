@@ -6,22 +6,21 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
-const (
-	assetTypeSubnet        = "aws_subnet"
-	assetTypeSecurityGroup = "aws_ec2_security_group"
-	assetTypeNetworkACL    = "aws_vpc_network_acl"
-)
+func subnetType() string        { return VPCCIDRTypes.Subnet }
+func securityGroupType() string { return VPCCIDRTypes.SecurityGroup }
+func networkACLType() string    { return VPCCIDRTypes.NetworkACL }
 
 // EnrichVPCCIDRCoverage checks whether security group ingress rules and
 // NACL allow rules cover all subnet CIDRs in their VPC. It sets derived
-// booleans that standard control predicates can evaluate.
+// booleans that standard control predicates can evaluate. The asset types
+// it matches are configured via VPCCIDRTypes (set by the provider at startup).
 //
-// Derived fields on aws_ec2_security_group:
+// Derived fields on security group assets:
 //   - network.security_group.cidr_coverage.covers_all_vpc_subnets (bool)
 //   - network.security_group.cidr_coverage.uncovered_subnet_count (float64)
 //   - network.security_group.cidr_coverage.has_cidr_rules (bool)
 //
-// Derived fields on aws_vpc_network_acl:
+// Derived fields on network ACL assets:
 //   - network.nacl.cidr_coverage.covers_all_associated_subnets (bool)
 //   - network.nacl.cidr_coverage.uncovered_subnet_count (float64)
 //   - network.nacl.cidr_coverage.has_cidr_rules (bool)
@@ -47,9 +46,9 @@ func enrichSnapshotCIDRCoverage(snap asset.Snapshot) asset.Snapshot {
 	for i := range enriched.Assets {
 		a := &enriched.Assets[i]
 		switch {
-		case a.IsType(assetTypeSecurityGroup):
+		case a.IsType(securityGroupType()):
 			enriched.Assets[i] = enrichSGCoverage(*a, subnetsByVPC)
-		case a.IsType(assetTypeNetworkACL):
+		case a.IsType(networkACLType()):
 			enriched.Assets[i] = enrichNACLCoverage(*a, subnetsByVPC, subnetCIDRByID)
 		}
 	}
@@ -60,7 +59,7 @@ func enrichSnapshotCIDRCoverage(snap asset.Snapshot) asset.Snapshot {
 func collectSubnetCIDRsByVPC(snap asset.Snapshot) map[string][]netip.Prefix {
 	m := map[string][]netip.Prefix{}
 	for _, a := range snap.Assets {
-		if !a.IsType(assetTypeSubnet) {
+		if !a.IsType(subnetType()) {
 			continue
 		}
 		net, _ := a.Properties["network"].(map[string]any)
@@ -85,7 +84,7 @@ func collectSubnetCIDRsByVPC(snap asset.Snapshot) map[string][]netip.Prefix {
 func collectSubnetCIDRByID(snap asset.Snapshot) map[string]netip.Prefix {
 	m := map[string]netip.Prefix{}
 	for _, a := range snap.Assets {
-		if !a.IsType(assetTypeSubnet) {
+		if !a.IsType(subnetType()) {
 			continue
 		}
 		net, _ := a.Properties["network"].(map[string]any)

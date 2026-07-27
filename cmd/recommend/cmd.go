@@ -1,13 +1,14 @@
 package recommend
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/pkg/stave"
 	"github.com/sufield/stave/pkg/stave/snapshot"
 	tmpl "github.com/sufield/stave/pkg/stave/template"
 	"github.com/sufield/stave/templates"
@@ -63,15 +64,13 @@ Exit Codes:
 	return cmd
 }
 
-func runRecommend(_ any, w io.Writer, opts *options) error {
+func runRecommend(ctx context.Context, w io.Writer, opts *options) error {
 	allTemplates, err := tmpl.LoadAll("", templates.BuiltinTemplateFS)
 	if err != nil {
 		return fmt.Errorf("load templates: %w", err)
 	}
 
-	// Load snapshot and extract summary
-	// For now use a minimal snapshot loading path
-	snapshots, err := loadSnapshots(opts.SnapshotDir)
+	snapshots, err := stave.LoadSnapshots(ctx, opts.SnapshotDir)
 	if err != nil {
 		return fmt.Errorf("load snapshot: %w", err)
 	}
@@ -105,11 +104,4 @@ func runRecommend(_ any, w io.Writer, opts *options) error {
 	}
 
 	return nil
-}
-
-func loadSnapshots(dir string) (asset.Snapshots, error) {
-	// Delegate to the existing observation loading infrastructure
-	// This is a placeholder that loads from the directory
-	_ = dir
-	return nil, errors.New("snapshot loading not yet wired (requires observation loader integration)")
 }

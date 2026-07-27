@@ -3,21 +3,16 @@
 package toolmap
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	yamlctl "github.com/sufield/stave/internal/adapters/controls/yaml"
-	predalias "github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/app/toolmap"
 	"github.com/sufield/stave/internal/cli/ui"
-	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/pkg/stave"
 )
 
 type options struct {
@@ -105,7 +100,7 @@ func run(w io.Writer, opts *options) error {
 		return showCapability(w, registry, opts)
 	}
 
-	result, err := toolmap.Analyze(registry, opts.ChainsDir, loadControlsFromDisk, opts.ControlsDir)
+	result, err := toolmap.Analyze(registry, opts.ChainsDir, stave.LoadControlsFromDisk, opts.ControlsDir)
 	if err != nil {
 		return fmt.Errorf("analyze: %w", err)
 	}
@@ -196,34 +191,4 @@ func writeJSON(w io.Writer, v any) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
-}
-
-func loadControlsFromDisk(rootDir string) ([]policy.ControlDefinition, error) {
-	loader := yamlctl.NewControlLoader(yamlctl.WithAliasResolver(predalias.ResolverFunc()))
-	var dirs []string
-	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if info.IsDir() && path != rootDir {
-			dirs = append(dirs, path)
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("walk %s: %w", rootDir, err)
-	}
-	if len(dirs) == 0 {
-		dirs = []string{rootDir}
-	}
-
-	var all []policy.ControlDefinition
-	for _, d := range dirs {
-		controls, loadErr := loader.LoadControls(context.Background(), d)
-		if loadErr != nil {
-			continue
-		}
-		all = append(all, controls...)
-	}
-	return all, nil
 }

@@ -1,6 +1,7 @@
 package architecture_test
 
 import (
+	"bufio"
 	"fmt"
 	"io/fs"
 	"os"
@@ -266,5 +267,67 @@ func TestADR012_AliasResolverOnAllLoaders(t *testing.T) {
 		t.Errorf("ADR-012 violation: NewControlLoader without WithAliasResolver at %s.\n"+
 			"  Controls with unsafe_predicate_alias silently produce no findings.\n"+
 			"  See %s/ADR-012-alias-resolver-all-loaders.md", v, adrDir)
+	}
+}
+
+func TestADR013_CoreNoCloudProviderLiterals(t *testing.T) {
+	// Ratchet: cloud-provider literals in core code (non-comment, non-test)
+	// must not increase. The baseline covers deferred LOW-priority
+	// violations (sirfacts, risk, translation). Each cleanup lowers it.
+	const baseline = 74
+
+	root := repoRoot(t)
+	coreDir := filepath.Join(root, "internal", "core")
+
+	patterns := []string{
+		"aws_", "gcp_", "azure_",
+		".amazonaws.com", ".googleapi.com", ".azure.com",
+	}
+
+	count := 0
+	err := filepath.WalkDir(coreDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			if d.Name() == "testdata" {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		f, openErr := os.Open(path)
+		if openErr != nil {
+			return fmt.Errorf("open %s: %w", path, openErr)
+		}
+		defer f.Close()
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			line := scanner.Text()
+			trimmed := strings.TrimSpace(line)
+			if strings.HasPrefix(trimmed, "//") {
+				continue
+			}
+			for _, pat := range patterns {
+				if strings.Contains(line, pat) {
+					count++
+					break
+				}
+			}
+		}
+		return scanner.Err()
+	})
+	if err != nil {
+		t.Fatalf("walk: %v", err)
+	}
+	if count > baseline {
+		t.Fatalf("ADR-013 violation: cloud-provider literals in core increased (%d > baseline %d).\n"+
+			"  Move new cloud-specific code to internal/platform/providers/ or internal/adapters/.\n"+
+			"  See %s/ADR-013-core-cloud-agnosticism.md", count, baseline, adrDir)
+	}
+	if count < baseline {
+		t.Logf("ADR-013: count decreased (%d < %d) — update baseline in this test", count, baseline)
 	}
 }
