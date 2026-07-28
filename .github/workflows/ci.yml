@@ -57,9 +57,9 @@ jobs:
         with:
           filters: |
             catalog:
-              - 'controls/**'
-              - 'chains/**'
-              - 'schemas/**'
+              - 'internal/controls/**'
+              - 'internal/chains/**'
+              - 'internal/schemas/**'
               - 'testdata/**'
               - 'internal/**/*.go'
               - 'cmd/**/*.go'

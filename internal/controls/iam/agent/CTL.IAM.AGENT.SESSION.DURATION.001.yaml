@@ -1,0 +1,140 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.AGENT.SESSION.DURATION.001
+name: Agent Role MaxSessionDuration Exceeds 1 Hour
+description: >
+  An agent-identified IAM role allows session durations above 1 hour.
+  Agent roles — identified by trust policy service principals
+  (bedrock/sagemaker/lambda/states), name patterns (*agent*, *bot*,
+  *automation*, *pipeline*), or workload-type tags — should use the
+  shortest practical session duration. If an agent is compromised
+  through prompt injection or tool abuse, longer sessions give the
+  attacker more time to operate with the agent's credentials before
+  they expire. The general-purpose CTL.IAM.SESSION.DURATION.001 fires
+  at 4 hours; this control tightens the threshold to 1 hour for
+  agent workloads specifically, following the CSA/SANS recommendation
+  from the Hugging Face autonomous agent breach post-mortem (2026).
+domain: identity
+severity: medium
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: credential_access
+compliance:
+  owasp_nhi: "NHI4"
+  nist_800_53_r5: "AC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - agent
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+observation_fields:
+  - identity.kind
+  - identity.role.workload_type
+  - identity.role.max_session_duration
+  - identity.role.agent_session_duration_excessive
+remediation:
+  description: >
+    Agent role MaxSessionDuration exceeds 1 hour. Compromised agent
+    credentials remain valid for the full duration.
+  action: >
+    Set MaxSessionDuration to 3600 seconds (1 hour) via
+    aws iam update-role --role-name ROLE --max-session-duration 3600.
+    If the agent's task genuinely requires longer sessions, document
+    the justification and use CTL.IAM.SESSION.DURATION.001 (4-hour
+    threshold) as the fallback control.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "workload_type": "agent",
+          "max_session_duration": 3600,
+          "agent_session_duration_excessive": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.role.workload_type
+      op: eq
+      value: agent
+    - field: properties.identity.role.agent_session_duration_excessive
+      op: present
+    - field: properties.identity.role.agent_session_duration_excessive
+      op: eq
+      value: true
+defect: >
+  Agent role MaxSessionDuration set above 1-hour threshold.
+infection: >
+  When an agent is compromised through prompt injection or tool abuse,
+  the attacker inherits the agent's session credentials. Longer sessions
+  give the attacker more operating time before credential expiry forces
+  re-authentication. A 2-hour session doubles the exploitation window
+  compared to 1 hour.
+failure: >
+  Extended credential validity on an agent role. Compromised agent
+  credentials remain valid long enough for lateral movement,
+  data exfiltration, or privilege escalation.
+tests:
+  - name: agent role with 2-hour session fires (above 1h agent threshold)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/bedrock-order-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            workload_type: agent
+            max_session_duration: 7200
+            agent_session_duration_excessive: true
+  - name: agent role with 1-hour session passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/bedrock-readonly-agent"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            workload_type: agent
+            max_session_duration: 3600
+            agent_session_duration_excessive: false
+  - name: human role with 2-hour session does not fire (scoped to agents)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/admin-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            workload_type: human
+            max_session_duration: 7200
+            agent_session_duration_excessive: false
+  - name: general control still fires at 4h regardless of workload type
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/general-3h-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role:
+            workload_type: agent
+            max_session_duration: 3600
+            agent_session_duration_excessive: false

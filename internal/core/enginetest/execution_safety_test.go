@@ -193,25 +193,28 @@ func TestNoHTTPSchemaIdentifiers(t *testing.T) {
 	}
 
 	// Check schema JSON files for http(s) $id values
-	schemaDir := filepath.Join(root, "schemas")
-	entries, err := os.ReadDir(schemaDir)
-	if err != nil {
-		t.Fatalf("cannot read schemas directory: %v", err)
-	}
-	for _, entry := range entries {
-		if !strings.HasSuffix(entry.Name(), ".json") {
-			continue
+	schemaDir := filepath.Join(root, "internal", "schemas")
+	err = filepath.WalkDir(schemaDir, func(path string, d fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
 		}
-		path := filepath.Join(schemaDir, entry.Name())
-		data, err := os.ReadFile(path)
-		if err != nil {
-			t.Errorf("cannot read %s: %v", entry.Name(), err)
-			continue
+		if d.IsDir() || !strings.HasSuffix(d.Name(), ".json") {
+			return nil
+		}
+		data, readErr := os.ReadFile(path)
+		if readErr != nil {
+			t.Errorf("cannot read %s: %v", path, readErr)
+			return nil
 		}
 		content := string(data)
 		if strings.Contains(content, `"$id": "http://`) || strings.Contains(content, `"$id": "https://`) {
-			t.Errorf("%s contains HTTP(S) $id — schema identifiers must use non-network URN scheme", entry.Name())
+			rel, _ := filepath.Rel(root, path)
+			t.Errorf("%s contains HTTP(S) $id — schema identifiers must use non-network URN scheme", rel)
 		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("cannot walk schemas directory: %v", err)
 	}
 }
 

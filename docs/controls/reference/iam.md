@@ -69,6 +69,21 @@ Complements the Bedrock-agent permission-scope controls (CTL.BEDROCK.AGENT.OVERP
 
 ---
 
+### CTL.IAM.AGENT.SESSION.DURATION.001
+
+**Agent Role MaxSessionDuration Exceeds 1 Hour**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-12; owasp_nhi: NHI4; soc2: CC6.1;
+
+An agent-identified IAM role allows session durations above 1 hour. Agent roles — identified by trust policy service principals (bedrock/sagemaker/lambda/states), name patterns (*agent*, *bot*, *automation*, *pipeline*), or workload-type tags — should use the shortest practical session duration. If an agent is compromised through prompt injection or tool abuse, longer sessions give the attacker more time to operate with the agent's credentials before they expire. The general-purpose CTL.IAM.SESSION.DURATION.001 fires at 4 hours; this control tightens the threshold to 1 hour for agent workloads specifically, following the CSA/SANS recommendation from the Hugging Face autonomous agent breach post-mortem (2026).
+
+**Remediation:** Set MaxSessionDuration to 3600 seconds (1 hour) via aws iam update-role --role-name ROLE --max-session-duration 3600. If the agent's task genuinely requires longer sessions, document the justification and use CTL.IAM.SESSION.DURATION.001 (4-hour threshold) as the fallback control.
+
+---
+
 ### CTL.IAM.AMPLIFY.ADMIN.001
 
 **IAM Policy Grants Amplify App Creation**

@@ -7,6 +7,7 @@ the Security tab alongside CodeQL and other scanners.
 ## Generate SARIF
 
 ```bash
+# doctest:skip — example assumes user has an observations directory
 stave apply --observations ./observations/ --format sarif > findings.sarif
 ```
 

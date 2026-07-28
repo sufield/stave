@@ -21,7 +21,7 @@ stave forge paths --asset-type aws_s3_bucket --snapshot snapshot-bundle.json
 
 ```bash
 # Lint a control definition
-stave forge lint --control controls/s3/access/CTL.S3.ACCESS.001.yaml
+stave forge lint --control internal/controls/s3/access/CTL.S3.ACCESS.001.yaml
 ```
 
 ```bash

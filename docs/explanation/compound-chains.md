@@ -36,16 +36,16 @@ The catalog groups chains by family — the service prefix of the chain ID (e.g.
 
 ```bash
 # All chains, grouped by family
-stave catalog --kind chain
+stave catalog --kind chain --chains internal/chains --controls internal/controls
 
 # Just one family
-stave catalog --kind chain --family iam
+stave catalog --kind chain --chains internal/chains --controls internal/controls --family iam
 
 # Full descriptions (default truncates to one phrase)
-stave catalog --kind chain --verbose
+stave catalog --kind chain --chains internal/chains --controls internal/controls --verbose
 
 # Machine-readable
-stave catalog --kind chain --format json
+stave catalog --kind chain --chains internal/chains --controls internal/controls --format json
 ```
 
 ## Rendering Chain Documentation
@@ -53,7 +53,7 @@ stave catalog --kind chain --format json
 Chain catalog data can be rendered through templates for custom documentation:
 
 ```bash
-stave catalog --kind chain --format json \
+stave catalog --kind chain --chains internal/chains --controls internal/controls --format json \
   | stave render --data - --template templates/chain-catalog.md.tmpl
 ```
 

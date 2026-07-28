@@ -148,7 +148,7 @@ postconditions:
 func TestApply_CrossAssetMarkerChainFires(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: "../../examples/cognito-iteration2-unauth/fixtures/cross-resource-config/observations",
-		ChainsDir:    "../../chains",
+		ChainsDir:    "../../internal/chains",
 		EvalTime:     time.Date(2026, 5, 9, 0, 0, 0, 0, time.UTC),
 	})
 	if err != nil {

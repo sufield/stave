@@ -517,7 +517,7 @@ func TestRun_ContextChainDrillDown(t *testing.T) {
 		"type":                "chain",
 		"id":                  "bedrock_agent_overpermissioned",
 		"observations":        ctxObs,
-		"chains":              filepath.Join("..", "..", "chains"),
+		"chains":              filepath.Join("..", "..", "internal", "chains"),
 		"allow_unknown_input": true,
 	})
 	var res map[string]any
@@ -574,7 +574,7 @@ func TestRun_ContextRejectedInHostedMode(t *testing.T) {
 func TestRun_ChainsToolVisualizesCompoundRisk(t *testing.T) {
 	t.Parallel()
 	obs := filepath.Join("..", "..", "examples", "demo-ai-security", "fixtures", "writeup-config", "observations")
-	chains := filepath.Join("..", "..", "chains")
+	chains := filepath.Join("..", "..", "internal", "chains")
 	req := map[string]any{
 		"jsonrpc": "2.0", "id": 70, "method": "tools/call",
 		"params": map[string]any{
@@ -628,7 +628,7 @@ func TestRun_ChainsToolVisualizesCompoundRisk(t *testing.T) {
 func TestRun_ChainsGoodResult(t *testing.T) {
 	t.Parallel()
 	obs := filepath.Join("..", "..", "examples", "demo-s3-public-read", "fixtures", "observations")
-	chains := filepath.Join("..", "..", "chains")
+	chains := filepath.Join("..", "..", "internal", "chains")
 	req := map[string]any{
 		"jsonrpc": "2.0", "id": 71, "method": "tools/call",
 		"params": map[string]any{

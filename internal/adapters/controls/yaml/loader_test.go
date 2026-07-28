@@ -227,8 +227,8 @@ unsafe_predicate:
 // TestControlLoader_CanonicalS3DirNoDuplicates verifies that the canonical
 // controls/s3/ directory loads without duplicate ID errors.
 func TestControlLoader_CanonicalS3DirNoDuplicates(t *testing.T) {
-	// Path from this test file to repo root: yaml/ -> controls/ -> input/ -> adapters/ -> internal/ -> stave/
-	s3Dir := filepath.Join("..", "..", "..", "..", "..", "controls", "s3")
+	// Path from this test file to repo root: yaml/ -> controls/ -> adapters/ -> internal/ -> (repo root)
+	s3Dir := filepath.Join("..", "..", "..", "..", "internal", "controls", "s3")
 	if _, err := os.Stat(s3Dir); os.IsNotExist(err) {
 		t.Skip("controls/s3/ not found (running outside repo)")
 	}

@@ -10,7 +10,7 @@ import (
 
 var (
 	compoundNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
-	chainsDir   = "../../chains"
+	chainsDir   = "../../internal/chains"
 )
 
 func TestCompoundRegression_RhinoAttachUserPolicy(t *testing.T) {

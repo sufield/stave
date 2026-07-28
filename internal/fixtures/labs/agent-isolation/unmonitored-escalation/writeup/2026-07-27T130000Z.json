@@ -1,0 +1,35 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-27T13:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/ml-training-agent",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "passrole_lambda_create": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/main-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "data_events": {
+            "lambda": {
+              "enabled": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

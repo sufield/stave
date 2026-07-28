@@ -434,7 +434,7 @@ def validate(generated: dict[str, str], hand: dict[str, str]) -> dict[str, float
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n", 1)[0])
     ap.add_argument("--columns", type=Path, default=Path("scripts/steampipe-columns.json"))
-    ap.add_argument("--schemas", type=Path, default=Path("schemas/observation/v1/asset-types"))
+    ap.add_argument("--schemas", type=Path, default=Path("internal/schemas/observation/v1/asset-types"))
     ap.add_argument("--output", type=Path, default=Path("contracts/steampipe"))
     ap.add_argument("--skip-existing", action="store_true",
                     help="Do not overwrite YAMLs that already exist under --output")

@@ -1,0 +1,22 @@
+id: agent_unmonitored_escalation
+description: >
+  Agent role has a privilege escalation path via PassRole to Lambda
+  (or similar compute) AND CloudTrail does not log Lambda data events.
+  The escalation path exists (the agent can create or invoke a Lambda
+  with an elevated role) but the forensic evidence of the escalation
+  is not recorded. The existing iam_escalation_undetected chain checks
+  for CloudWatch alarm absence; this chain checks for CloudTrail data
+  event absence — different detection layer, same escalation shape.
+  With data events disabled, the Lambda invocations that constitute
+  the escalation are invisible in CloudTrail, making incident
+  response reconstruction impossible.
+controls:
+  - CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001
+  - CTL.CLOUDTRAIL.DATA.LAMBDA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

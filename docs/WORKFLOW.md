@@ -73,7 +73,7 @@ job, never Stave's.
 ## Step 5 — Apply: evaluate per service group, get findings fast
 
 ```bash
-stave apply --services iam -o testdata/e2e/e2e-01-violation/observations
+stave apply --services iam -o testdata/e2e/e2e-01-violation/observations --controls testdata/e2e/e2e-01-violation/controls
 stave apply --services s3  -o testdata/e2e/e2e-01-violation/observations
 stave apply -o testdata/e2e/e2e-01-violation/observations
 ```
@@ -90,7 +90,7 @@ Remediate the criticals first (each finding carries a `remediation` hint and a p
 ## Step 7 — Check: did the fixes work?
 
 ```bash
-stave check --before testdata/e2e/e2e-01-violation/observations --after testdata/e2e/e2e-01-violation/observations
+stave check --before testdata/e2e/e2e-01-violation/observations --after testdata/e2e/e2e-01-violation/observations --controls testdata/e2e/e2e-01-violation/controls
 ```
 
 Reports **RESOLVED / STILL-FAILING / NEW**. Each `--after` can become the next `--before`.
@@ -109,9 +109,9 @@ stave discover --services iam,s3,ec2,lambda,cloudtrail
 stave plan     --services iam,s3,ec2,lambda,cloudtrail
 # 3. collect raw snapshots with your tools (commands printed by discover)
 # 4. convert snapshots -> obs.v0.1 observations with your extractor (NOT Stave)
-stave apply --services iam -o testdata/e2e/e2e-01-violation/observations
+stave apply --services iam -o testdata/e2e/e2e-01-violation/observations --controls testdata/e2e/e2e-01-violation/controls
 # 6. fix, re-collect, re-convert -> ./observations-fixed
-stave check --before testdata/e2e/e2e-01-violation/observations --after testdata/e2e/e2e-01-violation/observations
+stave check --before testdata/e2e/e2e-01-violation/observations --after testdata/e2e/e2e-01-violation/observations --controls testdata/e2e/e2e-01-violation/controls
 ```
 
 `scripts/quickstart.sh` runs steps 1–2 (and 5 if you pass a converted observations directory).

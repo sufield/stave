@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-27T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/data-pipeline-agent",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "workload_type": "agent"
+          },
+          "agent_reaches_sensitive": false,
+          "agent_reach_path": "data-pipeline-agent -> public-assets (not sensitive)",
+          "trust_policy": {
+            "requires_session_name": true,
+            "session_name_condition": "StringEquals"
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-agent-data-001",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": false
+          }
+        }
+      }
+    }
+  ]
+}

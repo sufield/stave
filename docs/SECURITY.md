@@ -78,6 +78,7 @@ You can independently verify that Stave makes zero network syscalls:
 **Linux (strace):**
 
 ```bash
+# doctest:skip — requires strace and user-supplied paths
 strace -f -e trace=network ./stave apply \
   --controls ./controls --observations ./obs 2>&1 | grep -E 'socket|connect|sendto|recvfrom|getaddrinfo'
 # Expected: no output (zero network syscalls)
@@ -86,7 +87,7 @@ strace -f -e trace=network ./stave apply \
 **macOS (dtruss):**
 
 ```bash
-# dtruss requires root; run in a test environment
+# doctest:skip — requires dtruss/root and user-supplied paths
 sudo dtruss -f ./stave apply \
   --controls ./controls --observations ./obs 2>&1 | grep -iE 'socket|connect'
 # Note: macOS dtruss output is noisier; filter for socket/connect only
@@ -95,6 +96,7 @@ sudo dtruss -f ./stave apply \
 **Container-based (works on any OS):**
 
 ```bash
+# doctest:skip — requires docker and user-supplied paths
 docker run --rm --network=none -v "$(pwd):/work" -w /work golang:1.26 \
   ./stave apply --controls ./controls --observations ./obs
 # If this succeeds, the binary works with zero network access
@@ -190,6 +192,7 @@ Use `--path-mode=full` to include absolute paths in errors and logs.
 ### Producing Shareable Output
 
 ```bash
+# doctest:skip — example assumes user-supplied controls and observations
 # Sanitize identifiers and use basename-only paths
 stave apply --controls ./controls --observations ./obs --sanitize
 

@@ -36,6 +36,7 @@ Each finding's `remediation.changes[]` array contains `PropertyChange` entries:
 ## Pipeline
 
 ```bash
+# doctest:skip — example assumes user has an observations directory
 # Assessment findings (JSON)
 stave apply --observations ./observations --format json > remediation.json
 

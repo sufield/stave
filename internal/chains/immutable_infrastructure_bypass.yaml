@@ -1,0 +1,24 @@
+id: immutable_infrastructure_bypass
+description: >
+  Container runtime can be modified at runtime (ECS Exec enabled on
+  production) AND the root filesystem is writable AND container images
+  are not cryptographically signed. All three conditions erode
+  immutable infrastructure: exec provides the entry point, a writable
+  filesystem allows persistent modification, and unsigned images mean
+  the replacement image is not verified. An attacker who gains exec
+  access can modify the running container's filesystem and deploy a
+  tampered image that passes no integrity check. The post-mortem
+  recommends destroy-and-redeploy from known-good signed images;
+  this chain detects the configuration that makes that recommendation
+  necessary.
+controls:
+  - CTL.ECS.EXEC.001
+  - CTL.ECS.TASKDEF.READONLY.001
+  - CTL.ECR.SIGNING.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - data_access
+implicit_dependencies: []

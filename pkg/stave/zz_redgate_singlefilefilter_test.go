@@ -42,8 +42,8 @@ func Test_RedGate_SingleFileFilter(t *testing.T) {
 	}()
 
 	const (
-		srcReferrer = "../../controls/cloudfront/headers/CTL.CLOUDFRONT.HEADERS.NOREFERRER.001.yaml"
-		srcHSTS     = "../../controls/cloudfront/headers/CTL.CLOUDFRONT.HEADERS.NOHSTS.001.yaml"
+		srcReferrer = "../../internal/controls/cloudfront/headers/CTL.CLOUDFRONT.HEADERS.NOREFERRER.001.yaml"
+		srcHSTS     = "../../internal/controls/cloudfront/headers/CTL.CLOUDFRONT.HEADERS.NOHSTS.001.yaml"
 	)
 
 	dir := t.TempDir()

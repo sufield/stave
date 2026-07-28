@@ -537,7 +537,8 @@ subdirectory.
 ### SIR export
 
 ```bash
-stave export-sir --format jsonl --output facts.jsonl
+# doctest:skip — requires observation directory
+stave export sir --format jsonl --out facts.jsonl
 ```
 
 ### Datalog

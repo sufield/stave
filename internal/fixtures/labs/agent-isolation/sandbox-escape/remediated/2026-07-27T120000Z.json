@@ -1,0 +1,47 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-27T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "sg-agent-sandbox-001",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/benchmark-agent",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "role": {
+            "workload_type": "agent"
+          },
+          "agent_reaches_sensitive": false,
+          "agent_reach_path": "benchmark-agent -> sandbox-only-role (no sensitive target)"
+        }
+      }
+    },
+    {
+      "id": "vpc-agent-sandbox-001",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "flow_log": {
+            "enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

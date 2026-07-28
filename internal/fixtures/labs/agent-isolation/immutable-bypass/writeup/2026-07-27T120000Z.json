@@ -1,0 +1,46 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-27T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:111122223333:service/prod/api-service",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "ecs_service",
+          "exec": {
+            "enabled_in_production": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api-task:42",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "filesystem": {
+            "readonly_root": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ecr:us-east-1:111122223333:repository/api-image",
+      "type": "aws_ecr_repository",
+      "vendor": "aws",
+      "properties": {
+        "container_registry": {
+          "kind": "repository",
+          "signing": {
+            "enforced": false
+          }
+        }
+      }
+    }
+  ]
+}

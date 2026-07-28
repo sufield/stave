@@ -81,7 +81,7 @@ func TestADR003_ExtensionsDTOIntegrity(t *testing.T) {
 
 func TestADR004_CrossAssetChainsUseGlobalScope(t *testing.T) {
 	root := repoRoot(t)
-	chainsDir := filepath.Join(root, "chains")
+	chainsDir := filepath.Join(root, "internal", "chains")
 	entries, err := os.ReadDir(chainsDir)
 	if err != nil {
 		t.Fatalf("read chains dir: %v", err)
@@ -164,7 +164,7 @@ func TestADR007_AttestVerifyPrintsFailure(t *testing.T) {
 
 func TestADR008_FixturesAreCommittedArtifacts(t *testing.T) {
 	root := repoRoot(t)
-	waDir := filepath.Join(root, "fixtures/labs/wa-lenses")
+	waDir := filepath.Join(root, "internal", "fixtures", "labs", "wa-lenses")
 	var jsonFiles int
 	_ = filepath.WalkDir(waDir, func(_ string, d fs.DirEntry, err error) error {
 		if err != nil {

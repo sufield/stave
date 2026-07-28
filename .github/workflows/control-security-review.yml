@@ -1,6 +1,6 @@
 name: Control Security Review
 
-# Every PR that touches controls/ must have a security-focused differential
+# Every PR that touches internal/controls/ must have a security-focused differential
 # review of the diff (false negatives, edge-case coverage) before merge. The
 # review itself is a Claude Code skill (`differential-review`) run locally by
 # the author — CI cannot run an LLM review headlessly, so this gate requires
@@ -10,7 +10,7 @@ name: Control Security Review
 on:
   pull_request:
     paths:
-      - 'controls/**'
+      - 'internal/controls/**'
       - '.github/workflows/control-security-review.yml'
 
 permissions:
@@ -34,7 +34,7 @@ jobs:
           {
             echo "### Controls changed in this PR"
             echo ""
-            git diff --name-only "$BASE"...HEAD -- controls/ | sed 's/^/- `/; s/$/`/'
+            git diff --name-only "$BASE"...HEAD -- internal/controls/ | sed 's/^/- `/; s/$/`/'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Require differential-review attestation
@@ -47,6 +47,6 @@ jobs:
           if printf '%s' "$BODY" | grep -qiE '\[[xX]\][^]]*differential-review'; then
             echo "differential-review attested — gate passes."
           else
-            echo "::error::This PR changes controls/ but the differential-review box in the PR description is unchecked. Run the \`differential-review\` skill on the control diff (focus: false negatives, edge cases), then check the box. See CONTRIBUTING.md."
+            echo "::error::This PR changes internal/controls/ but the differential-review box in the PR description is unchecked. Run the \`differential-review\` skill on the control diff (focus: false negatives, edge cases), then check the box. See CONTRIBUTING.md."
             exit 1
           fi

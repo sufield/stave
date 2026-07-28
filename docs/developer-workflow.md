@@ -37,10 +37,10 @@ stave transform -i raw/ -o my-obs/
 ./my-extractor.sh > my-obs/2026-03-15T000000Z.json
 
 # Validate catches schema mistakes before evaluation
-stave validate --controls controls/s3 --observations ./my-obs
+stave validate --controls internal/controls/s3 --observations ./my-obs
 
 # Evaluate
-stave apply --controls controls/s3 --observations ./my-obs --max-unsafe 168h
+stave apply --controls internal/controls/s3 --observations ./my-obs --max-unsafe 168h
 ```
 
 The `validate` step acts as a safety net. Common issues it catches:
