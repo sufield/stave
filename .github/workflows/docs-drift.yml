@@ -90,7 +90,7 @@ jobs:
             local pattern="$1"
             local reason="$2"
             if grep -rn -E "$pattern" \
-                README.md CONTRIBUTING.md ARCHITECTURE.md TESTING.md DOCTRINE.md \
+                README.md \
                 docs/ \
                 --include='*.md' \
                 --exclude-dir=plans \

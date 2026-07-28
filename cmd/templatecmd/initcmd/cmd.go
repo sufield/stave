@@ -10,7 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	tmpl "github.com/sufield/stave/pkg/stave/template"
-	"github.com/sufield/stave/templates"
+	"github.com/sufield/stave/internal/templates"
 )
 
 type options struct {

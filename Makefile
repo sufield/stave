@@ -13,11 +13,11 @@ GOLINT_LOCAL=$(shell $(GOCMD) env GOPATH)/bin/golangci-lint
 GOLINT=$(if $(wildcard $(GOLINT_LOCAL)),$(GOLINT_LOCAL),golangci-lint)
 
 # Schema sync (contracts source → embedded runtime copy)
-SCHEMA_SRC=schemas
+SCHEMA_SRC=internal/schemas
 SCHEMA_DST=internal/contracts/schema/embedded
 
 # Control sync (canonical controls → embedded runtime copy)
-CONTROL_SRC=controls
+CONTROL_SRC=internal/controls
 CONTROL_DST=internal/controldata/embedded
 
 # Alternatives inventory sync (canonical inventories → embedded runtime copy)
@@ -48,9 +48,10 @@ all: lint test build
 ## hashed once more. A rename or a one-byte content change invalidates
 ## the cache and triggers a re-sync.
 
-SCHEMA_HASH_FILE       := .sync-schemas-hash
-CONTROL_HASH_FILE      := .sync-controls-hash
-ALTERNATIVES_HASH_FILE := .sync-alternatives-hash
+BUILD_CACHE_DIR        := .build-cache
+SCHEMA_HASH_FILE       := $(BUILD_CACHE_DIR)/.sync-schemas-hash
+CONTROL_HASH_FILE      := $(BUILD_CACHE_DIR)/.sync-controls-hash
+ALTERNATIVES_HASH_FILE := $(BUILD_CACHE_DIR)/.sync-alternatives-hash
 
 ## sync_tree: single source for the three identical embed-copy targets.
 ##
@@ -71,6 +72,7 @@ $(1):
 	  mkdir -p $(4); \
 	  rm -rf $(4)/*; \
 	  cp -R $(3)/* $(4)/; \
+	  mkdir -p $(BUILD_CACHE_DIR); \
 	  echo "$$$$new_hash" > $(5); \
 	  echo "$(2) synced ($$$$new_hash)"; \
 	fi
@@ -170,7 +172,7 @@ test-pkg:
 	fi
 	@case "$(PKG)" in \
 		*controldata*|*contracts/schema*|*adapters/coverage*) \
-			for h in .sync-controls-hash .sync-schemas-hash .sync-alternatives-hash; do \
+			for h in $(SCHEMA_HASH_FILE) $(CONTROL_HASH_FILE) $(ALTERNATIVES_HASH_FILE); do \
 				if [ ! -f "$$h" ]; then \
 					echo "WARNING: $$h missing — embedded data may be stale. Run 'make sync-controls sync-schemas sync-alternatives' first." >&2; \
 					break; \
@@ -194,7 +196,7 @@ test-changed: sync-schemas sync-controls sync-alternatives
 	if [ -z "$$changed" ]; then \
 		echo "No .go files changed vs $$base — nothing to test."; exit 0; \
 	fi; \
-	if echo "$$changed" | grep -qE '^(controls/|schemas/|data/alternatives/)'; then \
+	if echo "$$changed" | grep -qE '^(internal/controls/|internal/schemas/|data/alternatives/)'; then \
 		echo "Embedded-data source changed — falling back to test-fast."; \
 		$(MAKE) test-fast; exit $$?; \
 	fi; \
@@ -410,6 +412,7 @@ tidy:
 clean:
 	rm -f $(BINARY) stave-dev
 	rm -rf bin/
+	rm -rf $(BUILD_CACHE_DIR) .sync-schemas-hash .sync-controls-hash .sync-alternatives-hash
 	rm -f coverage.out coverage.html
 	rm -rf $(SCHEMA_DST)/*
 
@@ -979,7 +982,7 @@ docs-commands-catalog-check:
 ## before the schema validation kicks in, so the failure message is
 ## obvious rather than buried in a validator backtrace.
 attack-stage-check:
-	@bad=$$(grep -rEln '^[[:space:]]*attack_stage:[[:space:]]*(defense_evasion|credential_theft|data_access|reconnaissance|data_in_transit_exposure|command_and_control|none)[[:space:]]*$$' controls/ || true); \
+	@bad=$$(grep -rEln '^[[:space:]]*attack_stage:[[:space:]]*(defense_evasion|credential_theft|data_access|reconnaissance|data_in_transit_exposure|command_and_control|none)[[:space:]]*$$' internal/controls/ || true); \
 	if [ -n "$$bad" ]; then \
 		echo "ERROR: invalid attack_stage values found in:"; echo "$$bad"; \
 		echo "Migration map: defense_evasion->detection_evasion, credential_theft->credential_access, data_access->collection, reconnaissance->discovery, data_in_transit_exposure->exfiltration, command_and_control->REMOVED, none->REMOVE the params block"; \
@@ -995,14 +998,14 @@ attack-stage-check:
 ## cryptography, compliance, availability) as ERROR. It exits 0 on
 ## warnings, 2 on deprecated values.
 domain-check:
-	@deprecated=$$(grep -rEln '^[[:space:]]*domain:[[:space:]]*(detect|encrypt|cryptography|compliance|availability)[[:space:]]*$$' controls/ || true); \
+	@deprecated=$$(grep -rEln '^[[:space:]]*domain:[[:space:]]*(detect|encrypt|cryptography|compliance|availability)[[:space:]]*$$' internal/controls/ || true); \
 	if [ -n "$$deprecated" ]; then \
 		echo "ERROR: deprecated domain values found in:"; echo "$$deprecated"; \
 		echo "Migration map (see docs/ontology/domains.json): detect->detection, encrypt->encryption, cryptography->encryption, compliance->governance, availability->resilience"; \
 		exit 2; \
 	fi
 	@canonical='exposure governance identity detection encryption audit network resilience lifecycle storage access hygiene secrets capacity'; \
-	values=$$(grep -rh --include='*.yaml' "^[[:space:]]*domain:" controls/ | awk -F: '{gsub(/^[[:space:]]*/,"",$$2); gsub(/[[:space:]]*$$/,"",$$2); print $$2}' | sort -u); \
+	values=$$(grep -rh --include='*.yaml' "^[[:space:]]*domain:" internal/controls/ | awk -F: '{gsub(/^[[:space:]]*/,"",$$2); gsub(/[[:space:]]*$$/,"",$$2); print $$2}' | sort -u); \
 	for v in $$values; do \
 		case " $$canonical " in *" $$v "*) ;; *) echo "WARN: non-canonical domain '$$v' (see docs/ontology/domains.json)" ;; esac; \
 	done
@@ -1216,11 +1219,11 @@ metrics:
 	@echo "# Run: make metrics" >> docs/metrics.yaml
 	@echo "" >> docs/metrics.yaml
 	@echo "catalog:" >> docs/metrics.yaml
-	@echo "  controls: $$(find controls/ -name '*.yaml' -not -path '*/_triage/*' -not -name '_*' | wc -l | tr -d ' ')" >> docs/metrics.yaml
-	@echo "  services: $$(find controls/ -mindepth 1 -maxdepth 1 -type d -not -name '_triage' | wc -l | tr -d ' ')" >> docs/metrics.yaml
+	@echo "  controls: $$(find internal/controls/ -name '*.yaml' -not -path '*/_triage/*' -not -name '_*' | wc -l | tr -d ' ')" >> docs/metrics.yaml
+	@echo "  services: $$(find internal/controls/ -mindepth 1 -maxdepth 1 -type d -not -name '_triage' | wc -l | tr -d ' ')" >> docs/metrics.yaml
 	@echo "" >> docs/metrics.yaml
 	@echo "chains:" >> docs/metrics.yaml
-	@echo "  authored: $$(find chains/ -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" >> docs/metrics.yaml
+	@echo "  authored: $$(find internal/chains/ -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" >> docs/metrics.yaml
 	@echo "" >> docs/metrics.yaml
 	@echo "frameworks:" >> docs/metrics.yaml
 	@echo "  count: $$(find data/frameworks/ -name '*.yaml' 2>/dev/null | wc -l | tr -d ' ')" >> docs/metrics.yaml

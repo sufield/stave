@@ -11,7 +11,7 @@ import (
 	"github.com/sufield/stave/pkg/stave"
 	"github.com/sufield/stave/pkg/stave/snapshot"
 	tmpl "github.com/sufield/stave/pkg/stave/template"
-	"github.com/sufield/stave/templates"
+	"github.com/sufield/stave/internal/templates"
 )
 
 type options struct {

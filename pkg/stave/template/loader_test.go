@@ -3,7 +3,7 @@ package template
 import (
 	"testing"
 
-	"github.com/sufield/stave/templates"
+	"github.com/sufield/stave/internal/templates"
 )
 
 func TestLoadFromFS_BuiltinTemplates(t *testing.T) {

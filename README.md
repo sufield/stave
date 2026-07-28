@@ -200,7 +200,7 @@ in AWS's own Zelkova research.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, development workflow, and PR guidelines.
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for setup, development workflow, and PR guidelines.
 
 ## License
 

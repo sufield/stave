@@ -11,6 +11,7 @@ python/solver/tests/__pycache__/
 # top of Makefile). They let the syncs skip rm/cp when source is
 # unchanged. CI never has these — clean checkouts re-sync every time,
 # so correctness is unaffected.
+.build-cache/
 .sync-schemas-hash
 .sync-controls-hash
 .sync-alternatives-hash

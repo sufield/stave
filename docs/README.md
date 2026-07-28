@@ -77,11 +77,11 @@ Framework-specific mapping with control counts.
 
 ## For Contributors
 
-- [Architecture](../ARCHITECTURE.md) — layer map, dependency rule, command trace
-- [Contributing](../CONTRIBUTING.md) — setup, workflow, PR guidelines
-- [Development](../DEVELOPMENT.md) — build, test, lint
-- [Doctrine](../DOCTRINE.md) — design principles
-- [Glossary](../GLOSSARY.md) — term definitions
+- [Architecture](ARCHITECTURE.md) — layer map, dependency rule, command trace
+- [Contributing](CONTRIBUTING.md) — setup, workflow, PR guidelines
+- [Development](DEVELOPMENT.md) — build, test, lint
+- [Doctrine](DOCTRINE.md) — design principles
+- [Glossary](GLOSSARY.md) — term definitions
 - [CLI style guide](cli-style-guide.md) — output conventions
 - [Community scripts](../contrib/README.md) — Atlantis, hooks
 - [Control definitions](../controls/README.md) — 97 service directories
