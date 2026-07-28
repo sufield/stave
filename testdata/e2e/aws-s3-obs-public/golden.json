@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "c8a5800992935659c6b11b8a77125dfeec6cc024b99130e7ff91e2145da7cf26",
+    "policy_fingerprint": "40ff5a9d6a0d5dca80d7b6218506019f43649b0c2b10177035a5743b39fa2f4a",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -207,7 +207,7 @@
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"encryption\": {\n      \"at_rest_enabled\": true\n    },\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-335a4ba9a0319bd8",
+        "id": "fix-6ce9fe75e3221499",
         "target": {
           "asset_id": "public-test-bucket",
           "asset_type": "aws_s3_bucket"
@@ -419,7 +419,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-335a4ba9a0319bd8",
+        "id": "fix-6ce9fe75e3221499",
         "target": {
           "asset_id": "public-test-bucket",
           "asset_type": "aws_s3_bucket"
@@ -2589,50 +2589,6 @@
       "asset_id": "public-test-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-335a4ba9a0319bd8",
-        "target": {
-          "asset_id": "public-test-bucket",
-          "asset_type": "aws_s3_bucket"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "action": "Enable Block Public Access on the bucket (all 4 sub-flags) to make the encryption meaningful. If public access is intentional, remove encryption from the bucket's security posture description — it is not providing confidentiality."
-      },
-      "contributing_controls": [
-        "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
-        "CTL.S3.PUBLIC.001"
-      ],
-      "finding_count": 2
-    },
-    {
-      "asset_id": "public-test-bucket",
-      "asset_type": "aws_s3_bucket",
-      "fix_plan": {
         "id": "fix-6c6bf4529bfb9ec9",
         "target": {
           "asset_id": "public-test-bucket",
@@ -2804,6 +2760,50 @@
         "CTL.S3.LIFECYCLE.MULTIPART.001"
       ],
       "finding_count": 1
+    },
+    {
+      "asset_id": "public-test-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-6ce9fe75e3221499",
+        "target": {
+          "asset_id": "public-test-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Enable Block Public Access on the bucket (all 4 sub-flags) to make the encryption meaningful. If public access is intentional, remove encryption from the bucket's security posture description — it is not providing confidentiality."
+      },
+      "contributing_controls": [
+        "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
+        "CTL.S3.PUBLIC.001"
+      ],
+      "finding_count": 2
     }
   ],
   "top_exposures": [

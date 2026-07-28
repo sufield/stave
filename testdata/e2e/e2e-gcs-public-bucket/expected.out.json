@@ -14,7 +14,7 @@
       },
       "overall": "37da254d9f570ea5089731d34673e7c85acf2fb50d95a4996982319bffffa9db"
     },
-    "policy_fingerprint": "337d82731351d463b83eb111ee56e90a24897041b85598e5e05b795ffb28bd0e",
+    "policy_fingerprint": "feb588ef1fa9336764b9b32b0a0c417428cc99390c72959d2dcd9daba9af9b76",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -85,7 +85,7 @@
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-182ea18064a0b07e",
+        "id": "fix-b886fa387cb67890",
         "target": {
           "asset_id": "my-project-public-bucket",
           "asset_type": "gcp_gcs_bucket"
@@ -258,7 +258,7 @@
       "asset_id": "my-project-public-bucket",
       "asset_type": "gcp_gcs_bucket",
       "fix_plan": {
-        "id": "fix-182ea18064a0b07e",
+        "id": "fix-b886fa387cb67890",
         "target": {
           "asset_id": "my-project-public-bucket",
           "asset_type": "gcp_gcs_bucket"

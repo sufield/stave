@@ -14,7 +14,7 @@
       },
       "overall": "37d6a574667ceb6671f51d0bf8f53e7b24e51144bcd782c675b3303992aaa84c"
     },
-    "policy_fingerprint": "1104214ed01a1592725c5babc9f114939c22ded6608ab8de92b06037eae1fd92",
+    "policy_fingerprint": "72bc0d184122c21c3e455cb66c7796e9f48e0b648cce890e2804c3ea5c517413",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -182,7 +182,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -442,7 +442,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false,\n      \"public_list\": false\n    },\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -723,7 +723,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -900,7 +900,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"list_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1077,7 +1077,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1271,7 +1271,7 @@
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -2525,7 +2525,7 @@
       "asset_id": "public-phi-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"

@@ -14,7 +14,7 @@
       },
       "overall": "1c786462481e7edac6d8e9242adbf26d4b56124668970d1ffde2bad726e9e0d8"
     },
-    "policy_fingerprint": "ed164302305704edb43fcce573329d3dee96ae76b52e5d6621136a1baa004824",
+    "policy_fingerprint": "f1063835330b6e7d4663c2859e4f3e1555ca675e7fa2f728dafc068d65ed9bd6",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -112,7 +112,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-c0e5e43eb28f5519",
+        "id": "fix-6abd3c523577964f",
         "target": {
           "asset_id": "phi-data-bucket",
           "asset_type": "aws_s3_bucket"
@@ -398,7 +398,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-5b17055023bf42ee",
+        "id": "fix-fc689252f1375706",
         "target": {
           "asset_id": "public-assets-bucket",
           "asset_type": "aws_s3_bucket"
@@ -692,7 +692,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false,\n      \"public_list\": false\n    },\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-c0e5e43eb28f5519",
+        "id": "fix-6abd3c523577964f",
         "target": {
           "asset_id": "phi-data-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1075,7 +1075,7 @@
       "asset_id": "phi-data-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-c0e5e43eb28f5519",
+        "id": "fix-6abd3c523577964f",
         "target": {
           "asset_id": "phi-data-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1119,7 +1119,7 @@
       "asset_id": "public-assets-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-5b17055023bf42ee",
+        "id": "fix-fc689252f1375706",
         "target": {
           "asset_id": "public-assets-bucket",
           "asset_type": "aws_s3_bucket"

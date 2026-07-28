@@ -14,7 +14,7 @@
       },
       "overall": "47f2caade3f8f2a0a09ad2abc6111d3017f0b07bde78d7ee9cb4114558060627"
     },
-    "policy_fingerprint": "afcd1bc6cab21321ce75204cacd720ed0bacdd7be2f1cc96ed69fce16019b342",
+    "policy_fingerprint": "0a9a8443962042c3ced4388952fa78c69a3e038a65820dd186b940f824f0bdae",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -92,7 +92,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-2c7509bc52123eef",
+        "id": "fix-05ed121b8b6d51a3",
         "target": {
           "asset_id": "mapbox-private-objects",
           "asset_type": "aws_s3_bucket"
@@ -348,7 +348,7 @@
       "asset_id": "mapbox-private-objects",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-2c7509bc52123eef",
+        "id": "fix-05ed121b8b6d51a3",
         "target": {
           "asset_id": "mapbox-private-objects",
           "asset_type": "aws_s3_bucket"

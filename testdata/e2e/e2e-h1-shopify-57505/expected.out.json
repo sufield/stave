@@ -14,7 +14,7 @@
       },
       "overall": "db79f69df8052641853ba728eb6040f0d17d2f846a60066843678d1ff6e7d5b9"
     },
-    "policy_fingerprint": "9cc87576b186b6c0755aec34c736bb01e1192a1d9c0ae04fa59b197ab0f8d582",
+    "policy_fingerprint": "affca8bec6fbb01ae9b4b691b1134a39b380184912c2916a3397901cda60649e",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -98,7 +98,7 @@
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-a9b25057e644b335",
+        "id": "fix-fc1e3453559b8cfc",
         "target": {
           "asset_id": "shopify-public-assets",
           "asset_type": "aws_s3_bucket"
@@ -405,7 +405,7 @@
       "asset_id": "shopify-public-assets",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-a9b25057e644b335",
+        "id": "fix-fc1e3453559b8cfc",
         "target": {
           "asset_id": "shopify-public-assets",
           "asset_type": "aws_s3_bucket"
