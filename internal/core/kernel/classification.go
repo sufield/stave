@@ -37,13 +37,15 @@ func (c ControlClass) String() string {
 func (id ControlID) Classify() ControlClass {
 	s := strings.ToUpper(id.String())
 
-	// Check for Public Exposure keywords
-	if containsAny(s, ".PUBLIC.", ".EXPOSURE.", ".TAKEOVER.", ".POLICY.WRITE") {
+	// Check for Public Exposure keywords (middle segment or trailing segment)
+	if containsAny(s, ".PUBLIC.", ".EXPOSURE.", ".TAKEOVER.", ".POLICY.WRITE") ||
+		hasAnySuffix(s, ".PUBLIC", ".EXPOSURE", ".TAKEOVER", ".POLICY.WRITE") {
 		return ClassPublicExposure
 	}
 
-	// Check for Encryption keywords
-	if containsAny(s, ".ENCRYPT.", ".KMS.", ".SSE.") {
+	// Check for Encryption keywords (middle segment or trailing segment)
+	if containsAny(s, ".ENCRYPT.", ".KMS.", ".SSE.") ||
+		hasAnySuffix(s, ".ENCRYPT", ".KMS", ".SSE") {
 		return ClassEncryptionMissing
 	}
 
@@ -53,6 +55,12 @@ func (id ControlID) Classify() ControlClass {
 	}
 
 	return ClassUnknown
+}
+
+func hasAnySuffix(s string, suffixes ...string) bool {
+	return slices.ContainsFunc(suffixes, func(sub string) bool {
+		return strings.HasSuffix(s, sub)
+	})
 }
 
 // containsAny is a helper to check if any of the provided substrings exist in s.

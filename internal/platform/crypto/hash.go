@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -49,13 +50,17 @@ func StableID(prefix, input string) string {
 }
 
 // HashDelimited computes the SHA-256 hex digest of parts joined by sep.
-// Each part is followed by sep (e.g. "a\nb\n" for sep='\n').
-// Uses io.WriteString to avoid per-part []byte allocations.
+// Each part is length-prefixed and followed by sep to prevent delimiter
+// injection collisions when individual parts contain the delimiter byte.
 func HashDelimited(parts []string, sep byte) kernel.Digest {
 	h := sha256.New()
 	var sepBuf [1]byte
 	sepBuf[0] = sep
+	var lenBuf [20]byte
 	for _, p := range parts {
+		b := strconv.AppendInt(lenBuf[:0], int64(len(p)), 10)
+		h.Write(b)
+		h.Write(sepBuf[:])
 		io.WriteString(h, p) //nolint:errcheck,gosec // hash.Write never returns an error
 		h.Write(sepBuf[:])
 	}

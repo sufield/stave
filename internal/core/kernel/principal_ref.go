@@ -42,13 +42,19 @@ func (r *principalSuffixRegistry) register(suffix string) {
 	}
 }
 
-// matches reports whether s ends with any registered suffix.
+// matches reports whether s ends with any registered suffix at a hostname dot boundary.
 func (r *principalSuffixRegistry) matches(s string) bool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	for _, suffix := range r.suffixes {
-		if strings.HasSuffix(s, suffix) {
-			return true
+		if strings.HasPrefix(suffix, ".") {
+			if strings.HasSuffix(s, suffix) {
+				return true
+			}
+		} else {
+			if s == suffix || strings.HasSuffix(s, "."+suffix) {
+				return true
+			}
 		}
 	}
 	return false

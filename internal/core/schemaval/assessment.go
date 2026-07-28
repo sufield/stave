@@ -46,11 +46,11 @@ type AssessmentSummary struct {
 // ReadinessAssessment captures the result of a pre-evaluation integrity check.
 // It determines if the environment and control-set are in a safe state to proceed.
 type ReadinessAssessment struct {
-	IsSafe            bool              `json:"is_safe"`
-	ControlSource     string            `json:"control_source"`
-	ObservationSource string            `json:"observation_source"`
-	Summary           AssessmentSummary `json:"summary"`
-	findings          []ValidationFinding
+	IsSafe            bool                `json:"is_safe"`
+	ControlSource     string              `json:"control_source"`
+	ObservationSource string              `json:"observation_source"`
+	Summary           AssessmentSummary   `json:"summary"`
+	RecordedFindings  []ValidationFinding `json:"findings,omitempty"`
 }
 
 // NewReadinessAssessment initializes an assessment, defaulting to a safe state.
@@ -59,7 +59,7 @@ func NewReadinessAssessment(controlSrc, observationSrc string) *ReadinessAssessm
 		IsSafe:            true,
 		ControlSource:     controlSrc,
 		ObservationSource: observationSrc,
-		findings:          make([]ValidationFinding, 0),
+		RecordedFindings:  make([]ValidationFinding, 0),
 	}
 }
 
@@ -94,13 +94,19 @@ func (r *ReadinessAssessment) NextCommand() string {
 
 // Findings returns a copy of the recorded structural or environmental issues.
 func (r *ReadinessAssessment) Findings() []ValidationFinding {
-	out := make([]ValidationFinding, len(r.findings))
-	copy(out, r.findings)
+	if r == nil {
+		return nil
+	}
+	out := make([]ValidationFinding, len(r.RecordedFindings))
+	copy(out, r.RecordedFindings)
 	return out
 }
 
 // RecordFinding logs a validation issue and updates the aggregate safety state.
 func (r *ReadinessAssessment) RecordFinding(f ValidationFinding) {
+	if r == nil {
+		return
+	}
 	switch {
 	case !f.IsPassing() && !f.IsWarning():
 		// Anything that's neither passing nor a warning is a hard
@@ -111,7 +117,7 @@ func (r *ReadinessAssessment) RecordFinding(f ValidationFinding) {
 	case f.IsWarning():
 		r.Summary.Warnings++
 	}
-	r.findings = append(r.findings, f)
+	r.RecordedFindings = append(r.RecordedFindings, f)
 }
 
 // EvaluationState contains the diagnostics and load metrics from an active evaluation.

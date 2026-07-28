@@ -311,6 +311,9 @@ func (s *Sanitizer) Snapshot(snap asset.Snapshot) asset.Snapshot {
 // sanitized according to the profile. Nested maps and lists are recursed
 // so sensitive values nested inside list-shaped properties are still scrubbed.
 func (s *Sanitizer) ScrubMap(props map[string]any, profile Profile) map[string]any {
+	if s == nil {
+		return props
+	}
 	return s.scrubMapInScope(props, profile, false)
 }
 

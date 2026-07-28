@@ -112,9 +112,9 @@ func TestHashDelimited(t *testing.T) {
 		t.Errorf("HashDelimited not deterministic: %q != %q", d, d2)
 	}
 
-	// Verify manually: "a\nb\nc\n" hashed
+	// Verify manually: "1\na\n1\nb\n1\nc\n" hashed
 	h := sha256.New()
-	h.Write([]byte("a\nb\nc\n"))
+	h.Write([]byte("1\na\n1\nb\n1\nc\n"))
 	want := kernel.Digest(hex.EncodeToString(h.Sum(nil)))
 	if d != want {
 		t.Errorf("HashDelimited = %q, want %q", d, want)

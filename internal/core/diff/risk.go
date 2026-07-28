@@ -3,6 +3,8 @@
 // risk by consulting the known polarity of boolean observation fields.
 package diff
 
+import "strings"
+
 // RiskDirection classifies a property change's effect on security posture.
 type RiskDirection int
 
@@ -92,9 +94,14 @@ func ClassifyRisk(field string, was, now any) RiskDirection {
 		return RiskNeutral
 	}
 
-	pol, known := fieldPolarity[field]
+	leaf := field
+	if idx := strings.LastIndexByte(field, '.'); idx >= 0 {
+		leaf = field[idx+1:]
+	}
+
+	pol, known := fieldPolarity[leaf]
 	if !known {
-		pol, known = polarityByPrefix(field)
+		pol, known = polarityByPrefix(leaf)
 	}
 	if !known {
 		return RiskNeutral
