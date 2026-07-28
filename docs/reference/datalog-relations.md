@@ -96,7 +96,7 @@ Run: `go run ./internal/tools/gendatalogdocs`
 
 ### has_type
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -108,7 +108,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_vendor
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -118,7 +118,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_severity
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -128,7 +128,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_action
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -138,7 +138,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_resource
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -148,7 +148,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_deny_action
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -158,7 +158,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_deny_resource
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -168,7 +168,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_permission_action
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -178,7 +178,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_permission_resource
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -188,7 +188,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_condition
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -198,7 +198,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_condition_value
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -208,7 +208,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_tag
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -218,7 +218,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### can_assume
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -228,7 +228,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### cross_account_assumes
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -238,7 +238,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### trusts_service
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -248,7 +248,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_delegated_principal
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -258,7 +258,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_unknown_delegated_principal
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -268,7 +268,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_delegation_scope_exceeded_for
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -278,7 +278,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### resource_policy_principal
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -288,7 +288,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### resource_policy_action
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -298,7 +298,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### grants_cross_account_access
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -308,7 +308,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### maps_unauth_to
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -318,7 +318,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### maps_auth_to
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -328,7 +328,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### allows_unauthenticated
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -338,7 +338,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### self_registration_unrestricted
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -348,7 +348,7 @@ Input relations — verbatim SIR-facts vocabulary.
 
 ### has_trust_condition
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -365,7 +365,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### contributed_by
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -375,7 +375,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### is_decommissioned
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -385,7 +385,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### is_provisioned
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -395,7 +395,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### first_seen_at
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -405,7 +405,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### last_seen_at
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -415,7 +415,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_exposure_window
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -425,7 +425,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_forbidden_state
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -435,7 +435,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_forbidden_category
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -445,7 +445,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_incompatible_pair
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -455,7 +455,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_intent_rationale
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -465,7 +465,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_privilege_level
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -475,7 +475,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_unused_service
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -485,7 +485,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_data_event_logging
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -495,7 +495,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_mfa_enforced
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -505,7 +505,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### has_advanced_security_enabled
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -515,7 +515,7 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 
 ### authorized
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -537,7 +537,7 @@ shape, fail-open/fail-closed semantics, and limitations.
 
 ### sensitivity
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** input
 
@@ -547,7 +547,7 @@ shape, fail-open/fail-closed semantics, and limitations.
 
 ### is_principal_type
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** derived
 
@@ -575,7 +575,7 @@ is_principal_type("aws_iam_sso_config").
 
 ### principal_type
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** output
 
@@ -590,7 +590,7 @@ etc.) which appear in has_type as resources.
 
 ### resource
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** output
 
@@ -612,7 +612,7 @@ when non-AWS providers join the contract.
 
 ### trust_principal
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** output
 
@@ -629,7 +629,7 @@ principal lists).
 
 ### trust_service
 
-**Source:** `reasoning/souffle/iam/schema.dl`
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
 
 **Kind:** output
 
@@ -643,7 +643,7 @@ view for downstream readability.
 
 ### transitive_assume
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -663,7 +663,7 @@ limits.
 
 ### unconditional_assume
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -682,7 +682,7 @@ from transitive_assume to unconditional_assume to answer
 
 ### reachable_action
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -699,7 +699,7 @@ role's actions for the purposes of effective access.
 
 ### reachable_resource
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -709,7 +709,7 @@ role's actions for the purposes of effective access.
 
 ### reachable_deny_action
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -723,7 +723,7 @@ empty, so under Option B these are typically sparse.
 
 ### reachable_deny_resource
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -733,7 +733,7 @@ empty, so under Option B these are typically sparse.
 
 ### effective_allow
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -749,7 +749,7 @@ Option B.
 
 ### effective_deny
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -759,7 +759,7 @@ Option B.
 
 ### effective_permission
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -776,7 +776,7 @@ compound CEL predicates produce.
 
 ### arn_matches
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** derived
 
@@ -798,7 +798,7 @@ matcher.
 
 ### effective_access
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -813,7 +813,7 @@ ARN matches one of P's effective resource patterns.
 
 ### resource_effective_access
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -827,7 +827,7 @@ bucket?"
 
 ### unauthorized_access
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -851,7 +851,7 @@ untagged-principal).
 
 ### violation_c
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -861,7 +861,7 @@ untagged-principal).
 
 ### violation_i
 
-**Source:** `reasoning/souffle/iam/rules.dl`
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
 
 **Kind:** output
 
@@ -885,7 +885,7 @@ honest caveat at the top of action_classes.dl.
 
 ### privesc_path
 
-**Source:** `reasoning/souffle/discovery/discovery.dl`
+**Source:** `internal/reasoning/souffle/discovery/discovery.dl`
 
 **Kind:** output
 
@@ -902,7 +902,7 @@ depth 5 to match AWS's practical role-chain limit.
 
 ### access_path
 
-**Source:** `reasoning/souffle/discovery/discovery.dl`
+**Source:** `internal/reasoning/souffle/discovery/discovery.dl`
 
 **Kind:** output
 
@@ -917,7 +917,7 @@ many hops, and the final role that holds the permission.
 
 ### escalation_path
 
-**Source:** `reasoning/souffle/discovery/discovery.dl`
+**Source:** `internal/reasoning/souffle/discovery/discovery.dl`
 
 **Kind:** output
 
@@ -930,7 +930,7 @@ escalation_path: assume chain leads to a role with admin-equivalent actions.
 
 ### exfil_path
 
-**Source:** `reasoning/souffle/discovery/discovery.dl`
+**Source:** `internal/reasoning/souffle/discovery/discovery.dl`
 
 **Kind:** output
 
@@ -942,7 +942,7 @@ exfil_path: principal can write to a resource via cross-account or wildcard S3.
 
 ### external_reach
 
-**Source:** `reasoning/souffle/discovery/discovery.dl`
+**Source:** `internal/reasoning/souffle/discovery/discovery.dl`
 
 **Kind:** output
 
@@ -954,7 +954,7 @@ external_reach: access from a cross-account principal.
 
 ### confused_deputy_path
 
-**Source:** `reasoning/souffle/discovery/discovery.dl`
+**Source:** `internal/reasoning/souffle/discovery/discovery.dl`
 
 **Kind:** output
 
@@ -966,7 +966,7 @@ confused_deputy: service-trusted role reaches sensitive resource.
 
 ### path_condition
 
-**Source:** `reasoning/souffle/discovery/discovery.dl`
+**Source:** `internal/reasoning/souffle/discovery/discovery.dl`
 
 **Kind:** output
 
@@ -982,7 +982,7 @@ The Go harness reads these to build Z3 constraints.
 
 ### lateral_via_resource_policy
 
-**Source:** `reasoning/souffle/discovery/discovery.dl`
+**Source:** `internal/reasoning/souffle/discovery/discovery.dl`
 
 **Kind:** output
 
@@ -998,7 +998,7 @@ and B's role has resource policy grants into account C's resources.
 
 ### assume_cycle
 
-**Source:** `reasoning/souffle/discovery/discovery.dl`
+**Source:** `internal/reasoning/souffle/discovery/discovery.dl`
 
 **Kind:** output
 
