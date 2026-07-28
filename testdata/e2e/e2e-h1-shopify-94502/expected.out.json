@@ -14,7 +14,7 @@
       },
       "overall": "dc22b6fe3206dca1fdda772ee929e95ec8c40c8f8120b2715161ab23a137f093"
     },
-    "policy_fingerprint": "5afb65ad79e13c03e2d75628090d7504ca86eaf1711b575b77eff9b00ea83be3",
+    "policy_fingerprint": "6f269b146e4dcd01499dd7e3b33bde6fd93731c62e001114532e2a26c9236057",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -1488,7 +1488,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-728fc9e1572de8e9",
+        "id": "fix-364909ec8e5fee1d",
         "target": {
           "asset_id": "shopify-owned-1",
           "asset_type": "aws_s3_bucket"
@@ -1831,7 +1831,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-cb40dd526a18d441",
+        "id": "fix-040862a3591e4c1b",
         "target": {
           "asset_id": "shopify-owned-2",
           "asset_type": "aws_s3_bucket"
@@ -2174,7 +2174,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-1c9e0099685bba81",
+        "id": "fix-9fd1b0c43b783f6f",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -2507,7 +2507,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_write\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-1c9e0099685bba81",
+        "id": "fix-9fd1b0c43b783f6f",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -2676,7 +2676,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-728fc9e1572de8e9",
+        "id": "fix-364909ec8e5fee1d",
         "target": {
           "asset_id": "shopify-owned-1",
           "asset_type": "aws_s3_bucket"
@@ -2844,7 +2844,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-cb40dd526a18d441",
+        "id": "fix-040862a3591e4c1b",
         "target": {
           "asset_id": "shopify-owned-2",
           "asset_type": "aws_s3_bucket"
@@ -3012,7 +3012,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-1c9e0099685bba81",
+        "id": "fix-9fd1b0c43b783f6f",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -3468,6 +3468,50 @@
       "asset_id": "shopify-owned-1",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
+        "id": "fix-364909ec8e5fee1d",
+        "target": {
+          "asset_id": "shopify-owned-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
+      },
+      "contributing_controls": [
+        "CTL.S3.PUBLIC.001",
+        "CTL.S3.PUBLIC.004"
+      ],
+      "finding_count": 2
+    },
+    {
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
         "id": "fix-615ea15597343a26",
         "target": {
           "asset_id": "shopify-owned-1",
@@ -3497,12 +3541,12 @@
       "finding_count": 1
     },
     {
-      "asset_id": "shopify-owned-1",
+      "asset_id": "shopify-owned-2",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-728fc9e1572de8e9",
+        "id": "fix-040862a3591e4c1b",
         "target": {
-          "asset_id": "shopify-owned-1",
+          "asset_id": "shopify-owned-2",
           "asset_type": "aws_s3_bucket"
         },
         "preconditions": [
@@ -3571,56 +3615,44 @@
         "CTL.S3.ENCRYPT.004"
       ],
       "finding_count": 1
-    },
-    {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "fix_plan": {
-        "id": "fix-cb40dd526a18d441",
-        "target": {
-          "asset_id": "shopify-owned-2",
-          "asset_type": "aws_s3_bucket"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
-      },
-      "contributing_controls": [
-        "CTL.S3.PUBLIC.001",
-        "CTL.S3.PUBLIC.004"
-      ],
-      "finding_count": 2
     },
     {
       "asset_id": "shopify-writeable-1",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-1c9e0099685bba81",
+        "id": "fix-655489696a02bf28",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
+      },
+      "contributing_controls": [
+        "CTL.S3.CONTROLS.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-655489696a02bf28",
+        "target": {
+          "asset_id": "shopify-writeable-1",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
+      },
+      "contributing_controls": [
+        "CTL.S3.ENCRYPT.004"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-9fd1b0c43b783f6f",
         "target": {
           "asset_id": "shopify-writeable-1",
           "asset_type": "aws_s3_bucket"
@@ -3660,38 +3692,6 @@
         "CTL.S3.PUBLIC.004"
       ],
       "finding_count": 3
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "fix_plan": {
-        "id": "fix-655489696a02bf28",
-        "target": {
-          "asset_id": "shopify-writeable-1",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Enable all four Public Access Block settings on the bucket: BlockPublicAcls, IgnorePublicAcls, BlockPublicPolicy, RestrictPublicBuckets."
-      },
-      "contributing_controls": [
-        "CTL.S3.CONTROLS.001"
-      ],
-      "finding_count": 1
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "fix_plan": {
-        "id": "fix-655489696a02bf28",
-        "target": {
-          "asset_id": "shopify-writeable-1",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "contributing_controls": [
-        "CTL.S3.ENCRYPT.004"
-      ],
-      "finding_count": 1
     }
   ],
   "top_exposures": [

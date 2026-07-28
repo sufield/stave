@@ -14,7 +14,7 @@
       },
       "overall": "520fcb9d9bb6033313a525a0267d3ce5b2b7dbf3e8476a6cafd5fd5ebcb74c86"
     },
-    "policy_fingerprint": "7636f708c061fe67a232455f421b500c27880671d526382a1d1c7156bd887090",
+    "policy_fingerprint": "6cea15b57121dbfd7310b3e065e2c026e5af0ce455937e6760b582af617f168b",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -102,7 +102,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-81313fa1ba57cf6a",
+        "id": "fix-7d1dcce34b07ca85",
         "target": {
           "asset_id": "zomato-chat-images",
           "asset_type": "aws_s3_bucket"
@@ -338,7 +338,7 @@
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-81313fa1ba57cf6a",
+        "id": "fix-7d1dcce34b07ca85",
         "target": {
           "asset_id": "zomato-chat-images",
           "asset_type": "aws_s3_bucket"
@@ -707,7 +707,7 @@
       "asset_id": "zomato-chat-images",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-81313fa1ba57cf6a",
+        "id": "fix-7d1dcce34b07ca85",
         "target": {
           "asset_id": "zomato-chat-images",
           "asset_type": "aws_s3_bucket"
