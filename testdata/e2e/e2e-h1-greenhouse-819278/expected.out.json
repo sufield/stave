@@ -14,7 +14,7 @@
       },
       "overall": "15c03d25c1c7f764881d9765314069d70ee4de3409e6a342d7d72973164632f9"
     },
-    "policy_fingerprint": "0a9a8443962042c3ced4388952fa78c69a3e038a65820dd186b940f824f0bdae",
+    "policy_fingerprint": "afcd1bc6cab21321ce75204cacd720ed0bacdd7be2f1cc96ed69fce16019b342",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -92,7 +92,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-5b86c106130a4005",
+        "id": "fix-493d49ff5a151b28",
         "target": {
           "asset_id": "grnhse-marketing-site-assets",
           "asset_type": "aws_s3_bucket"
@@ -348,7 +348,7 @@
       "asset_id": "grnhse-marketing-site-assets",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-5b86c106130a4005",
+        "id": "fix-493d49ff5a151b28",
         "target": {
           "asset_id": "grnhse-marketing-site-assets",
           "asset_type": "aws_s3_bucket"

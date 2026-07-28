@@ -14,7 +14,7 @@
       },
       "overall": "601e4c2eecc9549954dceb5f48829f32534f49ec74af6bae267e8596edfd6dc4"
     },
-    "policy_fingerprint": "69c67a202aec1f2f79b6b27693ce7d7fe76019298437f155fe504c885117c9ff",
+    "policy_fingerprint": "d76b97b460d6e6f836fc3c4ebafd0e39a9d3449bdac95054128660ab6c499fd7",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -102,7 +102,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-b5922e987334be11",
+        "id": "fix-feace1b24c72a549",
         "target": {
           "asset_id": "exposed-bucket",
           "asset_type": "aws_s3_bucket"
@@ -320,7 +320,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_resource\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-b5922e987334be11",
+        "id": "fix-feace1b24c72a549",
         "target": {
           "asset_id": "exposed-bucket",
           "asset_type": "aws_s3_bucket"
@@ -523,7 +523,7 @@
       "asset_id": "exposed-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-b5922e987334be11",
+        "id": "fix-feace1b24c72a549",
         "target": {
           "asset_id": "exposed-bucket",
           "asset_type": "aws_s3_bucket"

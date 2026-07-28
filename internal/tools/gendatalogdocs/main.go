@@ -58,9 +58,9 @@ func main() {
 		path    string
 		section string
 	}{
-		{filepath.Join(root, "reasoning", "souffle", "iam", "schema.dl"), "Input Relations (schema.dl)"},
-		{filepath.Join(root, "reasoning", "souffle", "iam", "rules.dl"), "Derived Relations (rules.dl)"},
-		{filepath.Join(root, "reasoning", "souffle", "discovery", "discovery.dl"), "Discovery Relations (discovery.dl)"},
+		{filepath.Join(root, "internal", "reasoning", "souffle", "iam", "schema.dl"), "Input Relations (schema.dl)"},
+		{filepath.Join(root, "internal", "reasoning", "souffle", "iam", "rules.dl"), "Derived Relations (rules.dl)"},
+		{filepath.Join(root, "internal", "reasoning", "souffle", "discovery", "discovery.dl"), "Discovery Relations (discovery.dl)"},
 	}
 
 	var sections []fileSection

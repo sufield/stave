@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "a786d5967929c48d29a9bdfcd2fb3c8c0ca85686aea5d0bf233e8154da3db200",
+    "policy_fingerprint": "a2bef89019195fff240ddcb2366d3cd5576169849c542d0ae2ba5053b973b389",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -2209,7 +2209,7 @@
         "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"access\": {\n      \"publicly_accessible\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-26fd8b391ea68bea",
+        "id": "fix-8bbdfe8e2cfe4781",
         "target": {
           "asset_id": "phi-database",
           "asset_type": "aws_rds_instance"
@@ -6935,49 +6935,6 @@
       "asset_id": "phi-database",
       "asset_type": "aws_rds_instance",
       "fix_plan": {
-        "id": "fix-26fd8b391ea68bea",
-        "target": {
-          "asset_id": "phi-database",
-          "asset_type": "aws_rds_instance"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
-      },
-      "contributing_controls": [
-        "CTL.RDS.PUBLIC.001"
-      ],
-      "finding_count": 1
-    },
-    {
-      "asset_id": "phi-database",
-      "asset_type": "aws_rds_instance",
-      "fix_plan": {
         "id": "fix-4233e63a00340e1b",
         "target": {
           "asset_id": "phi-database",
@@ -7035,6 +6992,49 @@
       },
       "contributing_controls": [
         "CTL.RDS.MULTIAZ.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "fix_plan": {
+        "id": "fix-8bbdfe8e2cfe4781",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
+      },
+      "contributing_controls": [
+        "CTL.RDS.PUBLIC.001"
       ],
       "finding_count": 1
     },

@@ -319,7 +319,7 @@ construction time via `NewControlID`, `NewDigest`, etc.).
 - Engine changes (`internal/core/`)
 - Application layer changes (`internal/app/`)
 - Adapter changes (`internal/adapters/`)
-- CEL evaluator changes (`internal/cel/`)
+- CEL evaluator changes (`internal/adapters/cel/`)
 - New Go types, interfaces, or packages
 
 ## Multi-Domain Data Modeling

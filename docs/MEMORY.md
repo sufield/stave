@@ -8,7 +8,7 @@ What happened over 2 months, what's left, and what to never repeat.
 
 ### Major Shifts Completed
 
-1. **Hexagonal architecture migration** — Flat `internal/domain/` + `pkg/alpha/` restructured into `core/` (domain), `app/` (services), `adapters/` (infrastructure), with compile-time boundary enforcement tests.
+1. **Hexagonal architecture migration** — Flat `internal/core/` + `pkg/alpha/` restructured into `core/` (domain), `app/` (services), `adapters/` (infrastructure), with compile-time boundary enforcement tests.
 
 2. **Strangler Fig package extraction** — Monolithic `domain/usecases/` dissolved into 44 feature-specific packages, each with its own domain types and use case. Old packages fully deleted.
 
@@ -56,7 +56,7 @@ What happened over 2 months, what's left, and what to never repeat.
 
 9. **Remediation plan output is the newest feature** — `fix_plan` in findings output was added recently. The `enforce/fix` command acts on these plans. This code path has fewer miles on it than the evaluation engine.
 
-10. **`internal/cel/` is a critical dependency** — The CEL predicate evaluator powers all control evaluation. It wraps `google/cel-go` with Stave-specific extensions. Changes here affect every control in the catalog. Treat with extreme care.
+10. **`internal/adapters/cel/` is a critical dependency** — The CEL predicate evaluator powers all control evaluation. It wraps `google/cel-go` with Stave-specific extensions. Changes here affect every control in the catalog. Treat with extreme care.
 
 ### Low Priority
 

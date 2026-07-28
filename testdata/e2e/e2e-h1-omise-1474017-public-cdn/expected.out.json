@@ -14,7 +14,7 @@
       },
       "overall": "d696c44738921fed4375a7fbd55e6fc1ef262b9cb67bbdb07b42df2d6cea0cd9"
     },
-    "policy_fingerprint": "54ee972331aa1853bb919fa6a97da97b10a36cc765fdf1eeb8a0ac7392fb935a",
+    "policy_fingerprint": "d2131dc2023ab759b0f59a571ed873e6ff7909c1d4ffbe294e6ff217bb297f26",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -102,7 +102,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-5fe71caf3cca618b",
+        "id": "fix-3d303074b3ff773c",
         "target": {
           "asset_id": "omise-cdn-2",
           "asset_type": "aws_s3_bucket"
@@ -568,7 +568,7 @@
       "asset_id": "omise-cdn-2",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-5fe71caf3cca618b",
+        "id": "fix-3d303074b3ff773c",
         "target": {
           "asset_id": "omise-cdn-2",
           "asset_type": "aws_s3_bucket"

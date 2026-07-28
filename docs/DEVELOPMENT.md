@@ -155,7 +155,7 @@ Boundary tests (import-graph assertions at test time):
 |--------|-------|-------|
 | `make test-fast` | `-short` flag, skips e2e/profile/golden | < 30s |
 | `make test-pkg PKG=./path/...` | Single package, no sync | Seconds |
-| `make test-integration` | `internal/...` + `cmd/apply/...` + `cmd/evaluate/...` | Minutes |
+| `make test-integration` | `internal/...` + `cmd/apply/...` | Minutes |
 | `make test-e2e` | Binary-driven e2e + testscript | Minutes |
 | `make test` | Full suite with `-race`, `-parallel 16`, `-timeout 30m` | ~10 min |
 | `make test-ci` | Regenerate goldens + full suite | ~15 min |

@@ -33,7 +33,7 @@ The push uses the `github.com-sufield` SSH host alias (configured in `~/.ssh/con
 | `goreleaser check` | Before commit | Invalid release config |
 | `VERSION` ↔ tag match | CI release workflow | Version file forgotten |
 
-Golden file comparisons (`scripts/e2e.sh`, `cmd/apply/verify/determinism_test.go`, `cmd/apply/profile_e2e_test.go`) strip `run.tool_version` before comparing, so version bumps do not require regenerating golden files.
+Golden file comparisons (`make e2e`, `cmd/apply/verify/determinism_test.go`, `cmd/apply/profile_e2e_test.go`) strip `run.tool_version` before comparing, so version bumps do not require regenerating golden files.
 
 ### Version propagation
 

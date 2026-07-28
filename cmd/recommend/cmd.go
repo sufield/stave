@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/internal/templates"
 	"github.com/sufield/stave/pkg/stave"
 	"github.com/sufield/stave/pkg/stave/snapshot"
 	tmpl "github.com/sufield/stave/pkg/stave/template"
-	"github.com/sufield/stave/internal/templates"
 )
 
 type options struct {
