@@ -15,8 +15,17 @@ type condOperator string
 // modifiers (ForAnyValue:, ForAllValues:) and null-safety (IfExists).
 func parseOperator(raw string) condOperator {
 	clean := strings.ToLower(raw)
-	clean = strings.TrimPrefix(clean, condPrefixForAnyValue)
-	clean = strings.TrimPrefix(clean, condPrefixForAllValues)
+	for {
+		if strings.HasPrefix(clean, condPrefixForAnyValue) {
+			clean = strings.TrimPrefix(clean, condPrefixForAnyValue)
+			continue
+		}
+		if strings.HasPrefix(clean, condPrefixForAllValues) {
+			clean = strings.TrimPrefix(clean, condPrefixForAllValues)
+			continue
+		}
+		break
+	}
 	return condOperator(strings.TrimSuffix(clean, condSuffixIfExists))
 }
 

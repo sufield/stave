@@ -71,6 +71,9 @@ func Evaluate(cp CompiledPredicate, a asset.Asset, identities []asset.CloudIdent
 // == operator can compare them with string literals.
 // Returns a new map — does not mutate the input.
 func stringifyNamedTypes(m map[string]any) map[string]any {
+	if m == nil {
+		return nil
+	}
 	out := make(map[string]any, len(m))
 	for k, v := range m {
 		out[k] = stringifyValue(v)

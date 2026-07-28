@@ -40,7 +40,8 @@ func ParseARN(arn string) ARN {
 
 	accountID, resource, found = strings.Cut(remaining, ":")
 	if !found {
-		return ARN{}
+		accountID = remaining
+		resource = ""
 	}
 
 	return ARN{

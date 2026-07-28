@@ -60,13 +60,28 @@ func (f FieldPath) Parts() []string {
 }
 
 // TrimPrefix returns the path with the given prefix removed.
+// It enforces segment dot-boundaries so that a prefix like "properties.storage"
+// will not match "properties.storage_account".
 func (f FieldPath) TrimPrefix(prefix string) string {
-	return strings.TrimPrefix(f.raw, prefix)
+	if !f.HasPrefix(prefix) {
+		return f.raw
+	}
+	if strings.HasSuffix(prefix, ".") {
+		return strings.TrimPrefix(f.raw, prefix)
+	}
+	if f.raw == prefix {
+		return ""
+	}
+	return strings.TrimPrefix(f.raw, prefix+".")
 }
 
 // HasPrefix reports whether the path starts with the given prefix.
+// Enforces segment dot-boundaries to prevent substring collisions.
 func (f FieldPath) HasPrefix(prefix string) bool {
-	return strings.HasPrefix(f.raw, prefix)
+	if strings.HasSuffix(prefix, ".") {
+		return strings.HasPrefix(f.raw, prefix)
+	}
+	return f.raw == prefix || strings.HasPrefix(f.raw, prefix+".")
 }
 
 // --- Serialization ---
