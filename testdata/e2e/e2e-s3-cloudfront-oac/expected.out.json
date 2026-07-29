@@ -14,7 +14,7 @@
       },
       "overall": "525666646e8b8845b2e3f8b3af202a5af48ee163e7af1cad40895d9fafb4cd00"
     },
-    "policy_fingerprint": "09b680cf0f7bc04ca0a746ead580fbc3811f892d919c20ea743f630aa9adc56b",
+    "policy_fingerprint": "a0a4a1f6855b1b9dda165674b430a0b88baf6554862fdaa2ce23b48f0920b2df",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -107,7 +107,7 @@
         "example": "{\n  \"storage\": {\n    \"cdn_access\": {\n      \"bucket_policy_grants_cloudfront\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-f939df2a60df642d",
+        "id": "fix-48285a0e8b02500e",
         "target": {
           "asset_id": "cdn-bucket",
           "asset_type": "aws_s3_bucket"
@@ -451,23 +451,7 @@
       "asset_id": "cdn-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-7af9de05f20fe7e9",
-        "target": {
-          "asset_id": "cdn-bucket",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com\n   with a Condition restricting to the distribution ARN.\n4. Remove the legacy OAI."
-      },
-      "contributing_controls": [
-        "CTL.S3.CDN.OAC.001"
-      ],
-      "finding_count": 1
-    },
-    {
-      "asset_id": "cdn-bucket",
-      "asset_type": "aws_s3_bucket",
-      "fix_plan": {
-        "id": "fix-f939df2a60df642d",
+        "id": "fix-48285a0e8b02500e",
         "target": {
           "asset_id": "cdn-bucket",
           "asset_type": "aws_s3_bucket"
@@ -503,6 +487,22 @@
       },
       "contributing_controls": [
         "CTL.S3.CDN.EXPOSURE.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "cdn-bucket",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-7af9de05f20fe7e9",
+        "target": {
+          "asset_id": "cdn-bucket",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "1. Create an Origin Access Control for the distribution. 2. Update the distribution origin to use OAC instead of OAI. 3. Update the bucket policy to grant cloudfront.amazonaws.com\n   with a Condition restricting to the distribution ARN.\n4. Remove the legacy OAI."
+      },
+      "contributing_controls": [
+        "CTL.S3.CDN.OAC.001"
       ],
       "finding_count": 1
     }
