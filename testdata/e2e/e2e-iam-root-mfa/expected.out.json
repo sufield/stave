@@ -14,7 +14,7 @@
       },
       "overall": "6293e0c00fb341fb493e6653d0c3802e1b7f83ddecc37dbd50a798c7fbec8c30"
     },
-    "policy_fingerprint": "369858c5fb7b686634b96a23b127aa29e40a23136032f71ea05b751bb20a2d89",
+    "policy_fingerprint": "b2b249c134ac9a91c8443682a995d4c74bb48910a3584af0fb5b093a5095ff95",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -103,54 +103,7 @@
         },
         "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
       },
-      "exploitability": "one_away",
-      "near_miss_chains": [
-        {
-          "chain_id": "chegg_root_credential_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.IAM.CRED.ROTATION.001",
-          "controls_failing": [
-            "CTL.IAM.ROOT.MFA.001"
-          ],
-          "description": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n"
-        },
-        {
-          "chain_id": "chegg_root_credential_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
-          "controls_failing": [
-            "CTL.IAM.ROOT.MFA.001"
-          ],
-          "description": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n"
-        },
-        {
-          "chain_id": "root_compromise_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.IAM.POLICY.ADMIN.001",
-          "controls_failing": [
-            "CTL.IAM.ROOT.MFA.001"
-          ],
-          "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
-        },
-        {
-          "chain_id": "root_compromise_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
-          "controls_failing": [
-            "CTL.IAM.ROOT.MFA.001"
-          ],
-          "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
-        },
-        {
-          "chain_id": "root_compromise_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.IAM.ROOT.HWMFA.001",
-          "controls_failing": [
-            "CTL.IAM.ROOT.MFA.001"
-          ],
-          "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
-        }
-      ],
+      "exploitability": "reachable",
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 168,
@@ -244,58 +197,6 @@
         "7d8c16616d67"
       ],
       "deciding_layer": "identity_policy"
-    }
-  ],
-  "near_miss_chains": [
-    {
-      "chain": "chegg_root_credential_path",
-      "description": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.MFA.001"
-      ],
-      "missing_control": "CTL.IAM.CRED.ROTATION.001",
-      "severity": "critical",
-      "scope_id": "aws-account-root"
-    },
-    {
-      "chain": "chegg_root_credential_path",
-      "description": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.MFA.001"
-      ],
-      "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
-      "severity": "critical",
-      "scope_id": "aws-account-root"
-    },
-    {
-      "chain": "root_compromise_path",
-      "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.MFA.001"
-      ],
-      "missing_control": "CTL.IAM.POLICY.ADMIN.001",
-      "severity": "critical",
-      "scope_id": "aws-account-root"
-    },
-    {
-      "chain": "root_compromise_path",
-      "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.MFA.001"
-      ],
-      "missing_control": "CTL.IAM.ROOT.ACCESSKEY.001",
-      "severity": "critical",
-      "scope_id": "aws-account-root"
-    },
-    {
-      "chain": "root_compromise_path",
-      "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.MFA.001"
-      ],
-      "missing_control": "CTL.IAM.ROOT.HWMFA.001",
-      "severity": "critical",
-      "scope_id": "aws-account-root"
     }
   ],
   "issues": [
