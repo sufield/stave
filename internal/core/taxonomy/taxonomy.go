@@ -26,6 +26,7 @@ const (
 	Monitoring          kernel.CategoryID = "monitoring"
 	AIGuardrails        kernel.CategoryID = "ai-guardrails"
 	AISupplyChain       kernel.CategoryID = "ai-supply-chain"
+	SupplyChain         kernel.CategoryID = "supply-chain"
 	ResourceSprawl      kernel.CategoryID = "resource-sprawl"
 	AccountGovernance   kernel.CategoryID = "account-governance"
 	ComplianceMapping   kernel.CategoryID = "compliance-mapping"
@@ -57,6 +58,7 @@ var All = []kernel.CategoryID{
 	Monitoring,
 	AIGuardrails,
 	AISupplyChain,
+	SupplyChain,
 	ResourceSprawl,
 	AccountGovernance,
 	ComplianceMapping,

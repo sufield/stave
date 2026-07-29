@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3187
-**Pack hash:** `08a58887213aa380e7c5402a80a6b906637cf3af2a360ce2a5bdba90e3e5d40c`
+**Total controls:** 3200
+**Pack hash:** `0b1e4f8b29015de3338279315a3a15b755f463c0d053e8c35f07ce7ec1d9fa80`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 342 |
-| high | 1390 |
+| critical | 345 |
+| high | 1396 |
 | info | 19 |
 | low | 236 |
-| medium | 1200 |
+| medium | 1204 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,12 +26,12 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | compute | 1 |
 | config | 2 |
-| detection | 140 |
+| detection | 141 |
 | encryption | 123 |
-| exposure | 1395 |
-| governance | 651 |
+| exposure | 1399 |
+| governance | 656 |
 | hygiene | 20 |
-| identity | 616 |
+| identity | 619 |
 | lifecycle | 31 |
 | network | 48 |
 | resilience | 39 |
@@ -51,19 +51,19 @@ GitHub. Pick a service below.
 | [APIGW2](reference/apigw2.md) | 2 |
 | [APPRUNNER](reference/apprunner.md) | 1 |
 | [APPSTREAM](reference/appstream.md) | 2 |
-| [ATHENA](reference/athena.md) | 3 |
+| [ATHENA](reference/athena.md) | 5 |
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
 | [BACKUP](reference/backup.md) | 13 |
 | [BATCH](reference/batch.md) | 3 |
 | [BEANSTALK](reference/beanstalk.md) | 3 |
-| [BEDROCK](reference/bedrock.md) | 47 |
+| [BEDROCK](reference/bedrock.md) | 49 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
 | [CLOUD9](reference/cloud9.md) | 2 |
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
-| [CLOUDFORMATION](reference/cloudformation.md) | 9 |
+| [CLOUDFORMATION](reference/cloudformation.md) | 12 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
 | [CLOUDTRAIL](reference/cloudtrail.md) | 60 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
@@ -82,7 +82,7 @@ GitHub. Pick a service below.
 | [EBS](reference/ebs.md) | 3 |
 | [EC2](reference/ec2.md) | 110 |
 | [ECR](reference/ecr.md) | 10 |
-| [ECS](reference/ecs.md) | 53 |
+| [ECS](reference/ecs.md) | 54 |
 | [EFS](reference/efs.md) | 14 |
 | [EKS](reference/eks.md) | 115 |
 | [ELASTICACHE](reference/elasticache.md) | 11 |
@@ -103,7 +103,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 19 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 308 |
+| [IAM](reference/iam.md) | 310 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
@@ -123,14 +123,14 @@ GitHub. Pick a service below.
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
-| [ORG](reference/org.md) | 60 |
+| [ORG](reference/org.md) | 62 |
 | [QUICKSIGHT](reference/quicksight.md) | 2 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 73 |
 | [RECYCLEBIN](reference/recyclebin.md) | 2 |
 | [REDSHIFT](reference/redshift.md) | 26 |
 | [ROUTE53](reference/route53.md) | 50 |
-| [S3](reference/s3.md) | 148 |
+| [S3](reference/s3.md) | 149 |
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 3 |

@@ -1826,6 +1826,36 @@ IAM policies must not grant broad iam:List* permissions without resource scope c
 
 ---
 
+### CTL.IAM.MANAGED.ACCOUNTMGMT.001
+
+**Account Management Policy Must Not Be Attached Outside Management Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** mitre_attack: T1098; nist_800_53_r5: AC-6(1); soc2: CC6.3;
+
+The AWSManagedAccountManagementAccess policy grants full IAM lifecycle actions including iam:CreateRole, iam:DeleteRole, iam:AttachRolePolicy, iam:PutRolePolicy, and iam:UpdateAssumeRolePolicy. This policy is intended for management account principals performing account setup automation. Attachment to a principal in a member account grants that principal unrestricted IAM policy management — a direct privilege escalation vector. The policy also grants iam:PutRolePermissionsBoundary, making boundary enforcement ineffective because the principal can remove its own boundary.
+
+**Remediation:** Remove the AWSManagedAccountManagementAccess policy from member account principals. If account setup automation is needed in member accounts, create a scoped policy with only the specific IAM actions required, constrained by permission boundaries and resource-level conditions.
+
+---
+
+### CTL.IAM.MANAGED.ACCOUNTMGMT.BOUNDARY.001
+
+**Roles Created Via Account Management Must Have Permission Boundaries**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+
+Roles created through account management workflows (using AWSManagedAccountManagementAccess or equivalent) must have a permission boundary attached. The account management policy grants both iam:CreateRole and iam:PutRolePermissionsBoundary. If the workflow creates roles without boundaries, those roles have no upper bound on their effective permissions — the management policy becomes an unrestricted role factory. The boundary is the only mechanism that constrains what the created roles can do.
+
+**Remediation:** Attach a permission boundary to the role that limits its effective permissions to the intended scope. Modify the account management workflow to require iam:PermissionsBoundary as a condition on iam:CreateRole calls.
+
+---
+
 ### CTL.IAM.MARKER.PRODUCTION.001
 
 **IAM Role Tagged environment=production (Marker)**

@@ -455,6 +455,36 @@ AgentCore runtime has not been invoked within the observation window (default 30
 
 ---
 
+### CTL.BEDROCK.AGENTCORE.VERSION.UNPINNED.001
+
+**AgentCore Runtime Version Not Pinned**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-2, CM-7; soc2: CC8.1;
+
+Bedrock AgentCore runtime version is not pinned to a specific release — the runtime floats on the latest version. Silent upgrades can change security behavior, introduce new capabilities the agent wasn't tested with, or regress sandboxing controls. Pinning to a tested version and upgrading deliberately ensures that security properties are verified before each deployment.
+
+**Remediation:** Pin the runtime to a specific version in the deployment configuration. Test each version upgrade in a non-production environment before promoting.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.VERSION.VULNERABLE.001
+
+**AgentCore Runtime at Vulnerable Version**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2, RA-5; soc2: CC7.1;
+
+Bedrock AgentCore runtime version is below the minimum safe version. Known vulnerabilities in older versions allow model-generated input to invoke the package installer, enabling arbitrary code execution within the runtime environment. The runtime must be updated to a version that sandboxes model-generated tool invocations from system-level operations.
+
+**Remediation:** Update the AgentCore runtime to the latest version. Pin to a specific version after updating to prevent regression on future deployments.
+
+---
+
 ### CTL.BEDROCK.AGENTCORE.VPC.001
 
 **AgentCore Runtime Must Be VPC-Attached**

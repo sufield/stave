@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-28T13:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "o-abc123def4",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "mcp_policy_set",
+          "mcp": {
+            "enabled": true,
+            "enforcement_mode": "monitoring",
+            "rules_loaded": false
+          }
+        }
+      }
+    }
+  ]
+}

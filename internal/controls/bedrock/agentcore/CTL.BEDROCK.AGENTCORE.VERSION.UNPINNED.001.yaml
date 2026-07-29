@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.VERSION.UNPINNED.001
+name: AgentCore Runtime Version Not Pinned
+description: >
+  Bedrock AgentCore runtime version is not pinned to a specific
+  release — the runtime floats on the latest version. Silent
+  upgrades can change security behavior, introduce new
+  capabilities the agent wasn't tested with, or regress
+  sandboxing controls. Pinning to a tested version and upgrading
+  deliberately ensures that security properties are verified
+  before each deployment.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-2, CM-7"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-01", "CCC-04"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: persistence
+observation_fields:
+  - ai.kind
+  - ai.runtime.version_pinned
+remediation:
+  description: >
+    AgentCore runtime is not pinned. Silent upgrades may change
+    security behavior without review.
+  action: >
+    Pin the runtime to a specific version in the deployment
+    configuration. Test each version upgrade in a non-production
+    environment before promoting.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": {
+          "version_pinned": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.runtime.version_pinned
+      op: eq
+      value: false
+tests:
+  - name: "unpinned version — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-float"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            version_pinned: false
+  - name: "pinned version — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-pinned"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            version_pinned: true

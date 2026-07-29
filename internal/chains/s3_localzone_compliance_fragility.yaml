@@ -1,0 +1,20 @@
+id: s3_localzone_compliance_fragility
+description: >
+  S3 bucket in a Local Zone without replication AND missing the
+  data-classification tag. Local Zone storage provides single-AZ
+  durability — a zone failure causes data unavailability. Without
+  the classification tag, compliance controls (encryption tier,
+  retention, access restrictions) cannot evaluate whether the data
+  requires regulatory-grade durability. The combination means
+  potentially regulated data sits in a single-AZ bucket with no
+  backup and no way for automated controls to flag its sensitivity.
+controls:
+  - CTL.S3.LOCALZONE.NOREPLICATION.001
+  - CTL.S3.GOVERNANCE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - data_access
+postconditions:
+  - data_destruction
+implicit_dependencies: []

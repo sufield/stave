@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.NLB.LISTENER.NOCONDITION.001
+name: NLB Listener Rule Has No Conditions
+description: >
+  Network Load Balancer listener rule has no conditions — all
+  traffic matches unconditionally and forwards to the target group.
+  Conditionless rules accept traffic from any source IP, port, or
+  protocol without filtering, bypassing the network-level access
+  control that listener rules can provide. At minimum, rules should
+  filter by source IP CIDR for internal services or by host-header
+  for shared listeners.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4, SC-7"
+  soc2: "CC6.1, CC6.6"
+  ccm_v4: ["IVS-04", "IVS-06"]
+scope_tags:
+  - aws
+  - elb
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_network_load_balancer
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.load_balancer.kind
+  - network.load_balancer.listener.has_conditions
+remediation:
+  description: >
+    NLB listener rule forwards all traffic with no conditions.
+    Any source can reach the target group.
+  action: >
+    Add conditions to the listener rule — source IP CIDR for
+    internal services, or host-header/path-pattern conditions
+    for application routing. Remove the default catch-all rule
+    if more specific rules exist.
+  example: |
+    {
+      "network": {
+        "load_balancer": {
+          "kind": "nlb",
+          "listener": {
+            "has_conditions": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.load_balancer.kind
+      op: eq
+      value: nlb
+    - field: properties.network.load_balancer.listener.has_conditions
+      op: eq
+      value: false
+tests:
+  - name: "listener rule with no conditions — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/net/prod-nlb/abc123/rule/def456"
+      asset_type: aws_network_load_balancer
+      vendor: aws
+      properties:
+        network:
+          load_balancer:
+            kind: nlb
+            listener:
+              has_conditions: false
+  - name: "listener rule with source IP condition — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/net/prod-nlb/abc123/rule/def456"
+      asset_type: aws_network_load_balancer
+      vendor: aws
+      properties:
+        network:
+          load_balancer:
+            kind: nlb
+            listener:
+              has_conditions: true

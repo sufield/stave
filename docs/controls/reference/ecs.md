@@ -127,6 +127,21 @@ When ECS Exec is enabled on any service — production or non-production — aud
 
 ---
 
+### CTL.ECS.EXEC.LOGGING.DESTINATION.001
+
+**ECS Execute Command Sessions Not Logged to Durable Destination**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: AU-2; hipaa: 164.312(b); mitre_attack: T1059; nist_800_53_r5: AU-2, AU-3, AU-6; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+ECS cluster has execute command enabled but session output is not routed to a durable destination (S3 or CloudWatch Logs). Without session logging, interactive shell commands run inside containers produce no audit trail — an operator or attacker can execute arbitrary commands with no record of what was typed or returned. The ExecuteCommandConfiguration.logConfiguration must route to S3 or CloudWatch to satisfy audit requirements.
+
+**Remediation:** Configure ExecuteCommandConfiguration.logConfiguration in the ECS cluster to route session output to an S3 bucket or CloudWatch Logs group. Set cloudWatchLogGroupName or s3BucketName, and enable cloudWatchEncryptionEnabled or s3EncryptionEnabled.
+
+---
+
 ### CTL.ECS.EXECROLE.OVERBROAD.001
 
 **ECS Execution Role Must Not Have Admin or Overly Broad Permissions**

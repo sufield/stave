@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.VERSION.VULNERABLE.001
+name: AgentCore Runtime at Vulnerable Version
+description: >
+  Bedrock AgentCore runtime version is below the minimum safe
+  version. Known vulnerabilities in older versions allow
+  model-generated input to invoke the package installer, enabling
+  arbitrary code execution within the runtime environment.
+  The runtime must be updated to a version that sandboxes
+  model-generated tool invocations from system-level operations.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SI-2, RA-5"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02", "TVM-04"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: execution
+observation_fields:
+  - ai.kind
+  - ai.runtime.version_eol
+remediation:
+  description: >
+    AgentCore runtime is at a vulnerable version. Model-generated
+    input can reach the package installer.
+  action: >
+    Update the AgentCore runtime to the latest version. Pin to a
+    specific version after updating to prevent regression on
+    future deployments.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": {
+          "version_eol": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.runtime.version_eol
+      op: eq
+      value: true
+tests:
+  - name: "vulnerable version — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-old"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            version_eol: true
+  - name: "safe version — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-current"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            version_eol: false

@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.STACKSETS.TARGET.001
+name: StackSets Deployment Target Must Be Restricted
+description: >
+  CloudFormation StackSet deployment targets must be restricted
+  to specific OUs or accounts. An unrestricted StackSet can
+  deploy infrastructure to any account in the organization,
+  including security, audit, and log archive accounts. An
+  attacker with cloudformation:CreateStackInstances on an
+  unrestricted StackSet can deploy arbitrary templates into
+  sensitive accounts that should be isolated from workload
+  automation.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  mitre_attack: "T1578"
+  ccm_v4: ["CCC-04", "CCC-07"]
+scope_tags:
+  - aws
+  - cloudformation
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_cloudformation_stack]
+params:
+  attack_stage: execution
+observation_fields:
+  - cloudformation.stacksets.target_restriction.configured
+remediation:
+  description: >
+    StackSet deployment target is unrestricted. Any account in
+    the organization can be targeted for infrastructure
+    deployment.
+  action: >
+    Configure the StackSet deployment target to specific OUs or
+    accounts. Use organizational unit filters to exclude security,
+    audit, and log archive accounts from workload StackSet
+    deployments.
+  example: |
+    {
+      "cloudformation": {
+        "stacksets": {
+          "target_restriction": {
+            "configured": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cloudformation.stacksets.target_restriction.configured
+      op: eq
+      value: false
+tests:
+  - name: "unrestricted target fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudformation:us-east-1:111122223333:stackset/infra-deploy"
+      asset_type: aws_cloudformation_stack
+      vendor: aws
+      properties:
+        cloudformation:
+          stacksets:
+            target_restriction:
+              configured: false
+  - name: "restricted target passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudformation:us-east-1:111122223333:stackset/scoped-deploy"
+      asset_type: aws_cloudformation_stack
+      vendor: aws
+      properties:
+        cloudformation:
+          stacksets:
+            target_restriction:
+              configured: true
+  - name: "null target restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudformation:us-east-1:111122223333:stackset/legacy"
+      asset_type: aws_cloudformation_stack
+      vendor: aws
+      properties:
+        cloudformation:
+          stacksets:
+            target_restriction:
+              configured: null

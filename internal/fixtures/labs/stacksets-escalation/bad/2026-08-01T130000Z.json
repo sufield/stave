@@ -1,0 +1,79 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.stacksets-escalation"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:cloudformation:us-east-1:111122223333:stackset/infra-deploy",
+      "type": "aws_cloudformation_stack",
+      "vendor": "aws",
+      "properties": {
+        "cloudformation": {
+          "stacksets": {
+            "permission_model": "SELF_MANAGED",
+            "execution_role": {
+              "has_iam_policy_management": true,
+              "iam_actions": [
+                "iam:PutRolePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:GetRolePolicy",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy"
+              ]
+            },
+            "target_restriction": {
+              "configured": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::444455556666:role/AccountSetupRole",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "is_management_account_principal": false,
+            "has_boundary": false,
+            "boundary_requires_boundary_on_created": false,
+            "can_create_principals": true
+          },
+          "policies": {
+            "has_account_management_policy": true,
+            "managed_policy_names": [
+              "AWSManagedAccountManagementAccess"
+            ],
+            "has_dangerous_managed_policy": true,
+            "has_fullaccess_managed_policy": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::444455556666:role/CreatedByAccountMgmt",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "has_boundary": false,
+            "created_via_account_management": true,
+            "boundary_requires_boundary_on_created": false,
+            "can_create_principals": false
+          },
+          "policies": {
+            "has_account_management_policy": false,
+            "has_dangerous_managed_policy": false
+          }
+        }
+      }
+    }
+  ]
+}

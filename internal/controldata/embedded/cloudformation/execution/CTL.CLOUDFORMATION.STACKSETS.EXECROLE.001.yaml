@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.STACKSETS.EXECROLE.001
+name: StackSets Execution Role Must Not Have IAM Policy Management Permissions
+description: >
+  The AWSCloudFormationStackSetExecutionRole in member accounts
+  should not have IAM policy management actions such as
+  iam:PutRolePolicy, iam:DeleteRolePolicy, iam:AttachRolePolicy,
+  or iam:DetachRolePolicy. The v2 CloudFormation
+  StackSetsOrgMemberServiceRolePolicy now includes these actions,
+  granting any principal that can trigger StackSet operations the
+  ability to modify IAM policies in every member account. An
+  attacker who compromises one member account's StackSets role
+  can escalate to full IAM control in that account.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  mitre_attack: "T1098"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - cloudformation
+  - iam
+taxonomy:
+  - least-privilege
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_cloudformation_stack]
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - cloudformation.stacksets.execution_role.has_iam_policy_management
+remediation:
+  description: >
+    StackSets execution role has IAM policy management permissions.
+    Compromise of any member account's StackSets role grants IAM
+    escalation in that account.
+  action: >
+    Replace the default AWSCloudFormationStackSetExecutionRole with
+    a custom execution role scoped to the CloudFormation actions
+    the StackSet actually needs. Remove iam:PutRolePolicy,
+    iam:DeleteRolePolicy, iam:AttachRolePolicy, and
+    iam:DetachRolePolicy.
+  example: |
+    {
+      "cloudformation": {
+        "stacksets": {
+          "execution_role": {
+            "has_iam_policy_management": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cloudformation.stacksets.execution_role.has_iam_policy_management
+      op: eq
+      value: true
+tests:
+  - name: "execution role with IAM policy management fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudformation:us-east-1:111122223333:stackset/infra-deploy"
+      asset_type: aws_cloudformation_stack
+      vendor: aws
+      properties:
+        cloudformation:
+          stacksets:
+            execution_role:
+              has_iam_policy_management: true
+  - name: "execution role without IAM policy management passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudformation:us-east-1:111122223333:stackset/infra-deploy"
+      asset_type: aws_cloudformation_stack
+      vendor: aws
+      properties:
+        cloudformation:
+          stacksets:
+            execution_role:
+              has_iam_policy_management: false
+  - name: "null execution role passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudformation:us-east-1:111122223333:stackset/infra-deploy"
+      asset_type: aws_cloudformation_stack
+      vendor: aws
+      properties:
+        cloudformation:
+          stacksets:
+            execution_role:
+              has_iam_policy_management: null

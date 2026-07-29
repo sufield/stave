@@ -7,8 +7,8 @@ import (
 )
 
 func TestAll_HasExpectedCount(t *testing.T) {
-	if got := len(All); got != 27 {
-		t.Fatalf("expected 27 categories, got %d", got)
+	if got := len(All); got != 28 {
+		t.Fatalf("expected 28 categories, got %d", got)
 	}
 }
 

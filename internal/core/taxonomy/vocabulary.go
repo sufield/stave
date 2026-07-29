@@ -134,6 +134,12 @@ func Vocabulary() []Category {
 			Examples:   []string{"ECR repository without scan-on-push enabled"},
 		},
 		{
+			ID:         SupplyChain,
+			Name:       "Supply Chain",
+			Definition: "Controls that detect vulnerable, unsigned, or untrusted software components.",
+			Examples:   []string{"Container image from public registry without digest pinning"},
+		},
+		{
 			ID:         ResourceSprawl,
 			Name:       "Resource Sprawl",
 			Definition: "Controls that detect shadow or unmanaged resources.",

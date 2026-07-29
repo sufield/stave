@@ -79,6 +79,36 @@ CloudFormation stack has no stack policy. Without a stack policy, any IAM princi
 
 ---
 
+### CTL.CLOUDFORMATION.STACKSETS.EXECROLE.001
+
+**StackSets Execution Role Must Not Have IAM Policy Management Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** mitre_attack: T1098; nist_800_53_r5: AC-6(1); soc2: CC6.3;
+
+The AWSCloudFormationStackSetExecutionRole in member accounts should not have IAM policy management actions such as iam:PutRolePolicy, iam:DeleteRolePolicy, iam:AttachRolePolicy, or iam:DetachRolePolicy. The v2 CloudFormation StackSetsOrgMemberServiceRolePolicy now includes these actions, granting any principal that can trigger StackSet operations the ability to modify IAM policies in every member account. An attacker who compromises one member account's StackSets role can escalate to full IAM control in that account.
+
+**Remediation:** Replace the default AWSCloudFormationStackSetExecutionRole with a custom execution role scoped to the CloudFormation actions the StackSet actually needs. Remove iam:PutRolePolicy, iam:DeleteRolePolicy, iam:AttachRolePolicy, and iam:DetachRolePolicy.
+
+---
+
+### CTL.CLOUDFORMATION.STACKSETS.PERMMODEL.001
+
+**StackSets Must Use Service-Managed Permission Model**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** mitre_attack: T1578; nist_800_53_r5: CM-3;
+
+CloudFormation StackSets should use the service-managed (Organizations integration) permission model instead of self-managed. Self-managed StackSets require explicit AdministratorRole trust relationships in every target account, are harder to audit across the organization, and do not inherit organizational boundaries such as OU-based deployment targets. Service-managed StackSets integrate with AWS Organizations, automatically manage trust relationships, and can be scoped to specific OUs.
+
+**Remediation:** Migrate the StackSet to service-managed permissions via AWS Organizations integration. This requires the StackSet to be created in the management account or a delegated administrator account with Organizations trusted access enabled for CloudFormation.
+
+---
+
 ### CTL.CLOUDFORMATION.STACKSETS.RESTRICT.001
 
 **CloudFormation StackSets Must Require Administrator Approval**
@@ -91,6 +121,21 @@ CloudFormation stack has no stack policy. Without a stack policy, any IAM princi
 CloudFormation StackSets deploy infrastructure across multiple AWS accounts and regions simultaneously. An attacker with cloudformation:CreateStackSet and cloudformation:CreateStackInstances can execute arbitrary CloudFormation templates across an entire AWS Organization — creating IAM roles, modifying security groups, or deploying compute resources in hundreds of accounts. StackSet operations should require explicit approval and be restricted to trusted automation accounts or principals.
 
 **Remediation:** Restrict cloudformation:CreateStackInstances to designated automation principals via SCP. Deny unless aws:PrincipalArn matches approved automation roles.
+
+---
+
+### CTL.CLOUDFORMATION.STACKSETS.TARGET.001
+
+**StackSets Deployment Target Must Be Restricted**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** mitre_attack: T1578; nist_800_53_r5: CM-3;
+
+CloudFormation StackSet deployment targets must be restricted to specific OUs or accounts. An unrestricted StackSet can deploy infrastructure to any account in the organization, including security, audit, and log archive accounts. An attacker with cloudformation:CreateStackInstances on an unrestricted StackSet can deploy arbitrary templates into sensitive accounts that should be isolated from workload automation.
+
+**Remediation:** Configure the StackSet deployment target to specific OUs or accounts. Use organizational unit filters to exclude security, audit, and log archive accounts from workload StackSet deployments.
 
 ---
 

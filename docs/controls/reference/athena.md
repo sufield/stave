@@ -5,6 +5,36 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.ATHENA.CONNECTOR.NOVPC.001
+
+**Athena Federated Query Connector Not in VPC**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7, AC-4; soc2: CC6.6;
+
+Athena federated query connector Lambda function is not deployed within a VPC. The connector has unrestricted outbound network access and can reach any internet endpoint. For connectors that access internal data sources (RDS, Redshift, on-premises databases), VPC deployment provides network isolation and enables security group filtering on the connector's traffic.
+
+**Remediation:** Deploy the connector Lambda in a VPC with security groups restricting egress to the data source endpoints only.
+
+---
+
+### CTL.ATHENA.CONNECTOR.VULNERABLE.001
+
+**Athena Federated Query Connector at Vulnerable Version**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2, RA-5, SI-10; soc2: CC7.1;
+
+Athena federated query connector is at a version with known SQL injection vulnerabilities. Crafted table names in federated queries can inject SQL into the downstream data source, enabling unauthorized data access or modification. The connector Lambda function must be updated to a version that sanitizes table name input before constructing downstream queries.
+
+**Remediation:** Update the connector Lambda function to the latest version. If using a custom connector, audit the query construction code for parameterized query usage.
+
+---
+
 ### CTL.ATHENA.ENCRYPT.001
 
 **Athena Workgroups Must Encrypt Query Results**

@@ -215,6 +215,36 @@ Organization does not use Identity Center (or an equivalent federated identity m
 
 ---
 
+### CTL.ORG.MCP.FAILOPEN.001
+
+**MCP Enforcement Mode Is Not Enforcing**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3, CM-7; soc2: CC6.1;
+
+Managed Control Policy is attached to the organization but enforcement mode is not "enforcing." In monitoring mode, the MCP evaluates rules and logs results but does not block non-compliant actions — providing visibility without protection. This creates a false sense of security: the policy appears active in the console, compliance dashboards may report it as deployed, but non-compliant actions proceed without restriction.
+
+**Remediation:** Set the MCP enforcement mode to "enforcing." Verify that monitoring-mode logs show no false positives before switching, then update the policy enforcement configuration.
+
+---
+
+### CTL.ORG.MCP.NORULES.001
+
+**MCP Attached With No Rules Loaded**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3, CM-7; soc2: CC6.1;
+
+Managed Control Policy is attached to the organization but no rules are loaded or evaluating. The policy appears active — it shows as attached in the Organizations console and API — but provides zero enforcement. Same archetype as a Secrets Manager rotation enabled with a deleted Lambda: the protection mechanism exists in name only. Common causes: policy syntax error rejected all rules, empty policy body, or IAM permission issue preventing rule evaluation.
+
+**Remediation:** Check the MCP policy body for syntax errors. Verify IAM permissions allow the Organizations service to evaluate the policy. Re-attach the policy if needed and confirm rules appear in the evaluation log.
+
+---
+
 ### CTL.ORG.MEMBERSHIP.001
 
 **Account Must Be Member of an AWS Organization**

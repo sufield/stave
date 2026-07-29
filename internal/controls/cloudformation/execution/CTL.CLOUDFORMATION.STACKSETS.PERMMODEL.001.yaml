@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDFORMATION.STACKSETS.PERMMODEL.001
+name: StackSets Must Use Service-Managed Permission Model
+description: >
+  CloudFormation StackSets should use the service-managed
+  (Organizations integration) permission model instead of
+  self-managed. Self-managed StackSets require explicit
+  AdministratorRole trust relationships in every target account,
+  are harder to audit across the organization, and do not
+  inherit organizational boundaries such as OU-based deployment
+  targets. Service-managed StackSets integrate with AWS
+  Organizations, automatically manage trust relationships, and
+  can be scoped to specific OUs.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3"
+  mitre_attack: "T1578"
+  ccm_v4: ["CCC-04"]
+scope_tags:
+  - aws
+  - cloudformation
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_cloudformation_stack]
+params:
+  attack_stage: execution
+observation_fields:
+  - cloudformation.stacksets.permission_model
+remediation:
+  description: >
+    StackSet uses self-managed permission model. Cross-account
+    trust relationships are manually maintained and do not
+    inherit organizational boundaries.
+  action: >
+    Migrate the StackSet to service-managed permissions via AWS
+    Organizations integration. This requires the StackSet to be
+    created in the management account or a delegated administrator
+    account with Organizations trusted access enabled for
+    CloudFormation.
+  example: |
+    {
+      "cloudformation": {
+        "stacksets": {
+          "permission_model": "SERVICE_MANAGED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cloudformation.stacksets.permission_model
+      op: eq
+      value: SELF_MANAGED
+tests:
+  - name: "self-managed permission model fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudformation:us-east-1:111122223333:stackset/legacy-deploy"
+      asset_type: aws_cloudformation_stack
+      vendor: aws
+      properties:
+        cloudformation:
+          stacksets:
+            permission_model: SELF_MANAGED
+  - name: "service-managed permission model passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudformation:us-east-1:111122223333:stackset/org-deploy"
+      asset_type: aws_cloudformation_stack
+      vendor: aws
+      properties:
+        cloudformation:
+          stacksets:
+            permission_model: SERVICE_MANAGED

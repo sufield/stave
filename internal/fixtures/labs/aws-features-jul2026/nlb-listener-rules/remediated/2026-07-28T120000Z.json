@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-28T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener-rule/net/prod-nlb/abc123/rule/def456",
+      "type": "aws_network_load_balancer",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "load_balancer": {
+            "kind": "nlb",
+            "listener": {
+              "has_conditions": true,
+              "protocol": "TLS",
+              "mutual_tls_enabled": true
+            }
+          }
+        }
+      }
+    }
+  ]
+}

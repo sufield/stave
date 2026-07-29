@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.NLB.MTLS.001
+name: NLB Listener Does Not Enforce Mutual TLS
+description: >
+  Network Load Balancer TLS listener does not enforce mutual TLS
+  authentication. Without mTLS, the NLB verifies the server
+  certificate to clients but does not verify client certificates —
+  any client with network access can connect. For service-to-service
+  communication, mTLS provides cryptographic identity verification
+  at the transport layer, preventing unauthorized services from
+  connecting even if they have network access.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "IA-3, SC-8"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-04", "IAM-02"]
+scope_tags:
+  - aws
+  - elb
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+  - identity-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_network_load_balancer
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.load_balancer.kind
+  - network.load_balancer.listener.protocol
+  - network.load_balancer.listener.mutual_tls_enabled
+remediation:
+  description: >
+    NLB TLS listener does not enforce mutual TLS. Any client with
+    network access can connect without certificate verification.
+  action: >
+    Enable mutual TLS authentication on the NLB listener. Configure
+    a trust store with the CA certificate that signs client
+    certificates, then set MutualAuthentication.Mode to "verify".
+  example: |
+    {
+      "network": {
+        "load_balancer": {
+          "kind": "nlb",
+          "listener": {
+            "protocol": "TLS",
+            "mutual_tls_enabled": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.load_balancer.kind
+      op: eq
+      value: nlb
+    - field: properties.network.load_balancer.listener.protocol
+      op: eq
+      value: "TLS"
+    - field: properties.network.load_balancer.listener.mutual_tls_enabled
+      op: eq
+      value: false
+tests:
+  - name: "TLS listener without mTLS — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/net/prod-nlb/abc123/listener/ghi789"
+      asset_type: aws_network_load_balancer
+      vendor: aws
+      properties:
+        network:
+          load_balancer:
+            kind: nlb
+            listener:
+              protocol: "TLS"
+              mutual_tls_enabled: false
+  - name: "TLS listener with mTLS — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticloadbalancing:us-east-1:111122223333:listener/net/prod-nlb/abc123/listener/ghi789"
+      asset_type: aws_network_load_balancer
+      vendor: aws
+      properties:
+        network:
+          load_balancer:
+            kind: nlb
+            listener:
+              protocol: "TLS"
+              mutual_tls_enabled: true

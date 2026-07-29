@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.ATHENA.CONNECTOR.VULNERABLE.001
+name: Athena Federated Query Connector at Vulnerable Version
+description: >
+  Athena federated query connector is at a version with known SQL
+  injection vulnerabilities. Crafted table names in federated
+  queries can inject SQL into the downstream data source, enabling
+  unauthorized data access or modification. The connector Lambda
+  function must be updated to a version that sanitizes table name
+  input before constructing downstream queries.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2, RA-5, SI-10"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02", "AIS-04"]
+scope_tags:
+  - aws
+  - athena
+taxonomy:
+  - compliance-mapping
+  - supply-chain
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_athena_workgroup
+params:
+  attack_stage: collection
+observation_fields:
+  - analytics.kind
+  - analytics.federated_query.connector_version_vulnerable
+remediation:
+  description: >
+    Athena federated query connector is at a vulnerable version.
+    SQL injection via crafted table names is possible.
+  action: >
+    Update the connector Lambda function to the latest version.
+    If using a custom connector, audit the query construction
+    code for parameterized query usage.
+  example: |
+    {
+      "analytics": {
+        "kind": "athena_workgroup",
+        "federated_query": {
+          "connector_version_vulnerable": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.analytics.kind
+      op: eq
+      value: athena_workgroup
+    - field: properties.analytics.federated_query.connector_version_vulnerable
+      op: eq
+      value: true
+tests:
+  - name: "vulnerable connector version — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/analytics-prod"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        analytics:
+          kind: athena_workgroup
+          federated_query:
+            connector_version_vulnerable: true
+  - name: "safe connector version — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/analytics-prod"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        analytics:
+          kind: athena_workgroup
+          federated_query:
+            connector_version_vulnerable: false

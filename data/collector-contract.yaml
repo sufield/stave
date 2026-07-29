@@ -879,3 +879,117 @@ contracts:
       Count of elastic network interfaces in this VPC.
       From ec2:DescribeNetworkInterfaces filtered by VPC.
     consumers: []
+
+  # ─── ECS Execute Command Logging (Jul 2026) ─────────────
+
+  - field: exec_logging_enabled
+    type: boolean
+    postcondition: >
+      True if the ECS cluster's ExecuteCommandConfiguration
+      routes session output to a durable destination (S3
+      bucket or CloudWatch log group). False if exec is
+      enabled but logConfiguration is absent or has no
+      destination. Derived from DescribeCluster →
+      configuration.executeCommandConfiguration.logConfiguration.
+    consumers:
+      - CTL.ECS.EXEC.LOGGING.DESTINATION.001
+
+  # ─── NLB Listener Rules (Jul 2026) ──────────────────────
+
+  - field: listener_has_conditions
+    type: boolean
+    postcondition: >
+      True if the NLB/ALB listener rule has at least one
+      condition (host-header, path-pattern, source-ip, etc.).
+      False if the rule is a default action with no conditions
+      — all traffic matches unconditionally. Derived from
+      DescribeRules → Rules[].Conditions.
+    consumers:
+      - CTL.NLB.LISTENER.NOCONDITION.001
+
+  - field: mutual_tls_enabled
+    type: boolean
+    postcondition: >
+      True if the NLB/ALB listener has mutual TLS
+      authentication enabled. Derived from DescribeListeners
+      → MutualAuthentication.Mode == "verify" or "passthrough".
+    consumers:
+      - CTL.NLB.MTLS.001
+
+  # ─── S3 Local Zone (Jul 2026) ───────────────────────────
+
+  - field: availability_zone_type
+    type: string
+    postcondition: >
+      The availability zone type for the S3 bucket location:
+      "standard" for normal AZs, "local-zone" for Local Zones.
+      Derived by cross-referencing the bucket's location
+      constraint with ec2:DescribeAvailabilityZones ZoneType.
+    consumers:
+      - CTL.S3.LOCALZONE.NOREPLICATION.001
+
+  # ─── MCP Enforcement (Jul 2026) ─────────────────────────
+
+  - field: mcp_enforcement_mode
+    type: string
+    postcondition: >
+      The enforcement mode of the Managed Control Policy:
+      "enforcing", "monitoring", or "none". Derived from
+      organizations:ListManagedControlPoliciesForTarget.
+    consumers:
+      - CTL.ORG.MCP.FAILOPEN.001
+
+  - field: mcp_rules_loaded
+    type: boolean
+    postcondition: >
+      True if the MCP has at least one rule loaded and
+      evaluating. False if the MCP is attached but has no
+      active rules (syntax error, empty policy, or
+      permission issue). Derived from MCP policy evaluation
+      status.
+    consumers:
+      - CTL.ORG.MCP.NORULES.001
+
+  # ─── Bedrock AgentCore Version (Jul 2026) ───────────────
+
+  - field: agentcore_version_eol
+    type: boolean
+    postcondition: >
+      True if the AgentCore runtime version is below the
+      minimum safe version (currently 1.18.1). Derived by
+      comparing the runtime's reported version against the
+      known-vulnerable version list.
+    consumers:
+      - CTL.BEDROCK.AGENTCORE.VERSION.VULNERABLE.001
+
+  - field: agentcore_version_pinned
+    type: boolean
+    postcondition: >
+      True if the AgentCore runtime is pinned to a specific
+      version rather than floating on "latest". Derived from
+      the runtime configuration's version specification.
+    consumers:
+      - CTL.BEDROCK.AGENTCORE.VERSION.UNPINNED.001
+
+  # ─── Athena Federated Query Connectors (Jul 2026) ───────
+
+  - field: connector_version_vulnerable
+    type: boolean
+    postcondition: >
+      True if any Athena federated query connector (Lambda
+      data source) is at a version with known SQL injection
+      vulnerabilities. Derived by inspecting the connector
+      Lambda function's version/tag against the vulnerability
+      registry.
+    consumers:
+      - CTL.ATHENA.CONNECTOR.VULNERABLE.001
+
+  - field: connector_vpc_configured
+    type: boolean
+    postcondition: >
+      True if the Athena federated query connector Lambda
+      function is deployed within a VPC. False if the
+      connector runs with unrestricted network access.
+      Derived from lambda:GetFunction → VpcConfig.
+    consumers:
+      - CTL.ATHENA.CONNECTOR.NOVPC.001

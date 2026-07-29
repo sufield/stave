@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.S3.LOCALZONE.NOREPLICATION.001
+name: S3 Bucket in Local Zone Without Replication
+description: >
+  S3 bucket is placed in a Local Zone without cross-region
+  replication configured. Local Zones provide single-AZ storage
+  optimized for latency, not durability — there is no built-in
+  cross-AZ redundancy. A zone failure, hardware issue, or
+  network partition causes data unavailability or loss. Data
+  that requires durability guarantees (compliance, backup,
+  regulated) must replicate to a standard-region bucket.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CP-9, SC-28"
+  soc2: "A1.2"
+  hipaa: "164.308(a)(7)"
+  pci_dss_v4.0: "9.4.1"
+  ccm_v4: ["BCR-08", "BCR-11"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: impact
+  blast_radius:
+    type: recovery
+    scope: bucket
+    multiplier: 3.0
+observation_fields:
+  - storage.kind
+  - storage.availability_zone_type
+  - storage.replication.enabled
+remediation:
+  description: >
+    S3 bucket in Local Zone has no replication. A zone failure
+    causes data loss with no recovery path.
+  action: >
+    Configure cross-region replication to a standard-region S3
+    bucket. The destination bucket provides the durability
+    guarantees that Local Zone storage lacks.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "availability_zone_type": "local-zone",
+        "replication": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.availability_zone_type
+      op: eq
+      value: "local-zone"
+    - field: properties.storage.replication.enabled
+      op: ne
+      value: true
+tests:
+  - name: "local zone bucket without replication — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::edge-cache-atl"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          availability_zone_type: "local-zone"
+          replication:
+            enabled: false
+  - name: "local zone bucket with replication — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::edge-cache-atl-replicated"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          availability_zone_type: "local-zone"
+          replication:
+            enabled: true
+  - name: "standard zone bucket without replication — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::prod-data"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          availability_zone_type: "standard"
+          replication:
+            enabled: false

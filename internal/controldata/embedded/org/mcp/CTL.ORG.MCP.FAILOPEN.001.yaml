@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.MCP.FAILOPEN.001
+name: MCP Enforcement Mode Is Not Enforcing
+description: >
+  Managed Control Policy is attached to the organization but
+  enforcement mode is not "enforcing." In monitoring mode, the MCP
+  evaluates rules and logs results but does not block non-compliant
+  actions — providing visibility without protection. This creates
+  a false sense of security: the policy appears active in the
+  console, compliance dashboards may report it as deployed, but
+  non-compliant actions proceed without restriction.
+domain: governance
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3, CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["GRC-01", "IAM-01"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - organization.kind
+  - organization.mcp.enabled
+  - organization.mcp.enforcement_mode
+remediation:
+  description: >
+    MCP is attached but not enforcing. Non-compliant actions
+    are logged but not blocked.
+  action: >
+    Set the MCP enforcement mode to "enforcing." Verify that
+    monitoring-mode logs show no false positives before switching,
+    then update the policy enforcement configuration.
+  example: |
+    {
+      "organization": {
+        "kind": "mcp_policy_set",
+        "mcp": {
+          "enabled": true,
+          "enforcement_mode": "enforcing"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: mcp_policy_set
+    - field: properties.organization.mcp.enabled
+      op: eq
+      value: true
+    - field: properties.organization.mcp.enforcement_mode
+      op: ne
+      value: "enforcing"
+tests:
+  - name: "MCP in monitoring mode — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: mcp_policy_set
+          mcp:
+            enabled: true
+            enforcement_mode: "monitoring"
+  - name: "MCP in enforcing mode — passes"
+    verdict: PASS
+    asset:
+      asset_id: "o-abc123def4"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: mcp_policy_set
+          mcp:
+            enabled: true
+            enforcement_mode: "enforcing"

@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.ATHENA.CONNECTOR.NOVPC.001
+name: Athena Federated Query Connector Not in VPC
+description: >
+  Athena federated query connector Lambda function is not deployed
+  within a VPC. The connector has unrestricted outbound network
+  access and can reach any internet endpoint. For connectors that
+  access internal data sources (RDS, Redshift, on-premises
+  databases), VPC deployment provides network isolation and enables
+  security group filtering on the connector's traffic.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7, AC-4"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-04"]
+scope_tags:
+  - aws
+  - athena
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_athena_workgroup
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - analytics.kind
+  - analytics.federated_query.connector_vpc_configured
+remediation:
+  description: >
+    Athena connector Lambda has unrestricted network access.
+    No VPC isolation for data source connectivity.
+  action: >
+    Deploy the connector Lambda in a VPC with security groups
+    restricting egress to the data source endpoints only.
+  example: |
+    {
+      "analytics": {
+        "kind": "athena_workgroup",
+        "federated_query": {
+          "connector_vpc_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.analytics.kind
+      op: eq
+      value: athena_workgroup
+    - field: properties.analytics.federated_query.connector_vpc_configured
+      op: eq
+      value: false
+tests:
+  - name: "connector not in VPC — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/analytics-prod"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        analytics:
+          kind: athena_workgroup
+          federated_query:
+            connector_vpc_configured: false
+  - name: "connector in VPC — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/analytics-prod"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        analytics:
+          kind: athena_workgroup
+          federated_query:
+            connector_vpc_configured: true

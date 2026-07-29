@@ -1,0 +1,21 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-28T13:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:athena:us-east-1:111122223333:workgroup/analytics-prod",
+      "type": "aws_athena_workgroup",
+      "vendor": "aws",
+      "properties": {
+        "analytics": {
+          "kind": "athena_workgroup",
+          "federated_query": {
+            "connector_version_vulnerable": false,
+            "connector_vpc_configured": true
+          }
+        }
+      }
+    }
+  ]
+}
