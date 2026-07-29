@@ -167,16 +167,17 @@ func compareFindings(baseline, current []BaselineFinding) (newFindings, resolved
 	type key struct {
 		ControlID string
 		AssetID   string
+		AssetType string
 	}
 
 	baseMap := make(map[key]BaselineFinding, len(baseline))
 	for _, f := range baseline {
-		baseMap[key{f.ControlID, f.AssetID}] = f
+		baseMap[key{f.ControlID, f.AssetID, f.AssetType}] = f
 	}
 
 	curMap := make(map[key]BaselineFinding, len(current))
 	for _, f := range current {
-		curMap[key{f.ControlID, f.AssetID}] = f
+		curMap[key{f.ControlID, f.AssetID, f.AssetType}] = f
 	}
 
 	newFindings = make([]BaselineFinding, 0)

@@ -203,7 +203,7 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error 
 	}
 
 	rel, err := filepath.Rel(s.base, path)
-	if err != nil || rel == "." {
+	if err != nil {
 		return nil //nolint:nilerr // Rel failure on a walk entry is non-fatal
 	}
 
@@ -221,6 +221,9 @@ func (s *walkState) walk(path string, entry fs.DirEntry, walkErrIn error) error 
 				"path", path, "depth", depth, "max_depth", s.maxDepth)
 		}
 		return fs.SkipDir
+	}
+	if rel == "." {
+		return nil
 	}
 	if depth >= s.maxDepth {
 		return fs.SkipDir

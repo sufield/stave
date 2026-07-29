@@ -1,6 +1,9 @@
 package capabilities
 
-import "slices"
+import (
+	"slices"
+	"strings"
+)
 
 // synonymMap translates the words users actually type into the
 // catalog's vocabulary. "Is my bucket open?" should
@@ -78,7 +81,7 @@ var synonymMap = map[string][]string{
 // SynonymsFor returns the canonical-form terms registered for the
 // given token. Returns an empty slice when no synonyms exist.
 func SynonymsFor(token string) []string {
-	if v, ok := synonymMap[token]; ok {
+	if v, ok := synonymMap[strings.ToLower(token)]; ok {
 		return v
 	}
 	return nil

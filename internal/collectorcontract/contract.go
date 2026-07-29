@@ -40,6 +40,9 @@ func Load() (*Contract, error) {
 
 // FieldIndex returns a map from field name to Entry for fast lookup.
 func (c *Contract) FieldIndex() map[string]*Entry {
+	if c == nil {
+		return nil
+	}
 	idx := make(map[string]*Entry, len(c.Entries))
 	for i := range c.Entries {
 		idx[c.Entries[i].Field] = &c.Entries[i]

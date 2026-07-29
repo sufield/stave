@@ -152,8 +152,11 @@ func buildMinimalObservation(fields []string, rules []contracts.ExplainRule) map
 	}
 
 	for _, fullPath := range fields {
+		if !strings.HasPrefix(fullPath, "properties.") {
+			continue
+		}
 		trimmed := strings.TrimPrefix(fullPath, "properties.")
-		if trimmed == "" || trimmed == fullPath && strings.HasPrefix(fullPath, "properties.") {
+		if trimmed == "" {
 			continue
 		}
 		setNested(props, trimmed, valueByPath[fullPath])

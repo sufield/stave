@@ -120,17 +120,7 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 // every Severity into a separate enum. critical > high > medium
 // > low > anything-else.
 func rank(s policy.Severity) int {
-	switch s {
-	case policy.SeverityCritical:
-		return 4
-	case policy.SeverityHigh:
-		return 3
-	case policy.SeverityMedium:
-		return 2
-	case policy.SeverityLow:
-		return 1
-	}
-	return 0
+	return int(s)
 }
 
 func appendUnique[T comparable](slice []T, v T) []T {
