@@ -14,7 +14,7 @@
       },
       "overall": "37d6a574667ceb6671f51d0bf8f53e7b24e51144bcd782c675b3303992aaa84c"
     },
-    "policy_fingerprint": "1104214ed01a1592725c5babc9f114939c22ded6608ab8de92b06037eae1fd92",
+    "policy_fingerprint": "72bc0d184122c21c3e455cb66c7796e9f48e0b648cce890e2804c3ea5c517413",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -182,7 +182,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -216,63 +216,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Enable S3 Public Access Block (all four settings). Remove any bucket policy statements granting access to Principal \"*\". Remove any ACL grants to AllUsers or AuthenticatedUsers."
       },
-      "exploitability": "one_away",
-      "near_miss_chains": [
-        {
-          "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "high",
-          "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.001"
-          ],
-          "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
-        },
-        {
-          "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "high",
-          "missing_control": "CTL.S3.ENCRYPT.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.001"
-          ],
-          "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
-        },
-        {
-          "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "high",
-          "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.001"
-          ],
-          "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
-        },
-        {
-          "chain_id": "public_phi_exposure",
-          "chain_severity": "critical",
-          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.001"
-          ],
-          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
-        },
-        {
-          "chain_id": "public_phi_exposure",
-          "chain_severity": "critical",
-          "missing_control": "CTL.S3.ENCRYPT.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.001"
-          ],
-          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
-        },
-        {
-          "chain_id": "public_phi_exposure",
-          "chain_severity": "critical",
-          "missing_control": "CTL.S3.LOG.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.001"
-          ],
-          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
-        }
-      ],
+      "exploitability": "reachable",
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 168,
@@ -442,7 +386,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_read\": false,\n      \"public_list\": false\n    },\n    \"tags\": {\n      \"data-classification\": \"phi\"\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -723,7 +667,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"read_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -900,7 +844,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"list_via_identity\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1077,7 +1021,7 @@
         "example": "{\n  \"storage\": {\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1271,7 +1215,7 @@
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"
@@ -1305,54 +1249,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "If listing is intentional, add the tag public_list_intended=true to the bucket. Otherwise, remove the policy or ACL granting s3:ListBucket to Principal \"*\" or AllUsers."
       },
-      "exploitability": "one_away",
-      "near_miss_chains": [
-        {
-          "chain_id": "staging_endpoint_exposed",
-          "chain_severity": "high",
-          "missing_control": "CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.LIST.002"
-          ],
-          "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
-        },
-        {
-          "chain_id": "staging_endpoint_exposed",
-          "chain_severity": "high",
-          "missing_control": "CTL.EC2.SG.INGRESS.CIDR.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.LIST.002"
-          ],
-          "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
-        },
-        {
-          "chain_id": "staging_endpoint_exposed",
-          "chain_severity": "high",
-          "missing_control": "CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.LIST.002"
-          ],
-          "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
-        },
-        {
-          "chain_id": "staging_endpoint_exposed",
-          "chain_severity": "high",
-          "missing_control": "CTL.LIFECYCLE.STAGING.STALE.001",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.LIST.002"
-          ],
-          "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
-        },
-        {
-          "chain_id": "staging_endpoint_exposed",
-          "chain_severity": "high",
-          "missing_control": "CTL.S3.PUBLIC.005",
-          "controls_failing": [
-            "CTL.S3.PUBLIC.LIST.002"
-          ],
-          "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n"
-        }
-      ],
+      "exploitability": "reachable",
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -2332,118 +2229,6 @@
       ]
     }
   ],
-  "near_miss_chains": [
-    {
-      "chain": "classified_data_unprotected_storage",
-      "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.001"
-      ],
-      "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
-      "severity": "high",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "classified_data_unprotected_storage",
-      "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.001"
-      ],
-      "missing_control": "CTL.S3.ENCRYPT.001",
-      "severity": "high",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "classified_data_unprotected_storage",
-      "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.001"
-      ],
-      "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
-      "severity": "high",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "public_phi_exposure",
-      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.001"
-      ],
-      "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
-      "severity": "critical",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "public_phi_exposure",
-      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.001"
-      ],
-      "missing_control": "CTL.S3.ENCRYPT.001",
-      "severity": "critical",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "public_phi_exposure",
-      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.001"
-      ],
-      "missing_control": "CTL.S3.LOG.001",
-      "severity": "critical",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.APIGATEWAY.NETWORK.PRIVATE.POLICY.001",
-      "severity": "high",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.EC2.SG.INGRESS.CIDR.001",
-      "severity": "high",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.ELB.NETWORK.INTERNAL.PUBLICSUBNET.001",
-      "severity": "high",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.LIFECYCLE.STAGING.STALE.001",
-      "severity": "high",
-      "scope_id": "public-phi-bucket"
-    },
-    {
-      "chain": "staging_endpoint_exposed",
-      "description": "A non-production resource (staging, dev, test, qa, sandbox, demo) is dormant AND publicly reachable. The compound is the canonical NHI-offboarding failure mode: forgotten ephemeral infrastructure retained on the internet, beyond active maintenance, accumulating configuration drift. Stave's per-service public-access controls fire on each individual exposure dimension (S3 bucket policy, EC2 SG ingress, API Gateway resource policy, ALB topology); the staleness control fires on the lifecycle-plus-environment-tag combination. Either alone is a finding; both on the same asset is the shadow-infrastructure crisis the writeups in channels/devto/ describe.\n",
-      "controls_failing": [
-        "CTL.S3.PUBLIC.LIST.002"
-      ],
-      "missing_control": "CTL.S3.PUBLIC.005",
-      "severity": "high",
-      "scope_id": "public-phi-bucket"
-    }
-  ],
   "issues": [
     {
       "issue_id": "sha256:3f7a0e33b008c2a4",
@@ -2525,7 +2310,7 @@
       "asset_id": "public-phi-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-659c6cef69b9707f",
+        "id": "fix-7632754779be3580",
         "target": {
           "asset_id": "public-phi-bucket",
           "asset_type": "aws_s3_bucket"

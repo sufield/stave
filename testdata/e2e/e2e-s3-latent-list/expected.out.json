@@ -14,7 +14,7 @@
       },
       "overall": "165e6ac86e9eaf0057db4d040d7c23cb2435ce4c09ef79f8e99787b43eedc021"
     },
-    "policy_fingerprint": "8446f830b9eb948e6affeb0947b529fb345c6b8169dde82d0a11ff3b1376cc3a",
+    "policy_fingerprint": "521d2f7702cbb7602e979fee1164a064f27bde8d7ed76881ff3241d0841f3f2c",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -86,7 +86,7 @@
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"latent_public_list\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-d4589654a40e7f1b",
+        "id": "fix-e80de11bb447a50f",
         "target": {
           "asset_id": "latent-listable-bucket",
           "asset_type": "aws_s3_bucket"
@@ -240,7 +240,7 @@
       "asset_id": "latent-listable-bucket",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
-        "id": "fix-d4589654a40e7f1b",
+        "id": "fix-e80de11bb447a50f",
         "target": {
           "asset_id": "latent-listable-bucket",
           "asset_type": "aws_s3_bucket"
