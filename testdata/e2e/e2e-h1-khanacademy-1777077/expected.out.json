@@ -14,7 +14,7 @@
       },
       "overall": "46364755b7efc2330d0183ec01dc8470da316212f349e239bfef7bf7cfd4d89a"
     },
-    "policy_fingerprint": "a83b89a862a924cd4bcea142d708b588b6ff20bb76a1468b9dcd9134a53bd84d",
+    "policy_fingerprint": "fb3a03fbeba6b8830d92f136ca2ae63f78c8fc8e0d8172994448543b9bfe7f24",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -85,7 +85,7 @@
         "example": "{\n  \"s3_ref\": {\n    \"bucket_exists\": true,\n    \"bucket_owned\": true\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-b6aa58c6b933ff2c",
+        "id": "fix-7fa250223c4ca140",
         "target": {
           "asset_id": "learn2-khanacademy-cname-ref",
           "asset_type": "s3_bucket_reference"
@@ -246,7 +246,7 @@
       "asset_id": "learn2-khanacademy-cname-ref",
       "asset_type": "s3_bucket_reference",
       "fix_plan": {
-        "id": "fix-b6aa58c6b933ff2c",
+        "id": "fix-7fa250223c4ca140",
         "target": {
           "asset_id": "learn2-khanacademy-cname-ref",
           "asset_type": "s3_bucket_reference"
