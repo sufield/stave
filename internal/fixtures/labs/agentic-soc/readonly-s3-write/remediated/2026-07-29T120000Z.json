@@ -1,0 +1,37 @@
+{
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "captured_at": "2026-07-29T12:00:00Z",
+  "assets": [
+    {
+      "id": "ecs-taskdef-soc-app-readonly-fixed",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "service_intent": "read-only",
+          "task_role": {
+            "has_s3_write": false,
+            "s3_write_scope": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "ecs-taskdef-soc-writer-scoped",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "service_intent": "read-write",
+          "task_role": {
+            "has_s3_write": true,
+            "s3_write_scope": "access-point"
+          }
+        }
+      }
+    }
+  ]
+}

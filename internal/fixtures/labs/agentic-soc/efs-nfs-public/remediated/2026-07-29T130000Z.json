@@ -1,0 +1,21 @@
+{
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "captured_at": "2026-07-29T13:00:00Z",
+  "assets": [
+    {
+      "id": "efs-fs-soc-session-private-nfs",
+      "type": "aws_efs_file_system",
+      "vendor": "aws",
+      "properties": {
+        "filesystem": {
+          "kind": "efs",
+          "mount_targets": {
+            "sg_allows_public_nfs": false,
+            "has_missing_sg": false
+          }
+        }
+      }
+    }
+  ]
+}

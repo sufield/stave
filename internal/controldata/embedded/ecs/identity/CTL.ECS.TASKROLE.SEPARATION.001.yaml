@@ -1,0 +1,62 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASKROLE.SEPARATION.001
+name: ECS Task Role Must Be Distinct from Execution Role
+description: >
+  ECS task definition uses the same IAM role for both the task role
+  and the execution role. The execution role is an infrastructure
+  role — it pulls images from ECR, pushes logs to CloudWatch, and
+  retrieves secrets from SSM/Secrets Manager. The task role is the
+  application role — it carries the permissions application code
+  uses at runtime. When both are the same role, application code
+  inherits ECR pull, log push, and secret retrieval permissions it
+  should never have. An attacker who compromises the application
+  gets infrastructure-level credentials. Two trust boundaries
+  collapse into one.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - ecs
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_ecs_task_definition]
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - container.kind
+  - container.roles_identical
+remediation:
+  description: >
+    ECS task definition uses the same IAM role as both the task role
+    and the execution role.
+  action: >
+    Create separate IAM roles. The execution role should have only
+    ECR pull (ecr:GetAuthorizationToken, ecr:BatchGetImage),
+    CloudWatch Logs push (logs:CreateLogStream, logs:PutLogEvents),
+    and the specific Secrets Manager or SSM permissions needed for
+    secret injection. The task role should have only the permissions
+    the application code needs at runtime.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "roles_identical": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.roles_identical
+      op: eq
+      value: true

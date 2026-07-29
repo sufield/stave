@@ -1,0 +1,20 @@
+{
+  "schema_version": "obs.v0.1",
+  "source": "deployed",
+  "captured_at": "2026-07-29T12:00:00Z",
+  "assets": [
+    {
+      "id": "iam-role-soc-agent-ap-scoped",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "policies": {
+            "has_s3_bucket_arn_bypassing_ap": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+dsl_version: ctrl.v1
+id: CTL.EFS.MT.SG.NFS.PUBLIC.001
+name: EFS Mount Target Security Group Must Not Allow Public NFS Access
+description: >
+  EFS mount target has a security group that allows NFS (port 2049)
+  ingress from 0.0.0.0/0 or ::/0. NFS is an unauthenticated
+  protocol at the network layer — any host that can reach port 2049
+  can mount the file system. Public NFS access exposes the entire
+  file system contents to the internet. The generic SG control
+  (CTL.VPC.SG.UNRESTRICTED.001) catches unrestricted ingress on
+  sensitive ports; this control adds EFS-specific context so triage
+  teams immediately see the filesystem exposure rather than a
+  generic SG finding.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.3.1"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - efs
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_efs_file_system]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - filesystem.kind
+  - filesystem.mount_targets.sg_allows_public_nfs
+remediation:
+  description: >
+    EFS mount target security group allows NFS (port 2049) from
+    0.0.0.0/0. The file system is mountable from the internet.
+  action: >
+    Restrict the mount target security group to allow port 2049
+    only from the CIDR ranges or security groups of authorized
+    clients. Run: aws efs modify-mount-target-security-groups
+    --mount-target-id fsmt-xxx --security-groups sg-xxx
+  example: |
+    {
+      "filesystem": {
+        "kind": "efs",
+        "mount_targets": {
+          "sg_allows_public_nfs": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.filesystem.kind
+      op: eq
+      value: efs
+    - field: properties.filesystem.mount_targets.sg_allows_public_nfs
+      op: eq
+      value: true

@@ -1,0 +1,64 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASKROLE.S3WRITE.BROAD.001
+name: ECS Task Role Has Broad S3 Write Scope
+description: >
+  ECS task role grants S3 write actions (s3:PutObject,
+  s3:PutObjectAcl, s3:DeleteObject) on wildcard or bucket-wide
+  scope. Wildcard means every bucket in the account; bucket-wide
+  means every object in a specific bucket. Access-point-scoped
+  grants (arn:aws:s3:::accesspoint/...) are narrower and do not
+  trigger this control. The s3_write_scope property is derived by
+  the collector from the resolved IAM policies attached to the
+  task role.
+domain: identity
+severity: medium
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "DSP-07"]
+scope_tags:
+  - aws
+  - ecs
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+  - data-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_ecs_task_definition]
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - container.kind
+  - container.task_role.has_s3_write
+  - container.task_role.s3_write_scope
+remediation:
+  description: >
+    ECS task role has S3 write permissions on wildcard or bucket-wide
+    scope.
+  action: >
+    Scope S3 write actions to specific access point ARNs or
+    prefix-scoped bucket ARNs. Use access points to enforce
+    network and IAM restrictions at the access-point boundary.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "task_role": {
+          "has_s3_write": true,
+          "s3_write_scope": "access-point"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.task_role.has_s3_write
+      op: eq
+      value: true
+    - field: properties.container.task_role.s3_write_scope
+      op: in
+      value: ["wildcard", "bucket-wide"]
