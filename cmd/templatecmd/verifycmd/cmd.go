@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/templates"
 	tmpl "github.com/sufield/stave/pkg/stave/template"
 )
 
@@ -55,7 +54,7 @@ Exit Codes:
 }
 
 func runVerify(w io.Writer, name string) error {
-	allTemplates, err := tmpl.LoadAll("", templates.BuiltinTemplateFS)
+	allTemplates, err := tmpl.LoadAll("", tmpl.BuiltinFS())
 	if err != nil {
 		return fmt.Errorf("load templates: %w", err)
 	}
@@ -75,7 +74,7 @@ func runVerify(w io.Writer, name string) error {
 
 	// Load expected findings from the template's fixture
 	expected, err := tmpl.LoadExpectedFindings(
-		templates.BuiltinTemplateFS,
+		tmpl.BuiltinFS(),
 		fmt.Sprintf("%s/%s", name, target.Fixture.ExpectedFindings),
 	)
 	if err != nil {

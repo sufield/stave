@@ -167,6 +167,19 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 		"yamlutil":          {}, // yaml parsing helpers
 		"architecture":      {}, // ADR-as-test assertions (Extension G)
 		"collectorcontract": {}, // collector contract validation; loaded by pkg/stave facade
+
+		// Data directories — not Go packages, consumed at build time
+		// or by the CLI at runtime. No Go source to import.
+		"_skills":         {}, // public early-adopter onboarding skills (Superpowers format)
+		"chains":          {}, // compound chain YAML definitions
+		"controls":        {}, // canonical control YAML catalog
+		"fixtures":        {}, // test observation fixtures
+		"fuzz":            {}, // fuzz corpus data
+		"integrations":    {}, // integration metadata
+		"reasoning":       {}, // Z3/Soufflé reasoning data
+		"reasoning-specs": {}, // reasoning specification YAML
+		"schemas":         {}, // JSON schemas for observation/control formats
+		"templates":       {}, // output templates
 	}
 
 	entries, err := os.ReadDir(internalDir)

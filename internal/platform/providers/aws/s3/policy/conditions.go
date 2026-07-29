@@ -16,12 +16,12 @@ type condOperator string
 func parseOperator(raw string) condOperator {
 	clean := strings.ToLower(raw)
 	for {
-		if strings.HasPrefix(clean, condPrefixForAnyValue) {
-			clean = strings.TrimPrefix(clean, condPrefixForAnyValue)
+		if after, ok := strings.CutPrefix(clean, condPrefixForAnyValue); ok {
+			clean = after
 			continue
 		}
-		if strings.HasPrefix(clean, condPrefixForAllValues) {
-			clean = strings.TrimPrefix(clean, condPrefixForAllValues)
+		if after, ok := strings.CutPrefix(clean, condPrefixForAllValues); ok {
+			clean = after
 			continue
 		}
 		break

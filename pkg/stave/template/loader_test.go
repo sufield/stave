@@ -2,12 +2,10 @@ package template
 
 import (
 	"testing"
-
-	"github.com/sufield/stave/internal/templates"
 )
 
 func TestLoadFromFS_BuiltinTemplates(t *testing.T) {
-	loaded, err := LoadFromFS(templates.BuiltinTemplateFS, ".")
+	loaded, err := LoadFromFS(BuiltinFS(), ".")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 
-	"github.com/sufield/stave/internal/templates"
 	tmpl "github.com/sufield/stave/pkg/stave/template"
 )
 
@@ -61,7 +60,7 @@ Exit Codes:
 }
 
 func runInit(w io.Writer, name string, opts *options) error {
-	allTemplates, err := tmpl.LoadAll("", templates.BuiltinTemplateFS)
+	allTemplates, err := tmpl.LoadAll("", tmpl.BuiltinFS())
 	if err != nil {
 		return fmt.Errorf("load templates: %w", err)
 	}

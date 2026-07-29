@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/sufield/stave/internal/templates"
 	tmpl "github.com/sufield/stave/pkg/stave/template"
 )
 
@@ -58,7 +57,7 @@ Exit Codes:
 }
 
 func runEject(w io.Writer, name string, opts *options) error {
-	allTemplates, err := tmpl.LoadAll("", templates.BuiltinTemplateFS)
+	allTemplates, err := tmpl.LoadAll("", tmpl.BuiltinFS())
 	if err != nil {
 		return fmt.Errorf("load templates: %w", err)
 	}
@@ -80,7 +79,7 @@ func runEject(w io.Writer, name string, opts *options) error {
 	}
 
 	// Copy the template directory from embedded FS
-	err = fs.WalkDir(templates.BuiltinTemplateFS, name, func(path string, d fs.DirEntry, err error) error {
+	err = fs.WalkDir(tmpl.BuiltinFS(), name, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -92,7 +91,7 @@ func runEject(w io.Writer, name string, opts *options) error {
 			return os.MkdirAll(dest, 0o750)
 		}
 
-		data, err := fs.ReadFile(templates.BuiltinTemplateFS, path)
+		data, err := fs.ReadFile(tmpl.BuiltinFS(), path)
 		if err != nil {
 			return fmt.Errorf("read %s: %w", path, err)
 		}
