@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	covadapter "github.com/sufield/stave/internal/adapters/coverage"
 	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
@@ -107,13 +108,24 @@ func filterSnapshots(primary Profile, req ProfileRequest, snapshots []asset.Snap
 
 func loadControlsMulti(ctx context.Context, profiles []Profile) (string, []policy.ControlDefinition, error) {
 	base := getControlsBaseDir()
-	loader := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()))
+	_, statErr := os.Stat(base)
+	useEmbedded := statErr != nil
+
 	seenDir := make(map[string]struct{})
 	seenCtl := make(map[kernel.ControlID]struct{})
 	var primaryDir string
 	var controls []policy.ControlDefinition
 	for _, prof := range profiles {
-		dir := filepath.Join(base, profileControlDomain(prof))
+		domain := profileControlDomain(prof)
+		var dir string
+		if useEmbedded {
+			dir = "embedded"
+			if domain != "" {
+				dir = filepath.Join("embedded", domain)
+			}
+		} else {
+			dir = filepath.Join(base, domain)
+		}
 		if primaryDir == "" {
 			primaryDir = dir
 		}
@@ -121,7 +133,18 @@ func loadControlsMulti(ctx context.Context, profiles []Profile) (string, []polic
 			continue
 		}
 		seenDir[dir] = struct{}{}
-		loaded, err := loader.LoadControls(ctx, dir)
+		var loaded []policy.ControlDefinition
+		var err error
+		if useEmbedded {
+			store := ctlbuiltin.NewControlStore(
+				ctlbuiltin.EmbeddedFS(), dir,
+				ctlbuiltin.WithAliasResolver(builtinpredicate.ResolverFunc()),
+			)
+			loaded, err = store.All()
+		} else {
+			loader := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()))
+			loaded, err = loader.LoadControls(ctx, dir)
+		}
 		if err != nil {
 			return "", nil, fmt.Errorf("load controls from %s: %w", dir, err)
 		}
@@ -245,6 +268,15 @@ func getControlsBaseDir() string {
 		}
 	}
 	return "controls"
+}
+
+func getChainsDir() string {
+	for _, candidate := range []string{"chains", "internal/chains"} {
+		if fi, err := os.Stat(candidate); err == nil && fi.IsDir() {
+			return candidate
+		}
+	}
+	return "chains"
 }
 
 // latestSnapshotSource returns the origin context of the most recent

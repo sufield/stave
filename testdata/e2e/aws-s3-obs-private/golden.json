@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "c8a5800992935659c6b11b8a77125dfeec6cc024b99130e7ff91e2145da7cf26",
+    "policy_fingerprint": "416e763f5141db64ec9edc5ea8ad3babbdbeb15d235d687ee2a76324d4b2cf26",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -373,6 +373,7 @@
         "aws",
         "s3"
       ],
+      "defect": "Access logging is enabled. Logging destination in org is not enabled.",
       "delta": [
         {
           "property_label": "logging destination in org",
@@ -550,6 +551,7 @@
         "aws",
         "s3"
       ],
+      "defect": "Object ownership rule is missing from the observation data. Object ownership rule is not \"BucketOwnerEnforced\".",
       "delta": [
         {
           "property_label": "object ownership rule",
@@ -692,6 +694,7 @@
         "aws",
         "s3"
       ],
+      "defect": "Lifecycle aborts incomplete multipart is not enabled.",
       "delta": [
         {
           "property_label": "lifecycle aborts incomplete multipart",
@@ -838,6 +841,7 @@
         "s3",
         "hipaa"
       ],
+      "defect": "Data classification tag is set to \"phi\".",
       "delta": [
         {
           "property_label": "data classification tag",

@@ -134,7 +134,7 @@ func EvaluateProfile(ctx context.Context, req ProfileRequest) (ProfileResult, er
 		return ProfileResult{}, fmt.Errorf("init CEL evaluator: %w", err)
 	}
 
-	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
+	chains, chainsErr := ctlyaml.LoadChains(getChainsDir(), capabilities.Builtin())
 	if chainsErr != nil {
 		return ProfileResult{}, fmt.Errorf("loading chains: %w", chainsErr)
 	}

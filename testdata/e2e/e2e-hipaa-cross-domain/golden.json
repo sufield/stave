@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "a2bef89019195fff240ddcb2366d3cd5576169849c542d0ae2ba5053b973b389",
+    "policy_fingerprint": "46235184e7ace8435cbacc511d157362b0f6c880ee0ce78007bb172a4c743619",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -2209,7 +2209,7 @@
         "example": "{\n  \"database\": {\n    \"kind\": \"instance\",\n    \"access\": {\n      \"publicly_accessible\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-8bbdfe8e2cfe4781",
+        "id": "fix-26fd8b391ea68bea",
         "target": {
           "asset_id": "phi-database",
           "asset_type": "aws_rds_instance"
@@ -2924,6 +2924,24 @@
       },
       "exploitability": "one_away",
       "near_miss_chains": [
+        {
+          "chain_id": "agent_sandbox_escape_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.AGENT.CHAIN.SENSITIVE.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n"
+        },
+        {
+          "chain_id": "agent_sandbox_escape_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n"
+        },
         {
           "chain_id": "data_exfiltration_path",
           "chain_severity": "critical",
@@ -5810,6 +5828,26 @@
       "scope_id": "__global__"
     },
     {
+      "chain": "agent_sandbox_escape_path",
+      "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.IAM.AGENT.CHAIN.SENSITIVE.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "agent_sandbox_escape_path",
+      "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
       "chain": "cloudformation_template_injection_unaudited",
       "description": "S3 bucket hosting CloudFormation templates allows untrusted write access AND CloudTrail is not enabled. The Pacu cfn__resource_injection module exploits exactly this: an attacker with PutObject on the template bucket injects a malicious resource (IAM role, Lambda function, EC2 instance) into the template. On the next stack update, CloudFormation deploys the injected resource with the stack's service role permissions. Without CloudTrail, the PutObject call to the template bucket AND the UpdateStack API call are both invisible — the supply chain compromise leaves no audit trail. Either control alone mitigates: restricting template bucket write access blocks the injection; enabling CloudTrail records the suspicious PutObject and UpdateStack calls.\n",
       "controls_failing": [
@@ -6935,6 +6973,49 @@
       "asset_id": "phi-database",
       "asset_type": "aws_rds_instance",
       "fix_plan": {
+        "id": "fix-26fd8b391ea68bea",
+        "target": {
+          "asset_id": "phi-database",
+          "asset_type": "aws_rds_instance"
+        },
+        "preconditions": [
+          "Confirm resource ownership and internal change window approval.",
+          "Ensure public access is not explicitly required for this specific resource's function."
+        ],
+        "actions": [
+          {
+            "action_type": "set",
+            "path": "security_posture.block_identity_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_metadata_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.block_resource_public_access",
+            "value": true
+          },
+          {
+            "action_type": "set",
+            "path": "security_posture.ignore_resource_metadata_access",
+            "value": true
+          }
+        ],
+        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
+        "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
+      },
+      "contributing_controls": [
+        "CTL.RDS.PUBLIC.001"
+      ],
+      "finding_count": 1
+    },
+    {
+      "asset_id": "phi-database",
+      "asset_type": "aws_rds_instance",
+      "fix_plan": {
         "id": "fix-4233e63a00340e1b",
         "target": {
           "asset_id": "phi-database",
@@ -6992,49 +7073,6 @@
       },
       "contributing_controls": [
         "CTL.RDS.MULTIAZ.001"
-      ],
-      "finding_count": 1
-    },
-    {
-      "asset_id": "phi-database",
-      "asset_type": "aws_rds_instance",
-      "fix_plan": {
-        "id": "fix-8bbdfe8e2cfe4781",
-        "target": {
-          "asset_id": "phi-database",
-          "asset_type": "aws_rds_instance"
-        },
-        "preconditions": [
-          "Confirm resource ownership and internal change window approval.",
-          "Ensure public access is not explicitly required for this specific resource's function."
-        ],
-        "actions": [
-          {
-            "action_type": "set",
-            "path": "security_posture.block_identity_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_metadata_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.block_resource_public_access",
-            "value": true
-          },
-          {
-            "action_type": "set",
-            "path": "security_posture.ignore_resource_metadata_access",
-            "value": true
-          }
-        ],
-        "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
-        "action": "Modify the instance to disable public accessibility. Run: aws rds modify-db-instance --db-instance-identifier xxx --no-publicly-accessible --apply-immediately"
-      },
-      "contributing_controls": [
-        "CTL.RDS.PUBLIC.001"
       ],
       "finding_count": 1
     },

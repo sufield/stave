@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3200
-**Pack hash:** `0b1e4f8b29015de3338279315a3a15b755f463c0d053e8c35f07ce7ec1d9fa80`
+**Total controls:** 3202
+**Pack hash:** `8f9e957162743f2ab097f0f7267a87ea56b92dac252bb270e9771c875aed37ab`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -17,7 +17,7 @@ GitHub. Pick a service below.
 | high | 1396 |
 | info | 19 |
 | low | 236 |
-| medium | 1204 |
+| medium | 1206 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,10 +28,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 141 |
 | encryption | 123 |
-| exposure | 1399 |
+| exposure | 1400 |
 | governance | 656 |
 | hygiene | 20 |
-| identity | 619 |
+| identity | 620 |
 | lifecycle | 31 |
 | network | 48 |
 | resilience | 39 |
@@ -122,6 +122,7 @@ GitHub. Pick a service below.
 | [MWAA](reference/mwaa.md) | 2 |
 | [NEPTUNE](reference/neptune.md) | 20 |
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
+| [NLB](reference/nlb.md) | 2 |
 | [OPENSEARCH](reference/opensearch.md) | 132 |
 | [ORG](reference/org.md) | 62 |
 | [QUICKSIGHT](reference/quicksight.md) | 2 |
