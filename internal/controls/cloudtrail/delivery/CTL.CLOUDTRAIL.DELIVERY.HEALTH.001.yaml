@@ -1,0 +1,92 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.DELIVERY.HEALTH.001
+name: CloudTrail S3 Delivery Must Be Healthy
+description: >
+  CloudTrail trail S3 delivery must be actively succeeding.
+  A trail can be enabled, multi-region, organization-wide,
+  and pass every other CloudTrail control while S3 delivery
+  is silently failing. GetTrailStatus reports
+  LatestDeliveryError and LatestDeliveryTime — when delivery
+  has failed, the trail is a ghost reference: it appears
+  functional in the CloudTrail console but no audit events
+  reach the S3 bucket. Every downstream consumer of the
+  trail logs (SIEM, compliance archive, forensic tooling)
+  operates on stale data. This is the canonical ghost
+  reference pattern: the configuration is correct but the
+  mechanism has failed.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v3.0: "3.1"
+  nist_800_53_r5: "AU-9"
+  fedramp_moderate: "AU-9"
+  pci_dss_v4.0: "10.3.1"
+  soc2: "CC7.2"
+  hipaa: "164.312(b)"
+  ccm_v4: ["LOG-05", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cloudtrail_trail
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+defect: >
+  CloudTrail S3 delivery is failing. The trail is configured
+  and enabled but audit events are not reaching the S3 bucket.
+infection: >
+  The trail appears healthy in the console. CloudTrail shows
+  the trail as logging. Other CloudTrail controls pass —
+  multi-region is enabled, encryption is configured, log file
+  validation is on. But S3 delivery has failed: the bucket
+  policy changed, the bucket was deleted, KMS permissions
+  were revoked, or the bucket is in a different account that
+  revoked cross-account access. No audit events have been
+  delivered since the failure. The SIEM ingests nothing new.
+  The compliance archive stops growing. Forensic tooling
+  shows a gap in the timeline. Nobody notices because the
+  trail itself is still "logging" — the ghost reference.
+failure: >
+  An attacker operates in the account for days or weeks. The
+  team investigates and discovers the CloudTrail S3 bucket
+  has no events for the incident period. The trail was
+  enabled the entire time but delivery silently failed.
+  There is no audit trail for the incident.
+remediation:
+  description: >
+    CloudTrail S3 delivery is failing. Audit events are not
+    reaching the configured S3 bucket.
+  action: >
+    Check GetTrailStatus for LatestDeliveryError. Common
+    causes: S3 bucket policy no longer allows CloudTrail
+    writes, KMS key policy revoked CloudTrail encrypt
+    permission, bucket was deleted or moved to another
+    account. Fix the underlying issue and verify delivery
+    resumes by checking LatestDeliveryTime updates.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "audit_trail": {
+          "s3_delivery_healthy": true,
+          "s3_delivery_error": "",
+          "s3_last_delivery_time": "2026-07-28T12:00:00Z"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.audit_trail.s3_delivery_healthy
+      op: eq
+      value: false

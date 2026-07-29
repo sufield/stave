@@ -803,6 +803,51 @@ ECS task definitions tagged with data-classification phi or pii must have task r
 
 ---
 
+### CTL.ECS.TASKROLE.S3WRITE.BROAD.001
+
+**ECS Task Role Has Broad S3 Write Scope**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+ECS task role grants S3 write actions (s3:PutObject, s3:PutObjectAcl, s3:DeleteObject) on wildcard or bucket-wide scope. Wildcard means every bucket in the account; bucket-wide means every object in a specific bucket. Access-point-scoped grants (arn:aws:s3:::accesspoint/...) are narrower and do not trigger this control. The s3_write_scope property is derived by the collector from the resolved IAM policies attached to the task role.
+
+**Remediation:** Scope S3 write actions to specific access point ARNs or prefix-scoped bucket ARNs. Use access points to enforce network and IAM restrictions at the access-point boundary.
+
+---
+
+### CTL.ECS.TASKROLE.S3WRITE.READONLY.001
+
+**Read-Only ECS Service Must Not Have S3 Write Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+ECS service designated as read-only has a task role with S3 write permissions (s3:PutObject, s3:PutObjectAcl, or s3:DeleteObject). Application code in this service can modify the artifact store it should only consume — enabling artifact tampering from a supposedly read-only consumer. The service_intent property is derived from the service or task definition tags (e.g., stave:service-intent=read-only). When intent is declared and the role violates it, the trust model is broken.
+
+**Remediation:** Scope the task role to read-only S3 actions (s3:GetObject, s3:ListBucket) on the artifact store. Remove s3:PutObject, s3:PutObjectAcl, and s3:DeleteObject.
+
+---
+
+### CTL.ECS.TASKROLE.SEPARATION.001
+
+**ECS Task Role Must Be Distinct from Execution Role**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+ECS task definition uses the same IAM role for both the task role and the execution role. The execution role is an infrastructure role — it pulls images from ECR, pushes logs to CloudWatch, and retrieves secrets from SSM/Secrets Manager. The task role is the application role — it carries the permissions application code uses at runtime. When both are the same role, application code inherits ECR pull, log push, and secret retrieval permissions it should never have. An attacker who compromises the application gets infrastructure-level credentials. Two trust boundaries collapse into one.
+
+**Remediation:** Create separate IAM roles. The execution role should have only ECR pull (ecr:GetAuthorizationToken, ecr:BatchGetImage), CloudWatch Logs push (logs:CreateLogStream, logs:PutLogEvents), and the specific Secrets Manager or SSM permissions needed for secret injection. The task role should have only the permissions the application code needs at runtime.
+
+---
+
 ### CTL.ECS.TASKROLE.SHARED.001
 
 **ECS Task Definitions Must Use Per-Service Task Roles**

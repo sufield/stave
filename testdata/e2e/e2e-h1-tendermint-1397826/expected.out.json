@@ -14,7 +14,7 @@
       },
       "overall": "5ec37df8a5f92571017a9974b8024b6916b8b2f372dfd56f2e1cca2c9a17dfcb"
     },
-    "policy_fingerprint": "fb3a03fbeba6b8830d92f136ca2ae63f78c8fc8e0d8172994448543b9bfe7f24",
+    "policy_fingerprint": "a83b89a862a924cd4bcea142d708b588b6ff20bb76a1468b9dcd9134a53bd84d",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -85,7 +85,7 @@
         "example": "{\n  \"s3_ref\": {\n    \"bucket_exists\": true,\n    \"bucket_owned\": true\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-f70e634ea270682e",
+        "id": "fix-1975a63355c55bcf",
         "target": {
           "asset_id": "tendermint-packages-ref",
           "asset_type": "s3_bucket_reference"
@@ -246,7 +246,7 @@
       "asset_id": "tendermint-packages-ref",
       "asset_type": "s3_bucket_reference",
       "fix_plan": {
-        "id": "fix-f70e634ea270682e",
+        "id": "fix-1975a63355c55bcf",
         "target": {
           "asset_id": "tendermint-packages-ref",
           "asset_type": "s3_bucket_reference"

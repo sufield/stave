@@ -1,0 +1,51 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-28T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/mgmt-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit": {
+          "kind": "trail",
+          "cloudtrail": {
+            "mgmt_logs_reads": false,
+            "cw_logs_delivery_configured": true,
+            "cw_logs_retention_compliant": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:vpc-flow-log/fl-abc123",
+      "type": "aws_vpc_flow_log",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "flow_log",
+          "flowlog": {
+            "has_critical_fields": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:guardduty:us-east-1:111122223333:detector/d1",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "guardduty": {
+            "detection_method_count": 2
+          }
+        }
+      }
+    }
+  ],
+  "generated_by": {
+    "source_type": "synthetic.detection-blindness"
+  }
+}

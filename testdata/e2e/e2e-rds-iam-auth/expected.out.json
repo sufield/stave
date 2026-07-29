@@ -14,7 +14,7 @@
       },
       "overall": "9ac450ebf5a029e16470e45d8b387100ea290be9141158bb7b83f7abeeb3b12a"
     },
-    "policy_fingerprint": "84e3700ad2b158ab3ca4f5120de12f7bd529905a87e7b542b754b1ad3549905c",
+    "policy_fingerprint": "0b5630e609be18aa9a73f0f9223a1867dd6bc7c66704b6b120ed0da15f00ed0b",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -92,7 +92,27 @@
         },
         "action": "Enable IAM authentication on the instance. Run: aws rds modify-db-instance --db-instance-identifier xxx --enable-iam-database-authentication --apply-immediately"
       },
-      "exploitability": "reachable",
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "rds_auth_weakness",
+          "chain_severity": "high",
+          "missing_control": "CTL.RDS.AUTH.MASTERUSER.001",
+          "controls_failing": [
+            "CTL.RDS.IAMAUTH.001"
+          ],
+          "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n"
+        },
+        {
+          "chain_id": "rds_auth_weakness",
+          "chain_severity": "high",
+          "missing_control": "CTL.SECRETSMANAGER.POLICY.PUBLIC.001",
+          "controls_failing": [
+            "CTL.RDS.IAMAUTH.001"
+          ],
+          "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n"
+        }
+      ],
       "sla_deadline_hours": 1440,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -184,6 +204,28 @@
         "1d77db92bd62",
         "eafe976c4f29"
       ]
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "rds_auth_weakness",
+      "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n",
+      "controls_failing": [
+        "CTL.RDS.IAMAUTH.001"
+      ],
+      "missing_control": "CTL.RDS.AUTH.MASTERUSER.001",
+      "severity": "high",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "rds_auth_weakness",
+      "description": "IAM authentication is not enabled on the RDS instance AND either the master username matches a well-known default or a Secrets Manager secret on the account has a public resource policy. The authentication path falls back to password-only AND either the username half is free for the attacker (well-known default) or the password half is publicly retrievable (any AWS principal can call GetSecretValue). One condition alone is medium severity; the combination is the database operating with a guessable username and / or a publicly-fetchable password against static-credential authentication.\n",
+      "controls_failing": [
+        "CTL.RDS.IAMAUTH.001"
+      ],
+      "missing_control": "CTL.SECRETSMANAGER.POLICY.PUBLIC.001",
+      "severity": "high",
+      "scope_id": "phi-database"
     }
   ],
   "issues": [

@@ -1,0 +1,63 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-28T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:guardduty:us-east-1:111122223333:detector/d1",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "enabled": true,
+          "notification": {
+            "has_routing": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:111122223333:delivery-channel/default",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_delivery_channel",
+          "config": {
+            "has_sns_topic": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/mgmt-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit": {
+          "kind": "trail",
+          "cloudwatch_logs": {
+            "delivery_active": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudwatch:us-east-1:111122223333:alarm:UnauthorizedAPICalls",
+      "type": "aws_cloudwatch_alarm",
+      "vendor": "aws",
+      "properties": {
+        "monitoring": {
+          "kind": "alarm",
+          "cloudwatch": {
+            "has_any_action": true
+          }
+        }
+      }
+    }
+  ],
+  "generated_by": {
+    "source_type": "synthetic.detection-blindness"
+  }
+}

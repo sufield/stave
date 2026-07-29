@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3202
-**Pack hash:** `8f9e957162743f2ab097f0f7267a87ea56b92dac252bb270e9771c875aed37ab`
+**Total controls:** 3208
+**Pack hash:** `350a6e35db64e80935d70ab51a8b8e3242ee4f1bab4b630c9b817edb4c66501d`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 345 |
-| high | 1396 |
+| critical | 347 |
+| high | 1398 |
 | info | 19 |
 | low | 236 |
-| medium | 1206 |
+| medium | 1208 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,10 +28,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 141 |
 | encryption | 123 |
-| exposure | 1400 |
+| exposure | 1403 |
 | governance | 656 |
 | hygiene | 20 |
-| identity | 620 |
+| identity | 623 |
 | lifecycle | 31 |
 | network | 48 |
 | resilience | 39 |
@@ -65,7 +65,7 @@ GitHub. Pick a service below.
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
 | [CLOUDFORMATION](reference/cloudformation.md) | 12 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
-| [CLOUDTRAIL](reference/cloudtrail.md) | 60 |
+| [CLOUDTRAIL](reference/cloudtrail.md) | 61 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
 | [CODEBUILD](reference/codebuild.md) | 13 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
@@ -82,8 +82,8 @@ GitHub. Pick a service below.
 | [EBS](reference/ebs.md) | 3 |
 | [EC2](reference/ec2.md) | 110 |
 | [ECR](reference/ecr.md) | 10 |
-| [ECS](reference/ecs.md) | 54 |
-| [EFS](reference/efs.md) | 14 |
+| [ECS](reference/ecs.md) | 57 |
+| [EFS](reference/efs.md) | 15 |
 | [EKS](reference/eks.md) | 115 |
 | [ELASTICACHE](reference/elasticache.md) | 11 |
 | [ELB](reference/elb.md) | 80 |
@@ -103,7 +103,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 19 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 310 |
+| [IAM](reference/iam.md) | 311 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |

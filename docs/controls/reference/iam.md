@@ -3351,6 +3351,21 @@ The root account must not be used for day-to-day operations. Root activity shoul
 
 ---
 
+### CTL.IAM.S3.ACCESSPOINT.BYPASS.001
+
+**IAM Policy Grants S3 Access on Bucket ARN Bypassing Access Points**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM policy grants S3 write actions directly on a bucket ARN when S3 access points are configured for that bucket. Access points enforce network-origin and IAM restrictions at a narrower scope than the bucket policy. A role that writes via the bucket ARN bypasses access-point restrictions entirely — the access-point VPC restriction, principal constraints, and action scope do not apply to direct bucket operations. The has_s3_bucket_arn_bypassing_ap property is derived by the collector by cross-referencing the IAM policy's S3 resource ARNs with the bucket's access-point configuration.
+
+**Remediation:** Replace the bucket ARN in the IAM policy Resource element with the access point ARN. Use arn:aws:s3:region:account:accesspoint/name to enforce access-point restrictions.
+
+---
+
 ### CTL.IAM.S3.WILDCARD.001
 
 **Roles Must Not Grant Wildcard S3 Resource Access**

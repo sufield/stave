@@ -1,0 +1,37 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-28T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.ghost-reference-proof"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit": {
+          "kind": "trail",
+          "enabled": true,
+          "is_multi_region": true,
+          "is_organization_trail": true,
+          "log_file_validation_enabled": true,
+          "cloudwatch_logs": {
+            "delivery_active": true
+          },
+          "cloudtrail": {
+            "mgmt_logs_reads": true,
+            "cw_logs_delivery_configured": true,
+            "cw_logs_retention_compliant": true
+          },
+          "audit_trail": {
+            "s3_delivery_healthy": false,
+            "s3_delivery_error": "S3 bucket does not exist",
+            "s3_last_delivery_time": "2026-07-20T03:14:00Z"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -993,3 +993,37 @@ contracts:
       Derived from lambda:GetFunction → VpcConfig.
     consumers:
       - CTL.ATHENA.CONNECTOR.NOVPC.001
+
+  # ─── CloudTrail S3 Delivery Health (Jul 2026) ──────────
+
+  - field: s3_delivery_healthy
+    type: boolean
+    postcondition: >
+      True if CloudTrail S3 delivery has succeeded within
+      the expected delivery window (24h). False if the trail
+      reports delivery errors or last delivery is stale.
+      Derived from cloudtrail:GetTrailStatus →
+      LatestDeliveryError, LatestDeliveryTime.
+    consumers:
+      - CTL.CLOUDTRAIL.DELIVERY.HEALTH.001
+
+  - field: s3_delivery_error
+    type: string
+    postcondition: >
+      The CloudTrail S3 delivery error string from
+      GetTrailStatus.LatestDeliveryError. Empty string or
+      absent when delivery is healthy. Non-empty values
+      indicate the trail is configured but logs are not
+      reaching S3.
+    consumers:
+      - CTL.CLOUDTRAIL.DELIVERY.HEALTH.001
+
+  - field: s3_last_delivery_time
+    type: string
+    postcondition: >
+      ISO 8601 timestamp of the last successful S3 delivery
+      from GetTrailStatus.LatestDeliveryTime. Used to detect
+      stale delivery — a trail that was once delivering but
+      has silently stopped.
+    consumers:
+      - CTL.CLOUDTRAIL.DELIVERY.HEALTH.001

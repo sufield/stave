@@ -370,6 +370,21 @@ CloudTrail must log S3 data write events (PutObject, DeleteObject). Without obje
 
 ---
 
+### CTL.CLOUDTRAIL.DELIVERY.HEALTH.001
+
+**CloudTrail S3 Delivery Must Be Healthy**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.1; fedramp_moderate: AU-9; hipaa: 164.312(b); nist_800_53_r5: AU-9; pci_dss_v4.0: 10.3.1; soc2: CC7.2;
+
+CloudTrail trail S3 delivery must be actively succeeding. A trail can be enabled, multi-region, organization-wide, and pass every other CloudTrail control while S3 delivery is silently failing. GetTrailStatus reports LatestDeliveryError and LatestDeliveryTime — when delivery has failed, the trail is a ghost reference: it appears functional in the CloudTrail console but no audit events reach the S3 bucket. Every downstream consumer of the trail logs (SIEM, compliance archive, forensic tooling) operates on stale data. This is the canonical ghost reference pattern: the configuration is correct but the mechanism has failed.
+
+**Remediation:** Check GetTrailStatus for LatestDeliveryError. Common causes: S3 bucket policy no longer allows CloudTrail writes, KMS key policy revoked CloudTrail encrypt permission, bucket was deleted or moved to another account. Fix the underlying issue and verify delivery resumes by checking LatestDeliveryTime updates.
+
+---
+
 ### CTL.CLOUDTRAIL.DISABLE.RECUR.001
 
 **CloudTrail Must Not Be Stopped and Restarted Repeatedly**
