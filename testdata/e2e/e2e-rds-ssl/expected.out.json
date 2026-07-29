@@ -14,7 +14,7 @@
       },
       "overall": "c71840b89ce187166fa2fe9b15b08abcadbe7361aabdd95775cb47b1488ed5ce"
     },
-    "policy_fingerprint": "991de93d2312c52cdeebb8813a37c6837bc3db2ff8b747a0f02af7240fd80ab6",
+    "policy_fingerprint": "c4f3a10257a4402aff4e6ef5491ca8ad3176ae82e14bfa0d6512cd510912ab2d",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -99,7 +99,27 @@
         },
         "action": "Set the rds.force_ssl parameter to 1 in the parameter group (PostgreSQL) or require_secure_transport to ON (MySQL). For Aurora, use the cluster parameter group."
       },
-      "exploitability": "reachable",
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "rds_plaintext_database",
+          "chain_severity": "high",
+          "missing_control": "CTL.RDS.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.RDS.SSL.001"
+          ],
+          "description": "TLS is not enforced for client connections AND either the instance is not encrypted at rest OR the automated backup chain is unencrypted. Encryption fails at multiple layers simultaneously: in transit (an attacker on any segment between the application and the database reads credentials and queries), AND either at rest (the instance storage is plaintext) or in the backup service (a recoverable plaintext copy of the database exists). The intersection is a database whose data is reachable in cleartext through more than one channel; closing any one layer alone leaves the others.\n"
+        },
+        {
+          "chain_id": "rds_plaintext_database",
+          "chain_severity": "high",
+          "missing_control": "CTL.RDS.ENCRYPT.BACKUP.001",
+          "controls_failing": [
+            "CTL.RDS.SSL.001"
+          ],
+          "description": "TLS is not enforced for client connections AND either the instance is not encrypted at rest OR the automated backup chain is unencrypted. Encryption fails at multiple layers simultaneously: in transit (an attacker on any segment between the application and the database reads credentials and queries), AND either at rest (the instance storage is plaintext) or in the backup service (a recoverable plaintext copy of the database exists). The intersection is a database whose data is reachable in cleartext through more than one channel; closing any one layer alone leaves the others.\n"
+        }
+      ],
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -191,6 +211,28 @@
         "1d77db92bd62",
         "d44d185b09a3"
       ]
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "rds_plaintext_database",
+      "description": "TLS is not enforced for client connections AND either the instance is not encrypted at rest OR the automated backup chain is unencrypted. Encryption fails at multiple layers simultaneously: in transit (an attacker on any segment between the application and the database reads credentials and queries), AND either at rest (the instance storage is plaintext) or in the backup service (a recoverable plaintext copy of the database exists). The intersection is a database whose data is reachable in cleartext through more than one channel; closing any one layer alone leaves the others.\n",
+      "controls_failing": [
+        "CTL.RDS.SSL.001"
+      ],
+      "missing_control": "CTL.RDS.ENCRYPT.001",
+      "severity": "high",
+      "scope_id": "phi-database"
+    },
+    {
+      "chain": "rds_plaintext_database",
+      "description": "TLS is not enforced for client connections AND either the instance is not encrypted at rest OR the automated backup chain is unencrypted. Encryption fails at multiple layers simultaneously: in transit (an attacker on any segment between the application and the database reads credentials and queries), AND either at rest (the instance storage is plaintext) or in the backup service (a recoverable plaintext copy of the database exists). The intersection is a database whose data is reachable in cleartext through more than one channel; closing any one layer alone leaves the others.\n",
+      "controls_failing": [
+        "CTL.RDS.SSL.001"
+      ],
+      "missing_control": "CTL.RDS.ENCRYPT.BACKUP.001",
+      "severity": "high",
+      "scope_id": "phi-database"
     }
   ],
   "issues": [
