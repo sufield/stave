@@ -14,7 +14,7 @@
       },
       "overall": "37da254d9f570ea5089731d34673e7c85acf2fb50d95a4996982319bffffa9db"
     },
-    "policy_fingerprint": "337d82731351d463b83eb111ee56e90a24897041b85598e5e05b795ffb28bd0e",
+    "policy_fingerprint": "feb588ef1fa9336764b9b32b0a0c417428cc99390c72959d2dcd9daba9af9b76",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -85,7 +85,7 @@
         "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"access\": {\n      \"public_read\": false\n    }\n  }\n}\n"
       },
       "fix_plan": {
-        "id": "fix-182ea18064a0b07e",
+        "id": "fix-b886fa387cb67890",
         "target": {
           "asset_id": "my-project-public-bucket",
           "asset_type": "gcp_gcs_bucket"
@@ -119,18 +119,7 @@
         "expected_effect": "Enforces a hardened security posture by blocking all identity-bound and resource-bound public access paths.",
         "action": "Remove allUsers and allAuthenticatedUsers from bucket IAM bindings. Run: gcloud storage buckets remove-iam-policy-binding gs://BUCKET --member=allUsers --role=roles/storage.objectViewer"
       },
-      "exploitability": "one_away",
-      "near_miss_chains": [
-        {
-          "chain_id": "gcs_public_bucket_unaudited",
-          "chain_severity": "critical",
-          "missing_control": "CTL.GCP.LOGGING.AUDIT.001",
-          "controls_failing": [
-            "CTL.GCS.PUBLIC.001"
-          ],
-          "description": "GCS bucket allows public read access AND Cloud Audit Logging is not enabled for all services. With public read, anyone on the internet can download objects from the bucket without authentication. Without audit logging, there is no record of who accessed the data, when, or how much was downloaded. The combination is a publicly accessible data store with zero access forensics — data exfiltration at scale with no evidence trail. Either control alone mitigates: removing public access blocks unauthorized downloads; enabling audit logging records all access for detection and investigation.\n"
-        }
-      ],
+      "exploitability": "reachable",
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 168,
@@ -225,18 +214,6 @@
       ]
     }
   ],
-  "near_miss_chains": [
-    {
-      "chain": "gcs_public_bucket_unaudited",
-      "description": "GCS bucket allows public read access AND Cloud Audit Logging is not enabled for all services. With public read, anyone on the internet can download objects from the bucket without authentication. Without audit logging, there is no record of who accessed the data, when, or how much was downloaded. The combination is a publicly accessible data store with zero access forensics — data exfiltration at scale with no evidence trail. Either control alone mitigates: removing public access blocks unauthorized downloads; enabling audit logging records all access for detection and investigation.\n",
-      "controls_failing": [
-        "CTL.GCS.PUBLIC.001"
-      ],
-      "missing_control": "CTL.GCP.LOGGING.AUDIT.001",
-      "severity": "critical",
-      "scope_id": "__global__"
-    }
-  ],
   "issues": [
     {
       "issue_id": "sha256:f9aed81f0404353e",
@@ -258,7 +235,7 @@
       "asset_id": "my-project-public-bucket",
       "asset_type": "gcp_gcs_bucket",
       "fix_plan": {
-        "id": "fix-182ea18064a0b07e",
+        "id": "fix-b886fa387cb67890",
         "target": {
           "asset_id": "my-project-public-bucket",
           "asset_type": "gcp_gcs_bucket"
