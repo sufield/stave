@@ -1,0 +1,82 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-01T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "vpc-bastion-bypass-01",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "vpc_id": "vpc-bastion-bypass-01",
+          "cidr_blocks": ["10.0.0.0/16"],
+          "state": "available",
+          "flow_log": {
+            "enabled": true,
+            "traffic_type": "ALL",
+            "log_destination_type": "cloud-watch-logs"
+          },
+          "bastion": {
+            "identified": true,
+            "egress_unrestricted_internal": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-bastion-01",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "ssh_from_internal_cidr": false,
+            "ssh_from_cidr_only": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-prod-app-01",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "ssh_from_internal_cidr": false,
+            "ssh_from_cidr_only": false
+          }
+        }
+      }
+    },
+    {
+      "id": "i-prod-app-01",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "instance": {
+            "ssm_managed": true,
+            "has_key_pair": false,
+            "sg_allows_ssh": false
+          }
+        },
+        "network": {
+          "security_group": {
+            "ssh_from_internal_cidr": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SG.SSH.INTERNAL.CIDR.001
+name: Security Group Allows SSH From Internal CIDR Instead of Bastion Security Group
+description: >
+  Security group allows SSH (port 22) from an internal CIDR range
+  (RFC1918: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) rather
+  than a specific security group reference. Production instances
+  should accept SSH only from the bastion host's security group,
+  not from broad internal ranges. A rule allowing 10.0.0.0/8 on
+  port 22 bypasses the bastion architecture — any instance in the
+  VPC or peered VPCs can SSH directly. This gap is invisible to
+  existing controls that check only for 0.0.0.0/0: the instance
+  is not internet-exposed, but the bastion is architecturally
+  defeated. Legitimate bastion access uses SG-to-SG references
+  (source = sg-bastion), not CIDR ranges.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "AC-17"
+  cis_aws_v3.0: "5.1"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_security_group
+defect: >
+  SSH ingress rule uses an RFC1918 CIDR source instead of a
+  security group reference.
+infection: >
+  Any instance in the CIDR range can SSH directly to instances
+  using this security group, bypassing the bastion host.
+failure: >
+  Bastion architecture defeated. SSH access is not funneled
+  through the audited, hardened jump host.
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.security_group.ssh_from_internal_cidr
+remediation:
+  description: >
+    Security group allows SSH from an internal CIDR range,
+    bypassing the bastion architecture.
+  action: >
+    Replace the CIDR-based SSH ingress rule with a security
+    group reference pointing to the bastion host's security
+    group. If SSM Session Manager is available, remove SSH
+    access entirely and use SSM for authenticated, logged
+    shell access.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "ssh_from_internal_cidr": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.ssh_from_internal_cidr
+      op: eq
+      value: true
+tests:
+  - name: SG with SSH from internal CIDR fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-ssh-internal-cidr"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            ssh_from_internal_cidr: true
+  - name: SG with SSH from bastion SG reference passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-ssh-bastion-ref"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            ssh_from_internal_cidr: false
+  - name: SG with no SSH rules passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-no-ssh"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            ssh_from_internal_cidr: false

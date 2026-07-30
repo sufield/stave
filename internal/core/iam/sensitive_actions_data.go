@@ -308,8 +308,8 @@ var defaultActions = []ActionClassification{
 	{Action: "lambda:AddPermission", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
 	{Action: "lambda:CreateFunction", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
 	{Action: "lambda:PublishLayerVersion", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
-	{Action: "lambda:UpdateFunctionCode", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
-	{Action: "lambda:UpdateFunctionConfiguration", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
+	{Action: "lambda:UpdateFunctionCode", Categories: []ActionRiskCategory{ActionResourceExposure, ActionPrivEsc}, Source: "farris"},
+	{Action: "lambda:UpdateFunctionConfiguration", Categories: []ActionRiskCategory{ActionResourceExposure, ActionPrivEsc}, Source: "farris"},
 	{Action: "logs:CreateLogGroup", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
 	{Action: "logs:DeleteLogGroup", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
 	{Action: "logs:DeleteLogStream", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
@@ -464,8 +464,11 @@ var defaultActions = []ActionClassification{
 	{Action: "verifiedpermissions:UpdatePolicy", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
 	{Action: "sso:CreateAccountAssignment", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
 	{Action: "sso:ProvisionPermissionSet", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
+	{Action: "iam:CreateServiceLinkedRole", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
+	{Action: "ssm:SendCommand", Categories: []ActionRiskCategory{ActionResourceExposure, ActionPrivEsc}, Source: "stave"},
 
 	// --- ResourceExposure additions ---
+	{Action: "datapipeline:CreatePipeline", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "organizations:LeaveOrganization", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "organizations:RemoveAccountFromOrganization", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "organizations:DeletePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},

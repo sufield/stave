@@ -1105,3 +1105,30 @@ contracts:
       owner account ID.
     consumers:
       - CTL.VPC.ENDPOINT.INTERFACE.CROSSACCOUNT.001
+
+  # ─── Security Group SSH Source Analysis (Jul 2026) ──────
+
+  - field: ssh_from_internal_cidr
+    type: boolean
+    postcondition: >
+      True if any inbound rule for port 22 (or a port range
+      including 22) uses an RFC1918 CIDR source (10.0.0.0/8,
+      172.16.0.0/12, 192.168.0.0/16) or any sub-range thereof.
+      Excludes rules whose source is a security group reference
+      or prefix list. The presence of an internal CIDR on SSH
+      indicates bastion bypass — legitimate bastion architectures
+      use SG-to-SG references, not CIDR ranges.
+    consumers:
+      - CTL.EC2.SG.SSH.INTERNAL.CIDR.001
+      - CTL.EC2.SSM.SSH.INTERNAL.OPEN.001
+
+  - field: ssh_from_cidr_only
+    type: boolean
+    postcondition: >
+      True if ALL inbound rules for port 22 use CIDR sources
+      and none use security group references. False if at least
+      one port-22 rule references a security group. Null if
+      no port-22 ingress rules exist. A security group where
+      every SSH rule uses CIDRs has no SG-to-SG bastion binding.
+    consumers:
+      - CTL.EC2.SG.SSH.CIDR.ONLY.001

@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SG.SSH.CIDR.ONLY.001
+name: All SSH Ingress Rules Use CIDR Sources Instead of Security Group References
+description: >
+  Every SSH (port 22) ingress rule on this security group uses a
+  CIDR source — none use security group references. In a bastion
+  architecture, SSH ingress should reference the bastion's security
+  group, not a CIDR range. CIDR-based rules are less precise (they
+  include all IPs in the range, not just the bastion) and do not
+  enforce the bastion as the sole SSH entry point. This control is
+  lower severity than CTL.EC2.SG.SSH.INTERNAL.CIDR.001 because
+  the CIDR might be narrow or external (e.g., a corporate VPN
+  exit IP), but the architectural weakness remains: CIDR-based SSH
+  rules do not bind to the bastion identity.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-17"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_security_group
+defect: >
+  All SSH ingress rules use CIDR sources; none reference a
+  security group.
+infection: >
+  SSH access is bound to IP ranges, not to the bastion's
+  security group identity. Any IP in the range can connect.
+failure: >
+  Bastion identity not enforced at the network layer. SSH
+  access is position-based (IP range) not identity-based
+  (security group membership).
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.security_group.ssh_from_cidr_only
+remediation:
+  description: >
+    All SSH ingress rules use CIDR sources instead of security
+    group references.
+  action: >
+    Replace CIDR-based SSH ingress rules with security group
+    references. Add an ingress rule: port 22, source sg-bastion.
+    Remove the CIDR rule.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "ssh_from_cidr_only": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.ssh_from_cidr_only
+      op: eq
+      value: true
+tests:
+  - name: SG with only CIDR SSH rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-cidr-only-ssh"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            ssh_from_cidr_only: true
+  - name: SG with SG-reference SSH rule passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-ref-ssh"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            ssh_from_cidr_only: false

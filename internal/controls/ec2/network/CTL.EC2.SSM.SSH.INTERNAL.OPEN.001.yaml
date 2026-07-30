@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.SSM.SSH.INTERNAL.OPEN.001
+name: SSM-Managed Instance Accepts SSH From Internal Networks
+description: >
+  Instance is SSM-managed but still accepts SSH from internal
+  CIDR ranges. SSM Session Manager provides authenticated,
+  IAM-controlled, fully-logged shell access without any open
+  port. Keeping SSH open from internal CIDRs provides an unlogged
+  alternative path that bypasses SSM's audit trail. Unlike
+  CTL.EC2.KEYPAIR.SSM.PREFERRED.001 (which checks for any SSH
+  access on SSM-managed instances), this control specifically
+  targets internal CIDR-sourced SSH — the bastion bypass pattern
+  that passes all internet-facing controls.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-17"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-08", "IVS-06"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+  - logging
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: initial_access
+observation_fields:
+  - compute.kind
+  - compute.instance.ssm_managed
+  - network.security_group.ssh_from_internal_cidr
+remediation:
+  description: >
+    SSM-managed instance accepts SSH from internal CIDR ranges.
+    SSH provides an unlogged path that bypasses SSM's audit trail.
+  action: >
+    Close port 22 entirely and use SSM Session Manager for all
+    shell access. If SSH must remain for specific workflows (SCP,
+    debug tooling), restrict the source to the bastion's security
+    group and enable VPC flow logs on the subnet.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "instance": {
+          "ssm_managed": true
+        }
+      },
+      "network": {
+        "security_group": {
+          "ssh_from_internal_cidr": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.instance.ssm_managed
+      op: eq
+      value: true
+    - field: properties.network.security_group.ssh_from_internal_cidr
+      op: eq
+      value: true
+tests:
+  - name: SSM-managed instance with internal SSH fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "i-ssm-internal-ssh"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          instance:
+            ssm_managed: true
+        network:
+          security_group:
+            ssh_from_internal_cidr: true
+  - name: SSM-managed instance without internal SSH passes
+    verdict: PASS
+    asset:
+      asset_id: "i-ssm-no-ssh"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          instance:
+            ssm_managed: true
+        network:
+          security_group:
+            ssh_from_internal_cidr: false
+  - name: Non-SSM instance with internal SSH passes (not in scope)
+    verdict: PASS
+    asset:
+      asset_id: "i-no-ssm-internal-ssh"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          instance:
+            ssm_managed: false
+        network:
+          security_group:
+            ssh_from_internal_cidr: true
