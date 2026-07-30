@@ -1,0 +1,131 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001
+name: Security Group in Isolated VPC Allows Non-VPC Egress Destinations
+description: >
+  Security group in a VPC with airgapped or egress-restricted isolation
+  intent allows outbound traffic to CIDR ranges outside the VPC. Enclave
+  instances can reach egress-capable nodes in other subnets or VPCs,
+  defeating the isolation boundary at the security group layer. The
+  security group should restrict egress to the VPC's own CIDR block
+  only, ensuring that even if route tables or NACLs have gaps, the SG
+  prevents lateral traffic to egress-capable nodes.
+domain: exposure
+severity: critical
+scope: atomic
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.3.2"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_security_group
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.vpc.isolation_intent
+  - network.security_group.egress.has_non_vpc_destinations
+remediation:
+  description: >
+    Security group in an isolated VPC allows outbound traffic to
+    destinations outside the VPC CIDR. Enclave instances can reach
+    egress-capable nodes.
+  action: >
+    Restrict all egress rules to the VPC's own CIDR block. Remove
+    0.0.0.0/0 egress rules and any rules targeting CIDRs outside
+    the VPC. If specific cross-VPC connectivity is required, route
+    it through VPC endpoints rather than direct SG egress rules.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "vpc": {
+          "isolation_intent": "airgapped"
+        },
+        "security_group": {
+          "egress": {
+            "has_non_vpc_destinations": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - any:
+        - field: properties.network.vpc.isolation_intent
+          op: eq
+          value: "airgapped"
+        - field: properties.network.vpc.isolation_intent
+          op: eq
+          value: "egress-restricted"
+    - field: properties.network.security_group.egress.has_non_vpc_destinations
+      op: eq
+      value: true
+tests:
+  - name: "SG in airgapped VPC with non-VPC egress fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-0abc123airgapped"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          vpc:
+            isolation_intent: "airgapped"
+          security_group:
+            egress:
+              has_non_vpc_destinations: true
+  - name: "SG in airgapped VPC with VPC-only egress passes"
+    verdict: PASS
+    asset:
+      asset_id: "sg-0def456vpconly"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          vpc:
+            isolation_intent: "airgapped"
+          security_group:
+            egress:
+              has_non_vpc_destinations: false
+  - name: "SG in internet-facing VPC with non-VPC egress passes"
+    verdict: PASS
+    asset:
+      asset_id: "sg-0ghi789internetfacing"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          vpc:
+            isolation_intent: "internet-facing"
+          security_group:
+            egress:
+              has_non_vpc_destinations: true
+  - name: "SG in egress-restricted VPC with non-VPC egress fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-0jkl012egressrestricted"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          vpc:
+            isolation_intent: "egress-restricted"
+          security_group:
+            egress:
+              has_non_vpc_destinations: true

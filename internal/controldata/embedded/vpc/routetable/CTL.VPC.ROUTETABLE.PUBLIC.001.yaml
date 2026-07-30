@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ROUTETABLE.PUBLIC.001
+name: Route Table Has Public Route to Internet Gateway
+description: >
+  Route table (main or custom) has a 0.0.0.0/0 route to an internet
+  gateway. Any subnet associated with this route table has internet
+  egress. Unlike CTL.VPC.ROUTETABLE.MAIN.PUBLIC.001 (which fires only
+  on the main route table to catch the implicit-inheritance risk),
+  this control fires on ANY route table with an IGW route — including
+  custom route tables explicitly configured for public subnets. Use
+  this control for egress inventory: it enumerates every IPv4 internet
+  path in the VPC regardless of route table role.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_route_table
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.routetable.has_igw_route
+remediation:
+  description: >
+    Route table has a 0.0.0.0/0 route to an internet gateway. Subnets
+    using this route table have internet egress.
+  action: >
+    If the VPC should have no internet egress, remove the IGW route
+    from the route table and detach the internet gateway. If internet
+    access is intentional for specific subnets, ensure this route
+    table is associated only with those subnets and not with subnets
+    hosting isolated workloads.
+  example: |
+    {
+      "network": {
+        "kind": "route_table",
+        "routetable": {
+          "has_igw_route": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route_table
+    - field: properties.network.routetable.has_igw_route
+      op: eq
+      value: true
+tests:
+  - name: "custom route table with IGW route fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "rtb-0abc123custom"
+      asset_type: aws_vpc_route_table
+      vendor: aws
+      properties:
+        network:
+          kind: route_table
+          routetable:
+            is_main: false
+            has_igw_route: true
+  - name: "main route table with IGW route fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "rtb-0def456main"
+      asset_type: aws_vpc_route_table
+      vendor: aws
+      properties:
+        network:
+          kind: route_table
+          routetable:
+            is_main: true
+            has_igw_route: true
+  - name: "route table without IGW route passes"
+    verdict: PASS
+    asset:
+      asset_id: "rtb-0ghi789private"
+      asset_type: aws_vpc_route_table
+      vendor: aws
+      properties:
+        network:
+          kind: route_table
+          routetable:
+            is_main: false
+            has_igw_route: false

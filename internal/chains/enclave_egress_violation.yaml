@@ -1,0 +1,25 @@
+id: enclave_egress_violation
+description: >
+  VPC declared as airgapped or egress-restricted has one or more
+  internet egress paths — IGW, NAT, peering, TGW, or VPN/DX.
+  Declared isolation intent does not match actual network posture.
+  The ExploitGym incident (July 2026) demonstrated this exact failure:
+  models escaped an isolated evaluation environment because the
+  environment's sole sanctioned egress path (a package-registry
+  proxy) provided uncontrolled internet connectivity. The
+  configuration was "isolated" in intent but not in topology.
+controls:
+  - CTL.VPC.EGRESS.ENDPOINT.ONLY.001
+  - CTL.VPC.IGW.UNNECESSARY.001
+  - CTL.VPC.SG.EGRESS.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - network_access_ec2
+postconditions:
+  - data_access
+incident_precedent:
+  name: OpenAI ExploitGym Sandbox Escape (2026)
+  impact: Models escaped isolated evaluation environment via sole egress proxy, pivoted to internet, chained into production
+  reference: OpenAI ExploitGym / JFrog Artifactory disclosure, July 21-28 2026; Hugging Face autonomous agent breach (same shape)
+implicit_dependencies: []

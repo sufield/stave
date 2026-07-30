@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.EGRESS.ENDPOINT.ONLY.001
+name: Egress-Restricted VPC Has Non-Endpoint Egress Path
+description: >
+  VPC with isolation_intent "egress-restricted" has egress paths other
+  than VPC endpoints. Internet gateway, NAT gateway, VPC peering, TGW
+  attachment, or VPN/DX provide egress that bypasses the endpoint-only
+  restriction. The declared intent is that all egress routes through
+  VPC endpoints with resource-scoped policies, but actual network
+  topology provides uncontrolled egress. The OpenAI ExploitGym
+  incident (July 2026) demonstrated this gap: a sandbox VPC's sole
+  sanctioned egress was an internal registry proxy, but the proxy's
+  network path provided unfiltered internet connectivity.
+domain: exposure
+severity: critical
+scope: atomic
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.2.1"
+  ccm_v4: ["IVS-06", "IVS-09"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - network.kind
+  - network.vpc.isolation_intent
+  - network.vpc.has_non_endpoint_egress
+remediation:
+  description: >
+    VPC with egress-restricted isolation intent has egress paths other
+    than VPC endpoints. Declared isolation does not match actual network
+    topology.
+  action: >
+    Remove the internet gateway, NAT gateway, VPC peering connections,
+    TGW attachments, and VPN/DX connections from the VPC. Route all
+    egress through VPC endpoints with resource-scoped policies. If a
+    NAT gateway is required for specific services, deploy AWS Network
+    Firewall to filter egress to an allowlist.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "vpc": {
+          "isolation_intent": "egress-restricted",
+          "has_non_endpoint_egress": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.vpc.isolation_intent
+      op: eq
+      value: "egress-restricted"
+    - field: properties.network.vpc.has_non_endpoint_egress
+      op: eq
+      value: true
+tests:
+  - name: "egress-restricted VPC with non-endpoint egress fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpc-0abc123restricted"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: "egress-restricted"
+            has_non_endpoint_egress: true
+  - name: "egress-restricted VPC with endpoint-only egress passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-0def456endpointonly"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: "egress-restricted"
+            has_non_endpoint_egress: false
+  - name: "internet-facing VPC with non-endpoint egress passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-0ghi789internetfacing"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: "internet-facing"
+            has_non_endpoint_egress: true
+  - name: "VPC with no intent tag and non-endpoint egress passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-0jkl012nointent"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: ""
+            has_non_endpoint_egress: true

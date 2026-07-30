@@ -2947,6 +2947,21 @@ IAM role's policy grants access to resources in a different AWS account via a cr
 
 ---
 
+### CTL.IAM.RESOURCE.POLICY.CROSS.ENV.001
+
+**Resource Policy Grants Cross-Environment Access**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-4; iso_27001_2022: A.8.22; nist_800_53_r5: AC-4; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+Production resource policy (S3, KMS, SQS, SNS, Lambda) grants access to a principal from a different environment tier. An enclave or sandbox account principal can access production data without assuming a production role — bypassing AssumeRole controls, MFA requirements, and session logging. This is the resource-policy leg of cross- environment pivot that CTL.IAM.CROSS.ENV.001 covers on the IAM side. The OpenAI ExploitGym incident (July 2026) demonstrated this pattern: stolen enclave credentials accessed production resources through resource policy grants that did not require role assumption.
+
+**Remediation:** Remove cross-environment principal grants from resource policies. Cross-environment access should route through AssumeRole with ExternalId and MFA conditions so that session logging, duration limits, and conditional access apply. If direct resource-policy access is required, scope it to specific actions and add aws:PrincipalOrgID and aws:PrincipalTag/Environment conditions.
+
+---
+
 ### CTL.IAM.ROLE.BREAKGLASS.001
 
 **Break-Glass Elevated Roles Must Not Persist**

@@ -880,6 +880,46 @@ contracts:
       From ec2:DescribeNetworkInterfaces filtered by VPC.
     consumers: []
 
+  # ─── VPC Isolation Intent (Jul 2026) ───────────────────────
+
+  - field: isolation_intent
+    type: string
+    postcondition: >
+      The declared isolation intent for this VPC, read from the
+      AWS resource tag "stave:isolation-intent". Values:
+      "airgapped" (no internet egress, no peering, no TGW, no
+      VPN/DX), "egress-restricted" (egress only through VPC
+      endpoints or allowlist), "internet-facing" (standard
+      internet access expected). Empty string when no tag is set
+      — controls fire unconditionally.
+    consumers:
+      - CTL.VPC.EGRESS.ENDPOINT.ONLY.001
+      - CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001
+      - CTL.VPC.NACL.ENCLAVE.EGRESS.001
+
+  # ─── Route Table IPv6 (Jul 2026) ──────────────────────────
+
+  - field: has_ipv6_default_route
+    type: boolean
+    postcondition: >
+      True when any route table in the VPC has a ::/0 route
+      pointing to an egress-only internet gateway (eigw-*).
+      Derived from ec2:DescribeRouteTables.
+    consumers:
+      - CTL.VPC.ROUTETABLE.IPV6.DEFAULT.001
+
+  # ─── Gateway Endpoint Route Association (Jul 2026) ────────
+
+  - field: gateway_endpoint_has_route_entries
+    type: boolean
+    postcondition: >
+      True when a gateway VPC endpoint (S3 or DynamoDB) is
+      associated with at least one route table. A gateway
+      endpoint with no route table association exists but
+      carries no traffic — a ghost endpoint.
+    consumers:
+      - CTL.VPC.ENDPOINT.GATEWAY.NOROUTE.001
+
   # ─── ECS Execute Command Logging (Jul 2026) ─────────────
 
   - field: exec_logging_enabled

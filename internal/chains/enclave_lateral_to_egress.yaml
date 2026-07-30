@@ -1,0 +1,23 @@
+id: enclave_lateral_to_egress
+description: >
+  Isolated VPC has security group rules that permit traffic from
+  enclave instances to egress-capable nodes, combined with broad
+  internal connectivity (east-west permissiveness) and no flow log
+  visibility. An attacker with code execution in the enclave can
+  reach a node with internet egress and use it as an exfiltration
+  relay — the lateral movement is invisible without flow logs.
+controls:
+  - CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001
+  - CTL.VPC.SG.EASTWEST.001
+  - CTL.VPC.FLOWLOG.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - data_access
+incident_precedent:
+  name: OpenAI ExploitGym Sandbox Escape (2026)
+  impact: Lateral movement from isolated compute to egress-capable proxy, invisible to monitoring
+  reference: OpenAI ExploitGym / JFrog Artifactory disclosure, July 21-28 2026
+implicit_dependencies: []

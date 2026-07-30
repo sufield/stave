@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3208
-**Pack hash:** `350a6e35db64e80935d70ab51a8b8e3242ee4f1bab4b630c9b817edb4c66501d`
+**Total controls:** 3216
+**Pack hash:** `e9871a3aef972d49b146bd834cfa8fa4fbf09d558c8b170a348934dcd2b1aa24`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 347 |
-| high | 1398 |
+| critical | 350 |
+| high | 1401 |
 | info | 19 |
 | low | 236 |
-| medium | 1208 |
+| medium | 1210 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,10 +28,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 141 |
 | encryption | 123 |
-| exposure | 1403 |
+| exposure | 1409 |
 | governance | 656 |
-| hygiene | 20 |
-| identity | 623 |
+| hygiene | 21 |
+| identity | 624 |
 | lifecycle | 31 |
 | network | 48 |
 | resilience | 39 |
@@ -103,7 +103,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 19 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 311 |
+| [IAM](reference/iam.md) | 312 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 4 |
@@ -151,7 +151,7 @@ GitHub. Pick a service below.
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
 | [TRANSFER](reference/transfer.md) | 2 |
-| [VPC](reference/vpc.md) | 104 |
+| [VPC](reference/vpc.md) | 111 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 17 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

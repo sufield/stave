@@ -1,0 +1,31 @@
+id: enclave_to_prod_resource_policy
+description: >
+  Enclave account principal can access production resources through
+  resource policy grants without assuming a production role — bypassing
+  AssumeRole controls, MFA requirements, and session logging. Combined
+  with a transitive cross-environment path, an attacker who compromises
+  the enclave account reaches production data through the resource
+  policy grant rather than the identity boundary. The ExploitGym
+  incident demonstrated this pattern: stolen credentials from the
+  sandbox proxy reached production resources via resource policy grants
+  that trusted the sandbox account.
+controls:
+  - CTL.IAM.RESOURCE.POLICY.CROSS.ENV.001
+  - CTL.IAM.CROSS.ENV.PATH.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_access
+incident_precedent:
+  name: OpenAI ExploitGym Sandbox Escape (2026)
+  impact: Stolen sandbox credentials reached production via resource policy grants
+  reference: OpenAI ExploitGym / JFrog Artifactory disclosure, July 21-28 2026
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses
+      observation-layer counts only, which may undercount transitive
+      cross-environment resource access paths.

@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.GATEWAY.NOROUTE.001
+name: Gateway VPC Endpoint Has No Route Table Association
+description: >
+  Gateway VPC endpoint (S3 or DynamoDB) exists but has no route table
+  association. The endpoint is a ghost — no traffic is routed through
+  it. If the endpoint was created to restrict S3 or DynamoDB access
+  to the VPC (replacing NAT-routed internet paths), the restriction
+  is not in effect. Traffic continues via the prior path (NAT gateway,
+  IGW, or fails silently). A gateway endpoint without route table
+  entries provides no connectivity and no policy enforcement.
+domain: hygiene
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: persistence
+observation_fields:
+  - network.kind
+  - network.vpc_endpoint.kind
+  - network.vpc_endpoint.gateway_endpoint_has_route_entries
+remediation:
+  description: >
+    Gateway VPC endpoint exists but has no route table association.
+    The endpoint provides no connectivity or policy enforcement.
+  action: >
+    Associate the gateway endpoint with the route tables of subnets
+    that need S3 or DynamoDB access via the endpoint. If the endpoint
+    is no longer needed, delete it to reduce configuration noise.
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "vpc_endpoint": {
+          "kind": "Gateway",
+          "gateway_endpoint_has_route_entries": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.kind
+      op: eq
+      value: Gateway
+    - field: properties.network.vpc_endpoint.gateway_endpoint_has_route_entries
+      op: eq
+      value: false
+tests:
+  - name: "gateway endpoint with no route table fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0abc123noroute"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            gateway_endpoint_has_route_entries: false
+  - name: "gateway endpoint with route table passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0def456routed"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            gateway_endpoint_has_route_entries: true
+  - name: "interface endpoint passes (different type)"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0ghi789interface"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            gateway_endpoint_has_route_entries: false

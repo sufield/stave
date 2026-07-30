@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ROUTETABLE.IPV6.DEFAULT.001
+name: Route Table Has IPv6 Default Route to Egress-Only Internet Gateway
+description: >
+  Route table has a ::/0 route pointing to an egress-only internet
+  gateway. IPv6 traffic from any resource in subnets using this route
+  table can reach the internet. Egress-only internet gateways allow
+  outbound IPv6 traffic while blocking inbound — they provide
+  unidirectional internet egress, not isolation. If the VPC is
+  intended to be airgapped, this route is an egress path that must
+  be removed.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.2.1"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_route_table
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - network.kind
+  - network.routetable.has_ipv6_default_route
+remediation:
+  description: >
+    Route table has a ::/0 route to an egress-only internet gateway.
+    IPv6 egress to the internet is enabled.
+  action: >
+    Remove the ::/0 route from the route table if the VPC should have
+    no internet egress. If IPv6 egress is required for specific
+    subnets, move the route to a dedicated route table associated
+    only with those subnets.
+  example: |
+    {
+      "network": {
+        "kind": "route_table",
+        "routetable": {
+          "has_ipv6_default_route": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route_table
+    - field: properties.network.routetable.has_ipv6_default_route
+      op: eq
+      value: true
+tests:
+  - name: "route table with IPv6 default route fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "rtb-0abc123ipv6egress"
+      asset_type: aws_vpc_route_table
+      vendor: aws
+      properties:
+        network:
+          kind: route_table
+          routetable:
+            has_ipv6_default_route: true
+  - name: "route table without IPv6 default route passes"
+    verdict: PASS
+    asset:
+      asset_id: "rtb-0def456noipv6"
+      asset_type: aws_vpc_route_table
+      vendor: aws
+      properties:
+        network:
+          kind: route_table
+          routetable:
+            has_ipv6_default_route: false

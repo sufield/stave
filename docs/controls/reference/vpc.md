@@ -352,6 +352,21 @@ AWS Direct Connect should have at least two connections for resiliency. A single
 
 ---
 
+### CTL.VPC.EGRESS.ENDPOINT.ONLY.001
+
+**Egress-Restricted VPC Has Non-Endpoint Egress Path**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+VPC with isolation_intent "egress-restricted" has egress paths other than VPC endpoints. Internet gateway, NAT gateway, VPC peering, TGW attachment, or VPN/DX provide egress that bypasses the endpoint-only restriction. The declared intent is that all egress routes through VPC endpoints with resource-scoped policies, but actual network topology provides uncontrolled egress. The OpenAI ExploitGym incident (July 2026) demonstrated this gap: a sandbox VPC's sole sanctioned egress was an internal registry proxy, but the proxy's network path provided unfiltered internet connectivity.
+
+**Remediation:** Remove the internet gateway, NAT gateway, VPC peering connections, TGW attachments, and VPN/DX connections from the VPC. Route all egress through VPC endpoints with resource-scoped policies. If a NAT gateway is required for specific services, deploy AWS Network Firewall to filter egress to an allowlist.
+
+---
+
 ### CTL.VPC.EGRESS.UNRESTRICTED.001
 
 **Private Subnet With Unrestricted Egress via NAT**
@@ -469,6 +484,21 @@ VPC endpoint policies must not allow access to resources in external accounts. A
 Interface VPC endpoint does not have Private DNS enabled. Without Private DNS, the standard service DNS name (for example `kms.us-east-1.amazonaws.com`) resolves to the service's public IP — not to the VPC endpoint. Applications using the standard SDK configuration bypass the endpoint entirely: traffic routes through the NAT gateway to the public endpoint. The VPC endpoint exists but is unused because DNS does not point at it. Private DNS makes the standard service name resolve to the endpoint's private IP, so every SDK call routes through the endpoint without code changes. Low severity because the finding rarely causes outages — but the behavior surprises most teams because the endpoint appears to be in use when it is not.
 
 **Remediation:** Enable Private DNS on the interface endpoint. This changes the VPC's DNS resolution so the standard service DNS name resolves to the endpoint's private IP, routing all SDK traffic through the endpoint without code changes. If Private DNS cannot be enabled (conflicts with an overlapping resolver configuration), configure application SDKs to use the endpoint's VPCE-specific DNS name explicitly — but the simpler fix is Private DNS.
+
+---
+
+### CTL.VPC.ENDPOINT.GATEWAY.NOROUTE.001
+
+**Gateway VPC Endpoint Has No Route Table Association**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** hygiene
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Gateway VPC endpoint (S3 or DynamoDB) exists but has no route table association. The endpoint is a ghost — no traffic is routed through it. If the endpoint was created to restrict S3 or DynamoDB access to the VPC (replacing NAT-routed internet paths), the restriction is not in effect. Traffic continues via the prior path (NAT gateway, IGW, or fails silently). A gateway endpoint without route table entries provides no connectivity and no policy enforcement.
+
+**Remediation:** Associate the gateway endpoint with the route tables of subnets that need S3 or DynamoDB access via the endpoint. If the endpoint is no longer needed, delete it to reduce configuration noise.
 
 ---
 
@@ -816,6 +846,21 @@ Subnet is associated with the VPC's default Network ACL, which ships with allow-
 
 ---
 
+### CTL.VPC.NACL.ENCLAVE.EGRESS.001
+
+**NACL in Isolated VPC Allows Non-VPC Egress**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+NACL in a VPC with airgapped or egress-restricted isolation intent allows outbound traffic to destinations outside the VPC CIDR. The enclave subnet can route to egress-capable subnets in other VPCs or to the internet via peered or transit routes. NACLs are the defense-in-depth layer below security groups — even if SG rules are correct, a permissive NACL provides a fallback egress path that survives SG rule changes.
+
+**Remediation:** Replace the default allow-all egress NACL rule with explicit rules that permit outbound traffic only to the VPC's own CIDR block. Deny all other egress destinations. This enforces isolation at the subnet level regardless of security group configuration.
+
+---
+
 ### CTL.VPC.NACL.RULE.ORDER.001
 
 **NACL Deny Rules Ordered After Allow Rules That Match Same Traffic**
@@ -996,6 +1041,21 @@ Security group has no attached resources AND allows unrestricted ingress (0.0.0.
 
 ---
 
+### CTL.VPC.ROUTETABLE.IPV6.DEFAULT.001
+
+**Route Table Has IPv6 Default Route to Egress-Only Internet Gateway**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+
+Route table has a ::/0 route pointing to an egress-only internet gateway. IPv6 traffic from any resource in subnets using this route table can reach the internet. Egress-only internet gateways allow outbound IPv6 traffic while blocking inbound — they provide unidirectional internet egress, not isolation. If the VPC is intended to be airgapped, this route is an egress path that must be removed.
+
+**Remediation:** Remove the ::/0 route from the route table if the VPC should have no internet egress. If IPv6 egress is required for specific subnets, move the route to a dedicated route table associated only with those subnets.
+
+---
+
 ### CTL.VPC.ROUTETABLE.MAIN.PUBLIC.001
 
 **Main Route Table Has Public Route**
@@ -1023,6 +1083,21 @@ The VPC's main (default) route table has a 0.0.0.0/0 route to an Internet Gatewa
 Route table exists but is not associated with any subnet, implicit or explicit. The table's routes are inert. Orphaned route tables are a lifecycle signal — the subnet that used this table was deleted but the table itself was left behind. Hygiene accumulation in the VPC layer usually tracks with accumulation in other layers (stale security groups, stale IAM policies).
 
 **Remediation:** Delete the orphaned route table. Add an association-count check to periodic VPC housekeeping so route tables that sit unassociated for longer than a defined threshold are reported and removed. Review neighboring resources (security groups, EIPs) for matching staleness.
+
+---
+
+### CTL.VPC.ROUTETABLE.PUBLIC.001
+
+**Route Table Has Public Route to Internet Gateway**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Route table (main or custom) has a 0.0.0.0/0 route to an internet gateway. Any subnet associated with this route table has internet egress. Unlike CTL.VPC.ROUTETABLE.MAIN.PUBLIC.001 (which fires only on the main route table to catch the implicit-inheritance risk), this control fires on ANY route table with an IGW route — including custom route tables explicitly configured for public subnets. Use this control for egress inventory: it enumerates every IPv4 internet path in the VPC regardless of route table role.
+
+**Remediation:** If the VPC should have no internet egress, remove the IGW route from the route table and detach the internet gateway. If internet access is intentional for specific subnets, ensure this route table is associated only with those subnets and not with subnets hosting isolated workloads.
 
 ---
 
@@ -1221,6 +1296,21 @@ Security groups must not allow unrestricted outbound traffic to 0.0.0.0/0 on por
 
 ---
 
+### CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001
+
+**Security Group in Isolated VPC Allows Non-VPC Egress Destinations**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Security group in a VPC with airgapped or egress-restricted isolation intent allows outbound traffic to CIDR ranges outside the VPC. Enclave instances can reach egress-capable nodes in other subnets or VPCs, defeating the isolation boundary at the security group layer. The security group should restrict egress to the VPC's own CIDR block only, ensuring that even if route tables or NACLs have gaps, the SG prevents lateral traffic to egress-capable nodes.
+
+**Remediation:** Restrict all egress rules to the VPC's own CIDR block. Remove 0.0.0.0/0 egress rules and any rules targeting CIDRs outside the VPC. If specific cross-VPC connectivity is required, route it through VPC endpoints rather than direct SG egress rules.
+
+---
+
 ### CTL.VPC.SG.GHOST.001
 
 **Security Group Rules Must Not Reference Deleted Security Groups**
@@ -1338,6 +1428,21 @@ Security group rule allows a range of more than 100 ports (e.g., 1024-65535, 800
 Security group has had unrestricted ingress (0.0.0.0/0 or ::/0) added, removed, and added again more than twice in 30 days. Security group rules are not accidental — adding a rule is a deliberate API call. Repeated re-addition after removal indicates either a broken change process or an attacker re-enabling their access path after detection.
 
 **Remediation:** Investigate the root cause of the repeated oscillation. Determine whether the pattern indicates a broken process, operational workaround, or active compromise. Review CloudTrail for the API calls that triggered each transition.
+
+---
+
+### CTL.VPC.SG.SHARED.CROSS.ISOLATION.001
+
+**Security Group Shared Across Isolation Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Security group is attached to instances in both an isolated VPC and a non-isolated VPC. The shared SG creates an implicit trust bridge across the isolation boundary — firewall rules designed for the non-isolated context apply to isolated instances too. An attacker who can modify the shared SG (or who compromises a resource in the non-isolated VPC that the SG permits traffic from) gains a path into the isolated environment without needing to bypass isolation- specific controls.
+
+**Remediation:** Create separate security groups for isolated and non-isolated VPCs. Do not share security groups across VPCs with different isolation_intent values. If the same rules are needed in both contexts, duplicate the SG rather than sharing it — the isolation boundary must be explicit, not implicit.
 
 ---
 

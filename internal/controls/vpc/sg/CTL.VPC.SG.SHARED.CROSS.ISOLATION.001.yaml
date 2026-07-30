@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.SHARED.CROSS.ISOLATION.001
+name: Security Group Shared Across Isolation Boundary
+description: >
+  Security group is attached to instances in both an isolated VPC and
+  a non-isolated VPC. The shared SG creates an implicit trust bridge
+  across the isolation boundary — firewall rules designed for the
+  non-isolated context apply to isolated instances too. An attacker
+  who can modify the shared SG (or who compromises a resource in the
+  non-isolated VPC that the SG permits traffic from) gains a path
+  into the isolated environment without needing to bypass isolation-
+  specific controls.
+domain: exposure
+severity: high
+scope: atomic
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_security_group
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.security_group.crosses_isolation_boundary
+remediation:
+  description: >
+    Security group is attached to instances in VPCs with different
+    isolation intents. Shared SG bridges the isolation boundary.
+  action: >
+    Create separate security groups for isolated and non-isolated
+    VPCs. Do not share security groups across VPCs with different
+    isolation_intent values. If the same rules are needed in both
+    contexts, duplicate the SG rather than sharing it — the
+    isolation boundary must be explicit, not implicit.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "crosses_isolation_boundary": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.crosses_isolation_boundary
+      op: eq
+      value: true
+tests:
+  - name: "SG shared across isolation boundary fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-0abc123shared"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            crosses_isolation_boundary: true
+  - name: "SG within single isolation context passes"
+    verdict: PASS
+    asset:
+      asset_id: "sg-0def456single"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            crosses_isolation_boundary: false

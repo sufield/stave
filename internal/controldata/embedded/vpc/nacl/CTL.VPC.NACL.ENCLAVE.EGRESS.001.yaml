@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NACL.ENCLAVE.EGRESS.001
+name: NACL in Isolated VPC Allows Non-VPC Egress
+description: >
+  NACL in a VPC with airgapped or egress-restricted isolation intent
+  allows outbound traffic to destinations outside the VPC CIDR. The
+  enclave subnet can route to egress-capable subnets in other VPCs or
+  to the internet via peered or transit routes. NACLs are the
+  defense-in-depth layer below security groups — even if SG rules are
+  correct, a permissive NACL provides a fallback egress path that
+  survives SG rule changes.
+domain: exposure
+severity: high
+scope: atomic
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.3.2"
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_network_acl
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.kind
+  - network.vpc.isolation_intent
+  - network.nacl.egress.has_non_vpc_destinations
+remediation:
+  description: >
+    NACL in an isolated VPC allows outbound traffic to destinations
+    outside the VPC CIDR. Enclave subnet can reach egress-capable
+    subnets.
+  action: >
+    Replace the default allow-all egress NACL rule with explicit
+    rules that permit outbound traffic only to the VPC's own CIDR
+    block. Deny all other egress destinations. This enforces isolation
+    at the subnet level regardless of security group configuration.
+  example: |
+    {
+      "network": {
+        "kind": "network_acl",
+        "vpc": {
+          "isolation_intent": "airgapped"
+        },
+        "nacl": {
+          "egress": {
+            "has_non_vpc_destinations": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_acl
+    - any:
+        - field: properties.network.vpc.isolation_intent
+          op: eq
+          value: "airgapped"
+        - field: properties.network.vpc.isolation_intent
+          op: eq
+          value: "egress-restricted"
+    - field: properties.network.nacl.egress.has_non_vpc_destinations
+      op: eq
+      value: true
+tests:
+  - name: "NACL in airgapped VPC with non-VPC egress fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "acl-0abc123airgapped"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          vpc:
+            isolation_intent: "airgapped"
+          nacl:
+            egress:
+              has_non_vpc_destinations: true
+  - name: "NACL in airgapped VPC with VPC-only egress passes"
+    verdict: PASS
+    asset:
+      asset_id: "acl-0def456vpconly"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          vpc:
+            isolation_intent: "airgapped"
+          nacl:
+            egress:
+              has_non_vpc_destinations: false
+  - name: "NACL in VPC with no intent and non-VPC egress passes"
+    verdict: PASS
+    asset:
+      asset_id: "acl-0ghi789nointent"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          vpc:
+            isolation_intent: ""
+          nacl:
+            egress:
+              has_non_vpc_destinations: true
