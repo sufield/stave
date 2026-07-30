@@ -27,11 +27,11 @@ dependencies:
   - sources: ["internal/platform/providers/aws/iam/resolve.go"]
     docs:
       - path: docs/explanation/architecture.md
-        last_audited: "9dc62bf24"
+        last_audited: "538351997"
       - path: docs/explanation/exploitability.md
-        last_audited: "9dc62bf24"
+        last_audited: "538351997"
       - path: docs/reference/finding-schema.md
-        last_audited: "9dc62bf24"
+        last_audited: "538351997"
     auto_regen: false
 
   - sources: ["internal/appeval/workflow.go"]
@@ -45,9 +45,9 @@ dependencies:
   - sources: ["internal/adapters/output/**/*.go"]
     docs:
       - path: docs/reference/output-formats.md
-        last_audited: "3121a19d8"
+        last_audited: "538351997"
       - path: docs/reference/finding-schema.md
-        last_audited: "3121a19d8"
+        last_audited: "538351997"
     auto_regen: false
 
   - sources: ["internal/platform/providers/aws/organizations/scp.go",
