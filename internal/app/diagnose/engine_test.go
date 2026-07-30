@@ -74,6 +74,10 @@ func celEvalAllSafe() policy.PredicateEval {
 	}
 }
 
+func noopParser(_ any) (*policy.UnsafePredicate, error) {
+	return &policy.UnsafePredicate{}, nil
+}
+
 // ---------------------------------------------------------------------------
 // NewRun
 // ---------------------------------------------------------------------------
@@ -156,6 +160,7 @@ func TestExecute_WithPreviousResult(t *testing.T) {
 		ObservationSource: "observations",
 		Clock:             ports.FixedClock(baseTime().Add(2 * time.Hour)),
 		BaselineReport:    prev,
+		PredicateParser:   noopParser,
 		PredicateEval:     celEvalAllSafe(),
 	})
 	if err != nil {
@@ -177,6 +182,7 @@ func TestExecute_FreshEvaluation(t *testing.T) {
 		ObservationSource: "observations",
 		SLAThreshold:      168 * time.Hour,
 		Clock:             ports.FixedClock(baseTime().Add(2 * time.Hour)),
+		PredicateParser:   noopParser,
 		PredicateEval:     celEvalAllSafe(),
 	})
 	if err != nil {

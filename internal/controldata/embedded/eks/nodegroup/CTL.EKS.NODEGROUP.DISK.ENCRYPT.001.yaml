@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.NODEGROUP.DISK.ENCRYPT.001
+name: EKS Node Group Has Unencrypted EBS Root Volumes
+description: >
+  EKS managed node group launches instances with unencrypted EBS
+  root volumes. Container filesystems, kubelet data, and pod
+  ephemeral storage sit on unencrypted disk. The launch template
+  for the node group does not specify EBS encryption. Unlike EKS
+  secrets encryption (control plane etcd), this is data-at-rest
+  encryption for the node's local storage — container images,
+  emptyDir volumes, kubelet state, and anything written to the
+  node's filesystem by pods. Existing node groups cannot be
+  modified — remediation requires creating a new node group with
+  encryption and migrating workloads.
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  fedramp_moderate: "SC-28"
+  pci_dss_v4.0: "3.5.1"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - eks
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_eks_cluster]
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    EKS managed node group launches instances with unencrypted
+    EBS root volumes — container filesystems, kubelet data, and
+    pod ephemeral storage are unencrypted at rest.
+  action: >
+    Configure the node group's launch template with an encrypted
+    EBS volume. Specify a KMS key for customer-managed encryption.
+    Existing node groups require replacement — create a new node
+    group with encryption enabled, cordon and drain the old nodes,
+    then delete the unencrypted node group. Verify pod disruption
+    budgets protect workload availability during the migration.
+  example: |
+    {
+      "nodegroup": {
+        "disk_encryption_enabled": true,
+        "disk_encryption_kms_key": "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+      }
+    }
+defect: >
+  EKS node group launches instances with unencrypted EBS volumes;
+  container and node data is unencrypted at rest.
+infection: >
+  The node group's launch template does not enable EBS encryption.
+  Every instance launched by the node group has an unencrypted
+  root volume. Container images, emptyDir volumes, kubelet state,
+  and pod ephemeral storage are written to unencrypted disk. An
+  EBS snapshot taken from these volumes is also unencrypted.
+failure: >
+  Node-level data at rest is unencrypted. Container filesystems,
+  kubelet data, and pod ephemeral storage are readable from
+  unencrypted EBS volumes or snapshots.
+unsafe_predicate:
+  all:
+    - field: properties.nodegroup.disk_encryption_enabled
+      op: eq
+      value: false
+tests:
+  - name: node group with unencrypted disks fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:123456789012:nodegroup/prod-cluster/workers/abc123"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        nodegroup:
+          disk_encryption_enabled: false
+  - name: node group with encrypted disks passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:123456789012:nodegroup/prod-cluster/workers/abc123"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        nodegroup:
+          disk_encryption_enabled: true
+          disk_encryption_kms_key: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"

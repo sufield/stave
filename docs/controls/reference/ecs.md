@@ -653,6 +653,21 @@ ECS task definitions with both privileged mode and host networking allow contain
 
 ---
 
+### CTL.ECS.TASKDEF.EFS.TRANSITENCRYPT.001
+
+**ECS Task Definition Mounts EFS Without Transit Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+ECS task definition mounts an EFS volume without transit encryption. Data flows between the ECS task and EFS over the network in plaintext. EFS supports TLS transit encryption via the EFS mount helper, but it must be explicitly enabled in the task definition's volume configuration. Without it, any network observer between the task and the EFS mount target can read the data. This is the ECS-side check — it verifies the mount configuration in the task definition, not the EFS filesystem configuration. Both should be checked independently (defense-in-depth).
+
+**Remediation:** Set transitEncryption to ENABLED in the ECS task definition's EFS volume configuration. This enables TLS for the NFS connection between the task and EFS. No changes to the EFS filesystem are required — transit encryption is configured per-mount in the task definition.
+
+---
+
 ### CTL.ECS.TASKDEF.HEALTHCHECK.MISSING.001
 
 **ECS Container Has No Health Check**

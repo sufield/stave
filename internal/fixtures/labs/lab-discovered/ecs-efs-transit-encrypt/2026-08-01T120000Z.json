@@ -1,0 +1,40 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.lab-discovered"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/app-with-efs-unencrypted:1",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "efs": {
+            "has_efs_volume": true,
+            "file_system_id": "fs-0123456789abcdef0",
+            "transit_encryption_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ecs:us-east-1:123456789012:task-definition/app-with-efs-encrypted:1",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "efs": {
+            "has_efs_volume": true,
+            "file_system_id": "fs-abcdef0123456789a",
+            "transit_encryption_enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

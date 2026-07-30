@@ -1,0 +1,32 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.lab-discovered"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:eks:us-east-1:123456789012:nodegroup/prod-cluster/workers-unencrypted/abc123",
+      "type": "aws_eks_cluster",
+      "vendor": "aws",
+      "properties": {
+        "nodegroup": {
+          "disk_encryption_enabled": true,
+          "disk_encryption_kms_key": "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+        }
+      }
+    },
+    {
+      "id": "arn:aws:eks:us-east-1:123456789012:nodegroup/prod-cluster/workers-encrypted/def456",
+      "type": "aws_eks_cluster",
+      "vendor": "aws",
+      "properties": {
+        "nodegroup": {
+          "disk_encryption_enabled": true,
+          "disk_encryption_kms_key": "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
+        }
+      }
+    }
+  ]
+}

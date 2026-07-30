@@ -82,7 +82,7 @@ func BenchmarkEvaluateLargeSnapshot(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = appeval.Evaluate(context.Background(), appeval.EvaluateInput{
+		_, _ = appeval.EvaluateLoaded(context.Background(), appeval.EvaluationRequest{
 			Controls:          controls,
 			Snapshots:         snapshots,
 			MaxUnsafeDuration: maxUnsafe,
@@ -152,7 +152,7 @@ func TestEvaluationPerformanceGuardrail(t *testing.T) {
 
 	// Run evaluation and measure time
 	start := time.Now()
-	_, _ = appeval.Evaluate(context.Background(), appeval.EvaluateInput{
+	_, _ = appeval.EvaluateLoaded(context.Background(), appeval.EvaluationRequest{
 		Controls:          controls,
 		Snapshots:         snapshots,
 		MaxUnsafeDuration: maxUnsafe,
@@ -219,7 +219,7 @@ func TestLargeSnapshotProcessing(t *testing.T) {
 	maxUnsafe := 168 * time.Hour
 
 	start := time.Now()
-	result, err := appeval.Evaluate(context.Background(), appeval.EvaluateInput{
+	result, err := appeval.EvaluateLoaded(context.Background(), appeval.EvaluationRequest{
 		Controls:          controls,
 		Snapshots:         []asset.Snapshot{snapshot},
 		MaxUnsafeDuration: maxUnsafe,

@@ -1,0 +1,38 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.lab-discovered"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:lambda:us-east-1:111122223333:function:rotate-rds-disabled",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "concurrency": {
+            "reserved_value": 0,
+            "reserved_set": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:111122223333:function:api-handler-healthy",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "concurrency": {
+            "reserved_value": 100,
+            "reserved_set": true
+          }
+        }
+      }
+    }
+  ]
+}

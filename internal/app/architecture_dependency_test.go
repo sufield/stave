@@ -155,6 +155,7 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 		"contracts":         {}, // legacy global contracts (internal/app/contracts is the active one)
 		"controldata":       {}, // pre-Phase-5 control data; future move into adapters/controls
 		"doctor":            {}, // doctor diagnostics; semi-cmd-like
+		"docsverify":        {}, // integration tests for doc CLI examples; invoked by make test-docs
 		"env":               {}, // env-var loading helpers
 		"pack":              {}, // concern-pack model + resolver + embedded data; pure, read by cmd/pack and pkg/stave
 		"profile":           {}, // compliance profile evaluation

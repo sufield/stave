@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3220
-**Pack hash:** `faec434114fd51552c5fd8b1ad63ba861bed237750bf9245dfa2c4c045b58dbe`
+**Total controls:** 3224
+**Pack hash:** `9da8205839686cc395957a828c8dd7947b98633ae5e1c4af69f373a1bf86e5e7`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 353 |
-| high | 1402 |
+| high | 1406 |
 | info | 19 |
 | low | 236 |
 | medium | 1210 |
@@ -27,8 +27,8 @@ GitHub. Pick a service below.
 | compute | 1 |
 | config | 2 |
 | detection | 141 |
-| encryption | 123 |
-| exposure | 1410 |
+| encryption | 125 |
+| exposure | 1412 |
 | governance | 656 |
 | hygiene | 21 |
 | identity | 625 |
@@ -43,7 +43,7 @@ GitHub. Pick a service below.
 | Service | Controls |
 |---------|----------|
 | [ACCOUNT](reference/account.md) | 3 |
-| [ACM](reference/acm.md) | 8 |
+| [ACM](reference/acm.md) | 9 |
 | [ACMPCA](reference/acmpca.md) | 1 |
 | [AD](reference/ad.md) | 40 |
 | [AMPLIFY](reference/amplify.md) | 1 |
@@ -82,9 +82,9 @@ GitHub. Pick a service below.
 | [EBS](reference/ebs.md) | 3 |
 | [EC2](reference/ec2.md) | 110 |
 | [ECR](reference/ecr.md) | 10 |
-| [ECS](reference/ecs.md) | 58 |
+| [ECS](reference/ecs.md) | 59 |
 | [EFS](reference/efs.md) | 15 |
-| [EKS](reference/eks.md) | 115 |
+| [EKS](reference/eks.md) | 116 |
 | [ELASTICACHE](reference/elasticache.md) | 11 |
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 7 |
@@ -109,7 +109,7 @@ GitHub. Pick a service below.
 | [KINESIS](reference/kinesis.md) | 4 |
 | [KMS](reference/kms.md) | 47 |
 | [LAKEFORMATION](reference/lakeformation.md) | 2 |
-| [LAMBDA](reference/lambda.md) | 91 |
+| [LAMBDA](reference/lambda.md) | 92 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 5 |
 | [M365](reference/m365.md) | 73 |

@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASKDEF.EFS.TRANSITENCRYPT.001
+name: ECS Task Definition Mounts EFS Without Transit Encryption
+description: >
+  ECS task definition mounts an EFS volume without transit
+  encryption. Data flows between the ECS task and EFS over the
+  network in plaintext. EFS supports TLS transit encryption via
+  the EFS mount helper, but it must be explicitly enabled in the
+  task definition's volume configuration. Without it, any network
+  observer between the task and the EFS mount target can read the
+  data. This is the ECS-side check — it verifies the mount
+  configuration in the task definition, not the EFS filesystem
+  configuration. Both should be checked independently
+  (defense-in-depth).
+domain: encryption
+severity: high
+compliance:
+  nist_800_53_r5: "SC-8"
+  fedramp_moderate: "SC-8"
+  pci_dss_v4.0: "4.2.1"
+  soc2: "CC6.7"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - ecs
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_ecs_task_definition]
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    ECS task definition mounts an EFS volume without transit
+    encryption — data between the task and EFS travels in
+    plaintext over the network.
+  action: >
+    Set transitEncryption to ENABLED in the ECS task definition's
+    EFS volume configuration. This enables TLS for the NFS
+    connection between the task and EFS. No changes to the EFS
+    filesystem are required — transit encryption is configured
+    per-mount in the task definition.
+  example: |
+    {
+      "container": {
+        "kind": "task_definition",
+        "efs": {
+          "transit_encryption_enabled": true
+        }
+      }
+    }
+defect: >
+  ECS task definition mounts an EFS volume with transit encryption
+  disabled; data flows in plaintext.
+infection: >
+  The EFS volume configuration in the ECS task definition has
+  transitEncryption set to DISABLED or not specified (default is
+  DISABLED). NFS traffic between the task and the EFS mount target
+  is unencrypted. Any network-level access (VPC flow capture,
+  compromised ENI, MITM on the subnet) exposes the data.
+failure: >
+  Data in transit between ECS task and EFS volume is unencrypted.
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: task_definition
+    - field: properties.container.efs.has_efs_volume
+      op: eq
+      value: true
+    - field: properties.container.efs.transit_encryption_enabled
+      op: ne
+      value: true
+tests:
+  - name: ECS task with EFS volume and no transit encryption fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:123456789012:task-definition/app-with-efs:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          efs:
+            has_efs_volume: true
+            file_system_id: "fs-0123456789abcdef0"
+            transit_encryption_enabled: false
+  - name: ECS task with EFS volume and transit encryption passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:123456789012:task-definition/app-with-efs:2"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          efs:
+            has_efs_volume: true
+            file_system_id: "fs-0123456789abcdef0"
+            transit_encryption_enabled: true
+  - name: ECS task with no EFS volume passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:123456789012:task-definition/app-no-efs:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: task_definition
+          efs:
+            has_efs_volume: false

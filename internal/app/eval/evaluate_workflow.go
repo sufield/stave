@@ -2,8 +2,8 @@ package eval
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -44,25 +44,24 @@ type EvaluateInput struct {
 	GenerateEvidence bool
 }
 
-// resolveDependencies normalises the optional dependency slots so
-// every evaluation component has at least a no-op implementation.
-// Centralises the "fallback to safe default + warn the operator
-// about the degraded mode" pattern instead of letting each Evaluate
-// call site re-implement the nil-check ladder. The warns surface in
-// -v output so an inconclusive verdict cluster is traceable to the
-// missing dependency rather than read as a real evaluation failure.
-func (input *EvaluateInput) resolveDependencies() {
+// validateDependencies checks that required evaluation dependencies
+// are wired. A nil CELEvaluator or PredicateParser produces
+// inconclusive verdicts that look like real evaluation results but
+// silently skip all predicate logic — a misconfiguration that should
+// surface immediately rather than pollute output with noise.
+// Use EvaluateLoaded for the convenience entrypoint that supplies
+// safe defaults.
+func (input *EvaluateInput) validateDependencies() error {
 	if input == nil {
-		return
+		return errors.New("nil EvaluateInput")
 	}
 	if input.PredicateParser == nil {
-		slog.Warn("eval.Evaluate: PredicateParser is nil; falling back to no-op parser — predicates will not classify")
-		input.PredicateParser = noopPredicateParser
+		return errors.New("missing PredicateParser: predicate classification will not run")
 	}
 	if input.CELEvaluator == nil {
-		slog.Warn("eval.Evaluate: CELEvaluator is nil; falling back to inconclusive evaluator — CEL predicates will not fire")
-		input.CELEvaluator = inconclusiveCELEvaluator
+		return errors.New("missing CELEvaluator: CEL predicates will not fire")
 	}
+	return nil
 }
 
 // BuildAssessorOptions returns the engine option list derived from the
@@ -111,7 +110,9 @@ func (i *EvaluateInput) BuildAssessorOptions(
 // (large catalog × asset matrix) honours operator cancellation and
 // upstream deadlines instead of running to completion silently.
 func Evaluate(ctx context.Context, input EvaluateInput) (evaluation.ComplianceReport, error) {
-	input.resolveDependencies()
+	if err := input.validateDependencies(); err != nil {
+		return evaluation.ComplianceReport{}, fmt.Errorf("invalid evaluation dependencies: %w", err)
+	}
 	catalog := policy.NewCatalog(input.Controls)
 	opts := input.BuildAssessorOptions(catalog, input.PredicateParser, input.CELEvaluator, input.Tracer)
 	runner := engine.NewAssessor(opts...)

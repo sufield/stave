@@ -1,0 +1,32 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.lab-discovered"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:acm:us-east-1:111122223333:certificate/imported-no-renew",
+      "type": "aws_acm_certificate",
+      "vendor": "aws",
+      "properties": {
+        "certificate": {
+          "kind": "imported",
+          "has_renewal_automation": true
+        }
+      }
+    },
+    {
+      "id": "arn:aws:acm:us-east-1:111122223333:certificate/amazon-issued-healthy",
+      "type": "aws_acm_certificate",
+      "vendor": "aws",
+      "properties": {
+        "certificate": {
+          "kind": "amazon_issued",
+          "has_renewal_automation": true
+        }
+      }
+    }
+  ]
+}

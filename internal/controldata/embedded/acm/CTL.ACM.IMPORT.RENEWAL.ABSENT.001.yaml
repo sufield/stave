@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.ACM.IMPORT.RENEWAL.ABSENT.001
+name: Imported ACM Certificate Has No Renewal Automation
+description: >
+  Imported ACM certificate has no renewal automation. ACM
+  auto-renews certificates it issues via DNS or email validation,
+  but imported certificates expire on their expiry date with no
+  automatic renewal. If nobody tracks the expiry and manually
+  reimports a renewed certificate, the certificate expires and
+  dependent services (ALB, CloudFront, API Gateway) fail TLS
+  handshakes. Distinct from CTL.ACM.RENEWAL.001 which detects
+  failed renewal of Amazon-issued certificates; this control
+  detects imported certificates that have no renewal mechanism
+  at all.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "4.2.1"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["CEK-03", "CEK-04"]
+scope_tags:
+  - aws
+  - acm
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_acm_certificate
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Imported ACM certificate has no renewal automation. The
+    certificate will expire without warning or automatic
+    replacement.
+  action: >
+    Either replace the imported certificate with an ACM-issued
+    certificate (which auto-renews via DNS validation) or implement
+    renewal automation: an EventBridge rule monitoring the
+    DaysToExpiry metric with a Lambda that reimports the renewed
+    certificate. Verify the certificate's NotAfter date and set
+    alerts at 90, 30, and 7 days before expiry.
+  example: |
+    {
+      "certificate": {
+        "kind": "amazon_issued",
+        "has_renewal_automation": true
+      }
+    }
+defect: >
+  Imported ACM certificate has no renewal automation; certificate
+  will expire without automatic replacement.
+infection: >
+  The certificate was imported into ACM rather than issued by ACM.
+  ACM does not auto-renew imported certificates — renewal is
+  entirely manual. When the certificate expires, every service
+  using it (ALB listeners, CloudFront distributions, API Gateway
+  custom domains) begins failing TLS handshakes. The failure is
+  immediate and total — there is no graceful degradation for an
+  expired certificate.
+failure: >
+  Service disruption on certificate expiry. Dependent services
+  fail TLS handshakes when the imported certificate expires.
+unsafe_predicate:
+  all:
+    - field: properties.certificate.kind
+      op: eq
+      value: imported
+    - field: properties.certificate.has_renewal_automation
+      op: eq
+      value: false
+tests:
+  - name: imported cert with no renewal automation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:certificate/imported-no-renew"
+      asset_type: aws_acm_certificate
+      vendor: aws
+      properties:
+        certificate:
+          kind: imported
+          has_renewal_automation: false
+  - name: imported cert with renewal automation passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:certificate/imported-with-renew"
+      asset_type: aws_acm_certificate
+      vendor: aws
+      properties:
+        certificate:
+          kind: imported
+          has_renewal_automation: true
+  - name: amazon-issued cert passes regardless
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:certificate/amazon-issued"
+      asset_type: aws_acm_certificate
+      vendor: aws
+      properties:
+        certificate:
+          kind: amazon_issued
+          has_renewal_automation: true

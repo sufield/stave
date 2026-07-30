@@ -14,7 +14,9 @@ import (
 
 func TestEvaluate_NoSnapshots(t *testing.T) {
 	result, err := Evaluate(context.Background(), EvaluateInput{
-		Clock: ports.FixedClock(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)),
+		Clock:           ports.FixedClock(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)),
+		PredicateParser: noopPredicateParser,
+		CELEvaluator:    mustPredicateEval(),
 	})
 	if err != nil {
 		t.Fatalf("Evaluate() error = %v", err)
@@ -58,6 +60,8 @@ func TestEvaluate_WithControls(t *testing.T) {
 		Snapshots:         []asset.Snapshot{snap1, snap2},
 		MaxUnsafeDuration: 12 * time.Hour,
 		Clock:             ports.FixedClock(now),
+		PredicateParser:   noopPredicateParser,
+		CELEvaluator:      mustPredicateEval(),
 	})
 	if err != nil {
 		t.Fatalf("Evaluate() error = %v", err)
@@ -67,6 +71,15 @@ func TestEvaluate_WithControls(t *testing.T) {
 	// verify the evaluation ran successfully.
 	if result.Summary.TotalAssets == 0 {
 		t.Error("expected at least 1 asset evaluated")
+	}
+}
+
+func TestEvaluate_NilDepsReturnsError(t *testing.T) {
+	_, err := Evaluate(context.Background(), EvaluateInput{
+		Clock: ports.FixedClock(time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)),
+	})
+	if err == nil {
+		t.Fatal("expected error for nil CELEvaluator/PredicateParser")
 	}
 }
 

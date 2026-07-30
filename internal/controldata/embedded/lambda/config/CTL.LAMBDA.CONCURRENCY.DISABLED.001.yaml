@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.CONCURRENCY.DISABLED.001
+name: Lambda Function Throttled to Zero Concurrency
+description: >
+  Lambda function has ReservedConcurrentExecutions set to zero.
+  This throttles the function to zero — it exists but can never
+  execute. Commonly used to "pause" a function during incidents,
+  then forgotten. The function appears in the inventory, its role
+  exists, its triggers are configured, but every invocation is
+  throttled. If the function provides a security capability
+  (rotation Lambda, custom Config rule evaluator, GuardDuty
+  remediation handler), that capability is silently absent.
+  Distinct from CTL.LAMBDA.CONCURRENCY.001 which fires when
+  concurrency is unreserved (not set at all); this control fires
+  when concurrency is explicitly set to zero (disabled).
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "CM-6"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "2.2.1"
+  ccm_v4: ["IVS-04"]
+scope_tags:
+  - aws
+  - lambda
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_function
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Lambda function has reserved concurrency set to zero — the
+    function exists but can never execute.
+  action: >
+    Set ReservedConcurrentExecutions to a non-zero value or remove
+    the reservation to use unreserved concurrency. If the function
+    was intentionally disabled, delete it instead of throttling to
+    zero — a deleted function triggers dependency checks, a
+    throttled function does not.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "concurrency": {
+          "reserved_value": 100
+        }
+      }
+    }
+defect: >
+  Lambda function has reserved concurrent executions set to zero;
+  function exists but can never execute.
+infection: >
+  Setting ReservedConcurrentExecutions to 0 throttles all
+  invocations. The function, its role, triggers, and event
+  source mappings remain configured but every invocation is
+  rejected with a TooManyRequestsException. If the function
+  is a security function (rotation Lambda, Config rule
+  evaluator, remediation handler), the security capability
+  it provides is silently absent while appearing active.
+failure: >
+  Silent capability loss. Function appears deployed and
+  configured but cannot execute.
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.concurrency.reserved_value
+      op: eq
+      value: 0
+tests:
+  - name: lambda with reserved concurrency zero fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:rotate-rds"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          concurrency:
+            reserved_value: 0
+            reserved_set: true
+  - name: lambda with reserved concurrency 100 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:api-handler"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          concurrency:
+            reserved_value: 100
+            reserved_set: true
+  - name: lambda with unreserved concurrency passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:batch-proc"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          concurrency:
+            reserved_value: -1
+            reserved_set: false

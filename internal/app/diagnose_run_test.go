@@ -17,6 +17,16 @@ import (
 	clockadp "github.com/sufield/stave/internal/core/ports"
 )
 
+func noopPredicateParser(_ any) (*policy.UnsafePredicate, error) {
+	return &policy.UnsafePredicate{}, nil
+}
+
+func celEvalAllSafe() func(policy.ControlDefinition, asset.Asset, []asset.CloudIdentity) (bool, error) {
+	return func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		return false, nil
+	}
+}
+
 func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 	now := time.Date(2026, 1, 20, 0, 0, 0, 0, time.UTC)
 	ctl := policy.ControlDefinition{
@@ -65,6 +75,8 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 			BaselineReport:    previousResult,
 			SLAThreshold:      30 * time.Minute,
 			Clock:             clockadp.FixedClock(now),
+			PredicateParser:   noopPredicateParser,
+			PredicateEval:     celEvalAllSafe(),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -93,6 +105,8 @@ func TestDiagnoseExecuteAndLoaders(t *testing.T) {
 			ObservationSource: "obs",
 			SLAThreshold:      30 * time.Minute,
 			Clock:             clockadp.FixedClock(now),
+			PredicateParser:   noopPredicateParser,
+			PredicateEval:     celEvalAllSafe(),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -127,6 +141,8 @@ func TestDiagnoseExecute_NilPreviousResultRunsFreshEvaluation(t *testing.T) {
 		ObservationSource: "obs",
 		SLAThreshold:      time.Hour,
 		Clock:             clockadp.FixedClock(now),
+		PredicateParser:   noopPredicateParser,
+		PredicateEval:     celEvalAllSafe(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)

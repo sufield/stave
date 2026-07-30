@@ -155,12 +155,17 @@ func (r *Runner) newDiagnosticEngine() (*appdiagnose.DiagnosticEngine, error) {
 }
 
 func (r *Runner) buildAuditRequest(cfg Config, maxDuration time.Duration) (appdiagnose.AuditRequest, error) {
+	celEval, err := cel.NewPredicateEval()
+	if err != nil {
+		return appdiagnose.AuditRequest{}, fmt.Errorf("create CEL evaluator: %w", err)
+	}
 	req := appdiagnose.AuditRequest{
 		PolicySource:      cfg.ControlsDir,
 		ObservationSource: cfg.ObservationsDir,
 		SLAThreshold:      maxDuration,
 		Clock:             r.Clock,
 		PredicateParser:   ctlyaml.ParsePredicate,
+		PredicateEval:     celEval,
 	}
 
 	loader := &evaljson.Loader{}

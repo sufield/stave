@@ -110,6 +110,21 @@ Lambda functions must have reserved concurrency set to a non-zero value. Without
 
 ---
 
+### CTL.LAMBDA.CONCURRENCY.DISABLED.001
+
+**Lambda Function Throttled to Zero Concurrency**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-6; pci_dss_v4.0: 2.2.1; soc2: CC7.1;
+
+Lambda function has ReservedConcurrentExecutions set to zero. This throttles the function to zero — it exists but can never execute. Commonly used to "pause" a function during incidents, then forgotten. The function appears in the inventory, its role exists, its triggers are configured, but every invocation is throttled. If the function provides a security capability (rotation Lambda, custom Config rule evaluator, GuardDuty remediation handler), that capability is silently absent. Distinct from CTL.LAMBDA.CONCURRENCY.001 which fires when concurrency is unreserved (not set at all); this control fires when concurrency is explicitly set to zero (disabled).
+
+**Remediation:** Set ReservedConcurrentExecutions to a non-zero value or remove the reservation to use unreserved concurrency. If the function was intentionally disabled, delete it instead of throttling to zero — a deleted function triggers dependency checks, a throttled function does not.
+
+---
+
 ### CTL.LAMBDA.CONFIG.CONCURRENCY.NOLIMIT.001
 
 **Publicly Invocable Lambda Has No Concurrency Limit**

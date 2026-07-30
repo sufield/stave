@@ -1063,6 +1063,21 @@ EKS self-managed node group's launch template runs a bootstrap script that fetch
 
 ---
 
+### CTL.EKS.NODEGROUP.DISK.ENCRYPT.001
+
+**EKS Node Group Has Unencrypted EBS Root Volumes**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+EKS managed node group launches instances with unencrypted EBS root volumes. Container filesystems, kubelet data, and pod ephemeral storage sit on unencrypted disk. The launch template for the node group does not specify EBS encryption. Unlike EKS secrets encryption (control plane etcd), this is data-at-rest encryption for the node's local storage — container images, emptyDir volumes, kubelet state, and anything written to the node's filesystem by pods. Existing node groups cannot be modified — remediation requires creating a new node group with encryption and migrating workloads.
+
+**Remediation:** Configure the node group's launch template with an encrypted EBS volume. Specify a KMS key for customer-managed encryption. Existing node groups require replacement — create a new node group with encryption enabled, cordon and drain the old nodes, then delete the unencrypted node group. Verify pod disruption budgets protect workload availability during the migration.
+
+---
+
 ### CTL.EKS.NODEGROUP.IMDS.DISABLED.001
 
 **EKS Node Group Has IMDS Endpoint Disabled While Workloads Need It**

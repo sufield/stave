@@ -80,6 +80,21 @@ ACM certificates should use DNS validation, not email validation. Email validati
 
 ---
 
+### CTL.ACM.IMPORT.RENEWAL.ABSENT.001
+
+**Imported ACM Certificate Has No Renewal Automation**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(e)(1); nist_800_53_r5: SC-12; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+Imported ACM certificate has no renewal automation. ACM auto-renews certificates it issues via DNS or email validation, but imported certificates expire on their expiry date with no automatic renewal. If nobody tracks the expiry and manually reimports a renewed certificate, the certificate expires and dependent services (ALB, CloudFront, API Gateway) fail TLS handshakes. Distinct from CTL.ACM.RENEWAL.001 which detects failed renewal of Amazon-issued certificates; this control detects imported certificates that have no renewal mechanism at all.
+
+**Remediation:** Either replace the imported certificate with an ACM-issued certificate (which auto-renews via DNS validation) or implement renewal automation: an EventBridge rule monitoring the DaysToExpiry metric with a Lambda that reimports the renewed certificate. Verify the certificate's NotAfter date and set alerts at 90, 30, and 7 days before expiry.
+
+---
+
 ### CTL.ACM.KEY.ALGORITHM.001
 
 **ACM Certificates Must Use Strong Key Algorithms**
