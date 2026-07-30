@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.TASKROLE.SELFDEPLOY.001
+name: ECS Task Role Must Not Have Self-Deployment Capability
+description: >
+  ECS task role can register new task definitions, run tasks, and
+  pass its own role — the three permissions needed to rewrite and
+  redeploy itself. This is a persistence mechanism: an attacker who
+  compromises the task can deploy a new version with their code,
+  surviving task restarts, service redeployments, and container
+  image updates. The legitimate task code is replaced by attacker
+  code running with the same permissions indefinitely.
+domain: identity
+severity: critical
+scope: atomic
+corpus_reference: MITRE:T1525
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - ecs
+taxonomy:
+  - least-privilege
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ecs_task_definition
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: identity
+    scope: service
+observation_fields:
+  - container.kind
+  - container.task_role.has_self_deploy_capability
+defect: >
+  ECS task role has self-deployment capability. The role can
+  register task definitions, run tasks, and pass its own role.
+infection: >
+  An attacker compromises the task via application vulnerability,
+  supply chain attack, or stolen credentials. They discover the
+  task role permits RegisterTaskDefinition + RunTask + PassRole
+  on the task's own family. They register a new task definition
+  with their backdoor code, run it, and the attacker's code now
+  runs as a legitimate ECS task with the original role's
+  permissions. Container image updates, task restarts, and even
+  service redeployments use the attacker's task definition.
+failure: >
+  The attacker maintains persistent access to the account through
+  a self-deploying task that survives all normal operational
+  remediation. Incident responders rotate credentials and patch
+  the original vulnerability, but the attacker's task definition
+  keeps running. The persistence is invisible in CloudTrail
+  because the ECS API calls come from the legitimate task role.
+remediation:
+  description: >
+    ECS task role has self-deployment capability. The task can
+    rewrite and redeploy itself.
+  action: >
+    Remove ecs:RegisterTaskDefinition and ecs:RunTask from the
+    task role policy, or scope iam:PassRole to exclude the task's
+    own role ARN. Use a separate deployment role (CI/CD pipeline
+    role) for task definition updates, not the task role itself.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_task",
+        "task_role": {
+          "has_self_deploy_capability": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_task
+    - field: properties.container.task_role.has_self_deploy_capability
+      op: eq
+      value: true
+tests:
+  - name: "task role with self-deploy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/compromisable:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: ecs_task
+          task_role:
+            has_self_deploy_capability: true
+  - name: "task role without self-deploy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/safe:1"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: ecs_task
+          task_role:
+            has_self_deploy_capability: false
+  - name: "non-ECS task passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:worker"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        container:
+          kind: lambda
+          task_role:
+            has_self_deploy_capability: true

@@ -833,6 +833,21 @@ ECS service designated as read-only has a task role with S3 write permissions (s
 
 ---
 
+### CTL.ECS.TASKROLE.SELFDEPLOY.001
+
+**ECS Task Role Must Not Have Self-Deployment Capability**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+ECS task role can register new task definitions, run tasks, and pass its own role — the three permissions needed to rewrite and redeploy itself. This is a persistence mechanism: an attacker who compromises the task can deploy a new version with their code, surviving task restarts, service redeployments, and container image updates. The legitimate task code is replaced by attacker code running with the same permissions indefinitely.
+
+**Remediation:** Remove ecs:RegisterTaskDefinition and ecs:RunTask from the task role policy, or scope iam:PassRole to exclude the task's own role ARN. Use a separate deployment role (CI/CD pipeline role) for task definition updates, not the task role itself.
+
+---
+
 ### CTL.ECS.TASKROLE.SEPARATION.001
 
 **ECS Task Role Must Be Distinct from Execution Role**

@@ -1,0 +1,36 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-29T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.isolation-intent-validation"
+  },
+  "assets": [
+    {
+      "id": "vpc-0typo001",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "vpc": {
+            "isolation_intent": "airgapped"
+          }
+        }
+      }
+    },
+    {
+      "id": "vpc-0typo002",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "vpc": {
+            "isolation_intent": "egress-restricted"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1067,3 +1067,18 @@ contracts:
       has silently stopped.
     consumers:
       - CTL.CLOUDTRAIL.DELIVERY.HEALTH.001
+
+  # ─── ECS Task Role Self-Deployment (Jul 2026) ───────────
+
+  - field: has_self_deploy_capability
+    type: boolean
+    postcondition: >
+      True if the ECS task role's IAM policy grants
+      ecs:RegisterTaskDefinition + ecs:RunTask + iam:PassRole
+      scoped to include its own task definition family and
+      role. A task with this combination can rewrite and
+      redeploy itself — a persistence mechanism. Derived by
+      analyzing the task role policy for the three-permission
+      combination with resource scope including self.
+    consumers:
+      - CTL.ECS.TASKROLE.SELFDEPLOY.001

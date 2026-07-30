@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3216
-**Pack hash:** `e9871a3aef972d49b146bd834cfa8fa4fbf09d558c8b170a348934dcd2b1aa24`
+**Total controls:** 3218
+**Pack hash:** `bdaa17b68d80c7c6a0be650867620992ec8086c4375d8b1102e15a70d53c6512`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,7 +13,7 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 350 |
+| critical | 352 |
 | high | 1401 |
 | info | 19 |
 | low | 236 |
@@ -28,10 +28,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 141 |
 | encryption | 123 |
-| exposure | 1409 |
+| exposure | 1410 |
 | governance | 656 |
 | hygiene | 21 |
-| identity | 624 |
+| identity | 625 |
 | lifecycle | 31 |
 | network | 48 |
 | resilience | 39 |
@@ -82,7 +82,7 @@ GitHub. Pick a service below.
 | [EBS](reference/ebs.md) | 3 |
 | [EC2](reference/ec2.md) | 110 |
 | [ECR](reference/ecr.md) | 10 |
-| [ECS](reference/ecs.md) | 57 |
+| [ECS](reference/ecs.md) | 58 |
 | [EFS](reference/efs.md) | 15 |
 | [EKS](reference/eks.md) | 115 |
 | [ELASTICACHE](reference/elasticache.md) | 11 |
@@ -151,7 +151,7 @@ GitHub. Pick a service below.
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
 | [TRANSFER](reference/transfer.md) | 2 |
-| [VPC](reference/vpc.md) | 111 |
+| [VPC](reference/vpc.md) | 112 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 17 |
 | [WORKSPACES](reference/workspaces.md) | 1 |

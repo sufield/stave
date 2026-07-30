@@ -1,0 +1,164 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ISOLATION.INTENT.VALID.001
+name: VPC Isolation Intent Must Be a Recognized Value
+description: >
+  VPC tagged with stave:isolation-intent must use one of the three
+  recognized values: airgapped, egress-restricted, or internet-facing.
+  A typo like "airgaped" or "egress_restricted" silently disables all
+  isolation controls that gate on intent — the VPC appears ungoverned
+  and every isolation check passes. This control fires when the tag is
+  present but the value is not recognized. VPCs without the tag are
+  not flagged here (that is a separate coverage concern).
+domain: exposure
+severity: critical
+scope: atomic
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: vpc
+observation_fields:
+  - network.kind
+  - network.vpc.isolation_intent
+defect: >
+  VPC isolation intent tag has an unrecognized value. All isolation
+  controls that gate on intent will silently pass because they match
+  on exact values only.
+infection: >
+  The VPC is tagged with an intent like "airgaped" or "egress_restricted"
+  instead of the recognized values. Controls that enforce airgapped or
+  egress-restricted posture never fire because they check for exact
+  string matches. The team believes the VPC is governed by isolation
+  controls but no isolation control applies.
+failure: >
+  An attacker exploits the ungoverned VPC. The team investigates and
+  discovers that isolation controls never applied because the intent
+  tag was misspelled. The VPC appeared isolated in the tagging console
+  but was functionally ungoverned.
+remediation:
+  description: >
+    VPC isolation intent tag has an unrecognized value. Isolation
+    controls will not apply.
+  action: >
+    Set the stave:isolation-intent tag to one of: airgapped,
+    egress-restricted, or internet-facing. Check for common typos
+    like hyphens vs underscores, missing letters, or capitalization.
+  example: |
+    {
+      "network": {
+        "kind": "vpc",
+        "vpc": {
+          "isolation_intent": "egress-restricted"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc
+    - field: properties.network.vpc.isolation_intent
+      op: present
+    - field: properties.network.vpc.isolation_intent
+      op: ne
+      value: ""
+    - field: properties.network.vpc.isolation_intent
+      op: ne
+      value: "airgapped"
+    - field: properties.network.vpc.isolation_intent
+      op: ne
+      value: "egress-restricted"
+    - field: properties.network.vpc.isolation_intent
+      op: ne
+      value: "internet-facing"
+tests:
+  - name: "typo airgaped fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpc-0typo001"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: "airgaped"
+  - name: "underscore variant fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpc-0typo002"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: "egress_restricted"
+  - name: "valid airgapped passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-0valid001"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: "airgapped"
+  - name: "valid egress-restricted passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-0valid002"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: "egress-restricted"
+  - name: "valid internet-facing passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-0valid003"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: "internet-facing"
+  - name: "empty intent passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-0empty001"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc:
+            isolation_intent: ""
+  - name: "missing intent passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpc-0missing001"
+      asset_type: aws_vpc
+      vendor: aws
+      properties:
+        network:
+          kind: vpc
+          vpc: {}

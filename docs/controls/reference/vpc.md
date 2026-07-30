@@ -801,6 +801,21 @@ Subnet is private on IPv4 — no 0.0.0.0/0 route to the Internet Gateway — but
 
 ---
 
+### CTL.VPC.ISOLATION.INTENT.VALID.001
+
+**VPC Isolation Intent Must Be a Recognized Value**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+VPC tagged with stave:isolation-intent must use one of the three recognized values: airgapped, egress-restricted, or internet-facing. A typo like "airgaped" or "egress_restricted" silently disables all isolation controls that gate on intent — the VPC appears ungoverned and every isolation check passes. This control fires when the tag is present but the value is not recognized. VPCs without the tag are not flagged here (that is a separate coverage concern).
+
+**Remediation:** Set the stave:isolation-intent tag to one of: airgapped, egress-restricted, or internet-facing. Check for common typos like hyphens vs underscores, missing letters, or capitalization.
+
+---
+
 ### CTL.VPC.NACL.ADMIN.001
 
 **No NACL Ingress from 0.0.0.0/0 to Admin Ports**

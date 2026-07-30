@@ -1,20 +1,22 @@
 id: detection_response_broken
 description: >
-  Detection services are enabled but their notification paths are
-  broken. GuardDuty detects threats into a void, Config records
-  changes with no real-time alert, CloudTrail delivers to
-  CloudWatch Logs but delivery has failed, and CloudWatch alarms
-  fire with no configured action. Each service appears healthy in
-  the console — the detector is green, the delivery channel exists,
-  the alarm is in OK state — but the path from detection event to
-  human operator is severed at the notification layer. The
-  organization believes it has detection coverage because the
-  services are enabled; the attacker operates freely because no
-  alert ever reaches a responder.
+  Detection services are enabled but their delivery or notification
+  paths are broken. GuardDuty detects threats into a void, Config
+  records changes with no real-time alert, CloudTrail S3 delivery
+  silently fails while the trail appears healthy, CloudTrail
+  CloudWatch Logs integration is broken, and CloudWatch alarms fire
+  with no configured action. Each service appears healthy in the
+  console — the detector is green, the delivery channel exists, the
+  alarm is in OK state — but the path from detection event to human
+  operator or durable archive is severed. The organization believes
+  it has detection coverage because the services are enabled; the
+  attacker operates freely because no alert ever reaches a responder
+  and no audit events reach the archive.
 controls:
   - CTL.GUARDDUTY.NOTIFICATION.001
   - CTL.CONFIG.DELIVERY.NOSNS.001
   - CTL.CLOUDTRAIL.CWLOGS.001
+  - CTL.CLOUDTRAIL.DELIVERY.HEALTH.001
   - CTL.CLOUDWATCH.ALARM.NOACTION.001
 escalation_threshold: 2
 compound_severity: critical

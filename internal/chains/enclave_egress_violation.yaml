@@ -12,6 +12,7 @@ controls:
   - CTL.VPC.EGRESS.ENDPOINT.ONLY.001
   - CTL.VPC.IGW.UNNECESSARY.001
   - CTL.VPC.SG.EGRESS.001
+  - CTL.VPC.DNS.ISOLATED.EXFIL.001
 escalation_threshold: 1
 compound_severity: critical
 preconditions:
