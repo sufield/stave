@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "46235184e7ace8435cbacc511d157362b0f6c880ee0ce78007bb172a4c743619",
+    "policy_fingerprint": "c4aeaa59b9b2b9d8bcbc716e1002c3ab2fb525e0534cc7d871da105e220b5345",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -3004,6 +3004,24 @@
             "CTL.VPC.FLOWLOG.001"
           ],
           "description": "Redis cache has no AUTH token AND the VPC has no flow logs. Without AUTH, any client with network access reads and writes cached data (sessions, credentials, application state). Without flow logs, there is no record of which hosts connected to the cache endpoint. The combination is an unauthenticated data store with zero network forensics — an attacker exfiltrates cached data and the breach leaves no evidence trail. Either control alone mitigates: AUTH blocks unauthorized access; flow logs record connection attempts for post-incident investigation.\n"
+        },
+        {
+          "chain_id": "enclave_lateral_to_egress",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EASTWEST.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n"
+        },
+        {
+          "chain_id": "enclave_lateral_to_egress",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n"
         },
         {
           "chain_id": "vpc_dns_exfiltration",
@@ -6136,6 +6154,26 @@
       "missing_control": "CTL.ELASTICACHE.ENCRYPT.REST.001",
       "severity": "high",
       "scope_id": "__global__"
+    },
+    {
+      "chain": "enclave_lateral_to_egress",
+      "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EASTWEST.001",
+      "severity": "high",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "enclave_lateral_to_egress",
+      "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001",
+      "severity": "high",
+      "scope_id": "vpc-prod-001"
     },
     {
       "chain": "rds_audit_blind",
