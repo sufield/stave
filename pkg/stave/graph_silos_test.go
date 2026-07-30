@@ -7,8 +7,12 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
-func makeControl(id string) policy.ControlDefinition {
-	return policy.ControlDefinition{ID: kernel.ControlID(id)}
+func makeControl(id string, assetTypes ...string) policy.ControlDefinition {
+	ctl := policy.ControlDefinition{ID: kernel.ControlID(id)}
+	for _, at := range assetTypes {
+		ctl.ApplicableAssetTypes = append(ctl.ApplicableAssetTypes, kernel.AssetType(at))
+	}
+	return ctl
 }
 
 func makeChain(id string, controlIDs ...string) policy.ChainDefinition {
@@ -119,6 +123,41 @@ func TestBuildSiloReport_NoSilos(t *testing.T) {
 
 	if report.SiloCount != 0 {
 		t.Fatalf("SiloCount = %d, want 0", report.SiloCount)
+	}
+}
+
+func TestBuildSiloReport_UnevaluatedAssetTypes(t *testing.T) {
+	report := buildSiloReport(nil, nil, 1)
+
+	if report.SchemaAssetTypeCount == 0 {
+		t.Fatal("SchemaAssetTypeCount should be >0 from contract schema")
+	}
+	if report.UnevaluatedCount != report.SchemaAssetTypeCount {
+		t.Fatalf("with zero controls, all %d schema types should be unevaluated, got %d",
+			report.SchemaAssetTypeCount, report.UnevaluatedCount)
+	}
+	if report.EvaluatedAssetTypeCount != 0 {
+		t.Fatalf("EvaluatedAssetTypeCount = %d, want 0", report.EvaluatedAssetTypeCount)
+	}
+}
+
+func TestIndexControlsByAssetType(t *testing.T) {
+	controls := []policy.ControlDefinition{
+		makeControl("CTL.S3.PUBLIC.001", "aws_s3_bucket"),
+		makeControl("CTL.S3.ENCRYPT.001", "aws_s3_bucket"),
+		makeControl("CTL.IAM.POLICY.001", "aws_iam_policy", "aws_iam_role"),
+	}
+
+	m := indexControlsByAssetType(controls)
+
+	if m["aws_s3_bucket"] != 2 {
+		t.Fatalf("aws_s3_bucket count = %d, want 2", m["aws_s3_bucket"])
+	}
+	if m["aws_iam_policy"] != 1 {
+		t.Fatalf("aws_iam_policy count = %d, want 1", m["aws_iam_policy"])
+	}
+	if m["aws_iam_role"] != 1 {
+		t.Fatalf("aws_iam_role count = %d, want 1", m["aws_iam_role"])
 	}
 }
 

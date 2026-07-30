@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.INTERFACE.CROSSACCOUNT.001
+name: Interface VPC Endpoint Connects to Cross-Account PrivateLink Service
+description: >
+  Interface VPC endpoint targets a PrivateLink service hosted in a
+  different AWS account. The endpoint creates a network-level egress
+  path from the local VPC to the remote account's VPC, bypassing IGW,
+  NAT, and peering controls. In an isolated or airgapped VPC, this is
+  an uncontrolled egress channel — data leaves the enclave via the
+  PrivateLink tunnel without traversing any network-layer inspection.
+domain: network
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03", "IVS-09", "DSP-17"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - data-perimeter
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Interface endpoint targets a PrivateLink service in a different
+    account. This creates a cross-account egress path that bypasses
+    all network-layer isolation controls.
+  action: >
+    Verify the cross-account PrivateLink service is authorized and
+    expected. If it is, scope the endpoint policy to restrict which
+    principals and actions can traverse it. If it is not authorized,
+    delete the endpoint.
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "vpc_endpoint": {
+          "kind": "Interface",
+          "is_cross_account_privatelink": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.kind
+      op: eq
+      value: Interface
+    - field: properties.network.vpc_endpoint.is_cross_account_privatelink
+      op: eq
+      value: true
+tests:
+  - name: "interface endpoint to cross-account PrivateLink fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0abc123crossacct"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            is_cross_account_privatelink: true
+  - name: "interface endpoint to same-account service passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0def456sameacct"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            is_cross_account_privatelink: false
+  - name: "gateway endpoint passes (wrong type)"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0ghi789gateway"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            is_cross_account_privatelink: true

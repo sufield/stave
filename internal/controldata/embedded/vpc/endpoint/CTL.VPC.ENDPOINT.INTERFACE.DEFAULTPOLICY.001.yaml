@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.INTERFACE.DEFAULTPOLICY.001
+name: Interface VPC Endpoint Has Full-Access Default Policy
+description: >
+  Interface VPC endpoint uses the default full-access policy (Principal *,
+  Action *, Resource *). The default policy places no restriction on which
+  principals can invoke the service through the endpoint or what operations
+  they can perform. In an isolated VPC, this turns the interface endpoint
+  into an unrestricted egress path to the backing service — any workload
+  in the VPC can reach the service without IAM-level endpoint constraints.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03", "DSP-17"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - data-perimeter
+  - network-isolation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Interface endpoint uses the default full-access policy. Any principal
+    with network reachability can invoke any action on any resource through
+    this endpoint.
+  action: >
+    Replace the default policy with a scoped policy that restricts Principal
+    to authorized roles, Action to required operations, and Resource to
+    specific ARNs. At minimum, deny anonymous requests.
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "vpc_endpoint": {
+          "kind": "Interface",
+          "has_default_full_access_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.kind
+      op: eq
+      value: Interface
+    - field: properties.network.vpc_endpoint.has_default_full_access_policy
+      op: eq
+      value: true
+tests:
+  - name: "interface endpoint with default policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0abc123default"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            has_default_full_access_policy: true
+  - name: "interface endpoint with scoped policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0def456scoped"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            has_default_full_access_policy: false
+  - name: "gateway endpoint with default policy passes (wrong type)"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0ghi789gateway"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            has_default_full_access_policy: true

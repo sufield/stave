@@ -532,6 +532,36 @@ VPC endpoint policies must include IAM conditions (aws:PrincipalArn, aws:Princip
 
 ---
 
+### CTL.VPC.ENDPOINT.INTERFACE.CROSSACCOUNT.001
+
+**Interface VPC Endpoint Connects to Cross-Account PrivateLink Service**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.1;
+
+Interface VPC endpoint targets a PrivateLink service hosted in a different AWS account. The endpoint creates a network-level egress path from the local VPC to the remote account's VPC, bypassing IGW, NAT, and peering controls. In an isolated or airgapped VPC, this is an uncontrolled egress channel — data leaves the enclave via the PrivateLink tunnel without traversing any network-layer inspection.
+
+**Remediation:** Verify the cross-account PrivateLink service is authorized and expected. If it is, scope the endpoint policy to restrict which principals and actions can traverse it. If it is not authorized, delete the endpoint.
+
+---
+
+### CTL.VPC.ENDPOINT.INTERFACE.DEFAULTPOLICY.001
+
+**Interface VPC Endpoint Has Full-Access Default Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.1;
+
+Interface VPC endpoint uses the default full-access policy (Principal *, Action *, Resource *). The default policy places no restriction on which principals can invoke the service through the endpoint or what operations they can perform. In an isolated VPC, this turns the interface endpoint into an unrestricted egress path to the backing service — any workload in the VPC can reach the service without IAM-level endpoint constraints.
+
+**Remediation:** Replace the default policy with a scoped policy that restricts Principal to authorized roles, Action to required operations, and Resource to specific ARNs. At minimum, deny anonymous requests.
+
+---
+
 ### CTL.VPC.ENDPOINT.MISSING.CRITICAL.001
 
 **VPC Missing Interface Endpoints for Critical AWS Services**

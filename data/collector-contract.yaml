@@ -1082,3 +1082,26 @@ contracts:
       combination with resource scope including self.
     consumers:
       - CTL.ECS.TASKROLE.SELFDEPLOY.001
+
+  # ─── VPC Interface Endpoint PrivateLink (Jul 2026) ──────
+
+  - field: has_default_full_access_policy
+    type: boolean
+    postcondition: >
+      True if the VPC endpoint policy is the AWS default
+      full-access policy (Principal *, Action *, Resource *).
+      Derived by comparing the endpoint's policy document
+      against the known default policy structure.
+    consumers:
+      - CTL.VPC.ENDPOINT.INTERFACE.DEFAULTPOLICY.001
+
+  - field: is_cross_account_privatelink
+    type: boolean
+    postcondition: >
+      True if the interface endpoint targets a PrivateLink
+      service (vpce-svc-*) hosted in a different AWS account
+      than the endpoint's own account. Derived by comparing
+      the service name's account ID against the endpoint's
+      owner account ID.
+    consumers:
+      - CTL.VPC.ENDPOINT.INTERFACE.CROSSACCOUNT.001

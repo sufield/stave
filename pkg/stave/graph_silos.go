@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 
 	"github.com/sufield/stave/internal/adapters/controls/yaml"
+	contractschema "github.com/sufield/stave/internal/contracts/schema"
 	"github.com/sufield/stave/internal/core/capabilities"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -22,15 +23,26 @@ type ServiceConnectivity struct {
 	Question    string   `json:"question,omitempty"`
 }
 
+// UnevaluatedAssetType is an asset type with a schema but zero controls.
+type UnevaluatedAssetType struct {
+	AssetType    string `json:"asset_type"`
+	ControlCount int    `json:"control_count"`
+	InSchema     bool   `json:"in_schema"`
+}
+
 // SiloReport is the output of structural silence detection.
 type SiloReport struct {
-	Silos         []ServiceConnectivity `json:"silos"`
-	MostConnected []ServiceConnectivity `json:"most_connected"`
-	Distribution  map[string]int        `json:"connectivity_distribution"`
-	SiloCount     int                   `json:"silo_count"`
-	TotalServices int                   `json:"total_services"`
-	TotalControls int                   `json:"total_controls"`
-	TotalChains   int                   `json:"total_chains"`
+	Silos                   []ServiceConnectivity  `json:"silos"`
+	MostConnected           []ServiceConnectivity  `json:"most_connected"`
+	Distribution            map[string]int         `json:"connectivity_distribution"`
+	SiloCount               int                    `json:"silo_count"`
+	TotalServices           int                    `json:"total_services"`
+	TotalControls           int                    `json:"total_controls"`
+	TotalChains             int                    `json:"total_chains"`
+	UnevaluatedAssetTypes   []UnevaluatedAssetType `json:"unevaluated_asset_types,omitempty"`
+	UnevaluatedCount        int                    `json:"unevaluated_count"`
+	EvaluatedAssetTypeCount int                    `json:"evaluated_asset_type_count"`
+	SchemaAssetTypeCount    int                    `json:"schema_asset_type_count"`
 }
 
 // SiloConfig parameterizes [GraphSilos].
@@ -126,14 +138,41 @@ func buildSiloReport(controls []policy.ControlDefinition, chains []policy.ChainD
 		}
 	}
 
+	assetTypeControls := indexControlsByAssetType(controls)
+	schemaTypes := contractschema.AssetTypesWithSchema()
+	schemaSet := make(map[string]bool, len(schemaTypes))
+	for _, t := range schemaTypes {
+		schemaSet[t] = true
+	}
+
+	var unevaluated []UnevaluatedAssetType
+	for _, t := range schemaTypes {
+		if assetTypeControls[t] == 0 {
+			unevaluated = append(unevaluated, UnevaluatedAssetType{
+				AssetType:    t,
+				ControlCount: 0,
+				InSchema:     true,
+			})
+		}
+	}
+	slices.SortFunc(unevaluated, func(a, b UnevaluatedAssetType) int {
+		return strings.Compare(a.AssetType, b.AssetType)
+	})
+
+	evaluatedCount := len(schemaTypes) - len(unevaluated)
+
 	return &SiloReport{
-		Silos:         silos,
-		MostConnected: top,
-		Distribution:  dist,
-		SiloCount:     len(silos),
-		TotalServices: len(serviceControls),
-		TotalControls: len(controls),
-		TotalChains:   len(chains),
+		Silos:                   silos,
+		MostConnected:           top,
+		Distribution:            dist,
+		SiloCount:               len(silos),
+		TotalServices:           len(serviceControls),
+		TotalControls:           len(controls),
+		TotalChains:             len(chains),
+		UnevaluatedAssetTypes:   unevaluated,
+		UnevaluatedCount:        len(unevaluated),
+		EvaluatedAssetTypeCount: evaluatedCount,
+		SchemaAssetTypeCount:    len(schemaTypes),
 	}
 }
 
@@ -192,6 +231,17 @@ func chainServices(ids []kernel.ControlID) map[string]bool {
 		svc := strings.ToLower(id.Provider())
 		if svc != "" {
 			m[svc] = true
+		}
+	}
+	return m
+}
+
+// indexControlsByAssetType maps asset type string → control count.
+func indexControlsByAssetType(controls []policy.ControlDefinition) map[string]int {
+	m := make(map[string]int)
+	for i := range controls {
+		for _, at := range controls[i].ApplicableAssetTypes {
+			m[string(at)]++
 		}
 	}
 	return m

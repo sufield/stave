@@ -126,7 +126,19 @@ func renderSilosText(w io.Writer, r *stave.SiloReport) error {
 	fmt.Fprintf(w, "  6-20 chains: %d\n", r.Distribution["6-20_chains"])
 	fmt.Fprintf(w, "  21+ chains:  %d\n\n", r.Distribution["21+_chains"])
 
-	fmt.Fprintf(w, "Silo count: %d (target: 0)\n", r.SiloCount)
+	fmt.Fprintf(w, "Silo count: %d (target: 0)\n\n", r.SiloCount)
+
+	fmt.Fprintf(w, "Asset Type Coverage:\n")
+	fmt.Fprintf(w, "  Schema types:    %d\n", r.SchemaAssetTypeCount)
+	fmt.Fprintf(w, "  Evaluated:       %d\n", r.EvaluatedAssetTypeCount)
+	fmt.Fprintf(w, "  Unevaluated:     %d\n", r.UnevaluatedCount)
+	if len(r.UnevaluatedAssetTypes) > 0 {
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "Unevaluated asset types (schema defined, zero controls):\n\n")
+		for _, u := range r.UnevaluatedAssetTypes {
+			fmt.Fprintf(w, "  %s\n", u.AssetType)
+		}
+	}
 
 	return nil
 }

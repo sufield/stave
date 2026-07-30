@@ -1,0 +1,40 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-29T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.privatelink-egress"
+  },
+  "assets": [
+    {
+      "id": "vpce-0abc123crossacct",
+      "type": "aws_vpc_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc_endpoint",
+          "vpc_endpoint": {
+            "kind": "Interface",
+            "is_cross_account_privatelink": true,
+            "has_default_full_access_policy": true
+          }
+        }
+      }
+    },
+    {
+      "id": "vpce-0def456sameacct",
+      "type": "aws_vpc_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc_endpoint",
+          "vpc_endpoint": {
+            "kind": "Interface",
+            "is_cross_account_privatelink": false,
+            "has_default_full_access_policy": true
+          }
+        }
+      }
+    }
+  ]
+}

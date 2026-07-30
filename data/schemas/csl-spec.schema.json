@@ -34,7 +34,7 @@
           "type": "string",
           "enum": [
             "reconnaissance", "initial_access", "execution",
-            "persistence", "privilege_escalation", "defense_evasion",
+            "persistence", "privilege_escalation", "detection_evasion",
             "credential_access", "discovery", "lateral_movement",
             "collection", "exfiltration", "impact"
           ]

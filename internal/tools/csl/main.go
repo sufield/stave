@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
+	"github.com/sufield/stave/internal/collectorcontract"
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
@@ -115,6 +116,28 @@ func run(specPath string) error {
 		}
 	}
 
+	// 6. Condition operator/value consistency
+	for _, pair := range []struct {
+		label string
+		cond  *condition
+	}{
+		{"unsafe_condition", spec.Spec.UnsafeCondition},
+		{"safe_condition", spec.Spec.SafeCondition},
+	} {
+		if pair.cond == nil {
+			continue
+		}
+		if condIssues := validateCondition(pair.label, pair.cond); len(condIssues) > 0 {
+			issues = append(issues, condIssues...)
+		}
+	}
+
+	// 7. Contract field cross-check (WARN only)
+	var warnings []issue
+	if spec.Spec.DataReadiness != nil && len(spec.Spec.DataReadiness.FieldsRequired) > 0 {
+		warnings = checkContractFields(spec.Spec.DataReadiness.FieldsRequired)
+	}
+
 	// Report
 	if len(issues) > 0 {
 		fmt.Fprintf(os.Stderr, "CSL spec %s: %d issue(s)\n\n", specPath, len(issues))
@@ -130,6 +153,13 @@ func run(specPath string) error {
 	fmt.Printf("  asset_type: %s\n", spec.Spec.AssetType)
 	fmt.Printf("  severity:   %s\n", spec.Spec.Severity)
 	fmt.Printf("  threat:     %s\n", spec.Spec.Threat)
+
+	if len(warnings) > 0 {
+		fmt.Fprintf(os.Stderr, "\n%d warning(s):\n", len(warnings))
+		for _, w := range warnings {
+			fmt.Fprintf(os.Stderr, "  [%s] %s\n", w.check, w.message)
+		}
+	}
 	return nil
 }
 
@@ -231,6 +261,83 @@ func normalizeYAML(v any) any {
 	default:
 		return v
 	}
+}
+
+func validateCondition(label string, cond *condition) []issue {
+	var issues []issue
+
+	if cond.Field == "" {
+		issues = append(issues, issue{
+			check:   "condition-syntax",
+			message: fmt.Sprintf("%s: field is empty", label),
+		})
+	}
+
+	switch cond.Operator {
+	case "in", "not_in":
+		if _, ok := cond.Value.([]any); !ok {
+			issues = append(issues, issue{
+				check:   "condition-syntax",
+				message: fmt.Sprintf("%s: operator %q requires a list value, got %T", label, cond.Operator, cond.Value),
+			})
+		}
+	case "gt", "gte", "lt", "lte":
+		switch cond.Value.(type) {
+		case int, float64:
+		default:
+			issues = append(issues, issue{
+				check:   "condition-syntax",
+				message: fmt.Sprintf("%s: operator %q requires a numeric value, got %T", label, cond.Operator, cond.Value),
+			})
+		}
+	case "prefix", "suffix":
+		if _, ok := cond.Value.(string); !ok {
+			issues = append(issues, issue{
+				check:   "condition-syntax",
+				message: fmt.Sprintf("%s: operator %q requires a string value, got %T", label, cond.Operator, cond.Value),
+			})
+		}
+	case "regex":
+		s, ok := cond.Value.(string)
+		if !ok {
+			issues = append(issues, issue{
+				check:   "condition-syntax",
+				message: fmt.Sprintf("%s: operator %q requires a string value, got %T", label, cond.Operator, cond.Value),
+			})
+		} else if _, err := regexp.Compile(s); err != nil {
+			issues = append(issues, issue{
+				check:   "condition-syntax",
+				message: fmt.Sprintf("%s: invalid regex %q: %v", label, s, err),
+			})
+		}
+	case "missing", "present", "eq", "ne", "any_match", "all_match":
+		// These accept any value type.
+	default:
+		issues = append(issues, issue{
+			check:   "condition-syntax",
+			message: fmt.Sprintf("%s: unknown operator %q", label, cond.Operator),
+		})
+	}
+	return issues
+}
+
+func checkContractFields(fieldsRequired []string) []issue {
+	contract, err := collectorcontract.Load()
+	if err != nil {
+		return []issue{{check: "contract-crosscheck", message: fmt.Sprintf("load contract: %v", err)}}
+	}
+	idx := contract.FieldIndex()
+
+	var warnings []issue
+	for _, f := range fieldsRequired {
+		if _, ok := idx[f]; !ok {
+			warnings = append(warnings, issue{
+				check:   "contract-crosscheck",
+				message: fmt.Sprintf("field %q not found in collector contract — may be planned or use a different path", f),
+			})
+		}
+	}
+	return warnings
 }
 
 type cslSpec struct {

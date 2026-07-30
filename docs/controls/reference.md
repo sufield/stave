@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3218
-**Pack hash:** `bdaa17b68d80c7c6a0be650867620992ec8086c4375d8b1102e15a70d53c6512`
+**Total controls:** 3220
+**Pack hash:** `faec434114fd51552c5fd8b1ad63ba861bed237750bf9245dfa2c4c045b58dbe`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,8 +13,8 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 352 |
-| high | 1401 |
+| critical | 353 |
+| high | 1402 |
 | info | 19 |
 | low | 236 |
 | medium | 1210 |
@@ -33,7 +33,7 @@ GitHub. Pick a service below.
 | hygiene | 21 |
 | identity | 625 |
 | lifecycle | 31 |
-| network | 48 |
+| network | 50 |
 | resilience | 39 |
 | secrets | 4 |
 | storage | 8 |
@@ -151,7 +151,7 @@ GitHub. Pick a service below.
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
 | [TRANSFER](reference/transfer.md) | 2 |
-| [VPC](reference/vpc.md) | 112 |
+| [VPC](reference/vpc.md) | 114 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 17 |
 | [WORKSPACES](reference/workspaces.md) | 1 |
