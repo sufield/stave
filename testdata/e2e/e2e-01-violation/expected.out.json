@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "2026-01-11T00:00:00Z",
+    "eval_time": "2026-07-28T22:15:47.824608292Z",
     "sla_threshold": "7d",
     "snapshots": 3,
     "input_hashes": {
@@ -31,7 +31,7 @@
       "asset_type": "storage_bucket",
       "status": "OVERDUE",
       "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
+      "remaining_hours": -4846.263284613415,
       "first_unsafe_at": "2026-01-01T00:00:00Z",
       "threshold_hours": 168
     }
@@ -52,7 +52,7 @@
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
+        "unsafe_duration_hours": 5014.263284613415,
         "threshold_hours": 168,
         "misconfigurations": [
           {
@@ -65,7 +65,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 5014 hours (SLA: 168 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "posture_drift": {
         "pattern": "persistent",
@@ -84,15 +84,15 @@
         "action": "Review the misconfigured properties and revert to compliant values."
       },
       "exploitability": "reachable",
-      "exposure_score": 10.273972602739727,
+      "exposure_score": 31.448089690898207,
       "score_breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 2,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
+        "blind_multiplier": 1.5724044845449103,
+        "days_blind": 208.92763685889227
       },
       "reasoning_trace": [
         {
@@ -153,7 +153,7 @@
       "member_finding_ids": [
         "sha256:879ea59f23dfc192"
       ],
-      "consolidated_score": 10.273972602739727,
+      "consolidated_score": 31.448089690898207,
       "consolidated_blast_radius": 1
     }
   ],
@@ -180,15 +180,15 @@
       "finding_index": 0,
       "control_id": "CTL.EXP.DURATION.001",
       "asset_id": "res:aws:s3:bucket:public-bucket",
-      "exposure_score": 10.273972602739727,
+      "exposure_score": 31.448089690898207,
       "breakdown": {
         "base_score": 10,
-        "duration_factor": 1,
+        "duration_factor": 2,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
+        "blind_multiplier": 1.5724044845449103,
+        "days_blind": 208.92763685889227
       },
       "silent_killer": false
     }

@@ -1399,6 +1399,36 @@ Security groups must not allow unrestricted inbound access on high-risk ports: R
 
 ---
 
+### CTL.EC2.SG.SSH.CIDR.ONLY.001
+
+**All SSH Ingress Rules Use CIDR Sources Instead of Security Group References**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-17; soc2: CC6.6;
+
+Every SSH (port 22) ingress rule on this security group uses a CIDR source — none use security group references. In a bastion architecture, SSH ingress should reference the bastion's security group, not a CIDR range. CIDR-based rules are less precise (they include all IPs in the range, not just the bastion) and do not enforce the bastion as the sole SSH entry point. This control is lower severity than CTL.EC2.SG.SSH.INTERNAL.CIDR.001 because the CIDR might be narrow or external (e.g., a corporate VPN exit IP), but the architectural weakness remains: CIDR-based SSH rules do not bind to the bastion identity.
+
+**Remediation:** Replace CIDR-based SSH ingress rules with security group references. Add an ingress rule: port 22, source sg-bastion. Remove the CIDR rule.
+
+---
+
+### CTL.EC2.SG.SSH.INTERNAL.CIDR.001
+
+**Security Group Allows SSH From Internal CIDR Instead of Bastion Security Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** cis_aws_v3.0: 5.1; nist_800_53_r5: AC-17; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Security group allows SSH (port 22) from an internal CIDR range (RFC1918: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) rather than a specific security group reference. Production instances should accept SSH only from the bastion host's security group, not from broad internal ranges. A rule allowing 10.0.0.0/8 on port 22 bypasses the bastion architecture — any instance in the VPC or peered VPCs can SSH directly. This gap is invisible to existing controls that check only for 0.0.0.0/0: the instance is not internet-exposed, but the bastion is architecturally defeated. Legitimate bastion access uses SG-to-SG references (source = sg-bastion), not CIDR ranges.
+
+**Remediation:** Replace the CIDR-based SSH ingress rule with a security group reference pointing to the bastion host's security group. If SSM Session Manager is available, remove SSH access entirely and use SSM for authenticated, logged shell access.
+
+---
+
 ### CTL.EC2.SG.UNUSED.001
 
 **Unused Security Groups Must Be Removed**
@@ -1546,6 +1576,21 @@ Running EC2 instance has no instance profile or the instance profile role lacks 
 SSM Session Manager provides interactive shell access to EC2 instances without SSH keys or open inbound ports. Without session logging, all commands executed through Session Manager leave no audit trail. An attacker who gains ssm:StartSession access can execute arbitrary commands on managed instances without any record of the session content — only the session start/stop is logged in CloudTrail.
 
 **Remediation:** Configure Session Manager preferences to log sessions to S3 or CloudWatch Logs. Enable encryption for session logs. aws ssm update-document --name SSM-SessionManagerRunShell --content file://session-prefs.json --document-version '$LATEST'
+
+---
+
+### CTL.EC2.SSM.SSH.INTERNAL.OPEN.001
+
+**SSM-Managed Instance Accepts SSH From Internal Networks**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-17; soc2: CC6.1;
+
+Instance is SSM-managed but still accepts SSH from internal CIDR ranges. SSM Session Manager provides authenticated, IAM-controlled, fully-logged shell access without any open port. Keeping SSH open from internal CIDRs provides an unlogged alternative path that bypasses SSM's audit trail. Unlike CTL.EC2.KEYPAIR.SSM.PREFERRED.001 (which checks for any SSH access on SSM-managed instances), this control specifically targets internal CIDR-sourced SSH — the bastion bypass pattern that passes all internet-facing controls.
+
+**Remediation:** Close port 22 entirely and use SSM Session Manager for all shell access. If SSH must remain for specific workflows (SCP, debug tooling), restrict the source to the bastion's security group and enable VPC flow logs on the subnet.
 
 ---
 

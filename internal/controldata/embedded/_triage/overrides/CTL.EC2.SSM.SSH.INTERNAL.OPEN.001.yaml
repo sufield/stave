@@ -1,0 +1,14 @@
+control: CTL.EC2.SSM.SSH.INTERNAL.OPEN.001
+defect: >
+  An SSM-managed instance still accepts SSH from internal CIDR
+  ranges. SSM provides authenticated, logged shell access without
+  any open port, making the SSH path redundant attack surface.
+infection: >
+  The internal SSH path bypasses SSM's audit trail. An attacker
+  with internal network access can SSH directly to the instance,
+  and the session is not recorded in CloudTrail or S3. SSM session
+  logging is defeated by the alternative path.
+failure: >
+  Unlogged shell access to SSM-managed instance. The security value
+  of SSM (IAM authentication, session logging, no open port) is
+  nullified by the parallel SSH path from internal networks.

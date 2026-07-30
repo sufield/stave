@@ -1,0 +1,15 @@
+control: CTL.EC2.SG.SSH.INTERNAL.CIDR.001
+defect: >
+  A security group rule allows SSH (port 22) from an RFC1918
+  internal CIDR range instead of a specific security group
+  reference, bypassing the bastion architecture.
+infection: >
+  Any instance within the internal CIDR range can SSH directly
+  to instances protected by this security group. The bastion host
+  is architecturally bypassed — SSH connections do not transit the
+  hardened, logged jump host. This gap is invisible to controls
+  that check only for 0.0.0.0/0 (internet exposure).
+failure: >
+  Bastion architecture defeated. SSH access is not funneled through
+  the audited jump host. Lateral movement from any compromised
+  internal instance to production is direct.

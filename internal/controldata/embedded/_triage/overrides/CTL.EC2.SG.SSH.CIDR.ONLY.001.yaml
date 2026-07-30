@@ -1,0 +1,14 @@
+control: CTL.EC2.SG.SSH.CIDR.ONLY.001
+defect: >
+  Every SSH ingress rule on this security group uses a CIDR source.
+  None reference a security group, so the bastion's identity is not
+  enforced at the network layer.
+infection: >
+  SSH access is bound to IP ranges, not to bastion group membership.
+  Any host whose IP falls within the permitted CIDR can connect,
+  regardless of whether it is the bastion. The binding is positional
+  (IP range) rather than identity-based (security group membership).
+failure: >
+  Bastion identity not enforced. SSH ingress is position-based, not
+  identity-based. The bastion is an architectural intent, not a
+  network enforcement.
