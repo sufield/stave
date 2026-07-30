@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 	"github.com/sufield/stave/pkg/stave/internal/trendcmd"
 )
 
@@ -55,12 +56,12 @@ func ClassifyOscillation(ctx context.Context, cfg TrendOscillationConfig) (outpu
 	return mapTrendInputErr(trendcmd.ClassifyOscillation(ctx, cfg))
 }
 
-// mapTrendInputErr re-wraps a trendcmd.InputError (unknown --format on a
+// mapTrendInputErr re-wraps a cmderr.InputError (unknown --format on a
 // subcommand) with ErrInvalidInput so the CLI exits 2; everything else passes
 // through plain (exit 4).
 func mapTrendInputErr(output []byte, warnings []string, err error) ([]byte, []string, error) {
 	if err != nil {
-		var ie *trendcmd.InputError
+		var ie *cmderr.InputError
 		if errors.As(err, &ie) {
 			return nil, warnings, fmt.Errorf("%w: %w", ie.Err, ErrInvalidInput)
 		}

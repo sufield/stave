@@ -131,23 +131,6 @@ func TestMarshalGraphML_ValidXML(t *testing.T) {
 	}
 }
 
-func TestExporters_InterfaceSatisfied(t *testing.T) {
-	t.Parallel()
-	g := buildFixtureGraph(t)
-
-	var ex GraphExporter = NewJSONLDExporter()
-	out, err := ex.Export(g)
-	if err != nil || len(out) == 0 {
-		t.Fatalf("JSONLDExporter.Export: out=%d err=%v", len(out), err)
-	}
-
-	ex = NewGraphMLExporter()
-	out, err = ex.Export(g)
-	if err != nil || len(out) == 0 {
-		t.Fatalf("GraphMLExporter.Export: out=%d err=%v", len(out), err)
-	}
-}
-
 func TestSeverityWeight_Mapping(t *testing.T) {
 	t.Parallel()
 	cases := []struct {

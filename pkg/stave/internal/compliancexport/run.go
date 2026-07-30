@@ -26,20 +26,8 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/version"
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 )
-
-// InputError marks a user-input failure (bad profile, missing/empty
-// snapshot, unknown format). The pkg/stave facade unwraps it and re-wraps
-// the message with stave.ErrInvalidInput so the CLI exits 2; other failures
-// stay plain (exit 4). It carries no sentinel text of its own so the public
-// message reads with a single "invalid input" suffix.
-type InputError struct{ Err error }
-
-// Error implements error.
-func (e *InputError) Error() string { return e.Err.Error() }
-
-// Unwrap exposes the wrapped cause.
-func (e *InputError) Unwrap() error { return e.Err }
 
 // Outcome is the compliance result the caller maps to an exit code.
 type Outcome int
@@ -82,7 +70,7 @@ func Run(ctx context.Context, cfg *Config) (Result, error) {
 	switch cfg.Format {
 	case "json", "table", "markdown", "oscal":
 	default:
-		return Result{}, &InputError{fmt.Errorf("unsupported format: %q", cfg.Format)}
+		return Result{}, &cmderr.InputError{Err: fmt.Errorf("unsupported format: %q", cfg.Format)}
 	}
 
 	profiles, err := loadProfiles(cfg)
@@ -94,10 +82,10 @@ func Run(ctx context.Context, cfg *Config) (Result, error) {
 
 	snapshots, err := observations.LoadBundle(cfg.SnapshotPath)
 	if err != nil {
-		return Result{}, &InputError{fmt.Errorf("load snapshot: %w", err)}
+		return Result{}, &cmderr.InputError{Err: fmt.Errorf("load snapshot: %w", err)}
 	}
 	if len(snapshots) == 0 {
-		return Result{}, &InputError{errors.New("snapshot file contains no observations")}
+		return Result{}, &cmderr.InputError{Err: errors.New("snapshot file contains no observations")}
 	}
 
 	repo := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(predicate.ResolverFunc()))
@@ -168,7 +156,7 @@ func Run(ctx context.Context, cfg *Config) (Result, error) {
 	default:
 		renderer, rErr := NewRenderer(cfg.Format, cfg.Verbose)
 		if rErr != nil {
-			return Result{}, &InputError{rErr}
+			return Result{}, &cmderr.InputError{Err: rErr}
 		}
 		export := buildExport(profiles[0], assessments[0], pkg, version.String, snapshotTime, cfg.IncludePass, cfg.MinSeverity, result.Findings)
 		if err := renderer.Render(&buf, export); err != nil {
@@ -190,19 +178,19 @@ func loadProfiles(cfg *Config) ([]*evidence.FrameworkProfile, error) {
 		}
 		profile, err := evidenceadapter.LoadProfile(pid)
 		if err != nil {
-			return nil, &InputError{fmt.Errorf("invalid --profile %q: %w", pid, err)}
+			return nil, &cmderr.InputError{Err: fmt.Errorf("invalid --profile %q: %w", pid, err)}
 		}
 		profiles = append(profiles, profile)
 	}
 	for _, path := range cfg.ProfileFiles {
 		profile, err := evidenceadapter.LoadProfileFromFile(path)
 		if err != nil {
-			return nil, &InputError{fmt.Errorf("load profile file %q: %w", path, err)}
+			return nil, &cmderr.InputError{Err: fmt.Errorf("load profile file %q: %w", path, err)}
 		}
 		profiles = append(profiles, profile)
 	}
 	if len(profiles) == 0 {
-		return nil, &InputError{errors.New("at least one of --profile or --profile-file is required")}
+		return nil, &cmderr.InputError{Err: errors.New("at least one of --profile or --profile-file is required")}
 	}
 	return profiles, nil
 }

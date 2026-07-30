@@ -1,7 +1,6 @@
 package graph
 
 import (
-	"fmt"
 	"log/slog"
 	"maps"
 	"strings"
@@ -51,31 +50,6 @@ type UnmappedEdge struct {
 	Type EdgeType
 	From string
 	To   string
-}
-
-// UnmappedEdgesError is the typed error wrapping the collected
-// unmapped edge list. Callers that want strict semantics check via
-// errors.As; callers that don't care can ignore the error entirely
-// since the bytes were still produced.
-type UnmappedEdgesError struct {
-	Edges []UnmappedEdge
-}
-
-// Error implements error.
-func (e *UnmappedEdgesError) Error() string {
-	if len(e.Edges) == 0 {
-		return "no unmapped edges"
-	}
-	types := make(map[EdgeType]struct{}, len(e.Edges))
-	for _, ue := range e.Edges {
-		types[ue.Type] = struct{}{}
-	}
-	out := make([]string, 0, len(types))
-	for t := range types {
-		out = append(out, string(t))
-	}
-	return fmt.Sprintf("graph export dropped %d edges with unmapped type(s): %s",
-		len(e.Edges), strings.Join(out, ", "))
 }
 
 // rdfMapper carries the indexes built during mapTordfGraph's node

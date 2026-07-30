@@ -72,7 +72,9 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 				idx.PathMaxSeverity[path] = ctl.Severity
 			}
 			for _, at := range ctl.ApplicableAssetTypes {
-				idx.TypeToPaths[at] = appendUnique(idx.TypeToPaths[at], path)
+				if !slices.Contains(idx.TypeToPaths[at], path) {
+					idx.TypeToPaths[at] = append(idx.TypeToPaths[at], path)
+				}
 			}
 		})
 	}
@@ -121,11 +123,4 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 // > low > anything-else.
 func rank(s policy.Severity) int {
 	return int(s)
-}
-
-func appendUnique[T comparable](slice []T, v T) []T {
-	if slices.Contains(slice, v) {
-		return slice
-	}
-	return append(slice, v)
 }

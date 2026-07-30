@@ -11,23 +11,6 @@ type RiskDelta struct {
 	ResolvedFindings int               `json:"resolved_findings"`
 }
 
-// NetDirection returns the overall risk direction of the delta.
-func (d *RiskDelta) NetDirection() RiskDirection {
-	if len(d.ChainsActivated) > len(d.ChainsResolved) {
-		return RiskIncreasing
-	}
-	if len(d.ChainsResolved) > len(d.ChainsActivated) {
-		return RiskDecreasing
-	}
-	if d.NewFindings > d.ResolvedFindings {
-		return RiskIncreasing
-	}
-	if d.ResolvedFindings > d.NewFindings {
-		return RiskDecreasing
-	}
-	return RiskNeutral
-}
-
 // ChainActivation records a compound chain that became active due to changes.
 type ChainActivation struct {
 	ChainID  string   `json:"chain_id"`

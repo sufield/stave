@@ -4,7 +4,6 @@ package compiler
 
 import (
 	"fmt"
-	"slices"
 
 	"github.com/aclements/go-z3/z3"
 )
@@ -235,14 +234,4 @@ func stripCategoryPrefix(p string) string {
 		}
 	}
 	return p
-}
-
-// SortedKeys returns the map keys in lexicographic order.
-func SortedKeys[V any](m map[string]V) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	slices.Sort(out)
-	return out
 }

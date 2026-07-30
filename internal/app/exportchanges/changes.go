@@ -112,5 +112,5 @@ func parseAssetID(assetID string) (vendor, service, resourceID string) {
 	}
 
 	// segment 6: resource-id (if there is a 6th colon)
-	return vendor, service, remaining
+	return vendor, service, part5 + ":" + remaining
 }

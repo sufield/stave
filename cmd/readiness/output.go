@@ -61,7 +61,7 @@ func writeObservedTypes(w io.Writer, r stave.ReadinessReport) error {
 	if _, err := fmt.Fprintln(w, "\nObserved asset types:"); err != nil {
 		return err
 	}
-	for _, t := range sortedKeys(r.ObservedTypes) {
+	for _, t := range slices.Sorted(maps.Keys(r.ObservedTypes)) {
 		if _, err := fmt.Fprintf(w, "  %-40s %d\n", t, r.ObservedTypes[t]); err != nil {
 			return err
 		}
@@ -150,8 +150,4 @@ func writeLines(w io.Writer, lines []string) error {
 		}
 	}
 	return nil
-}
-
-func sortedKeys(m map[stave.AssetType]int) []stave.AssetType {
-	return slices.Sorted(maps.Keys(m))
 }

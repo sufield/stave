@@ -19,19 +19,8 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/sanitize"
 	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 )
-
-// InputError marks a user-input failure (invalid change-type filter, unknown
-// output format). The pkg/stave facade unwraps it and re-wraps the message
-// with stave.ErrInvalidInput so the CLI exits 2; loading/compute failures
-// stay plain (exit 4).
-type InputError struct{ Err error }
-
-// Error implements error.
-func (e *InputError) Error() string { return e.Err.Error() }
-
-// Unwrap exposes the wrapped cause.
-func (e *InputError) Unwrap() error { return e.Err }
 
 // Config parameterizes [Run]. It mirrors the `stave snapshot diff` flags
 // plus the global --sanitize / --path-mode settings.
@@ -56,7 +45,7 @@ func Run(ctx context.Context, cfg Config) ([]byte, error) {
 	switch cfg.Format {
 	case "text", "json":
 	default:
-		return nil, &InputError{fmt.Errorf("unsupported format %q (expected: text | json)", cfg.Format)}
+		return nil, &cmderr.InputError{Err: fmt.Errorf("unsupported format %q (expected: text | json)", cfg.Format)}
 	}
 
 	filter, err := buildFilter(cfg.ChangeTypes, cfg.AssetTypes, cfg.AssetID)
@@ -124,7 +113,7 @@ func parseChangeTypes(raw []string) ([]asset.DriftType, error) {
 		}
 		ct := asset.DriftType(val)
 		if !ct.IsValid() {
-			return nil, &InputError{fmt.Errorf("invalid --change-type %q (supported: PROVISIONED, DECOMMISSIONED, RECONFIGURED)", s)}
+			return nil, &cmderr.InputError{Err: fmt.Errorf("invalid --change-type %q (supported: PROVISIONED, DECOMMISSIONED, RECONFIGURED)", s)}
 		}
 		out = append(out, ct)
 	}

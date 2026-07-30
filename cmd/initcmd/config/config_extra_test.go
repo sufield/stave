@@ -26,25 +26,6 @@ func TestConfigFileLine_Empty(t *testing.T) {
 	}
 }
 
-func TestSortedKeys(t *testing.T) {
-	m := map[string]int{"z": 1, "a": 2, "m": 3}
-	got := sortedKeys(m)
-	if len(got) != 3 {
-		t.Fatalf("expected 3 keys, got %d", len(got))
-	}
-	if got[0] != "a" || got[1] != "m" || got[2] != "z" {
-		t.Fatalf("expected sorted order, got: %v", got)
-	}
-}
-
-func TestSortedKeys_Empty(t *testing.T) {
-	m := map[string]int{}
-	got := sortedKeys(m)
-	if len(got) != 0 {
-		t.Fatalf("expected 0 keys, got %d", len(got))
-	}
-}
-
 func TestWriteLines(t *testing.T) {
 	var buf bytes.Buffer
 	err := writeLines(&buf, "line1", "line2", "line3")

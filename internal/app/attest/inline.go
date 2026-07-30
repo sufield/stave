@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -73,6 +74,14 @@ func VerifyAssets(assets []asset.Asset, attestation *InlineAttestation, publicKe
 	}
 	if attestation == nil {
 		return errors.New("no attestation present")
+	}
+
+	if attestation.PublicKeyFingerprint != "" {
+		fp := sha256.Sum256(publicKey)
+		expectedFp := "sha256:" + hex.EncodeToString(fp[:])
+		if !strings.EqualFold(attestation.PublicKeyFingerprint, expectedFp) {
+			return fmt.Errorf("public key fingerprint mismatch: expected %s, got %s", expectedFp, attestation.PublicKeyFingerprint)
+		}
 	}
 
 	canonical, err := json.Marshal(assets)

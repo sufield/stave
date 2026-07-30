@@ -6,19 +6,6 @@ import (
 	"testing"
 )
 
-func TestWriteUpcomingJSON(t *testing.T) {
-	var buf bytes.Buffer
-	data := map[string]any{"key": "value", "count": 42}
-	err := WriteUpcomingJSON(&buf, data)
-	if err != nil {
-		t.Fatalf("WriteUpcomingJSON() error = %v", err)
-	}
-	out := buf.String()
-	if !strings.Contains(out, `"key"`) || !strings.Contains(out, `"value"`) {
-		t.Fatalf("unexpected output: %s", out)
-	}
-}
-
 func TestWriteValidation(t *testing.T) {
 	var buf bytes.Buffer
 	report := map[string]any{"valid": true, "errors": []string{}}

@@ -62,6 +62,9 @@ func (c *Classifier) add(cat kernel.CategoryID, pattern string) {
 // The caller typically concatenates the control's ID, name,
 // description, and predicate field paths into a single string.
 func (c *Classifier) Classify(controlText string) []kernel.CategoryID {
+	if c == nil {
+		return nil
+	}
 	seen := make(map[kernel.CategoryID]bool)
 	var result []kernel.CategoryID
 	for _, r := range c.rules {

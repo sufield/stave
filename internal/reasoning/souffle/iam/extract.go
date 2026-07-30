@@ -337,8 +337,8 @@ func emitG3Facts(outDir string) (map[string]int, error) {
 
 	authCount := 0
 	// Stable iteration order for determinism.
-	resList := sortedKeys(resources)
-	prinList := sortedKeys(principals)
+	resList := slices.Sorted(maps.Keys(resources))
+	prinList := slices.Sorted(maps.Keys(principals))
 
 	for _, r := range resList {
 		ownerValues := ownershipValues(tagsByAsset[r])
@@ -567,7 +567,7 @@ func emitBucketHijackFacts(outDir string) (map[string]int, error) {
 	}
 
 	// bucket_in_snapshot — 1-col: every S3 bucket name in the snapshot.
-	if err := writeLines(filepath.Join(outDir, "bucket_in_snapshot.facts"), sortedKeys(bucketNames), counts, "bucket_in_snapshot"); err != nil {
+	if err := writeLines(filepath.Join(outDir, "bucket_in_snapshot.facts"), slices.Sorted(maps.Keys(bucketNames)), counts, "bucket_in_snapshot"); err != nil {
 		return nil, err
 	}
 
@@ -639,13 +639,7 @@ func emitBucketHijackFacts(outDir string) (map[string]int, error) {
 	}
 
 	// router_account — 2-col: parsed from router ARNs.
-	raKeys := sortedKeys(func() map[string]struct{} {
-		m := make(map[string]struct{}, len(routerAccts))
-		for k := range routerAccts {
-			m[k] = struct{}{}
-		}
-		return m
-	}())
+	raKeys := slices.Sorted(maps.Keys(routerAccts))
 	var raRows []string
 	for _, router := range raKeys {
 		raRows = append(raRows, fmt.Sprintf("%s\t%s", router, routerAccts[router]))
@@ -667,7 +661,7 @@ func emitBucketHijackFacts(outDir string) (map[string]int, error) {
 	}
 	var dpRows []string
 	if hasPerimeter {
-		for _, acct := range sortedKeys(allAccounts) {
+		for _, acct := range slices.Sorted(maps.Keys(allAccounts)) {
 			dpRows = append(dpRows, acct)
 		}
 	}
@@ -702,7 +696,7 @@ func resolveBucketAccounts(bucketARNs, allAccounts map[string]struct{}) []string
 			acct = a
 		}
 		rows := make([]string, 0, len(bucketARNs))
-		for _, arn := range sortedKeys(bucketARNs) {
+		for _, arn := range slices.Sorted(maps.Keys(bucketARNs)) {
 			rows = append(rows, fmt.Sprintf("%s\t%s", arn, acct))
 		}
 		return rows
@@ -860,15 +854,6 @@ func writeLines(path string, rows []string, counts map[string]int, key string) e
 	}
 	counts[key] = len(rows)
 	return nil
-}
-
-func sortedKeys(m map[string]struct{}) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	slices.Sort(out)
-	return out
 }
 
 // emitFederationFacts reads has_type.facts and can_assume.facts to identify

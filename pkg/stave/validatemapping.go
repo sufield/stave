@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 	"strings"
 	"text/tabwriter"
@@ -379,7 +380,7 @@ func writeMappingValidationText(w io.Writer, r mappingReport) error {
 	fmt.Fprintln(w)
 
 	fmt.Fprintln(w, "Operations:")
-	kinds := sortedKeys(r.Operations.ByKind)
+	kinds := slices.Sorted(maps.Keys(r.Operations.ByKind))
 	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
 	for _, k := range kinds {
 		fmt.Fprintf(tw, "  %s\t%d\n", k, r.Operations.ByKind[k])

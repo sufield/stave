@@ -10,7 +10,6 @@ import (
 	"github.com/sufield/stave/internal/adapters/predicate"
 	appexempt "github.com/sufield/stave/internal/app/exempt"
 	"github.com/sufield/stave/internal/controldata"
-	"github.com/sufield/stave/internal/core/ports"
 )
 
 // AcknowledgmentInput parameterizes [AddAcknowledgment]. Compensating is a
@@ -58,10 +57,10 @@ func AddAcknowledgment(file string, in AcknowledgmentInput) error {
 		ReviewBy:             reviewBy,
 		ReviewCadence:        in.ReviewCadence,
 		CompensatingControls: comps,
-	}, appexempt.NewTimestamp(ports.RealClock{})); addErr != nil {
+	}, time.Now().UTC().Format(time.RFC3339)); addErr != nil {
 		return fmt.Errorf("add acknowledgment: %w", addErr)
 	}
-	if saveErr := appexempt.Save(file, f, "stave exempt acknowledge", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
+	if saveErr := appexempt.Save(file, f, "stave exempt acknowledge", time.Now().UTC().Format(time.RFC3339)); saveErr != nil {
 		return fmt.Errorf("save acceptance file: %w", saveErr)
 	}
 	return nil
@@ -97,7 +96,7 @@ func AddException(file string, in ExceptionInput) error {
 	if err != nil {
 		return fmt.Errorf("load acceptance file: %w", err)
 	}
-	ts := appexempt.NewTimestamp(ports.RealClock{})
+	ts := time.Now().UTC().Format(time.RFC3339)
 	if addErr := f.AddException(appexempt.ExceptionEntry{
 		ControlID:  in.ControlID,
 		AssetID:    in.AssetID,
@@ -125,7 +124,7 @@ func AddAssetExemption(file, pattern, reason string) error {
 	}); addErr != nil {
 		return fmt.Errorf("add exemption: %w", addErr)
 	}
-	if saveErr := appexempt.Save(file, f, "stave exempt asset", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
+	if saveErr := appexempt.Save(file, f, "stave exempt asset", time.Now().UTC().Format(time.RFC3339)); saveErr != nil {
 		return fmt.Errorf("save acceptance file: %w", saveErr)
 	}
 	return nil
@@ -139,10 +138,10 @@ func RemoveAcceptance(file, id string) error {
 	if err != nil {
 		return fmt.Errorf("load acceptance file: %w", err)
 	}
-	if rmErr := f.Remove(id, appexempt.NewTimestamp(ports.RealClock{})); rmErr != nil {
+	if rmErr := f.Remove(id, time.Now().UTC().Format(time.RFC3339)); rmErr != nil {
 		return fmt.Errorf("revoke entry: %w", rmErr)
 	}
-	if saveErr := appexempt.Save(file, f, "stave exempt remove", appexempt.NewTimestamp(ports.RealClock{})); saveErr != nil {
+	if saveErr := appexempt.Save(file, f, "stave exempt remove", time.Now().UTC().Format(time.RFC3339)); saveErr != nil {
 		return fmt.Errorf("save acceptance file: %w", saveErr)
 	}
 	return nil

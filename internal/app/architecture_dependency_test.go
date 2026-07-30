@@ -160,7 +160,6 @@ func TestNoFloatingInternalPackages(t *testing.T) {
 		"profile":           {}, // compliance profile evaluation
 		"sanitize":          {}, // ID sanitisation helpers
 		"testutil":          {}, // shared test helpers
-		"docsverify":        {}, // markdown code-block extraction for doc testing
 		"tools":             {}, // build-time code-gen tools
 		"util":              {}, // small pure-functional utilities
 		"version":           {}, // version-string constants

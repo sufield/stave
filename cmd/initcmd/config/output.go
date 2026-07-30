@@ -3,8 +3,6 @@ package config
 import (
 	"fmt"
 	"io"
-	"maps"
-	"slices"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
 )
@@ -61,10 +59,6 @@ func configFileLine(configFile string) string {
 		return "Config file: (none found; using env/defaults)"
 	}
 	return "Config file: " + configFile
-}
-
-func sortedKeys[V any](m map[string]V) []string {
-	return slices.Sorted(maps.Keys(m))
 }
 
 func writeLines(w io.Writer, lines ...string) error {

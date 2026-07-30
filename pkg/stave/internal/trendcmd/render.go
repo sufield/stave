@@ -9,20 +9,8 @@ import (
 	"github.com/sufield/stave/internal/app/oscillation"
 	"github.com/sufield/stave/internal/app/trendpredict"
 	"github.com/sufield/stave/internal/util/jsonutil"
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 )
-
-// InputError marks a user-input failure (unknown --format on a subcommand).
-// The pkg/stave facade maps it to stave.ErrInvalidInput so the subcommands
-// exit 2 — matching their pre-facade ui.UserError handling. The main `trend`
-// command never wrapped its format error, so [renderTrend] returns a plain
-// error there (exit 4): the difference is preserved verbatim.
-type InputError struct{ Err error }
-
-// Error implements error.
-func (e *InputError) Error() string { return e.Err.Error() }
-
-// Unwrap exposes the wrapped cause.
-func (e *InputError) Unwrap() error { return e.Err }
 
 // renderTrend dispatches the main trend report. Unknown formats are a PLAIN
 // error (the pre-facade command returned NewRenderer's error unwrapped → exit 4).
@@ -51,7 +39,7 @@ func renderForecast(format string, w io.Writer, r *forecast.Result) error {
 		writeForecastTable(w, r)
 		return nil
 	}
-	return &InputError{fmt.Errorf("unsupported format %q (expected: table | json)", format)}
+	return &cmderr.InputError{Err: fmt.Errorf("unsupported format %q (expected: table | json)", format)}
 }
 
 // renderOscillation dispatches the oscillation results. Unknown format → InputError (exit 2).
@@ -65,7 +53,7 @@ func renderOscillation(format string, w io.Writer, results []oscillation.Classif
 		writeOscillationTable(w, results)
 		return nil
 	}
-	return &InputError{fmt.Errorf("unsupported format %q (expected: table | json)", format)}
+	return &cmderr.InputError{Err: fmt.Errorf("unsupported format %q (expected: table | json)", format)}
 }
 
 // renderPredict dispatches the prediction. Unknown format → InputError (exit 2).
@@ -79,5 +67,5 @@ func renderPredict(format string, w io.Writer, p *trendpredict.Prediction) error
 	case "text", "":
 		return renderPredictText(w, p)
 	}
-	return &InputError{fmt.Errorf("unsupported format %q (expected: text | json)", format)}
+	return &cmderr.InputError{Err: fmt.Errorf("unsupported format %q (expected: text | json)", format)}
 }

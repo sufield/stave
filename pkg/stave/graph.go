@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 	"github.com/sufield/stave/pkg/stave/internal/graphcmd"
 )
 
@@ -43,10 +44,10 @@ func ExportAssessmentGraph(assessmentData []byte, format, sourcePath string, now
 	return out, nil
 }
 
-// mapGraphInputErr re-wraps a graphcmd.InputError with ErrInvalidInput (exit
+// mapGraphInputErr re-wraps a cmderr.InputError with ErrInvalidInput (exit
 // 2) and passes everything else through unchanged (plain, exit 4).
 func mapGraphInputErr(err error) error {
-	var ie *graphcmd.InputError
+	var ie *cmderr.InputError
 	if errors.As(err, &ie) {
 		return fmt.Errorf("%w: %w", ie.Err, ErrInvalidInput)
 	}

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 	"strings"
 
@@ -121,7 +122,7 @@ func renderExpandText(w io.Writer, arch archetype.Archetype, matched []policy.Co
 		fmt.Fprintln(w, "Controls in this archetype:")
 		fmt.Fprintln(w)
 		groups := groupByService(matched)
-		for _, svc := range sortedKeys(groups) {
+		for _, svc := range slices.Sorted(maps.Keys(groups)) {
 			ctls := groups[svc]
 			fmt.Fprintf(w, "  %s (%d control%s)\n", svc, len(ctls), plural(len(ctls)))
 			for i := range ctls {
@@ -193,7 +194,7 @@ func renderExpandJSON(w io.Writer, arch archetype.Archetype, matched []policy.Co
 	}
 
 	groups := groupByService(matched)
-	out.ServicesAffected = sortedKeys(groups)
+	out.ServicesAffected = slices.Sorted(maps.Keys(groups))
 	for _, svc := range out.ServicesAffected {
 		ctls := groups[svc]
 		for i := range ctls {
@@ -287,15 +288,6 @@ func groupByService(ctls []policy.ControlDefinition) map[string][]policy.Control
 		svc := expand.ServiceFromControlID(ctls[i].ID)
 		out[svc] = append(out[svc], ctls[i])
 	}
-	return out
-}
-
-func sortedKeys[V any](m map[string]V) []string {
-	out := make([]string, 0, len(m))
-	for k := range m {
-		out = append(out, k)
-	}
-	slices.Sort(out)
 	return out
 }
 

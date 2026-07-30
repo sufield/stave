@@ -101,9 +101,12 @@ func (l *Linter) checkMetadata(path string, root *yaml.Node) []Diagnostic {
 	description, descriptionKey := getString(root, "description")
 	var remediationAction string
 	var remediationActionKey *yaml.Node
-	_, remediation := findNode(root, "remediation")
+	remKey, remediation := findNode(root, "remediation")
 	if remediation != nil && remediation.Kind == yaml.MappingNode {
 		remediationAction, remediationActionKey = getString(remediation, "action")
+		if remediationActionKey == nil {
+			remediationActionKey = remKey
+		}
 	}
 
 	checks := []struct {

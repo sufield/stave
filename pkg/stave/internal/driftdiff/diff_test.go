@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 )
 
 func TestComputeObservationDelta_DetectsAddedRemovedModified(t *testing.T) {
@@ -96,9 +97,9 @@ func TestBuildFilter_InvalidChangeType(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected invalid change type error")
 	}
-	var ie *InputError
+	var ie *cmderr.InputError
 	if !errors.As(err, &ie) {
-		t.Fatalf("expected *InputError, got %T", err)
+		t.Fatalf("expected *cmderr.InputError, got %T", err)
 	}
 }
 

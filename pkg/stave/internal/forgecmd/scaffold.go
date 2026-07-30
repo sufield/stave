@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
@@ -148,33 +149,13 @@ func resolvePropertyPath(props map[string]any, dotPath string) any {
 }
 
 func splitDotPath(path string) []string {
-	path = trimPrefix(path, "properties.")
+	path = strings.TrimPrefix(path, "properties.")
 	var parts []string
-	for _, p := range splitOn(path, '.') {
+	for p := range strings.SplitSeq(path, ".") {
 		if p != "" {
 			parts = append(parts, p)
 		}
 	}
-	return parts
-}
-
-func trimPrefix(s, prefix string) string {
-	if len(s) >= len(prefix) && s[:len(prefix)] == prefix {
-		return s[len(prefix):]
-	}
-	return s
-}
-
-func splitOn(s string, sep byte) []string {
-	var parts []string
-	start := 0
-	for i := range len(s) {
-		if s[i] == sep {
-			parts = append(parts, s[start:i])
-			start = i + 1
-		}
-	}
-	parts = append(parts, s[start:])
 	return parts
 }
 

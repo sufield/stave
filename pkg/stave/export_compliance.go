@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 	"github.com/sufield/stave/pkg/stave/internal/compliancexport"
 )
 
@@ -37,7 +38,7 @@ const (
 func ExportCompliance(ctx context.Context, cfg ComplianceExportConfig) (output []byte, outcome ComplianceOutcome, err error) {
 	res, err := compliancexport.Run(ctx, &cfg)
 	if err != nil {
-		var ie *compliancexport.InputError
+		var ie *cmderr.InputError
 		if errors.As(err, &ie) {
 			return nil, ComplianceSatisfied, fmt.Errorf("%w: %w", ie.Err, ErrInvalidInput)
 		}

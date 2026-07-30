@@ -752,7 +752,7 @@ func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 			hasBroadDataAccess = true
 		}
 
-		if idx := indexByte(action, ':'); idx > 0 {
+		if idx := strings.IndexByte(action, ':'); idx > 0 {
 			serviceCount[action[:idx]] = struct{}{}
 		}
 	}
@@ -789,15 +789,6 @@ func isIAMAdminAction(action string) bool {
 		return true
 	}
 	return sensitiveActions.HasPrivEsc(action)
-}
-
-func indexByte(s string, b byte) int {
-	for i := range s {
-		if s[i] == b {
-			return i
-		}
-	}
-	return -1
 }
 
 // isEffectivelyBroadResource reports whether resource is wildcard-

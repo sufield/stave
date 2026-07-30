@@ -22,19 +22,8 @@ import (
 	"github.com/sufield/stave/internal/sanitize"
 	"github.com/sufield/stave/internal/util/jsonutil"
 	"github.com/sufield/stave/internal/util/strutil"
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 )
-
-// InputError marks a user-input failure (unknown format, bad assessment
-// JSON). The pkg/stave facade unwraps it and re-wraps with
-// stave.ErrInvalidInput so the CLI exits 2; load/compute/render failures
-// stay plain (exit 4).
-type InputError struct{ Err error }
-
-// Error implements error.
-func (e *InputError) Error() string { return e.Err.Error() }
-
-// Unwrap exposes the wrapped cause.
-func (e *InputError) Unwrap() error { return e.Err }
 
 // Format represents a validated coverage-graph output format.
 type Format string
@@ -53,7 +42,7 @@ func ParseFormat(s string) (Format, error) {
 	case FormatDot, FormatJSON:
 		return normalized, nil
 	default:
-		return "", &InputError{fmt.Errorf("invalid --format %q (expected: dot | json)", s)}
+		return "", &cmderr.InputError{Err: fmt.Errorf("invalid --format %q (expected: dot | json)", s)}
 	}
 }
 

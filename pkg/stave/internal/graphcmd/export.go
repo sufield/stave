@@ -9,6 +9,7 @@ import (
 
 	graphpkg "github.com/sufield/stave/internal/adapters/graph"
 	"github.com/sufield/stave/internal/core/report"
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 )
 
 // Renderer is the polymorphic format-dispatch interface for graph export.
@@ -86,7 +87,7 @@ func NewRenderer(format string) (Renderer, error) {
 func ExportGraph(assessmentData []byte, format, sourcePath string, now time.Time) ([]byte, error) {
 	var assessment report.Assessment
 	if err := json.Unmarshal(assessmentData, &assessment); err != nil {
-		return nil, &InputError{fmt.Errorf("parse assessment: %w", err)}
+		return nil, &cmderr.InputError{Err: fmt.Errorf("parse assessment: %w", err)}
 	}
 
 	g := graphpkg.Build(graphpkg.BuildInput{

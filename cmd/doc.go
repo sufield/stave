@@ -5,7 +5,7 @@
 //
 // Getting Started: init, generate
 //
-// Control Engine: validate, apply (--dry-run), diagnose, explain, expand, trace, verify
+// Control Engine: validate, apply (--dry-run), diagnose, explain, expand, trace
 //
 // Workflow & CI: ci (baseline/gate/fix-loop/diff/fix), snapshot, status
 //

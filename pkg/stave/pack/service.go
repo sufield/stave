@@ -32,7 +32,7 @@ func ServicesForPack(p *Pack, catalog []ControlMeta) []string {
 			seen[s] = true
 		}
 	}
-	return sortedKeys(seen)
+	return slices.Sorted(maps.Keys(seen))
 }
 
 // PacksForServices returns the names of packs covering any of the given services
@@ -51,7 +51,7 @@ func PacksForServices(services []string, all map[string]*Pack, catalog []Control
 			}
 		}
 	}
-	return sortedKeys(hit)
+	return slices.Sorted(maps.Keys(hit))
 }
 
 // MergeRequirements unions the requirement manifests of several packs: API calls
@@ -88,7 +88,7 @@ func MergeRequirements(packs []*Pack) Requirements {
 	}
 
 	slices.Sort(serviceOrder)
-	merged := Requirements{ObservationSignals: sortedKeys(signals)}
+	merged := Requirements{ObservationSignals: slices.Sorted(maps.Keys(signals))}
 	for _, svc := range serviceOrder {
 		merged.AWSAPICalls = append(merged.AWSAPICalls, ServiceCalls{
 			Service: svc, Calls: callsByService[svc], Notes: notesByService[svc],
@@ -110,8 +110,4 @@ func dedupAppend(dst, src []string) []string {
 		}
 	}
 	return dst
-}
-
-func sortedKeys(m map[string]bool) []string {
-	return slices.Sorted(maps.Keys(m))
 }

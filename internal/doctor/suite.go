@@ -33,6 +33,9 @@ func (s *DiagnosticSuite) Execute(env *SystemEnvironment) ([]Diagnostic, bool) {
 	isReady := true
 
 	for _, probe := range s.probes {
+		if probe == nil {
+			continue
+		}
 		res := probe(env)
 
 		if res.Name == "" {

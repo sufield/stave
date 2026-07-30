@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/sufield/stave/pkg/stave/internal/cmderr"
 	"github.com/sufield/stave/pkg/stave/internal/driftdiff"
 )
 
@@ -28,7 +29,7 @@ func ObservationDriftChangeTypes() []string { return driftdiff.ChangeTypeNames()
 func DiffObservationDrift(ctx context.Context, cfg ObservationDriftConfig) ([]byte, error) {
 	out, err := driftdiff.Run(ctx, cfg)
 	if err != nil {
-		var ie *driftdiff.InputError
+		var ie *cmderr.InputError
 		if errors.As(err, &ie) {
 			return nil, fmt.Errorf("%w: %w", ie.Err, ErrInvalidInput)
 		}
