@@ -723,6 +723,22 @@ Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept �
 
 ---
 
+### CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.NOCONDITION.001
+
+**Principal Has Unrestricted iam:AttachGroupPolicy Without Policy ARN Condition**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal has `iam:AttachGroupPolicy` but the granting statement lacks a `Condition` restricting which policy ARNs can be attached. Without a `StringEquals`, `StringLike`, or `ArnEquals` condition on the `iam:PolicyARN` key, the principal can attach any of AWS's 1,000+ managed policies — including `AdministratorAccess` and `SecretsManagerReadWrite` — to any group it can target. If the principal belongs to the targeted group, every member (including the principal) inherits the attached policy. The safe pattern scopes attachment to a whitelist of approved policy ARNs via `iam:PolicyARN` condition. Absence of this condition converts a scoped delegation into a full privilege-escalation path with group-wide blast radius.
+Scope: gated on `identity.kind == "user"`. Fires only when `attach_group_policy.present` is true AND `has_policy_arn_condition` is false — i.e., the grant exists and is unrestricted.
+
+**Remediation:** Add a `Condition` block with `ArnEquals` or `StringEquals` on `iam:PolicyARN` to restrict which managed policies can be attached. Example: `"Condition": {"ArnEquals": {"iam:PolicyARN": "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"}}`. If the principal should not attach group policies at all, remove `iam:AttachGroupPolicy` entirely.
+
+---
+
 ### CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001
 
 **Principal Must Not Escalate via iam:AttachRolePolicy**

@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PUTUSERPOLICY.NOCONDITION.001
+name: Principal Has iam:PutUserPolicy Without Content Restriction
+description: >
+  A principal has `iam:PutUserPolicy` in its effective permissions.
+  Unlike `iam:AttachUserPolicy` which can be condition-restricted via
+  `iam:PolicyARN`, there is no IAM Condition key that restricts the
+  *content* of an inline policy written via PutUserPolicy. Every
+  PutUserPolicy grant is inherently unrestricted in what policy
+  document the caller can write — the only available defense is
+  restricting the Resource field (which users can be targeted).
+  This makes PutUserPolicy structurally more dangerous than
+  AttachUserPolicy: the attacker authors the payload (arbitrary
+  Action/Resource/Effect JSON) rather than selecting from existing
+  managed policies.
+
+  Scope: gated on `identity.kind == "user"`. Fires when the
+  principal has `iam:PutUserPolicy` in its effective permissions
+  regardless of whether the Resource includes the principal's own
+  ARN. The self-targeting variant is detected by
+  `CTL.IAM.ESCALATE.PUTUSERPOLICY.001`.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1098.003
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+params:
+  attack_stage: privilege_escalation
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.put_user_policy.present
+  - identity.escalation.put_user_policy.resource_scope
+remediation:
+  description: >
+    Principal has `iam:PutUserPolicy` — the ability to write
+    arbitrary inline policy documents onto IAM users. No IAM
+    Condition key restricts the content of the inline policy,
+    so any grant of this action allows writing admin-equivalent
+    permissions.
+  action: >
+    Remove `iam:PutUserPolicy` from the principal. If the
+    principal must manage inline policies for service accounts,
+    scope the Resource field to specific user ARNs that do not
+    include the principal itself. Deny at the organization
+    boundary with an SCP.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "escalation": {
+          "put_user_policy": {
+            "present": false
+          }
+        }
+      }
+    }
+mitre_attack:
+  - id: T1098.003
+    name: "Account Manipulation: Additional Cloud Roles"
+    tactic: privilege-escalation
+validated_against:
+  - vendor: bishopfox
+    lab: privesc10-PutUserPolicy
+    result: detected
+    verified: "2026-05-30"
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.escalation.put_user_policy.present
+      op: eq
+      value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.

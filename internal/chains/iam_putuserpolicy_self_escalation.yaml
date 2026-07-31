@@ -1,0 +1,34 @@
+id: iam_putuserpolicy_self_escalation
+description: >
+  PutUserPolicy self-escalation to arbitrary permissions. A user
+  has iam:PutUserPolicy (NOCONDITION.001) AND the Resource covers
+  the user's own ARN (PUTUSERPOLICY.001). Together this means the
+  principal can write any inline policy document onto itself —
+  including {"Action": "*", "Resource": "*"} — with a single API
+  call. Unlike AttachUserPolicy (limited to existing managed
+  policies) or AddUserToGroup (requires a pre-existing privileged
+  group), PutUserPolicy lets the attacker author the payload
+  directly. There is no IAM Condition key that restricts inline
+  policy content, so the Resource restriction is the only defense.
+  Threshold 2: both must fire to confirm the self-escalation path
+  is open. A Resource-scoped PutUserPolicy (partial case — user
+  can put policies on service accounts but not on self) fires only
+  the capability control, not this chain.
+controls:
+  - CTL.IAM.ESCALATE.PUTUSERPOLICY.NOCONDITION.001
+  - CTL.IAM.ESCALATE.PUTUSERPOLICY.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.
+incident_precedent:
+  name: Rhino Security Labs IAM Privilege Escalation #2 (2019)
+  impact: PutUserPolicy on self grants immediate admin via attacker-authored inline policy
+  reference: Bishop Fox IAM Vulnerable privesc10-PutUserPolicy; Pacu iam__privesc_scan
