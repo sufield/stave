@@ -17,6 +17,13 @@
             "security_configured": true,
             "billing_configured": true
           }
+        },
+        "network": {
+          "vpc_bpa": {
+            "enabled": true,
+            "managed_by_declarative_policy": true,
+            "mode": "block-bidirectional"
+          }
         }
       }
     },
@@ -26,7 +33,9 @@
       "vendor": "aws",
       "properties": {
         "account": {
-          "in_organization": true
+          "in_organization": true,
+          "root_email_is_unique": true,
+          "root_email_uses_corporate_domain": true
         }
       }
     },
@@ -46,6 +55,11 @@
             "access_analyzer_configured": true,
             "guardduty_configured": true,
             "securityhub_configured": true
+          }
+        },
+        "guardduty": {
+          "org": {
+            "all_members_enrolled": true
           }
         }
       }
@@ -86,6 +100,11 @@
             "guardduty_configured": true,
             "securityhub_configured": true
           }
+        },
+        "guardduty": {
+          "org": {
+            "all_members_enrolled": true
+          }
         }
       }
     },
@@ -116,12 +135,20 @@
             "denies_external_source": true,
             "denies_kms_secrets_external": true,
             "denies_external_principal": true,
-            "enforces_s3_acl_disabled": true
+            "enforces_s3_acl_disabled": true,
+            "all_ous_covered": true,
+            "denies_confused_deputy": true,
+            "enforces_principal_org_id": true
           },
           "delegated_admin": {
             "access_analyzer_configured": true,
             "guardduty_configured": true,
             "securityhub_configured": true
+          }
+        },
+        "guardduty": {
+          "org": {
+            "all_members_enrolled": true
           }
         }
       }
@@ -146,6 +173,11 @@
             "guardduty_configured": true,
             "securityhub_configured": true
           }
+        },
+        "guardduty": {
+          "org": {
+            "all_members_enrolled": true
+          }
         }
       }
     },
@@ -163,6 +195,11 @@
             "access_analyzer_configured": true,
             "guardduty_configured": true,
             "securityhub_configured": true
+          }
+        },
+        "guardduty": {
+          "org": {
+            "all_members_enrolled": true
           }
         }
       }
@@ -194,10 +231,59 @@
             "denies_vpc_management": true,
             "denies_get_federation_token": true,
             "denies_modify_userdata": true,
-            "denies_lambda_public": true
+            "denies_lambda_public": true,
+            "denies_access_analyzer_delete": true,
+            "denies_accesskey_without_sourceip": true,
+            "denies_assume_root": true,
+            "denies_close_account": true,
+            "denies_cloudtrail_modify": true,
+            "denies_config_modify": true,
+            "denies_confused_deputy_assume_role": true,
+            "denies_ebs_encryption_disable": true,
+            "denies_ec2_launch_without_imdsv2": true,
+            "denies_ec2_modify_ebs_default_key": true,
+            "denies_eventbridge_rule_modify": true,
+            "denies_guardduty_disable": true,
+            "denies_guardduty_ipset_modify": true,
+            "denies_iam_create_user": true,
+            "denies_iam_escalation": true,
+            "denies_igw_creation": true,
+            "denies_kms_create_key_external": true,
+            "denies_kms_delete_key_material": true,
+            "denies_kms_import_key_material": true,
+            "denies_kms_replicate_key": true,
+            "denies_kms_schedule_key_deletion": true,
+            "denies_leave_org": true,
+            "denies_marketplace_subscribe": true,
+            "denies_org_takeover_actions": true,
+            "denies_ri_purchase": true,
+            "denies_root_access_key": true,
+            "denies_savings_plan_create": true,
+            "denies_traffic_mirror_create": true,
+            "has_data_perimeter_s3": true,
+            "has_restrictive_policies": true,
+            "restricts_regions": true,
+            "uses_allowlist_strategy": true
+          },
+          "tag_auth": {
+            "sensitive_actions_tag_gated": true,
+            "tag_mutation_locked": true,
+            "session_tag_injection_blocked": true,
+            "tagger_role_protected": true
+          },
+          "root": {
+            "centralized_management_enabled": true
           },
           "org_policy": {
             "s3_bpa_enabled": true
+          }
+        },
+        "audit": {
+          "has_org_trail": true
+        },
+        "guardduty": {
+          "org": {
+            "all_members_enrolled": true
           }
         }
       }
@@ -219,6 +305,11 @@
             "access_analyzer_configured": true,
             "guardduty_configured": true,
             "securityhub_configured": true
+          }
+        },
+        "guardduty": {
+          "org": {
+            "all_members_enrolled": true
           }
         }
       }
