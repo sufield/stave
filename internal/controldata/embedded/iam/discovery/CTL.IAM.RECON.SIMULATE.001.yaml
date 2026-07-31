@@ -1,0 +1,50 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.RECON.SIMULATE.001
+name: Principal Has iam:SimulatePrincipalPolicy Capability
+description: >
+  A principal with iam:SimulatePrincipalPolicy can
+  programmatically test what any other principal in the account
+  can do — one API call per target reveals the complete effective
+  permission set without performing the action. This is the most
+  efficient victim selection tool: the attacker iterates over
+  ListUsers output and calls SimulatePrincipalPolicy for each
+  user to find the one with the highest privileges. Combined with
+  any escalation vector, this enables optimal target selection.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  mitre_attack: "T1087.004"
+  ccm_v4: ["IAM-03"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iam_user, aws_iam_role]
+params:
+  attack_stage: discovery
+observation_fields:
+  - identity.reconnaissance.can_simulate_policies
+remediation:
+  description: >
+    Principal has iam:SimulatePrincipalPolicy — can
+    programmatically evaluate any other principal's permissions.
+    Combined with an escalation vector, enables optimal target
+    selection.
+  action: >
+    Remove iam:SimulatePrincipalPolicy from non-admin principals.
+    Deny via SCP in workload accounts where policy simulation is
+    not required for automation.
+mitre_attack:
+  - id: T1087.004
+    name: "Account Discovery: Cloud Account"
+    tactic: discovery
+unsafe_predicate:
+  all:
+    - field: properties.identity.reconnaissance.can_simulate_policies
+      op: eq
+      value: true

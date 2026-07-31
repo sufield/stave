@@ -13,6 +13,7 @@ const (
 	ActionDataAccess
 	ActionPrivEsc
 	ActionResourceExposure
+	ActionDiscovery
 )
 
 func (c ActionRiskCategory) String() string {
@@ -25,6 +26,8 @@ func (c ActionRiskCategory) String() string {
 		return "PrivEsc"
 	case ActionResourceExposure:
 		return "ResourceExposure"
+	case ActionDiscovery:
+		return "Discovery"
 	}
 	return "Unknown"
 }
@@ -130,6 +133,12 @@ func (r *SensitiveActionRegistry) HasPrivEsc(actionOrPattern string) bool {
 	return r.hasCategory(actionOrPattern, ActionPrivEsc)
 }
 
+// HasDiscovery returns true if the action or pattern includes any
+// Discovery-classified action.
+func (r *SensitiveActionRegistry) HasDiscovery(actionOrPattern string) bool {
+	return r.hasCategory(actionOrPattern, ActionDiscovery)
+}
+
 // CountByCategory counts actions in the given category from a list.
 func (r *SensitiveActionRegistry) CountByCategory(
 	actions []string, category ActionRiskCategory,
@@ -159,7 +168,7 @@ func (r *SensitiveActionRegistry) hasCategory(actionOrPattern string, cat Action
 func (r *SensitiveActionRegistry) allCategories() []ActionRiskCategory {
 	return []ActionRiskCategory{
 		ActionCredentialExposure, ActionDataAccess,
-		ActionPrivEsc, ActionResourceExposure,
+		ActionPrivEsc, ActionResourceExposure, ActionDiscovery,
 	}
 }
 
@@ -192,7 +201,7 @@ func setToSlice(m map[ActionRiskCategory]bool) []ActionRiskCategory {
 	out := make([]ActionRiskCategory, 0, len(m))
 	for _, c := range []ActionRiskCategory{
 		ActionCredentialExposure, ActionDataAccess,
-		ActionPrivEsc, ActionResourceExposure,
+		ActionPrivEsc, ActionResourceExposure, ActionDiscovery,
 	} {
 		if m[c] {
 			out = append(out, c)
@@ -212,4 +221,5 @@ const (
 	EdgeCredential                  // sts:AssumeRole, etc.
 	EdgePrivEsc                     // iam:PassRole, etc.
 	EdgeResExposure                 // s3:PutBucketPolicy, etc.
+	EdgeDiscovery                   // iam:ListUsers, iam:GetUserPolicy, etc.
 )

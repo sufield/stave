@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"strings"
+
 	"github.com/sufield/stave/internal/core/asset"
 )
 
@@ -26,14 +28,27 @@ import (
 // The projection is idempotent — running it twice on the same
 // snapshot is a no-op the second time around.
 func ProjectChainProperties(snap *asset.Snapshot) {
-	if snap == nil || len(snap.Identities) == 0 {
+	if snap == nil || (len(snap.Identities) == 0 && len(snap.Assets) == 0) {
 		return
 	}
-	chainsByPrincipal := ResolveChainsBySnapshot(snap)
+	resolved, trusts := ResolveAllPrincipals(snap)
+	chainsByPrincipal := resolveChainsByResolved(snap, resolved, trusts)
 	for i := range snap.Identities {
 		id := &snap.Identities[i]
 		chains := chainsByPrincipal[string(id.ID)]
 		writeChainProjections(id, chains)
+		if perms := resolved[string(id.ID)]; perms != nil {
+			writeReconProjections(id, perms)
+		}
+	}
+	for i := range snap.Assets {
+		a := &snap.Assets[i]
+		if !a.IsIdentityAsset() {
+			continue
+		}
+		if perms := resolved[string(a.ID)]; perms != nil {
+			writeReconProjectionsOnAsset(a, perms)
+		}
 	}
 }
 
@@ -72,6 +87,14 @@ func ResolveChainsBySnapshot(snap *asset.Snapshot) map[string][]RoleChain {
 		return nil
 	}
 	resolved, trusts := ResolveAllPrincipals(snap)
+	return resolveChainsByResolved(snap, resolved, trusts)
+}
+
+func resolveChainsByResolved(
+	snap *asset.Snapshot,
+	resolved map[string]*ResolvedPermissions,
+	trusts map[string]*PolicyDocument,
+) map[string][]RoleChain {
 	if len(resolved) == 0 {
 		return nil
 	}
@@ -238,4 +261,52 @@ func mutateNested(props map[string]any, path []string, value map[string]any) {
 		}
 		cur = next
 	}
+}
+
+func buildReconMap(perms *ResolvedPermissions) map[string]any {
+	actions := make(map[string]bool, len(perms.EffectiveAllow))
+	for _, g := range perms.EffectiveAllow {
+		actions[strings.ToLower(g.Action)] = true
+	}
+
+	canEnum := actions["iam:listusers"] && actions["iam:listroles"]
+	canRead := actions["iam:getuserpolicy"] && actions["iam:getpolicyversion"] && actions["iam:listattacheduserpolicies"]
+	canSim := actions["iam:simulateprincipalpolicy"]
+	canCred := actions["iam:getloginprofile"] && actions["iam:listaccesskeys"]
+
+	hasEscalation := perms.RiskProfile.PrivEsc > 0
+
+	var capability string
+	switch {
+	case canEnum && canRead && canSim:
+		capability = "full"
+	case canEnum && canRead:
+		capability = "partial"
+	case hasEscalation:
+		capability = "blind"
+	default:
+		capability = "none"
+	}
+
+	return map[string]any{
+		"can_enumerate_principals":    canEnum,
+		"can_read_principal_policies": canRead,
+		"can_simulate_policies":       canSim,
+		"can_read_credentials":        canCred,
+		"victim_selection_capability": capability,
+	}
+}
+
+func writeReconProjections(id *asset.CloudIdentity, perms *ResolvedPermissions) {
+	if id.Properties == nil {
+		id.Properties = make(map[string]any)
+	}
+	mutateNested(id.Properties, []string{"identity", "reconnaissance"}, buildReconMap(perms))
+}
+
+func writeReconProjectionsOnAsset(a *asset.Asset, perms *ResolvedPermissions) {
+	if a.Properties == nil {
+		a.Properties = make(map[string]any)
+	}
+	mutateNested(a.Properties, []string{"identity", "reconnaissance"}, buildReconMap(perms))
 }

@@ -2932,6 +2932,36 @@ It must be TWO SEPARATE statements (OR logic), not one (AND logic): (1) Deny sts
 
 ---
 
+### CTL.IAM.RECON.SIMULATE.001
+
+**Principal Has iam:SimulatePrincipalPolicy Capability**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** mitre_attack: T1087.004; nist_800_53_r5: AC-6;
+
+A principal with iam:SimulatePrincipalPolicy can programmatically test what any other principal in the account can do — one API call per target reveals the complete effective permission set without performing the action. This is the most efficient victim selection tool: the attacker iterates over ListUsers output and calls SimulatePrincipalPolicy for each user to find the one with the highest privileges. Combined with any escalation vector, this enables optimal target selection.
+
+**Remediation:** Remove iam:SimulatePrincipalPolicy from non-admin principals. Deny via SCP in workload accounts where policy simulation is not required for automation.
+
+---
+
+### CTL.IAM.RECON.VICTIM.SELECTION.001
+
+**Principal Has Victim Selection Capability for Privilege Escalation**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** mitre_attack: T1087.004; nist_800_53_r5: AC-6;
+
+A principal that can enumerate all IAM principals (iam:ListUsers/ListRoles), read their attached policies (iam:GetUserPolicy/GetPolicyVersion/ListAttachedUserPolicies), and optionally simulate their permissions (iam:SimulatePrincipalPolicy) has the reconnaissance capability to surgically select the highest-privilege target before executing an escalation vector. Combined with any escalation control, this transforms blind exploitation into targeted privilege escalation — the attacker identifies the programmatic-only admin account with no MFA and acts on it specifically.
+
+**Remediation:** Scope iam:ListUsers, iam:ListRoles, and policy-reading actions (iam:GetUserPolicy, iam:GetPolicyVersion, iam:ListAttachedUserPolicies) to specific resource ARNs or remove them from non-admin principals. Deny iam:SimulatePrincipalPolicy via SCP for workload accounts.
+
+---
+
 ### CTL.IAM.RESOURCE.CROSSACCOUNT.001
 
 **Role Must Not Grant Access to External Account Resources**

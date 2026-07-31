@@ -90,6 +90,27 @@
       }
     },
     {
+      "id": "arn:aws:iam::111122223333:user/frank-create-login-existing-profile",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "create_login_profile": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/admin-existing",
+              "permission_delta": [
+                "iam:*"
+              ],
+              "resource_scope": "wildcard",
+              "target_has_existing_profile": true
+            }
+          }
+        }
+      }
+    },
+    {
       "id": "arn:aws:iam::111122223333:user/eve-clean",
       "type": "aws_iam_user",
       "vendor": "aws",

@@ -1187,3 +1187,58 @@ contracts:
       Null if the tag is absent.
     consumers:
       - network-reachability-graph
+
+  # ─── IAM Reconnaissance / Victim Selection ──────────────────────
+  #
+  # Derived by the Stave resolver from the principal's effective
+  # action set. These fields enable controls that distinguish
+  # targeted escalation (attacker can enumerate and select the
+  # highest-value victim) from blind escalation.
+
+  - field: identity.reconnaissance.can_enumerate_principals
+    type: boolean
+    postcondition: >
+      True when the principal has both iam:ListUsers and
+      iam:ListRoles in its effective action set. Enables
+      discovery of all IAM principals in the account.
+    consumers:
+      - CTL.IAM.RECON.VICTIM.SELECTION.001
+
+  - field: identity.reconnaissance.can_read_principal_policies
+    type: boolean
+    postcondition: >
+      True when the principal has iam:GetUserPolicy,
+      iam:GetPolicyVersion, and iam:ListAttachedUserPolicies
+      (or role equivalents) in its effective action set.
+      Enables reading other principals' permissions.
+    consumers:
+      - CTL.IAM.RECON.VICTIM.SELECTION.001
+
+  - field: identity.reconnaissance.can_simulate_policies
+    type: boolean
+    postcondition: >
+      True when the principal has iam:SimulatePrincipalPolicy
+      in its effective action set. The most dangerous single
+      recon action: programmatic victim selection in one API call.
+    consumers:
+      - CTL.IAM.RECON.VICTIM.SELECTION.001
+
+  - field: identity.reconnaissance.can_read_credentials
+    type: boolean
+    postcondition: >
+      True when the principal has iam:GetLoginProfile and
+      iam:ListAccessKeys in its effective action set. Enables
+      target selection for credential manipulation attacks.
+    consumers:
+      - CTL.IAM.RECON.VICTIM.SELECTION.001
+
+  - field: identity.reconnaissance.victim_selection_capability
+    type: string
+    postcondition: >
+      Summary field derived from the 4 recon booleans.
+      "full" when enumerate + read + simulate are all true.
+      "partial" when enumerate + read but cannot simulate.
+      "blind" when escalation exists but no recon capability.
+      "none" when no recon and no escalation.
+    consumers:
+      - CTL.IAM.RECON.VICTIM.SELECTION.001

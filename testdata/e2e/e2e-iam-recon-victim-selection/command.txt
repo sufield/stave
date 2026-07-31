@@ -1,0 +1,1 @@
+apply --observations $CASE_DIR/observations --max-unsafe 168h --eval-time 2026-01-15T00:00:00Z --format json

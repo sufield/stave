@@ -494,4 +494,42 @@ var defaultActions = []ActionClassification{
 	{Action: "backup:DeleteRecoveryPoint", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "rbin:DeleteRule", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "rbin:UpdateRule", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+
+	// ================================================================
+	// DISCOVERY (source: "stave")
+	// IAM reconnaissance actions that enable victim selection in
+	// privilege escalation attacks. An attacker with these permissions
+	// can enumerate principals and read their policies to identify
+	// the highest-value target before acting.
+	// Excludes iam:GetAccountAuthorizationDetails (too broad, high
+	// noise for legitimate automation).
+	// ================================================================
+
+	// --- Principal enumeration ---
+	{Action: "iam:ListUsers", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:GetUser", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:ListRoles", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:GetRole", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+
+	// --- Policy reading (user) ---
+	{Action: "iam:ListAttachedUserPolicies", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:ListUserPolicies", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:GetUserPolicy", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+
+	// --- Policy reading (group) ---
+	{Action: "iam:ListGroupsForUser", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:GetGroup", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:ListGroupPolicies", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:GetGroupPolicy", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:ListAttachedGroupPolicies", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+
+	// --- Policy reading (role) ---
+	{Action: "iam:ListRolePolicies", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+
+	// --- Policy reading (shared) ---
+	{Action: "iam:GetPolicy", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+	{Action: "iam:GetPolicyVersion", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+
+	// --- Policy simulation ---
+	{Action: "iam:SimulatePrincipalPolicy", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
 }

@@ -1,0 +1,31 @@
+id: iam_simulated_escalation
+description: >
+  Principal can simulate any other principal's permissions
+  (iam:SimulatePrincipalPolicy) AND has an escalation vector.
+  SimulatePrincipalPolicy is the most efficient target selection
+  tool — one API call tells the attacker exactly what each
+  potential victim can do. Combined with credential manipulation
+  or policy attachment, this enables programmatic identification
+  of the highest-value target before executing the escalation.
+controls:
+  - CTL.IAM.RECON.SIMULATE.001
+  - CTL.IAM.ESCALATE.CREATELOGINPROFILE.001
+  - CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001
+  - CTL.IAM.ESCALATE.CREATEACCESSKEY.001
+  - CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001
+  - CTL.IAM.ESCALATE.PUTUSERPOLICY.001
+  - CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001
+  - CTL.IAM.ESCALATE.ADDUSERTOGROUP.001
+  - CTL.IAM.ESCALATE.RESYNCMFADEVICE.001
+escalation_threshold: 2
+compound_severity: critical
+scope: global
+preconditions:
+  - initial_access
+postconditions:
+  - targeted_privilege_escalation
+implicit_dependencies: []
+incident_precedent:
+  name: Rhino Security Labs aws_escalate.py (2019)
+  impact: Automated victim selection via SimulatePrincipalPolicy before credential manipulation
+  reference: Bishop Fox IAM Vulnerable; p0 Labs GUI-Vil (2023) same technique at scale

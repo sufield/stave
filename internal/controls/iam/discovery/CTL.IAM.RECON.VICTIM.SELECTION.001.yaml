@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.RECON.VICTIM.SELECTION.001
+name: Principal Has Victim Selection Capability for Privilege Escalation
+description: >
+  A principal that can enumerate all IAM principals
+  (iam:ListUsers/ListRoles), read their attached policies
+  (iam:GetUserPolicy/GetPolicyVersion/ListAttachedUserPolicies),
+  and optionally simulate their permissions
+  (iam:SimulatePrincipalPolicy) has the reconnaissance capability
+  to surgically select the highest-privilege target before
+  executing an escalation vector. Combined with any escalation
+  control, this transforms blind exploitation into targeted
+  privilege escalation — the attacker identifies the
+  programmatic-only admin account with no MFA and acts on it
+  specifically.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  mitre_attack: "T1087.004"
+  ccm_v4: ["IAM-03"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iam_user, aws_iam_role]
+params:
+  attack_stage: discovery
+observation_fields:
+  - identity.reconnaissance.can_enumerate_principals
+  - identity.reconnaissance.can_read_principal_policies
+  - identity.reconnaissance.can_simulate_policies
+  - identity.reconnaissance.can_read_credentials
+  - identity.reconnaissance.victim_selection_capability
+remediation:
+  description: >
+    Principal has victim selection capability — can enumerate IAM
+    principals and read their policies. Combined with an
+    escalation vector, this enables surgical selection of the
+    highest-privilege target rather than blind exploitation.
+  action: >
+    Scope iam:ListUsers, iam:ListRoles, and policy-reading
+    actions (iam:GetUserPolicy, iam:GetPolicyVersion,
+    iam:ListAttachedUserPolicies) to specific resource ARNs or
+    remove them from non-admin principals. Deny
+    iam:SimulatePrincipalPolicy via SCP for workload accounts.
+mitre_attack:
+  - id: T1087.004
+    name: "Account Discovery: Cloud Account"
+    tactic: discovery
+unsafe_predicate:
+  all:
+    - field: properties.identity.reconnaissance.victim_selection_capability
+      op: in
+      value: ["full", "partial"]
+tests:
+  - name: "full recon capability fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/attacker"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          reconnaissance:
+            victim_selection_capability: "full"
+            can_enumerate_principals: true
+            can_read_principal_policies: true
+            can_simulate_policies: true
+  - name: "partial recon capability fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/partial"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          reconnaissance:
+            victim_selection_capability: "partial"
+            can_enumerate_principals: true
+            can_read_principal_policies: true
+  - name: "blind capability does not fire"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/blind"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          reconnaissance:
+            victim_selection_capability: "blind"
+  - name: "no capability does not fire"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/safe"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          reconnaissance:
+            victim_selection_capability: "none"

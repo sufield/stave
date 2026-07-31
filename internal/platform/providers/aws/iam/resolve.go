@@ -686,6 +686,7 @@ type RiskProfile struct {
 	DataAccess         int `json:"data_access"`
 	PrivEsc            int `json:"priv_esc"`
 	ResourceExposure   int `json:"resource_exposure"`
+	Discovery          int `json:"discovery"`
 }
 
 var sensitiveActions = coreiam.DefaultRegistry()
@@ -717,6 +718,8 @@ func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 				profile.PrivEsc++
 			case coreiam.ActionResourceExposure:
 				profile.ResourceExposure++
+			case coreiam.ActionDiscovery:
+				profile.Discovery++
 			}
 		}
 

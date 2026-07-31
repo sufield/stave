@@ -79,8 +79,8 @@ func TestClassifyWildcardPrefix(t *testing.T) {
 func TestClassifyWildcardStar(t *testing.T) {
 	r := DefaultRegistry()
 	cats := r.ClassifyWildcard("*")
-	if len(cats) != 4 {
-		t.Errorf("* should return all 4 categories, got %d", len(cats))
+	if len(cats) != 5 {
+		t.Errorf("* should return all 5 categories, got %d", len(cats))
 	}
 }
 

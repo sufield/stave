@@ -1,0 +1,85 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/attacker-full-recon",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "scp_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}",
+          "policies_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iam:ListUsers\",\"iam:ListRoles\",\"iam:GetUserPolicy\",\"iam:GetPolicyVersion\",\"iam:ListAttachedUserPolicies\",\"iam:SimulatePrincipalPolicy\",\"iam:CreateLoginProfile\",\"iam:GetLoginProfile\",\"iam:ListAccessKeys\"],\"Resource\":\"*\"}]}",
+          "escalation": {
+            "create_login_profile": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/svc-admin",
+              "permission_delta": ["iam:*", "s3:*"],
+              "resource_scope": "wildcard",
+              "target_has_existing_profile": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/attacker-partial-recon",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "scp_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}",
+          "policies_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iam:ListUsers\",\"iam:ListRoles\",\"iam:GetUserPolicy\",\"iam:GetPolicyVersion\",\"iam:ListAttachedUserPolicies\",\"iam:CreateLoginProfile\"],\"Resource\":\"*\"}]}",
+          "escalation": {
+            "create_login_profile": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/svc-admin",
+              "permission_delta": ["iam:*"],
+              "resource_scope": "wildcard",
+              "target_has_existing_profile": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/attacker-blind",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "scp_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}",
+          "policies_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"iam:CreateLoginProfile\"],\"Resource\":\"*\"}]}",
+          "escalation": {
+            "create_login_profile": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/svc-admin",
+              "permission_delta": ["iam:*"],
+              "resource_scope": "wildcard",
+              "target_has_existing_profile": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/user-no-capability",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "scp_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}",
+          "policies_json": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:GetObject\"],\"Resource\":\"arn:aws:s3:::my-bucket/*\"}]}",
+          "escalation": {
+            "create_login_profile": {"present": false}
+          }
+        }
+      }
+    }
+  ]
+}
