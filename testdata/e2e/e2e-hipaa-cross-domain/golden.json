@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "c4aeaa59b9b2b9d8bcbc716e1002c3ab2fb525e0534cc7d871da105e220b5345",
+    "policy_fingerprint": "ca612c270289edf1badcae0b9eb5e9bef171b88977e26ad741c4ffd796808884",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -2943,6 +2943,24 @@
           "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n"
         },
         {
+          "chain_id": "bastion_bypass_unmonitored",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EC2.SG.SSH.INTERNAL.CIDR.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n"
+        },
+        {
+          "chain_id": "bastion_bypass_unmonitored",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SEGMENT.BASTION.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n"
+        },
+        {
           "chain_id": "data_exfiltration_path",
           "chain_severity": "critical",
           "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
@@ -5862,6 +5880,26 @@
         "CTL.VPC.FLOWLOG.001"
       ],
       "missing_control": "CTL.VPC.SG.EGRESS.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "bastion_bypass_unmonitored",
+      "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.EC2.SG.SSH.INTERNAL.CIDR.001",
+      "severity": "critical",
+      "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "bastion_bypass_unmonitored",
+      "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SEGMENT.BASTION.001",
       "severity": "critical",
       "scope_id": "vpc-prod-001"
     },

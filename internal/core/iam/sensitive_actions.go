@@ -133,12 +133,6 @@ func (r *SensitiveActionRegistry) HasPrivEsc(actionOrPattern string) bool {
 	return r.hasCategory(actionOrPattern, ActionPrivEsc)
 }
 
-// HasDiscovery returns true if the action or pattern includes any
-// Discovery-classified action.
-func (r *SensitiveActionRegistry) HasDiscovery(actionOrPattern string) bool {
-	return r.hasCategory(actionOrPattern, ActionDiscovery)
-}
-
 // CountByCategory counts actions in the given category from a list.
 func (r *SensitiveActionRegistry) CountByCategory(
 	actions []string, category ActionRiskCategory,

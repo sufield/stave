@@ -36,7 +36,8 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// 63 after moving `path` under `graph path`.
 	// 62 after moving `toolmap` under `map attack`.
 	// 61 after removing top-level `diff` (split into `snapshot compare` + `controls diff`).
-	const want = 61
+	// 62 after adding `network enumerate`.
+	const want = 62
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}

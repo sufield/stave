@@ -10,11 +10,11 @@ import (
 func TestCompute_UninitializedWeightsFallsBackToDefault(t *testing.T) {
 	// A completely clean posture (0 findings, 100% coverage, 0 SLA breaches)
 	input := Input{
-		Findings:      []remediation.Finding{},
-		CoveragePct:   100.0,
-		HasCoverage:   true,
-		Weights:       Weights{}, // zero-value uninitialized weights
-		GeneratedAt:   time.Now(),
+		Findings:    []remediation.Finding{},
+		CoveragePct: 100.0,
+		HasCoverage: true,
+		Weights:     Weights{}, // zero-value uninitialized weights
+		GeneratedAt: time.Now(),
 	}
 
 	res := Compute(input)

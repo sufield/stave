@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.TRAINING.ENCRYPT.CMK.001
+name: SageMaker Training Job Must Use a Customer-Managed KMS Key
+description: >
+  SageMaker training job volumes with encryption must use a
+  customer-managed KMS key, not the AWS-managed default. Training
+  jobs process entire datasets — if the training data is PHI, the
+  volume encryption key determines whether the organization can
+  independently rotate, audit, and revoke access. The AWS-managed
+  key has a key policy the customer cannot edit and cannot be
+  revoked on the customer's schedule.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4:
+  - CEK-04
+  - CEK-08
+scope_tags:
+- aws
+- sagemaker
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sagemaker_training_job]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Training job volume is encrypted with the AWS-managed default
+    key. Per-tenant key-policy and revocation controls are unavailable.
+  action: >
+    Specify a customer-managed KMS key via VolumeKmsKeyId in the
+    training job ResourceConfig. Each new training job can use a
+    different key.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_training",
+        "encryption": {
+          "volume_encrypted": true,
+          "kms_key_managed_by": "customer"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+  - field: properties.compute.kind
+    op: eq
+    value: sagemaker_training
+  - field: properties.compute.encryption.volume_encrypted
+    op: eq
+    value: true
+  - field: properties.compute.encryption.kms_key_managed_by
+    op: eq
+    value: aws
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:training-job/model-training-2026"
+      asset_type: aws_sagemaker_training_job
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_training
+          encryption:
+            volume_encrypted: true
+            kms_key_managed_by: aws
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:training-job/model-training-2026"
+      asset_type: aws_sagemaker_training_job
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_training
+          encryption:
+            volume_encrypted: true
+            kms_key_managed_by: customer
+  - name: unencrypted training job not in scope
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:training-job/dev-training"
+      asset_type: aws_sagemaker_training_job
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_training
+          encryption:
+            volume_encrypted: false

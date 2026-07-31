@@ -93,6 +93,7 @@ var facadeCleanBaseline = map[string]struct{}{
 	"mcp":                   {},
 	"metrics":               {},
 	"nep":                   {},
+	"network":               {},
 	"pack":                  {},
 	"path":                  {},
 	"plan":                  {},

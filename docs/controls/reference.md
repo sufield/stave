@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3242
-**Pack hash:** `677ff8d8fd2692669b74d499a956c974aa0dd33e4fb70ba3adf1982781c893ed`
+**Total controls:** 3245
+**Pack hash:** `9cbdd0d9ff02d085ebd04f2f5a5d52aa27759c259a980d543dbe3188a46e7618`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -17,7 +17,7 @@ GitHub. Pick a service below.
 | high | 1411 |
 | info | 19 |
 | low | 238 |
-| medium | 1220 |
+| medium | 1223 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,7 +28,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 141 |
 | encryption | 125 |
-| exposure | 1421 |
+| exposure | 1424 |
 | governance | 657 |
 | hygiene | 21 |
 | identity | 631 |
@@ -135,7 +135,7 @@ GitHub. Pick a service below.
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 3 |
-| [SAGEMAKER](reference/sagemaker.md) | 42 |
+| [SAGEMAKER](reference/sagemaker.md) | 45 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |

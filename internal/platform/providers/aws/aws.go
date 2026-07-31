@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/derive"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/network"
 )
 
 // AlgorithmAWSKMS is the AWS KMS-managed encryption algorithm.
@@ -69,6 +70,10 @@ func Register() {
 	derive.VPCCIDRTypes.NetworkACL = "aws_vpc_network_acl"
 	derive.BucketAPTypes.Bucket = "aws_s3_bucket"
 	derive.BucketAPTypes.AccessPoint = "aws_s3_access_point"
+
+	network.GraphTypes.Instance = "aws_ec2_instance"
+	network.GraphTypes.SecurityGroup = "aws_ec2_security_group"
+	network.GraphTypes.PeeringConnection = "aws_vpc_peering_connection"
 
 	remediation.TypeTokens["aws_s3_bucket"] = []remediation.TokenDef{
 		{Placeholder: "<bucket>"},

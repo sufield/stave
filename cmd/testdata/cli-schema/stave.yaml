@@ -178,6 +178,7 @@ see_also:
     - stave lint - Lint control files for design quality
     - stave map - ATT&CK tactic coverage and gap analysis
     - stave metrics - Write Prometheus scrape file for node_exporter
+    - stave network - Network reachability analysis and safety proofs
     - stave pack - Concern packs — named control groupings and their data requirements
     - stave permissions - Query net effective permissions from a snapshot
     - stave plan - Preview which controls will evaluate, by service and severity

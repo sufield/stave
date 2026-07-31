@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.ENDPOINT.ENCRYPT.CMK.001
+name: SageMaker Endpoint Must Use a Customer-Managed KMS Key
+description: >
+  SageMaker endpoint configurations with encryption must use a
+  customer-managed KMS key, not the AWS-managed default. Endpoints
+  serve inference on potentially sensitive inputs — the AWS-managed
+  key has a key policy the customer cannot edit and cannot be revoked
+  or rotated on the customer's schedule. Customer-managed keys
+  provide per-tenant key-policy control and per-incident key-revocation
+  capability for data at rest on inference instances.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4:
+  - CEK-04
+  - CEK-08
+scope_tags:
+- aws
+- sagemaker
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sagemaker_endpoint_config]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Endpoint is encrypted with the AWS-managed default key.
+    Per-tenant key-policy and revocation controls are unavailable.
+  action: >
+    Create a new endpoint configuration with a customer-managed KMS
+    key specified via KmsKeyId. SageMaker does not allow changing
+    the encryption key on an existing endpoint configuration.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_endpoint_config",
+        "encryption": {
+          "volume_encrypted": true,
+          "kms_key_managed_by": "customer"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+  - field: properties.compute.kind
+    op: eq
+    value: sagemaker_endpoint_config
+  - field: properties.compute.encryption.volume_encrypted
+    op: eq
+    value: true
+  - field: properties.compute.encryption.kms_key_managed_by
+    op: eq
+    value: aws
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:endpoint-config/prod-endpoint"
+      asset_type: aws_sagemaker_endpoint_config
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_endpoint_config
+          encryption:
+            volume_encrypted: true
+            kms_key_managed_by: aws
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:endpoint-config/prod-endpoint"
+      asset_type: aws_sagemaker_endpoint_config
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_endpoint_config
+          encryption:
+            volume_encrypted: true
+            kms_key_managed_by: customer
+  - name: unencrypted endpoint not in scope
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:endpoint-config/dev-endpoint"
+      asset_type: aws_sagemaker_endpoint_config
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_endpoint_config
+          encryption:
+            volume_encrypted: false

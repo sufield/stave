@@ -41,6 +41,9 @@ Inputs:
 Exit codes:
   0   History displayed
   2   Input error`,
+		Example: `  stave prove history --dir proofs/
+  stave prove history --dir proofs/ --property bastion-ssh --format json
+  stave prove history --dir proofs/ --since 2026-01-01`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,

@@ -45,15 +45,18 @@ func BuildGraph(snapshots []asset.Snapshot) *Graph {
 		Hosts:   make(map[string]*Host),
 		SGRules: make(map[string][]SGRule),
 	}
+	if GraphTypes.Instance == "" {
+		return g
+	}
 	for i := range snapshots {
 		for j := range snapshots[i].Assets {
 			a := &snapshots[i].Assets[j] //nolint:gosec // index is within range
 			switch string(a.Type) {
-			case "aws_ec2_instance":
+			case GraphTypes.Instance:
 				g.extractHost(a)
-			case "aws_ec2_security_group":
+			case GraphTypes.SecurityGroup:
 				g.extractSGRules(a)
-			case "aws_vpc_peering_connection":
+			case GraphTypes.PeeringConnection:
 				g.extractPeering(a)
 			}
 		}

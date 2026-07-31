@@ -65,6 +65,21 @@ SageMaker endpoint configuration does not specify a customer- managed KMS key fo
 
 ---
 
+### CTL.SAGEMAKER.ENDPOINT.ENCRYPT.CMK.001
+
+**SageMaker Endpoint Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+SageMaker endpoint configurations with encryption must use a customer-managed KMS key, not the AWS-managed default. Endpoints serve inference on potentially sensitive inputs — the AWS-managed key has a key policy the customer cannot edit and cannot be revoked or rotated on the customer's schedule. Customer-managed keys provide per-tenant key-policy control and per-incident key-revocation capability for data at rest on inference instances.
+
+**Remediation:** Create a new endpoint configuration with a customer-managed KMS key specified via KmsKeyId. SageMaker does not allow changing the encryption key on an existing endpoint configuration.
+
+---
+
 ### CTL.SAGEMAKER.ENDPOINT.ISOLATION.001
 
 **SageMaker Endpoint Configuration Must Enable Network Isolation**
@@ -440,6 +455,21 @@ SageMaker pipeline must encrypt artifacts and intermediate data with a customer-
 
 ---
 
+### CTL.SAGEMAKER.PIPELINE.ENCRYPT.CMK.001
+
+**SageMaker Pipeline Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+SageMaker pipelines with encryption must use a customer-managed KMS key, not the AWS-managed default. Pipelines chain multiple processing stages, each with its own storage for artifacts, intermediate data, and model outputs. The AWS-managed key has a key policy the customer cannot edit and cannot be revoked or rotated on the customer's schedule. Customer-managed keys provide per-tenant key-policy control and per-incident key-revocation capability across all pipeline stages.
+
+**Remediation:** Configure the pipeline's OutputDataConfig and ProcessingOutputConfig to use a customer-managed KMS key ARN. Update the pipeline definition to reference the CMK.
+
+---
+
 ### CTL.SAGEMAKER.PIPELINE.OVERPERM.001
 
 **SageMaker Pipeline Role Must Follow Least Privilege**
@@ -497,6 +527,21 @@ SageMaker training job's InputDataConfig references an S3 bucket in a different 
 SageMaker training job ingests its InputDataConfig data source without encryption-in-transit and without explicit KMS encryption-context binding. Distinct from CTL.SAGEMAKER.TRAINING.ENCRYPT.VOLUME.001 (which checks the training instance's local volume encryption at rest) — this control flags the read path between S3 and the training container. Unencrypted training reads expose dataset content on the AWS network path and bind retrieval to the bucket- level KMS key (rather than a job-specific encryption context), so a compromised training role's blast radius spans every bucket the role can decrypt.
 
 **Remediation:** Add aws:SecureTransport=true deny-rule to the source bucket policy. Configure the training job's InputDataConfig with a KmsKeyId and pass an explicit encryption-context entry binding the decrypt to the training-job ARN. Add a key policy permitting only the training role to decrypt with that context.
+
+---
+
+### CTL.SAGEMAKER.TRAINING.ENCRYPT.CMK.001
+
+**SageMaker Training Job Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+SageMaker training job volumes with encryption must use a customer-managed KMS key, not the AWS-managed default. Training jobs process entire datasets — if the training data is PHI, the volume encryption key determines whether the organization can independently rotate, audit, and revoke access. The AWS-managed key has a key policy the customer cannot edit and cannot be revoked on the customer's schedule.
+
+**Remediation:** Specify a customer-managed KMS key via VolumeKmsKeyId in the training job ResourceConfig. Each new training job can use a different key.
 
 ---
 

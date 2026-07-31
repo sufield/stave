@@ -74,22 +74,6 @@ func (*ChainPropertyEnricher) EnrichSnapshot(snap *asset.Snapshot) {
 	ProjectChainProperties(snap)
 }
 
-// ResolveChainsBySnapshot drives the chain walker over every
-// identity in the snapshot and returns the resulting chains keyed
-// by principal ARN. Centralised so both the property projector
-// (above) and any future caller that wants chain data stay
-// aligned on extractor configuration — service trusts,
-// AWS-principal trusts, scheduled deletions, and resource
-// bindings must all be configured identically across consumers
-// or the chain results diverge.
-func ResolveChainsBySnapshot(snap *asset.Snapshot) map[string][]RoleChain {
-	if snap == nil || len(snap.Identities) == 0 {
-		return nil
-	}
-	resolved, trusts := ResolveAllPrincipals(snap)
-	return resolveChainsByResolved(snap, resolved, trusts)
-}
-
 func resolveChainsByResolved(
 	snap *asset.Snapshot,
 	resolved map[string]*ResolvedPermissions,
