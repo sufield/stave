@@ -1,0 +1,41 @@
+id: iam_attachrolepolicy_assumerole_escalation
+description: >
+  Cross-service privilege escalation via iam:AttachRolePolicy +
+  sts:AssumeRole. A principal has unrestricted iam:AttachRolePolicy
+  (ATTACHROLEPOLICY.001 + NOCONDITION.001) AND can assume a role
+  whose trust policy admits the principal (ASSUMEROLE.001). Together
+  this creates a two-stage escalation: the principal attaches any
+  managed policy (including AdministratorAccess or AmazonS3FullAccess)
+  to the assumable role, then assumes it, gaining arbitrary permissions
+  across service boundaries — including access to S3 buckets containing
+  PII or other sensitive data. This is the first chain in the escalation
+  family that crosses IAM → STS → target-service boundaries. Single-
+  resource scanners miss this compound path: an IAM scanner sees
+  AttachRolePolicy, an S3 scanner sees a bucket accessible to
+  SupportRole — neither connects the two. Threshold 3: all three
+  controls must fire on the same principal to confirm the two-stage
+  escalation path is open. AttachRolePolicy without AssumeRole trust
+  means the principal can arm but not fire the role (dangerous but not
+  self-escalation). AssumeRole trust without AttachRolePolicy means
+  the principal uses the role's existing permissions only (not an
+  escalation).
+controls:
+  - CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001
+  - CTL.IAM.ESCALATE.ATTACHROLEPOLICY.NOCONDITION.001
+  - CTL.IAM.ESCALATE.ASSUMEROLE.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - iam_credential_theft
+  - data_exfiltration
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.
+incident_precedent:
+  name: Palo Alto Unit 42 cloud extortion (2024)
+  impact: Attackers with AttachRolePolicy escalated role permissions and accessed S3 data at scale
+  reference: Rhino Security Labs IAM Privilege Escalation (AttachRolePolicy + AssumeRole); Bishop Fox IAM Vulnerable privesc9-AttachRolePolicy

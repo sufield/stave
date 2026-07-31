@@ -754,6 +754,22 @@ A principal (IAM user or role) holding `iam:AttachRolePolicy` on a role it can r
 
 ---
 
+### CTL.IAM.ESCALATE.ATTACHROLEPOLICY.NOCONDITION.001
+
+**Principal Has Unrestricted iam:AttachRolePolicy Without Policy ARN Condition**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal has `iam:AttachRolePolicy` but the granting statement lacks a `Condition` restricting which policy ARNs can be attached. Without a `StringEquals`, `StringLike`, or `ArnEquals` condition on the `iam:PolicyARN` key, the principal can attach any of AWS's 1,000+ managed policies — including `AdministratorAccess` and `AmazonS3FullAccess` — to any role it can target. Combined with `sts:AssumeRole` trust on the target role, this creates a two-stage escalation: modify the role's permissions, then assume it. The safe pattern scopes attachment to a whitelist of approved policy ARNs via `iam:PolicyARN` condition and restricts the Resource field to specific role ARNs. Absence of the condition converts a scoped delegation into a full privilege-escalation path.
+Scope: applies to both users and roles (matching `CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001`). Fires when `attach_role_policy.present` is true AND `has_policy_arn_condition` is false — i.e., the grant exists and is unrestricted.
+
+**Remediation:** Add a `Condition` block with `ArnEquals` or `StringEquals` on `iam:PolicyARN` to restrict which managed policies can be attached. Example: `"Condition": {"ArnEquals": {"iam:PolicyARN": "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"}}`. Also scope the Resource to specific role ARNs. If the principal should not attach role policies at all, remove `iam:AttachRolePolicy` entirely.
+
+---
+
 ### CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001
 
 **Principal Must Not Escalate via iam:AttachUserPolicy On Self**

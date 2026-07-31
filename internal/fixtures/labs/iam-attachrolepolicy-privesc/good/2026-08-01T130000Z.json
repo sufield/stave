@@ -1,0 +1,69 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.iam-attachrolepolicy-privesc"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/safe-user",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "has_inline_policies": false
+          },
+          "escalation": {
+            "attach_role_policy": {
+              "present": false
+            },
+            "assume_role": {
+              "present": false
+            },
+            "can_escalate_to_admin": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/SupportRole",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "role_name": "SupportRole",
+        "assume_role_policy_document": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "attached_policies": [
+          "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"
+        ]
+      }
+    },
+    {
+      "id": "arn:aws:s3:::app-assets-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket_name": "app-assets-111122223333",
+        "public_access_block": {
+          "block_public_acls": true,
+          "block_public_policy": true,
+          "ignore_public_acls": true,
+          "restrict_public_buckets": true
+        }
+      }
+    }
+  ]
+}
