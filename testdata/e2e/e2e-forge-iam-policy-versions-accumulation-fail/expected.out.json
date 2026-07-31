@@ -4,7 +4,7 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "2026-01-11T00:00:00Z",
+    "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
@@ -30,7 +30,7 @@
       "asset_type": "aws_iam_user",
       "status": "OVERDUE",
       "due_at": "2026-01-08T00:00:00Z",
-      "remaining_hours": -72,
+      "remaining_hours": -168,
       "first_unsafe_at": "2026-01-01T00:00:00Z",
       "threshold_hours": 168
     }
@@ -47,7 +47,7 @@
       "evidence": {
         "first_unsafe_at": "2026-01-01T00:00:00Z",
         "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
+        "unsafe_duration_hours": 336,
         "misconfigurations": [
           {
             "property": "identity.kind",
@@ -70,7 +70,7 @@
         "root_causes": [
           "general"
         ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
       },
       "control_severity": "medium",
       "control_compliance": {
@@ -98,15 +98,15 @@
       "sla_deadline_hours": 1440,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
-      "exposure_score": 51.369863013698634,
+      "exposure_score": 51.917808219178085,
       "score_breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
+        "blind_multiplier": 1.0383561643835617,
+        "days_blind": 14
       },
       "reasoning_trace": [
         {
@@ -234,7 +234,7 @@
       "member_finding_ids": [
         "sha256:cf3903e9b863400e"
       ],
-      "consolidated_score": 51.369863013698634,
+      "consolidated_score": 51.917808219178085,
       "consolidated_blast_radius": 1
     }
   ],
@@ -261,15 +261,15 @@
       "finding_index": 0,
       "control_id": "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001",
       "asset_id": "arn:aws:iam::111122223333:user/mallory",
-      "exposure_score": 51.369863013698634,
+      "exposure_score": 51.917808219178085,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
         "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
+        "blind_multiplier": 1.0383561643835617,
+        "days_blind": 14
       },
       "silent_killer": false
     }

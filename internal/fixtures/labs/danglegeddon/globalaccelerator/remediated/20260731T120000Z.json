@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-31T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:route53:::hostedzone/Z777777-danglegeddon-ga",
+      "type": "aws_route53_hosted_zone",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_record",
+          "dns": {
+            "record_name": "cdn.example.com",
+            "target_type": "globalaccelerator",
+            "has_dangling_globalaccelerator_target": false
+          }
+        }
+      }
+    }
+  ]
+}

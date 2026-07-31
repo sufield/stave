@@ -1,0 +1,36 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-31T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:route53:::hostedzone/Z333333-danglegeddon-ns",
+      "type": "aws_route53_hosted_zone",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_record",
+          "dns": {
+            "record_name": "sub.example.com",
+            "record_type": "NS",
+            "has_lame_delegation": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:route53:::hostedzone/Z333333-danglegeddon-ns-zone",
+      "type": "aws_route53_hosted_zone",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_zone",
+          "dns": {
+            "is_public_zone": true,
+            "dnssec_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

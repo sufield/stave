@@ -1,0 +1,29 @@
+id: r53_dangling_email_intercept
+description: >
+  Dangling MX record allows email interception AND DMARC is missing
+  or not enforced. An attacker who takes over a dangling MX target
+  receives all inbound email for the domain — password reset links,
+  invoice notifications, verification codes, and confidential
+  correspondence. Without DMARC enforcement (p=reject or p=quarantine),
+  the attacker can also spoof outbound email from the domain without
+  recipient mail servers rejecting or quarantining the spoofed
+  messages. The combination enables a complete email takeover: the
+  attacker both receives the organization's inbound email and sends
+  convincing email as the organization. MX dangling
+  (CTL.ROUTE53.DANGLING.MX.001) provides the interception capability.
+  Missing DMARC (CTL.ROUTE53.EMAIL.DMARC.MISSING.001) or unenforced
+  DMARC (CTL.ROUTE53.EMAIL.DMARC.NOENFORCE.001) removes the
+  authentication barrier for spoofed outbound email.
+  Linked incidents: Silent Push "Danglegeddon" (July 2026) demonstrated
+  MX-based email interception across government domains.
+controls:
+  - CTL.ROUTE53.DANGLING.MX.001
+  - CTL.ROUTE53.EMAIL.DMARC.MISSING.001
+  - CTL.ROUTE53.EMAIL.DMARC.NOENFORCE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

@@ -1,0 +1,35 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-31T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:route53:::hostedzone/Z111111-danglegeddon-cert",
+      "type": "aws_route53_hosted_zone",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_record",
+          "dns": {
+            "record_name": "static.example.com",
+            "target_type": "s3",
+            "has_dangling_s3_target": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:route53:::hostedzone/Z111111-danglegeddon-cert-zone",
+      "type": "aws_route53_hosted_zone",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_zone",
+          "dns": {
+            "has_caa": false
+          }
+        }
+      }
+    }
+  ]
+}

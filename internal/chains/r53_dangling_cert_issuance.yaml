@@ -1,0 +1,36 @@
+id: r53_dangling_cert_issuance
+description: >
+  Dangling DNS record allows subdomain takeover AND no CAA record
+  restricts certificate issuance. An attacker who takes over a
+  subdomain via any reclaimable dangling CNAME (S3 bucket, CloudFront
+  distribution, Elastic Beanstalk, EIP, or NS delegation) can then
+  use automated DNS validation to issue a TLS certificate for the
+  subdomain from any certificate authority. The valid certificate
+  enables the attacker to serve phishing content under the trusted
+  domain with the browser lock icon — indistinguishable from
+  legitimate HTTPS to end users. CAA records restrict which CAs can
+  issue certificates for the domain. Without CAA, any of 100+
+  public CAs will issue a certificate to whoever controls the DNS
+  record. Combined: subdomain takeover + unrestricted cert issuance
+  = complete domain impersonation with valid HTTPS.
+  Linked incidents: Silent Push "Danglegeddon" (July 2026, 4,000
+  subdomains taken over across government, banking, pharma, automotive).
+controls:
+  - CTL.ROUTE53.DANGLING.S3.001
+  - CTL.ROUTE53.DANGLING.CLOUDFRONT.001
+  - CTL.ROUTE53.DANGLING.BEANSTALK.001
+  - CTL.ROUTE53.DANGLING.EIP.001
+  - CTL.ROUTE53.DANGLING.NS.001
+  - CTL.ROUTE53.DANGLING.ELB.001
+  - CTL.ROUTE53.DANGLING.EC2.001
+  - CTL.ROUTE53.DANGLING.APIGATEWAY.001
+  - CTL.ROUTE53.DANGLING.MX.001
+  - CTL.DNS.DANGLING.001
+  - CTL.ROUTE53.ZONE.CAA.MISSING.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

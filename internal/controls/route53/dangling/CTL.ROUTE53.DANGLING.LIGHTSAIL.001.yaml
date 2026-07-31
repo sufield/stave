@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.LIGHTSAIL.001
+name: DNS Record Points to Deleted Lightsail Instance
+description: >
+  Route 53 CNAME or A record points to a deleted Amazon Lightsail
+  instance. When a Lightsail instance is deleted, its static IP or
+  public DNS name is released. A CNAME pointing to the Lightsail
+  public DNS endpoint or an A record pointing to a released Lightsail
+  static IP can be reclaimed. An attacker who creates a new Lightsail
+  instance at the same endpoint can serve content on the
+  organization's subdomain.
+domain: exposure
+severity: high
+archetype: ghost-reference
+scope: compound
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03", "IVS-03"]
+scope_tags:
+  - aws
+  - route53
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
+  - trust-decay
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_route53_hosted_zone]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DNS record points to a deleted Lightsail instance. The endpoint
+    is reclaimable by an attacker.
+  action: >
+    Delete the DNS record pointing to the decommissioned Lightsail
+    instance, or re-create the instance and reclaim the endpoint
+    defensively.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "blog.example.com",
+          "target_type": "lightsail",
+          "has_dangling_lightsail_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_lightsail_target
+      op: eq
+      value: true

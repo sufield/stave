@@ -1275,3 +1275,175 @@ contracts:
     consumers:
       - CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001
       - CTL.IAM.POLICY.VERSIONS.ATCAPACITY.001
+
+  # ─── DNS Dangling Record Derived Booleans ───────────────────
+  #
+  # Derived by the collector: resolves the DNS target and checks
+  # whether the target resource exists in the organization's
+  # inventory. null or absent = the collector did not evaluate
+  # this field (standard null_semantics).
+
+  - field: has_dangling_s3_target
+    type: boolean
+    postcondition: >
+      True if a Route 53 CNAME or alias record points to an S3
+      website hosting endpoint for a bucket that no longer exists.
+      The bucket name is globally unique but reclaimable.
+    consumers:
+      - CTL.ROUTE53.DANGLING.S3.001
+
+  - field: has_dangling_cloudfront_target
+    type: boolean
+    postcondition: >
+      True if a Route 53 CNAME points to a CloudFront distribution
+      that has been deleted. The CNAME is reclaimable on a new
+      distribution.
+    consumers:
+      - CTL.ROUTE53.DANGLING.CLOUDFRONT.001
+
+  - field: has_dangling_beanstalk_target
+    type: boolean
+    postcondition: >
+      True if a Route 53 CNAME points to an Elastic Beanstalk
+      environment that has been terminated. The CNAME prefix is
+      reclaimable.
+    consumers:
+      - CTL.ROUTE53.DANGLING.BEANSTALK.001
+
+  - field: has_dangling_elb_target
+    type: boolean
+    postcondition: >
+      True if a Route 53 CNAME or alias points to an ELB that
+      has been deleted. The ELB DNS name is no longer valid.
+    consumers:
+      - CTL.ROUTE53.DANGLING.ELB.001
+
+  - field: has_dangling_apigateway_target
+    type: boolean
+    postcondition: >
+      True if a Route 53 CNAME points to an API Gateway custom
+      domain that has been deleted.
+    consumers:
+      - CTL.ROUTE53.DANGLING.APIGATEWAY.001
+
+  - field: has_dangling_ec2_ip
+    type: boolean
+    postcondition: >
+      True if a Route 53 A record points to an EC2 public IP
+      that has been released and is reclaimable via IP pool
+      cycling.
+    consumers:
+      - CTL.ROUTE53.DANGLING.EC2.001
+
+  - field: has_dangling_eip
+    type: boolean
+    postcondition: >
+      True if a Route 53 A record points to an Elastic IP that
+      has been released. EIPs are reclaimable via pool cycling.
+    consumers:
+      - CTL.ROUTE53.DANGLING.EIP.001
+
+  - field: has_dangling_amplify_target
+    type: boolean
+    postcondition: >
+      True if a Route 53 CNAME record points to a deleted AWS
+      Amplify app. The custom domain is reclaimable by an
+      attacker who creates a new Amplify app.
+    consumers:
+      - CTL.ROUTE53.DANGLING.AMPLIFY.001
+
+  - field: has_dangling_apprunner_target
+    type: boolean
+    postcondition: >
+      True if a Route 53 CNAME record points to a deleted AWS
+      App Runner service. The custom domain is reclaimable by
+      an attacker who creates a new service.
+    consumers:
+      - CTL.ROUTE53.DANGLING.APPRUNNER.001
+
+  - field: has_dangling_lightsail_target
+    type: boolean
+    postcondition: >
+      True if a Route 53 CNAME or A record points to a deleted
+      Lightsail instance. The endpoint is reclaimable.
+    consumers:
+      - CTL.ROUTE53.DANGLING.LIGHTSAIL.001
+
+  - field: has_dangling_globalaccelerator_target
+    type: boolean
+    postcondition: >
+      True if a Route 53 CNAME record points to a deleted Global
+      Accelerator. The endpoint is reclaimable.
+    consumers:
+      - CTL.ROUTE53.DANGLING.GLOBALACCELERATOR.001
+
+  - field: has_dangling_alias
+    type: boolean
+    postcondition: >
+      True if a Route 53 alias record points to a resource that
+      no longer exists. The alias target is unresolvable.
+    consumers:
+      - CTL.ROUTE53.DANGLING.ALIAS.001
+
+  - field: has_dangling_mx
+    type: boolean
+    postcondition: >
+      True if a Route 53 MX record points to a mail server
+      that is no longer under the organization's control.
+      The MX target is reclaimable for email interception.
+    consumers:
+      - CTL.ROUTE53.DANGLING.MX.001
+
+  - field: has_lame_delegation
+    type: boolean
+    postcondition: >
+      True if a Route 53 NS record delegates to name servers
+      that do not serve the zone. The name server domain may
+      be expired or under attacker control.
+    consumers:
+      - CTL.ROUTE53.DANGLING.NS.001
+
+  - field: has_dangling_ip
+    type: boolean
+    postcondition: >
+      True if a DNS record points to an IP address that is not
+      associated with any resource in the organization's
+      inventory. Vendor-agnostic dangling IP detection.
+    consumers:
+      - CTL.ROUTE53.DANGLING.001
+
+  # ─── DNS Zone Properties ────────────────────────────────────
+
+  - field: has_caa
+    type: boolean
+    postcondition: >
+      True if the hosted zone has at least one CAA record
+      restricting which certificate authorities can issue
+      certificates for the domain.
+    consumers:
+      - CTL.ROUTE53.ZONE.CAA.MISSING.001
+
+  - field: has_dmarc
+    type: boolean
+    postcondition: >
+      True if the hosted zone has a _dmarc TXT record with
+      a valid DMARC policy.
+    consumers:
+      - CTL.ROUTE53.EMAIL.DMARC.MISSING.001
+
+  - field: dnssec_enabled
+    type: boolean
+    postcondition: >
+      True if DNSSEC signing is enabled on the public hosted
+      zone. Enables resolvers to cryptographically verify
+      zone responses.
+    consumers:
+      - CTL.ROUTE53.DNSSEC.DISABLED.001
+
+  - field: is_public_zone
+    type: boolean
+    postcondition: >
+      True if the hosted zone is a public zone (not a private
+      hosted zone associated with VPCs).
+    consumers:
+      - CTL.ROUTE53.DNSSEC.DISABLED.001

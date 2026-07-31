@@ -1,0 +1,35 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-31T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:route53:::hostedzone/Z222222-danglegeddon-email",
+      "type": "aws_route53_hosted_zone",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_record",
+          "dns": {
+            "record_name": "example.com",
+            "record_type": "MX",
+            "has_dangling_mx": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:route53:::hostedzone/Z222222-danglegeddon-email-zone",
+      "type": "aws_route53_hosted_zone",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "route53_zone",
+          "dns": {
+            "has_dmarc": false
+          }
+        }
+      }
+    }
+  ]
+}

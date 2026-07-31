@@ -1,0 +1,59 @@
+dsl_version: ctrl.v1
+id: CTL.ROUTE53.DANGLING.GLOBALACCELERATOR.001
+name: DNS Record Points to Deleted Global Accelerator
+description: >
+  Route 53 CNAME record points to a deleted AWS Global Accelerator.
+  Global Accelerator provides static anycast IP addresses with a DNS
+  name (*.awsglobalaccelerator.com). When the accelerator is deleted,
+  the DNS name and IPs are released. A CNAME pointing to the
+  decommissioned accelerator endpoint can be reclaimed by an attacker
+  who creates a new Global Accelerator and obtains the same or
+  similar endpoint.
+domain: exposure
+severity: high
+archetype: ghost-reference
+scope: compound
+compliance:
+  nist_800_53_r5: "CM-3"
+  pci_dss_v4.0: "6.5.6"
+  soc2: "CC7.1"
+  ccm_v4: ["CCC-03", "IVS-03"]
+scope_tags:
+  - aws
+  - route53
+taxonomy:
+  - compliance-mapping
+  - trust-boundary
+  - trust-decay
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_route53_hosted_zone]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DNS CNAME record points to a deleted Global Accelerator. The
+    endpoint is reclaimable by an attacker.
+  action: >
+    Delete the CNAME record pointing to the decommissioned Global
+    Accelerator, or re-create the accelerator and reclaim the
+    endpoint defensively.
+  example: |
+    {
+      "network": {
+        "kind": "route53_record",
+        "dns": {
+          "record_name": "cdn.example.com",
+          "target_type": "globalaccelerator",
+          "has_dangling_globalaccelerator_target": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: route53_record
+    - field: properties.network.dns.has_dangling_globalaccelerator_target
+      op: eq
+      value: true
