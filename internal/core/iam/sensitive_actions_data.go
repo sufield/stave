@@ -532,4 +532,74 @@ var defaultActions = []ActionClassification{
 
 	// --- Policy simulation ---
 	{Action: "iam:SimulatePrincipalPolicy", Categories: []ActionRiskCategory{ActionDiscovery}, Source: "stave"},
+
+	// ================================================================
+	// SAR PERMISSIONS MANAGEMENT GAP CLOSURE (source: "sar-pm-2026-07")
+	// Actions classified as "Permissions management" in the AWS SAR
+	// that were missing from the registry.
+	// ================================================================
+
+	// --- Resource policy actions (14) ---
+	{Action: "codebuild:PutResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "codebuild:DeleteResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "dynamodb:PutResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "dynamodb:DeleteResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "ecr:PutRegistryPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "ecr:DeleteRegistryPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "glue:PutResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "glue:DeleteResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "logs:DeleteResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "redshift:PutResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "redshift:DeleteResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "secretsmanager:DeleteResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "ssm:PutResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "ssm:DeleteResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+
+	// --- IAM policy removal (4) ---
+	{Action: "iam:DeleteGroupPolicy", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "iam:DeletePolicy", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "iam:DeletePolicyVersion", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "iam:DetachGroupPolicy", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+
+	// --- SSO / Identity Center (8) ---
+	{Action: "sso:AttachManagedPolicyToPermissionSet", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "sso:AttachCustomerManagedPolicyReferenceToPermissionSet", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "sso:DetachManagedPolicyFromPermissionSet", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "sso:DetachCustomerManagedPolicyReferenceFromPermissionSet", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "sso:PutPermissionsBoundaryToPermissionSet", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "sso:DeletePermissionsBoundaryFromPermissionSet", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "sso:PutPermissionsPolicy", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "sso:UpdatePermissionSet", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+
+	// --- Lambda permission removal (2) ---
+	{Action: "lambda:RemovePermission", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "lambda:RemoveLayerVersionPermission", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+
+	// --- KMS grant management (2) ---
+	{Action: "kms:RetireGrant", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "kms:RevokeGrant", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+
+	// --- S3 access grants + policies (11) ---
+	{Action: "s3:CreateAccessGrant", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "s3:CreateAccessGrantsInstance", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "s3:DeleteAccessGrant", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "s3:PutAccessPointPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "s3:DeleteAccessPointPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "s3:PutAccessPointPublicAccessBlock", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "s3:PutAccountPublicAccessBlock", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "s3:PutBucketPublicAccessBlock", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "s3:PutBucketOwnershipControls", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "s3:BypassGovernanceRetention", Categories: []ActionRiskCategory{ActionResourceExposure, ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "s3:PutMultiRegionAccessPointPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+
+	// --- EC2 access controls (2) ---
+	{Action: "ec2:ModifyVpcEndpointServicePermissions", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "ec2:CreateNetworkInterfacePermission", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+
+	// --- Redshift access controls (5) ---
+	{Action: "redshift:AuthorizeDataShare", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "redshift:AuthorizeSnapshotAccess", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "redshift:AuthorizeEndpointAccess", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
+	{Action: "redshift:ModifyClusterIamRoles", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+	{Action: "redshift:CreateClusterUser", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
 }

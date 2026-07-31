@@ -161,6 +161,53 @@ func TestRedshiftServerlessMultiCategory(t *testing.T) {
 	}
 }
 
+func TestSARPMGapAdditions(t *testing.T) {
+	r := DefaultRegistry()
+
+	tests := []struct {
+		action string
+		want   []ActionRiskCategory
+	}{
+		{"codebuild:PutResourcePolicy", []ActionRiskCategory{ActionResourceExposure}},
+		{"dynamodb:DeleteResourcePolicy", []ActionRiskCategory{ActionResourceExposure}},
+		{"iam:DeleteGroupPolicy", []ActionRiskCategory{ActionPrivEsc}},
+		{"iam:DetachGroupPolicy", []ActionRiskCategory{ActionPrivEsc}},
+		{"sso:AttachManagedPolicyToPermissionSet", []ActionRiskCategory{ActionPrivEsc}},
+		{"sso:UpdatePermissionSet", []ActionRiskCategory{ActionPrivEsc}},
+		{"lambda:RemovePermission", []ActionRiskCategory{ActionResourceExposure}},
+		{"kms:RevokeGrant", []ActionRiskCategory{ActionResourceExposure}},
+		{"s3:PutBucketPublicAccessBlock", []ActionRiskCategory{ActionResourceExposure}},
+		{"s3:BypassGovernanceRetention", []ActionRiskCategory{ActionResourceExposure, ActionPrivEsc}},
+		{"ec2:ModifyVpcEndpointServicePermissions", []ActionRiskCategory{ActionResourceExposure}},
+		{"redshift:ModifyClusterIamRoles", []ActionRiskCategory{ActionPrivEsc}},
+		{"redshift:AuthorizeDataShare", []ActionRiskCategory{ActionResourceExposure}},
+	}
+	for _, tt := range tests {
+		cats := r.Classify(tt.action)
+		if cats == nil {
+			t.Errorf("Classify(%q) = nil, want %v", tt.action, tt.want)
+			continue
+		}
+		for _, w := range tt.want {
+			if !slices.Contains(cats, w) {
+				t.Errorf("Classify(%q) = %v, missing %v", tt.action, cats, w)
+			}
+		}
+	}
+}
+
+func TestSARPMGapCount(t *testing.T) {
+	count := 0
+	for _, a := range defaultActions {
+		if a.Source == "sar-pm-2026-07" {
+			count++
+		}
+	}
+	if count != 48 {
+		t.Errorf("expected 48 sar-pm-2026-07 actions, got %d", count)
+	}
+}
+
 func TestCategoryMergingForMultiListActions(t *testing.T) {
 	r := DefaultRegistry()
 	// iam:CreateAccessKey appears in CredentialExposure AND PrivEsc in Farris seed
