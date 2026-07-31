@@ -50,6 +50,21 @@ Route 53 alias record points to an AWS resource (ALB, CloudFront distribution, S
 
 ---
 
+### CTL.ROUTE53.DANGLING.AMPLIFY.001
+
+**DNS Record Points to Deleted AWS Amplify App**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 CNAME record points to a deleted AWS Amplify app. Amplify custom domains are associated via CNAME; when the Amplify app is deleted, the custom domain association is removed but the CNAME record may remain. An attacker who creates a new Amplify app and configures the same custom domain can serve content on the organization's subdomain. Amplify apps validate domain ownership via DNS — the existing CNAME record serves as proof of ownership.
+
+**Remediation:** Delete the CNAME record pointing to the decommissioned Amplify app, or re-create the Amplify app and reclaim the custom domain defensively.
+
+---
+
 ### CTL.ROUTE53.DANGLING.APIGATEWAY.001
 
 **DNS Record Points to Deleted API Gateway Custom Domain**
@@ -62,6 +77,21 @@ Route 53 alias record points to an AWS resource (ALB, CloudFront distribution, S
 Route 53 record points to an API Gateway custom domain (execute-api.region.amazonaws.com or a custom domain name) that has been deleted from API Gateway. The custom domain was removed but the DNS record still points to it. Depending on the API Gateway endpoint type: for Regional APIs, the custom domain name resolves to NXDOMAIN when deleted; for Edge-Optimized APIs fronted by CloudFront, the underlying CloudFront distribution's CNAME may become unclaimed after the API Gateway custom domain is deleted. In the edge-optimized case, an attacker may be able to create a new API Gateway custom domain with the same name and claim the CloudFront CNAME. The organization's DNS record routes API traffic to the attacker's API.
 
 **Remediation:** If the API is no longer needed: remove the Route 53 record. If the API must be restored: re-create the API Gateway custom domain name before the DNS record can route to an attacker's API. For edge-optimized APIs, verify the underlying CloudFront distribution's CNAME is still claimed by your account before creating a new custom domain.
+
+---
+
+### CTL.ROUTE53.DANGLING.APPRUNNER.001
+
+**DNS Record Points to Deleted AWS App Runner Service**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 CNAME record points to a deleted AWS App Runner service. App Runner services accept custom domain configuration via CNAME validation. When the service is deleted, the custom domain binding is removed but the CNAME record in Route 53 may remain. An attacker who creates a new App Runner service and associates the same custom domain can serve content on the organization's subdomain.
+
+**Remediation:** Delete the CNAME record pointing to the decommissioned App Runner service, or create a new App Runner service and reclaim the custom domain defensively.
 
 ---
 
@@ -137,6 +167,36 @@ Route 53 A record points to an Elastic IP address that has been released. When a
 Route 53 alias or CNAME record points to an Application Load Balancer, Network Load Balancer, or Classic Load Balancer that has been deleted. The DNS record resolves to a load balancer DNS name that no longer exists, causing the subdomain to return NXDOMAIN or an empty answer. Unlike S3 and CloudFront (where the resource name is globally reclaimable), ELB DNS names contain account-specific components (randomly generated hex strings and account ID fragments) that make direct takeover harder. However, the dangling record still causes visible service failure on the organization's domain: the subdomain appears broken, returning errors to all visitors. Dangling ELB records indicate incomplete decommissioning — the load balancer was deleted without updating DNS.
 
 **Remediation:** If the load balancer was deleted intentionally and the subdomain is no longer needed: remove the Route 53 record. If the service must be restored: create a new load balancer, update the Route 53 record to point to the new load balancer, and restore the service. For alias records, use Route 53's built-in alias evaluation to detect when the target is deleted.
+
+---
+
+### CTL.ROUTE53.DANGLING.GLOBALACCELERATOR.001
+
+**DNS Record Points to Deleted Global Accelerator**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 CNAME record points to a deleted AWS Global Accelerator. Global Accelerator provides static anycast IP addresses with a DNS name (*.awsglobalaccelerator.com). When the accelerator is deleted, the DNS name and IPs are released. A CNAME pointing to the decommissioned accelerator endpoint can be reclaimed by an attacker who creates a new Global Accelerator and obtains the same or similar endpoint.
+
+**Remediation:** Delete the CNAME record pointing to the decommissioned Global Accelerator, or re-create the accelerator and reclaim the endpoint defensively.
+
+---
+
+### CTL.ROUTE53.DANGLING.LIGHTSAIL.001
+
+**DNS Record Points to Deleted Lightsail Instance**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CM-3; pci_dss_v4.0: 6.5.6; soc2: CC7.1;
+
+Route 53 CNAME or A record points to a deleted Amazon Lightsail instance. When a Lightsail instance is deleted, its static IP or public DNS name is released. A CNAME pointing to the Lightsail public DNS endpoint or an A record pointing to a released Lightsail static IP can be reclaimed. An attacker who creates a new Lightsail instance at the same endpoint can serve content on the organization's subdomain.
+
+**Remediation:** Delete the DNS record pointing to the decommissioned Lightsail instance, or re-create the instance and reclaim the endpoint defensively.
 
 ---
 
