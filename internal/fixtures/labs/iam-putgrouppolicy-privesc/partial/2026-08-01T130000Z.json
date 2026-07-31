@@ -1,0 +1,63 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.iam-putgrouppolicy-privesc"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/ops-admin",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "has_inline_policies": true
+          },
+          "escalation": {
+            "put_group_policy": {
+              "present": true,
+              "target_group": "arn:aws:iam::111122223333:group/ServiceAccounts",
+              "resource_scope": "non_belonging"
+            },
+            "can_escalate_to_admin": false
+          },
+          "group_memberships": ["Developers"]
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:group/Developers",
+      "type": "aws_iam_group",
+      "vendor": "aws",
+      "properties": {
+        "group_name": "Developers",
+        "members": ["arn:aws:iam::111122223333:user/ops-admin"],
+        "attached_policies": ["arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess"],
+        "inline_policies": []
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:group/ServiceAccounts",
+      "type": "aws_iam_group",
+      "vendor": "aws",
+      "properties": {
+        "group_name": "ServiceAccounts",
+        "members": ["arn:aws:iam::111122223333:user/svc-deploy"],
+        "attached_policies": ["arn:aws:iam::aws:policy/PowerUserAccess"],
+        "inline_policies": []
+      }
+    },
+    {
+      "id": "arn:aws:secretsmanager:us-east-1:111122223333:secret:prod/api-key-XyZaBc",
+      "type": "aws_secretsmanager_secret",
+      "vendor": "aws",
+      "properties": {
+        "name": "prod/api-key",
+        "rotation_enabled": true
+      }
+    }
+  ]
+}

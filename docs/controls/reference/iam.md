@@ -1301,6 +1301,22 @@ Scope: gated on `identity.kind == "user"`. IAM groups are a user-only concept �
 
 ---
 
+### CTL.IAM.ESCALATE.PUTGROUPPOLICY.NOCONDITION.001
+
+**Principal Has iam:PutGroupPolicy With Resource Covering Belonging Group**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal has `iam:PutGroupPolicy` and the Resource field covers a group the principal belongs to. Unlike `iam:AttachGroupPolicy` which can be condition-restricted via `iam:PolicyARN`, there is no IAM Condition key that restricts the *content* of an inline policy written via PutGroupPolicy. Every PutGroupPolicy grant is inherently unrestricted in what policy document the caller can write — the only available defense is restricting the Resource field to groups the principal does not belong to. When the Resource covers a belonging group, the principal can author an arbitrary inline policy document (including `"Action": "*"` on `"Resource": "*"`) and inject it onto that group, elevating every member — including the principal — with a single API call. This combines the worst properties of PutUserPolicy (attacker-authored payload) and AttachGroupPolicy (group-wide blast radius).
+Scope: gated on `identity.kind == "user"`. Fires when the principal has `iam:PutGroupPolicy` and the Resource scope includes a group the principal belongs to. The capability-only variant is detected by `CTL.IAM.ESCALATE.PUTGROUPPOLICY.001`.
+
+**Remediation:** Scope `iam:PutGroupPolicy` Resource to groups the principal does not belong to, or remove the permission entirely. SCP-level deny on `iam:PutGroupPolicy` where the target group contains the calling principal closes the path.
+
+---
+
 ### CTL.IAM.ESCALATE.PUTROLEPOLICY.001
 
 **Principal Must Not Escalate via iam:PutRolePolicy**
@@ -1329,6 +1345,22 @@ A principal with `iam:PutUserPolicy` whose Resource field includes its own user 
 Scope: gated on `identity.kind == "user"`. The `iam:PutUserPolicy` AWS action targets users specifically — roles cannot be the self- target. The role-side analogue is `iam:PutRolePolicy` on self, a separate technique covered by its own `CTL.IAM.ESCALATE.PUTROLEPOLICY.001` control.
 
 **Remediation:** Remove `iam:PutUserPolicy` from the principal, or scope the Resource field so the principal cannot include itself. Organization SCPs can deny `iam:PutUserPolicy` on `${aws:PrincipalArn}` to close the path at the boundary.
+
+---
+
+### CTL.IAM.ESCALATE.PUTUSERPOLICY.NOCONDITION.001
+
+**Principal Has iam:PutUserPolicy Without Content Restriction**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal has `iam:PutUserPolicy` in its effective permissions. Unlike `iam:AttachUserPolicy` which can be condition-restricted via `iam:PolicyARN`, there is no IAM Condition key that restricts the *content* of an inline policy written via PutUserPolicy. Every PutUserPolicy grant is inherently unrestricted in what policy document the caller can write — the only available defense is restricting the Resource field (which users can be targeted). This makes PutUserPolicy structurally more dangerous than AttachUserPolicy: the attacker authors the payload (arbitrary Action/Resource/Effect JSON) rather than selecting from existing managed policies.
+Scope: gated on `identity.kind == "user"`. Fires when the principal has `iam:PutUserPolicy` in its effective permissions regardless of whether the Resource includes the principal's own ARN. The self-targeting variant is detected by `CTL.IAM.ESCALATE.PUTUSERPOLICY.001`.
+
+**Remediation:** Remove `iam:PutUserPolicy` from the principal. If the principal must manage inline policies for service accounts, scope the Resource field to specific user ARNs that do not include the principal itself. Deny at the organization boundary with an SCP.
 
 ---
 
