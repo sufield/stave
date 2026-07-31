@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_171 commands across 13 groups._
+_175 commands across 14 groups._
 
 ## Getting Started
 
@@ -68,6 +68,7 @@ _171 commands across 13 groups._
 | `permissions resource` | Show who has effective access to a resource |
 | `permissions summary` | Aggregate NEP metrics across all principals |
 | `prove` | Run Z3 SMT queries against a Stave assessment |
+| `prove history` | Show proof result timeline |
 | `score` | Compute security posture score (0-100) |
 | `scorecard` | Multi-framework compliance scorecard |
 | `search` | Find catalog entries matching a free-form intent |
@@ -245,3 +246,11 @@ _171 commands across 13 groups._
 | `alias delete` | Delete an alias |
 | `alias list` | List all aliases |
 | `alias set` | Create or update an alias |
+
+## Uncategorized
+
+| Command | Description |
+|---|---|
+| `network` | Network reachability analysis and safety proofs |
+| `network enumerate` | Enumerate SSH entry points to production hosts |
+| `network prove` | Verify a network safety property |

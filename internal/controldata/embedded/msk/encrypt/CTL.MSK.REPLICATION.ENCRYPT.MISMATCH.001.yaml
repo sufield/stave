@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.REPLICATION.ENCRYPT.MISMATCH.001
+name: MSK Replicator Target Has Inconsistent Encryption
+description: >
+  MSK cluster with cross-region replication has a target cluster
+  in another region with a different encryption configuration than
+  the source. If the source uses a customer-managed KMS key and
+  the target does not, the same streaming data has different
+  protection levels across regions. The weakest cluster's encryption
+  level is the effective protection for the replicated data set.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-28
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: 3.5.1
+  soc2: CC6.1
+  ccm_v4:
+  - DSP-17
+  - BCR-09
+scope_tags:
+- aws
+- msk
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_msk_cluster]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    The replication target cluster uses a different encryption key
+    than the source. The weakest encryption level applies to the
+    full data set.
+  action: >
+    Recreate the target cluster with the same CMK tier as the source.
+    Each region's key must exist in that region. Reconfigure the
+    MSK Replicator after updating the target.
+  example: |
+    {
+      "streaming": {
+        "kind": "msk_cluster",
+        "msk": {
+          "has_replication": true,
+          "replication_encrypt_consistent": true,
+          "replication_encrypt_mismatches": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+  - field: properties.streaming.kind
+    op: eq
+    value: msk_cluster
+  - field: properties.streaming.msk.has_replication
+    op: eq
+    value: true
+  - field: properties.streaming.msk.replication_encrypt_consistent
+    op: eq
+    value: false
+tests:
+  - name: inconsistent encryption fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kafka:us-east-1:111122223333:cluster/prod-kafka/abc-123"
+      asset_type: aws_msk_cluster
+      vendor: aws
+      properties:
+        streaming:
+          kind: msk_cluster
+          msk:
+            has_replication: true
+            replication_encrypt_consistent: false
+            replication_encrypt_mismatches:
+            - region: eu-west-1
+              key_type: aws_managed
+  - name: consistent encryption passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kafka:us-east-1:111122223333:cluster/prod-kafka/abc-123"
+      asset_type: aws_msk_cluster
+      vendor: aws
+      properties:
+        streaming:
+          kind: msk_cluster
+          msk:
+            has_replication: true
+            replication_encrypt_consistent: true
+            replication_encrypt_mismatches: []
+  - name: single-region cluster not in scope
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kafka:us-east-1:111122223333:cluster/dev-kafka/def-456"
+      asset_type: aws_msk_cluster
+      vendor: aws
+      properties:
+        streaming:
+          kind: msk_cluster
+          msk:
+            has_replication: false

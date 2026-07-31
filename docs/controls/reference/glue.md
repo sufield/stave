@@ -20,6 +20,21 @@ The Glue Data Catalog must use SSE-KMS encryption for metadata at rest. The cata
 
 ---
 
+### CTL.GLUE.CATALOG.ENCRYPT.CMK.001
+
+**Glue Data Catalog Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+The Glue Data Catalog with SSE-KMS encryption must use a customer-managed KMS key, not the AWS-managed default. The catalog contains table schemas, partition information, S3 data locations, and database definitions — a complete map of the organization's data landscape. The AWS-managed key has a key policy the customer cannot edit and cannot be revoked or rotated on the customer's schedule.
+
+**Remediation:** Update the Data Catalog encryption settings to use a customer- managed KMS key via aws glue put-data-catalog-encryption-settings with SseAwsKmsKeyId pointing to a CMK.
+
+---
+
 ### CTL.GLUE.CATALOG.ENCRYPT.PASSWORD.001
 
 **Glue Data Catalog Must Encrypt Connection Passwords**

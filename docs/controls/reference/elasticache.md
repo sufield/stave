@@ -50,6 +50,21 @@ ElastiCache cluster or replication group is configured as publicly accessible. E
 
 ---
 
+### CTL.ELASTICACHE.ENCRYPT.CMK.001
+
+**ElastiCache Redis Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+ElastiCache Redis clusters with at-rest encryption must use a customer-managed KMS key, not the AWS-managed default. The AWS-managed key has a key policy the customer cannot edit and cannot be revoked or rotated on the customer's schedule. Using it satisfies the at-rest encryption checkbox but eliminates per-tenant key-policy and per-incident key-revocation controls that customer-managed keys provide.
+
+**Remediation:** Create a new cluster with a customer-managed KMS key. ElastiCache does not allow changing the encryption key on an existing cluster. Snapshot the cluster, then restore to a new cluster with a CMK.
+
+---
+
 ### CTL.ELASTICACHE.ENCRYPT.REST.001
 
 **ElastiCache Redis Must Have At-Rest Encryption Enabled**
@@ -77,6 +92,21 @@ ElastiCache Redis clusters must have at-rest encryption enabled to protect cache
 ElastiCache clusters must not run engine versions that have reached end-of-life. AWS publishes a deprecation calendar per engine major version; clusters on a deprecated version no longer receive security patches and will eventually be force-upgraded during a maintenance window the operator did not choose. Redis 5.x reached EOL in 2024, Redis 6.0 in 2024, and Redis 6.2 is approaching EOL. Memcached 1.5.x is EOL. Unlike RDS, ElastiCache does not have a separate auto-minor-upgrade toggle — the engine version is the sole indicator of patch currency. Running an EOL engine version means known CVEs in the cache layer remain unpatched, and any data transiting the cache (session tokens, API responses, feature flags) is processed by unmaintained code.
 
 **Remediation:** Upgrade the cluster to a supported engine version. For Redis, upgrade to Redis 7.x. For Memcached, upgrade to 1.6.x. Use aws elasticache modify-replication-group --engine-version <ver> with a scheduled maintenance window to minimize impact. Test application compatibility with the new engine version before upgrading production — major version upgrades may change command behavior or remove deprecated commands.
+
+---
+
+### CTL.ELASTICACHE.GLOBAL.ENCRYPT.MISMATCH.001
+
+**Global Datastore Replicas Have Inconsistent Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+ElastiCache Global Datastore has replication groups with different encryption configurations. The primary uses a customer-managed KMS key while one or more secondaries use the AWS-managed key or a different CMK. Global Datastore replicates every write to every secondary. If the primary is CMK-encrypted and a secondary is not, the same data has different protection levels across regions: the CMK-protected region has key-policy control, CloudTrail audit of every decrypt, and key revocation capability; the AWS-managed region has none of these. The weakest secondary's encryption level is the effective protection for the data set.
+
+**Remediation:** Recreate secondary replication groups with the same CMK as the primary. Each region's key must exist in that region. Use aws elasticache create-replication-group with KmsKeyId matching the primary's CMK.
 
 ---
 

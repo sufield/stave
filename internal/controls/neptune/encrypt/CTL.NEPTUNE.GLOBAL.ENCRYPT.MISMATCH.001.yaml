@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.NEPTUNE.GLOBAL.ENCRYPT.MISMATCH.001
+name: Global Database Replicas Have Inconsistent Encryption
+description: >
+  Neptune Global Database has secondary clusters in regions with
+  different encryption configurations than the primary. If the
+  primary uses a customer-managed KMS key and a secondary does not,
+  the same graph data has different protection levels across regions.
+  The weakest secondary's encryption level is the effective
+  protection for the replicated data set.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-28
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: 3.5.1
+  soc2: CC6.1
+  ccm_v4:
+  - DSP-17
+  - BCR-09
+scope_tags:
+- aws
+- neptune
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_neptune_cluster]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    One or more global database secondaries use a different
+    encryption key than the primary. The weakest encryption level
+    applies to the full graph data set.
+  action: >
+    Remove and re-add secondary clusters with KMS keys at the same
+    tier as the primary. Each region's key must exist in that region.
+  example: |
+    {
+      "database": {
+        "kind": "neptune_cluster",
+        "neptune": {
+          "is_global_database": true,
+          "global_encrypt_consistent": true,
+          "global_encrypt_mismatches": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+  - field: properties.database.kind
+    op: eq
+    value: neptune_cluster
+  - field: properties.database.neptune.is_global_database
+    op: eq
+    value: true
+  - field: properties.database.neptune.global_encrypt_consistent
+    op: eq
+    value: false
+tests:
+  - name: inconsistent encryption fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:neptune::111122223333:global-cluster:prod-graph"
+      asset_type: aws_neptune_cluster
+      vendor: aws
+      properties:
+        database:
+          kind: neptune_cluster
+          neptune:
+            is_global_database: true
+            global_encrypt_consistent: false
+            global_encrypt_mismatches:
+            - region: eu-west-1
+              key_type: aws_managed
+  - name: consistent encryption passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:neptune::111122223333:global-cluster:prod-graph"
+      asset_type: aws_neptune_cluster
+      vendor: aws
+      properties:
+        database:
+          kind: neptune_cluster
+          neptune:
+            is_global_database: true
+            global_encrypt_consistent: true
+            global_encrypt_mismatches: []
+  - name: non-global cluster not in scope
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:neptune:us-east-1:111122223333:db:local-neptune"
+      asset_type: aws_neptune_cluster
+      vendor: aws
+      properties:
+        database:
+          kind: neptune_cluster
+          neptune:
+            is_global_database: false

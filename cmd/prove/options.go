@@ -20,14 +20,17 @@ var validQueries = []string{
 }
 
 type options struct {
-	observations string
-	controls     string
-	query        string
-	principal    string
-	action       string
-	resource     string
-	invariantID  string
-	format       string
+	observations    string
+	controls        string
+	query           string
+	principal       string
+	action          string
+	resource        string
+	invariantID     string
+	format          string
+	certificatePath string
+	compliance      string
+	historyDir      string
 }
 
 func addFlags(cmd *cobra.Command, o *options) {
@@ -40,6 +43,9 @@ func addFlags(cmd *cobra.Command, o *options) {
 	f.StringVar(&o.action, "action", "", "action (compatibility)")
 	f.StringVar(&o.resource, "resource", "", "resource ARN (compatibility, reachability, choke-point)")
 	f.StringVar(&o.invariantID, "invariant", "", "invariant control ID (invariant query)")
+	f.StringVar(&o.certificatePath, "certificate", "", "write SMT-LIB proof certificate to this path")
+	f.StringVar(&o.compliance, "compliance", "", "compliance frameworks to map (comma-separated, or 'all')")
+	f.StringVar(&o.historyDir, "history", "", "append result to proof history in this directory")
 	_ = cmd.MarkFlagRequired("observations")
 	_ = cmd.MarkFlagRequired("query")
 }

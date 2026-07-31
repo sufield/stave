@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.GLOBAL.ENCRYPT.MISMATCH.001
+name: Global Datastore Replicas Have Inconsistent Encryption
+description: >
+  ElastiCache Global Datastore has replication groups with different
+  encryption configurations. The primary uses a customer-managed KMS
+  key while one or more secondaries use the AWS-managed key or a
+  different CMK. Global Datastore replicates every write to every
+  secondary. If the primary is CMK-encrypted and a secondary is not,
+  the same data has different protection levels across regions: the
+  CMK-protected region has key-policy control, CloudTrail audit of
+  every decrypt, and key revocation capability; the AWS-managed region
+  has none of these. The weakest secondary's encryption level is the
+  effective protection for the data set.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-28
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: 3.5.1
+  soc2: CC6.1
+  ccm_v4:
+  - DSP-17
+  - BCR-09
+scope_tags:
+- aws
+- elasticache
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_elasticache_cluster]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    One or more Global Datastore secondaries use a different
+    encryption key than the primary. The weakest encryption level
+    applies to the full data set.
+  action: >
+    Recreate secondary replication groups with the same CMK as the
+    primary. Each region's key must exist in that region. Use
+    aws elasticache create-replication-group with KmsKeyId matching
+    the primary's CMK.
+  example: |
+    {
+      "cache": {
+        "kind": "cluster",
+        "elasticache": {
+          "is_global_datastore": true,
+          "global_encrypt_consistent": true,
+          "global_encrypt_mismatches": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+  - field: properties.cache.kind
+    op: eq
+    value: cluster
+  - field: properties.cache.elasticache.is_global_datastore
+    op: eq
+    value: true
+  - field: properties.cache.elasticache.global_encrypt_consistent
+    op: eq
+    value: false
+tests:
+  - name: inconsistent encryption fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticache::111122223333:globalreplicationgroup:prod-global"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: cluster
+          elasticache:
+            is_global_datastore: true
+            global_encrypt_consistent: false
+            global_encrypt_mismatches:
+            - region: eu-west-1
+              key_type: aws_managed
+  - name: consistent encryption passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticache::111122223333:globalreplicationgroup:prod-global"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: cluster
+          elasticache:
+            is_global_datastore: true
+            global_encrypt_consistent: true
+            global_encrypt_mismatches: []
+  - name: non-global cluster not in scope
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticache:us-east-1:111122223333:cluster:local-redis"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: cluster
+          elasticache:
+            is_global_datastore: false

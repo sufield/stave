@@ -125,6 +125,21 @@ MSK cluster broker endpoints must not be exposed to the public internet. Public 
 
 ---
 
+### CTL.MSK.REPLICATION.ENCRYPT.MISMATCH.001
+
+**MSK Replicator Target Has Inconsistent Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+MSK cluster with cross-region replication has a target cluster in another region with a different encryption configuration than the source. If the source uses a customer-managed KMS key and the target does not, the same streaming data has different protection levels across regions. The weakest cluster's encryption level is the effective protection for the replicated data set.
+
+**Remediation:** Recreate the target cluster with the same CMK tier as the source. Each region's key must exist in that region. Reconfigure the MSK Replicator after updating the target.
+
+---
+
 ### CTL.MSK.REPLICATION.FACTOR.001
 
 **MSK Topic Replication Factor Must Be At Least 3**

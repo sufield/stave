@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.OPENSEARCH.CROSSREGION.ENCRYPT.MISMATCH.001
+name: Cross-Cluster Replication Has Inconsistent Encryption
+description: >
+  OpenSearch domain with cross-cluster replication has follower
+  indices in regions with different encryption configurations
+  than the leader. If the leader uses a customer-managed KMS key
+  and a follower does not, the same data has different protection
+  levels across regions. The weakest follower's encryption level
+  is the effective protection for the replicated data set.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-28
+  hipaa: "164.312(a)(2)(iv)"
+  pci_dss_v4.0: 3.5.1
+  soc2: CC6.1
+  ccm_v4:
+  - DSP-17
+  - BCR-09
+scope_tags:
+- aws
+- opensearch
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_opensearch_domain]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    One or more cross-cluster followers use a different encryption
+    key than the leader. The weakest encryption level applies to
+    the full data set.
+  action: >
+    Recreate follower domains with the same CMK tier as the leader.
+    Each region's key must exist in that region. Update cross-cluster
+    replication connections after recreating the follower.
+  example: |
+    {
+      "search_service": {
+        "kind": "domain",
+        "opensearch": {
+          "has_cross_cluster": true,
+          "cross_cluster_encrypt_consistent": true,
+          "cross_cluster_encrypt_mismatches": []
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+  - field: properties.search_service.kind
+    op: eq
+    value: domain
+  - field: properties.search_service.opensearch.has_cross_cluster
+    op: eq
+    value: true
+  - field: properties.search_service.opensearch.cross_cluster_encrypt_consistent
+    op: eq
+    value: false
+tests:
+  - name: inconsistent encryption fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod-search"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          opensearch:
+            has_cross_cluster: true
+            cross_cluster_encrypt_consistent: false
+            cross_cluster_encrypt_mismatches:
+            - region: eu-west-1
+              key_type: aws_managed
+  - name: consistent encryption passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/prod-search"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          opensearch:
+            has_cross_cluster: true
+            cross_cluster_encrypt_consistent: true
+            cross_cluster_encrypt_mismatches: []
+  - name: single-region domain not in scope
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:es:us-east-1:111122223333:domain/dev-search"
+      asset_type: aws_opensearch_domain
+      vendor: aws
+      properties:
+        search_service:
+          kind: domain
+          opensearch:
+            has_cross_cluster: false

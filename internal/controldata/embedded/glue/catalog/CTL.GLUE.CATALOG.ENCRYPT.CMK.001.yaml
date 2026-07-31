@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.CATALOG.ENCRYPT.CMK.001
+name: Glue Data Catalog Must Use a Customer-Managed KMS Key
+description: >
+  The Glue Data Catalog with SSE-KMS encryption must use a
+  customer-managed KMS key, not the AWS-managed default. The
+  catalog contains table schemas, partition information, S3
+  data locations, and database definitions — a complete map
+  of the organization's data landscape. The AWS-managed key
+  has a key policy the customer cannot edit and cannot be
+  revoked or rotated on the customer's schedule.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+  - CEK-04
+  - CEK-08
+scope_tags:
+- aws
+- glue
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_glue_job]
+params:
+  attack_stage: collection
+remediation:
+  description: >
+    Data Catalog is encrypted with the AWS-managed default key.
+    Per-tenant key-policy and revocation controls are unavailable.
+  action: >
+    Update the Data Catalog encryption settings to use a customer-
+    managed KMS key via aws glue put-data-catalog-encryption-settings
+    with SseAwsKmsKeyId pointing to a CMK.
+  example: |
+    {
+      "governance": {
+        "kind": "glue_catalog",
+        "encryption": {
+          "metadata_encrypted": true,
+          "kms_key_managed_by": "customer"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+  - field: properties.governance.kind
+    op: eq
+    value: glue_catalog
+  - field: properties.governance.encryption.metadata_encrypted
+    op: eq
+    value: true
+  - field: properties.governance.encryption.kms_key_managed_by
+    op: eq
+    value: aws
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:catalog"
+      asset_type: aws_glue_job
+      vendor: aws
+      properties:
+        governance:
+          kind: glue_catalog
+          encryption:
+            metadata_encrypted: true
+            kms_key_managed_by: aws
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:catalog"
+      asset_type: aws_glue_job
+      vendor: aws
+      properties:
+        governance:
+          kind: glue_catalog
+          encryption:
+            metadata_encrypted: true
+            kms_key_managed_by: customer
+  - name: unencrypted catalog not in scope
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:catalog"
+      asset_type: aws_glue_job
+      vendor: aws
+      properties:
+        governance:
+          kind: glue_catalog
+          encryption:
+            metadata_encrypted: false

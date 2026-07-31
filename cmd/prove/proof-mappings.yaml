@@ -1,0 +1,98 @@
+properties:
+  compatibility:
+    description: "Can principal X perform action Y on resource Z?"
+    mappings:
+      pci-dss-4.0:
+        - id: "7.2.1"
+          description: "Access to system components restricted to least privilege"
+        - id: "7.2.4"
+          description: "Access assigned based on job classification and function"
+      hipaa:
+        - id: "§164.312(a)(1)"
+          description: "Access control — unique user identification"
+      fedramp:
+        - id: "AC-6"
+          description: "Least privilege"
+        - id: "AC-6(1)"
+          description: "Authorize access to security functions"
+      soc2:
+        - id: "CC6.1"
+          description: "Logical and physical access controls"
+
+  reachability:
+    description: "Can principal X reach resource Y through any chain of role assumptions?"
+    mappings:
+      pci-dss-4.0:
+        - id: "7.2.1"
+          description: "Access to system components restricted to least privilege"
+        - id: "7.2.4"
+          description: "Access assigned based on job classification and function"
+        - id: "8.3.1"
+          description: "All user access authenticated with at least one factor"
+      hipaa:
+        - id: "§164.312(a)(1)"
+          description: "Access control — unique user identification"
+        - id: "§164.312(d)"
+          description: "Person or entity authentication"
+      fedramp:
+        - id: "AC-17"
+          description: "Remote access — routing through managed access control points"
+        - id: "AC-17(1)"
+          description: "Remote access — automated monitoring and control"
+      soc2:
+        - id: "CC6.1"
+          description: "Logical and physical access controls"
+        - id: "CC6.2"
+          description: "Prior to issuing system credentials"
+
+  conflict:
+    description: "Do the loaded policies contradict each other?"
+    mappings:
+      pci-dss-4.0:
+        - id: "7.2.2"
+          description: "Access assigned based on personnel job classification"
+      fedramp:
+        - id: "AC-3"
+          description: "Access enforcement"
+      soc2:
+        - id: "CC6.1"
+          description: "Logical and physical access controls"
+
+  invariant:
+    description: "Is a control's unsafe condition reachable for ANY input?"
+    mappings:
+      pci-dss-4.0:
+        - id: "6.3.1"
+          description: "Security vulnerabilities identified and addressed"
+        - id: "11.3.1"
+          description: "Internal vulnerability scans performed"
+      hipaa:
+        - id: "§164.308(a)(8)"
+          description: "Evaluation — periodic technical and nontechnical evaluation"
+      fedramp:
+        - id: "RA-5"
+          description: "Vulnerability monitoring and scanning"
+        - id: "CA-2"
+          description: "Control assessments"
+      soc2:
+        - id: "CC3.2"
+          description: "Risk assessment — identifies and assesses risks"
+        - id: "CC4.1"
+          description: "Monitoring activities — evaluates and communicates"
+
+  choke-point:
+    description: "What is the minimum set of statements whose removal breaks an attack path?"
+    mappings:
+      pci-dss-4.0:
+        - id: "7.2.1"
+          description: "Access to system components restricted to least privilege"
+        - id: "6.3.1"
+          description: "Security vulnerabilities identified and addressed"
+      fedramp:
+        - id: "AC-6(5)"
+          description: "Privileged accounts"
+        - id: "CM-7"
+          description: "Least functionality"
+      soc2:
+        - id: "CC6.3"
+          description: "Security-relevant activity registered and managed"

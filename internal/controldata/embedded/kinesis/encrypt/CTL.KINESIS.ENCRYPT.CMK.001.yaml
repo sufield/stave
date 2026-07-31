@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.KINESIS.ENCRYPT.CMK.001
+name: Kinesis Stream Must Use a Customer-Managed KMS Key
+description: >
+  Kinesis Data Streams with server-side encryption must use a
+  customer-managed KMS key, not the AWS-managed `aws/kinesis`
+  default. The AWS-managed key has a key policy the customer
+  cannot edit and cannot be revoked or rotated on the customer's
+  schedule. Customer-managed keys provide per-tenant key-policy
+  control and per-incident key-revocation capability.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+  - CEK-04
+  - CEK-08
+scope_tags:
+- aws
+- kinesis
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_kinesis_stream]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Stream is encrypted with the AWS-managed default key.
+    Per-tenant key-policy and revocation controls are unavailable.
+  action: >
+    Update the stream encryption to use a customer-managed KMS key
+    via aws kinesis start-stream-encryption --encryption-type KMS
+    --key-id arn:aws:kms:...
+  example: |
+    {
+      "streaming": {
+        "kind": "kinesis_stream",
+        "encryption": {
+          "at_rest_enabled": true,
+          "kms_key_managed_by": "customer"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+  - field: properties.streaming.kind
+    op: eq
+    value: kinesis_stream
+  - field: properties.streaming.encryption.at_rest_enabled
+    op: eq
+    value: true
+  - field: properties.streaming.encryption.kms_key_managed_by
+    op: eq
+    value: aws
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kinesis:us-east-1:111122223333:stream/prod-events"
+      asset_type: aws_kinesis_stream
+      vendor: aws
+      properties:
+        streaming:
+          kind: kinesis_stream
+          encryption:
+            at_rest_enabled: true
+            kms_key_managed_by: aws
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kinesis:us-east-1:111122223333:stream/prod-events"
+      asset_type: aws_kinesis_stream
+      vendor: aws
+      properties:
+        streaming:
+          kind: kinesis_stream
+          encryption:
+            at_rest_enabled: true
+            kms_key_managed_by: customer
+  - name: unencrypted stream not in scope
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kinesis:us-east-1:111122223333:stream/dev-events"
+      asset_type: aws_kinesis_stream
+      vendor: aws
+      properties:
+        streaming:
+          kind: kinesis_stream
+          encryption:
+            at_rest_enabled: false

@@ -1,0 +1,36 @@
+// reasoning/souffle/network/schema.dl — Network topology input relations.
+//
+// Pipeline:
+//   observation snapshots → extract.go (this directory) → per-predicate TSV .facts
+//   .facts → souffle -F<facts-dir> schema.dl + reachability.dl
+//
+// Scope: SG-only reachability (covers ~80% of real access patterns).
+// NACLs, route table path validation, and TGW route propagation are
+// deferred — extend when SG-only produces false negatives in practice.
+
+// Security group rules: individual ingress/egress entries.
+// Port is a number; Soufflé needs the column typed as number for
+// arithmetic comparisons in downstream queries.
+.decl sg_allows(sg_id: symbol, direction: symbol, protocol: symbol, port: number, source_type: symbol, source_value: symbol)
+.input sg_allows
+
+// Resource placement: where compute resources sit in the network.
+.decl placement(resource_id: symbol, vpc_id: symbol, subnet_id: symbol, sg_id: symbol, private_ip: symbol, public_ip: symbol)
+.input placement
+
+// Resource tags for scope classification (key/value split).
+.decl resource_tag(resource_id: symbol, tag_key: symbol, tag_value: symbol)
+.input resource_tag
+
+// VPC peering connections (bidirectional).
+.decl vpc_peering(peering_id: symbol, requester_vpc: symbol, accepter_vpc: symbol)
+.input vpc_peering
+
+// Sanity counts.
+.decl _net_input_count(predicate: symbol, n: number)
+.output _net_input_count
+
+_net_input_count("sg_allows",     n) :- n = count : { sg_allows(_, _, _, _, _, _) }.
+_net_input_count("placement",     n) :- n = count : { placement(_, _, _, _, _, _) }.
+_net_input_count("resource_tag",  n) :- n = count : { resource_tag(_, _, _) }.
+_net_input_count("vpc_peering",   n) :- n = count : { vpc_peering(_, _, _) }.

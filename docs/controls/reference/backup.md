@@ -20,6 +20,21 @@ All backups must be encrypted at rest. Unencrypted backups expose data if the ba
 
 ---
 
+### CTL.BACKUP.ENCRYPT.CMK.001
+
+**Backup Vault Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+Backup vaults with encryption must use a customer-managed KMS key, not the AWS-managed default. The AWS-managed key has a key policy the customer cannot edit and cannot be revoked or rotated on the customer's schedule. Backup data often contains full database snapshots, file system contents, and application state — customer-managed keys provide per-tenant key-policy control and per-incident key-revocation capability.
+
+**Remediation:** Create a new backup vault with a customer-managed KMS key. AWS Backup does not allow changing the encryption key on an existing vault. Migrate recovery points to the new vault.
+
+---
+
 ### CTL.BACKUP.EXISTS.001
 
 **Critical Resources Must Have Backups**

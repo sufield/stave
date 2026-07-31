@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3227
-**Pack hash:** `2ee9dbc5cae1040d14d44648303fff0c1be1d540c6f0a12d57aaa77ed30cf434`
+**Total controls:** 3236
+**Pack hash:** `760c898f4966927b0684d92877c86720bd559b00b72a2d11acb44db62abb428b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 353 |
-| high | 1407 |
+| high | 1411 |
 | info | 19 |
 | low | 236 |
-| medium | 1212 |
+| medium | 1217 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,7 +28,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 141 |
 | encryption | 125 |
-| exposure | 1412 |
+| exposure | 1421 |
 | governance | 657 |
 | hygiene | 21 |
 | identity | 625 |
@@ -55,7 +55,7 @@ GitHub. Pick a service below.
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
-| [BACKUP](reference/backup.md) | 13 |
+| [BACKUP](reference/backup.md) | 14 |
 | [BATCH](reference/batch.md) | 3 |
 | [BEANSTALK](reference/beanstalk.md) | 3 |
 | [BEDROCK](reference/bedrock.md) | 49 |
@@ -85,7 +85,7 @@ GitHub. Pick a service below.
 | [ECS](reference/ecs.md) | 59 |
 | [EFS](reference/efs.md) | 15 |
 | [EKS](reference/eks.md) | 116 |
-| [ELASTICACHE](reference/elasticache.md) | 11 |
+| [ELASTICACHE](reference/elasticache.md) | 13 |
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 7 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 97 |
@@ -99,14 +99,14 @@ GitHub. Pick a service below.
 | [GITHUB](reference/github.md) | 22 |
 | [GLACIER](reference/glacier.md) | 2 |
 | [GLOBALACCELERATOR](reference/globalaccelerator.md) | 1 |
-| [GLUE](reference/glue.md) | 13 |
+| [GLUE](reference/glue.md) | 14 |
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 19 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
 | [IAM](reference/iam.md) | 312 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
-| [KINESIS](reference/kinesis.md) | 4 |
+| [KINESIS](reference/kinesis.md) | 5 |
 | [KMS](reference/kms.md) | 47 |
 | [LAKEFORMATION](reference/lakeformation.md) | 2 |
 | [LAMBDA](reference/lambda.md) | 92 |
@@ -118,12 +118,12 @@ GitHub. Pick a service below.
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
 | [MQ](reference/mq.md) | 3 |
-| [MSK](reference/msk.md) | 10 |
+| [MSK](reference/msk.md) | 11 |
 | [MWAA](reference/mwaa.md) | 2 |
-| [NEPTUNE](reference/neptune.md) | 20 |
+| [NEPTUNE](reference/neptune.md) | 21 |
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [NLB](reference/nlb.md) | 2 |
-| [OPENSEARCH](reference/opensearch.md) | 132 |
+| [OPENSEARCH](reference/opensearch.md) | 133 |
 | [ORG](reference/org.md) | 62 |
 | [QUICKSIGHT](reference/quicksight.md) | 2 |
 | [RAM](reference/ram.md) | 3 |
@@ -135,7 +135,7 @@ GitHub. Pick a service below.
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 3 |
-| [SAGEMAKER](reference/sagemaker.md) | 41 |
+| [SAGEMAKER](reference/sagemaker.md) | 42 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |

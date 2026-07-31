@@ -1,0 +1,70 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.encryption-crossregion"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:elasticache::111122223333:globalreplicationgroup:prod-global",
+      "type": "aws_elasticache_cluster",
+      "vendor": "aws",
+      "properties": {
+        "cache": {
+          "kind": "cluster",
+          "elasticache": {
+            "is_global_datastore": true,
+            "global_encrypt_consistent": true,
+            "global_encrypt_mismatches": []
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:es:us-east-1:111122223333:domain/prod-search",
+      "type": "aws_opensearch_domain",
+      "vendor": "aws",
+      "properties": {
+        "search_service": {
+          "kind": "domain",
+          "opensearch": {
+            "has_cross_cluster": true,
+            "cross_cluster_encrypt_consistent": true,
+            "cross_cluster_encrypt_mismatches": []
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:neptune::111122223333:global-cluster:prod-graph",
+      "type": "aws_neptune_cluster",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "neptune_cluster",
+          "neptune": {
+            "is_global_database": true,
+            "global_encrypt_consistent": true,
+            "global_encrypt_mismatches": []
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:kafka:us-east-1:111122223333:cluster/prod-kafka/abc-123",
+      "type": "aws_msk_cluster",
+      "vendor": "aws",
+      "properties": {
+        "streaming": {
+          "kind": "msk_cluster",
+          "msk": {
+            "has_replication": true,
+            "replication_encrypt_consistent": true,
+            "replication_encrypt_mismatches": []
+          }
+        }
+      }
+    }
+  ]
+}

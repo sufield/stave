@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.NOTEBOOK.ENCRYPT.CMK.001
+name: SageMaker Notebook Must Use a Customer-Managed KMS Key
+description: >
+  SageMaker notebook instances with volume encryption must use a
+  customer-managed KMS key, not the AWS-managed default. The
+  AWS-managed key has a key policy the customer cannot edit and
+  cannot be revoked or rotated on the customer's schedule.
+  Notebook volumes hold code, datasets, model artifacts, and
+  cached credentials — customer-managed keys provide per-tenant
+  key-policy control and per-incident key-revocation capability.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+  - CEK-04
+  - CEK-08
+scope_tags:
+- aws
+- sagemaker
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sagemaker_notebook]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Notebook volume is encrypted with the AWS-managed default key.
+    Per-tenant key-policy and revocation controls are unavailable.
+  action: >
+    Create a new notebook instance with a customer-managed KMS key
+    specified via KmsKeyId. SageMaker does not allow changing the
+    encryption key on an existing notebook instance.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_notebook",
+        "encryption": {
+          "volume_encrypted": true,
+          "kms_key_managed_by": "customer"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+  - field: properties.compute.kind
+    op: eq
+    value: sagemaker_notebook
+  - field: properties.compute.encryption.volume_encrypted
+    op: eq
+    value: true
+  - field: properties.compute.encryption.kms_key_managed_by
+    op: eq
+    value: aws
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:notebook-instance/ml-notebook"
+      asset_type: aws_sagemaker_notebook
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_notebook
+          encryption:
+            volume_encrypted: true
+            kms_key_managed_by: aws
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:notebook-instance/ml-notebook"
+      asset_type: aws_sagemaker_notebook
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_notebook
+          encryption:
+            volume_encrypted: true
+            kms_key_managed_by: customer
+  - name: unencrypted notebook not in scope
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:notebook-instance/dev-notebook"
+      asset_type: aws_sagemaker_notebook
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_notebook
+          encryption:
+            volume_encrypted: false

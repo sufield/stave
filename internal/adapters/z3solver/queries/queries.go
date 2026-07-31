@@ -2,6 +2,8 @@
 
 package queries
 
+import "github.com/aclements/go-z3/z3"
+
 // QueryResult is the wire shape every query produces.
 type QueryResult struct {
 	QueryName      string            `json:"query_name"`
@@ -11,6 +13,7 @@ type QueryResult struct {
 	UnsatCore      []string          `json:"unsat_core,omitempty"`
 	SolveTimeMs    int64             `json:"solve_time_ms"`
 	ModelCoverage  ModelCoverage     `json:"model_coverage"`
+	CertificateSMT string            `json:"-"`
 }
 
 // ModelCoverage names what the query reasons over.
@@ -24,4 +27,16 @@ func satString(sat bool) string {
 		return "satisfiable"
 	}
 	return "unsatisfiable"
+}
+
+// captureCertificate snapshots the solver's assertions as SMT-LIB text.
+func captureCertificate(solver *z3.Solver, sat bool, queryName string) string {
+	result := "unsat"
+	if sat {
+		result = "sat"
+	}
+	return "; Stave Proof Certificate — query: " + queryName + "\n" +
+		"; Expected result: " + result + "\n" +
+		"; Verify: z3 <this-file>\n\n" +
+		solver.String() + "\n\n(check-sat)\n"
 }

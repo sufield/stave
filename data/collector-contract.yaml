@@ -1132,3 +1132,58 @@ contracts:
       every SSH rule uses CIDRs has no SG-to-SG bastion binding.
     consumers:
       - CTL.EC2.SG.SSH.CIDR.ONLY.001
+
+  # ─── Network Topology Fields (Graph-Based Reachability) ─────
+  #
+  # Raw network topology for graph-based reachability analysis.
+  # These fields carry the structured data the network proof engine
+  # traverses; the pre-computed booleans above remain for CEL controls.
+
+  - field: security_group_rules
+    type: array
+    postcondition: >
+      Array of individual SG ingress/egress rules. Each element has:
+      direction (ingress|egress), protocol, from_port, to_port,
+      source_type (cidr|sg|prefix-list), source_value.
+      Null if the SG has no rules.
+    consumers:
+      - network-reachability-graph
+
+  - field: compute.vpc_id
+    type: string
+    postcondition: >
+      The VPC ID this compute resource resides in.
+    consumers:
+      - network-reachability-graph
+
+  - field: compute.subnet_id
+    type: string
+    postcondition: >
+      The subnet ID this compute resource resides in.
+    consumers:
+      - network-reachability-graph
+
+  - field: compute.security_groups
+    type: array
+    postcondition: >
+      Array of security group IDs attached to this compute resource.
+    consumers:
+      - network-reachability-graph
+
+  - field: compute.environment
+    type: string
+    postcondition: >
+      Value of the stave:environment tag on the resource.
+      Expected values: production, staging, development, sandbox.
+      Null if the tag is absent.
+    consumers:
+      - network-reachability-graph
+
+  - field: compute.role
+    type: string
+    postcondition: >
+      Value of the stave:role tag on the resource.
+      Expected values: bastion, jumphost, nat-instance, proxy, application.
+      Null if the tag is absent.
+    consumers:
+      - network-reachability-graph

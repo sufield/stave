@@ -549,6 +549,21 @@ OpenSearch cross-cluster setup is over-broad: CCS trust granted to a non-product
 
 ---
 
+### CTL.OPENSEARCH.CROSSREGION.ENCRYPT.MISMATCH.001
+
+**Cross-Cluster Replication Has Inconsistent Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+OpenSearch domain with cross-cluster replication has follower indices in regions with different encryption configurations than the leader. If the leader uses a customer-managed KMS key and a follower does not, the same data has different protection levels across regions. The weakest follower's encryption level is the effective protection for the replicated data set.
+
+**Remediation:** Recreate follower domains with the same CMK tier as the leader. Each region's key must exist in that region. Update cross-cluster replication connections after recreating the follower.
+
+---
+
 ### CTL.OPENSEARCH.CUSTOM.CERT.EXPIRY.001
 
 **OpenSearch Custom Endpoint Certificate Near Expiry**

@@ -1,0 +1,145 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-01T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "i-bastion-01",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "instance": {
+            "vpc_id": "vpc-prod-01",
+            "subnet_id": "subnet-bastion-01",
+            "security_groups": ["sg-bastion-01"],
+            "private_ip": "10.0.0.10",
+            "ssm_managed": true,
+            "has_key_pair": true
+          }
+        },
+        "tags": {
+          "stave:role": "bastion",
+          "Name": "bastion-east"
+        }
+      }
+    },
+    {
+      "id": "i-prod-app-01",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "instance": {
+            "vpc_id": "vpc-prod-01",
+            "subnet_id": "subnet-prod-01",
+            "security_groups": ["sg-prod-01"],
+            "private_ip": "10.0.1.10",
+            "ssm_managed": true,
+            "has_key_pair": true
+          }
+        },
+        "tags": {
+          "stave:environment": "production",
+          "Name": "prod-app-01"
+        }
+      }
+    },
+    {
+      "id": "i-prod-app-02",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "instance": {
+            "vpc_id": "vpc-prod-01",
+            "subnet_id": "subnet-prod-01",
+            "security_groups": ["sg-prod-01"],
+            "private_ip": "10.0.1.11",
+            "ssm_managed": true,
+            "has_key_pair": true
+          }
+        },
+        "tags": {
+          "stave:environment": "production",
+          "Name": "prod-app-02"
+        }
+      }
+    },
+    {
+      "id": "i-prod-db-01",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "instance": {
+            "vpc_id": "vpc-prod-01",
+            "subnet_id": "subnet-prod-02",
+            "security_groups": ["sg-prod-db-01"],
+            "private_ip": "10.0.2.10",
+            "ssm_managed": true,
+            "has_key_pair": true
+          }
+        },
+        "tags": {
+          "stave:environment": "production",
+          "Name": "prod-db-primary"
+        }
+      }
+    },
+    {
+      "id": "sg-bastion-01",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "rules": [
+              {"direction": "ingress", "protocol": "tcp", "from_port": 22, "to_port": 22, "source_type": "cidr", "source_value": "203.0.113.0/24"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-prod-01",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "rules": [
+              {"direction": "ingress", "protocol": "tcp", "from_port": 22, "to_port": 22, "source_type": "sg", "source_value": "sg-bastion-01"}
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-prod-db-01",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "rules": [
+              {"direction": "ingress", "protocol": "tcp", "from_port": 22, "to_port": 22, "source_type": "sg", "source_value": "sg-bastion-01"}
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

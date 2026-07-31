@@ -62,6 +62,7 @@ func QueryConflict(model *compiler.CompiledModel) *QueryResult {
 	} else {
 		r.Interpretation = "policies are mutually consistent: no triple is both allowed and denied"
 	}
+	r.CertificateSMT = captureCertificate(solver, sat, r.QueryName)
 	return r
 }
 

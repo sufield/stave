@@ -64,6 +64,7 @@ func QueryInvariantVerify(model *compiler.CompiledModel, invariantID string) *Qu
 			"invariant %s holds: no modeled input triggers the unsafe condition",
 			invariantID)
 	}
+	r.CertificateSMT = captureCertificate(solver, sat, r.QueryName)
 	return r
 }
 

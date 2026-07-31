@@ -5,6 +5,7 @@ package stave
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/sufield/stave/internal/adapters/z3solver/compiler"
 	"github.com/sufield/stave/internal/adapters/z3solver/queries"
@@ -12,13 +13,14 @@ import (
 
 // ProveConfig configures a prove query.
 type ProveConfig struct {
-	SnapshotsDir string
-	ControlsDir  string
-	Query        string
-	Principal    string
-	Action       string
-	Resource     string
-	InvariantID  string
+	SnapshotsDir    string
+	ControlsDir     string
+	Query           string
+	Principal       string
+	Action          string
+	Resource        string
+	InvariantID     string
+	CertificatePath string
 }
 
 // ProveResult wraps the Z3 query result for the facade.
@@ -44,21 +46,30 @@ func Prove(ctx context.Context, cfg ProveConfig) (*ProveResult, error) {
 		return nil, fmt.Errorf("prove: compile Z3 model: %w", err)
 	}
 
+	var result *ProveResult
 	switch cfg.Query {
 	case "compatibility":
-		return queries.QueryCompatibility(model, cfg.Principal, cfg.Action, cfg.Resource), nil
+		result = queries.QueryCompatibility(model, cfg.Principal, cfg.Action, cfg.Resource)
 	case "reachability":
-		return queries.QueryReachability(model, cfg.Principal, cfg.Resource), nil
+		result = queries.QueryReachability(model, cfg.Principal, cfg.Resource)
 	case "conflict":
-		return queries.QueryConflict(model), nil
+		result = queries.QueryConflict(model)
 	case "choke-point":
 		reach := queries.QueryReachability(model, cfg.Principal, cfg.Resource)
-		return queries.QueryChokePoint(model, reach), nil
+		result = queries.QueryChokePoint(model, reach)
 	case "invariant":
-		return queries.QueryInvariantVerify(model, cfg.InvariantID), nil
+		result = queries.QueryInvariantVerify(model, cfg.InvariantID)
 	default:
 		return nil, fmt.Errorf("prove: unknown query %q (valid: compatibility, reachability, conflict, choke-point, invariant)", cfg.Query)
 	}
+
+	if cfg.CertificatePath != "" && result.CertificateSMT != "" {
+		if err := os.WriteFile(cfg.CertificatePath, []byte(result.CertificateSMT), 0o644); err != nil {
+			return nil, fmt.Errorf("prove: write certificate: %w", err)
+		}
+	}
+
+	return result, nil
 }
 
 func loadProveExports(ctx context.Context, cfg ProveConfig) (*compiler.Exports, error) {

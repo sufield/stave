@@ -34,9 +34,13 @@ Inputs:
   --resource          Resource ARN (compatibility, reachability, choke-point)
   --invariant         Control ID (invariant query)
   --format, -f        Output format: json (default), text
+  --certificate       Write SMT-LIB proof certificate to this path
+  --compliance        Compliance frameworks to map (comma-separated, or 'all')
+  --history           Append result to proof history JSONL in this directory
 
 Outputs:
   stdout: query result as JSON (or text with --format text)
+  certificate: self-contained SMT-LIB file verifiable by z3/cvc5/yices-smt2
 
 Exit codes:
   0   Query completed successfully
@@ -66,7 +70,31 @@ Requires: binary built with -tags 'cgo z3' and libz3 installed.` + metadata.Offl
   # Find the minimum fix to break an attack path
   stave prove -o observations --query choke-point \
     --principal arn:aws:iam::123456789012:user/attacker \
-    --resource arn:aws:s3:::sensitive-data`,
+    --resource arn:aws:s3:::sensitive-data
+
+  # Produce a proof certificate for independent verification
+  stave prove -o observations --query compatibility \
+    --principal arn:aws:iam::123456789012:role/MyRole \
+    --action s3:GetObject \
+    --resource arn:aws:s3:::my-bucket \
+    --certificate proof.smt2
+  # Then: z3 proof.smt2
+
+  # Map proof to compliance frameworks
+  stave prove -o observations --query compatibility \
+    --principal arn:aws:iam::123456789012:role/MyRole \
+    --action s3:GetObject \
+    --resource arn:aws:s3:::my-bucket \
+    --compliance pci-dss-4.0,hipaa
+
+  # Accumulate proof history
+  stave prove -o observations --query compatibility \
+    --principal arn:aws:iam::123456789012:role/MyRole \
+    --action s3:GetObject \
+    --resource arn:aws:s3:::my-bucket \
+    --certificate ./proofs/proof.smt2 \
+    --history ./proofs/ \
+    --compliance all`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -74,5 +102,6 @@ Requires: binary built with -tags 'cgo z3' and libz3 installed.` + metadata.Offl
 		RunE:          func(cmd *cobra.Command, _ []string) error { return run(cmd, opts) },
 	}
 	addFlags(cmd, opts)
+	cmd.AddCommand(NewHistoryCmd())
 	return cmd
 }

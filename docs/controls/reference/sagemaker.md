@@ -275,6 +275,21 @@ SageMaker notebook instances must encrypt the ML storage volume at rest with KMS
 
 ---
 
+### CTL.SAGEMAKER.NOTEBOOK.ENCRYPT.CMK.001
+
+**SageMaker Notebook Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+SageMaker notebook instances with volume encryption must use a customer-managed KMS key, not the AWS-managed default. The AWS-managed key has a key policy the customer cannot edit and cannot be revoked or rotated on the customer's schedule. Notebook volumes hold code, datasets, model artifacts, and cached credentials — customer-managed keys provide per-tenant key-policy control and per-incident key-revocation capability.
+
+**Remediation:** Create a new notebook instance with a customer-managed KMS key specified via KmsKeyId. SageMaker does not allow changing the encryption key on an existing notebook instance.
+
+---
+
 ### CTL.SAGEMAKER.NOTEBOOK.IDLE.001
 
 **SageMaker Notebook Must Not Be Idle Beyond Threshold**

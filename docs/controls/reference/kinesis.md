@@ -20,6 +20,21 @@ Kinesis Data Streams must use server-side encryption with KMS to protect records
 
 ---
 
+### CTL.KINESIS.ENCRYPT.CMK.001
+
+**Kinesis Stream Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+Kinesis Data Streams with server-side encryption must use a customer-managed KMS key, not the AWS-managed `aws/kinesis` default. The AWS-managed key has a key policy the customer cannot edit and cannot be revoked or rotated on the customer's schedule. Customer-managed keys provide per-tenant key-policy control and per-incident key-revocation capability.
+
+**Remediation:** Update the stream encryption to use a customer-managed KMS key via aws kinesis start-stream-encryption --encryption-type KMS --key-id arn:aws:kms:...
+
+---
+
 ### CTL.KINESIS.MODE.PROVISIONED.001
 
 **Kinesis Stream Should Use On-Demand Capacity Mode**

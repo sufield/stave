@@ -1,0 +1,130 @@
+// reasoning/souffle/network/reachability.dl — Network reachability rules.
+//
+// Computes SG-based reachability and the bastion routing safety property.
+// This is the formal specification; the Go implementation in
+// internal/core/network/ is the executable path in the CLI.
+
+#include "schema.dl"
+
+// =====================================================
+// Scope classification from tags.
+// =====================================================
+
+.decl is_production(resource_id: symbol)
+is_production(R) :- resource_tag(R, "stave:environment", "production").
+
+.decl is_bastion(resource_id: symbol)
+is_bastion(R) :- resource_tag(R, "stave:role", "bastion").
+
+// =====================================================
+// Broad internal CIDRs — conservative approximation.
+// Soufflé lacks CIDR arithmetic; match RFC1918 supernets
+// and the universal wildcard. A host in the same VPC is
+// assumed covered by any of these.
+// =====================================================
+
+.decl is_broad_internal_cidr(cidr: symbol)
+is_broad_internal_cidr("10.0.0.0/8").
+is_broad_internal_cidr("172.16.0.0/12").
+is_broad_internal_cidr("192.168.0.0/16").
+is_broad_internal_cidr("0.0.0.0/0").
+
+// =====================================================
+// SG-based reachability.
+// =====================================================
+
+// Ingress via SG reference (bastion architecture pattern).
+.decl sg_ingress_from_sg(dst_sg: symbol, src_sg: symbol, port: number)
+sg_ingress_from_sg(DSG, SSG, Port) :-
+    sg_allows(DSG, "ingress", "tcp", Port, "sg", SSG).
+
+// Ingress via CIDR.
+.decl sg_ingress_from_cidr(dst_sg: symbol, cidr: symbol, port: number)
+sg_ingress_from_cidr(DSG, CIDR, Port) :-
+    sg_allows(DSG, "ingress", "tcp", Port, "cidr", CIDR).
+
+// Direct reachability: SG-to-SG reference within same VPC.
+.decl can_reach(src: symbol, dst: symbol, port: number)
+.output can_reach
+
+can_reach(Src, Dst, Port) :-
+    placement(Src, VPC, _, SrcSG, _, _),
+    placement(Dst, VPC, _, DstSG, _, _),
+    sg_ingress_from_sg(DstSG, SrcSG, Port),
+    Src != Dst.
+
+// CIDR-based reachability within same VPC.
+can_reach(Src, Dst, Port) :-
+    placement(Src, VPC, _, _, _, _),
+    placement(Dst, VPC, _, DstSG, _, _),
+    sg_ingress_from_cidr(DstSG, CIDR, Port),
+    is_broad_internal_cidr(CIDR),
+    Src != Dst.
+
+// Cross-VPC reachability via peering (either direction).
+can_reach(Src, Dst, Port) :-
+    placement(Src, VPC1, _, _, _, _),
+    placement(Dst, VPC2, _, DstSG, _, _),
+    vpc_peering(_, VPC1, VPC2),
+    sg_ingress_from_cidr(DstSG, CIDR, Port),
+    is_broad_internal_cidr(CIDR),
+    VPC1 != VPC2.
+
+can_reach(Src, Dst, Port) :-
+    placement(Src, VPC1, _, _, _, _),
+    placement(Dst, VPC2, _, DstSG, _, _),
+    vpc_peering(_, VPC2, VPC1),
+    sg_ingress_from_cidr(DstSG, CIDR, Port),
+    is_broad_internal_cidr(CIDR),
+    VPC1 != VPC2.
+
+// =====================================================
+// Entry point enumeration.
+// =====================================================
+
+// External entry points: reachable from the internet.
+.decl external_entry(dst: symbol, port: number)
+.output external_entry
+
+external_entry(Dst, Port) :-
+    placement(Dst, _, _, DstSG, _, _),
+    sg_ingress_from_cidr(DstSG, "0.0.0.0/0", Port).
+
+// SSH to production hosts from non-production sources.
+.decl ssh_to_prod(src: symbol, dst: symbol, path_type: symbol)
+.output ssh_to_prod
+
+ssh_to_prod(Src, Dst, "direct") :-
+    can_reach(Src, Dst, 22),
+    is_production(Dst),
+    !is_production(Src).
+
+// =====================================================
+// Bastion routing safety property.
+//
+// bastion_bypass is non-empty iff a non-bastion host can
+// SSH to a production host. Empty = property holds (UNSAT
+// equivalent). Non-empty = bypass exists (SAT equivalent)
+// and the tuples ARE the counterexamples.
+// =====================================================
+
+.decl bastion_bypass(src: symbol, dst: symbol)
+.output bastion_bypass
+
+bastion_bypass(Src, Dst) :-
+    ssh_to_prod(Src, Dst, _),
+    !is_bastion(Src).
+
+// =====================================================
+// Derived counts for inspection.
+// =====================================================
+
+.decl _net_derived_count(relation: symbol, n: number)
+.output _net_derived_count
+
+_net_derived_count("can_reach",       n) :- n = count : { can_reach(_, _, _) }.
+_net_derived_count("external_entry",  n) :- n = count : { external_entry(_, _) }.
+_net_derived_count("ssh_to_prod",     n) :- n = count : { ssh_to_prod(_, _, _) }.
+_net_derived_count("bastion_bypass",  n) :- n = count : { bastion_bypass(_, _) }.
+_net_derived_count("is_production",   n) :- n = count : { is_production(_) }.
+_net_derived_count("is_bastion",      n) :- n = count : { is_bastion(_) }.

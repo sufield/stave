@@ -74,5 +74,6 @@ func QueryCompatibility(model *compiler.CompiledModel, principal, action, resour
 			"no modeled layer grants %s the action %s on %s",
 			principal, action, resource)
 	}
+	r.CertificateSMT = captureCertificate(solver, sat, r.QueryName)
 	return r
 }

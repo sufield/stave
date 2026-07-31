@@ -40,6 +40,7 @@ import (
 	stavemap "github.com/sufield/stave/cmd/map"
 	stavemetrics "github.com/sufield/stave/cmd/metrics"
 	stavenep "github.com/sufield/stave/cmd/nep"
+	stavenetwork "github.com/sufield/stave/cmd/network"
 	stavepack "github.com/sufield/stave/cmd/pack"
 	stavepath "github.com/sufield/stave/cmd/path"
 	staveplan "github.com/sufield/stave/cmd/plan"
@@ -175,6 +176,9 @@ func WireCommands(app *App) error {
 
 	// Z3 SMT formal verification
 	root.AddCommand(staveprove.NewCmd())
+
+	// Network reachability analysis
+	root.AddCommand(stavenetwork.NewCmd())
 
 	// Net Effective Permissions (CIEM)
 	root.AddCommand(stavenep.NewCmd())

@@ -9,13 +9,14 @@ import (
 
 // ProveConfig configures a prove query.
 type ProveConfig struct {
-	SnapshotsDir string
-	ControlsDir  string
-	Query        string
-	Principal    string
-	Action       string
-	Resource     string
-	InvariantID  string
+	SnapshotsDir    string
+	ControlsDir     string
+	Query           string
+	Principal       string
+	Action          string
+	Resource        string
+	InvariantID     string
+	CertificatePath string
 }
 
 // ProveResult wraps the Z3 query result for the facade.
@@ -30,6 +31,7 @@ type ProveResult struct {
 		Modeled    []string `json:"modeled"`
 		NotModeled []string `json:"not_modeled"`
 	} `json:"model_coverage"`
+	CertificateSMT string `json:"-"`
 }
 
 // Prove returns an error when the binary is built without Z3.

@@ -125,6 +125,21 @@ Neptune clusters must not run engine versions that have reached end-of-life. AWS
 
 ---
 
+### CTL.NEPTUNE.GLOBAL.ENCRYPT.MISMATCH.001
+
+**Global Database Replicas Have Inconsistent Encryption**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.5.1; soc2: CC6.1;
+
+Neptune Global Database has secondary clusters in regions with different encryption configurations than the primary. If the primary uses a customer-managed KMS key and a secondary does not, the same graph data has different protection levels across regions. The weakest secondary's encryption level is the effective protection for the replicated data set.
+
+**Remediation:** Remove and re-add secondary clusters with KMS keys at the same tier as the primary. Each region's key must exist in that region.
+
+---
+
 ### CTL.NEPTUNE.LOADER.ROLE.CROSSBUCKET.001
 
 **Neptune Loader Role Must Stay Inside the Bucket Allow-List**
