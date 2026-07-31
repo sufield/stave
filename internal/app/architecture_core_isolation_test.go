@@ -32,6 +32,7 @@ func TestCoreRuntimeNoHardwiredSideEffects(t *testing.T) {
 	// injection-point defaults (NowFunc fallbacks).
 	timeNowAllowed := map[string]struct{}{
 		filepath.Join("internal", "core", "ports", "clock.go"):           {}, // RealClock implementation
+		filepath.Join("internal", "core", "network", "proof.go"):         {}, // elapsed-time profiling (SolveTimeMs)
 		filepath.Join("internal", "app", "eval", "evaluation_output.go"): {}, // elapsed-time profiling
 		filepath.Join("internal", "app", "hygiene", "request.go"):        {}, // NowFunc default fallback
 	}
