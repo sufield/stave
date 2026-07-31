@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001
+name: "Managed Policy Has Multiple Versions"
+description: >
+  A customer-managed IAM policy has more than one version. Dormant
+  versions may contain broader permissions that can be activated via
+  iam:SetDefaultPolicyVersion — a single-API-call escalation path.
+  Policies should be cleaned to a single version after changes are
+  verified.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+params:
+  attack_stage: privilege_escalation
+  base_impact: 4
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.0
+observation_fields:
+  - identity.kind
+  - identity.policy.version_count
+remediation:
+  description: >
+    IAM managed policy has multiple versions — dormant versions are a
+    precondition for the SetDefaultPolicyVersion escalation path.
+  action: >
+    Delete non-default policy versions after verifying the current
+    default version is correct. Use aws iam delete-policy-version to
+    remove dormant versions. Alternatively, enable an SCP that denies
+    iam:SetDefaultPolicyVersion in workload accounts.
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policy": {
+          "version_count": 1
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policy.version_count
+      op: present
+    - field: properties.identity.policy.version_count
+      op: gt
+      value: 1
+tests:
+  - name: "user with 3 policy versions fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/mallory"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            version_count: 3
+  - name: "user with 1 policy version passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/bob"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy:
+            version_count: 1
+  - name: "user without version_count passes (absent field)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/alice"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policy: {}
+alternatives:
+  - tool: prowler
+    check_id: iam_policy_no_full_access_to_cloudwatch_logs
+    coverage: partial
+    note: No direct Prowler check for version accumulation; partial overlap with broad IAM policy checks.

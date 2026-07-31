@@ -1242,3 +1242,36 @@ contracts:
       "none" when no recon and no escalation.
     consumers:
       - CTL.IAM.RECON.VICTIM.SELECTION.001
+
+  # ─── IAM Policy Version State ───────────────────────────────
+  #
+  # Fields governing managed policy version history. The boolean
+  # proxy (has_broader_inactive_version) is computed upstream by
+  # the projector comparing version documents. Stave trusts this
+  # boolean without re-evaluating the underlying policy documents.
+
+  - field: identity.policy.has_broader_inactive_version
+    type: boolean
+    postcondition: >
+      True when any non-default version of the managed policy
+      contains permissions broader than the current default
+      version. The comparison is performed by the upstream
+      projector using the actual policy documents from
+      iam:GetPolicyVersion. Stave evaluates the boolean
+      without access to the version documents themselves.
+    consumers:
+      - CTL.IAM.POLICY.VERSIONS.001
+
+  - field: identity.policy.version_count
+    type: integer
+    postcondition: >
+      Number of versions for the managed policy (1-5, AWS
+      maximum is 5). Derived from the length of the
+      iam:ListPolicyVersions response. 1 means only the
+      default version exists (clean). 5 means at capacity —
+      iam:CreatePolicyVersion requires deleting a version
+      first, but iam:SetDefaultPolicyVersion can still
+      activate any existing dormant version.
+    consumers:
+      - CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001
+      - CTL.IAM.POLICY.VERSIONS.ATCAPACITY.001

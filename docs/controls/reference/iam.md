@@ -2886,6 +2886,36 @@ A customer-managed IAM policy has non-default versions containing broader permis
 
 ---
 
+### CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001
+
+**Managed Policy Has Multiple Versions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+A customer-managed IAM policy has more than one version. Dormant versions may contain broader permissions that can be activated via iam:SetDefaultPolicyVersion — a single-API-call escalation path. Policies should be cleaned to a single version after changes are verified.
+
+**Remediation:** Delete non-default policy versions after verifying the current default version is correct. Use aws iam delete-policy-version to remove dormant versions. Alternatively, enable an SCP that denies iam:SetDefaultPolicyVersion in workload accounts.
+
+---
+
+### CTL.IAM.POLICY.VERSIONS.ATCAPACITY.001
+
+**Managed Policy at Version Capacity**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6;
+
+A customer-managed IAM policy has 5 versions (AWS maximum). iam:CreatePolicyVersion requires deleting a version first, but iam:SetDefaultPolicyVersion can still activate any existing dormant version without deletion. At capacity, the attack surface is frozen — the set of potentially-exploitable versions is fixed.
+
+**Remediation:** Review and delete unneeded policy versions to free capacity. If all 5 versions are intentional, verify that none contains broader permissions than the current default. Use aws iam delete-policy-version to remove unnecessary versions.
+
+---
+
 ### CTL.IAM.POLLUTION.STALEADMIN.001
 
 **Stale IAM Credential Has Administrative Permissions**

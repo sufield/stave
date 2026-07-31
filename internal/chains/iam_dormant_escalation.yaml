@@ -7,6 +7,7 @@ description: >
 controls:
   - CTL.IAM.POLICY.VERSIONS.001
   - CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001
+  - CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001
 escalation_threshold: 2
 compound_severity: critical
 preconditions:

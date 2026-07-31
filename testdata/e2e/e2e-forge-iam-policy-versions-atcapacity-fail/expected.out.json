@@ -1,0 +1,373 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-01-15T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "2b210ce10c645657e1b956bd8ee0224e02fc94b4716e925fd02dd51becf5bb70",
+        "2026-01-11T000000Z.json": "48b5b9cd1027528dc27bccc3932d9eb4b9b3691f0fa88fd0e3bb4401b402382a"
+      },
+      "overall": "951fbbd31ac4e18c55aec3d24ec67956649e78f6bc563c505281f566dc26dff6"
+    },
+    "policy_fingerprint": "e439753cecde83a23e4d5c7a53b6dd610c5964175fde7b4f35ab942cec01fe72",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.IAM.POLICY.VERSIONS.ATCAPACITY.001",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "asset_type": "aws_iam_user",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -168,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:3ae171e52512f696",
+      "control_id": "CTL.IAM.POLICY.VERSIONS.ATCAPACITY.001",
+      "control_name": "Managed Policy at Version Capacity",
+      "control_description": "A customer-managed IAM policy has 5 versions (AWS maximum). iam:CreatePolicyVersion requires deleting a version first, but iam:SetDefaultPolicyVersion can still activate any existing dormant version without deletion. At capacity, the attack surface is frozen — the set of potentially-exploitable versions is fixed.\n",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "asset_type": "aws_iam_user",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 336,
+        "misconfigurations": [
+          {
+            "property": "identity.kind",
+            "actual_value": "user",
+            "operator": "eq",
+            "unsafe_value": "user"
+          },
+          {
+            "property": "identity.policy.version_count",
+            "actual_value": 5,
+            "operator": "eq",
+            "unsafe_value": 5
+          },
+          {
+            "property": "identity.policy.version_count",
+            "actual_value": 5,
+            "operator": "present"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 336 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "AC-6"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "IAM managed policy is at the 5-version limit. Review and delete unneeded versions to free capacity.",
+        "action": "Review and delete unneeded policy versions to free capacity. If all 5 versions are intentional, verify that none contains broader permissions than the current default. Use aws iam delete-policy-version to remove unnecessary versions.",
+        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"policy\": {\n      \"version_count\": 2\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-0e6504c8cf7ba713",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:user/mallory",
+          "asset_type": "aws_iam_user"
+        },
+        "action": "Review and delete unneeded policy versions to free capacity. If all 5 versions are intentional, verify that none contains broader permissions than the current default. Use aws iam delete-policy-version to remove unnecessary versions."
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 4320,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 25.958904109589042,
+      "score_breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0383561643835617,
+        "days_blind": 14
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identity.kind eq \"user\"",
+          "observation_key": "identity.kind",
+          "operator": "eq",
+          "expected_value": "user",
+          "observed_value": "user"
+        },
+        {
+          "predicate_expr": "identity.policy.version_count eq 5",
+          "observation_key": "identity.policy.version_count",
+          "operator": "eq",
+          "expected_value": 5,
+          "observed_value": 5
+        },
+        {
+          "predicate_expr": "identity.policy.version_count present",
+          "observation_key": "identity.policy.version_count",
+          "operator": "present",
+          "observed_value": 5
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:iam::111122223333:user/mallory",
+          "type": "aws_iam_user",
+          "vendor": "aws",
+          "arn": "arn:aws:iam::111122223333:user/mallory"
+        },
+        "violation": {
+          "control_id": "CTL.IAM.POLICY.VERSIONS.ATCAPACITY.001",
+          "control_name": "Managed Policy at Version Capacity",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "identity.kind = \"user\"",
+              "observation_key": "identity.kind",
+              "observed_value": "user"
+            },
+            {
+              "clause": "identity.policy.version_count = 5",
+              "observation_key": "identity.policy.version_count",
+              "observed_value": 5
+            },
+            {
+              "clause": "identity.policy.version_count is set (observed: 5)",
+              "observation_key": "identity.policy.version_count",
+              "observed_value": 5
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identity.kind",
+            "current_value": "user",
+            "required_value": "any value other than user",
+            "has_safe_default": false,
+            "description": "Change identity.kind away from user"
+          },
+          {
+            "path": "identity.policy.version_count",
+            "current_value": "5",
+            "required_value": "any value other than 5",
+            "has_safe_default": false,
+            "description": "Change identity.policy.version_count away from 5"
+          },
+          {
+            "path": "identity.policy.version_count",
+            "current_value": "5",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove identity.policy.version_count"
+          }
+        ],
+        "action": "Review and delete unneeded policy versions to free capacity. If all 5 versions are intentional, verify that none contains broader permissions than the current default. Use aws iam delete-policy-version to remove unnecessary versions."
+      },
+      "alternatives": [
+        {
+          "tool": "prowler",
+          "check_id": "iam_policy_no_full_access_to_cloudwatch_logs",
+          "coverage": "partial",
+          "note": "No direct Prowler check for version capacity; partial overlap with broad IAM policy checks."
+        }
+      ],
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "iam"
+      ],
+      "delta": [
+        {
+          "property_label": "policy version count",
+          "property_path": "identity.policy.version_count",
+          "current_value": "5",
+          "fix_action": "change from 5"
+        },
+        {
+          "property_label": "policy version count",
+          "property_path": "identity.policy.version_count",
+          "current_value": "5",
+          "fix_action": "remove this property from the configuration"
+        }
+      ],
+      "contributing_fact_ids": [
+        "c9983f77dd2b",
+        "b8ea4ffd96ff",
+        "3ddeef540f13",
+        "32c1edbc9ba2",
+        "bcc68d65d019",
+        "520dc7cdc7ba"
+      ],
+      "deciding_layer": "identity_policy"
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:11b2c66b6eb7e8b6",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "shared_keys": [
+        "identity.policy",
+        "identity.policy.version_count"
+      ],
+      "headline_finding_id": "sha256:3ae171e52512f696",
+      "member_finding_ids": [
+        "sha256:3ae171e52512f696"
+      ],
+      "consolidated_score": 25.958904109589042,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "asset_type": "aws_iam_user",
+      "fix_plan": {
+        "id": "fix-0e6504c8cf7ba713",
+        "target": {
+          "asset_id": "arn:aws:iam::111122223333:user/mallory",
+          "asset_type": "aws_iam_user"
+        },
+        "action": "Review and delete unneeded policy versions to free capacity. If all 5 versions are intentional, verify that none contains broader permissions than the current default. Use aws iam delete-policy-version to remove unnecessary versions."
+      },
+      "contributing_controls": [
+        "CTL.IAM.POLICY.VERSIONS.ATCAPACITY.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.IAM.POLICY.VERSIONS.ATCAPACITY.001",
+      "asset_id": "arn:aws:iam::111122223333:user/mallory",
+      "exposure_score": 25.958904109589042,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0383561643835617,
+        "days_blind": 14
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "_unmatched": {
+        "covered": 1,
+        "total": 0,
+        "not_covered_checks": []
+      },
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}
