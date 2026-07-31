@@ -6,6 +6,7 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
+	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -217,21 +218,38 @@ func Analyze(input Input) *Result {
 	}
 }
 
+func normalizeKey(v string) string {
+	v = strings.ToLower(strings.TrimSpace(v))
+	v = strings.ReplaceAll(v, "-", "_")
+	return v
+}
+
 func hasFramework(compliance policy.ComplianceMapping, key string) bool {
-	if compliance == nil {
+	if compliance == nil || key == "" {
 		return false
 	}
-	_, ok := compliance[policy.ComplianceFramework(key)]
-	return ok
+	normKey := normalizeKey(key)
+	for f := range compliance {
+		normF := normalizeKey(string(f))
+		if normF == normKey || strings.HasPrefix(normF, normKey) || strings.HasPrefix(normKey, normF) {
+			return true
+		}
+	}
+	return false
 }
 
 func extractCitations(compliance policy.ComplianceMapping, key string) []string {
-	if compliance == nil {
+	if compliance == nil || key == "" {
 		return nil
 	}
-	cite, ok := compliance[policy.ComplianceFramework(key)]
-	if !ok || cite == "" {
-		return nil
+	normKey := normalizeKey(key)
+	for f, cite := range compliance {
+		normF := normalizeKey(string(f))
+		if normF == normKey || strings.HasPrefix(normF, normKey) || strings.HasPrefix(normKey, normF) {
+			if cite != "" {
+				return []string{string(cite)}
+			}
+		}
 	}
-	return []string{string(cite)}
+	return nil
 }

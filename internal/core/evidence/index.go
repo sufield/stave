@@ -33,15 +33,24 @@ func NewCitationIndex() *CitationIndex {
 
 // Add registers a control as addressing a specific framework requirement.
 func (idx *CitationIndex) Add(framework, requirement string, entry CitationEntry) {
+	if idx == nil {
+		return
+	}
 	key := citationKey(framework, requirement)
 	idx.mu.Lock()
 	defer idx.mu.Unlock()
+	if idx.entries == nil {
+		idx.entries = make(map[string][]CitationEntry)
+	}
 	idx.entries[key] = append(idx.entries[key], entry)
 }
 
 // Lookup returns all controls addressing a specific framework requirement.
 // The returned slice is a clone — callers may mutate it freely.
 func (idx *CitationIndex) Lookup(framework, requirement string) []CitationEntry {
+	if idx == nil {
+		return nil
+	}
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 	return slices.Clone(idx.entries[citationKey(framework, requirement)])
@@ -61,6 +70,9 @@ type CitationCoverage struct {
 // at least one Stave control. totalRequirements is the total count of
 // requirements in the framework catalog.
 func (idx *CitationIndex) Coverage(framework string, totalRequirements int) CitationCoverage {
+	if idx == nil {
+		return CitationCoverage{Framework: framework, TotalRequirements: totalRequirements}
+	}
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 	prefix := framework + ":"
@@ -85,6 +97,9 @@ func (idx *CitationIndex) Coverage(framework string, totalRequirements int) Cita
 
 // Frameworks returns all framework names present in the index.
 func (idx *CitationIndex) Frameworks() []string {
+	if idx == nil {
+		return nil
+	}
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 	seen := make(map[string]struct{})
@@ -103,6 +118,9 @@ func (idx *CitationIndex) Frameworks() []string {
 
 // RequirementsFor returns all requirement IDs covered for a framework.
 func (idx *CitationIndex) RequirementsFor(framework string) []string {
+	if idx == nil {
+		return nil
+	}
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 	prefix := framework + ":"
@@ -118,6 +136,9 @@ func (idx *CitationIndex) RequirementsFor(framework string) []string {
 
 // Size returns the total number of citation entries in the index.
 func (idx *CitationIndex) Size() int {
+	if idx == nil {
+		return 0
+	}
 	idx.mu.RLock()
 	defer idx.mu.RUnlock()
 	total := 0

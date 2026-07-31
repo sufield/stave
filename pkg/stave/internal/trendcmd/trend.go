@@ -55,8 +55,12 @@ func TrendReport(ctx context.Context, cfg TrendConfig) (output []byte, warnings 
 		return nil, warnings, err
 	}
 
-	if len(assessments) < cfg.MinRuns {
-		return nil, warnings, fmt.Errorf("trend requires at least %d assessment files (found %d)", cfg.MinRuns, len(assessments))
+	if len(assessments) == 0 || len(assessments) < cfg.MinRuns {
+		reqRuns := cfg.MinRuns
+		if reqRuns <= 0 {
+			reqRuns = 1
+		}
+		return nil, warnings, fmt.Errorf("trend requires at least %d assessment files (found %d)", reqRuns, len(assessments))
 	}
 
 	slices.SortFunc(assessments, func(a, b *report.Assessment) int {

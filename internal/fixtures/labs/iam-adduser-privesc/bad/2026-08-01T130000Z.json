@@ -1,0 +1,49 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.iam-adduser-privesc"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/lab-user",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "has_inline_policies": true
+          },
+          "escalation": {
+            "add_user_to_group": {
+              "present": true,
+              "target_group": "SecretsManagerGroup",
+              "permission_delta": ["secretsmanager:GetSecretValue", "secretsmanager:ListSecrets"]
+            },
+            "can_escalate_to_admin": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:group/SecretsManagerGroup",
+      "type": "aws_iam_group",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "group": {
+            "name": "SecretsManagerGroup",
+            "has_sensitive_service_access": true,
+            "sensitive_services": ["secretsmanager"],
+            "member_count": 2,
+            "policy_count": 1,
+            "has_policies_no_members": false,
+            "has_inline_policies": false
+          }
+        }
+      }
+    }
+  ]
+}

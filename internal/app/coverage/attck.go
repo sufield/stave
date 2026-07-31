@@ -275,6 +275,9 @@ func Build(input BuildInput) *CoverageReport {
 
 // NavigatorLayer produces an ATT&CK Navigator layer JSON.
 func NavigatorLayer(report *CoverageReport) map[string]any {
+	if report == nil {
+		return nil
+	}
 	techniques := make([]map[string]any, 0, len(report.Tactics))
 	for i := range report.Tactics {
 		tc := &report.Tactics[i]

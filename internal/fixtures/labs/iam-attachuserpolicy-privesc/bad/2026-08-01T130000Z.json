@@ -1,0 +1,36 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.iam-attachuserpolicy-privesc"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/lab-user",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "has_inline_policies": true
+          },
+          "escalation": {
+            "attach_user_policy_self": {
+              "present": true,
+              "target_user_arn": "arn:aws:iam::111122223333:user/lab-user",
+              "resource_scope": "self",
+              "has_policy_arn_condition": false,
+              "reachable_managed_policies": [
+                "arn:aws:iam::aws:policy/AdministratorAccess",
+                "arn:aws:iam::aws:policy/SecretsManagerReadWrite"
+              ]
+            },
+            "can_escalate_to_admin": false
+          }
+        }
+      }
+    }
+  ]
+}

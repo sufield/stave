@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.GROUP.SENSITIVE.ACCESS.001
+name: IAM Group Grants Access to Sensitive Services
+description: >
+  IAM group has policies granting access to sensitive services
+  (SecretsManager, KMS Decrypt, S3 object read, RDS data access).
+  Alone this is informational — groups should grant what their
+  members need. Combined with AddUserToGroup on a principal that
+  is not a current member, the group becomes a one-call escalation
+  target to data-plane access. The extractor evaluates the group's
+  effective policy set and flags groups where the union of attached
+  and inline policies includes data-access actions.
+domain: identity
+severity: low
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.3"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iam_group]
+params:
+  attack_stage: collection
+observation_fields:
+  - identity.group.name
+  - identity.group.has_sensitive_service_access
+  - identity.group.sensitive_services
+remediation:
+  description: >
+    IAM group grants access to sensitive data services. Any
+    principal with AddUserToGroup permission can join this group
+    and inherit data-plane access.
+  action: >
+    Review whether the group needs broad data-service access.
+    Prefer task-specific groups with scoped resource ARNs over
+    groups granting service-wide access. Restrict AddUserToGroup
+    to prevent unauthorized group joins.
+  example: |
+    {
+      "identity": {
+        "group": {
+          "name": "readonly-group",
+          "has_sensitive_service_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.group.has_sensitive_service_access
+      op: present
+    - field: properties.identity.group.has_sensitive_service_access
+      op: eq
+      value: true
+tests:
+  - name: group with SecretsManager access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:group/SecretsManagerGroup"
+      asset_type: aws_iam_group
+      vendor: aws
+      properties:
+        identity:
+          group:
+            name: "SecretsManagerGroup"
+            has_sensitive_service_access: true
+            sensitive_services:
+            - secretsmanager
+            member_count: 2
+            policy_count: 1
+  - name: group without sensitive access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:group/readonly-logs"
+      asset_type: aws_iam_group
+      vendor: aws
+      properties:
+        identity:
+          group:
+            name: "readonly-logs"
+            has_sensitive_service_access: false
+            member_count: 3
+            policy_count: 1

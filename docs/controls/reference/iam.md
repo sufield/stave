@@ -754,6 +754,22 @@ Scope: gated on `identity.kind == "user"`. The `iam:AttachUserPolicy` AWS action
 
 ---
 
+### CTL.IAM.ESCALATE.ATTACHUSERPOLICY.NOCONDITION.001
+
+**Principal Has Unrestricted iam:AttachUserPolicy Without Policy ARN Condition**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal has `iam:AttachUserPolicy` but the granting statement lacks a `Condition` restricting which policy ARNs can be attached. Without a `StringEquals`, `StringLike`, or `ArnEquals` condition on the `iam:PolicyARN` key, the principal can attach any of AWS's 1,000+ managed policies — including `AdministratorAccess` and `SecretsManagerReadWrite` — to any user it can target. The safe pattern scopes attachment to a whitelist of approved policy ARNs via `iam:PolicyARN` condition. Absence of this condition converts a scoped delegation into a full privilege-escalation path.
+Scope: gated on `identity.kind == "user"`. Fires only when `attach_user_policy_self.present` is true AND `has_policy_arn_condition` is false — i.e., the grant exists and is unrestricted.
+
+**Remediation:** Add a `Condition` block with `ArnEquals` or `StringEquals` on `iam:PolicyARN` to restrict which managed policies can be attached. Example: `"Condition": {"ArnEquals": {"iam:PolicyARN": "arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess"}}`. If the principal should not attach policies at all, remove `iam:AttachUserPolicy` entirely.
+
+---
+
 ### CTL.IAM.ESCALATE.CHAIN.001
 
 **Principal Must Not Have Multi-Step Path to Admin**
@@ -1659,6 +1675,21 @@ Fail-loud: if `identity.internet_facing` cannot be determined from the snapshot,
 An IAM group has attached policies (managed or inline) but no members. The group's permissions serve no operational purpose. If the group has admin-level policies, adding a user to it grants admin — the orphaned group is a latent escalation path via AddUserToGroup (technique #13 in the Stave escalation catalog).
 
 **Remediation:** Remove policies from empty groups or delete the group. Empty groups with admin-level policies are latent escalation paths via AddUserToGroup.
+
+---
+
+### CTL.IAM.GROUP.SENSITIVE.ACCESS.001
+
+**IAM Group Grants Access to Sensitive Services**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.3;
+
+IAM group has policies granting access to sensitive services (SecretsManager, KMS Decrypt, S3 object read, RDS data access). Alone this is informational — groups should grant what their members need. Combined with AddUserToGroup on a principal that is not a current member, the group becomes a one-call escalation target to data-plane access. The extractor evaluates the group's effective policy set and flags groups where the union of attached and inline policies includes data-access actions.
+
+**Remediation:** Review whether the group needs broad data-service access. Prefer task-specific groups with scoped resource ARNs over groups granting service-wide access. Restrict AddUserToGroup to prevent unauthorized group joins.
 
 ---
 

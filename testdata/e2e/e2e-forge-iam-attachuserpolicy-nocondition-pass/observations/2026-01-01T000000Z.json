@@ -1,0 +1,23 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/alice",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "escalation": {
+            "attach_user_policy_self": {
+              "present": true,
+              "has_policy_arn_condition": true
+            }
+          }
+        }
+      },
+      "type": "aws_iam_user",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -452,6 +452,9 @@ type chainResult struct {
 // Compute produces a posture score from assessment data.
 func Compute(input Input) Result {
 	w := input.Weights
+	if err := w.Validate(); err != nil {
+		w = DefaultWeights()
+	}
 	genAt := input.GeneratedAt
 
 	sev := computeSeverityScore(input)

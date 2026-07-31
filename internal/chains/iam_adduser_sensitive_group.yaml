@@ -1,0 +1,29 @@
+id: iam_adduser_sensitive_group
+description: >
+  Principal with iam:AddUserToGroup can join a group that grants
+  access to sensitive data services (SecretsManager, KMS, S3
+  object read). The attacker adds themselves to the group,
+  inheriting data-plane access in a single API call. This chain
+  extends the atomic AddUserToGroup detection by connecting the
+  escalation vector to its impact: the attacker does not merely
+  gain broader IAM permissions — they gain access to specific
+  data stores. The inline-policy detection is included because
+  inline policies on the attacker user are the most common
+  delivery mechanism for the AddUserToGroup permission in
+  observed incidents.
+controls:
+  - CTL.IAM.POLICY.INLINE.001
+  - CTL.IAM.ESCALATE.ADDUSERTOGROUP.001
+  - CTL.IAM.GROUP.SENSITIVE.ACCESS.001
+escalation_threshold: 2
+compound_severity: critical
+scope: global
+preconditions:
+  - initial_access
+postconditions:
+  - data_exfiltration
+implicit_dependencies: []
+incident_precedent:
+  name: Rhino Security Labs IAM Privilege Escalation (2019)
+  impact: AddUserToGroup used to join groups with data-service access after inline policy granted the escalation permission
+  reference: Bishop Fox IAM Vulnerable privesc13-AddUserToGroup; Rhino Security Labs aws_escalate technique 6

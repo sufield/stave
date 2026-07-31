@@ -23,6 +23,9 @@ type Engine struct {
 
 // Run executes the search over the given snapshots.
 func (e *Engine) Run(ctx context.Context, snapshots []asset.Snapshot, mode Mode, controlID string, resourceARN string) (Result, error) {
+	if e == nil || e.Evaluate == nil {
+		return Result{}, errors.New("bisect: evaluator function is required")
+	}
 	if len(snapshots) == 0 {
 		return Result{}, errors.New("no snapshots to search")
 	}
