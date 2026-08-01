@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.CREATEINVESTIGATION.NOCONDITION.001
+name: Principal Has guardduty:CreateInvestigation Without Restriction
+description: >
+  A principal has guardduty:CreateInvestigation in its effective
+  permissions with Resource "*" and no condition keys. This action
+  triggers AI-powered investigation agents that analyze findings,
+  correlate events across CloudTrail, VPC Flow Logs, and DNS logs,
+  and produce automated root cause analysis. An unrestricted grant
+  allows any holder to trigger investigations across the entire
+  account — consuming GuardDuty investigation credits and
+  potentially accessing correlated security event data that
+  exceeds the principal's intended scope.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02", "IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - guardduty
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+  - aws_iam_user
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - identity.kind
+  - identity.escalation.guardduty_create_investigation.present
+remediation:
+  description: >
+    Principal has guardduty:CreateInvestigation with no resource
+    or condition restriction. Any investigation can be triggered
+    account-wide.
+  action: >
+    Scope the guardduty:CreateInvestigation grant to specific
+    detector ARNs via the Resource field. Add condition keys
+    (aws:SourceAccount, aws:RequestedRegion) to limit where
+    investigations can be triggered. Consider restricting to
+    a dedicated security operations role.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "escalation": {
+          "guardduty_create_investigation": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.guardduty_create_investigation.present
+      op: present
+    - field: properties.identity.escalation.guardduty_create_investigation.present
+      op: eq
+      value: true
+tests:
+  - name: "role with broad CreateInvestigation — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/SecurityOps"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          escalation:
+            guardduty_create_investigation:
+              present: true
+              resource_scope: "*"
+  - name: "role without CreateInvestigation — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/ReadOnly"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          escalation:
+            guardduty_create_investigation:
+              present: false

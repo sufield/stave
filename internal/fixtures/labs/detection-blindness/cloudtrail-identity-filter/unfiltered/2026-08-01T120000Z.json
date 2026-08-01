@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.cloudtrail-identity-filter"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/main-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "network_activity_events": {
+            "enabled": true,
+            "has_identity_filter": false
+          }
+        }
+      }
+    }
+  ]
+}

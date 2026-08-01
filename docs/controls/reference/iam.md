@@ -924,6 +924,21 @@ Principals with iam:CreateInstanceProfile, iam:AddRoleToInstanceProfile, and ec2
 
 ---
 
+### CTL.IAM.ESCALATE.CREATEINVESTIGATION.NOCONDITION.001
+
+**Principal Has guardduty:CreateInvestigation Without Restriction**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.1;
+
+A principal has guardduty:CreateInvestigation in its effective permissions with Resource "*" and no condition keys. This action triggers AI-powered investigation agents that analyze findings, correlate events across CloudTrail, VPC Flow Logs, and DNS logs, and produce automated root cause analysis. An unrestricted grant allows any holder to trigger investigations across the entire account — consuming GuardDuty investigation credits and potentially accessing correlated security event data that exceeds the principal's intended scope.
+
+**Remediation:** Scope the guardduty:CreateInvestigation grant to specific detector ARNs via the Resource field. Add condition keys (aws:SourceAccount, aws:RequestedRegion) to limit where investigations can be triggered. Consider restricting to a dedicated security operations role.
+
+---
+
 ### CTL.IAM.ESCALATE.CREATELOGINPROFILE.001
 
 **Principal Must Not Escalate via iam:CreateLoginProfile On Another User**

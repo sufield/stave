@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.INVESTIGATION.001
+name: GuardDuty Investigation Agent Must Be Enabled
+# preview: true — investigation agent is in public preview as of July 2026.
+# Review field derivation at GA.
+description: >
+  GuardDuty detector is active but the investigation agent feature
+  is not enabled. The investigation agent uses AI to automatically
+  analyze findings, correlate related events, and provide root
+  cause analysis — reducing mean time to understand from hours to
+  minutes. Without it, SOC analysts must manually correlate
+  CloudTrail events, VPC flow logs, and DNS logs for each finding.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "IR-4, SI-4"
+  soc2: "CC7.2, CC7.3"
+  ccm_v4: ["LOG-03", "SEF-04"]
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - compliance-mapping
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_guardduty_detector]
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - threat_detection.kind
+  - threat_detection.enabled
+  - threat_detection.investigation.enabled
+remediation:
+  description: >
+    GuardDuty investigation agent is not enabled. Finding
+    triage requires manual event correlation.
+  action: >
+    Enable the investigation agent feature on the GuardDuty
+    detector via the console or API. The feature is in public
+    preview as of July 2026.
+  example: |
+    {
+      "threat_detection": {
+        "kind": "detector",
+        "investigation": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.threat_detection.kind
+      op: eq
+      value: detector
+    - field: properties.threat_detection.enabled
+      op: eq
+      value: true
+    - field: properties.threat_detection.investigation.enabled
+      op: eq
+      value: false
+tests:
+  - name: "detector without investigation agent — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/abc123"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: detector
+          enabled: true
+          investigation:
+            enabled: false
+  - name: "detector with investigation agent — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/abc123"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        threat_detection:
+          kind: detector
+          investigation:
+            enabled: true

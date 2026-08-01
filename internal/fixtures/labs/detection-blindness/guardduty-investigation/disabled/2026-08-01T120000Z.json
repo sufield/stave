@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.guardduty-investigation"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:guardduty:us-east-1:111122223333:detector/abc123",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "enabled": false,
+          "investigation": {
+            "enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

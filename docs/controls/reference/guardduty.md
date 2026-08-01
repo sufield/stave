@@ -109,6 +109,21 @@ The observation snapshot is missing required GuardDuty properties.
 
 ---
 
+### CTL.GUARDDUTY.INVESTIGATION.001
+
+**GuardDuty Investigation Agent Must Be Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: IR-4, SI-4; soc2: CC7.2, CC7.3;
+
+GuardDuty detector is active but the investigation agent feature is not enabled. The investigation agent uses AI to automatically analyze findings, correlate related events, and provide root cause analysis — reducing mean time to understand from hours to minutes. Without it, SOC analysts must manually correlate CloudTrail events, VPC flow logs, and DNS logs for each finding.
+
+**Remediation:** Enable the investigation agent feature on the GuardDuty detector via the console or API. The feature is in public preview as of July 2026.
+
+---
+
 ### CTL.GUARDDUTY.IPSET.UNRESTRICTED.001
 
 **SCP Must Restrict GuardDuty IPSet Modification**

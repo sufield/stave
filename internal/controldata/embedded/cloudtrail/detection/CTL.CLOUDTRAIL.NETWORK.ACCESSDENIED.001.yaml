@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.NETWORK.ACCESSDENIED.001
+name: CloudTrail Network Activity Events Must Log VpceAccessDenied
+description: >
+  CloudTrail network activity event logging is enabled but the
+  advanced event selector filters out VpceAccessDenied events.
+  Denied VPC endpoint access attempts are the primary security
+  signal from network activity logging — they reveal unauthorized
+  access probes, misconfigured endpoint policies, and lateral
+  movement attempts. Filtering them out defeats the security
+  purpose of enabling network activity events.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-3, AU-12"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-01"]
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - logging
+  - detection-evasion
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_cloudtrail_trail]
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - audit_trail.kind
+  - audit_trail.network_activity_events.enabled
+  - audit_trail.network_activity_events.logs_access_denied
+remediation:
+  description: >
+    CloudTrail network activity event selectors exclude
+    VpceAccessDenied events. Unauthorized VPC endpoint access
+    attempts are not logged.
+  action: >
+    Include VpceAccessDenied in the network activity event
+    selector's eventName conditions, or remove the eventName
+    filter to log all network activity events including denied
+    access.
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "network_activity_events": {
+          "enabled": true,
+          "logs_access_denied": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.network_activity_events.enabled
+      op: eq
+      value: true
+    - field: properties.audit_trail.network_activity_events.logs_access_denied
+      op: eq
+      value: false
+tests:
+  - name: "trail filtering out access denied events — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/main-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          network_activity_events:
+            enabled: true
+            logs_access_denied: false
+  - name: "trail logging access denied events — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/main-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          network_activity_events:
+            enabled: true
+            logs_access_denied: true

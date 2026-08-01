@@ -669,6 +669,21 @@ CloudTrail data events do not cover MWAA DAG execution. MWAA environments run DA
 
 ---
 
+### CTL.CLOUDTRAIL.NETWORK.ACCESSDENIED.001
+
+**CloudTrail Network Activity Events Must Log VpceAccessDenied**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-3, AU-12; soc2: CC7.2;
+
+CloudTrail network activity event logging is enabled but the advanced event selector filters out VpceAccessDenied events. Denied VPC endpoint access attempts are the primary security signal from network activity logging — they reveal unauthorized access probes, misconfigured endpoint policies, and lateral movement attempts. Filtering them out defeats the security purpose of enabling network activity events.
+
+**Remediation:** Include VpceAccessDenied in the network activity event selector's eventName conditions, or remove the eventName filter to log all network activity events including denied access.
+
+---
+
 ### CTL.CLOUDTRAIL.NETWORK.ACTIVITY.001
 
 **CloudTrail Must Log Network Activity Events for VPC Endpoints**
@@ -681,6 +696,21 @@ CloudTrail data events do not cover MWAA DAG execution. MWAA environments run DA
 CloudTrail Network Activity event logging must be enabled to capture VPC endpoint data-plane events including anonymous S3 requests. AWS's April 2026 patch logs anonymous requests as Network Activity events, but only if this event type is enabled.
 
 **Remediation:** Enable Network Activity events on the CloudTrail trail via PutEventSelectors with the networkActivity event category.
+
+---
+
+### CTL.CLOUDTRAIL.NETWORK.ACTIVITY.IDENTITYFILTER.001
+
+**CloudTrail Network Activity Events Must Not Filter by UserIdentity**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-3, AU-12; soc2: CC7.2;
+
+CloudTrail network activity event logging is enabled but advanced event selectors include UserIdentity-based filtering conditions. A UserIdentity filter narrows which principals' VPC endpoint traffic is logged, creating a targeted blind spot — traffic from excluded principals is invisible. An attacker who compromises an excluded identity operates through VPC endpoints without any network activity record.
+
+**Remediation:** Remove UserIdentity field selectors from the advanced event selector for networkActivity events. Log all principals' network activity without identity-based filtering.
 
 ---
 

@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.iam-createinvestigation"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/ReadOnly",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "guardduty_create_investigation": {
+              "present": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3258
-**Pack hash:** `cb0a23fbf4aca8645a6c72cfa074a7cc2fa2d690dfc5691472e585ffb96481fc`
+**Total controls:** 3262
+**Pack hash:** `42e6fda1fcafb967a489d4f8cf6d4273286d955018fc3e79ea0facd3454b14dc`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 359 |
-| high | 1418 |
+| high | 1420 |
 | info | 19 |
 | low | 238 |
-| medium | 1224 |
+| medium | 1226 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,12 +26,12 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | compute | 1 |
 | config | 2 |
-| detection | 141 |
+| detection | 142 |
 | encryption | 125 |
-| exposure | 1428 |
+| exposure | 1430 |
 | governance | 658 |
 | hygiene | 21 |
-| identity | 639 |
+| identity | 640 |
 | lifecycle | 31 |
 | network | 52 |
 | resilience | 39 |
@@ -65,7 +65,7 @@ GitHub. Pick a service below.
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
 | [CLOUDFORMATION](reference/cloudformation.md) | 12 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
-| [CLOUDTRAIL](reference/cloudtrail.md) | 61 |
+| [CLOUDTRAIL](reference/cloudtrail.md) | 63 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
 | [CODEBUILD](reference/codebuild.md) | 13 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
@@ -101,9 +101,9 @@ GitHub. Pick a service below.
 | [GLOBALACCELERATOR](reference/globalaccelerator.md) | 1 |
 | [GLUE](reference/glue.md) | 14 |
 | [GRAFANA](reference/grafana.md) | 1 |
-| [GUARDDUTY](reference/guardduty.md) | 19 |
+| [GUARDDUTY](reference/guardduty.md) | 20 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 326 |
+| [IAM](reference/iam.md) | 327 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 5 |
