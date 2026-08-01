@@ -287,6 +287,7 @@ var defaultActions = []ActionClassification{
 	{Action: "es:CreateElasticsearchDomain", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
 	{Action: "es:UpdateElasticsearchDomainConfig", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
 	{Action: "guardduty:CreateIPSet", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
+	{Action: "guardduty:CreateInvestigation", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "guardduty:DeleteDetector", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
 	{Action: "guardduty:DeleteIPSet", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},
 	{Action: "guardduty:UpdateDetector", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "farris"},

@@ -21,6 +21,10 @@ var cloudtrailSchema = Schema{
 			Doc: "data-events coverage signal; sparse without data events"},
 		{Path: "properties.audit.cloudtrail.cw_logs_delivery_configured", Required: false,
 			Doc: "CloudWatch Logs delivery signal"},
+		{Path: "properties.audit_trail.network_activity_events.has_identity_filter", Required: false,
+			Doc: "advanced event selector filters network activity by userIdentity"},
+		{Path: "properties.audit_trail.network_activity_events.logs_access_denied", Required: false,
+			Doc: "network activity selector includes VpceAccessDenied events"},
 	},
 }
 

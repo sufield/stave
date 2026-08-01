@@ -859,6 +859,17 @@ contracts:
       CloudTrail, S3 data events, etc.).
     consumers: []
 
+  # Preview: investigation agent is in public preview as of July 2026.
+  # Review field derivation at GA.
+  - field: threat_detection.investigation.enabled
+    type: boolean
+    postcondition: >
+      True if the GuardDuty detector has the investigation
+      feature enabled (from GetDetector response feature
+      status). False when the feature is not enabled or
+      the detector does not support it.
+    consumers: []
+
   # ─── Account Resource Counts (B2) ────────────────────────
 
   - field: resource_count_by_service
@@ -877,6 +888,27 @@ contracts:
       List of event selector exclusion patterns from
       cloudtrail:GetEventSelectors. Each entry is the
       exclusion selector configuration.
+    consumers: []
+
+  - field: network_activity_events.has_identity_filter
+    type: boolean
+    postcondition: >
+      True if any advanced event selector condition for
+      networkActivity events references userIdentity.arn
+      or userIdentity.principalId as a field selector.
+      False when no identity-scoped filter is configured,
+      meaning all principals' network activity is logged.
+    consumers: []
+
+  - field: network_activity_events.logs_access_denied
+    type: boolean
+    postcondition: >
+      True if the network activity event selector includes
+      VpceAccessDenied in its eventName conditions, or has
+      no eventName filter (meaning all events including
+      denied are logged). Default true — absence of a
+      filter means all events are logged, which includes
+      denied. Fail-safe default.
     consumers: []
 
   # ─── IAM Sensitive Actions (B4) ──────────────────────────
