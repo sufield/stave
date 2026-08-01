@@ -360,3 +360,304 @@ func peeringAsset(id, requester, accepter string) asset.Asset {
 		},
 	}
 }
+
+func subnetAsset(id, vpcID, rtID string, tags map[string]string) asset.Asset {
+	tagMap := make(map[string]any, len(tags))
+	for k, v := range tags {
+		tagMap[k] = v
+	}
+	return asset.Asset{
+		ID:     asset.ID(id),
+		Type:   "aws_ec2_subnet",
+		Vendor: "aws",
+		Properties: map[string]any{
+			"network": map[string]any{
+				"subnet": map[string]any{
+					"vpc_id":         vpcID,
+					"route_table_id": rtID,
+				},
+			},
+			"tags": tagMap,
+		},
+	}
+}
+
+func routeTableAsset(id string, routes []Route) asset.Asset {
+	routesAny := make([]any, len(routes))
+	for i, r := range routes {
+		routesAny[i] = map[string]any{
+			"destination": r.Destination,
+			"target_type": r.TargetType,
+			"target_id":   r.TargetID,
+		}
+	}
+	return asset.Asset{
+		ID:     asset.ID(id),
+		Type:   "aws_ec2_route_table",
+		Vendor: "aws",
+		Properties: map[string]any{
+			"network": map[string]any{
+				"route_table": map[string]any{
+					"routes": routesAny,
+				},
+			},
+		},
+	}
+}
+
+func firewallAsset(id string, endpoints []string) asset.Asset {
+	epAny := make([]any, len(endpoints))
+	for i, ep := range endpoints {
+		epAny[i] = ep
+	}
+	return asset.Asset{
+		ID:     asset.ID(id),
+		Type:   "aws_networkfirewall_firewall",
+		Vendor: "aws",
+		Properties: map[string]any{
+			"network": map[string]any{
+				"firewall": map[string]any{
+					"endpoints": epAny,
+				},
+			},
+		},
+	}
+}
+
+// --- prod-dev-isolation tests ---
+
+func TestProveProdDevIsolation_Isolated(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{prodDevIsolatedSnapshot()})
+	result, err := g.ProveProdDevIsolation()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "UNSAT" {
+		t.Fatalf("expected UNSAT (environments isolated), got %s", result.Result)
+	}
+}
+
+func TestProveProdDevIsolation_Connected(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{prodDevConnectedSnapshot()})
+	result, err := g.ProveProdDevIsolation()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT (cross-environment path exists), got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample")
+	}
+	if result.Counterexample.PathType != "cross-vpc" {
+		t.Errorf("expected cross-vpc path type, got %s", result.Counterexample.PathType)
+	}
+}
+
+func TestProveProdDevIsolation_VacuousNoDev(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{bastionEnforcedSnapshot()})
+	_, err := g.ProveProdDevIsolation()
+	if err == nil {
+		t.Fatal("expected error when no development hosts found")
+	}
+}
+
+func prodDevIsolatedSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-prod-01", "vpc-prod", "subnet-p", []string{"sg-prod"}, map[string]string{"stave:environment": "production"}),
+			hostAsset("i-dev-01", "vpc-dev", "subnet-d", []string{"sg-dev"}, map[string]string{"stave:environment": "development"}),
+			sgAsset("sg-prod", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-prod"},
+			}),
+			sgAsset("sg-dev", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-dev"},
+			}),
+		},
+	}
+}
+
+func prodDevConnectedSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-prod-01", "vpc-prod", "subnet-p", []string{"sg-prod"}, map[string]string{"stave:environment": "production"}),
+			hostAsset("i-dev-01", "vpc-dev", "subnet-d", []string{"sg-dev"}, map[string]string{"stave:environment": "development"}),
+			sgAsset("sg-prod", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			}),
+			sgAsset("sg-dev", nil),
+			peeringAsset("pcx-prod-dev", "vpc-prod", "vpc-dev"),
+		},
+	}
+}
+
+// --- database-isolation tests ---
+
+func TestProveDatabaseIsolation_Isolated(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{databaseIsolatedSnapshot()})
+	result, err := g.ProveDatabaseIsolation()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "UNSAT" {
+		t.Fatalf("expected UNSAT (database isolated), got %s", result.Result)
+	}
+}
+
+func TestProveDatabaseIsolation_Exposed(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{databaseExposedSnapshot()})
+	result, err := g.ProveDatabaseIsolation()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT (database reachable from outside VPC), got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample")
+	}
+	if result.Counterexample.PathType != "cross-vpc" {
+		t.Errorf("expected cross-vpc path type, got %s", result.Counterexample.PathType)
+	}
+}
+
+func TestProveDatabaseIsolation_ExternalIngress(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{databaseExternalIngressSnapshot()})
+	result, err := g.ProveDatabaseIsolation()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT (database has internet ingress), got %s", result.Result)
+	}
+	if result.Counterexample.PathType != "external" {
+		t.Errorf("expected external path type, got %s", result.Counterexample.PathType)
+	}
+}
+
+func TestProveDatabaseIsolation_VacuousNoDatabase(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{bastionEnforcedSnapshot()})
+	_, err := g.ProveDatabaseIsolation()
+	if err == nil {
+		t.Fatal("expected error when no database hosts found")
+	}
+}
+
+func databaseIsolatedSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-app-01", "vpc-app", "subnet-app", []string{"sg-app"}, map[string]string{"stave:tier": "application"}),
+			hostAsset("i-db-01", "vpc-app", "subnet-db", []string{"sg-db"}, map[string]string{"stave:tier": "database"}),
+			sgAsset("sg-app", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			}),
+			sgAsset("sg-db", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 3306, SourceType: "sg", SourceValue: "sg-app"},
+			}),
+		},
+	}
+}
+
+func databaseExposedSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-db-01", "vpc-app", "subnet-db", []string{"sg-db"}, map[string]string{"stave:tier": "database"}),
+			hostAsset("i-mgmt-01", "vpc-mgmt", "subnet-mgmt", []string{"sg-mgmt"}, nil),
+			sgAsset("sg-db", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 3306, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			}),
+			sgAsset("sg-mgmt", nil),
+			peeringAsset("pcx-mgmt-app", "vpc-mgmt", "vpc-app"),
+		},
+	}
+}
+
+func databaseExternalIngressSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-db-01", "vpc-app", "subnet-db", []string{"sg-db"}, map[string]string{"stave:tier": "database"}),
+			sgAsset("sg-db", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 3306, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+			}),
+		},
+	}
+}
+
+// --- firewall-mandatory tests ---
+
+func TestProveFirewallMandatory_Enforced(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{firewallEnforcedSnapshot()})
+	result, err := g.ProveFirewallMandatory()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "UNSAT" {
+		t.Fatalf("expected UNSAT (firewall enforced), got %s", result.Result)
+	}
+}
+
+func TestProveFirewallMandatory_Bypassed(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{firewallBypassedSnapshot()})
+	result, err := g.ProveFirewallMandatory()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT (firewall bypassed), got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample")
+	}
+	if result.Counterexample.PathType != "direct-igw" {
+		t.Errorf("expected direct-igw path type, got %s", result.Counterexample.PathType)
+	}
+}
+
+func TestProveFirewallMandatory_VacuousNoSubnets(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{bastionEnforcedSnapshot()})
+	_, err := g.ProveFirewallMandatory()
+	if err == nil {
+		t.Fatal("expected error when no private subnets found")
+	}
+}
+
+func TestProveFirewallMandatory_VacuousNoFirewall(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{{
+		Assets: []asset.Asset{
+			subnetAsset("subnet-priv-01", "vpc-app", "rt-priv-01", map[string]string{"stave:subnet-type": "private"}),
+			routeTableAsset("rt-priv-01", []Route{
+				{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-01"},
+			}),
+		},
+	}})
+	_, err := g.ProveFirewallMandatory()
+	if err == nil {
+		t.Fatal("expected error when no firewall endpoints found")
+	}
+}
+
+func firewallEnforcedSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			subnetAsset("subnet-priv-01", "vpc-app", "rt-priv-01", map[string]string{"stave:subnet-type": "private"}),
+			routeTableAsset("rt-priv-01", []Route{
+				{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+				{Destination: "0.0.0.0/0", TargetType: "vpce", TargetID: "vpce-fw-01"},
+			}),
+			firewallAsset("fw-01", []string{"vpce-fw-01"}),
+		},
+	}
+}
+
+func firewallBypassedSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			subnetAsset("subnet-priv-01", "vpc-app", "rt-priv-01", map[string]string{"stave:subnet-type": "private"}),
+			routeTableAsset("rt-priv-01", []Route{
+				{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+				{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-01"},
+			}),
+			firewallAsset("fw-01", []string{"vpce-fw-01"}),
+		},
+	}
+}

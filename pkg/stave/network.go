@@ -63,14 +63,21 @@ func NetworkProve(ctx context.Context, cfg NetworkProveConfig) (*network.ProofRe
 
 	g := network.BuildGraph(snapshots)
 
+	var r *network.ProofResult
 	switch cfg.Property {
 	case "bastion-ssh", "":
-		r, err := g.ProveBastionSSH(cfg.Port)
-		if err != nil {
-			return nil, fmt.Errorf("network prove: %w", err)
-		}
-		return r, nil
+		r, err = g.ProveBastionSSH(cfg.Port)
+	case "prod-dev-isolation":
+		r, err = g.ProveProdDevIsolation()
+	case "database-isolation":
+		r, err = g.ProveDatabaseIsolation()
+	case "firewall-mandatory":
+		r, err = g.ProveFirewallMandatory()
 	default:
-		return nil, fmt.Errorf("network prove: unknown property %q (valid: bastion-ssh)", cfg.Property)
+		return nil, fmt.Errorf("network prove: unknown property %q (valid: bastion-ssh, prod-dev-isolation, database-isolation, firewall-mandatory)", cfg.Property)
 	}
+	if err != nil {
+		return nil, fmt.Errorf("network prove: %w", err)
+	}
+	return r, nil
 }

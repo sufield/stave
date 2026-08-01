@@ -11,8 +11,7 @@ import (
 
 func newMatrixCmd() *cobra.Command {
 	opts := &options{
-		Format:      "text",
-		ControlsDir: "controls",
+		Format: "text",
 	}
 	cmd := &cobra.Command{
 		Use:   "matrix",
@@ -55,6 +54,6 @@ Exit codes:
 		},
 	}
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
 	return cmd
 }

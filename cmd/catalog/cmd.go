@@ -38,9 +38,7 @@ type options struct {
 // must call NewCmd separately — Cobra cannot share instances.
 func NewCmd() *cobra.Command {
 	opts := &options{
-		Format:      "auto",
-		ControlsDir: "controls",
-		ChainsDir:   "chains",
+		Format: "auto",
 	}
 	cmd := &cobra.Command{
 		Use:   "catalog",
@@ -122,8 +120,8 @@ Exit codes:
 	cmd.Flags().StringVar(&opts.Category, "category", "", "filter to one category (requires --service)")
 	cmd.Flags().StringVar(&opts.KindFilter, "kind", "", "filter to one kind: control_group | chain | operational")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "auto", "output format: auto | text | wide | json")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
-	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chain catalog directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
+	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "", "chain catalog directory (default: embedded chains)")
 	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().StringVar(&opts.Severity, "severity", "", "show only leaf controls of this severity: critical | high | medium | low | info")
 	cmd.Flags().StringVar(&opts.Taxonomy, "taxonomy", "", "filter by taxonomy category (comma-separated, OR-joined)")

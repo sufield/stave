@@ -17,8 +17,10 @@ type Host struct {
 	Tags      map[string]string
 }
 
-func (h *Host) IsProduction() bool { return h.Tags["stave:environment"] == "production" }
-func (h *Host) IsBastion() bool    { return h.Tags["stave:role"] == "bastion" }
+func (h *Host) IsProduction() bool   { return h.Tags["stave:environment"] == "production" }
+func (h *Host) IsBastion() bool      { return h.Tags["stave:role"] == "bastion" }
+func (h *Host) IsDevelopment() bool  { return h.Tags["stave:environment"] == "development" }
+func (h *Host) IsDatabaseTier() bool { return h.Tags["stave:tier"] == "database" }
 
 // SGRule is a single security group rule.
 type SGRule struct {
@@ -36,18 +38,42 @@ type VPCPeering struct {
 	AccepterVPC  string
 }
 
+// Subnet is a VPC subnet with route table association.
+type Subnet struct {
+	ID           string
+	VPCID        string
+	RouteTableID string
+	Tags         map[string]string
+}
+
+// IsPrivate returns true if the subnet is tagged stave:subnet-type=private.
+func (s *Subnet) IsPrivate() bool { return s.Tags["stave:subnet-type"] == "private" }
+
+// Route is a single route in a route table.
+type Route struct {
+	Destination string // "0.0.0.0/0", "::/0", etc.
+	TargetType  string // "igw", "vpce", "nat", "local"
+	TargetID    string
+}
+
 // Graph is the network topology extracted from observations.
 type Graph struct {
-	Hosts    map[string]*Host
-	SGRules  map[string][]SGRule // sg_id -> rules
-	Peerings []VPCPeering
+	Hosts     map[string]*Host
+	SGRules   map[string][]SGRule // sg_id -> rules
+	Peerings  []VPCPeering
+	Subnets   map[string]*Subnet
+	Routes    map[string][]Route // route_table_id -> routes
+	Firewalls map[string]bool    // firewall endpoint IDs
 }
 
 // BuildGraph extracts network topology from observation snapshots.
 func BuildGraph(snapshots []asset.Snapshot) *Graph {
 	g := &Graph{
-		Hosts:   make(map[string]*Host),
-		SGRules: make(map[string][]SGRule),
+		Hosts:     make(map[string]*Host),
+		SGRules:   make(map[string][]SGRule),
+		Subnets:   make(map[string]*Subnet),
+		Routes:    make(map[string][]Route),
+		Firewalls: make(map[string]bool),
 	}
 	if GraphTypes.Instance == "" {
 		return g
@@ -62,6 +88,18 @@ func BuildGraph(snapshots []asset.Snapshot) *Graph {
 				g.extractSGRules(a)
 			case GraphTypes.PeeringConnection:
 				g.extractPeering(a)
+			case GraphTypes.Subnet:
+				if GraphTypes.Subnet != "" {
+					g.extractSubnet(a)
+				}
+			case GraphTypes.RouteTable:
+				if GraphTypes.RouteTable != "" {
+					g.extractRouteTable(a)
+				}
+			case GraphTypes.Firewall:
+				if GraphTypes.Firewall != "" {
+					g.extractFirewall(a)
+				}
 			}
 		}
 	}
@@ -163,4 +201,87 @@ func (g *Graph) BastionHosts() []*Host {
 		}
 	}
 	return out
+}
+
+// DevelopmentHosts returns all hosts tagged stave:environment=development.
+func (g *Graph) DevelopmentHosts() []*Host {
+	var out []*Host
+	for _, h := range g.Hosts {
+		if h.IsDevelopment() {
+			out = append(out, h)
+		}
+	}
+	return out
+}
+
+// DatabaseHosts returns all hosts tagged stave:tier=database.
+func (g *Graph) DatabaseHosts() []*Host {
+	var out []*Host
+	for _, h := range g.Hosts {
+		if h.IsDatabaseTier() {
+			out = append(out, h)
+		}
+	}
+	return out
+}
+
+// PrivateSubnets returns all subnets tagged stave:subnet-type=private.
+func (g *Graph) PrivateSubnets() []*Subnet {
+	var out []*Subnet
+	for _, s := range g.Subnets {
+		if s.IsPrivate() {
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+func (g *Graph) extractSubnet(a *asset.Asset) {
+	s := &Subnet{
+		ID:   string(a.ID),
+		Tags: make(map[string]string),
+	}
+	if net, ok := nested(a.Properties, "network", "subnet"); ok {
+		s.VPCID, _ = net["vpc_id"].(string)
+		s.RouteTableID, _ = net["route_table_id"].(string)
+	}
+	if tags, ok := a.Properties["tags"].(map[string]any); ok {
+		for k, v := range tags {
+			if sv, ok := v.(string); ok {
+				s.Tags[k] = strings.ToLower(sv)
+			}
+		}
+	}
+	g.Subnets[s.ID] = s
+}
+
+func (g *Graph) extractRouteTable(a *asset.Asset) {
+	rtID := string(a.ID)
+	if rt, ok := nested(a.Properties, "network", "route_table"); ok {
+		if routes, ok := rt["routes"].([]any); ok {
+			for _, r := range routes {
+				rm, ok := r.(map[string]any)
+				if !ok {
+					continue
+				}
+				route := Route{}
+				route.Destination, _ = rm["destination"].(string)
+				route.TargetType, _ = rm["target_type"].(string)
+				route.TargetID, _ = rm["target_id"].(string)
+				g.Routes[rtID] = append(g.Routes[rtID], route)
+			}
+		}
+	}
+}
+
+func (g *Graph) extractFirewall(a *asset.Asset) {
+	if fw, ok := nested(a.Properties, "network", "firewall"); ok {
+		if endpoints, ok := fw["endpoints"].([]any); ok {
+			for _, ep := range endpoints {
+				if epID, ok := ep.(string); ok {
+					g.Firewalls[epID] = true
+				}
+			}
+		}
+	}
 }

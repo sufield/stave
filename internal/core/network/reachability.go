@@ -133,6 +133,54 @@ func (g *Graph) EnumerateSSHPaths(port int) []SSHPath {
 	return paths
 }
 
+// canReachAnyPort reports whether src can reach dst on any port via SG rules.
+// Returns the path type and matched port.
+func (g *Graph) canReachAnyPort(srcID, dstID string) (bool, string, int) {
+	src, ok := g.Hosts[srcID]
+	if !ok {
+		return false, "", 0
+	}
+	dst, ok := g.Hosts[dstID]
+	if !ok {
+		return false, "", 0
+	}
+
+	for _, dstSG := range dst.SGIDs {
+		for _, rule := range g.SGRules[dstSG] {
+			if rule.Direction != "ingress" {
+				continue
+			}
+			switch rule.SourceType {
+			case "sg":
+				if slices.Contains(src.SGIDs, rule.SourceValue) {
+					return true, "sg-ref", rule.Port
+				}
+			case "cidr":
+				if g.cidrCoversHost(rule.SourceValue, src, dst) {
+					return true, "cidr", rule.Port
+				}
+			}
+		}
+	}
+
+	if src.VPCID != "" && dst.VPCID != "" && src.VPCID != dst.VPCID {
+		if g.vpcsArePeered(src.VPCID, dst.VPCID) {
+			for _, dstSG := range dst.SGIDs {
+				for _, rule := range g.SGRules[dstSG] {
+					if rule.Direction != "ingress" {
+						continue
+					}
+					if rule.SourceType == "cidr" && broadInternalCIDRs[rule.SourceValue] {
+						return true, "cross-vpc", rule.Port
+					}
+				}
+			}
+		}
+	}
+
+	return false, "", 0
+}
+
 func (g *Graph) allHosts() []*Host {
 	out := make([]*Host, 0, len(g.Hosts))
 	for _, h := range g.Hosts {

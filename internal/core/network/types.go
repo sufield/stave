@@ -7,4 +7,7 @@ var GraphTypes struct {
 	Instance          string
 	SecurityGroup     string
 	PeeringConnection string
+	Subnet            string
+	RouteTable        string
+	Firewall          string
 }

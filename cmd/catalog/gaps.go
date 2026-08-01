@@ -12,8 +12,7 @@ import (
 
 func newGapsCmd() *cobra.Command {
 	opts := &options{
-		Format:      "text",
-		ControlsDir: "controls",
+		Format: "text",
 	}
 	var strict bool
 	cmd := &cobra.Command{
@@ -72,7 +71,7 @@ Exit codes:
 		},
 	}
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
 	cmd.Flags().BoolVar(&strict, "strict", false, "exact control-ID match only, no fuzzy matching")
 	return cmd
 }

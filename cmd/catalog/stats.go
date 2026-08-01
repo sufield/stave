@@ -11,9 +11,7 @@ import (
 
 func newStatsCmd() *cobra.Command {
 	opts := &options{
-		Format:      "text",
-		ControlsDir: "controls",
-		ChainsDir:   "chains",
+		Format: "text",
 	}
 	cmd := &cobra.Command{
 		Use:   "stats",
@@ -53,7 +51,7 @@ Exit codes:
 		},
 	}
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
-	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chain catalog directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
+	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "", "chain catalog directory (default: embedded chains)")
 	return cmd
 }

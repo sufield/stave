@@ -34,34 +34,63 @@ func (jsonRenderer) Render(w io.Writer, r *network.ProofResult) error {
 
 type textRenderer struct{}
 
+var propertyTitles = map[string]string{
+	"bastion-ssh":        "Bastion SSH Routing Proof",
+	"prod-dev-isolation": "Production-Development Isolation Proof",
+	"database-isolation": "Database Tier Isolation Proof",
+	"firewall-mandatory": "Firewall Mandatory Routing Proof",
+}
+
 func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
-	fmt.Fprintln(w, "═══════════════════════════════════════════")
-	if r.Result == "UNSAT" {
-		fmt.Fprintln(w, "Bastion SSH Routing Proof")
-	} else {
-		fmt.Fprintln(w, "Bastion SSH Routing Proof — BYPASS FOUND")
+	title := propertyTitles[r.Property]
+	if title == "" {
+		title = r.Property
 	}
+	if r.Result == "SAT" {
+		title += " — VIOLATION FOUND"
+	}
+
+	fmt.Fprintln(w, "═══════════════════════════════════════════")
+	fmt.Fprintln(w, title)
 	fmt.Fprintln(w, "═══════════════════════════════════════════")
 	fmt.Fprintln(w)
-	fmt.Fprintf(w, "  Production hosts: %d\n", r.ProductionHosts)
-	fmt.Fprintf(w, "  Bastion hosts:    %d\n", r.BastionHosts)
-	fmt.Fprintf(w, "  SSH paths:        %d\n", r.SSHPaths)
+
+	// Bastion-specific scope fields.
+	if r.ProductionHosts > 0 {
+		fmt.Fprintf(w, "  Production hosts: %d\n", r.ProductionHosts)
+	}
+	if r.BastionHosts > 0 {
+		fmt.Fprintf(w, "  Bastion hosts:    %d\n", r.BastionHosts)
+	}
+	if r.SSHPaths > 0 {
+		fmt.Fprintf(w, "  SSH paths:        %d\n", r.SSHPaths)
+	}
+	// Generic scope fields.
+	for k, v := range r.Scope {
+		fmt.Fprintf(w, "  %s: %d\n", k, v)
+	}
 	fmt.Fprintln(w)
 
 	if r.Result == "UNSAT" {
-		fmt.Fprintln(w, "  PROOF: All SSH paths to production traverse a bastion host.")
+		fmt.Fprintf(w, "  PROOF: %s\n", r.Interpretation)
 		fmt.Fprintf(w, "  Solver: graph-search (completed in %dms)\n", r.SolveTimeMs)
 		fmt.Fprintln(w)
-		fmt.Fprintln(w, "  No bypass path exists.")
+		fmt.Fprintln(w, "  No violation exists.")
 	} else {
 		fmt.Fprintln(w, "  COUNTEREXAMPLE:")
 		ce := r.Counterexample
 		fmt.Fprintf(w, "    Source:      %s\n", ce.Source)
 		fmt.Fprintf(w, "    Destination: %s\n", ce.Destination)
-		fmt.Fprintf(w, "    Port:        %d\n", ce.Port)
+		if ce.Port > 0 {
+			fmt.Fprintf(w, "    Port:        %d\n", ce.Port)
+		}
 		fmt.Fprintf(w, "    Path:        %s\n", ce.PathType)
-		fmt.Fprintf(w, "    Rule SG:     %s\n", ce.RuleSG)
-		fmt.Fprintf(w, "    Rule source: %s\n", ce.RuleSource)
+		if ce.RuleSG != "" {
+			fmt.Fprintf(w, "    Rule SG:     %s\n", ce.RuleSG)
+		}
+		if ce.RuleSource != "" {
+			fmt.Fprintf(w, "    Rule source: %s\n", ce.RuleSource)
+		}
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "  %s\n", ce.Explanation)
 		fmt.Fprintln(w)

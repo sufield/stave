@@ -3,17 +3,19 @@ package network
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 )
 
-// ProofResult is the outcome of a bastion routing proof.
+// ProofResult is the outcome of a network safety property proof.
 type ProofResult struct {
 	Property        string          `json:"property"`
 	Result          string          `json:"result"` // "UNSAT" | "SAT"
 	Interpretation  string          `json:"interpretation"`
-	ProductionHosts int             `json:"production_hosts"`
-	BastionHosts    int             `json:"bastion_hosts"`
-	SSHPaths        int             `json:"ssh_paths"`
+	ProductionHosts int             `json:"production_hosts,omitempty"`
+	BastionHosts    int             `json:"bastion_hosts,omitempty"`
+	SSHPaths        int             `json:"ssh_paths,omitempty"`
+	Scope           map[string]int  `json:"scope,omitempty"`
 	Counterexample  *Counterexample `json:"counterexample,omitempty"`
 	SolveTimeMs     int64           `json:"solve_time_ms"`
 }
@@ -157,4 +159,180 @@ func buildRemediation(ruleSG, ruleSource string, bastions []*Host) string {
 		rem += " Replace with SSH from bastion SG only."
 	}
 	return rem
+}
+
+// ProveProdDevIsolation checks that no network path exists between
+// production and development environments. Returns UNSAT if isolation
+// holds, SAT with a counterexample if a cross-environment path exists.
+func (g *Graph) ProveProdDevIsolation() (*ProofResult, error) {
+	start := time.Now()
+
+	prod := g.ProductionHosts()
+	dev := g.DevelopmentHosts()
+
+	if len(prod) == 0 {
+		return nil, fmt.Errorf("%w: no hosts tagged stave:environment=production", ErrVacuousProof)
+	}
+	if len(dev) == 0 {
+		return nil, fmt.Errorf("%w: no hosts tagged stave:environment=development", ErrVacuousProof)
+	}
+
+	result := &ProofResult{
+		Property: "prod-dev-isolation",
+		Scope:    map[string]int{"production_hosts": len(prod), "development_hosts": len(dev)},
+	}
+
+	// Check both directions: prod→dev and dev→prod.
+	pairs := [][2][]*Host{{prod, dev}, {dev, prod}}
+	for _, pair := range pairs {
+		for _, src := range pair[0] {
+			for _, dst := range pair[1] {
+				ok, pathType, port := g.canReachAnyPort(src.ID, dst.ID)
+				if !ok {
+					continue
+				}
+				ruleSG, ruleSource := g.findRule(src, dst, port)
+				result.Result = "SAT"
+				result.Interpretation = "Production-development isolation violated — a cross-environment path exists."
+				result.Counterexample = &Counterexample{
+					Source:      src.ID,
+					Destination: dst.ID,
+					Port:        port,
+					PathType:    pathType,
+					RuleSG:      ruleSG,
+					RuleSource:  ruleSource,
+					Explanation: "Host " + src.ID + " (" + src.Tags["stave:environment"] + ") can reach " + dst.ID + " (" + dst.Tags["stave:environment"] + ") via " + pathType + ".",
+					Remediation: "Remove cross-environment ingress rule on " + ruleSG + ". Ensure production and development VPCs have no peering or broad CIDR rules.",
+				}
+				result.SolveTimeMs = time.Since(start).Milliseconds()
+				return result, nil
+			}
+		}
+	}
+
+	result.Result = "UNSAT"
+	result.Interpretation = "Production and development environments are network-isolated."
+	result.SolveTimeMs = time.Since(start).Milliseconds()
+	return result, nil
+}
+
+// ProveDatabaseIsolation checks that no host outside the database VPC
+// can reach a database-tier host. Returns UNSAT if isolation holds,
+// SAT with a counterexample if an external path exists.
+func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
+	start := time.Now()
+
+	dbHosts := g.DatabaseHosts()
+	if len(dbHosts) == 0 {
+		return nil, fmt.Errorf("%w: no hosts tagged stave:tier=database", ErrVacuousProof)
+	}
+
+	result := &ProofResult{
+		Property: "database-isolation",
+		Scope:    map[string]int{"database_hosts": len(dbHosts)},
+	}
+
+	for _, dst := range dbHosts {
+		// Check cross-VPC reachability from any non-same-VPC host.
+		for _, src := range g.allHosts() {
+			if src.ID == dst.ID || src.VPCID == dst.VPCID {
+				continue
+			}
+			if ok, pathType, port := g.canReachAnyPort(src.ID, dst.ID); ok {
+				ruleSG, ruleSource := g.findRule(src, dst, port)
+				result.Result = "SAT"
+				result.Interpretation = "Database isolation violated — a host outside the database VPC can reach a database host."
+				result.Counterexample = &Counterexample{
+					Source:      src.ID,
+					Destination: dst.ID,
+					Port:        port,
+					PathType:    pathType,
+					RuleSG:      ruleSG,
+					RuleSource:  ruleSource,
+					Explanation: "Host " + src.ID + " (vpc:" + src.VPCID + ") can reach database host " + dst.ID + " (vpc:" + dst.VPCID + ") via " + pathType + ".",
+					Remediation: "Remove cross-VPC ingress to database SG " + ruleSG + ". Restrict to application-tier SG references within the same VPC.",
+				}
+				result.SolveTimeMs = time.Since(start).Milliseconds()
+				return result, nil
+			}
+		}
+
+		// Check external entry (0.0.0.0/0 or ::/0 on any port).
+		for _, dstSG := range dst.SGIDs {
+			for _, rule := range g.SGRules[dstSG] {
+				if rule.Direction != "ingress" {
+					continue
+				}
+				if rule.SourceType == "cidr" && (rule.SourceValue == "0.0.0.0/0" || rule.SourceValue == "::/0") {
+					result.Result = "SAT"
+					result.Interpretation = "Database isolation violated — database host is directly accessible from the internet."
+					result.Counterexample = &Counterexample{
+						Source:      rule.SourceValue + " (internet)",
+						Destination: dst.ID,
+						Port:        rule.Port,
+						PathType:    "external",
+						RuleSG:      dstSG,
+						RuleSource:  rule.SourceValue,
+						Explanation: "Database host " + dst.ID + " accepts traffic from " + rule.SourceValue + " on port " + strconv.Itoa(rule.Port) + " via " + dstSG + ".",
+						Remediation: "Remove internet ingress on " + dstSG + ". Database hosts must not be reachable from the internet.",
+					}
+					result.SolveTimeMs = time.Since(start).Milliseconds()
+					return result, nil
+				}
+			}
+		}
+	}
+
+	result.Result = "UNSAT"
+	result.Interpretation = "All database hosts are isolated within their VPC — no cross-VPC or internet paths exist."
+	result.SolveTimeMs = time.Since(start).Milliseconds()
+	return result, nil
+}
+
+// ProveFirewallMandatory checks that all private subnets route internet
+// traffic through a Network Firewall endpoint. Returns UNSAT if all
+// egress routes through firewall, SAT if a bypass exists.
+func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
+	start := time.Now()
+
+	privateSubnets := g.PrivateSubnets()
+	if len(privateSubnets) == 0 {
+		return nil, fmt.Errorf("%w: no subnets tagged stave:subnet-type=private", ErrVacuousProof)
+	}
+	if len(g.Firewalls) == 0 {
+		return nil, fmt.Errorf("%w: no firewall endpoints found — cannot prove firewall routing", ErrVacuousProof)
+	}
+
+	result := &ProofResult{
+		Property: "firewall-mandatory",
+		Scope:    map[string]int{"private_subnets": len(privateSubnets), "firewall_endpoints": len(g.Firewalls)},
+	}
+
+	for _, sub := range privateSubnets {
+		for _, route := range g.Routes[sub.RouteTableID] {
+			if route.Destination != "0.0.0.0/0" && route.Destination != "::/0" {
+				continue
+			}
+			if route.TargetType == "igw" && !g.Firewalls[route.TargetID] {
+				result.Result = "SAT"
+				result.Interpretation = "Firewall bypass exists — private subnet routes internet traffic directly to an internet gateway."
+				result.Counterexample = &Counterexample{
+					Source:      sub.ID,
+					Destination: route.TargetID,
+					PathType:    "direct-igw",
+					RuleSG:      sub.RouteTableID,
+					RuleSource:  route.Destination,
+					Explanation: "Subnet " + sub.ID + " has a " + route.Destination + " route to IGW " + route.TargetID + " in route table " + sub.RouteTableID + " without passing through a Network Firewall endpoint.",
+					Remediation: "Change the " + route.Destination + " route in " + sub.RouteTableID + " to target a Network Firewall endpoint instead of " + route.TargetID + ".",
+				}
+				result.SolveTimeMs = time.Since(start).Milliseconds()
+				return result, nil
+			}
+		}
+	}
+
+	result.Result = "UNSAT"
+	result.Interpretation = "All private subnets route internet traffic through a Network Firewall endpoint."
+	result.SolveTimeMs = time.Since(start).Milliseconds()
+	return result, nil
 }

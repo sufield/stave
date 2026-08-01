@@ -14,21 +14,23 @@ func NewCmd() *cobra.Command {
 		Short: "Verify a network safety property",
 		Long: `Proves a network safety property against observation snapshots.
 
-The bastion-ssh property verifies that every SSH path to a production
-host traverses a bastion node. If a bypass path exists, the specific
-counterexample is produced (source, destination, violating SG rule).
+Returns UNSAT if the property holds (no violating paths), or SAT with
+a counterexample identifying the specific violation.
 
 Properties:
-  bastion-ssh   All SSH to production routes through a bastion host
+  bastion-ssh          All SSH to production routes through a bastion host
+  prod-dev-isolation   No network path between production and development VPCs
+  database-isolation   No cross-VPC or internet path to database-tier hosts
+  firewall-mandatory   All private subnet internet traffic passes through Network Firewall
 
 Inputs:
   --observations, -o  Observation snapshots directory (required)
   --property          Safety property to verify (default: bastion-ssh)
-  --port              Port to verify (default: 22)
+  --port              Port to verify for bastion-ssh (default: 22)
   --format, -f        Output format: json, text (default: text)
 
 Outputs:
-  stdout: proof result (UNSAT = property holds, SAT = bypass found)
+  stdout: proof result (UNSAT = property holds, SAT = violation found)
 
 Exit codes:
   0   Proof completed successfully (regardless of SAT/UNSAT)
@@ -38,8 +40,14 @@ Exit codes:
 		Example: `  # Verify bastion SSH routing
   stave network prove -o observations --property bastion-ssh
 
-  # JSON output
-  stave network prove -o observations -f json`,
+  # Verify environment isolation
+  stave network prove -o observations --property prod-dev-isolation
+
+  # Verify database tier isolation
+  stave network prove -o observations --property database-isolation -f json
+
+  # Verify firewall enforcement
+  stave network prove -o observations --property firewall-mandatory`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
