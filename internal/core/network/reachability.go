@@ -19,6 +19,7 @@ var broadInternalCIDRs = map[string]bool{
 	"172.16.0.0/12":  true,
 	"192.168.0.0/16": true,
 	"0.0.0.0/0":      true,
+	"::/0":           true,
 }
 
 // CanReach reports whether src can reach dst on the given port via SG rules.
@@ -116,7 +117,7 @@ func (g *Graph) EnumerateSSHPaths(port int) []SSHPath {
 		for _, dstSG := range dst.SGIDs {
 			for _, rule := range g.SGRules[dstSG] {
 				if rule.Direction == "ingress" && rule.Port == port &&
-					rule.SourceType == "cidr" && rule.SourceValue == "0.0.0.0/0" {
+					rule.SourceType == "cidr" && (rule.SourceValue == "0.0.0.0/0" || rule.SourceValue == "::/0") {
 					paths = append(paths, SSHPath{
 						Source:      "0.0.0.0/0",
 						Destination: dst.ID,

@@ -1,6 +1,10 @@
 package network
 
-import "time"
+import (
+	"errors"
+	"fmt"
+	"time"
+)
 
 // ProofResult is the outcome of a bastion routing proof.
 type ProofResult struct {
@@ -34,17 +38,29 @@ type EnumerateResult struct {
 	Paths           []SSHPath `json:"paths"`
 }
 
+// ErrVacuousProof is returned when a proof cannot run because the
+// scope sets (production hosts, bastion hosts) are empty.
+var ErrVacuousProof = errors.New("vacuous proof")
+
 // ProveBastionSSH checks whether all SSH paths to production hosts
 // traverse a bastion. Returns UNSAT if bastion routing holds,
 // SAT with a counterexample if a bypass exists.
 //
-// This is a graph-search proof over finite observations — equivalent
-// to the Z3 satisfiability check for concrete observation sets.
-func (g *Graph) ProveBastionSSH(port int) *ProofResult {
+// Returns ErrVacuousProof when production or bastion hosts are empty —
+// the property cannot be proved without both scope sets populated.
+func (g *Graph) ProveBastionSSH(port int) (*ProofResult, error) {
 	start := time.Now()
 
 	prod := g.ProductionHosts()
 	bastions := g.BastionHosts()
+
+	if len(prod) == 0 {
+		return nil, fmt.Errorf("%w: no hosts tagged stave:environment=production — cannot prove bastion routing", ErrVacuousProof)
+	}
+	if len(bastions) == 0 {
+		return nil, fmt.Errorf("%w: no hosts tagged stave:role=bastion — cannot prove bastion routing", ErrVacuousProof)
+	}
+
 	bastionIDs := make(map[string]bool, len(bastions))
 	for _, b := range bastions {
 		bastionIDs[b.ID] = true
@@ -78,7 +94,7 @@ func (g *Graph) ProveBastionSSH(port int) *ProofResult {
 				result.Result = "SAT"
 				result.Interpretation = "Bastion bypass exists — a non-bastion host can SSH to production without traversing a bastion."
 				result.SolveTimeMs = time.Since(start).Milliseconds()
-				return result
+				return result, nil
 			}
 		}
 
@@ -89,14 +105,14 @@ func (g *Graph) ProveBastionSSH(port int) *ProofResult {
 			result.Result = "SAT"
 			result.Interpretation = "Bastion bypass exists — production host is directly SSH-accessible from the internet."
 			result.SolveTimeMs = time.Since(start).Milliseconds()
-			return result
+			return result, nil
 		}
 	}
 
 	result.Result = "UNSAT"
 	result.Interpretation = "All SSH paths to production traverse a bastion host."
 	result.SolveTimeMs = time.Since(start).Milliseconds()
-	return result
+	return result, nil
 }
 
 func (g *Graph) findExternalBypass(dst *Host, port int) *Counterexample {
@@ -105,7 +121,7 @@ func (g *Graph) findExternalBypass(dst *Host, port int) *Counterexample {
 			if rule.Direction != "ingress" || rule.Port != port {
 				continue
 			}
-			if rule.SourceType != "cidr" || rule.SourceValue != "0.0.0.0/0" {
+			if rule.SourceType != "cidr" || (rule.SourceValue != "0.0.0.0/0" && rule.SourceValue != "::/0") {
 				continue
 			}
 			return &Counterexample{

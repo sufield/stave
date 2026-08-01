@@ -1,0 +1,128 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDPERMISSIONS.IDENTITYSOURCE.GHOST.001
+name: Verified Permissions Identity Source References Deleted Provider
+description: >
+  Verified Permissions policy store has an identity source
+  configured that references a Cognito user pool or OIDC
+  provider that no longer exists. Authorization calls using
+  IsAuthorizedWithToken will fail because the identity source
+  cannot validate the token against the deleted provider. This
+  is the same ghost-reference pattern as Cognito Lambda
+  triggers referencing deleted functions.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+scope: compound
+compliance:
+  owasp_nhi: "NHI1"
+  soc2: "CC6.1, CC8.1, A1.1"
+  nist_800_53_r5: "CM-2, CM-3, IA-2"
+  pci_dss_v4.0: "8.3"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - verifiedpermissions
+taxonomy:
+  - trust-decay
+  - ghost-reference
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_verifiedpermissions_policystore
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 4.0
+remediation:
+  description: >
+    Verified Permissions identity source references a deleted
+    identity provider.
+  action: >
+    Either recreate the identity provider (Cognito user pool or
+    OIDC provider) that the identity source references, or
+    delete the stale identity source and create a new one
+    pointing to an existing provider. Verify that
+    IsAuthorizedWithToken calls succeed after the fix.
+  example: |
+    {
+      "authz": {
+        "kind": "verified_permissions_policy_store",
+        "policy_store": {
+          "identity_source_configured": true,
+          "identity_source_type": "COGNITO",
+          "identity_source_exists": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authz.kind
+      op: eq
+      value: verified_permissions_policy_store
+    - field: properties.authz.policy_store.identity_source_configured
+      op: eq
+      value: true
+    - field: properties.authz.policy_store.identity_source_exists
+      op: present
+    - field: properties.authz.policy_store.identity_source_exists
+      op: eq
+      value: false
+defect: >
+  Verified Permissions identity source references a deleted
+  identity provider.
+infection: >
+  The identity source connects Verified Permissions to a
+  Cognito user pool or OIDC provider for token validation.
+  When the referenced provider is deleted, token-based
+  authorization calls (IsAuthorizedWithToken) fail. The
+  application falls back to either denying all access
+  (availability failure) or skipping token validation
+  (authorization bypass), depending on error handling.
+  The ghost reference persists until someone notices the
+  authorization failures — there is no automatic cleanup.
+failure: >
+  Token-based authorization calls fail because the identity
+  provider no longer exists. Application authorization is
+  either blocked (denial of service) or bypassed (security
+  failure) depending on error handling.
+tests:
+  - name: ghost identity source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: verified_permissions_policy_store
+          policy_store:
+            identity_source_configured: true
+            identity_source_type: "COGNITO"
+            identity_source_exists: false
+  - name: valid identity source passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: verified_permissions_policy_store
+          policy_store:
+            identity_source_configured: true
+            identity_source_type: "COGNITO"
+            identity_source_exists: true
+  - name: no identity source configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: verified_permissions_policy_store
+          policy_store:
+            identity_source_configured: false

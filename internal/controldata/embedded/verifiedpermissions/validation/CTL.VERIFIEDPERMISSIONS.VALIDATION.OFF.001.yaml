@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDPERMISSIONS.VALIDATION.OFF.001
+name: Verified Permissions Policy Store Schema Validation Disabled
+description: >
+  Verified Permissions policy store has schema validation mode
+  set to OFF. Cedar policies are not validated against the
+  entity schema, allowing malformed or overpermissive policies
+  to be accepted without type checking. Schema validation
+  catches policy errors at authoring time — entity type
+  mismatches, undefined actions, impossible conditions — that
+  would otherwise silently produce wrong authorization
+  decisions at runtime.
+domain: governance
+severity: high
+compliance:
+  soc2: "CC8.1"
+  nist_800_53_r5: "CM-2, CM-3, SA-11"
+  iso_27001_2022: "A.8.9"
+  ccm_v4: ["AIS-02"]
+scope_tags:
+  - aws
+  - verifiedpermissions
+taxonomy:
+  - enforcement-mode
+  - governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_verifiedpermissions_policystore
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Verified Permissions policy store schema validation is
+    disabled.
+  action: >
+    Update the policy store validation settings to STRICT mode
+    (UpdatePolicyStore with ValidationSettings.Mode = STRICT).
+    Fix any existing policies that fail schema validation
+    before enabling STRICT mode. In STRICT mode Cedar rejects
+    policies that reference undefined entity types, actions,
+    or attributes.
+  example: |
+    {
+      "authz": {
+        "kind": "verified_permissions_policy_store",
+        "policy_store": {
+          "validation_mode": "STRICT"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authz.kind
+      op: eq
+      value: verified_permissions_policy_store
+    - field: properties.authz.policy_store.validation_mode
+      op: eq
+      value: "OFF"
+defect: >
+  Verified Permissions policy store schema validation is
+  disabled.
+infection: >
+  Without schema validation an operator can create a Cedar
+  policy that references a nonexistent entity type or action.
+  The policy evaluates at runtime — Cedar does not reject
+  unknown types — but the match semantics differ from the
+  author's intent: an action typo means the policy never
+  matches, silently under-authorizing or over-authorizing.
+  With validation OFF, this class of error is invisible until
+  an end user reports an authorization failure or, worse,
+  gains access they should not have.
+failure: >
+  Cedar policies accepted without type checking. Malformed
+  policies produce silent authorization errors at runtime.
+tests:
+  - name: validation OFF fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: verified_permissions_policy_store
+          policy_store:
+            validation_mode: "OFF"
+  - name: validation STRICT passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: verified_permissions_policy_store
+          policy_store:
+            validation_mode: "STRICT"

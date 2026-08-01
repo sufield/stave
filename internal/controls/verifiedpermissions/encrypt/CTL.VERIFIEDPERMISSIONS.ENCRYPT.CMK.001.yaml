@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDPERMISSIONS.ENCRYPT.CMK.001
+name: Verified Permissions Policy Store Not Encrypted with Customer-Managed KMS Key
+description: >
+  Verified Permissions policy store uses AWS-owned encryption
+  key instead of a customer-managed KMS key. Authorization
+  decisions on sensitive data should use customer-controlled
+  encryption for key-policy control, audit visibility via
+  CloudTrail KMS events, and the ability to revoke access by
+  disabling the key. Once a CMK is configured on a policy
+  store it cannot be changed or removed — the decision is
+  permanent.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  hipaa: "164.312(a)(2)(iv)"
+  iso_27001_2022: "A.8.24"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - verifiedpermissions
+taxonomy:
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_verifiedpermissions_policystore
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Verified Permissions policy store encryption is not backed
+    by a customer-managed KMS key.
+  action: >
+    Create a new policy store with a customer-managed KMS key
+    (CreatePolicyStore with ValidationSettings and a CMK ARN).
+    Migrate policies, schema, and identity sources from the
+    existing store. The CMK gives the organization key-policy
+    control, audit visibility, and the ability to revoke access
+    by disabling the key.
+  example: |
+    {
+      "authz": {
+        "kind": "verified_permissions_policy_store",
+        "policy_store": {
+          "encryption_type": "CUSTOMER_MANAGED",
+          "encryption_kms_key": "arn:aws:kms:us-east-1:111122223333:key/abc"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authz.kind
+      op: eq
+      value: verified_permissions_policy_store
+    - field: properties.authz.policy_store.encryption_type
+      op: eq
+      value: "AWS_OWNED"
+defect: >
+  Verified Permissions policy store encryption is not backed by
+  a customer-managed KMS key.
+infection: >
+  AWS-owned encryption protects policy store data at rest but
+  provides no customer-visible key policy, no CloudTrail KMS
+  Decrypt events, and no ability to revoke access by disabling
+  the key. If an attacker gains authorized access to the
+  Verified Permissions API, they can read all policies and
+  authorization decisions with no second authorization layer.
+  A CMK adds kms:Decrypt as a gate that the key policy
+  controls independently of IAM.
+failure: >
+  No key-policy control over policy store decryption. The
+  organization cannot revoke access by disabling a key and
+  cannot audit Decrypt operations against a key it controls.
+tests:
+  - name: policy store with AWS-owned key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: verified_permissions_policy_store
+          policy_store:
+            encryption_type: "AWS_OWNED"
+  - name: policy store with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: verified_permissions_policy_store
+          policy_store:
+            encryption_type: "CUSTOMER_MANAGED"
+            encryption_kms_key: "arn:aws:kms:us-east-1:111122223333:key/abc"

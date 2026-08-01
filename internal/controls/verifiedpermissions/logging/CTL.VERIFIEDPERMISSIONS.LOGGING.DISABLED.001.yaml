@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDPERMISSIONS.LOGGING.DISABLED.001
+name: Verified Permissions Policy Store Authorization Logging Not Configured
+description: >
+  Verified Permissions policy store has no authorization
+  decision logging configured. IsAuthorized and
+  IsAuthorizedWithToken data events are not captured in
+  CloudTrail unless explicitly enabled. Without logging,
+  authorization decisions — who accessed what and when — leave
+  no audit trail for forensics, compliance, or anomaly
+  detection.
+domain: audit
+severity: high
+compliance:
+  soc2: "CC7.2"
+  nist_800_53_r5: "AU-2, AU-12"
+  hipaa: "164.312(b)"
+  pci_dss_v4.0: "10.2"
+  iso_27001_2022: "A.8.15"
+  ccm_v4: ["LOG-01", "LOG-12"]
+scope_tags:
+  - aws
+  - verifiedpermissions
+taxonomy:
+  - logging
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_verifiedpermissions_policystore
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Verified Permissions policy store has no authorization
+    decision logging.
+  action: >
+    Enable CloudTrail data events for Verified Permissions
+    (PutEventSelectors or advanced event selectors with
+    resource type AWS::VerifiedPermissions::PolicyStore).
+    This captures IsAuthorized, IsAuthorizedWithToken, and
+    BatchIsAuthorized calls with their request context and
+    decision results.
+  example: |
+    {
+      "authz": {
+        "kind": "verified_permissions_policy_store",
+        "policy_store": {
+          "logging_enabled": true,
+          "logging_destination": "arn:aws:logs:us-east-1:111122223333:log-group:/avp/authz"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authz.kind
+      op: eq
+      value: verified_permissions_policy_store
+    - field: properties.authz.policy_store.logging_enabled
+      op: eq
+      value: false
+defect: >
+  Verified Permissions policy store authorization decision
+  logging is not configured.
+infection: >
+  Authorization decisions are the core function of Verified
+  Permissions — every IsAuthorized call determines whether an
+  application user can perform an action. Without CloudTrail
+  data events for these calls, the organization has no record
+  of authorization decisions. An attacker who gains the ability
+  to modify Cedar policies can silently grant themselves access
+  with no forensic trail of the authorization changes taking
+  effect. Management events capture policy CRUD but not the
+  authorization DECISIONS those policies produce.
+failure: >
+  No audit trail for authorization decisions. Policy changes
+  take effect without any record of which access patterns
+  changed.
+tests:
+  - name: logging disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: verified_permissions_policy_store
+          policy_store:
+            logging_enabled: false
+  - name: logging enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: verified_permissions_policy_store
+          policy_store:
+            logging_enabled: true
+            logging_destination: "arn:aws:logs:us-east-1:111122223333:log-group:/avp/authz"

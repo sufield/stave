@@ -1,6 +1,10 @@
 package network
 
-import "github.com/sufield/stave/internal/core/asset"
+import (
+	"strings"
+
+	"github.com/sufield/stave/internal/core/asset"
+)
 
 // Host is a compute resource with network placement.
 type Host struct {
@@ -85,7 +89,7 @@ func (g *Graph) extractHost(a *asset.Asset) {
 	if tags, ok := a.Properties["tags"].(map[string]any); ok {
 		for k, v := range tags {
 			if s, ok := v.(string); ok {
-				h.Tags[k] = s
+				h.Tags[k] = strings.ToLower(s)
 			}
 		}
 	}

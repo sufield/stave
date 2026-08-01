@@ -10,7 +10,10 @@ func TestProveBastionSSH_Enforced(t *testing.T) {
 	snapshots := []asset.Snapshot{bastionEnforcedSnapshot()}
 	g := BuildGraph(snapshots)
 
-	result := g.ProveBastionSSH(22)
+	result, err := g.ProveBastionSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if result.Result != "UNSAT" {
 		t.Fatalf("expected UNSAT (bastion routing holds), got %s", result.Result)
 	}
@@ -29,7 +32,10 @@ func TestProveBastionSSH_Bypassed(t *testing.T) {
 	snapshots := []asset.Snapshot{bastionBypassedSnapshot()}
 	g := BuildGraph(snapshots)
 
-	result := g.ProveBastionSSH(22)
+	result, err := g.ProveBastionSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if result.Result != "SAT" {
 		t.Fatalf("expected SAT (bypass exists), got %s", result.Result)
 	}
@@ -49,7 +55,10 @@ func TestProveBastionSSH_PeeringBypass(t *testing.T) {
 	snapshots := []asset.Snapshot{peeringBypassSnapshot()}
 	g := BuildGraph(snapshots)
 
-	result := g.ProveBastionSSH(22)
+	result, err := g.ProveBastionSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 	if result.Result != "SAT" {
 		t.Fatalf("expected SAT (cross-VPC bypass exists), got %s", result.Result)
 	}
@@ -77,6 +86,82 @@ func TestEnumerateSSHPaths(t *testing.T) {
 	}
 	if !hasCIDR {
 		t.Error("expected at least one CIDR-based path (the bypass)")
+	}
+}
+
+func TestProveBastionSSH_VacuousNoProduction(t *testing.T) {
+	snapshots := []asset.Snapshot{noProductionSnapshot()}
+	g := BuildGraph(snapshots)
+
+	_, err := g.ProveBastionSSH(22)
+	if err == nil {
+		t.Fatal("expected error when no production hosts found, got nil")
+	}
+}
+
+func TestProveBastionSSH_VacuousNoBastions(t *testing.T) {
+	snapshots := []asset.Snapshot{noBastionSnapshot()}
+	g := BuildGraph(snapshots)
+
+	_, err := g.ProveBastionSSH(22)
+	if err == nil {
+		t.Fatal("expected error when no bastion hosts found, got nil")
+	}
+}
+
+func TestProveBastionSSH_CaseInsensitiveEnvironment(t *testing.T) {
+	snapshots := []asset.Snapshot{mixedCaseEnvSnapshot()}
+	g := BuildGraph(snapshots)
+
+	result, err := g.ProveBastionSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.ProductionHosts != 1 {
+		t.Errorf("expected 1 production host (case-insensitive), got %d", result.ProductionHosts)
+	}
+}
+
+func TestProveBastionSSH_CaseInsensitiveBastion(t *testing.T) {
+	snapshots := []asset.Snapshot{mixedCaseBastionSnapshot()}
+	g := BuildGraph(snapshots)
+
+	result, err := g.ProveBastionSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.BastionHosts != 1 {
+		t.Errorf("expected 1 bastion host (case-insensitive), got %d", result.BastionHosts)
+	}
+}
+
+func TestProveBastionSSH_IPv6ExternalBypass(t *testing.T) {
+	snapshots := []asset.Snapshot{ipv6ExternalBypassSnapshot()}
+	g := BuildGraph(snapshots)
+
+	result, err := g.ProveBastionSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT (IPv6 external bypass), got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample")
+	}
+	if result.Counterexample.PathType != "external" {
+		t.Errorf("expected external path type, got %s", result.Counterexample.PathType)
+	}
+}
+
+func TestProveBastionSSH_EmptyGraph(t *testing.T) {
+	g := &Graph{
+		Hosts:   make(map[string]*Host),
+		SGRules: make(map[string][]SGRule),
+	}
+	_, err := g.ProveBastionSSH(22)
+	if err == nil {
+		t.Fatal("expected error on empty graph, got nil")
 	}
 }
 
@@ -184,6 +269,78 @@ func sgAsset(id string, rules []SGRule) asset.Asset {
 					"rules": rulesAny,
 				},
 			},
+		},
+	}
+}
+
+func noProductionSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-bastion-01", "vpc-prod", "subnet-b", []string{"sg-bastion"}, map[string]string{"stave:role": "bastion"}),
+			hostAsset("i-dev-01", "vpc-prod", "subnet-d", []string{"sg-dev"}, nil),
+			sgAsset("sg-bastion", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "203.0.113.0/24"},
+			}),
+			sgAsset("sg-dev", nil),
+		},
+	}
+}
+
+func noBastionSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-prod-app-01", "vpc-prod", "subnet-p", []string{"sg-prod"}, map[string]string{"stave:environment": "production"}),
+			hostAsset("i-dev-01", "vpc-prod", "subnet-d", []string{"sg-dev"}, nil),
+			sgAsset("sg-prod", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			}),
+			sgAsset("sg-dev", nil),
+		},
+	}
+}
+
+func mixedCaseEnvSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-bastion-01", "vpc-prod", "subnet-b", []string{"sg-bastion"}, map[string]string{"stave:role": "bastion"}),
+			hostAsset("i-prod-app-01", "vpc-prod", "subnet-p", []string{"sg-prod"}, map[string]string{"stave:environment": "Production"}),
+			sgAsset("sg-bastion", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "203.0.113.0/24"},
+			}),
+			sgAsset("sg-prod", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-bastion"},
+			}),
+		},
+	}
+}
+
+func mixedCaseBastionSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-bastion-01", "vpc-prod", "subnet-b", []string{"sg-bastion"}, map[string]string{"stave:role": "BASTION"}),
+			hostAsset("i-prod-app-01", "vpc-prod", "subnet-p", []string{"sg-prod"}, map[string]string{"stave:environment": "production"}),
+			sgAsset("sg-bastion", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "203.0.113.0/24"},
+			}),
+			sgAsset("sg-prod", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-bastion"},
+			}),
+		},
+	}
+}
+
+func ipv6ExternalBypassSnapshot() asset.Snapshot {
+	return asset.Snapshot{
+		Assets: []asset.Asset{
+			hostAsset("i-bastion-01", "vpc-prod", "subnet-b", []string{"sg-bastion"}, map[string]string{"stave:role": "bastion"}),
+			hostAsset("i-prod-app-01", "vpc-prod", "subnet-p", []string{"sg-prod"}, map[string]string{"stave:environment": "production"}),
+			sgAsset("sg-bastion", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "203.0.113.0/24"},
+			}),
+			sgAsset("sg-prod", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-bastion"},
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "::/0"},
+			}),
 		},
 	}
 }

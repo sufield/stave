@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.cedar-verified-permissions"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:verifiedpermissions::111122223333:policy-store/ps-abc123",
+      "type": "aws_verifiedpermissions_policystore",
+      "vendor": "aws",
+      "properties": {
+        "authz": {
+          "kind": "verified_permissions_policy_store",
+          "policy_store": {
+            "logging_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}
