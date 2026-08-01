@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_175 commands across 14 groups._
+_175 commands across 13 groups._
 
 ## Getting Started
 
@@ -63,6 +63,9 @@ _175 commands across 14 groups._
 | `inspect policy` | Analyze an S3 bucket policy document |
 | `inspect risk` | Score risk from policy statement context |
 | `map attack` | Map offensive tools to configuration prerequisites and find coverage gaps |
+| `network` | Network reachability analysis and safety proofs |
+| `network enumerate` | Enumerate SSH entry points to production hosts |
+| `network prove` | Verify a network safety property |
 | `permissions` | Query net effective permissions from a snapshot |
 | `permissions principal` | Resolve permissions for a specific principal ARN |
 | `permissions resource` | Show who has effective access to a resource |
@@ -246,11 +249,3 @@ _175 commands across 14 groups._
 | `alias delete` | Delete an alias |
 | `alias list` | List all aliases |
 | `alias set` | Create or update an alias |
-
-## Uncategorized
-
-| Command | Description |
-|---|---|
-| `network` | Network reachability analysis and safety proofs |
-| `network enumerate` | Enumerate SSH entry points to production hosts |
-| `network prove` | Verify a network safety property |

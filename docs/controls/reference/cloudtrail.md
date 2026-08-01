@@ -654,6 +654,21 @@ CloudTrail LookupEvents access must be restricted to security and administrative
 
 ---
 
+### CTL.CLOUDTRAIL.MEMBERCANNARROW.001
+
+**Organization Member Accounts Can Narrow CloudTrail Event Scope**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** cis_aws_v3.0: 3.1; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.8.15; nist_800_53_r5: AC-3, AU-9, AU-12; pci_dss_v4.0: 10.5, 10.7; soc2: CC7.1, CC7.2;
+
+No Service Control Policy prevents organization member accounts from calling cloudtrail:PutEventSelectors or cloudtrail:PutAdvancedEventSelector. Even with an organization trail in place, a compromised member-account admin can narrow the event selector scope — excluding specific event types, data sources, or UserIdentity principals — making subsequent actions invisible. Unlike StopLogging (which triggers CloudWatch alarms), scope narrowing produces no alarm because the trail remains active. This is the A5 (Separation of Duties) analog of CTL.CLOUDTRAIL.ORG.MEMBERCANSTOP.001: the actor can both perform actions and suppress the record of those actions.
+
+**Remediation:** Attach an SCP to the organization (or relevant OU) that denies cloudtrail:PutEventSelectors and cloudtrail:PutAdvancedEventSelector with a NotPrincipal excluding the security-admin role and the management account. Verify by attempting PutAdvancedEventSelector from a member account's admin role — the call must fail with an SCP-denied error.
+
+---
+
 ### CTL.CLOUDTRAIL.MWAA.BLIND.001
 
 **CloudTrail Does Not Log MWAA Data Events**

@@ -21,8 +21,8 @@ scope_tags:
   - aws
   - verifiedpermissions
 taxonomy:
-  - enforcement-mode
-  - governance
+  - account-governance
+  - compliance-mapping
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

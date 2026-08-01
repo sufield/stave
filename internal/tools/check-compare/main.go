@@ -533,7 +533,7 @@ func buildTestCases() []TestCase {
 				}]
 			}`,
 			Actions: []string{"iam:PassRole", "iam:PutUserPolicy", "iam:AttachUserPolicy"},
-			Notes:   "Boundary allows only S3+PassRole — PutUserPolicy should be blocked by boundary (Stave resolves, AWS does not see boundary)",
+			Notes:   "Boundary allows only S3+PassRole — Stave blocks entire iam:* wildcard (boundary overapproximation). AWS does not see boundary (semantic difference).",
 		},
 		{
 			Name: "explicit-deny-passrole",

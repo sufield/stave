@@ -65,7 +65,11 @@ func NetworkProve(ctx context.Context, cfg NetworkProveConfig) (*network.ProofRe
 
 	switch cfg.Property {
 	case "bastion-ssh", "":
-		return g.ProveBastionSSH(cfg.Port)
+		r, err := g.ProveBastionSSH(cfg.Port)
+		if err != nil {
+			return nil, fmt.Errorf("network prove: %w", err)
+		}
+		return r, nil
 	default:
 		return nil, fmt.Errorf("network prove: unknown property %q (valid: bastion-ssh)", cfg.Property)
 	}

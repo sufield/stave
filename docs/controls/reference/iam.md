@@ -3732,6 +3732,21 @@ SCP does not deny CloudTrail modification or deletion in member accounts. A memb
 
 ---
 
+### CTL.IAM.SCP.CLOUDTRAIL.EVENTSELECTOR.001
+
+**SCP Does Not Prevent CloudTrail Event Selector Modification**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-3, AU-9, AU-12; soc2: CC6.1, CC7.1;
+
+No SCP denies cloudtrail:PutEventSelectors or cloudtrail:PutAdvancedEventSelector in member accounts. A member account admin can narrow CloudTrail event scope — excluding specific event types, data sources, or UserIdentity principals — without organizational prevention. This is an A5 (Separation of Duties) violation: the principal can both perform actions through VPC endpoints and suppress the record of those actions by modifying event selectors. Incident precedent: Ubiquiti (2020), FTX, CodeSpaces, Halcyon Codefinger — all cases where an actor could act and suppress.
+
+**Remediation:** Add an SCP that denies cloudtrail:PutEventSelectors and cloudtrail:PutAdvancedEventSelector for all principals in member accounts, excluding a break-glass security-admin role. This is the scope-narrowing analog of the existing SCP that denies StopLogging and DeleteTrail.
+
+---
+
 ### CTL.IAM.SCP.CONFIG.001
 
 **SCP Does Not Protect AWS Config**

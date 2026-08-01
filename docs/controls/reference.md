@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3262
-**Pack hash:** `42e6fda1fcafb967a489d4f8cf6d4273286d955018fc3e79ea0facd3454b14dc`
+**Total controls:** 3268
+**Pack hash:** `6cd5e18d3c8b4697d9026b2e9d02c3d394388a4141b0c7beaff090d95f76f54d`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,25 +13,25 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 359 |
-| high | 1420 |
+| critical | 360 |
+| high | 1424 |
 | info | 19 |
 | low | 238 |
-| medium | 1226 |
+| medium | 1227 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 97 |
+| audit | 98 |
 | capacity | 3 |
 | compute | 1 |
 | config | 2 |
 | detection | 142 |
 | encryption | 125 |
-| exposure | 1430 |
-| governance | 658 |
+| exposure | 1432 |
+| governance | 660 |
 | hygiene | 21 |
-| identity | 640 |
+| identity | 641 |
 | lifecycle | 31 |
 | network | 52 |
 | resilience | 39 |
@@ -65,7 +65,7 @@ GitHub. Pick a service below.
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
 | [CLOUDFORMATION](reference/cloudformation.md) | 12 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
-| [CLOUDTRAIL](reference/cloudtrail.md) | 63 |
+| [CLOUDTRAIL](reference/cloudtrail.md) | 64 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 67 |
 | [CODEBUILD](reference/codebuild.md) | 13 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
@@ -103,7 +103,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 20 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 327 |
+| [IAM](reference/iam.md) | 328 |
 | [INSPECTOR](reference/inspector.md) | 3 |
 | [K8S](reference/k8s.md) | 68 |
 | [KINESIS](reference/kinesis.md) | 5 |
@@ -151,6 +151,7 @@ GitHub. Pick a service below.
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
 | [TRANSFER](reference/transfer.md) | 2 |
+| [VERIFIEDPERMISSIONS](reference/verifiedpermissions.md) | 4 |
 | [VPC](reference/vpc.md) | 114 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 17 |
