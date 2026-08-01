@@ -1,0 +1,24 @@
+id: r53_domain_governance_risk
+description: >
+  Account holds Route 53 domain registrations without governance
+  controls. No tag identifies it as a domain-holding account
+  (CTL.ORG.ACCOUNT.DOMAINTAG.001), and the SCPs do not prevent
+  account closure for domain-tagged accounts
+  (CTL.IAM.SCP.CLOSEACCOUNT.002) or protect the governance tag
+  from removal (CTL.IAM.SCP.TAGAUTH.DOMAINS.001). An account
+  decommissioning workflow could close this account without
+  triggering any domain governance guardrails. Domain suspension
+  begins on day 5 after closure; after 30 days the domain is
+  released for anyone to register.
+controls:
+  - CTL.IAM.SCP.CLOSEACCOUNT.002
+  - CTL.IAM.SCP.TAGAUTH.DOMAINS.001
+  - CTL.ORG.ACCOUNT.DOMAINTAG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - account_closure
+postconditions:
+  - domain_suspension
+  - domain_loss
+implicit_dependencies: []

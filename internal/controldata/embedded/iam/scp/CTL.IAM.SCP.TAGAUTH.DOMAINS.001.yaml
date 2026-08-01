@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.TAGAUTH.DOMAINS.001
+name: "SCP Does Not Protect HasRegisteredDomains Tag from Removal"
+description: >
+  No SCP denies organizations:UntagResource for the
+  HasRegisteredDomains tag key. Without this protection, any
+  principal with organizations:UntagResource permission can
+  remove the governance tag from a domain-holding account,
+  bypassing the tag-conditional CloseAccount deny
+  (CTL.IAM.SCP.CLOSEACCOUNT.002). The tag is the only signal
+  that prevents account closure for domain-holding accounts —
+  removing it silently disarms the protection.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - scp
+taxonomy:
+  - account-governance
+  - compliance-mapping
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_untag_has_registered_domains
+remediation:
+  description: >
+    Organization SCPs do not prevent removal of the
+    HasRegisteredDomains tag from accounts.
+  action: >
+    Add an SCP that denies organizations:UntagResource when
+    aws:TagKeys contains HasRegisteredDomains. Exempt only
+    the designated tagger role via aws:PrincipalArn condition.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_untag_has_registered_domains": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_untag_has_registered_domains
+      op: ne
+      value: true
+defect: >
+  No SCP protects the HasRegisteredDomains tag from removal.
+infection: >
+  A principal removes the HasRegisteredDomains tag from an
+  account, silently disabling the tag-conditional
+  CloseAccount protection.
+failure: >
+  The account is now closeable through the normal
+  decommissioning workflow. Domain suspension follows on
+  day 5.
+tests:
+  - name: "no untag protection fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-nountag"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_untag_has_registered_domains: false
+  - name: "untag protection present passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-untag"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_untag_has_registered_domains: true

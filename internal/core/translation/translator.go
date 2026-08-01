@@ -125,7 +125,7 @@ func RenderClause(c Clause, registry FieldRegistry) string {
 		return fieldProse + " is not set (observed: " + formatValue(c.ObservedValue) + ")"
 	case "present":
 		if c.ObservedValue == nil {
-			return fieldProse + " is set, but is not set"
+			return fieldProse + " is set"
 		}
 		return fieldProse + " is set (observed: " + formatValue(c.ObservedValue) + ")"
 	}

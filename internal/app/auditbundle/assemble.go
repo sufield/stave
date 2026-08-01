@@ -57,7 +57,7 @@ func Assemble(input AssembleInput) (*Package, error) {
 	}
 
 	writeComponent := func(filename, desc string, data []byte) error {
-		if data == nil {
+		if len(data) == 0 {
 			return nil
 		}
 		path := filepath.Join(dir, filename)

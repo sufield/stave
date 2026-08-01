@@ -35,6 +35,21 @@ AWS account has no billing alternate contact configured. Without a billing conta
 
 ---
 
+### CTL.ORG.ACCOUNT.DOMAINTAG.001
+
+**Account With Route 53 Domains Lacks Governance Tag**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-8; soc2: CC6.1;
+
+AWS account holds Route 53 domain registrations but is not tagged HasRegisteredDomains. Without this tag, the tag- conditional SCP protections (CTL.IAM.SCP.CLOSEACCOUNT.002, CTL.IAM.SCP.TAGAUTH.DOMAINS.001) do not apply to this account. The account can be closed through normal decommissioning workflows without triggering the domain governance guardrails.
+
+**Remediation:** Tag the account with HasRegisteredDomains=true via organizations:TagResource. This enables the tag- conditional SCP protections against account closure and tag removal.
+
+---
+
 ### CTL.ORG.ALLFEATURES.001
 
 **AWS Organizations Must Be in All Features Mode**

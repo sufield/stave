@@ -3462,6 +3462,21 @@ Account root email uses a consumer or personal email domain. Farris: "the accoun
 
 ---
 
+### CTL.IAM.ROOT.EMAIL.LOCALZONE.001
+
+**Root Email Domain DNS Hosted in Same Account**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CP-2; soc2: CC9.1;
+
+The account's root email domain has its DNS hosted in a Route 53 public hosted zone within the same AWS account. If this account is closed, domain suspension begins on day 5 — the hosted zone stops resolving, which prevents delivery of AWS notification emails about the closure itself. This creates a circular failure: the recovery mechanism (email notification) is destroyed by the event it should warn about. The account owner cannot receive the 90-day closure warning and may miss the recovery window entirely.
+
+**Remediation:** Move the root email domain's hosted zone to a separate account (the management account or a dedicated DNS account), or change the root email to a domain hosted externally. The root email inbox must remain reachable even if this account is closed.
+
+---
+
 ### CTL.IAM.ROOT.EMAIL.SHARED.001
 
 **Root Email Must Not Be Shared Across Accounts**
@@ -3669,6 +3684,21 @@ SCP does not deny sts:AssumeRoot in the organization. A compromised management a
 No SCP in the hierarchy denies account:CloseAccount. An attacker who compromises a member account admin can close the AWS account, permanently destroying all resources — EC2 instances, S3 data, RDS databases, IAM configuration, and audit trails. Account closure is irreversible after a 90-day grace period. Unlike resource deletion, closing the account eliminates the entire control plane in one API call.
 
 **Remediation:** Add an SCP that denies account:CloseAccount for all principals in member accounts. Apply it to the organization root.
+
+---
+
+### CTL.IAM.SCP.CLOSEACCOUNT.002
+
+**SCP Does Not Deny CloseAccount for Domain-Tagged Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+No SCP denies account:CloseAccount with a condition scoped to accounts tagged HasRegisteredDomains. The unconditional deny (CTL.IAM.SCP.CLOSEACCOUNT.001) prevents all account closures, but organizations that allow controlled account decommissioning need a tag-conditional deny that protects only accounts holding Route 53 domain registrations. Without this, an account closure workflow can close a domain-holding account, triggering domain suspension on day 5 and permanent loss after 30 days.
+
+**Remediation:** Add an SCP that denies organizations:CloseAccount and account:CloseAccount with a Condition requiring aws:ResourceTag/HasRegisteredDomains equals true. Apply it to the organization root or the OU containing domain- holding accounts.
 
 ---
 
@@ -4074,6 +4104,21 @@ SCP does not deny savingsplans:CreateSavingsPlan in member accounts. A single AP
 Organization SCPs use individual Deny statements for specific services (deny-list strategy) rather than a Deny with NotAction listing permitted services (allow-list strategy). An allow-list strategy is structurally stronger — new AWS services are denied by default until explicitly permitted, preventing exposure from newly launched services that bypass existing guardrails. A deny-list must be updated every time AWS launches a service that could be abused.
 
 **Remediation:** Consider migrating to an allow-list SCP strategy using Deny with NotAction. List only the services your organization uses; everything else is denied by default. This prevents exposure from newly launched AWS services.
+
+---
+
+### CTL.IAM.SCP.TAGAUTH.DOMAINS.001
+
+**SCP Does Not Protect HasRegisteredDomains Tag from Removal**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+No SCP denies organizations:UntagResource for the HasRegisteredDomains tag key. Without this protection, any principal with organizations:UntagResource permission can remove the governance tag from a domain-holding account, bypassing the tag-conditional CloseAccount deny (CTL.IAM.SCP.CLOSEACCOUNT.002). The tag is the only signal that prevents account closure for domain-holding accounts — removing it silently disarms the protection.
+
+**Remediation:** Add an SCP that denies organizations:UntagResource when aws:TagKeys contains HasRegisteredDomains. Exempt only the designated tagger role via aws:PrincipalArn condition.
 
 ---
 

@@ -80,12 +80,18 @@ func DefaultRegistry() *SensitiveActionRegistry {
 // Classify returns the risk categories for an IAM action.
 // Returns nil for unclassified actions.
 func (r *SensitiveActionRegistry) Classify(action string) []ActionRiskCategory {
+	if r == nil {
+		return nil
+	}
 	return r.actions[strings.ToLower(action)]
 }
 
 // ClassifyWildcard handles wildcard patterns like "s3:Get*" or "s3:*".
 // Returns the union of categories for all matching actions.
 func (r *SensitiveActionRegistry) ClassifyWildcard(pattern string) []ActionRiskCategory {
+	if r == nil {
+		return nil
+	}
 	p := strings.ToLower(pattern)
 
 	// Exact match first.
@@ -137,6 +143,9 @@ func (r *SensitiveActionRegistry) HasPrivEsc(actionOrPattern string) bool {
 func (r *SensitiveActionRegistry) CountByCategory(
 	actions []string, category ActionRiskCategory,
 ) int {
+	if r == nil {
+		return 0
+	}
 	n := 0
 	for _, a := range actions {
 		if slices.Contains(r.Classify(a), category) {
@@ -147,7 +156,12 @@ func (r *SensitiveActionRegistry) CountByCategory(
 }
 
 // Len returns the number of classified actions.
-func (r *SensitiveActionRegistry) Len() int { return len(r.actions) }
+func (r *SensitiveActionRegistry) Len() int {
+	if r == nil {
+		return 0
+	}
+	return len(r.actions)
+}
 
 func (r *SensitiveActionRegistry) hasCategory(actionOrPattern string, cat ActionRiskCategory) bool {
 	var cats []ActionRiskCategory

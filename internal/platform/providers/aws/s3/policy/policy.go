@@ -134,6 +134,9 @@ func (s Statement) StatementID(index int) kernel.StatementID {
 
 // NormalizeStringOrSlice handles the AWS JSON polymorphism of single string vs array.
 func NormalizeStringOrSlice(v any) []string {
+	if v == nil {
+		return nil
+	}
 	switch val := v.(type) {
 	case string:
 		return []string{val}
@@ -142,12 +145,16 @@ func NormalizeStringOrSlice(v any) []string {
 	case []any:
 		out := make([]string, 0, len(val))
 		for _, item := range val {
-			if s, ok := item.(string); ok {
-				out = append(out, s)
+			if item != nil {
+				if s, ok := item.(string); ok {
+					out = append(out, s)
+				} else {
+					out = append(out, fmt.Sprint(item))
+				}
 			}
 		}
 		return out
 	default:
-		return nil
+		return []string{fmt.Sprint(v)}
 	}
 }

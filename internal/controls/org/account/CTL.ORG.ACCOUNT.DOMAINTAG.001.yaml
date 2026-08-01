@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.ACCOUNT.DOMAINTAG.001
+name: Account With Route 53 Domains Lacks Governance Tag
+description: >
+  AWS account holds Route 53 domain registrations but is not
+  tagged HasRegisteredDomains. Without this tag, the tag-
+  conditional SCP protections (CTL.IAM.SCP.CLOSEACCOUNT.002,
+  CTL.IAM.SCP.TAGAUTH.DOMAINS.001) do not apply to this
+  account. The account can be closed through normal
+  decommissioning workflows without triggering the domain
+  governance guardrails.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-8"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account_summary
+params:
+  attack_stage: resilience
+observation_fields:
+  - account.has_domains_without_tag
+remediation:
+  description: >
+    Account holds Route 53 domain registrations but lacks
+    the HasRegisteredDomains governance tag.
+  action: >
+    Tag the account with HasRegisteredDomains=true via
+    organizations:TagResource. This enables the tag-
+    conditional SCP protections against account closure
+    and tag removal.
+  example: |
+    {
+      "account": {
+        "has_registered_domains_tag": true,
+        "has_domains_without_tag": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.has_domains_without_tag
+      op: eq
+      value: true
+defect: >
+  Account holds Route 53 domains but is not tagged
+  HasRegisteredDomains.
+infection: >
+  Tag-conditional SCP protections do not apply to this
+  account because the tag is absent.
+failure: >
+  Account closure proceeds without domain governance
+  guardrails. Domain suspension begins on day 5.
+tests:
+  - name: "account with domains but no tag fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "333333333333/summary"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          has_domains_without_tag: true
+  - name: "account with domains and tag passes"
+    verdict: PASS
+    asset:
+      asset_id: "444444444444/summary"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          has_domains_without_tag: false
+  - name: "account without domains passes"
+    verdict: PASS
+    asset:
+      asset_id: "555555555555/summary"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          has_registered_domains_tag: false
+          has_domains_without_tag: false

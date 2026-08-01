@@ -2,12 +2,16 @@ package collectorcontract
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 )
 
 // WriteReport dispatches to text or JSON rendering based on format.
 func WriteReport(w io.Writer, r *Report, format string, fixHints bool) error {
+	if r == nil {
+		return errors.New("report is nil")
+	}
 	if format == "json" {
 		return WriteJSON(w, r)
 	}
@@ -16,6 +20,9 @@ func WriteReport(w io.Writer, r *Report, format string, fixHints bool) error {
 
 // WriteText renders the contract check as human-readable text.
 func WriteText(w io.Writer, r *Report, fixHints bool) error {
+	if r == nil {
+		return errors.New("report is nil")
+	}
 	fmt.Fprintf(w, "\nCollector Contract\n==================\n")
 	fmt.Fprintf(w, "Fields checked:  %d\n", r.FieldsChecked)
 	fmt.Fprintf(w, "  Pass:          %d\n", r.Pass)
@@ -90,6 +97,9 @@ func WriteText(w io.Writer, r *Report, fixHints bool) error {
 
 // WriteJSON renders the contract check as JSON.
 func WriteJSON(w io.Writer, r *Report) error {
+	if r == nil {
+		return errors.New("report is nil")
+	}
 	type jsonViolation struct {
 		Field     string   `json:"field"`
 		Status    string   `json:"status"`

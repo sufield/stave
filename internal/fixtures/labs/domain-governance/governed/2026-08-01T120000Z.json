@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.domain-governance"
+  },
+  "assets": [
+    {
+      "id": "o-gov-domain/identity",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "organization",
+          "scp": {
+            "denies_close_account": true,
+            "denies_close_account_for_domain_tagged": true,
+            "denies_untag_has_registered_domains": true
+          }
+        }
+      }
+    },
+    {
+      "id": "444444444444/summary",
+      "type": "aws_account_summary",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "in_organization": true,
+          "has_registered_domains_tag": true,
+          "has_domains_without_tag": false,
+          "root_email_domain_hosted_locally": false,
+          "root_email_uses_corporate_domain": true
+        }
+      }
+    }
+  ]
+}

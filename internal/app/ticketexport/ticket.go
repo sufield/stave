@@ -36,10 +36,14 @@ func Generate(findings []remediation.Finding) []Ticket {
 	return tickets
 }
 
-// StableTicketID computes a deterministic ticket ID from control_id + asset_id.
-func StableTicketID(controlID, assetID string) string {
+// StableTicketID computes a deterministic ticket ID from control_id, asset_id, and optional asset_type.
+func StableTicketID(controlID, assetID string, assetType ...string) string {
 	h := sha256.New()
-	fmt.Fprintf(h, "%d:%s:%d:%s", len(controlID), controlID, len(assetID), assetID)
+	astType := ""
+	if len(assetType) > 0 {
+		astType = assetType[0]
+	}
+	fmt.Fprintf(h, "%d:%s:%d:%s:%d:%s", len(controlID), controlID, len(assetID), assetID, len(astType), astType)
 	return "TKT-" + hex.EncodeToString(h.Sum(nil))[:12]
 }
 
@@ -62,12 +66,13 @@ func SeverityToPriority(severity string) string {
 func fromFinding(f *remediation.Finding) Ticket {
 	ctlID := string(f.ControlID)
 	astID := string(f.AssetID)
+	astType := string(f.AssetType)
 	sev := f.SeverityLabel()
 	dwellDays := f.DwellDays()
 
 	labels := []string{"security", sev}
 	if f.AssetType != "" {
-		labels = append(labels, string(f.AssetType))
+		labels = append(labels, astType)
 	}
 
 	desc := f.ControlDescription
@@ -78,7 +83,7 @@ func fromFinding(f *remediation.Finding) Ticket {
 	team := f.OwnerTeamName
 
 	return Ticket{
-		TicketID:    StableTicketID(ctlID, astID),
+		TicketID:    StableTicketID(ctlID, astID, astType),
 		Title:       fmt.Sprintf("[%s] %s - %s", sev, f.ControlName, astID),
 		Severity:    sev,
 		Priority:    SeverityToPriority(sev),

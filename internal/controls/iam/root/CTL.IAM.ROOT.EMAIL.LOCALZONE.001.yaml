@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROOT.EMAIL.LOCALZONE.001
+name: Root Email Domain DNS Hosted in Same Account
+description: >
+  The account's root email domain has its DNS hosted in a
+  Route 53 public hosted zone within the same AWS account.
+  If this account is closed, domain suspension begins on
+  day 5 — the hosted zone stops resolving, which prevents
+  delivery of AWS notification emails about the closure
+  itself. This creates a circular failure: the recovery
+  mechanism (email notification) is destroyed by the event
+  it should warn about. The account owner cannot receive
+  the 90-day closure warning and may miss the recovery
+  window entirely.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "CP-2"
+  soc2: "CC9.1"
+  ccm_v4: ["BCR-08"]
+scope_tags:
+  - aws
+  - iam
+  - route53
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account_summary
+params:
+  attack_stage: impact
+observation_fields:
+  - account.root_email_domain_hosted_locally
+remediation:
+  description: >
+    Root email domain DNS is hosted in the same account.
+    Account closure will break email delivery for the root
+    email.
+  action: >
+    Move the root email domain's hosted zone to a separate
+    account (the management account or a dedicated DNS
+    account), or change the root email to a domain hosted
+    externally. The root email inbox must remain reachable
+    even if this account is closed.
+  example: |
+    {
+      "account": {
+        "root_email_domain_hosted_locally": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.root_email_domain_hosted_locally
+      op: eq
+      value: true
+defect: >
+  Root email domain's DNS is hosted in the same AWS account.
+infection: >
+  Account closure triggers domain suspension on day 5.
+  The root email domain's DNS stops resolving.
+failure: >
+  AWS closure notification emails become undeliverable.
+  The account owner misses the 90-day recovery window.
+  The account and all its resources are permanently lost.
+tests:
+  - name: "root email domain hosted locally fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "333333333333/summary"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          root_email_domain_hosted_locally: true
+  - name: "root email domain hosted externally passes"
+    verdict: PASS
+    asset:
+      asset_id: "444444444444/summary"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        account:
+          root_email_domain_hosted_locally: false

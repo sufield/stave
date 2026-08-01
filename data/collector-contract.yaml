@@ -67,6 +67,29 @@ contracts:
     consumers:
       - CTL.ORG.SCP.DENY.CLOSEACCOUNT.001
 
+  - field: denies_close_account_for_domain_tagged
+    type: boolean
+    postcondition: >
+      True if any SCP denies organizations:CloseAccount or
+      account:CloseAccount with a Condition that requires
+      aws:ResourceTag/HasRegisteredDomains equals true.
+      Unlike denies_close_account (unconditional deny), this
+      field verifies the tag-conditional deny that protects
+      only accounts holding Route 53 domain registrations.
+    consumers:
+      - CTL.IAM.SCP.CLOSEACCOUNT.002
+
+  - field: denies_untag_has_registered_domains
+    type: boolean
+    postcondition: >
+      True if any SCP denies organizations:UntagResource
+      with a Condition on aws:TagKeys containing
+      HasRegisteredDomains. Prevents removal of the
+      governance tag that gates the tag-conditional
+      CloseAccount deny.
+    consumers:
+      - CTL.IAM.SCP.TAGAUTH.DOMAINS.001
+
   - field: denies_iam_create_user
     type: boolean
     postcondition: >
@@ -785,6 +808,37 @@ contracts:
       Collectors extract the domain portion after @.
     consumers:
       - CTL.ACCOUNT.ROOTEMAIL.DOMAIN.001
+
+  - field: root_email_domain_hosted_locally
+    type: boolean
+    postcondition: >
+      True if root_email_domain matches any Route 53 public
+      hosted zone domain name within the same AWS account.
+      Derived: root_email_domain × route53:ListHostedZones.
+      A true value means account closure will suspend the
+      domain that receives AWS notification emails, creating
+      a circular recovery failure.
+    consumers:
+      - CTL.IAM.ROOT.EMAIL.LOCALZONE.001
+
+  - field: has_registered_domains_tag
+    type: boolean
+    postcondition: >
+      True if the AWS account has an organization tag with
+      key HasRegisteredDomains and value true. Source:
+      organizations:ListTagsForResource.
+    consumers:
+      - CTL.ORG.ACCOUNT.DOMAINTAG.001
+
+  - field: has_domains_without_tag
+    type: boolean
+    postcondition: >
+      True if route53domains:ListDomains returns one or more
+      domains for this account AND has_registered_domains_tag
+      is false. Derived: route53domains:ListDomains ×
+      organizations:ListTagsForResource.
+    consumers:
+      - CTL.ORG.ACCOUNT.DOMAINTAG.001
 
   # ─── GuardDuty (B1) ─────────────────────────────────────
 

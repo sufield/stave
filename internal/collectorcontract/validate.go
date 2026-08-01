@@ -43,22 +43,31 @@ type Report struct {
 
 // HasViolations returns true if any field is missing or wrong-typed.
 func (r *Report) HasViolations() bool {
+	if r == nil {
+		return false
+	}
 	return r.Missing > 0 || r.WrongType > 0
 }
 
 // HasWarnings returns true if any field was null (not evaluated).
 func (r *Report) HasWarnings() bool {
+	if r == nil {
+		return false
+	}
 	return r.Null > 0
 }
 
 // ViolationCount returns the total number of hard violations.
 func (r *Report) ViolationCount() int {
+	if r == nil {
+		return 0
+	}
 	return r.Missing + r.WrongType
 }
 
 // CoveragePercent returns the percentage of checked fields that passed.
 func (r *Report) CoveragePercent() int {
-	if r.FieldsChecked == 0 {
+	if r == nil || r.FieldsChecked == 0 {
 		return 0
 	}
 	return r.Pass * 100 / r.FieldsChecked
