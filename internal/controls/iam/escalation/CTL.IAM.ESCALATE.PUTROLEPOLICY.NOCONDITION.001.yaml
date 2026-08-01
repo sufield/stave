@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.PUTROLEPOLICY.NOCONDITION.001
+name: Principal Has iam:PutRolePolicy Without Content Restriction
+description: >
+  A principal has `iam:PutRolePolicy` in its effective permissions.
+  Unlike `iam:AttachRolePolicy` which can be condition-restricted via
+  `iam:PolicyARN`, there is no IAM Condition key that restricts the
+  *content* of an inline policy written via PutRolePolicy. Every
+  PutRolePolicy grant is inherently unrestricted in what policy
+  document the caller can write — the only available defense is
+  restricting the Resource field (which roles can be targeted).
+  This makes PutRolePolicy structurally more dangerous than
+  AttachRolePolicy: the attacker authors the payload (arbitrary
+  Action/Resource/Effect JSON) rather than selecting from existing
+  managed policies. Combined with `sts:AssumeRole` trust on the
+  target role, this creates a two-stage escalation: write an admin
+  inline policy onto the role, then assume it.
+
+  Scope: applies to both users and roles (matching
+  `CTL.IAM.ESCALATE.PUTROLEPOLICY.001`). Fires when the
+  principal has `iam:PutRolePolicy` in its effective permissions
+  regardless of resource scope. The self-targeting variant (role
+  writing to its own ARN) is also detected by
+  `CTL.IAM.ESCALATE.PUTROLEPOLICY.001`.
+domain: identity
+severity: critical
+scope: compound
+corpus_reference: MITRE:T1098.003
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-6(5)"
+  fedramp_moderate: "AC-6(5)"
+  iso_27001_2022: "A.8.3"
+  ccm_v4: ["IAM-02", "IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+  - aws_iam_user
+params:
+  attack_stage: privilege_escalation
+  base_impact: 10
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.kind
+  - identity.escalation.put_role_policy.present
+  - identity.escalation.put_role_policy.resource_scope
+remediation:
+  description: >
+    Principal has `iam:PutRolePolicy` — the ability to write
+    arbitrary inline policy documents onto IAM roles. No IAM
+    Condition key restricts the content of the inline policy,
+    so any grant of this action allows writing admin-equivalent
+    permissions onto any role within Resource scope.
+  action: >
+    Remove `iam:PutRolePolicy` from the principal. If the
+    principal must manage inline policies for service roles,
+    scope the Resource field to specific role ARNs that do not
+    include the principal itself or any role it can assume. Deny
+    at the organization boundary with an SCP.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "escalation": {
+          "put_role_policy": {
+            "present": false
+          }
+        }
+      }
+    }
+mitre_attack:
+  - id: T1098.003
+    name: "Account Manipulation: Additional Cloud Roles"
+    tactic: privilege-escalation
+validated_against:
+  - vendor: bishopfox
+    lab: privesc12-PutRolePolicy
+    result: detected
+    verified: "2026-05-30"
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.put_role_policy.present
+      op: present
+    - field: properties.identity.escalation.put_role_policy.present
+      op: eq
+      value: true
+alternatives:
+  - tool: prowler
+    check_id: iam_inline_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.
+  - tool: prowler
+    check_id: iam_policy_allows_privilege_escalation
+    coverage: covered
+    note: One of 24 per-technique controls covering the aggregated Prowler check.

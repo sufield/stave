@@ -1348,6 +1348,22 @@ A principal (IAM user or role) holding `iam:PutRolePolicy` on a role it can reac
 
 ---
 
+### CTL.IAM.ESCALATE.PUTROLEPOLICY.NOCONDITION.001
+
+**Principal Has iam:PutRolePolicy Without Content Restriction**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A principal has `iam:PutRolePolicy` in its effective permissions. Unlike `iam:AttachRolePolicy` which can be condition-restricted via `iam:PolicyARN`, there is no IAM Condition key that restricts the *content* of an inline policy written via PutRolePolicy. Every PutRolePolicy grant is inherently unrestricted in what policy document the caller can write — the only available defense is restricting the Resource field (which roles can be targeted). This makes PutRolePolicy structurally more dangerous than AttachRolePolicy: the attacker authors the payload (arbitrary Action/Resource/Effect JSON) rather than selecting from existing managed policies. Combined with `sts:AssumeRole` trust on the target role, this creates a two-stage escalation: write an admin inline policy onto the role, then assume it.
+Scope: applies to both users and roles (matching `CTL.IAM.ESCALATE.PUTROLEPOLICY.001`). Fires when the principal has `iam:PutRolePolicy` in its effective permissions regardless of resource scope. The self-targeting variant (role writing to its own ARN) is also detected by `CTL.IAM.ESCALATE.PUTROLEPOLICY.001`.
+
+**Remediation:** Remove `iam:PutRolePolicy` from the principal. If the principal must manage inline policies for service roles, scope the Resource field to specific role ARNs that do not include the principal itself or any role it can assume. Deny at the organization boundary with an SCP.
+
+---
+
 ### CTL.IAM.ESCALATE.PUTUSERPOLICY.001
 
 **Principal Must Not Escalate via iam:PutUserPolicy On Self**
