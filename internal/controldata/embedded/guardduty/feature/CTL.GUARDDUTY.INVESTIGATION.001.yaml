@@ -12,6 +12,7 @@ description: >
   CloudTrail events, VPC flow logs, and DNS logs for each finding.
 domain: detection
 severity: medium
+axioms: [D1, D8]
 compliance:
   nist_800_53_r5: "IR-4, SI-4"
   soc2: "CC7.2, CC7.3"

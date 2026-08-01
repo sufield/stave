@@ -136,6 +136,18 @@ contracts:
     consumers:
       - CTL.ORG.SCP.DENY.CLOUDTRAIL.001
 
+  - field: denies_cloudtrail_eventselector_modify
+    type: boolean
+    postcondition: >
+      True if any SCP denies cloudtrail:PutEventSelectors
+      and cloudtrail:PutAdvancedEventSelector. Prevents
+      member accounts from narrowing CloudTrail event scope
+      (A5 separation of duties — a principal who can act
+      must not be able to suppress the record of that action).
+    hazop_reference: "A5 separation of duties; Ubiquiti 2020 incident shape"
+    consumers:
+      - CTL.IAM.SCP.CLOUDTRAIL.EVENTSELECTOR.001
+
   - field: denies_root_access_key
     type: boolean
     postcondition: >

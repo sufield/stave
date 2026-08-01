@@ -1,0 +1,26 @@
+id: cloudtrail_insider_scope_narrowing
+description: >
+  Insider scope-narrowing attack path (A5 separation of duties).
+  A principal can narrow CloudTrail event selector scope without
+  organizational prevention. Three legs: (1) the SCP doesn't block
+  event selector modification, (2) the member account has the
+  permission to modify selectors, (3) an identity filter is already
+  active on network activity events. Any 2 of 3 is dangerous:
+  permission + filter means someone already used it; SCP gap +
+  filter means the organization can't prevent more narrowing;
+  SCP gap + permission means the attack is ready to execute.
+  Incident precedent: Ubiquiti (2020), FTX, CodeSpaces, Halcyon
+  Codefinger — all A5 violations where an actor could perform
+  actions and suppress the record.
+axioms: [A5, D3]
+controls:
+  - CTL.IAM.SCP.CLOUDTRAIL.EVENTSELECTOR.001
+  - CTL.CLOUDTRAIL.MEMBERCANNARROW.001
+  - CTL.CLOUDTRAIL.NETWORK.ACTIVITY.IDENTITYFILTER.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_scope_narrowed
+implicit_dependencies: []

@@ -11,6 +11,7 @@ description: >
   purpose of enabling network activity events.
 domain: exposure
 severity: medium
+axioms: [A4, D8]
 compliance:
   nist_800_53_r5: "AU-3, AU-12"
   soc2: "CC7.2"

@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SCP.CLOUDTRAIL.EVENTSELECTOR.001
+name: "SCP Does Not Prevent CloudTrail Event Selector Modification"
+description: >
+  No SCP denies cloudtrail:PutEventSelectors or
+  cloudtrail:PutAdvancedEventSelector in member accounts. A member
+  account admin can narrow CloudTrail event scope — excluding
+  specific event types, data sources, or UserIdentity principals —
+  without organizational prevention. This is an A5 (Separation of
+  Duties) violation: the principal can both perform actions through
+  VPC endpoints and suppress the record of those actions by
+  modifying event selectors. Incident precedent: Ubiquiti (2020),
+  FTX, CodeSpaces, Halcyon Codefinger — all cases where an actor
+  could act and suppress.
+domain: identity
+severity: high
+axioms: [A5, D1]
+compliance:
+  nist_800_53_r5: "AC-3, AU-9, AU-12"
+  soc2: "CC6.1, CC7.1"
+  ccm_v4: ["IAM-04", "LOG-08"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - logging
+  - detection-evasion
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+    multiplier: 4.0
+observation_fields:
+  - identity.kind
+  - identity.scp.denies_cloudtrail_eventselector_modify
+remediation:
+  description: >
+    Organization SCPs do not deny CloudTrail event selector
+    modification in member accounts. Member accounts can narrow
+    logging scope.
+  action: >
+    Add an SCP that denies cloudtrail:PutEventSelectors and
+    cloudtrail:PutAdvancedEventSelector for all principals in
+    member accounts, excluding a break-glass security-admin role.
+    This is the scope-narrowing analog of the existing SCP that
+    denies StopLogging and DeleteTrail.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "denies_cloudtrail_eventselector_modify": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.denies_cloudtrail_eventselector_modify
+      op: ne
+      value: true
+defect: >
+  No SCP prevents member accounts from modifying CloudTrail event
+  selectors.
+infection: >
+  Without an SCP that denies cloudtrail:PutEventSelectors and
+  cloudtrail:PutAdvancedEventSelector: a compromised admin in a
+  member account calls PutAdvancedEventSelector to add a
+  UserIdentity exclusion filter — their subsequent actions through
+  VPC endpoints are invisible. Unlike StopLogging (which is
+  detectable by CloudWatch alarms), scope narrowing produces no
+  alarm because the trail remains active. The attacker can act AND
+  suppress the record of those actions — the A5 formal shape
+  violation.
+failure: >
+  Member accounts can narrow CloudTrail event scope. No SCP
+  prevents PutEventSelectors or PutAdvancedEventSelector.
+tests:
+  - name: "organization without event selector SCP — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_cloudtrail_eventselector_modify: false
+  - name: "organization with event selector SCP — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_cloudtrail_eventselector_modify: true

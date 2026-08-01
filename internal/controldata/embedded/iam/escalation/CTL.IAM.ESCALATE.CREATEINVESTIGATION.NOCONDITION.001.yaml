@@ -13,6 +13,7 @@ description: >
   exceeds the principal's intended scope.
 domain: identity
 severity: high
+axioms: [A2]
 compliance:
   nist_800_53_r5: "AC-6(5)"
   soc2: "CC6.1"

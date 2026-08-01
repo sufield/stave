@@ -18,6 +18,8 @@ import (
 // capabilities. Strings are sorted alphabetically for review-diff
 // stability; the order has no runtime meaning.
 var builtinNames = []string{
+	"account_closure",
+	"account_loss",
 	"audit_trail_destroyed",
 	"automation_hijack",
 	"aws_root_access",
@@ -45,6 +47,8 @@ var builtinNames = []string{
 	"detection_evasion",
 	"detection_fragmented",
 	"detection_without_response",
+	"domain_loss",
+	"domain_suspension",
 	"domain_takeover",
 	"ec2_code_execution",
 	"encryption_bypass",
@@ -63,6 +67,7 @@ var builtinNames = []string{
 	"org_admin_access",
 	"network_access_lambda",
 	"network_access_rds",
+	"notification_failure",
 	"network_access_vpc",
 	"no_router_update_permission",
 	"rds_data_access",

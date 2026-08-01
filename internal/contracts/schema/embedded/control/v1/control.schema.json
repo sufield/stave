@@ -222,6 +222,16 @@
             "minLength": 1
           }
         },
+        "axioms": {
+          "type": "array",
+          "title": "Axiom Anchors",
+          "description": "Axiom IDs from the 24-axiom framework that this control enforces or detects violations of (e.g., A4, A5, D1, D8). Primary axiom listed first.",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z][0-9]+$"
+          },
+          "uniqueItems": true
+        },
         "payer_exempt": {
           "type": "boolean",
           "title": "Payer Account Exempt",
