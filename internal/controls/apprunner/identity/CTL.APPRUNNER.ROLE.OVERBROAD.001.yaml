@@ -1,0 +1,112 @@
+dsl_version: ctrl.v1
+id: CTL.APPRUNNER.ROLE.OVERBROAD.001
+name: App Runner Instance Role Exceeds Required Permissions
+description: >
+  App Runner service's instance role has permissions beyond
+  what the containerized application requires. App Runner
+  services need specific access to their data stores (DynamoDB
+  tables, S3 buckets, RDS instances via Secrets Manager),
+  ECR pull for container images, and CloudWatch Logs. Any
+  action outside this set — s3:*, iam:PassRole,
+  sts:AssumeRole on broad targets — means a compromised web
+  application container can access resources far beyond its
+  service scope. App Runner services are internet-facing by
+  default; an overbroad instance role turns web application
+  compromise into account-wide privilege escalation.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - apprunner
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_apprunner_service
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+remediation:
+  description: >
+    App Runner instance role has permissions beyond the
+    service's required scope.
+  action: >
+    Scope the instance role to the specific DynamoDB tables,
+    S3 buckets, and Secrets Manager secrets the application
+    needs. Remove wildcard actions and broad Resource targets.
+    App Runner services are internet-facing — the instance
+    role is the first credential an attacker reaches after
+    web application compromise.
+  example: |
+    {
+      "compute": {
+        "kind": "apprunner_service",
+        "apprunner": {
+          "role_exceeds_required": false,
+          "role_arn": "arn:aws:iam::111122223333:role/apprunner-api-scoped"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: apprunner_service
+    - field: properties.compute.apprunner.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  App Runner instance role grants actions beyond the
+  service's required permissions.
+infection: >
+  App Runner services are internet-facing containers. The
+  instance role is accessible to the application code via
+  the task metadata endpoint. An overbroad role means web
+  application vulnerabilities (SSRF, RCE, injection) yield
+  credentials with account-wide reach. App Runner has zero
+  chains today — this control establishes the foundation
+  for lateral movement chain coverage.
+failure: >
+  App Runner instance role blast radius expansion.
+  Internet-facing web app compromise yields account-wide
+  access via overbroad instance role.
+tests:
+  - name: overbroad App Runner instance role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:apprunner:us-east-1:111122223333:service/api-backend/abc123"
+      asset_type: aws_apprunner_service
+      vendor: aws
+      properties:
+        compute:
+          kind: apprunner_service
+          apprunner:
+            role_exceeds_required: true
+            role_arn: "arn:aws:iam::111122223333:role/apprunner-admin"
+            excess_actions:
+              - "s3:*"
+              - "iam:PassRole"
+  - name: scoped App Runner instance role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:apprunner:us-east-1:111122223333:service/api-backend/abc123"
+      asset_type: aws_apprunner_service
+      vendor: aws
+      properties:
+        compute:
+          kind: apprunner_service
+          apprunner:
+            role_exceeds_required: false
+            role_arn: "arn:aws:iam::111122223333:role/apprunner-api-scoped"

@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.DEVENDPOINT.ENCRYPT.CMK.001
+name: Glue Dev Endpoint Must Use a Customer-Managed KMS Key
+description: >
+  Glue development endpoints must encrypt S3 targets, bookmarks,
+  and logs with a customer-managed KMS key. Dev endpoints are
+  interactive notebook environments that process and preview
+  data; the encryption key controls who can access intermediate
+  data written during development sessions.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+    - CEK-04
+    - CEK-08
+scope_tags:
+  - aws
+  - glue
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_glue_dev_endpoint]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Glue dev endpoint is not using a customer-managed KMS key.
+  action: >
+    Create a customer-managed KMS key and configure the Glue
+    security configuration to use it. Dev endpoints are
+    deprecated; prefer Glue interactive sessions with CMK
+    encryption configured.
+  example: |
+    {
+      "compute": {
+        "kind": "glue_dev_endpoint",
+        "glue": {
+          "dev_endpoint": {
+            "kms_key_origin": "CUSTOMER_MANAGED"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: glue_dev_endpoint
+    - field: properties.compute.glue.dev_endpoint.kms_key_origin
+      op: eq
+      value: AWS_MANAGED
+tests:
+  - name: dev endpoint with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:devEndpoint/dev-notebook"
+      asset_type: aws_glue_dev_endpoint
+      vendor: aws
+      properties:
+        compute:
+          kind: glue_dev_endpoint
+          glue:
+            dev_endpoint:
+              kms_key_origin: AWS_MANAGED
+  - name: dev endpoint with customer-managed CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:devEndpoint/dev-notebook"
+      asset_type: aws_glue_dev_endpoint
+      vendor: aws
+      properties:
+        compute:
+          kind: glue_dev_endpoint
+          glue:
+            dev_endpoint:
+              kms_key_origin: CUSTOMER_MANAGED

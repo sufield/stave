@@ -1,0 +1,32 @@
+id: eks_to_dynamodb_lateral
+description: >
+  EKS node group has an overbroad IAM role and DynamoDB is
+  accessible without a VPC endpoint policy restriction — a
+  compromised pod inheriting the node role can read or
+  write arbitrary DynamoDB tables via the public API. The
+  first leg detects that the EKS node group's IAM role
+  exceeds kubelet-minimum permissions
+  (CTL.EKS.NODEGROUP.ROLE.OVERBROAD.001) — the role
+  grants broad DynamoDB actions (dynamodb:*, or
+  dynamodb:GetItem on Resource: *). The second leg detects
+  that no VPC endpoint enforces a restrictive policy on
+  DynamoDB access (CTL.DYNAMODB.VPC.ENDPOINT.001) — pods
+  reach DynamoDB over the public endpoint with no
+  network-level constraint. Together: pod compromise yields
+  unrestricted DynamoDB access across every table the
+  overbroad node role permits. Removing either leg breaks
+  the chain: scope the node role to kubelet-minimum and
+  move workload DynamoDB access to IRSA or Pod Identity, OR
+  enforce a VPC endpoint policy that restricts DynamoDB
+  access to authorized principals only.
+controls:
+  - CTL.EKS.NODEGROUP.ROLE.OVERBROAD.001
+  - CTL.DYNAMODB.VPC.ENDPOINT.001
+scope: global
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - credential_access
+postconditions:
+  - data_access
+implicit_dependencies: []

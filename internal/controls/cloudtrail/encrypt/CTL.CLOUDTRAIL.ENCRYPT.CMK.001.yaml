@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ENCRYPT.CMK.001
+name: CloudTrail Trail Must Use a Customer-Managed KMS Key
+description: >
+  CloudTrail trails must encrypt log files with a customer-managed
+  KMS key, not the default SSE-S3 or AWS-managed key. The default
+  encryption provides no key-policy control, no custom rotation
+  schedule, and no ability to revoke access to historical logs
+  during an incident. A customer-managed CMK lets the organization
+  scope decrypt permissions to specific principals, enforce
+  automatic rotation, and revoke key access to cut off an attacker
+  who has compromised the S3 bucket but not the KMS key.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+    - CEK-04
+    - CEK-08
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_cloudtrail_trail]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    CloudTrail trail is not using a customer-managed KMS key.
+    Log files are encrypted with SSE-S3 or an AWS-managed key,
+    providing no key-policy or revocation control.
+  action: >
+    Create a customer-managed KMS key with a key policy that
+    grants CloudTrail encrypt permission and scopes decrypt to
+    specific audit principals. Update the trail with
+    aws cloudtrail update-trail --kms-key-id <key-arn>.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "audit_trail": {
+          "kms_key_origin": "CUSTOMER_MANAGED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.audit_trail.kms_key_origin
+      op: eq
+      value: AWS_MANAGED
+tests:
+  - name: trail with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          audit_trail:
+            kms_key_origin: AWS_MANAGED
+  - name: trail with customer-managed CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          audit_trail:
+            kms_key_origin: CUSTOMER_MANAGED

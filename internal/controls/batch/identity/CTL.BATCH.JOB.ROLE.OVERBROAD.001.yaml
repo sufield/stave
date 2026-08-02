@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.BATCH.JOB.ROLE.OVERBROAD.001
+name: Batch Job IAM Role Exceeds Required Permissions
+description: >
+  AWS Batch job definition's IAM role has permissions beyond
+  what the compute job requires. Batch jobs need ECR pull
+  (ecr:GetAuthorizationToken, ecr:BatchGetImage,
+  ecr:GetDownloadUrlForLayer), specific S3 access for input
+  and output data, and CloudWatch Logs for job logging. Any
+  action outside this set — s3:*, iam:PassRole,
+  sts:AssumeRole on broad targets — means a compromised
+  container running as a Batch job can access resources far
+  beyond its compute scope. Batch jobs run arbitrary
+  container images; an overbroad role turns container escape
+  or image compromise into account-wide privilege escalation.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - batch
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_batch_job_definition
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Batch job IAM role has permissions beyond the job's
+    required scope.
+  action: >
+    Scope the Batch job role to the specific S3 buckets,
+    ECR repositories, and CloudWatch Logs groups the job
+    needs. Remove wildcard actions and broad Resource
+    targets. Use separate roles for job definitions with
+    different data access requirements.
+  example: |
+    {
+      "compute": {
+        "kind": "batch_job",
+        "batch": {
+          "job": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/batch-job-scoped"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: batch_job
+    - field: properties.compute.batch.job.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  Batch job IAM role grants actions beyond the compute
+  job's required permissions.
+infection: >
+  Batch jobs run arbitrary container images in managed
+  compute environments. An overbroad role means a
+  compromised container — or a poisoned image pulled from
+  a shared ECR repository — gains access to S3 buckets,
+  secrets, and IAM resources beyond the job's scope.
+  The existing CTL.BATCH.ESCALATION.CHAIN.001 detects
+  escalation paths; this control catches the root cause:
+  the role itself is over-permissioned.
+failure: >
+  Batch job role blast radius expansion. Container
+  compromise or image poisoning yields account-wide
+  access via overbroad job role.
+tests:
+  - name: overbroad Batch job role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:job-definition/data-processing:3"
+      asset_type: aws_batch_job_definition
+      vendor: aws
+      properties:
+        compute:
+          kind: batch_job
+          batch:
+            job:
+              role_exceeds_required: true
+              role_arn: "arn:aws:iam::111122223333:role/batch-admin"
+              excess_actions:
+                - "s3:*"
+                - "iam:PassRole"
+  - name: scoped Batch job role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:batch:us-east-1:111122223333:job-definition/data-processing:3"
+      asset_type: aws_batch_job_definition
+      vendor: aws
+      properties:
+        compute:
+          kind: batch_job
+          batch:
+            job:
+              role_exceeds_required: false
+              role_arn: "arn:aws:iam::111122223333:role/batch-job-scoped"

@@ -1,0 +1,30 @@
+id: ecs_to_s3_lateral
+description: >
+  ECS task has a role with broad S3 write access and the
+  VPC allows unrestricted egress to S3 — a compromised
+  task can read or write arbitrary S3 buckets via the
+  public API. The first leg detects that the ECS task role
+  grants broad S3 write access
+  (CTL.ECS.TASKROLE.S3WRITE.BROAD.001) — the role permits
+  s3:PutObject or s3:* on broadly-scoped resources. The
+  second leg detects that the task's security group permits
+  unrestricted egress (CTL.VPC.SG.EGRESS.001) — the task
+  can reach S3 over the public endpoint without
+  network-level restriction. Together: task compromise
+  yields unrestricted S3 access for data exfiltration or
+  poisoning. This upgrades the generic ecs_ssrf_credential_theft
+  chain to a pair-specific S3 lateral path. Removing either
+  leg breaks the chain: scope the task role to specific S3
+  buckets and actions, OR restrict egress to a VPC endpoint
+  with a restrictive S3 policy.
+controls:
+  - CTL.ECS.TASKROLE.S3WRITE.BROAD.001
+  - CTL.VPC.SG.EGRESS.001
+scope: global
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - credential_access
+postconditions:
+  - data_access
+implicit_dependencies: []

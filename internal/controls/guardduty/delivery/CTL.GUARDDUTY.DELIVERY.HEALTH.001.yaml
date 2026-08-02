@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.GUARDDUTY.DELIVERY.HEALTH.001
+name: GuardDuty Detector Must Be Actively Detecting
+description: >
+  GuardDuty detector must be actively producing findings.
+  A detector can be enabled with all protection plans
+  active and pass every other GuardDuty control while the
+  detector runtime is silently degraded. When detection
+  stops, threats from compromised credentials, crypto
+  mining, C2 callbacks, and DNS exfiltration go undetected.
+  The GuardDuty console shows the detector as "Enabled"
+  and existing findings remain visible, but no new
+  detections occur. Existing controls check export and
+  notification paths — this control checks the detector
+  runtime itself: is it actively analyzing VPC flow logs,
+  DNS queries, and CloudTrail events, or has it silently
+  stopped?
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.4.1"
+  fedramp_moderate: "SI-4"
+  ccm_v4: ["TVM-01"]
+scope_tags:
+  - aws
+  - guardduty
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_guardduty_detector
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+defect: >
+  GuardDuty detector is enabled but not actively detecting.
+  The detector runtime is degraded or findings generation
+  has stopped.
+infection: >
+  GuardDuty appears healthy in the console. The detector
+  status shows "Enabled." Protection plans for S3, EKS,
+  Lambda, and Malware are active. But the detector runtime
+  has degraded: data source processing stalled, the
+  service-linked role lost permissions, or a protection
+  plan's underlying data feed was interrupted. GuardDuty
+  stops generating new findings but continues to display
+  historical ones. The export and notification pipelines
+  (CTL.GUARDDUTY.EXPORT.001, CTL.GUARDDUTY.NOTIFICATION.001)
+  show healthy because they have nothing new to deliver —
+  the problem is upstream at the detection stage itself.
+failure: >
+  An attacker uses stolen credentials to access the
+  account. GuardDuty would normally detect this via
+  CloudTrail anomaly analysis. But the detector runtime
+  has degraded. No finding is generated. The export
+  pipeline delivers nothing because there is nothing to
+  export. The SOC sees silence and interprets it as "no
+  threats detected."
+remediation:
+  description: >
+    GuardDuty detector is not actively detecting. Threat
+    detection has silently stopped.
+  action: >
+    Check detector status via GetDetector — verify
+    status is ENABLED and service role has required
+    permissions. Check data source statistics via
+    GetUsageStatistics — verify data sources are
+    actively processing. Common causes: service-linked
+    role permissions modified, VPC flow log delivery
+    interrupted, CloudTrail trail disabled in the
+    region, or account suspended from the organization
+    detector. Re-enable affected data sources and verify
+    detection resumes by generating a test finding via
+    CreateSampleFindings.
+  example: |
+    {
+      "detection": {
+        "kind": "guardduty",
+        "guardduty": {
+          "detector_healthy": true,
+          "detector_error": "",
+          "last_finding_time": "2026-07-28T12:00:00Z"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: guardduty
+    - field: properties.detection.guardduty.detector_healthy
+      op: eq
+      value: false
+tests:
+  - name: detector unhealthy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/abc123"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        detection:
+          kind: guardduty
+          guardduty:
+            detector_healthy: false
+            detector_error: "VPC flow log data source processing stalled"
+            last_finding_time: "2026-06-10T15:00:00Z"
+  - name: detector healthy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:guardduty:us-east-1:111122223333:detector/abc123"
+      asset_type: aws_guardduty_detector
+      vendor: aws
+      properties:
+        detection:
+          kind: guardduty
+          guardduty:
+            detector_healthy: true
+            detector_error: ""
+            last_finding_time: "2026-07-28T12:00:00Z"

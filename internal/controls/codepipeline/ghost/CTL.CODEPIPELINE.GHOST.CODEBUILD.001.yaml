@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.CODEPIPELINE.GHOST.CODEBUILD.001
+name: CodePipeline Action References Deleted CodeBuild Project
+description: >
+  CodePipeline action references a CodeBuild project that has been
+  deleted. The pipeline stage fails at execution time with an
+  InvalidActionDeclaration or ResourceNotFoundException. If the
+  project name is re-registered by an attacker in the same account,
+  the pipeline executes attacker-controlled build logic — a supply
+  chain vector identical to the S3 artifact store ghost
+  (CTL.CODEPIPELINE.GHOST.ARTIFACT.S3.001) but targeting compute
+  instead of storage. The attacker receives source code as input
+  artifacts and can substitute poisoned build output for downstream
+  deploy stages.
+domain: exposure
+severity: high
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1, CC8.1"
+  nist_800_53_r5: "SA-10, SI-7"
+  ccm_v4: ["DSP-04"]
+scope_tags:
+  - aws
+  - codepipeline
+taxonomy:
+  - trust-decay
+  - supply-chain
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_codepipeline_pipeline]
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 3.0
+defect: >
+  CodePipeline action references a CodeBuild project that has
+  been deleted.
+infection: >
+  CodePipeline passes source code and intermediate artifacts to
+  CodeBuild projects for compilation, testing, and packaging.
+  When the referenced CodeBuild project is deleted, the pipeline
+  action fails silently on execution. The pipeline definition
+  still names the project — if an attacker re-creates a project
+  with the same name in the same account, the pipeline resumes
+  execution against attacker-controlled buildspec. The attacker
+  receives source code as input, controls the build environment,
+  and produces output artifacts consumed by downstream deploy
+  stages. This is a compute-side supply chain ghost: the
+  configuration trusts a name that no longer resolves to the
+  original resource.
+failure: >
+  Pipeline broken or supply chain compromised via CodeBuild
+  project name hijacking. Attacker controls build logic,
+  receives source code, and can inject poisoned artifacts into
+  the deployment pipeline.
+remediation:
+  description: >
+    CodePipeline action references a deleted CodeBuild project.
+    Pipeline stage will fail or is vulnerable to project name
+    hijacking.
+  action: >
+    Update the pipeline action to reference an existing CodeBuild
+    project: aws codepipeline update-pipeline --pipeline
+    file://pipeline.json. Verify the CodeBuild project exists and
+    the buildspec is under version control. Consider using
+    CodeBuild project tags or ARN-based references instead of
+    name-based references to prevent hijacking.
+  example: |
+    {
+      "compute": {
+        "kind": "pipeline",
+        "codepipeline": {
+          "action": {
+            "codebuild_project": "build-project",
+            "codebuild_exists": true,
+            "has_ghost_codebuild": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: pipeline
+    - field: properties.compute.codepipeline.action.has_ghost_codebuild
+      op: eq
+      value: true
+tests:
+  - name: action targeting deleted CodeBuild project fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:codepipeline:us-east-1:111122223333:app-pipeline"
+      asset_type: aws_codepipeline_pipeline
+      vendor: aws
+      properties:
+        compute:
+          kind: pipeline
+          codepipeline:
+            pipeline_name: "app-pipeline"
+            action:
+              codebuild_project: "build-and-test-deleted"
+              codebuild_exists: false
+              has_ghost_codebuild: true
+  - name: action targeting live CodeBuild project passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:codepipeline:us-east-1:111122223333:app-pipeline"
+      asset_type: aws_codepipeline_pipeline
+      vendor: aws
+      properties:
+        compute:
+          kind: pipeline
+          codepipeline:
+            pipeline_name: "app-pipeline"
+            action:
+              codebuild_project: "build-and-test"
+              codebuild_exists: true
+              has_ghost_codebuild: false

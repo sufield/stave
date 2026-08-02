@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.DELIVERY.HEALTH.001
+name: WAF Logging Must Be Delivering
+description: >
+  WAF logging is configured on the web ACL but log data is
+  not reaching the destination. WAF logs can target Kinesis
+  Data Firehose, S3, or CloudWatch Logs. When the destination
+  fails — Firehose delivery errors, S3 bucket policy changes,
+  or CloudWatch Logs quota exceeded — WAF continues processing
+  requests but silently stops delivering log data. The web ACL
+  shows logging as enabled. Security teams believe they have
+  request-level visibility but the logs have a gap. This is
+  the delivery health pattern applied to WAF: inspection is
+  functioning but the audit trail is broken.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+  fedramp_moderate: "AU-6"
+  pci_dss_v4.0: "10.3.1"
+  ccm_v4: ["LOG-05"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_wafv2_web_acl
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: service
+defect: >
+  WAF logging is configured but not delivering log data
+  to the destination.
+infection: >
+  The web ACL has logging enabled and a destination configured.
+  WAF continues to inspect and filter requests — blocked
+  requests are blocked, allowed requests are allowed. But the
+  log stream has stopped. The Kinesis Data Firehose destination
+  may have exceeded its throughput, the S3 bucket policy may
+  have been modified, or the CloudWatch Logs log group may
+  have hit its quota. The WAF console shows logging as enabled
+  because the configuration exists. No CloudWatch alarm fires
+  because WAF does not emit a delivery-failure metric by
+  default.
+failure: >
+  An attacker probes the WAF with crafted requests during the
+  delivery failure window. WAF blocks some and allows others.
+  No log record exists for either outcome. Forensic analysis
+  of the incident has no WAF data for the attack period. The
+  team cannot determine what was blocked, what was allowed,
+  or what the attacker tested.
+remediation:
+  description: >
+    WAF logging is not delivering data to the configured
+    destination.
+  action: >
+    Check the WAF logging destination for errors. For Kinesis
+    Data Firehose: check DeliveryToS3.Errors and
+    ThrottledRecords metrics. For S3: verify bucket policy
+    allows WAF service principal writes. For CloudWatch Logs:
+    check quota limits. Set up CloudWatch alarms on
+    destination error metrics to detect future delivery
+    failures.
+  example: |
+    {
+      "detection": {
+        "kind": "waf_acl",
+        "waf": {
+          "logging_delivering": true,
+          "logging_destination_type": "firehose",
+          "logging_destination_arn": "arn:aws:firehose:us-east-1:111122223333:deliverystream/waf-logs"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: waf_acl
+    - field: properties.detection.waf.logging_delivering
+      op: eq
+      value: false
+tests:
+  - name: WAF logging not delivering fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/prod-api/abc123"
+      asset_type: aws_wafv2_web_acl
+      vendor: aws
+      properties:
+        detection:
+          kind: waf_acl
+          waf:
+            logging_delivering: false
+            logging_destination_type: firehose
+            logging_destination_arn: "arn:aws:firehose:us-east-1:111122223333:deliverystream/waf-logs"
+  - name: WAF logging delivering passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/prod-api/abc123"
+      asset_type: aws_wafv2_web_acl
+      vendor: aws
+      properties:
+        detection:
+          kind: waf_acl
+          waf:
+            logging_delivering: true
+            logging_destination_type: firehose
+            logging_destination_arn: "arn:aws:firehose:us-east-1:111122223333:deliverystream/waf-logs"

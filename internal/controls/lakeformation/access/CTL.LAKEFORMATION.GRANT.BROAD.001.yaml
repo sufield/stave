@@ -1,0 +1,127 @@
+dsl_version: ctrl.v1
+id: CTL.LAKEFORMATION.GRANT.BROAD.001
+name: Lake Formation Permission Grants Broad Data Access
+description: >
+  Lake Formation permission grants broad access to database
+  or table resources. A grant with ALL_TABLES, wildcard
+  database names, or SELECT/INSERT/DELETE on all tables in
+  a database gives the grantee unrestricted access to the
+  data lake. Lake Formation permissions are the primary
+  access control layer for data lakes — they govern who can
+  read, write, and modify tables in the Glue Data Catalog
+  and their underlying S3 data. A broad grant bypasses the
+  column-level and table-level access controls that Lake
+  Formation is designed to enforce.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  ccm_v4: ["IAM-04", "DSP-05"]
+scope_tags:
+  - aws
+  - lakeformation
+taxonomy:
+  - compliance-mapping
+  - access-control
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lakeformation_permissions
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: service
+defect: >
+  Lake Formation permission grants unrestricted access to
+  database or table resources.
+infection: >
+  A Lake Formation principal (IAM role, user, or SAML
+  federation) has been granted broad permissions: SELECT on
+  ALL_TABLES in a database, or permissions on a wildcard
+  database pattern. The grantee can read every table in the
+  data lake, including tables containing PII, financial
+  data, or other sensitive information. Column-level and
+  row-level security filters are bypassed when the grant
+  is at the database level with ALL_TABLES. The broad
+  grant may have been created during initial setup and
+  never scoped down.
+failure: >
+  A compromised principal with a broad Lake Formation grant
+  exfiltrates the entire data lake. Table-level and
+  column-level access controls that the data team configured
+  are bypassed because the broad grant supersedes them.
+remediation:
+  description: >
+    Lake Formation permission grants broad access to
+    data lake resources.
+  action: >
+    Replace broad grants with table-specific and
+    column-specific permissions. Use Lake Formation
+    tag-based access control (LF-TBAC) to scope
+    permissions to specific data classifications.
+    Remove ALL_TABLES grants and replace with
+    explicit table-level grants. Review grantees
+    and remove permissions for principals that no
+    longer need data lake access.
+  example: |
+    {
+      "governance": {
+        "kind": "lakeformation_grant",
+        "lakeformation": {
+          "grant_is_broad": false,
+          "database": "analytics",
+          "table": "user_events",
+          "permissions": ["SELECT"],
+          "columns": ["event_type", "timestamp"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: lakeformation_grant
+    - field: properties.governance.lakeformation.grant_is_broad
+      op: eq
+      value: true
+tests:
+  - name: broad grant fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lakeformation:us-east-1:111122223333:grant/all-tables-analytics"
+      asset_type: aws_lakeformation_permissions
+      vendor: aws
+      properties:
+        governance:
+          kind: lakeformation_grant
+          lakeformation:
+            grant_is_broad: true
+            database: "analytics"
+            table: "ALL_TABLES"
+            permissions:
+              - "SELECT"
+              - "INSERT"
+              - "DELETE"
+  - name: scoped grant passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lakeformation:us-east-1:111122223333:grant/specific-table"
+      asset_type: aws_lakeformation_permissions
+      vendor: aws
+      properties:
+        governance:
+          kind: lakeformation_grant
+          lakeformation:
+            grant_is_broad: false
+            database: "analytics"
+            table: "user_events"
+            permissions:
+              - "SELECT"
+            columns:
+              - "event_type"
+              - "timestamp"

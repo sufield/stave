@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.BEANSTALK.ROLE.OVERBROAD.001
+name: Elastic Beanstalk Environment Role Exceeds Required Permissions
+description: >
+  Elastic Beanstalk environment's instance profile role has
+  permissions beyond what the application requires. Beanstalk
+  environments need EC2 instance management, S3 access for
+  application versions and logs, CloudWatch Logs, and ELB
+  health reporting. Any action outside this set — s3:*,
+  iam:PassRole, sts:AssumeRole on broad targets — means
+  every EC2 instance in the environment can access resources
+  far beyond the application scope. Beanstalk's default
+  instance profile (aws-elasticbeanstalk-ec2-role) is
+  notoriously overbroad in many deployments.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - beanstalk
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_elastic_beanstalk_environment
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+remediation:
+  description: >
+    Beanstalk environment instance profile has permissions
+    beyond the application's required scope.
+  action: >
+    Replace the default aws-elasticbeanstalk-ec2-role with
+    a custom instance profile scoped to the application's
+    specific S3 buckets, database endpoints, and CloudWatch
+    Logs groups. Remove wildcard actions and broad Resource
+    targets.
+  example: |
+    {
+      "compute": {
+        "kind": "beanstalk_env",
+        "beanstalk": {
+          "role_exceeds_required": false,
+          "role_arn": "arn:aws:iam::111122223333:role/beanstalk-app-scoped"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: beanstalk_env
+    - field: properties.compute.beanstalk.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  Beanstalk environment instance profile grants actions
+  beyond the application's required permissions.
+infection: >
+  Every EC2 instance in the Beanstalk environment inherits
+  the instance profile via IMDS. An overbroad profile means
+  web application compromise (SSRF, RCE) on any instance
+  yields credentials with account-wide reach. Beanstalk's
+  default role is a legacy pattern that predates least-
+  privilege practices.
+failure: >
+  Beanstalk environment role blast radius expansion.
+  Application compromise on any instance yields account-wide
+  access via the shared overbroad instance profile.
+tests:
+  - name: overbroad Beanstalk role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticbeanstalk:us-east-1:111122223333:environment/my-app/prod"
+      asset_type: aws_elastic_beanstalk_environment
+      vendor: aws
+      properties:
+        compute:
+          kind: beanstalk_env
+          beanstalk:
+            role_exceeds_required: true
+            role_arn: "arn:aws:iam::111122223333:role/aws-elasticbeanstalk-ec2-role"
+            excess_actions:
+              - "s3:*"
+              - "sqs:*"
+              - "iam:PassRole"
+  - name: scoped Beanstalk role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticbeanstalk:us-east-1:111122223333:environment/my-app/prod"
+      asset_type: aws_elastic_beanstalk_environment
+      vendor: aws
+      properties:
+        compute:
+          kind: beanstalk_env
+          beanstalk:
+            role_exceeds_required: false
+            role_arn: "arn:aws:iam::111122223333:role/beanstalk-app-scoped"

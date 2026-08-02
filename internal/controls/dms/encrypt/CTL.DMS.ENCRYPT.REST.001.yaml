@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.DMS.ENCRYPT.REST.001
+name: DMS Replication Instance Storage Must Be Encrypted at Rest
+description: >
+  DMS replication instances must have storage encryption enabled.
+  The replication instance holds source and target data in transit
+  between databases — table mappings, cached rows, CDC change
+  records, and LOB data. Without encryption at rest the instance's
+  EBS volumes store this data in cleartext. An EBS snapshot taken
+  for troubleshooting or shared cross-account exposes every row
+  that passed through the replication.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  nist_800_53_r5: SC-28
+  pci_dss_v4.0: "3.4.1"
+  soc2: CC6.1
+  fedramp_moderate: SC-28
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - dms
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_dms_replication_instance
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
+remediation:
+  description: >
+    DMS replication instance storage is not encrypted at rest.
+    Cached migration data is stored in cleartext on EBS volumes.
+  action: >
+    Encryption cannot be enabled on an existing replication
+    instance. Create a new replication instance with
+    KmsKeyId specified, migrate task definitions to the new
+    instance, then delete the unencrypted instance.
+  example: |
+    {
+      "storage": {
+        "kind": "dms_replication",
+        "encryption": {
+          "at_rest_enabled": true,
+          "kms_key_id": "arn:aws:kms:us-east-1:111122223333:key/mrk-example"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: dms_replication
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: false
+tests:
+  - name: unencrypted replication instance fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dms:us-east-1:111122223333:rep:EXAMPLE"
+      asset_type: aws_dms_replication_instance
+      vendor: aws
+      properties:
+        storage:
+          kind: dms_replication
+          encryption:
+            at_rest_enabled: false
+  - name: encrypted replication instance passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dms:us-east-1:111122223333:rep:EXAMPLE"
+      asset_type: aws_dms_replication_instance
+      vendor: aws
+      properties:
+        storage:
+          kind: dms_replication
+          encryption:
+            at_rest_enabled: true
+            kms_key_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-example"

@@ -1,0 +1,33 @@
+id: lambda_to_s3_lateral
+description: >
+  Lambda function has an overbroad execution role and the
+  VPC (or lack thereof) allows unrestricted egress to S3 —
+  a compromised function can read or write arbitrary S3
+  buckets via the public API. The first leg detects that
+  the Lambda execution role exceeds least-privilege
+  (CTL.LAMBDA.ROLE.LEASTPRIV.001) — the role grants broad
+  S3 actions (s3:*, s3:GetObject on Resource: *). The
+  second leg detects that the function's security group
+  permits unrestricted egress (CTL.VPC.SG.EGRESS.001) —
+  the function can reach S3 over the public endpoint
+  without network-level restriction; non-VPC Lambda
+  functions always have unrestricted egress. Together:
+  function compromise yields unrestricted S3 access for
+  data exfiltration or poisoning. This upgrades the generic
+  lambda_exfiltration_bridge and lambda_silent_exfiltration
+  chains to a pair-specific Lambda→S3 lateral path.
+  Removing either leg breaks the chain: scope the Lambda
+  role to specific S3 buckets and actions, OR place the
+  function in a VPC with egress restricted to an S3 VPC
+  endpoint with a restrictive policy.
+controls:
+  - CTL.LAMBDA.ROLE.LEASTPRIV.001
+  - CTL.VPC.SG.EGRESS.001
+scope: global
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - credential_access
+postconditions:
+  - data_access
+implicit_dependencies: []

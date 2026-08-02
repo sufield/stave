@@ -1,0 +1,113 @@
+dsl_version: ctrl.v1
+id: CTL.FMS.DELIVERY.HEALTH.001
+name: Firewall Manager Policy Evaluation Must Be Delivering
+description: >
+  Firewall Manager policy evaluation is not delivering
+  compliance data from member accounts. FMS policies appear
+  enforced — the administrator account shows the policy as
+  active and member accounts are listed — but compliance
+  evaluation results have stopped arriving. Member account
+  WAF rules, security groups, or Shield protections may
+  have drifted without the administrator account detecting
+  the non-compliance. This is the delivery health pattern
+  applied to centralized policy management: the policy is
+  configured but the evaluation mechanism has failed.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "CA-7"
+  soc2: "CC7.2"
+  fedramp_moderate: "CA-7"
+  ccm_v4: ["GRC-03"]
+scope_tags:
+  - aws
+  - fms
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_fms_admin_account
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+defect: >
+  Firewall Manager policy evaluation is not delivering
+  compliance data from member accounts.
+infection: >
+  The FMS administrator account has policies configured and
+  member accounts associated. The policy shows as active in
+  the FMS console. But compliance evaluation results have
+  stopped arriving — member accounts may have drifted from
+  the policy, WAF rules may have been deleted, security
+  groups may have been modified, or Shield protections may
+  have been removed. The administrator sees the last known
+  compliance state, which may be days or weeks old. No alert
+  fires because the policy itself is still active.
+failure: >
+  Member accounts operate with non-compliant firewall
+  configurations while the administrator believes the
+  organization is compliant. An attacker modifies security
+  groups or WAF rules in a member account and the change
+  goes undetected because FMS compliance reporting has
+  silently stopped.
+remediation:
+  description: >
+    Firewall Manager policy evaluation is not delivering
+    compliance data from member accounts.
+  action: >
+    Check FMS policy compliance status in the administrator
+    account. Verify member account associations are active.
+    Check AWS Organizations integration health. Common causes:
+    member account left the organization, FMS service-linked
+    role was modified, or Config recorder in member accounts
+    was disabled (FMS depends on Config for compliance
+    evaluation).
+  example: |
+    {
+      "detection": {
+        "kind": "fms",
+        "fms": {
+          "policy_evaluation_healthy": true,
+          "member_accounts_reporting": 12,
+          "last_evaluation_time": "2026-07-28T12:00:00Z"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: fms
+    - field: properties.detection.fms.policy_evaluation_healthy
+      op: eq
+      value: false
+tests:
+  - name: FMS not delivering fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:fms:us-east-1:111122223333:admin-account"
+      asset_type: aws_fms_admin_account
+      vendor: aws
+      properties:
+        detection:
+          kind: fms
+          fms:
+            policy_evaluation_healthy: false
+            member_accounts_reporting: 0
+  - name: FMS delivering passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:fms:us-east-1:111122223333:admin-account"
+      asset_type: aws_fms_admin_account
+      vendor: aws
+      properties:
+        detection:
+          kind: fms
+          fms:
+            policy_evaluation_healthy: true
+            member_accounts_reporting: 12
+            last_evaluation_time: "2026-07-28T12:00:00Z"

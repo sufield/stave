@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.GLACIER.ENCRYPT.CMK.001
+name: Glacier Vault Must Use a Customer-Managed KMS Key
+description: >
+  Glacier vaults must use a customer-managed KMS key for
+  encryption at rest instead of the AWS-managed default. Glacier
+  encrypts all archives by default using SSE-S3 (AES-256), but
+  the service-managed key has no customer-visible key policy and
+  cannot be audited via CloudTrail KMS events. Archives stored
+  in Glacier are typically long-term backups, compliance
+  archives, or disaster-recovery copies — exactly the data that
+  requires per-tenant key-policy control and the ability to
+  revoke encryption access if the archive must be rendered
+  unrecoverable.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: "3.6.1"
+  ccm_v4: ["CEK-04", "CEK-08"]
+scope_tags:
+  - aws
+  - glacier
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_glacier_vault
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.kms_key_origin
+remediation:
+  description: >
+    Glacier vault is encrypted with the service-managed default
+    key. Per-tenant key-policy controls and CloudTrail audit of
+    decrypt operations are unavailable.
+  action: >
+    Glacier SSE cannot be changed on existing archives. To use
+    a customer-managed key, migrate archives to S3 Glacier
+    storage classes in an S3 bucket configured with SSE-KMS
+    using a customer-managed key. Use S3 Batch Operations for
+    bulk migration.
+  example: |
+    {
+      "storage": {
+        "kind": "glacier_vault",
+        "encryption": {
+          "at_rest_enabled": true,
+          "kms_key_origin": "CUSTOMER_MANAGED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: glacier_vault
+    - field: properties.storage.encryption.kms_key_origin
+      op: eq
+      value: AWS_MANAGED
+tests:
+  - name: AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:glacier:us-east-1:111122223333:vaults/compliance-archive"
+      asset_type: aws_glacier_vault
+      vendor: aws
+      properties:
+        storage:
+          kind: glacier_vault
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: AWS_MANAGED
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glacier:us-east-1:111122223333:vaults/compliance-archive"
+      asset_type: aws_glacier_vault
+      vendor: aws
+      properties:
+        storage:
+          kind: glacier_vault
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: CUSTOMER_MANAGED

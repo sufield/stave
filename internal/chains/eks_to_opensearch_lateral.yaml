@@ -1,0 +1,32 @@
+id: eks_to_opensearch_lateral
+description: >
+  EKS pods share a VPC with an OpenSearch domain that is
+  not isolated behind a VPC endpoint with a restrictive
+  access policy — a compromised pod can reach the search
+  cluster without additional credential theft or network
+  pivoting. The first leg detects that the EKS node group's
+  security group permits unrestricted egress
+  (CTL.VPC.SG.EGRESS.001) — pods can initiate connections
+  to the OpenSearch subnet. The second leg detects that the
+  OpenSearch domain is not deployed in a VPC or lacks
+  network-level access restriction (CTL.OPENSEARCH.VPC.001)
+  — the domain accepts connections from broad network
+  sources. Together: pod compromise yields search cluster
+  access without restriction. OpenSearch domains often
+  contain application logs, security events, or business
+  data — cluster access enables data exfiltration or log
+  tampering. Removing either leg breaks the chain: restrict
+  EKS node egress to required destinations only, OR deploy
+  the OpenSearch domain in a VPC with scoped security
+  groups.
+controls:
+  - CTL.VPC.SG.EGRESS.001
+  - CTL.OPENSEARCH.VPC.001
+scope_field: properties.network.vpc_id
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_access
+implicit_dependencies: []

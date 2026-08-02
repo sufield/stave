@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.KEYSPACES.ENCRYPT.REST.001
+name: Amazon Keyspaces Table Must Use Customer-Managed Encryption
+description: >
+  Amazon Keyspaces tables must use a customer-managed KMS key
+  for encryption at rest instead of the AWS-owned key. Keyspaces
+  encrypts all tables by default using an AWS-owned key, but the
+  AWS-owned key has no customer-visible key policy, cannot be
+  audited via CloudTrail KMS events, and cannot be revoked per
+  tenant. Using a customer-managed key provides key-policy
+  scoping, CloudTrail visibility into every decrypt call, and
+  the ability to revoke access by disabling the key.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: "3.6.1"
+  ccm_v4: ["CEK-04", "CEK-08"]
+scope_tags:
+  - aws
+  - keyspaces
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_keyspaces_table
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
+  - storage.encryption.kms_key_origin
+remediation:
+  description: >
+    Keyspaces table is encrypted with the AWS-owned default key.
+    Key-policy controls and CloudTrail audit of decrypt operations
+    are unavailable.
+  action: >
+    Alter the table to use a customer-managed KMS key:
+    ALTER TABLE keyspace.table WITH custom_properties =
+    {'encryption_specification': {'encryption_type':
+    'CUSTOMER_MANAGED_KMS_KEY', 'kms_key_identifier':
+    'arn:aws:kms:...'}}.
+  example: |
+    {
+      "storage": {
+        "kind": "keyspaces_table",
+        "encryption": {
+          "at_rest_enabled": true,
+          "kms_key_origin": "CUSTOMER_MANAGED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: keyspaces_table
+    - field: properties.storage.encryption.kms_key_origin
+      op: eq
+      value: AWS_OWNED
+tests:
+  - name: AWS-owned key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cassandra:us-east-1:111122223333:/keyspace/prod/table/users"
+      asset_type: aws_keyspaces_table
+      vendor: aws
+      properties:
+        storage:
+          kind: keyspaces_table
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: AWS_OWNED
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cassandra:us-east-1:111122223333:/keyspace/prod/table/users"
+      asset_type: aws_keyspaces_table
+      vendor: aws
+      properties:
+        storage:
+          kind: keyspaces_table
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: CUSTOMER_MANAGED

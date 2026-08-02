@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.MACIE.DELIVERY.HEALTH.001
+name: Macie Discovery Must Be Delivering Findings
+description: >
+  Macie sensitive data discovery must be actively producing
+  findings. Macie can be enabled with classification jobs
+  configured and pass every other Macie control while
+  discovery silently stops producing results. When discovery
+  stops delivering, new S3 objects containing PII, PHI,
+  credentials, or financial data go unclassified. The Macie
+  console shows the service as enabled and historical
+  findings remain visible, but no new sensitive data
+  detections occur. This is the detection delivery pattern:
+  the classifier appears functional but the discovery
+  mechanism has failed.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "RA-5"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.4.1"
+  fedramp_moderate: "RA-5"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["DSP-01"]
+scope_tags:
+  - aws
+  - macie
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_macie2_classification_configuration
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+defect: >
+  Macie discovery is enabled but not producing findings.
+  Sensitive data classification has silently stopped.
+infection: >
+  Macie appears healthy in the console. The service is
+  enabled, classification jobs are configured, S3 buckets
+  are in scope. But discovery has stopped delivering:
+  the service-linked role lost S3 read permissions, the
+  classification job schedule was paused, the S3 bucket
+  inventory update failed, or the findings export
+  destination was removed. No new sensitive data findings
+  are generated. Historical findings remain in the
+  dashboard. The data governance team believes
+  classification is active because Macie shows as enabled
+  and past findings are still visible.
+failure: >
+  A developer commits AWS credentials to a file that gets
+  uploaded to an S3 bucket in scope. Macie would normally
+  classify this as a credential exposure finding. But
+  discovery has stopped. No finding is generated. The
+  credentials are exfiltrated by an attacker who
+  discovers the publicly accessible bucket. The data
+  governance team later finds that Macie stopped
+  classifying new objects weeks before the incident.
+remediation:
+  description: >
+    Macie discovery is not delivering findings. Sensitive
+    data classification has stopped.
+  action: >
+    Check Macie account status and classification job
+    history. Common causes: service-linked role S3
+    permissions revoked, classification job schedule
+    paused or deleted, S3 bucket inventory stale, or
+    findings export destination removed. Resume
+    classification jobs and verify delivery by uploading
+    a test file with known PII patterns to an in-scope
+    bucket and confirming a finding appears.
+  example: |
+    {
+      "detection": {
+        "kind": "macie",
+        "macie": {
+          "discovery_delivering": true,
+          "discovery_error": "",
+          "last_discovery_time": "2026-07-28T12:00:00Z"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: macie
+    - field: properties.detection.macie.discovery_delivering
+      op: eq
+      value: false
+tests:
+  - name: discovery not delivering fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:macie2:us-east-1:111122223333:classification-configuration"
+      asset_type: aws_macie2_classification_configuration
+      vendor: aws
+      properties:
+        detection:
+          kind: macie
+          macie:
+            discovery_delivering: false
+            discovery_error: "Classification job prod-scan paused since 2026-06-01"
+            last_discovery_time: "2026-06-01T00:00:00Z"
+  - name: discovery delivering passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:macie2:us-east-1:111122223333:classification-configuration"
+      asset_type: aws_macie2_classification_configuration
+      vendor: aws
+      properties:
+        detection:
+          kind: macie
+          macie:
+            discovery_delivering: true
+            discovery_error: ""
+            last_discovery_time: "2026-07-28T12:00:00Z"
