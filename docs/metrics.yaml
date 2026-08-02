@@ -12,7 +12,7 @@ frameworks:
   count: 10
 
 proof_class:
-  trivial: 2237
+  trivial: 2265
   compound: 1032
 
 updated: 2026-08-02
