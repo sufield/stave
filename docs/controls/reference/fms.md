@@ -20,6 +20,21 @@ AWS Firewall Manager has no administrator account configured. Without an FMS adm
 
 ---
 
+### CTL.FMS.DELIVERY.HEALTH.001
+
+**Firewall Manager Policy Evaluation Must Be Delivering**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: CA-7; nist_800_53_r5: CA-7; soc2: CC7.2;
+
+Firewall Manager policy evaluation is not delivering compliance data from member accounts. FMS policies appear enforced — the administrator account shows the policy as active and member accounts are listed — but compliance evaluation results have stopped arriving. Member account WAF rules, security groups, or Shield protections may have drifted without the administrator account detecting the non-compliance. This is the delivery health pattern applied to centralized policy management: the policy is configured but the evaluation mechanism has failed.
+
+**Remediation:** Check FMS policy compliance status in the administrator account. Verify member account associations are active. Check AWS Organizations integration health. Common causes: member account left the organization, FMS service-linked role was modified, or Config recorder in member accounts was disabled (FMS depends on Config for compliance evaluation).
+
+---
+
 ### CTL.FMS.POLICY.NONCOMPLIANT.001
 
 **Firewall Manager Policy Has Non-Compliant Member Accounts**

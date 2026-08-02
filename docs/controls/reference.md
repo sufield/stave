@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3297
-**Pack hash:** `66114f89e649f0a91330f175ba3796f5444ec800a7d895322a25f54d67715422`
+**Total controls:** 3309
+**Pack hash:** `38cb109ede98f10099ee3a96310d83f16b276786b5adde59f15ea1bf085a7ccf`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 363 |
-| high | 1433 |
+| critical | 366 |
+| high | 1436 |
 | info | 19 |
 | low | 238 |
-| medium | 1244 |
+| medium | 1250 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,10 +28,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 142 |
 | encryption | 125 |
-| exposure | 1448 |
+| exposure | 1458 |
 | governance | 660 |
 | hygiene | 21 |
-| identity | 654 |
+| identity | 656 |
 | lifecycle | 31 |
 | network | 52 |
 | resilience | 39 |
@@ -74,7 +74,8 @@ GitHub. Pick a service below.
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [CONFIG](reference/config.md) | 51 |
 | [DATACLASS](reference/dataclass.md) | 5 |
-| [DATASYNC](reference/datasync.md) | 1 |
+| [DATASYNC](reference/datasync.md) | 2 |
+| [DETECTIVE](reference/detective.md) | 1 |
 | [DMS](reference/dms.md) | 9 |
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 18 |
@@ -92,7 +93,7 @@ GitHub. Pick a service below.
 | [EVS](reference/evs.md) | 1 |
 | [EXPOSURE](reference/exposure.md) | 11 |
 | [FIREHOSE](reference/firehose.md) | 3 |
-| [FMS](reference/fms.md) | 2 |
+| [FMS](reference/fms.md) | 3 |
 | [GCP](reference/gcp.md) | 72 |
 | [GCS](reference/gcs.md) | 7 |
 | [GHOST](reference/ghost.md) | 2 |
@@ -104,17 +105,20 @@ GitHub. Pick a service below.
 | [GUARDDUTY](reference/guardduty.md) | 21 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
 | [IAM](reference/iam.md) | 328 |
-| [INSPECTOR](reference/inspector.md) | 3 |
+| [INSPECTOR](reference/inspector.md) | 4 |
+| [IOT](reference/iot.md) | 2 |
 | [K8S](reference/k8s.md) | 68 |
+| [KEYSPACES](reference/keyspaces.md) | 1 |
 | [KINESIS](reference/kinesis.md) | 5 |
 | [KMS](reference/kms.md) | 47 |
-| [LAKEFORMATION](reference/lakeformation.md) | 2 |
+| [LAKEFORMATION](reference/lakeformation.md) | 3 |
 | [LAMBDA](reference/lambda.md) | 92 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 6 |
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 5 |
 | [MEDIASTORE](reference/mediastore.md) | 1 |
+| [MEMORYDB](reference/memorydb.md) | 1 |
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
 | [MQ](reference/mq.md) | 4 |
@@ -125,6 +129,7 @@ GitHub. Pick a service below.
 | [NLB](reference/nlb.md) | 2 |
 | [OPENSEARCH](reference/opensearch.md) | 133 |
 | [ORG](reference/org.md) | 63 |
+| [QLDB](reference/qldb.md) | 1 |
 | [QUICKSIGHT](reference/quicksight.md) | 2 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 73 |
@@ -140,7 +145,7 @@ GitHub. Pick a service below.
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
 | [SECURITYHUB](reference/securityhub.md) | 8 |
-| [SECURITYLAKE](reference/securitylake.md) | 2 |
+| [SECURITYLAKE](reference/securitylake.md) | 3 |
 | [SERVERLESSREPO](reference/serverlessrepo.md) | 1 |
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |
 | [SES](reference/ses.md) | 3 |
@@ -150,6 +155,7 @@ GitHub. Pick a service below.
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
+| [TIMESTREAM](reference/timestream.md) | 1 |
 | [TRANSFER](reference/transfer.md) | 2 |
 | [VERIFIEDPERMISSIONS](reference/verifiedpermissions.md) | 4 |
 | [VPC](reference/vpc.md) | 114 |

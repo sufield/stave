@@ -35,3 +35,18 @@ Lake Formation data lake has the default IAMAllowedPrincipals grant active. This
 
 ---
 
+### CTL.LAKEFORMATION.GRANT.BROAD.001
+
+**Lake Formation Permission Grants Broad Data Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1;
+
+Lake Formation permission grants broad access to database or table resources. A grant with ALL_TABLES, wildcard database names, or SELECT/INSERT/DELETE on all tables in a database gives the grantee unrestricted access to the data lake. Lake Formation permissions are the primary access control layer for data lakes — they govern who can read, write, and modify tables in the Glue Data Catalog and their underlying S3 data. A broad grant bypasses the column-level and table-level access controls that Lake Formation is designed to enforce.
+
+**Remediation:** Replace broad grants with table-specific and column-specific permissions. Use Lake Formation tag-based access control (LF-TBAC) to scope permissions to specific data classifications. Remove ALL_TABLES grants and replace with explicit table-level grants. Review grantees and remove permissions for principals that no longer need data lake access.
+
+---
+

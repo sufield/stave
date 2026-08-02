@@ -35,6 +35,21 @@ Amazon Inspector must have a delegated administrator configured in AWS Organizat
 
 ---
 
+### CTL.INSPECTOR.DELIVERY.HEALTH.001
+
+**Inspector Scanning Must Be Delivering Findings**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: RA-5; nist_800_53_r5: RA-5; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+Inspector scanning must be actively producing findings. Inspector can be enabled with full resource coverage and pass every other Inspector control while scan results silently stop flowing. When scanning stops delivering, new EC2 instances launch without vulnerability assessment, ECR images push without CVE checks, and Lambda functions deploy without code scanning. The Inspector console shows "enabled" and displays historical findings, but no new scans complete. This is the detection delivery pattern: the scanner appears functional but the scanning mechanism has degraded or stopped.
+
+**Remediation:** Check Inspector account status and scan statistics. Common causes: SSM agent not running on EC2 instances, service-linked role permissions modified, ECR scanning set to manual, Lambda code scanning disabled, or account-level Inspector service quotas exceeded. Verify scan delivery by launching a test instance with a known CVE and confirming a finding appears.
+
+---
+
 ### CTL.INSPECTOR.ENABLED.001
 
 **Amazon Inspector Must Be Enabled**

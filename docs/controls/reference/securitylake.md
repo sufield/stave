@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.SECURITYLAKE.DELIVERY.HEALTH.001
+
+**Security Lake Source Ingestion Must Be Healthy**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-6; nist_800_53_r5: AU-6; pci_dss_v4.0: 10.3.1; soc2: CC7.2;
+
+Security Lake source ingestion must be actively succeeding. Security Lake can be enabled with multiple AWS and custom sources configured while ingestion silently stops. When source ingestion fails, the OCSF-normalized data lake stops receiving new events — SIEM queries return stale results, subscriber pipelines process old data, and cross-account security analytics miss recent activity. The Security Lake console shows sources as "Enabled" but the underlying data pipeline has broken. This is the detection delivery pattern applied to the centralized security data lake.
+
+**Remediation:** Check Security Lake source status and ingestion metrics. Common causes: S3 bucket policy modified, cross-account collection role revoked, Glue crawler failed, region removed from data lake configuration, or subscriber S3 notification event configuration was deleted. Re-establish source ingestion and verify by checking that new events appear in the data lake S3 prefix within the next collection interval.
+
+---
+
 ### CTL.SECURITYLAKE.ENABLED.001
 
 **Amazon Security Lake Not Enabled**

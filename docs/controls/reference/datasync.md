@@ -20,3 +20,18 @@ No DataSync task should target a location outside the organization. DataSync can
 
 ---
 
+### CTL.DATASYNC.ROLE.OVERBROAD.001
+
+**DataSync Task Role Exceeds Required Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+DataSync task's IAM role has permissions beyond what the data transfer requires. DataSync tasks need access to the specific source and destination locations (S3 buckets, EFS filesystems, FSx shares, or NFS/SMB endpoints) and CloudWatch Logs for task logging. Any action outside this set — s3:*, efs:*, iam:PassRole — means the DataSync agent can access storage beyond its transfer scope.
+
+**Remediation:** Scope the DataSync role to the specific source and destination location ARNs. Use separate roles for tasks with different source-destination pairs. Remove wildcard storage actions.
+
+---
+
