@@ -1,0 +1,28 @@
+id: eks_node_role_inheritance_escalation
+description: >
+  EKS pods inherit the node IAM role (no IRSA or Pod Identity)
+  AND the node role has permissions beyond kubelet-minimum.
+  The first leg (CTL.EKS.POD.NODE.PROFILE.INHERIT.001)
+  detects that pods are using the node profile as their AWS
+  credential source. The second leg
+  (CTL.EKS.NODEGROUP.ROLE.OVERBROAD.001) detects that the
+  node profile itself grants excess permissions. Together:
+  pods actively inherit a role that gives them s3:*,
+  iam:PassRole, sts:AssumeRole, secretsmanager:* — or
+  whatever the node role accumulated beyond kubelet-minimum.
+  This is the exact EKS breach path: pod compromise →
+  IMDS credential theft → node role has broad permissions →
+  lateral movement to data stores and other AWS services.
+  Removing either leg breaks the chain: configure IRSA so
+  pods stop inheriting the node role, OR scope the node role
+  to kubelet-minimum so inheritance is harmless.
+controls:
+  - CTL.EKS.POD.NODE.PROFILE.INHERIT.001
+  - CTL.EKS.NODEGROUP.ROLE.OVERBROAD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

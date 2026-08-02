@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "sg-0abc1234def56789a",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "vpc_id": "vpc-0prod111222333",
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:rds:us-east-1:111122223333:db:prod-orders-db",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "rds_instance",
+          "network": {
+            "vpc_id": "vpc-0prod111222333",
+            "has_broad_sg_ingress": true,
+            "db_port": 5432
+          }
+        },
+        "network": {
+          "vpc_id": "vpc-0prod111222333"
+        }
+      }
+    }
+  ]
+}
