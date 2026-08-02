@@ -35,6 +35,21 @@ Elastic Beanstalk environments must not run on retired platform versions (soluti
 
 ---
 
+### CTL.BEANSTALK.ROLE.OVERBROAD.001
+
+**Elastic Beanstalk Environment Role Exceeds Required Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+Elastic Beanstalk environment's instance profile role has permissions beyond what the application requires. Beanstalk environments need EC2 instance management, S3 access for application versions and logs, CloudWatch Logs, and ELB health reporting. Any action outside this set — s3:*, iam:PassRole, sts:AssumeRole on broad targets — means every EC2 instance in the environment can access resources far beyond the application scope. Beanstalk's default instance profile (aws-elasticbeanstalk-ec2-role) is notoriously overbroad in many deployments.
+
+**Remediation:** Replace the default aws-elasticbeanstalk-ec2-role with a custom instance profile scoped to the application's specific S3 buckets, database endpoints, and CloudWatch Logs groups. Remove wildcard actions and broad Resource targets.
+
+---
+
 ### CTL.BEANSTALK.UPDATES.001
 
 **Elastic Beanstalk Must Enable Managed Platform Updates**

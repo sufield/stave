@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.IOT.POLICY.WILDCARD.ACTION.001
+name: IoT Policy Must Not Use Wildcard Action
+description: >
+  IoT policy uses Action "iot:*" granting all IoT operations:
+  iot:Connect, iot:Publish, iot:Subscribe, iot:Receive,
+  iot:UpdateThingShadow, iot:GetThingShadow, iot:DeleteThingShadow,
+  and every administrative action (iot:CreateThing,
+  iot:AttachPolicy, iot:UpdateCertificate). A device certificate
+  with this policy can register new things, attach policies to
+  other certificates, and manage the entire fleet — not just
+  communicate on its assigned topics. Least privilege requires
+  scoping to specific actions: typically iot:Connect +
+  iot:Publish/Subscribe/Receive on specific topic ARNs.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1, CC6.3"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - iot
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+  - access-control
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iot_policy]
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: service
+defect: >
+  IoT policy uses wildcard action (iot:*) granting all operations.
+infection: >
+  A device or identity holding this policy can perform every IoT
+  API action. Beyond the expected data-plane operations (Publish,
+  Subscribe, Connect), the wildcard includes control-plane actions:
+  creating and deleting things, attaching and detaching policies
+  and certificates, updating fleet indexing, and managing jobs.
+  A compromised device with iot:* can pivot from data exfiltration
+  to fleet-wide administrative control — registering rogue devices,
+  modifying other devices' shadow states, and attaching permissive
+  policies to new certificates.
+failure: >
+  Compromised device escalates from data-plane to control-plane
+  access. Fleet-wide administrative operations from a single
+  compromised certificate.
+remediation:
+  description: >
+    IoT policy grants wildcard action (iot:*). Device certificates
+    with this policy have unrestricted IoT access.
+  action: >
+    Replace iot:* with the minimum required actions. Typical device
+    policies need only iot:Connect, iot:Publish, iot:Subscribe, and
+    iot:Receive scoped to specific topic ARNs using policy variables
+    (e.g., iot:Connection.Thing.ThingName). Administrative actions
+    should be restricted to IAM roles used by fleet management
+    automation, not device certificates.
+  example: |
+    {
+      "iot": {
+        "kind": "policy",
+        "policy": {
+          "has_wildcard_action": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.iot.kind
+      op: eq
+      value: policy
+    - field: properties.iot.policy.has_wildcard_action
+      op: eq
+      value: true
+tests:
+  - name: wildcard action IoT policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:111122223333:policy/admin-device-policy"
+      asset_type: aws_iot_policy
+      vendor: aws
+      properties:
+        iot:
+          kind: policy
+          policy:
+            policy_name: "admin-device-policy"
+            allows_public: false
+            has_wildcard_action: true
+  - name: scoped action IoT policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:111122223333:policy/sensor-telemetry-policy"
+      asset_type: aws_iot_policy
+      vendor: aws
+      properties:
+        iot:
+          kind: policy
+          policy:
+            policy_name: "sensor-telemetry-policy"
+            allows_public: false
+            has_wildcard_action: false

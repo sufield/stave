@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.ENDPOINT.ROLE.OVERBROAD.001
+name: SageMaker Endpoint Execution Role Exceeds Required Permissions
+description: >
+  SageMaker endpoint execution role has permissions beyond
+  what the endpoint requires. The endpoint needs access to
+  the model artifacts in S3, ECR for container images, and
+  CloudWatch Logs for inference logging. Any action outside
+  this set — iam:*, sts:AssumeRole on broad targets, s3:*
+  on *, secretsmanager:*, or dynamodb:* — means the
+  endpoint's inference containers can be exploited to access
+  resources unrelated to model serving. The companion control
+  CTL.SAGEMAKER.ENDPOINT.OVERPERM.S3.001 checks S3 scope
+  specifically; this control checks for any overbroad
+  permission pattern.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_endpoint
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+defect: >
+  SageMaker endpoint execution role grants actions beyond
+  what model serving requires.
+infection: >
+  The endpoint execution role is the credential source for
+  every inference container running on the endpoint. Model
+  serving containers receive requests from clients and
+  execute model inference code. If the container is
+  compromised — via a model deserialization vulnerability,
+  adversarial input, or supply chain attack on the model
+  artifact — the attacker gains the execution role's
+  permissions. An overbroad role turns endpoint compromise
+  into account-level escalation: S3 data exfiltration,
+  role assumption chains, secrets retrieval, or IAM
+  mutation.
+failure: >
+  Endpoint compromise yields permissions beyond model
+  serving. The execution role becomes an escalation pivot
+  rather than a minimal-privilege inference credential.
+remediation:
+  description: >
+    SageMaker endpoint execution role has permissions beyond
+    what model serving requires.
+  action: >
+    Scope the endpoint execution role to model-serving
+    minimum: specific S3 bucket for model artifacts,
+    ECR pull for the container image, CloudWatch Logs push
+    for inference logging. Remove iam:*, sts:AssumeRole on
+    broad targets, s3:* on *, and any action in the
+    privilege escalation category on Resource: *.
+  example: |
+    {
+      "compute": {
+        "kind": "sagemaker_endpoint",
+        "sagemaker": {
+          "endpoint": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/sagemaker-endpoint-minimal"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: sagemaker_endpoint
+    - field: properties.compute.sagemaker.endpoint.role_exceeds_required
+      op: eq
+      value: true
+tests:
+  - name: overbroad endpoint role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:endpoint/prod-model"
+      asset_type: aws_sagemaker_endpoint
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_endpoint
+          sagemaker:
+            endpoint:
+              role_exceeds_required: true
+              role_arn: "arn:aws:iam::111122223333:role/sagemaker-endpoint-overbroad"
+              excess_actions:
+                - "s3:*"
+                - "iam:PassRole"
+                - "secretsmanager:GetSecretValue"
+  - name: minimal endpoint role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:endpoint/prod-model"
+      asset_type: aws_sagemaker_endpoint
+      vendor: aws
+      properties:
+        compute:
+          kind: sagemaker_endpoint
+          sagemaker:
+            endpoint:
+              role_exceeds_required: false
+              role_arn: "arn:aws:iam::111122223333:role/sagemaker-endpoint-minimal"

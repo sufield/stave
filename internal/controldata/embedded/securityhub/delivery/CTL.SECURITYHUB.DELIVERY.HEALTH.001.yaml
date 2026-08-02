@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYHUB.DELIVERY.HEALTH.001
+name: SecurityHub Findings Aggregation Must Be Healthy
+description: >
+  SecurityHub findings aggregation must be actively succeeding.
+  SecurityHub can be enabled, integrated with multiple accounts
+  and services, and pass every other SecurityHub control while
+  findings aggregation is silently failing. When aggregation
+  stops, the central security posture view becomes stale —
+  member account findings, GuardDuty detections, Inspector
+  vulnerabilities, and Config compliance results stop flowing
+  to the administrator account. The SOC dashboard shows green
+  because it displays cached state, not live findings. This is
+  the detection delivery pattern: the service appears functional
+  but the delivery mechanism has failed.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.4.1"
+  fedramp_moderate: "AU-6"
+  ccm_v4: ["LOG-05"]
+scope_tags:
+  - aws
+  - securityhub
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_securityhub_hub
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+defect: >
+  SecurityHub findings aggregation is failing. The hub is
+  enabled but findings are not being aggregated from member
+  accounts or integrated services.
+infection: >
+  SecurityHub appears healthy in the console. The hub is
+  enabled, integrations are configured, standards are
+  activated. But findings aggregation has stopped: the
+  administrator account link is broken, cross-region
+  aggregation failed, or the member account invitation
+  was revoked. No new findings flow to the central view.
+  The SOC monitors a stale dashboard. Compliance reports
+  show last-known-good state. Security posture degrades
+  across accounts without anyone noticing because the
+  aggregation point itself still shows as enabled.
+failure: >
+  An attacker compromises a member account. GuardDuty in
+  that account generates findings. SecurityHub in the
+  member account receives them. But the aggregation link
+  to the administrator account is broken. The SOC never
+  sees the findings. The attacker operates undetected in
+  the member account while the administrator dashboard
+  shows no new findings — interpreted as "all clear."
+remediation:
+  description: >
+    SecurityHub findings aggregation is not delivering.
+    The central view shows stale data.
+  action: >
+    Check SecurityHub administrator-member relationships
+    and cross-region aggregation configuration. Common
+    causes: member account disassociated, cross-region
+    aggregation region disabled, organization integration
+    turned off, or IAM permissions for the aggregation
+    role revoked. Re-establish the aggregation link and
+    verify findings flow by creating a test finding in a
+    member account.
+  example: |
+    {
+      "detection": {
+        "kind": "securityhub",
+        "securityhub": {
+          "aggregation_healthy": true,
+          "aggregation_error": "",
+          "last_finding_time": "2026-07-28T12:00:00Z"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: securityhub
+    - field: properties.detection.securityhub.aggregation_healthy
+      op: eq
+      value: false
+tests:
+  - name: aggregation unhealthy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        detection:
+          kind: securityhub
+          securityhub:
+            aggregation_healthy: false
+            aggregation_error: "Member account 444455556666 disassociated"
+            last_finding_time: "2026-06-15T08:30:00Z"
+  - name: aggregation healthy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        detection:
+          kind: securityhub
+          securityhub:
+            aggregation_healthy: true
+            aggregation_error: ""
+            last_finding_time: "2026-07-28T12:00:00Z"

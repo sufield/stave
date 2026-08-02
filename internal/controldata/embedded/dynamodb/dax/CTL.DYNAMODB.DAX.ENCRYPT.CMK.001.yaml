@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.DYNAMODB.DAX.ENCRYPT.CMK.001
+name: DAX Cluster Must Use a Customer-Managed KMS Key
+description: >
+  DAX clusters must encrypt at rest with a customer-managed KMS
+  key, not the AWS-managed default. The AWS-managed key is shared
+  across all DAX clusters in the account, has a key policy the
+  customer cannot edit, and cannot be rotated or revoked on the
+  customer's schedule. DAX caches DynamoDB data in memory and
+  persists it to disk; the encryption key controls who can
+  decrypt that cache.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+    - CEK-04
+    - CEK-08
+scope_tags:
+  - aws
+  - dynamodb
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_dax_cluster]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    DAX cluster is encrypted with the AWS-managed default key.
+    Per-tenant key-policy and revocation controls are unavailable.
+  action: >
+    Create a customer-managed KMS key with a scoped key policy.
+    DAX encryption is set at cluster creation; create a new
+    cluster with the CMK, migrate the application endpoint,
+    then delete the old cluster.
+  example: |
+    {
+      "storage": {
+        "kind": "dax_cluster",
+        "encryption": {
+          "kms_key_origin": "CUSTOMER_MANAGED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: dax_cluster
+    - field: properties.storage.encryption.kms_key_origin
+      op: eq
+      value: AWS_MANAGED
+tests:
+  - name: DAX with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dax:us-east-1:111122223333:cache/prod-cache"
+      asset_type: aws_dax_cluster
+      vendor: aws
+      properties:
+        storage:
+          kind: dax_cluster
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: AWS_MANAGED
+  - name: DAX with customer-managed CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dax:us-east-1:111122223333:cache/prod-cache"
+      asset_type: aws_dax_cluster
+      vendor: aws
+      properties:
+        storage:
+          kind: dax_cluster
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: CUSTOMER_MANAGED

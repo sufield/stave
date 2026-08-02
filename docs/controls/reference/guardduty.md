@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.GUARDDUTY.DELIVERY.HEALTH.001
+
+**GuardDuty Detector Must Be Actively Detecting**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-4; nist_800_53_r5: SI-4; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+GuardDuty detector must be actively producing findings. A detector can be enabled with all protection plans active and pass every other GuardDuty control while the detector runtime is silently degraded. When detection stops, threats from compromised credentials, crypto mining, C2 callbacks, and DNS exfiltration go undetected. The GuardDuty console shows the detector as "Enabled" and existing findings remain visible, but no new detections occur. Existing controls check export and notification paths — this control checks the detector runtime itself: is it actively analyzing VPC flow logs, DNS queries, and CloudTrail events, or has it silently stopped?
+
+**Remediation:** Check detector status via GetDetector — verify status is ENABLED and service role has required permissions. Check data source statistics via GetUsageStatistics — verify data sources are actively processing. Common causes: service-linked role permissions modified, VPC flow log delivery interrupted, CloudTrail trail disabled in the region, or account suspended from the organization detector. Re-enable affected data sources and verify detection resumes by generating a test finding via CreateSampleFindings.
+
+---
+
 ### CTL.GUARDDUTY.ECS.RUNTIME.001
 
 **GuardDuty ECS Runtime Monitoring Must Be Enabled**

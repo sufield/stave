@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYLAKE.DELIVERY.HEALTH.001
+name: Security Lake Source Ingestion Must Be Healthy
+description: >
+  Security Lake source ingestion must be actively succeeding.
+  Security Lake can be enabled with multiple AWS and custom
+  sources configured while ingestion silently stops. When
+  source ingestion fails, the OCSF-normalized data lake
+  stops receiving new events — SIEM queries return stale
+  results, subscriber pipelines process old data, and
+  cross-account security analytics miss recent activity.
+  The Security Lake console shows sources as "Enabled" but
+  the underlying data pipeline has broken. This is the
+  detection delivery pattern applied to the centralized
+  security data lake.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.3.1"
+  fedramp_moderate: "AU-6"
+  ccm_v4: ["LOG-05", "LOG-12"]
+scope_tags:
+  - aws
+  - securitylake
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_securitylake_data_lake
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: organization
+defect: >
+  Security Lake source ingestion is failing. Sources are
+  configured but events are not reaching the data lake.
+infection: >
+  Security Lake appears healthy in the console. Sources
+  are listed as enabled: CloudTrail, VPC Flow Logs,
+  Route 53 DNS, Security Hub, Lambda, EKS, S3 data
+  events. But ingestion has stopped: the S3 bucket
+  backing the data lake had its policy modified, the
+  cross-account role for source collection was revoked,
+  a region was removed from the data lake configuration,
+  or the Glue crawler that processes OCSF normalization
+  failed. No new events appear in the data lake. SIEM
+  queries against Security Lake return results only
+  through the last successful ingestion timestamp.
+  Subscriber notifications stop. Cross-account analytics
+  show a timeline gap.
+failure: >
+  The security team queries Security Lake during an
+  incident. Results show activity only through two weeks
+  ago. The data lake was enabled the entire time but
+  source ingestion silently failed. Two weeks of
+  CloudTrail, VPC Flow Logs, and DNS queries are missing
+  from the centralized store. The incident investigation
+  must fall back to per-service, per-region queries —
+  exactly the problem Security Lake was deployed to solve.
+remediation:
+  description: >
+    Security Lake source ingestion has stopped. The data
+    lake is not receiving new events from configured
+    sources.
+  action: >
+    Check Security Lake source status and ingestion
+    metrics. Common causes: S3 bucket policy modified,
+    cross-account collection role revoked, Glue crawler
+    failed, region removed from data lake configuration,
+    or subscriber S3 notification event configuration
+    was deleted. Re-establish source ingestion and verify
+    by checking that new events appear in the data lake
+    S3 prefix within the next collection interval.
+  example: |
+    {
+      "detection": {
+        "kind": "securitylake",
+        "securitylake": {
+          "ingestion_healthy": true,
+          "ingestion_error": "",
+          "last_ingestion_time": "2026-07-28T12:00:00Z"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: securitylake
+    - field: properties.detection.securitylake.ingestion_healthy
+      op: eq
+      value: false
+tests:
+  - name: ingestion unhealthy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake/default"
+      asset_type: aws_securitylake_data_lake
+      vendor: aws
+      properties:
+        detection:
+          kind: securitylake
+          securitylake:
+            ingestion_healthy: false
+            ingestion_error: "CloudTrail source collection role revoked"
+            last_ingestion_time: "2026-07-14T06:00:00Z"
+  - name: ingestion healthy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake/default"
+      asset_type: aws_securitylake_data_lake
+      vendor: aws
+      properties:
+        detection:
+          kind: securitylake
+          securitylake:
+            ingestion_healthy: true
+            ingestion_error: ""
+            last_ingestion_time: "2026-07-28T12:00:00Z"

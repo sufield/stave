@@ -35,3 +35,18 @@ MWAA environment web server is configured with PUBLIC_ONLY access mode, making t
 
 ---
 
+### CTL.MWAA.ROLE.OVERBROAD.001
+
+**MWAA Environment Execution Role Exceeds Required Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+MWAA (Managed Workflows for Apache Airflow) environment's execution role has permissions beyond what the Airflow DAGs require. MWAA environments need specific S3 access for DAG storage and logs, CloudWatch Logs, SQS for Celery executor, and Secrets Manager for connection strings. Any action outside this set — s3:*, iam:PassRole, sts:AssumeRole on broad targets, lambda:InvokeFunction on * — means every DAG task running in the environment can access resources far beyond its workflow scope. Airflow DAGs are code that runs on a schedule with the environment's credentials; an overbroad role turns DAG modification into lateral movement.
+
+**Remediation:** Scope the MWAA execution role to the specific S3 bucket for DAGs and logs, Secrets Manager secrets for connection strings, and the specific AWS services the DAGs invoke. Remove wildcard actions. Consider using Airflow's connection-level credential delegation instead of a single broad environment role.
+
+---
+

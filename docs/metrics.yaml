@@ -2,17 +2,17 @@
 # Run: make metrics
 
 catalog:
-  controls: 3262
-  services: 107
+  controls: 3309
+  services: 114
 
 chains:
-  authored: 705
+  authored: 723
 
 frameworks:
   count: 10
 
 proof_class:
-  trivial: 2231
-  compound: 1031
+  trivial: 2237
+  compound: 1032
 
-updated: 2026-08-01
+updated: 2026-08-02

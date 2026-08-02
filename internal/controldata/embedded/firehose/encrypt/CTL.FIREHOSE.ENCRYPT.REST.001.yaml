@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.FIREHOSE.ENCRYPT.REST.001
+name: Kinesis Data Firehose Delivery Stream Must Enable Server-Side Encryption
+description: >
+  Kinesis Data Firehose delivery streams must have server-side
+  encryption enabled. Firehose buffers incoming records before
+  delivering them to S3, Redshift, OpenSearch, or HTTP endpoints.
+  Without SSE the buffer contents — which may include log events,
+  clickstream data, or application telemetry containing PII — are
+  stored unencrypted in the Firehose service's internal storage
+  during the buffering interval.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  nist_800_53_r5: SC-28
+  pci_dss_v4.0: "3.4.1"
+  soc2: CC6.1
+  fedramp_moderate: SC-28
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - firehose
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kinesis_firehose_delivery_stream
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
+remediation:
+  description: >
+    Firehose delivery stream server-side encryption is disabled.
+    Buffered records are stored unencrypted during the delivery
+    interval.
+  action: >
+    Enable SSE on the delivery stream using
+    aws firehose start-delivery-stream-encryption with a
+    customer-managed KMS key. SSE can be enabled on existing
+    streams without recreation.
+  example: |
+    {
+      "storage": {
+        "kind": "firehose_stream",
+        "encryption": {
+          "at_rest_enabled": true,
+          "kms_key_id": "arn:aws:kms:us-east-1:111122223333:key/mrk-example"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: firehose_stream
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: false
+tests:
+  - name: unencrypted delivery stream fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:111122223333:deliverystream/prod-logs"
+      asset_type: aws_kinesis_firehose_delivery_stream
+      vendor: aws
+      properties:
+        storage:
+          kind: firehose_stream
+          encryption:
+            at_rest_enabled: false
+  - name: encrypted delivery stream passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:111122223333:deliverystream/prod-logs"
+      asset_type: aws_kinesis_firehose_delivery_stream
+      vendor: aws
+      properties:
+        storage:
+          kind: firehose_stream
+          encryption:
+            at_rest_enabled: true
+            kms_key_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-example"

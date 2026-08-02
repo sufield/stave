@@ -140,6 +140,21 @@ SageMaker endpoint configurations must use at least two instances per production
 
 ---
 
+### CTL.SAGEMAKER.ENDPOINT.ROLE.OVERBROAD.001
+
+**SageMaker Endpoint Execution Role Exceeds Required Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+SageMaker endpoint execution role has permissions beyond what the endpoint requires. The endpoint needs access to the model artifacts in S3, ECR for container images, and CloudWatch Logs for inference logging. Any action outside this set — iam:*, sts:AssumeRole on broad targets, s3:* on *, secretsmanager:*, or dynamodb:* — means the endpoint's inference containers can be exploited to access resources unrelated to model serving. The companion control CTL.SAGEMAKER.ENDPOINT.OVERPERM.S3.001 checks S3 scope specifically; this control checks for any overbroad permission pattern.
+
+**Remediation:** Scope the endpoint execution role to model-serving minimum: specific S3 bucket for model artifacts, ECR pull for the container image, CloudWatch Logs push for inference logging. Remove iam:*, sts:AssumeRole on broad targets, s3:* on *, and any action in the privilege escalation category on Resource: *.
+
+---
+
 ### CTL.SAGEMAKER.ENDPOINT.STALE.001
 
 **SageMaker Endpoint Must Not Be Idle Beyond Threshold**

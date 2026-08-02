@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.LIGHTSAIL.ROLE.OVERBROAD.001
+name: Lightsail Instance Role Exceeds Required Permissions
+description: >
+  Lightsail instance's IAM credentials have permissions
+  beyond what the instance workload requires. Lightsail
+  instances that use IAM roles (via instance metadata
+  service) should be scoped to the specific resources the
+  application needs. Any wildcard actions — s3:*,
+  iam:PassRole, sts:AssumeRole on broad targets — mean the
+  Lightsail instance becomes an over-permissioned compute
+  node. Lightsail instances are often used for simple
+  workloads with less security scrutiny than EC2; an
+  overbroad role on a less-monitored service is a
+  high-value lateral movement target.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - lightsail
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lightsail_instance
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+remediation:
+  description: >
+    Lightsail instance role has permissions beyond the
+    workload's required scope.
+  action: >
+    Scope the instance role to the specific S3 buckets,
+    DynamoDB tables, or other resources the application
+    needs. Remove wildcard actions. Consider whether the
+    Lightsail instance should use IAM roles at all — many
+    Lightsail workloads can use application-level
+    credentials instead.
+  example: |
+    {
+      "compute": {
+        "kind": "lightsail_instance",
+        "lightsail": {
+          "role_exceeds_required": false,
+          "role_arn": "arn:aws:iam::111122223333:role/lightsail-blog-scoped"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: lightsail_instance
+    - field: properties.compute.lightsail.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  Lightsail instance role grants actions beyond the
+  workload's required permissions.
+infection: >
+  Lightsail instances often receive less security scrutiny
+  than EC2. An overbroad role on a less-monitored service
+  is a high-value target: the attacker compromises the
+  simpler Lightsail instance and gains account-wide access
+  via the role, while security tooling focuses on EC2 and
+  EKS.
+failure: >
+  Lightsail instance role blast radius expansion. Instance
+  compromise on a less-monitored service yields account-wide
+  access via overbroad role.
+tests:
+  - name: overbroad Lightsail role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lightsail:us-east-1:111122223333:Instance/web-server"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          lightsail:
+            role_exceeds_required: true
+            role_arn: "arn:aws:iam::111122223333:role/lightsail-admin"
+            excess_actions:
+              - "s3:*"
+              - "iam:PassRole"
+  - name: scoped Lightsail role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lightsail:us-east-1:111122223333:Instance/web-server"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          lightsail:
+            role_exceeds_required: false
+            role_arn: "arn:aws:iam::111122223333:role/lightsail-blog-scoped"

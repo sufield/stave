@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.QLDB.ENCRYPT.CMK.001
+name: QLDB Ledger Must Use a Customer-Managed KMS Key
+description: >
+  QLDB ledgers must encrypt at rest with a customer-managed KMS
+  key, not the AWS-owned default. QLDB encrypts all data by
+  default using an AWS-owned key that the customer cannot audit,
+  scope, or revoke. A ledger stores immutable financial and
+  regulatory records — the inability to revoke the encryption
+  key per tenant or audit decrypt operations via CloudTrail is
+  a compliance gap for any regulated workload.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: "3.6.1"
+  ccm_v4: ["CEK-04", "CEK-08"]
+scope_tags:
+  - aws
+  - qldb
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_qldb_ledger
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.kms_key_origin
+remediation:
+  description: >
+    QLDB ledger is encrypted with the AWS-owned default key.
+    Key-policy controls and CloudTrail audit of decrypt operations
+    are unavailable.
+  action: >
+    Update the ledger's KMS key using aws qldb update-ledger
+    --kms-key-arn with a customer-managed key ARN. QLDB supports
+    in-place key rotation without ledger recreation.
+  example: |
+    {
+      "storage": {
+        "kind": "qldb_ledger",
+        "encryption": {
+          "at_rest_enabled": true,
+          "kms_key_origin": "CUSTOMER_MANAGED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: qldb_ledger
+    - field: properties.storage.encryption.kms_key_origin
+      op: eq
+      value: AWS_OWNED
+tests:
+  - name: AWS-owned key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:qldb:us-east-1:111122223333:ledger/prod-transactions"
+      asset_type: aws_qldb_ledger
+      vendor: aws
+      properties:
+        storage:
+          kind: qldb_ledger
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: AWS_OWNED
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:qldb:us-east-1:111122223333:ledger/prod-transactions"
+      asset_type: aws_qldb_ledger
+      vendor: aws
+      properties:
+        storage:
+          kind: qldb_ledger
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: CUSTOMER_MANAGED

@@ -20,6 +20,21 @@ A WAF Classic WebACL exists in the account. AWS retired WAF Classic on September
 
 ---
 
+### CTL.WAF.DELIVERY.HEALTH.001
+
+**WAF Logging Must Be Delivering**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-6; nist_800_53_r5: AU-6; pci_dss_v4.0: 10.3.1; soc2: CC7.2;
+
+WAF logging is configured on the web ACL but log data is not reaching the destination. WAF logs can target Kinesis Data Firehose, S3, or CloudWatch Logs. When the destination fails — Firehose delivery errors, S3 bucket policy changes, or CloudWatch Logs quota exceeded — WAF continues processing requests but silently stops delivering log data. The web ACL shows logging as enabled. Security teams believe they have request-level visibility but the logs have a gap. This is the delivery health pattern applied to WAF: inspection is functioning but the audit trail is broken.
+
+**Remediation:** Check the WAF logging destination for errors. For Kinesis Data Firehose: check DeliveryToS3.Errors and ThrottledRecords metrics. For S3: verify bucket policy allows WAF service principal writes. For CloudWatch Logs: check quota limits. Set up CloudWatch alarms on destination error metrics to detect future delivery failures.
+
+---
+
 ### CTL.WAF.EVASION.OBSERVE.001
 
 **WAF Must Have Full Body Inspection and Request Sampling Enabled**

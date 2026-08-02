@@ -430,6 +430,21 @@ CloudTrail logs must be encrypted at rest using a KMS customer-managed key. Defa
 
 ---
 
+### CTL.CLOUDTRAIL.ENCRYPT.CMK.001
+
+**CloudTrail Trail Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+CloudTrail trails must encrypt log files with a customer-managed KMS key, not the default SSE-S3 or AWS-managed key. The default encryption provides no key-policy control, no custom rotation schedule, and no ability to revoke access to historical logs during an incident. A customer-managed CMK lets the organization scope decrypt permissions to specific principals, enforce automatic rotation, and revoke key access to cut off an attacker who has compromised the S3 bucket but not the KMS key.
+
+**Remediation:** Create a customer-managed KMS key with a key policy that grants CloudTrail encrypt permission and scopes decrypt to specific audit principals. Update the trail with aws cloudtrail update-trail --kms-key-id <key-arn>.
+
+---
+
 ### CTL.CLOUDTRAIL.EVENTSELECTORS.001
 
 **CloudTrail Must Use Advanced Event Selectors for Granular Logging**

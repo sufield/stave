@@ -50,6 +50,21 @@ MSK Connect connectors must use TLS for in-transit encryption. Without TLS, data
 
 ---
 
+### CTL.MSK.ENCRYPT.CMK.001
+
+**MSK Cluster Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+MSK clusters must encrypt data at rest with a customer-managed KMS key, not the AWS-managed `aws/kafka` default. The AWS-managed key is shared across all MSK clusters in the account, has a key policy the customer cannot edit, and cannot be revoked during an incident. MSK brokers store topic data, consumer offsets, and transaction logs on encrypted EBS volumes; the encryption key controls who can access that data at the storage layer.
+
+**Remediation:** Create a customer-managed KMS key with a scoped key policy. MSK encryption-at-rest key is set at cluster creation; create a new cluster with the CMK, migrate topics and consumers, then delete the old cluster.
+
+---
+
 ### CTL.MSK.ENCRYPT.REST.001
 
 **MSK Clusters Must Use Customer-Managed KMS Key for Encryption at Rest**

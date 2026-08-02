@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.TIMESTREAM.ENCRYPT.CMK.001
+name: Timestream Database Must Use a Customer-Managed KMS Key
+description: >
+  Timestream databases must encrypt at rest with a customer-managed
+  KMS key, not the AWS-owned default. Timestream encrypts all data
+  by default using an AWS-owned key. Time-series data often
+  includes IoT telemetry, application metrics, and operational
+  data that may contain sensitive workload identifiers or
+  behavioral patterns. The AWS-owned key cannot be audited,
+  scoped, or revoked per tenant.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: "3.6.1"
+  ccm_v4: ["CEK-04", "CEK-08"]
+scope_tags:
+  - aws
+  - timestream
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_timestream_database
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.kms_key_origin
+remediation:
+  description: >
+    Timestream database is encrypted with the AWS-owned default
+    key. Key-policy controls and CloudTrail audit of decrypt
+    operations are unavailable.
+  action: >
+    Update the database KMS key using aws timestream-write
+    update-database --kms-key-id with a customer-managed key
+    ARN. Timestream supports in-place key changes.
+  example: |
+    {
+      "storage": {
+        "kind": "timestream_database",
+        "encryption": {
+          "at_rest_enabled": true,
+          "kms_key_origin": "CUSTOMER_MANAGED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: timestream_database
+    - field: properties.storage.encryption.kms_key_origin
+      op: eq
+      value: AWS_OWNED
+tests:
+  - name: AWS-owned key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:timestream:us-east-1:111122223333:database/prod-metrics"
+      asset_type: aws_timestream_database
+      vendor: aws
+      properties:
+        storage:
+          kind: timestream_database
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: AWS_OWNED
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:timestream:us-east-1:111122223333:database/prod-metrics"
+      asset_type: aws_timestream_database
+      vendor: aws
+      properties:
+        storage:
+          kind: timestream_database
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: CUSTOMER_MANAGED

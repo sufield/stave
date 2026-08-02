@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.MEMORYDB.ENCRYPT.REST.001
+name: MemoryDB Cluster Must Be Encrypted at Rest
+description: >
+  MemoryDB for Redis clusters must have encryption at rest enabled.
+  MemoryDB persists data to a distributed transaction log for
+  durability — unlike ElastiCache, data survives node restarts.
+  Without encryption at rest the transaction log and snapshot
+  data sit in cleartext. MemoryDB is positioned as a durable
+  primary database, not a cache, so unencrypted storage exposes
+  the full dataset.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  nist_800_53_r5: SC-28
+  pci_dss_v4.0: "3.4.1"
+  soc2: CC6.1
+  fedramp_moderate: SC-28
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - memorydb
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_memorydb_cluster
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
+remediation:
+  description: >
+    MemoryDB cluster encryption at rest is disabled. The
+    transaction log and snapshot data are stored in cleartext.
+  action: >
+    Encryption at rest must be set at cluster creation and cannot
+    be changed afterward. Create a new cluster with
+    TLSEnabled and KmsKeyId specified, restore from snapshot,
+    then update application endpoints and delete the unencrypted
+    cluster.
+  example: |
+    {
+      "storage": {
+        "kind": "memorydb_cluster",
+        "encryption": {
+          "at_rest_enabled": true,
+          "kms_key_id": "arn:aws:kms:us-east-1:111122223333:key/mrk-example"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: memorydb_cluster
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: false
+tests:
+  - name: unencrypted cluster fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:memorydb:us-east-1:111122223333:cluster/prod-sessions"
+      asset_type: aws_memorydb_cluster
+      vendor: aws
+      properties:
+        storage:
+          kind: memorydb_cluster
+          encryption:
+            at_rest_enabled: false
+  - name: encrypted cluster passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:memorydb:us-east-1:111122223333:cluster/prod-sessions"
+      asset_type: aws_memorydb_cluster
+      vendor: aws
+      properties:
+        storage:
+          kind: memorydb_cluster
+          encryption:
+            at_rest_enabled: true
+            kms_key_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-example"

@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.ENCRYPT.CMK.001
+name: MSK Cluster Must Use a Customer-Managed KMS Key
+description: >
+  MSK clusters must encrypt data at rest with a customer-managed
+  KMS key, not the AWS-managed `aws/kafka` default. The AWS-managed
+  key is shared across all MSK clusters in the account, has a key
+  policy the customer cannot edit, and cannot be revoked during an
+  incident. MSK brokers store topic data, consumer offsets, and
+  transaction logs on encrypted EBS volumes; the encryption key
+  controls who can access that data at the storage layer.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+    - CEK-04
+    - CEK-08
+scope_tags:
+  - aws
+  - msk
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_msk_cluster]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    MSK cluster is encrypted with the AWS-managed `aws/kafka`
+    key. Per-tenant key-policy and revocation controls are
+    unavailable.
+  action: >
+    Create a customer-managed KMS key with a scoped key policy.
+    MSK encryption-at-rest key is set at cluster creation; create
+    a new cluster with the CMK, migrate topics and consumers,
+    then delete the old cluster.
+  example: |
+    {
+      "storage": {
+        "kind": "msk_cluster",
+        "encryption": {
+          "kms_key_origin": "CUSTOMER_MANAGED"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: msk_cluster
+    - field: properties.storage.encryption.kms_key_origin
+      op: eq
+      value: AWS_MANAGED
+tests:
+  - name: MSK with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kafka:us-east-1:111122223333:cluster/prod-events/abc-123"
+      asset_type: aws_msk_cluster
+      vendor: aws
+      properties:
+        storage:
+          kind: msk_cluster
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: AWS_MANAGED
+  - name: MSK with customer-managed CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kafka:us-east-1:111122223333:cluster/prod-events/abc-123"
+      asset_type: aws_msk_cluster
+      vendor: aws
+      properties:
+        storage:
+          kind: msk_cluster
+          encryption:
+            at_rest_enabled: true
+            kms_key_origin: CUSTOMER_MANAGED

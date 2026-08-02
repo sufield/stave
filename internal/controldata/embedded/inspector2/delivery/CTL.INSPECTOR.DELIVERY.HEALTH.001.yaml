@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.INSPECTOR.DELIVERY.HEALTH.001
+name: Inspector Scanning Must Be Delivering Findings
+description: >
+  Inspector scanning must be actively producing findings.
+  Inspector can be enabled with full resource coverage and
+  pass every other Inspector control while scan results
+  silently stop flowing. When scanning stops delivering,
+  new EC2 instances launch without vulnerability assessment,
+  ECR images push without CVE checks, and Lambda functions
+  deploy without code scanning. The Inspector console shows
+  "enabled" and displays historical findings, but no new
+  scans complete. This is the detection delivery pattern:
+  the scanner appears functional but the scanning mechanism
+  has degraded or stopped.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "RA-5"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "6.3.3"
+  fedramp_moderate: "RA-5"
+  ccm_v4: ["TVM-02"]
+scope_tags:
+  - aws
+  - inspector
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_inspector2_configuration
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+defect: >
+  Inspector scanning is enabled but not producing findings.
+  Vulnerability assessment has silently stopped.
+infection: >
+  Inspector appears healthy in the console. Scanning is
+  enabled for EC2, ECR, and Lambda. Coverage metrics show
+  resources are in scope. But scan results have stopped
+  flowing: the service-linked role permissions were
+  modified, SSM agent connectivity was lost on EC2
+  instances, ECR scan frequency dropped to manual-only,
+  or the account exceeded Inspector service quotas. No
+  new CVEs are reported. The vulnerability dashboard shows
+  historical findings only. New deployments are unscanned.
+  The team believes vulnerability management is active
+  because Inspector shows as enabled.
+failure: >
+  A critical CVE is published. Affected EC2 instances and
+  Lambda functions are running in the account. Inspector
+  is enabled but scanning has stopped. The vulnerability
+  goes undetected. The team discovers the gap only after
+  an attacker exploits the CVE — Inspector was "enabled"
+  the entire time.
+remediation:
+  description: >
+    Inspector scanning is not delivering findings. New
+    resources are not being assessed for vulnerabilities.
+  action: >
+    Check Inspector account status and scan statistics.
+    Common causes: SSM agent not running on EC2 instances,
+    service-linked role permissions modified, ECR scanning
+    set to manual, Lambda code scanning disabled, or
+    account-level Inspector service quotas exceeded. Verify
+    scan delivery by launching a test instance with a known
+    CVE and confirming a finding appears.
+  example: |
+    {
+      "detection": {
+        "kind": "inspector",
+        "inspector": {
+          "scan_delivering": true,
+          "scan_error": "",
+          "last_scan_time": "2026-07-28T12:00:00Z"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: inspector
+    - field: properties.detection.inspector.scan_delivering
+      op: eq
+      value: false
+tests:
+  - name: scan not delivering fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:inspector2:us-east-1:111122223333:configuration"
+      asset_type: aws_inspector2_configuration
+      vendor: aws
+      properties:
+        detection:
+          kind: inspector
+          inspector:
+            scan_delivering: false
+            scan_error: "SSM agent connectivity lost on 12 instances"
+            last_scan_time: "2026-06-20T04:00:00Z"
+  - name: scan delivering passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:inspector2:us-east-1:111122223333:configuration"
+      asset_type: aws_inspector2_configuration
+      vendor: aws
+      properties:
+        detection:
+          kind: inspector
+          inspector:
+            scan_delivering: true
+            scan_error: ""
+            last_scan_time: "2026-07-28T12:00:00Z"

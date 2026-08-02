@@ -35,3 +35,18 @@ Cloud9 environment is configured with CONNECT_SSH connection type, which require
 
 ---
 
+### CTL.CLOUD9.ROLE.OVERBROAD.001
+
+**Cloud9 Environment Role Exceeds Required Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+Cloud9 environment's IAM credentials have permissions beyond what the development IDE requires. Cloud9 environments either use AWS managed temporary credentials (scoped automatically) or a manually attached instance profile. When using an instance profile, the environment needs only the specific resources the developer works with. Any wildcard actions — s3:*, iam:PassRole, sts:AssumeRole on broad targets — mean the IDE becomes an over-permissioned interactive shell.
+
+**Remediation:** Use AWS managed temporary credentials (which are automatically scoped) instead of a custom instance profile. If a custom profile is required, scope it to the specific resources the developer needs. Remove wildcard actions.
+
+---
+

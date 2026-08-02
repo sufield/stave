@@ -65,6 +65,21 @@ Lightsail instances with public IPs must not have firewall rules allowing broad 
 
 ---
 
+### CTL.LIGHTSAIL.ROLE.OVERBROAD.001
+
+**Lightsail Instance Role Exceeds Required Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+Lightsail instance's IAM credentials have permissions beyond what the instance workload requires. Lightsail instances that use IAM roles (via instance metadata service) should be scoped to the specific resources the application needs. Any wildcard actions — s3:*, iam:PassRole, sts:AssumeRole on broad targets — mean the Lightsail instance becomes an over-permissioned compute node. Lightsail instances are often used for simple workloads with less security scrutiny than EC2; an overbroad role on a less-monitored service is a high-value lateral movement target.
+
+**Remediation:** Scope the instance role to the specific S3 buckets, DynamoDB tables, or other resources the application needs. Remove wildcard actions. Consider whether the Lightsail instance should use IAM roles at all — many Lightsail workloads can use application-level credentials instead.
+
+---
+
 ### CTL.LIGHTSAIL.SERVICE.ACTIVE.001
 
 **Lightsail Service Is Active in Account**

@@ -988,6 +988,21 @@ CloudWatch Logs subscription filter delivers to a destination in an external acc
 
 ---
 
+### CTL.CLOUDWATCH.SUBSCRIPTION.DELIVERY.HEALTH.001
+
+**CloudWatch Logs Subscription Filter Must Be Delivering**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-6; nist_800_53_r5: AU-6; pci_dss_v4.0: 10.3.1; soc2: CC7.2;
+
+CloudWatch Logs subscription filter is configured but not delivering log events to its destination. A subscription filter can target a Lambda function, Kinesis stream, Kinesis Data Firehose, or another CloudWatch Logs destination. When the destination throttles, rejects, or fails, the subscription silently drops events — the log group continues to receive data, the filter pattern matches, but nothing reaches the consumer. Downstream systems (SIEM, alerting pipelines, compliance archives) operate on stale or incomplete data without any indication of loss. This is the delivery health pattern applied to log subscriptions: the configuration is correct but the mechanism has failed.
+
+**Remediation:** Check the subscription filter's destination for errors. For Lambda destinations: check invocation errors and throttle metrics. For Kinesis: check WriteProvisionedThroughputExceeded. For Firehose: check DeliveryToS3.Errors. For cross-account destinations: verify the destination policy still grants logs:PutSubscriptionFilter to the source account. Fix the underlying issue and verify delivery resumes by checking destination metrics.
+
+---
+
 ### CTL.CLOUDWATCH.SUBSCRIPTION.FILTER.NOALARM.001
 
 **Subscription Filter Destination Has No Monitoring**

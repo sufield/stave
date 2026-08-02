@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.DMS.ENCRYPT.REST.001
+
+**DMS Replication Instance Storage Must Be Encrypted at Rest**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+DMS replication instances must have storage encryption enabled. The replication instance holds source and target data in transit between databases — table mappings, cached rows, CDC change records, and LOB data. Without encryption at rest the instance's EBS volumes store this data in cleartext. An EBS snapshot taken for troubleshooting or shared cross-account exposes every row that passed through the replication.
+
+**Remediation:** Encryption cannot be enabled on an existing replication instance. Create a new replication instance with KmsKeyId specified, migrate task definitions to the new instance, then delete the unencrypted instance.
+
+---
+
 ### CTL.DMS.GHOST.TARGET.S3.001
 
 **DMS Replication Target S3 Bucket Deleted**
@@ -77,6 +92,21 @@ DMS replication instances must enable Multi-AZ for cross-AZ standby redundancy d
 DMS replication instances must not be publicly accessible. Public instances expose the migration pipeline to internet attacks, allowing data interception during database replication.
 
 **Remediation:** Set PubliclyAccessible to false on the replication instance.
+
+---
+
+### CTL.DMS.ROLE.OVERBROAD.001
+
+**DMS Replication Instance Role Exceeds Required Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+DMS replication instance's IAM role has permissions beyond what database migration requires. DMS needs access to the specific source and target endpoints (database connections, S3 buckets for CDC targets, Kinesis streams for change capture) and CloudWatch Logs for task logging. Any action outside this set — s3:*, iam:PassRole, sts:AssumeRole on broad targets, rds:* — means a compromised DMS instance can access databases and storage beyond its replication scope. DMS instances sit between source and target data stores; an overbroad role grants cross-database access that should not exist.
+
+**Remediation:** Scope the DMS role to the specific source and target endpoints, S3 buckets for CDC output, and CloudWatch Logs. Use separate roles for replication instances with different source-target pairs. Remove wildcard database and storage actions.
 
 ---
 

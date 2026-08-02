@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.DETECTIVE.DELIVERY.HEALTH.001
+name: Detective Graph Must Be Actively Ingesting Data
+description: >
+  Detective behavior graph must be actively ingesting data
+  from its configured sources. Detective can be enabled with
+  member accounts invited and pass initial setup checks while
+  the graph's underlying data ingestion silently stops. When
+  ingestion fails, the behavior graph becomes stale —
+  investigation queries return outdated entity profiles, IP
+  address lookups miss recent activity, and finding group
+  enrichment lacks current context. The Detective console
+  shows the graph as "Enabled" and historical data remains
+  queryable, but no new GuardDuty findings, CloudTrail
+  events, or VPC flow logs are being ingested for analysis.
+  This is the detection delivery pattern applied to the
+  investigation service: the tool appears ready but its
+  data foundation has eroded.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "IR-4"
+  soc2: "CC7.3"
+  fedramp_moderate: "IR-4"
+  ccm_v4: ["SEF-03"]
+scope_tags:
+  - aws
+  - detective
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_detective_graph
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+defect: >
+  Detective behavior graph is enabled but data sources are
+  not ingesting. Investigation capability is degraded.
+infection: >
+  Detective appears healthy in the console. The behavior
+  graph is created, member accounts are associated, and
+  data sources show as enabled. But ingestion has stopped:
+  GuardDuty findings are not flowing to the graph, VPC
+  flow log volume dropped to zero, or CloudTrail event
+  ingestion was interrupted by a permission change. The
+  behavior graph displays entity profiles based on
+  historical data only. New IP addresses, new IAM
+  principals, and new resource interactions are not being
+  profiled. Investigation queries return results that
+  stop at the last successful ingestion timestamp.
+failure: >
+  A GuardDuty finding triggers an investigation. The
+  analyst opens Detective to profile the suspicious IAM
+  principal. The entity profile shows activity only
+  through three weeks ago. The analyst cannot determine
+  what the principal did during the incident window
+  because Detective graph ingestion silently stopped.
+  The investigation falls back to manual CloudTrail
+  log analysis.
+remediation:
+  description: >
+    Detective graph is not ingesting data. Investigation
+    capability shows stale results.
+  action: >
+    Check Detective graph data source status and volume
+    metrics. Common causes: GuardDuty detector disabled
+    or suspended in a member account, VPC flow log
+    delivery to Detective interrupted, CloudTrail
+    management events not available in the region, or
+    member account disassociated from the graph. Verify
+    data source ingestion by checking the volume
+    statistics in the Detective console — zero volume
+    for any source indicates a break.
+  example: |
+    {
+      "detection": {
+        "kind": "detective",
+        "detective": {
+          "graph_healthy": true,
+          "graph_error": "",
+          "last_ingestion_time": "2026-07-28T12:00:00Z"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: detective
+    - field: properties.detection.detective.graph_healthy
+      op: eq
+      value: false
+tests:
+  - name: graph unhealthy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:detective:us-east-1:111122223333:graph/abc123"
+      asset_type: aws_detective_graph
+      vendor: aws
+      properties:
+        detection:
+          kind: detective
+          detective:
+            graph_healthy: false
+            graph_error: "VPC flow log ingestion volume zero for 14 days"
+            last_ingestion_time: "2026-07-14T00:00:00Z"
+  - name: graph healthy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:detective:us-east-1:111122223333:graph/abc123"
+      asset_type: aws_detective_graph
+      vendor: aws
+      properties:
+        detection:
+          kind: detective
+          detective:
+            graph_healthy: true
+            graph_error: ""
+            last_ingestion_time: "2026-07-28T12:00:00Z"

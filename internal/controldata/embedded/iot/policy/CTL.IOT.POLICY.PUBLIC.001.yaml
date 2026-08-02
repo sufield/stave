@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.IOT.POLICY.PUBLIC.001
+name: IoT Policy Must Not Allow Public Access
+description: >
+  IoT policy grants permissions to wildcard principal (*). Any AWS
+  account or unauthenticated entity can interact with IoT resources
+  governed by this policy. IoT policies control access to MQTT
+  topics, device shadows, and job executions. A public policy allows
+  unauthorized message publishing, topic subscription, device shadow
+  manipulation, and fleet command injection. Unlike IAM policies,
+  IoT policies are attached directly to X.509 certificates and
+  Cognito identities — a wildcard principal bypasses the
+  certificate-based device identity model entirely.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - iot
+taxonomy:
+  - compliance-mapping
+  - access-control
+  - identity-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iot_policy]
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: data
+    scope: service
+defect: >
+  IoT policy grants access to wildcard principal (*).
+infection: >
+  The IoT policy allows any principal to perform actions on IoT
+  resources. An attacker can publish messages to MQTT topics,
+  subscribe to sensitive device telemetry streams, read and write
+  device shadows to manipulate physical actuators, or execute jobs
+  across the device fleet. IoT policies apply at the account level
+  — one public policy exposes every device and topic in the
+  account. The certificate-based authentication model that
+  distinguishes IoT from other AWS services is completely bypassed.
+failure: >
+  Unauthorized access to IoT data streams, device impersonation,
+  shadow manipulation of physical actuators, or fleet-wide command
+  injection via public IoT policy.
+remediation:
+  description: >
+    IoT policy grants public access via wildcard principal.
+    Any entity can interact with IoT resources.
+  action: >
+    Scope the IoT policy to specific principals using certificate-
+    based authentication or Cognito identity pool IDs. Remove
+    wildcard (*) from the principal field. Use IoT policy variables
+    (iot:Connection.Thing.ThingName) to restrict actions to the
+    authenticated device's own resources.
+  example: |
+    {
+      "iot": {
+        "kind": "policy",
+        "policy": {
+          "allows_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.iot.kind
+      op: eq
+      value: policy
+    - field: properties.iot.policy.allows_public
+      op: eq
+      value: true
+tests:
+  - name: public IoT policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:111122223333:policy/open-device-policy"
+      asset_type: aws_iot_policy
+      vendor: aws
+      properties:
+        iot:
+          kind: policy
+          policy:
+            policy_name: "open-device-policy"
+            allows_public: true
+            has_wildcard_action: false
+  - name: scoped IoT policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:111122223333:policy/device-auth-policy"
+      asset_type: aws_iot_policy
+      vendor: aws
+      properties:
+        iot:
+          kind: policy
+          policy:
+            policy_name: "device-auth-policy"
+            allows_public: false
+            has_wildcard_action: false

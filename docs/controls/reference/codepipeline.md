@@ -35,6 +35,21 @@ CodePipeline artifact store references an S3 bucket that has been deleted. Pipel
 
 ---
 
+### CTL.CODEPIPELINE.GHOST.CODEBUILD.001
+
+**CodePipeline Action References Deleted CodeBuild Project**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SA-10, SI-7; soc2: CC6.1, CC8.1;
+
+CodePipeline action references a CodeBuild project that has been deleted. The pipeline stage fails at execution time with an InvalidActionDeclaration or ResourceNotFoundException. If the project name is re-registered by an attacker in the same account, the pipeline executes attacker-controlled build logic — a supply chain vector identical to the S3 artifact store ghost (CTL.CODEPIPELINE.GHOST.ARTIFACT.S3.001) but targeting compute instead of storage. The attacker receives source code as input artifacts and can substitute poisoned build output for downstream deploy stages.
+
+**Remediation:** Update the pipeline action to reference an existing CodeBuild project: aws codepipeline update-pipeline --pipeline file://pipeline.json. Verify the CodeBuild project exists and the buildspec is under version control. Consider using CodeBuild project tags or ARN-based references instead of name-based references to prevent hijacking.
+
+---
+
 ### CTL.CODEPIPELINE.NOAPPROVAL.001
 
 **CodePipeline Must Have Manual Approval Before Production Deploy**

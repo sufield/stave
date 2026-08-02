@@ -20,6 +20,21 @@ Security Hub must be configured to auto-enable for new member accounts in the or
 
 ---
 
+### CTL.SECURITYHUB.DELIVERY.HEALTH.001
+
+**SecurityHub Findings Aggregation Must Be Healthy**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AU-6; nist_800_53_r5: AU-6; pci_dss_v4.0: 10.4.1; soc2: CC7.2;
+
+SecurityHub findings aggregation must be actively succeeding. SecurityHub can be enabled, integrated with multiple accounts and services, and pass every other SecurityHub control while findings aggregation is silently failing. When aggregation stops, the central security posture view becomes stale — member account findings, GuardDuty detections, Inspector vulnerabilities, and Config compliance results stop flowing to the administrator account. The SOC dashboard shows green because it displays cached state, not live findings. This is the detection delivery pattern: the service appears functional but the delivery mechanism has failed.
+
+**Remediation:** Check SecurityHub administrator-member relationships and cross-region aggregation configuration. Common causes: member account disassociated, cross-region aggregation region disabled, organization integration turned off, or IAM permissions for the aggregation role revoked. Re-establish the aggregation link and verify findings flow by creating a test finding in a member account.
+
+---
+
 ### CTL.SECURITYHUB.ENABLED.001
 
 **AWS Security Hub Must Be Enabled**

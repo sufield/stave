@@ -20,6 +20,21 @@ Macie automated sensitive data discovery must be enabled. Basic Macie enablement
 
 ---
 
+### CTL.MACIE.DELIVERY.HEALTH.001
+
+**Macie Discovery Must Be Delivering Findings**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: RA-5; hipaa: 164.312(a)(1); nist_800_53_r5: RA-5; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+Macie sensitive data discovery must be actively producing findings. Macie can be enabled with classification jobs configured and pass every other Macie control while discovery silently stops producing results. When discovery stops delivering, new S3 objects containing PII, PHI, credentials, or financial data go unclassified. The Macie console shows the service as enabled and historical findings remain visible, but no new sensitive data detections occur. This is the detection delivery pattern: the classifier appears functional but the discovery mechanism has failed.
+
+**Remediation:** Check Macie account status and classification job history. Common causes: service-linked role S3 permissions revoked, classification job schedule paused or deleted, S3 bucket inventory stale, or findings export destination removed. Resume classification jobs and verify delivery by uploading a test file with known PII patterns to an in-scope bucket and confirming a finding appears.
+
+---
+
 ### CTL.MACIE.ENABLED.001
 
 **Amazon Macie Must Be Enabled for S3 Data Discovery**

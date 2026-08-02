@@ -1143,6 +1143,21 @@ Multiple EKS node groups across the cluster — typically serving different tena
 
 ---
 
+### CTL.EKS.NODEGROUP.ROLE.OVERBROAD.001
+
+**EKS Node Group IAM Role Exceeds Kubelet-Minimum Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+EKS managed node group's IAM role has permissions beyond kubelet-minimum. The kubelet-minimum set is: eks:DescribeCluster, ECR pull (ecr:GetAuthorizationToken, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer), CloudWatch Logs push (logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents, logs:DescribeLogStreams), EC2 describe (ec2:DescribeInstances, ec2:DescribeRegions), and VPC CNI (ec2:CreateNetworkInterface, ec2:AttachNetworkInterface, ec2:DeleteNetworkInterface, ec2:DescribeNetworkInterfaces). Any action outside this set — s3:*, iam:PassRole, sts:AssumeRole on broad targets, secretsmanager:* — means every pod that inherits the node profile (via missing IRSA or Pod Identity) gains excess permissions. The companion control CTL.EKS.POD.NODE.PROFILE.INHERIT.001 detects pods using the node profile; this control flags that the profile itself is over-permissioned.
+
+**Remediation:** Scope the node group IAM role to kubelet-minimum permissions only: eks:DescribeCluster, ECR pull, CloudWatch Logs push, EC2 describe, and VPC CNI network-interface operations. Move all workload-specific AWS permissions to IRSA or Pod Identity bindings on specific service accounts. After migration, remove excess policies from the node role and verify pods still function with their dedicated IRSA roles.
+
+---
+
 ### CTL.EKS.NODEGROUP.SELFMANAGED.NOTREADY.001
 
 **EKS Self-Managed Node Joined But Never Reached Ready**
@@ -1700,6 +1715,21 @@ RoleBinding or ClusterRoleBinding has a subject — ServiceAccount, User, or Gro
 EKS clusters must encrypt Kubernetes secrets at rest using a customer-managed KMS key. Without envelope encryption, anyone with access to the etcd backup or underlying EBS volume can read all cluster secrets (API tokens, database passwords, TLS certificates) in plaintext.
 
 **Remediation:** Enable secrets encryption: aws eks associate-encryption-config --cluster-name <cluster> --encryption-config '[{"resources":["secrets"],"provider": {"keyArn":"arn:aws:kms:<region>:<account>:key/<key-id>"}}]'
+
+---
+
+### CTL.EKS.SECRETS.ENCRYPT.CMK.001
+
+**EKS Secrets Envelope Encryption Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+EKS clusters with secrets encryption enabled must use a customer-managed KMS key for the envelope encryption provider, not the AWS-managed default. The AWS-managed key provides no key-policy control, no custom rotation schedule, and no ability to revoke access to Kubernetes secrets during an incident. EKS secrets store credentials, tokens, and TLS certificates; the KMS key wraps the data-encryption key that protects them in etcd.
+
+**Remediation:** Create a customer-managed KMS key with a key policy scoped to the EKS service principal. Update the cluster encryption config with aws eks associate-encryption-config --cluster-name <name> --encryption-config '[{"provider":{"keyArn":"<cmk-arn>"}, "resources":["secrets"]}]'.
 
 ---
 

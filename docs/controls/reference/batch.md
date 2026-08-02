@@ -39,6 +39,21 @@ Inspired by Doyensec CloudsecTidbits No. 3 — Messing Around With AWS Batch For
 
 ---
 
+### CTL.BATCH.JOB.ROLE.OVERBROAD.001
+
+**Batch Job IAM Role Exceeds Required Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+AWS Batch job definition's IAM role has permissions beyond what the compute job requires. Batch jobs need ECR pull (ecr:GetAuthorizationToken, ecr:BatchGetImage, ecr:GetDownloadUrlForLayer), specific S3 access for input and output data, and CloudWatch Logs for job logging. Any action outside this set — s3:*, iam:PassRole, sts:AssumeRole on broad targets — means a compromised container running as a Batch job can access resources far beyond its compute scope. Batch jobs run arbitrary container images; an overbroad role turns container escape or image compromise into account-wide privilege escalation.
+
+**Remediation:** Scope the Batch job role to the specific S3 buckets, ECR repositories, and CloudWatch Logs groups the job needs. Remove wildcard actions and broad Resource targets. Use separate roles for job definitions with different data access requirements.
+
+---
+
 ### CTL.BATCH.LOG.001
 
 **Batch Job Definitions Must Have Log Configuration**

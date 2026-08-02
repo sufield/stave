@@ -157,6 +157,21 @@ No CloudWatch alarm monitors the DAX cluster's error metrics (ErrorRequestCount,
 
 ---
 
+### CTL.DYNAMODB.DAX.ENCRYPT.CMK.001
+
+**DAX Cluster Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+DAX clusters must encrypt at rest with a customer-managed KMS key, not the AWS-managed default. The AWS-managed key is shared across all DAX clusters in the account, has a key policy the customer cannot edit, and cannot be rotated or revoked on the customer's schedule. DAX caches DynamoDB data in memory and persists it to disk; the encryption key controls who can decrypt that cache.
+
+**Remediation:** Create a customer-managed KMS key with a scoped key policy. DAX encryption is set at cluster creation; create a new cluster with the CMK, migrate the application endpoint, then delete the old cluster.
+
+---
+
 ### CTL.DYNAMODB.DAX.ENCRYPT.REST.001
 
 **DAX Cluster Not Encrypted at Rest**

@@ -1,0 +1,124 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDWATCH.SUBSCRIPTION.DELIVERY.HEALTH.001
+name: CloudWatch Logs Subscription Filter Must Be Delivering
+description: >
+  CloudWatch Logs subscription filter is configured but not
+  delivering log events to its destination. A subscription
+  filter can target a Lambda function, Kinesis stream,
+  Kinesis Data Firehose, or another CloudWatch Logs
+  destination. When the destination throttles, rejects, or
+  fails, the subscription silently drops events — the log
+  group continues to receive data, the filter pattern
+  matches, but nothing reaches the consumer. Downstream
+  systems (SIEM, alerting pipelines, compliance archives)
+  operate on stale or incomplete data without any indication
+  of loss. This is the delivery health pattern applied to
+  log subscriptions: the configuration is correct but the
+  mechanism has failed.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+  fedramp_moderate: "AU-6"
+  pci_dss_v4.0: "10.3.1"
+  ccm_v4: ["LOG-05", "LOG-12"]
+scope_tags:
+  - aws
+  - cloudwatch
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cloudwatch_log_subscription_filter
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: service
+defect: >
+  CloudWatch Logs subscription filter is not delivering events
+  to its configured destination.
+infection: >
+  The subscription filter exists on the log group with a valid
+  filter pattern. The log group receives events and the filter
+  matches them. But the destination is not receiving data: the
+  Lambda function is throttled, the Kinesis stream has exceeded
+  its throughput, the Firehose delivery has failed, or the
+  cross-account destination has revoked access. The subscription
+  appears healthy in the CloudWatch console — it is associated
+  with the log group and the filter pattern is valid. But the
+  delivery path is broken. Every downstream consumer sees a gap
+  in its data without knowing the gap exists.
+failure: >
+  Log events generated during the delivery failure period are
+  permanently lost. The SIEM has a blind spot. Alerting
+  pipelines miss security events. Compliance archives show
+  gaps. An attacker whose actions generated CloudTrail or
+  application logs during the failure window leaves no trace
+  in the downstream system.
+remediation:
+  description: >
+    CloudWatch Logs subscription filter is not delivering
+    events to its destination.
+  action: >
+    Check the subscription filter's destination for errors.
+    For Lambda destinations: check invocation errors and
+    throttle metrics. For Kinesis: check WriteProvisionedThroughputExceeded.
+    For Firehose: check DeliveryToS3.Errors. For cross-account
+    destinations: verify the destination policy still grants
+    logs:PutSubscriptionFilter to the source account. Fix the
+    underlying issue and verify delivery resumes by checking
+    destination metrics.
+  example: |
+    {
+      "monitoring": {
+        "kind": "subscription_filter",
+        "cloudwatch": {
+          "subscription": {
+            "delivering": true,
+            "destination_type": "lambda",
+            "destination_arn": "arn:aws:lambda:us-east-1:111122223333:function:log-processor"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.monitoring.kind
+      op: eq
+      value: subscription_filter
+    - field: properties.monitoring.cloudwatch.subscription.delivering
+      op: eq
+      value: false
+tests:
+  - name: subscription not delivering fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/api:subscription-filter:SecurityEvents"
+      asset_type: aws_cloudwatch_log_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription:
+              delivering: false
+              destination_type: lambda
+              destination_arn: "arn:aws:lambda:us-east-1:111122223333:function:log-processor"
+  - name: subscription delivering passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:logs:us-east-1:111122223333:log-group:/aws/lambda/api:subscription-filter:SecurityEvents"
+      asset_type: aws_cloudwatch_log_subscription_filter
+      vendor: aws
+      properties:
+        monitoring:
+          kind: subscription_filter
+          cloudwatch:
+            subscription:
+              delivering: true
+              destination_type: lambda
+              destination_arn: "arn:aws:lambda:us-east-1:111122223333:function:log-processor"

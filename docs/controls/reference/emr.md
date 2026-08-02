@@ -110,3 +110,18 @@ EMR clusters must not run release labels that have reached end-of-life. AWS publ
 
 ---
 
+### CTL.EMR.ROLE.OVERBROAD.001
+
+**EMR Cluster IAM Role Exceeds Required Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+EMR cluster's IAM role has permissions beyond what the big data workload requires. EMR clusters need specific S3 access for input data, output, and logs, plus elasticmapreduce:* on the cluster resource, EC2 describe for cluster management, and CloudWatch for metrics. Any action outside this set — s3:* on *, iam:PassRole, sts:AssumeRole on broad targets — means a compromised Spark or Hive job running on the cluster can access data and services far beyond its analytics scope. EMR clusters run long-lived compute with multiple users submitting jobs; an overbroad role is shared across all jobs.
+
+**Remediation:** Scope the EMR cluster role to specific S3 buckets for data and logs, the EMR service actions needed, and CloudWatch for metrics. Use EMR runtime roles for per-job credential scoping. Remove wildcard actions and broad Resource targets from the cluster role.
+
+---
+

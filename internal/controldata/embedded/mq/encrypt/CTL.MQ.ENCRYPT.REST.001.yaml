@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.MQ.ENCRYPT.REST.001
+name: Amazon MQ Broker Storage Must Be Encrypted at Rest
+description: >
+  Amazon MQ broker instances must have encryption at rest enabled.
+  The broker stores message queues, topic subscriptions, and
+  persistent messages on EBS-backed storage. Without encryption
+  at rest, message payloads — which often contain credentials,
+  PII, or transaction data — sit in cleartext on disk. An EBS
+  snapshot or volume detach exposes the full message store.
+domain: exposure
+severity: high
+compliance:
+  hipaa: "164.312(a)(2)(iv)"
+  nist_800_53_r5: SC-28
+  pci_dss_v4.0: "3.4.1"
+  soc2: CC6.1
+  fedramp_moderate: SC-28
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - mq
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_mq_broker
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
+remediation:
+  description: >
+    Amazon MQ broker storage is not encrypted at rest. Persistent
+    messages are stored in cleartext.
+  action: >
+    Encryption at rest must be enabled at broker creation time
+    and cannot be changed afterward. Create a new broker with
+    encryptionOptions.useAwsOwnedKey set to false and a KmsKeyId
+    specified. Migrate queue definitions and consumers to the new
+    broker, then delete the unencrypted broker.
+  example: |
+    {
+      "storage": {
+        "kind": "mq_broker",
+        "encryption": {
+          "at_rest_enabled": true,
+          "kms_key_id": "arn:aws:kms:us-east-1:111122223333:key/mrk-example"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: mq_broker
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: false
+tests:
+  - name: unencrypted broker fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:mq:us-east-1:111122223333:broker:prod-broker"
+      asset_type: aws_mq_broker
+      vendor: aws
+      properties:
+        storage:
+          kind: mq_broker
+          encryption:
+            at_rest_enabled: false
+  - name: encrypted broker passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:mq:us-east-1:111122223333:broker:prod-broker"
+      asset_type: aws_mq_broker
+      vendor: aws
+      properties:
+        storage:
+          kind: mq_broker
+          encryption:
+            at_rest_enabled: true
+            kms_key_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-example"

@@ -20,6 +20,21 @@ Amazon MQ ActiveMQ brokers must not run engine versions that have reached end-of
 
 ---
 
+### CTL.MQ.ENCRYPT.REST.001
+
+**Amazon MQ Broker Storage Must Be Encrypted at Rest**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-28; hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+
+Amazon MQ broker instances must have encryption at rest enabled. The broker stores message queues, topic subscriptions, and persistent messages on EBS-backed storage. Without encryption at rest, message payloads — which often contain credentials, PII, or transaction data — sit in cleartext on disk. An EBS snapshot or volume detach exposes the full message store.
+
+**Remediation:** Encryption at rest must be enabled at broker creation time and cannot be changed afterward. Create a new broker with encryptionOptions.useAwsOwnedKey set to false and a KmsKeyId specified. Migrate queue definitions and consumers to the new broker, then delete the unencrypted broker.
+
+---
+
 ### CTL.MQ.ENGINE.EOL.001
 
 **Amazon MQ Engine Version Must Not Be End-of-Life**

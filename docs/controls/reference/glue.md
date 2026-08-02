@@ -95,6 +95,36 @@ AWS Glue development endpoints are a deprecated resource type. AWS recommends mi
 
 ---
 
+### CTL.GLUE.DEVENDPOINT.ENCRYPT.CMK.001
+
+**Glue Dev Endpoint Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+Glue development endpoints must encrypt S3 targets, bookmarks, and logs with a customer-managed KMS key. Dev endpoints are interactive notebook environments that process and preview data; the encryption key controls who can access intermediate data written during development sessions.
+
+**Remediation:** Create a customer-managed KMS key and configure the Glue security configuration to use it. Dev endpoints are deprecated; prefer Glue interactive sessions with CMK encryption configured.
+
+---
+
+### CTL.GLUE.DEVENDPOINT.ROLE.OVERBROAD.001
+
+**Glue Dev Endpoint Role Exceeds Required Permissions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+Glue development endpoint's IAM role has permissions beyond what interactive development requires. Dev endpoints provide interactive Spark and Zeppelin sessions for ETL development. The minimum required set is S3 access for development data, Glue Data Catalog read access, and CloudWatch Logs. Any action outside this set — s3:*, iam:PassRole, sts:AssumeRole on broad targets — means an interactive development session has production-level access. Dev endpoints are deprecated but still active in many accounts; if present, they often carry admin-like roles from initial setup.
+
+**Remediation:** Scope the dev endpoint role to development-specific S3 buckets and read-only Glue Catalog access. Better yet, migrate to Glue Interactive Sessions which support per-session IAM roles. Dev endpoints are deprecated — consider removing them entirely (see CTL.GLUE.DEVENDPOINT.DEPRECATED.001).
+
+---
+
 ### CTL.GLUE.ENDPOINT.ENCRYPT.BOOKMARKS.001
 
 **Glue Dev Endpoint Must Encrypt Job Bookmarks**
@@ -155,6 +185,21 @@ Glue ETL jobs must use a security configuration with job bookmark encryption ena
 
 ---
 
+### CTL.GLUE.JOB.ENCRYPT.CMK.001
+
+**Glue Job Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+Glue jobs must encrypt bookmarks, S3 targets, and CloudWatch Logs output with a customer-managed KMS key. The AWS-managed default key provides no key-policy control and cannot be revoked during an incident. Glue jobs process and transform data across S3, databases, and streaming sources; the encryption key controls who can access intermediate and output data at rest.
+
+**Remediation:** Create a customer-managed KMS key and configure the Glue job security configuration to use it for S3, CloudWatch Logs, and bookmark encryption.
+
+---
+
 ### CTL.GLUE.JOB.ENCRYPT.S3.001
 
 **Glue ETL Jobs Must Encrypt S3 Data At Rest**
@@ -182,6 +227,21 @@ Glue ETL jobs must use a security configuration with S3 encryption enabled (SSE-
 Glue ETL jobs must use a security configuration with CloudWatch Logs encryption enabled (SSE-KMS). Unencrypted log entries can expose credentials, PII, connection strings, and schema details.
 
 **Remediation:** Create a Glue security configuration with CloudWatch Logs encryption (SSE-KMS) and attach it to the job.
+
+---
+
+### CTL.GLUE.JOB.ROLE.OVERBROAD.001
+
+**Glue Job IAM Role Exceeds Required Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-6; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+
+Glue job's IAM role has permissions beyond what the ETL job requires. Glue jobs process data across S3 buckets, Glue Data Catalog, and CloudWatch Logs. The minimum required set is: s3:GetObject and s3:PutObject on specific source and target buckets, glue:GetTable and glue:GetDatabase on the Data Catalog, and logs:CreateLogGroup, logs:CreateLogStream, logs:PutLogEvents for job logging. Any action outside this set — s3:*, iam:PassRole, sts:AssumeRole on broad targets, secretsmanager:*, dynamodb:* — means a compromised or misconfigured Glue job can access data and services far beyond its ETL scope. Glue jobs run unattended on a schedule and process high-value data; an overbroad role turns every job into a lateral movement opportunity.
+
+**Remediation:** Scope the Glue job role to only the resources the job needs: specific S3 buckets for source and target data, the Glue Data Catalog databases and tables the job reads, and CloudWatch Logs for job output. Remove wildcard actions (s3:*, glue:*, iam:PassRole) and broad Resource targets. Use separate roles for jobs with different data access requirements.
 
 ---
 
