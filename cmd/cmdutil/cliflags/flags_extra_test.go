@@ -92,8 +92,8 @@ func TestGetGlobalFlags_NilCmd(t *testing.T) {
 }
 
 func TestDefaultControlsDir(t *testing.T) {
-	if DefaultControlsDir == "" {
-		t.Fatal("DefaultControlsDir should not be empty")
+	if DefaultControlsDir != "" {
+		t.Fatalf("DefaultControlsDir should be empty (embedded catalog sentinel), got %q", DefaultControlsDir)
 	}
 }
 
