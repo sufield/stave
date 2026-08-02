@@ -21,6 +21,7 @@ var builtinNames = []string{
 	"account_closure",
 	"account_loss",
 	"audit_trail_destroyed",
+	"audit_trail_scope_narrowed",
 	"automation_hijack",
 	"aws_root_access",
 	"az_failure",

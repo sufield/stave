@@ -35,8 +35,8 @@ type explainNarrativeOpts struct {
 // NewExplainNarrativeCmd constructs the diagnose explain subcommand.
 func NewExplainNarrativeCmd() *cobra.Command {
 	opts := &explainNarrativeOpts{
-		ControlsDir: "controls",
-		ChainsDir:   "chains",
+		ControlsDir: "",
+		ChainsDir:   "",
 		Format:      "narrative",
 		Depth:       "standard",
 	}
@@ -105,9 +105,13 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 	}
 
 	// Load chains.
-	chains, chainsErr := ctlyaml.LoadChains(opts.ChainsDir, capabilities.Builtin())
-	if chainsErr != nil {
-		return fmt.Errorf("loading chains: %w", chainsErr)
+	var chains []policy.ChainDefinition
+	if opts.ChainsDir != "" {
+		var chainsErr error
+		chains, chainsErr = ctlyaml.LoadChains(opts.ChainsDir, capabilities.Builtin())
+		if chainsErr != nil {
+			return fmt.Errorf("loading chains: %w", chainsErr)
+		}
 	}
 
 	// Filter findings.

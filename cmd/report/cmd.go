@@ -76,8 +76,8 @@ Exit Codes:
 
 	cmd.Flags().StringVar(&opts.HistoryDir, "history", "", "history directory (required)")
 	cmd.Flags().StringVar(&opts.SnapshotPath, "snapshot", "", "snapshot to assess (required)")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "controls directory")
-	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chains directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "controls directory (default: embedded catalog)")
+	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "", "chains directory (default: embedded chains)")
 	cmd.Flags().StringVar(&opts.SLAFile, "sla-profile-file", "", "SLA policy file")
 	cmd.Flags().StringVar(&opts.TeamManifest, "team-manifest", "", "team manifest")
 	cmd.Flags().VarP(&opts.Format, "format", "f", "output format: json | markdown | html | csv")

@@ -16,7 +16,7 @@ type options struct {
 func addCommonFlags(cmd *cobra.Command, o *options) {
 	f := cmd.Flags()
 	f.StringVarP(&o.format, "format", "f", "text", "output format: text, json")
-	f.StringVarP(&o.controls, "controls", "i", "controls", "control definitions directory (default: built-in catalog)")
+	f.StringVarP(&o.controls, "controls", "i", "", "control definitions directory (default: built-in catalog)")
 }
 
 // Prepare validates flags at the CLI boundary (PreRunE).

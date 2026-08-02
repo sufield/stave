@@ -109,7 +109,7 @@ Exit Codes:
 		SilenceErrors: true,
 	}
 
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "Path to control definitions directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "Path to control definitions directory (default: embedded catalog)")
 	cmd.Flags().StringVarP(&opts.ObsDir, "observations", "o", "observations", "Path to snapshot archive directory")
 	cmd.Flags().StringVar(&opts.ControlID, "control-id", "", "Control ID to bisect (required)")
 	cmd.Flags().StringVar(&opts.Mode, "mode", "bisect", "Search strategy: bisect or scan")

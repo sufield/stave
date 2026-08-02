@@ -20,7 +20,7 @@ type silosOptions struct {
 
 func newSilosCmd() *cobra.Command {
 	opts := &silosOptions{
-		ChainsDir:   "chains",
+		ChainsDir:   "",
 		Format:      "text",
 		MinControls: 1,
 	}

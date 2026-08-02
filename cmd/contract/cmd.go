@@ -122,8 +122,8 @@ Exit codes:
 	cmd.Flags().BoolVar(&opts.List, "list", false, "list every asset type with controls")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
 	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
-	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chain catalog directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
+	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "", "chain catalog directory (default: embedded chains)")
 	cmd.Flags().StringVar(&opts.SteampipeDir, "steampipe", "contracts/steampipe", "Steampipe mapping directory")
 
 	return cmd

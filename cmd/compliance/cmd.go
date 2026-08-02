@@ -81,7 +81,7 @@ Examples:
 	f := cmd.Flags()
 	f.StringVar(&opts.framework, "framework", "aicm-v1.1", "compliance framework: "+compliancemapping.SupportedFrameworks())
 	f.StringVar(&opts.snapshot, "snapshot", "", "observation snapshot directory (or - for stdin)")
-	f.StringVarP(&opts.controls, "controls", "i", "controls", "control definitions directory (default: built-in catalog)")
+	f.StringVarP(&opts.controls, "controls", "i", "", "control definitions directory (default: built-in catalog)")
 	f.StringVarP(&opts.format, "format", "f", "text", "output format: text, json, markdown")
 	f.StringVar(&opts.evalTime, "eval-time", "", "Evaluation reference timestamp (RFC3339) for deterministic output")
 	f.BoolVar(&opts.verifyMapping, "verify-mapping", false, "check the framework mapping against the catalog and exit (no snapshot needed)")

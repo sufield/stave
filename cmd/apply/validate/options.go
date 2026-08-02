@@ -60,7 +60,7 @@ type options struct {
 // Call resolveConfigDefaults after flag parsing to fill in project-config defaults.
 func newOptions() *options {
 	return &options{
-		Controls:     "controls",
+		Controls:     "",
 		Observations: "observations",
 		Format:       "text",
 	}

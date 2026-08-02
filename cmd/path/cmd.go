@@ -67,7 +67,7 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVar(&opts.AssessmentPath, "output", "", "path to stave apply JSON output (required)")
-	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "path to chains directory")
+	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "", "path to chains directory (default: embedded chains)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "json", "output format: json | dot | csv-edges")
 
 	cliflags.MustMarkRequired(cmd, "output")

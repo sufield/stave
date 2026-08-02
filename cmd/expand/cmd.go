@@ -94,7 +94,7 @@ Exit codes:
 	flags.StringVarP(&opts.Format, "format", "f", "text", "output format: text or json")
 	flags.BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	flags.StringVar(&opts.Snapshots, "snapshots", "", "observations directory for snapshot coverage check")
-	flags.StringVarP(&opts.ControlsDir, cliflags.FlagControls, "i", "controls", "control definitions directory")
+	flags.StringVarP(&opts.ControlsDir, cliflags.FlagControls, "i", "", "control definitions directory (default: embedded catalog)")
 
 	cmd.MarkFlagsMutuallyExclusive("archetype", "finding", "list")
 

@@ -75,7 +75,7 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVar(&opts.SnapshotPath, "snapshot", "", "path to observation snapshot JSON (required)")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "path to controls directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "path to controls directory (default: embedded catalog)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json")
 	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 

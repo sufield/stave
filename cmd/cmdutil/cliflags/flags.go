@@ -348,4 +348,5 @@ func ResolveEvalTimeEnv(cmd *cobra.Command, current string) string {
 
 // DefaultControlsDir is the conventional default path for control definitions.
 // Used as the flag default across all commands that accept --controls.
-const DefaultControlsDir = "controls"
+// Empty string triggers the embedded catalog via resolveControls.
+const DefaultControlsDir = ""

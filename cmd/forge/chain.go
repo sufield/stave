@@ -49,7 +49,7 @@ Exit Codes:
 		},
 	}
 	lintCmd.Flags().StringVar(&chainLintPath, "chain", "", "path to chain YAML file (required)")
-	lintCmd.Flags().StringVar(&controlsDir, "controls", "controls", "path to controls directory")
+	lintCmd.Flags().StringVar(&controlsDir, "controls", "", "path to controls directory (default: embedded catalog)")
 	_ = lintCmd.MarkFlagRequired("chain")
 	cmd.AddCommand(lintCmd)
 

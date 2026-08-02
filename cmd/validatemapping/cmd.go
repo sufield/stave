@@ -93,8 +93,8 @@ Exit codes:
 		},
 	}
 	cmd.Flags().StringVar(&opts.File, "file", "", "mapping YAML file to validate (required)")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
-	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "chain catalog directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
+	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "", "chain catalog directory (default: embedded chains)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
 	cmd.Flags().BoolVar(&opts.Strict, "strict", false, "treat coverage gaps and unknown-to-schema paths as failures")
 	return cmd

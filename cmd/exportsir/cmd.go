@@ -134,7 +134,7 @@ Exit codes:
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&opts.ControlsDir, cliflags.FlagControls, cliflags.FlagControlsShort, "controls", "control definitions directory")
+	flags.StringVarP(&opts.ControlsDir, cliflags.FlagControls, cliflags.FlagControlsShort, "", "control definitions directory (default: embedded catalog)")
 	flags.StringVarP(&opts.ObservationsDir, flagObservations, "o", "observations", "observation snapshots directory")
 	flags.StringVarP(&opts.Format, cliflags.FlagFormat, "f", "json", "output format: json | jsonl | smt2")
 	flags.StringVar(&opts.EvalTime, flagEvalTime, "", "Evaluation reference timestamp (RFC3339) for deterministic output")

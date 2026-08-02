@@ -67,7 +67,7 @@ Exit codes:
 func newListCmd() *cobra.Command {
 	opts := &options{
 		RegistryPath: "data/services.yaml",
-		ControlsDir:  "controls",
+		ControlsDir:  "",
 		Format:       "text",
 	}
 	cmd := &cobra.Command{
@@ -118,7 +118,7 @@ Exit codes:
 	}
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
 	cmd.Flags().StringVar(&opts.RegistryPath, "registry", "data/services.yaml", "path to services.yaml")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
 	cmd.Flags().StringVar(&opts.Status, "status", "", "filter by status")
 	cmd.Flags().StringVar(&opts.Category, "category", "", "filter by category")
 	cmd.Flags().BoolVar(&opts.HasControls, "has-controls", false, "only services with controls")
@@ -129,7 +129,7 @@ Exit codes:
 func newInspectCmd() *cobra.Command {
 	opts := &options{
 		RegistryPath: "data/services.yaml",
-		ControlsDir:  "controls",
+		ControlsDir:  "",
 		Format:       "text",
 	}
 	cmd := &cobra.Command{
@@ -176,14 +176,14 @@ Exit codes:
 	}
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
 	cmd.Flags().StringVar(&opts.RegistryPath, "registry", "data/services.yaml", "path to services.yaml")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
 	return cmd
 }
 
 func newCoverageCmd() *cobra.Command {
 	opts := &options{
 		RegistryPath: "data/services.yaml",
-		ControlsDir:  "controls",
+		ControlsDir:  "",
 		Format:       "text",
 	}
 	cmd := &cobra.Command{
@@ -228,7 +228,7 @@ Exit codes:
 	}
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
 	cmd.Flags().StringVar(&opts.RegistryPath, "registry", "data/services.yaml", "path to services.yaml")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "control catalog directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
 	cmd.Flags().StringVar(&opts.Category, "category", "", "filter to one category")
 	return cmd
 }

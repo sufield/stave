@@ -53,7 +53,7 @@ Exit Codes:
 	}
 
 	cmd.Flags().StringVar(&opts.OutputFile, "output", "", "path to out.v0.1.json for posture overlay")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "path to controls directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "path to controls directory (default: embedded catalog)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "table", "output format: table | json | navigator | markdown")
 	cmd.Flags().BoolVar(&opts.NoPager, "no-pager", false, "never page output, even on a terminal")
 	cmd.Flags().IntVar(&opts.MinControls, "min-controls", 2, "thin coverage threshold")

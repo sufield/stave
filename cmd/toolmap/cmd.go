@@ -76,8 +76,8 @@ Exit Codes:
 		},
 	}
 
-	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "chains", "path to chain definitions directory")
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "path to controls directory")
+	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "", "path to chain definitions directory (default: embedded chains)")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "path to controls directory (default: embedded catalog)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
 	cmd.Flags().StringVar(&opts.Generate, "generate", "", "generate chain skeletons for gaps into this directory")
 	cmd.Flags().StringVar(&opts.Tool, "tool", "", "show prerequisites for a specific tool")

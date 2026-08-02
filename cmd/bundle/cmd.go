@@ -74,7 +74,7 @@ Exit Codes:
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "controls", "Path to control definitions directory")
+	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "Path to control definitions directory (default: embedded catalog)")
 	cmd.Flags().StringVarP(&opts.ObservationsDir, "observations", "o", "observations", "Path to observation snapshots directory")
 	cmd.Flags().StringVar(&opts.MaxUnsafe, "max-unsafe", "168h", "Maximum allowed unsafe duration")
 	cmd.Flags().StringVar(&opts.SignKeyPath, "sign-key", "", "Path to Ed25519 private key PEM for signing")

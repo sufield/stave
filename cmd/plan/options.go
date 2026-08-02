@@ -27,7 +27,7 @@ func addFlags(cmd *cobra.Command, o *options) {
 		"AWS services to preview (comma-separated), e.g. iam,s3,ec2")
 	f.StringVar(&o.pack, "pack", "", "preview a named pack instead of services")
 	f.StringVarP(&o.format, "format", "f", "text", "output format: text, json")
-	f.StringVarP(&o.controls, "controls", "i", "controls",
+	f.StringVarP(&o.controls, "controls", "i", "",
 		"control definitions directory (default: built-in catalog)")
 }
 

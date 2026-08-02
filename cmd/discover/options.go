@@ -20,7 +20,7 @@ func addFlags(cmd *cobra.Command, o *options) {
 	f.StringSliceVar(&o.services, "services", nil,
 		"AWS services in use (comma-separated), e.g. iam,s3,ec2,lambda,cloudtrail")
 	f.StringVarP(&o.format, "format", "f", "text", "output format: text, json")
-	f.StringVarP(&o.controls, "controls", "i", "controls",
+	f.StringVarP(&o.controls, "controls", "i", "",
 		"control definitions directory (default: built-in catalog)")
 	f.BoolVar(&o.policy, "policy", false,
 		"output a least-privilege IAM policy document (JSON) instead of the collection manifest")
