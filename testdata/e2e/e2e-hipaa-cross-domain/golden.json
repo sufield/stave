@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "ca612c270289edf1badcae0b9eb5e9bef171b88977e26ad741c4ffd796808884",
+    "policy_fingerprint": "6b8374ad1f85e89b507ccb4e0363af705166fc9acdfa32e3cae69638a9c523c3",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -2755,6 +2755,15 @@
           "chain_id": "cloudtrail_data_access_blind",
           "chain_severity": "high",
           "missing_control": "CTL.CLOUDTRAIL.DATAEVENTS.S3.001",
+          "controls_failing": [
+            "CTL.SECRETS.AUDIT.DATAEVENTS.001"
+          ],
+          "description": "No S3 data events for sensitive buckets plus either no Secrets Manager data events or no S3 bucket-policy change alarm. Data access is unaudited AND either credential access is unaudited or bucket access- control changes are unmonitored. The data access surface is blind: object reads invisible, credential reads invisible, and the API calls that would reconfigure access are unalarmed. Threshold of 2 fires when the bucket-data-events gap compounds with another audit-surface gap.\n"
+        },
+        {
+          "chain_id": "cloudtrail_data_access_blind",
+          "chain_severity": "high",
+          "missing_control": "CTL.CLOUDTRAIL.NETWORK.ACTIVITY.IDENTITYFILTER.001",
           "controls_failing": [
             "CTL.SECRETS.AUDIT.DATAEVENTS.001"
           ],
@@ -5940,6 +5949,16 @@
         "CTL.SECRETS.AUDIT.DATAEVENTS.001"
       ],
       "missing_control": "CTL.CLOUDTRAIL.DATAEVENTS.S3.001",
+      "severity": "high",
+      "scope_id": "db-credentials"
+    },
+    {
+      "chain": "cloudtrail_data_access_blind",
+      "description": "No S3 data events for sensitive buckets plus either no Secrets Manager data events or no S3 bucket-policy change alarm. Data access is unaudited AND either credential access is unaudited or bucket access- control changes are unmonitored. The data access surface is blind: object reads invisible, credential reads invisible, and the API calls that would reconfigure access are unalarmed. Threshold of 2 fires when the bucket-data-events gap compounds with another audit-surface gap.\n",
+      "controls_failing": [
+        "CTL.SECRETS.AUDIT.DATAEVENTS.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.NETWORK.ACTIVITY.IDENTITYFILTER.001",
       "severity": "high",
       "scope_id": "db-credentials"
     },
