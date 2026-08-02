@@ -23,7 +23,6 @@ scope_tags:
   - iot
 taxonomy:
   - compliance-mapping
-  - access-control
   - identity-perimeter
 type: unsafe_state
 classification: state_assertion

@@ -25,7 +25,6 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - least-privilege
-  - access-control
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_iot_policy]

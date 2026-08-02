@@ -19,7 +19,6 @@ scope_tags:
   - athena
 taxonomy:
   - compliance-mapping
-  - supply-chain
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -25,7 +25,6 @@ scope_tags:
   - codepipeline
 taxonomy:
   - trust-decay
-  - supply-chain
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_codepipeline_pipeline]
