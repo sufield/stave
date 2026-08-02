@@ -112,7 +112,7 @@ var nanRe = regexp.MustCompile(`:\s*(NaN|-?Infinity)\b`)
 func main() {
 	lensRepo := flag.String("lens-repo-path", "/tmp/wa-lenses", "path to cloned wa-lens repo")
 	staveBin := flag.String("stave-bin", "", "path to stave binary (default: $STAVE_BIN or ./stave)")
-	fixtureDir := flag.String("fixture-dir", "fixtures/labs/wa-lenses", "fixture directory")
+	fixtureDir := flag.String("fixture-dir", "internal/fixtures/labs/wa-lenses", "fixture directory")
 	scorecardPath := flag.String("scorecard", "docs-internal/experiments/wa-lens-scorecard.md", "scorecard path")
 	evalTime := flag.String("eval-time", "", "eval-time for deterministic output (default: current time)")
 	maxDelta := flag.Int("max-delta", 0, "max allowed violation increase per fixture (0 = no limit)")
@@ -138,6 +138,10 @@ func main() {
 	fmt.Fprintf(os.Stderr, "parsed %d lenses with Security pillars\n", len(allStats))
 
 	fixtureSlugs := discoverFixtures(*fixtureDir)
+	if len(fixtureSlugs) == 0 {
+		fmt.Fprintf(os.Stderr, "error: no fixtures found at %s — check the path\n", *fixtureDir)
+		os.Exit(2)
+	}
 	fmt.Fprintf(os.Stderr, "discovered %d fixture sets\n", len(fixtureSlugs))
 
 	results := make(map[string]fixtureResult)
