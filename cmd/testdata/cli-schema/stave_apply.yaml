@@ -72,7 +72,6 @@ options:
       usage: Bucket names/ARNs to include
     - name: controls
       shorthand: i
-      default_value: controls
       usage: Path to control definitions directory
     - name: dry-run
       default_value: "false"

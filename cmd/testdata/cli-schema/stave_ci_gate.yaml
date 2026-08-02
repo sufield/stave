@@ -36,7 +36,6 @@ options:
       usage: Path to baseline JSON (required for fail_on_new_violation)
     - name: controls
       shorthand: i
-      default_value: controls
       usage: |
         Path to control definitions directory (used by fail_on_overdue_upcoming)
     - name: eval-time

@@ -24,8 +24,7 @@ description: |-
 usage: stave graph path [flags]
 options:
     - name: chains
-      default_value: chains
-      usage: path to chains directory
+      usage: 'path to chains directory (default: embedded chains)'
     - name: format
       shorthand: f
       default_value: json

@@ -27,12 +27,11 @@ options:
     - name: capability
       usage: show tools needing this capability
     - name: chains
-      default_value: chains
-      usage: path to chain definitions directory
+      usage: |
+        path to chain definitions directory (default: embedded chains)
     - name: controls
       shorthand: i
-      default_value: controls
-      usage: path to controls directory
+      usage: 'path to controls directory (default: embedded catalog)'
     - name: format
       shorthand: f
       default_value: text

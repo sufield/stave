@@ -61,7 +61,6 @@ options:
       usage: 'Additional checks: collector-contract'
     - name: controls
       shorthand: i
-      default_value: controls
       usage: Path to control definitions (inferred if omitted)
     - name: eval-time
       usage: |

@@ -39,8 +39,8 @@ options:
       usage: Control ID to bisect (required)
     - name: controls
       shorthand: i
-      default_value: controls
-      usage: Path to control definitions directory
+      usage: |
+        Path to control definitions directory (default: embedded catalog)
     - name: eval-time
       usage: |
         Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.

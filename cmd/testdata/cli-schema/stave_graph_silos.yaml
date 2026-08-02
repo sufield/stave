@@ -31,7 +31,6 @@ description: |-
 usage: stave graph silos [flags]
 options:
     - name: chains
-      default_value: chains
       usage: Path to chain definitions directory
     - name: format
       shorthand: f

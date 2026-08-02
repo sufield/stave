@@ -12,8 +12,7 @@ usage: stave map [flags]
 options:
     - name: controls
       shorthand: i
-      default_value: controls
-      usage: path to controls directory
+      usage: 'path to controls directory (default: embedded catalog)'
     - name: format
       shorthand: f
       default_value: table

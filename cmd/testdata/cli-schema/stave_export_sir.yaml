@@ -60,8 +60,7 @@ options:
         emit closed-world forall axioms in SMT2 output (restricts each predicate to its asserted tuples only; needed for negative proofs but causes solver timeout on large fact sets)
     - name: controls
       shorthand: i
-      default_value: controls
-      usage: control definitions directory
+      usage: 'control definitions directory (default: embedded catalog)'
     - name: eval-time
       usage: |
         Evaluation reference timestamp (RFC3339) for deterministic output

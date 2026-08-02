@@ -33,12 +33,10 @@ description: |
 usage: stave validate-mapping [flags]
 options:
     - name: chains
-      default_value: chains
-      usage: chain catalog directory
+      usage: 'chain catalog directory (default: embedded chains)'
     - name: controls
       shorthand: i
-      default_value: controls
-      usage: control catalog directory
+      usage: 'control catalog directory (default: embedded catalog)'
     - name: file
       usage: mapping YAML file to validate (required)
     - name: format

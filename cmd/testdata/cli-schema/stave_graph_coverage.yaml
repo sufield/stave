@@ -37,7 +37,6 @@ usage: stave graph coverage [flags]
 options:
     - name: controls
       shorthand: i
-      default_value: controls
       usage: Path to control definitions directory
     - name: format
       shorthand: f

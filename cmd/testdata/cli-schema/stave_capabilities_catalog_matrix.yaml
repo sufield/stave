@@ -21,8 +21,7 @@ usage: stave capabilities catalog matrix [flags]
 options:
     - name: controls
       shorthand: i
-      default_value: controls
-      usage: control catalog directory
+      usage: 'control catalog directory (default: embedded catalog)'
     - name: format
       shorthand: f
       default_value: text

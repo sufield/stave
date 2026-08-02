@@ -39,7 +39,6 @@ options:
       usage: Filter to one or more diagnostic case values
     - name: controls
       shorthand: i
-      default_value: controls
       usage: |
         Path to control definitions directory (inferred from project root if omitted)
     - name: eval-time

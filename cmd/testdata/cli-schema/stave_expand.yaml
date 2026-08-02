@@ -34,8 +34,7 @@ options:
       usage: archetype ID to expand (e.g., ghost-reference)
     - name: controls
       shorthand: i
-      default_value: controls
-      usage: control definitions directory
+      usage: 'control definitions directory (default: embedded catalog)'
     - name: finding
       usage: |
         control ID to expand from (e.g., CTL.ROUTE53.DANGLING.S3.001)

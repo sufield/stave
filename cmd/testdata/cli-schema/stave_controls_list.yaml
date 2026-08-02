@@ -20,7 +20,6 @@ options:
       usage: 'Comma-separated columns: id,name,type,risk,domain'
     - name: controls
       shorthand: i
-      default_value: controls
       usage: Path to control definitions directory
     - name: filter
       default_value: '[]'

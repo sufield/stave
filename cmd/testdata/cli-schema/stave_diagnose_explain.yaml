@@ -16,12 +16,10 @@ options:
     - name: asset
       usage: explain all findings for an asset
     - name: chains
-      default_value: chains
       usage: chains directory
     - name: control
       usage: explain all findings for a control
     - name: controls
-      default_value: controls
       usage: controls directory
     - name: depth
       default_value: standard

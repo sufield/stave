@@ -33,7 +33,6 @@ options:
       usage: Control ID to trace (required)
     - name: controls
       shorthand: i
-      default_value: controls
       usage: Path to control definitions directory
     - name: format
       shorthand: f

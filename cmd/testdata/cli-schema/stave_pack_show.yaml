@@ -15,7 +15,6 @@ usage: stave pack show <name> [flags]
 options:
     - name: controls
       shorthand: i
-      default_value: controls
       usage: 'control definitions directory (default: built-in catalog)'
     - name: format
       shorthand: f

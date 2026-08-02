@@ -15,7 +15,6 @@ description: |-
 usage: stave explain <control-id> [flags]
 options:
     - name: controls
-      default_value: controls
       usage: Path to control definitions directory
     - name: format
       shorthand: f

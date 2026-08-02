@@ -50,7 +50,6 @@ options:
       usage: Control ID to inspect (required)
     - name: controls
       shorthand: i
-      default_value: controls
       usage: Path to control definitions directory
     - name: eval-time
       usage: |

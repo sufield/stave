@@ -13,8 +13,7 @@ options:
     - name: chain
       usage: path to chain YAML file (required)
     - name: controls
-      default_value: controls
-      usage: path to controls directory
+      usage: 'path to controls directory (default: embedded catalog)'
     - name: help
       shorthand: h
       default_value: "false"
