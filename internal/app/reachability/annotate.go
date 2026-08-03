@@ -7,6 +7,7 @@ package reachability
 
 import (
 	"math"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/util/strutil"
@@ -64,6 +65,9 @@ func BuildContext(entries []access.ResourceAccessEntry) *evaluation.Reachability
 	for _, m := range merged {
 		uniqueEntries = append(uniqueEntries, *m)
 	}
+	slices.SortFunc(uniqueEntries, func(a, b access.ResourceAccessEntry) int {
+		return strings.Compare(a.PrincipalARN, b.PrincipalARN)
+	})
 
 	ctx := &evaluation.ReachabilityContext{
 		TotalReachablePrincipals: len(uniqueEntries),

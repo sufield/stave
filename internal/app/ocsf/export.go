@@ -48,6 +48,10 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 	events := make([]ComplianceFinding, 0, len(findings))
 	for i := range findings {
 		f := &findings[i]
+		uid := string(f.ControlID) + ":" + string(f.AssetID)
+		if f.AssetType != "" {
+			uid = string(f.ControlID) + ":" + string(f.AssetType) + ":" + string(f.AssetID)
+		}
 		events = append(events, ComplianceFinding{
 			ClassUID:   2003,
 			ClassName:  "Compliance Finding",
@@ -57,7 +61,7 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 			StatusID:   2,
 			Status:     "New",
 			Finding: OCSFFinding{
-				UID:   string(f.ControlID) + ":" + string(f.AssetID),
+				UID:   uid,
 				Title: f.ControlName,
 			},
 			Compliance: OCSFCompliance{

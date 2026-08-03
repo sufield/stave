@@ -30,10 +30,18 @@ func Check(snapshots []asset.Snapshot, threshold time.Duration, now time.Time) *
 		}
 	}
 
-	var mostRecent time.Time
-	for i := range snapshots {
+	mostRecent := snapshots[0].CapturedAt
+	for i := 1; i < len(snapshots); i++ {
 		if snapshots[i].CapturedAt.After(mostRecent) {
 			mostRecent = snapshots[i].CapturedAt
+		}
+	}
+
+	if mostRecent.IsZero() {
+		return &Result{
+			ThresholdHrs: threshold.Hours(),
+			Stale:        true,
+			Message:      "snapshot capture timestamp missing or zero",
 		}
 	}
 

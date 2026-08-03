@@ -98,6 +98,9 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 	for i := range findings {
 		f := &findings[i]
 		findingID := string(f.ControlID) + ":" + string(f.AssetID)
+		if f.AssetType != "" {
+			findingID = string(f.ControlID) + ":" + string(f.AssetType) + ":" + string(f.AssetID)
+		}
 		findingUUID := uuidV5("finding", findingID)
 		obsUUID := uuidV5("observation", findingID)
 

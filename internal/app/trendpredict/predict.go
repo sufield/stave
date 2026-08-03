@@ -40,15 +40,21 @@ type Input struct {
 
 // Predict computes the readiness timeline.
 func Predict(in Input) *Prediction {
-	if len(in.Assessments) == 0 {
+	valid := make([]*report.Assessment, 0, len(in.Assessments))
+	for _, a := range in.Assessments {
+		if a != nil {
+			valid = append(valid, a)
+		}
+	}
+	if len(valid) == 0 {
 		return &Prediction{
 			Profile:         in.Profile,
 			TargetReadiness: in.TargetReadiness,
 		}
 	}
 
-	sorted := make([]*report.Assessment, len(in.Assessments))
-	copy(sorted, in.Assessments)
+	sorted := make([]*report.Assessment, len(valid))
+	copy(sorted, valid)
 	slices.SortFunc(sorted, func(a, b *report.Assessment) int {
 		return a.Run.EvalTime.Compare(b.Run.EvalTime)
 	})

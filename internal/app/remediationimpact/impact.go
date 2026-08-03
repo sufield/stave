@@ -180,6 +180,8 @@ func computeEfficiency(in Input, realized float64, afterKeys map[findingKey]*rem
 			}
 		}
 	}
+	slices.Sort(stillOpen)
+	stillOpen = slices.Compact(stillOpen)
 
 	return &Efficiency{
 		PredictedDelta: in.PredictedDelta,
