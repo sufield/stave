@@ -785,7 +785,7 @@ fuzz-snapshot: fuzz-install
 fuzz-iam: fuzz-install
 	$(GOSENTRY_GO) test -fuzz=FuzzParsePolicyDocument \
 		--focus-on-new-code=false \
-		--use-grammar --grammar=fuzz/grammars/iam-policy-grammar.json \
+		--use-grammar --grammar=internal/fuzz/grammars/iam-policy-grammar.json \
 		--catch-races=true --catch-leaks=true \
 		--panic-on=log.Fatal -fuzztime=$(FUZZ_TIME) \
 		./internal/platform/providers/aws/iam/
