@@ -39,18 +39,18 @@ make chain-discover ARGS="-snapshot observations/"
 bash examples/demo-ai-security/run.sh
 ```
 
-### Onboarding skills (`_skills/`)
+### Onboarding skills (`internal/_skills/`)
 
 Six executable skills guide you from install to real-environment evaluation. Each skill is a markdown file your AI coding agent (Claude Code, Cursor) can read and execute — or you can follow manually.
 
 | # | Skill | Time | AWS needed? |
 |---|-------|------|-------------|
-| 1 | [_setup](./_skills/_setup/SKILL.md) | 5 min | No |
-| 2 | [first-evaluation](./_skills/first-evaluation/SKILL.md) | 10 min | No |
-| 3 | [lab-validation](./_skills/lab-validation/SKILL.md) | 30 min | Sandbox ($0) |
-| 4 | [write-your-first-control](./_skills/write-your-first-control/SKILL.md) | 20 min | No |
-| 5 | [reasoning-engines](./_skills/reasoning-engines/SKILL.md) | 30 min | No |
-| 6 | [snapshot-your-account](./_skills/snapshot-your-account/SKILL.md) | 30 min | Yes (read-only) |
+| 1 | [_setup](./internal/_skills/_setup/SKILL.md) | 5 min | No |
+| 2 | [first-evaluation](./internal/_skills/first-evaluation/SKILL.md) | 10 min | No |
+| 3 | [lab-validation](./internal/_skills/lab-validation/SKILL.md) | 30 min | Sandbox ($0) |
+| 4 | [write-your-first-control](./internal/_skills/write-your-first-control/SKILL.md) | 20 min | No |
+| 5 | [reasoning-engines](./internal/_skills/reasoning-engines/SKILL.md) | 30 min | No |
+| 6 | [snapshot-your-account](./internal/_skills/snapshot-your-account/SKILL.md) | 30 min | Yes (read-only) |
 
 ## Assessment Templates
 
