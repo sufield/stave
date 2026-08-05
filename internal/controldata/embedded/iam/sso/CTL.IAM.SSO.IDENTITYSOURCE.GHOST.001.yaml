@@ -1,0 +1,141 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.IDENTITYSOURCE.GHOST.001
+name: SSO Identity Source References Deleted External IdP
+description: >
+  IAM Identity Center is configured with an external identity source
+  (SAML IdP, OIDC provider, or Active Directory Connector) that no
+  longer exists. SSO authentication depends on the external identity
+  source to validate user credentials. When the referenced provider
+  is deleted or disconnected, authentication fails — users cannot
+  sign in to AWS accounts via SSO. The Identity Center console shows
+  an identity source configured. An auditor checking "is SSO
+  configured with an external IdP?" sees the configuration and marks
+  it compliant. The IdP doesn't exist — SSO authentication is broken
+  while appearing configured. Same ghost-reference archetype as
+  CTL.VERIFIEDPERMISSIONS.IDENTITYSOURCE.GHOST.001 and
+  CTL.EVENTBRIDGE.TARGET.GHOST.001.
+domain: identity
+severity: critical
+archetype: ghost-reference
+scope: compound
+compliance:
+  owasp_nhi: "NHI1"
+  nist_800_53_r5: "IA-2, CM-2"
+  soc2: "CC6.1, CC8.1"
+  pci_dss_v4.0: "8.3"
+  iso_27001_2022: "A.5.16, A.8.5"
+  ccm_v4: ["IAM-09", "IAM-14"]
+scope_tags:
+  - aws
+  - iam
+  - sso
+taxonomy:
+  - compliance-mapping
+  - trust-decay
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_sso_config
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 5.0
+observation_fields:
+  - identity.kind
+  - identity.sso.identity_source_configured
+  - identity.sso.identity_source_exists
+remediation:
+  description: >
+    SSO identity source references a deleted external IdP.
+    Authentication appears configured but cannot succeed.
+  action: >
+    Either reconnect the external identity source (recreate the
+    SAML provider, OIDC configuration, or AD Connector) or
+    reconfigure Identity Center to use a different identity source.
+    Verify that SSO authentication succeeds after the fix by
+    testing a sign-in flow end-to-end. Audit the gap window —
+    users who could not authenticate during the outage may have
+    used alternative access paths (IAM users, direct role
+    assumption) that bypass SSO security controls.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_config",
+        "sso": {
+          "identity_source_configured": true,
+          "identity_source_exists": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_config
+    - field: properties.identity.sso.identity_source_configured
+      op: eq
+      value: true
+    - field: properties.identity.sso.identity_source_exists
+      op: present
+    - field: properties.identity.sso.identity_source_exists
+      op: eq
+      value: false
+defect: >
+  SSO identity source references a deleted external identity
+  provider.
+infection: >
+  Identity Center shows an external identity source configured.
+  The SAML provider, OIDC provider, or AD Connector has been
+  deleted. SSO authentication attempts fail at the identity
+  source validation step. Users cannot sign in via SSO. The
+  organization falls back to alternative access paths — IAM
+  users with console passwords, direct role assumption via
+  access keys — all of which bypass the SSO security controls
+  (MFA enforcement, session duration limits, centralized
+  access governance). The ghost reference persists
+  indefinitely because Identity Center does not validate
+  the identity source health proactively.
+failure: >
+  SSO authentication broken. Identity source appears configured
+  but the external IdP no longer exists. Users cannot sign in
+  via SSO — organization-wide authentication failure.
+tests:
+  - name: ghost identity source fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-ghost/config"
+      asset_type: aws_iam_sso_config
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            identity_source_configured: true
+            identity_source_type: "EXTERNAL_IDP"
+            identity_source_exists: false
+  - name: valid identity source passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-valid/config"
+      asset_type: aws_iam_sso_config
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            identity_source_configured: true
+            identity_source_type: "EXTERNAL_IDP"
+            identity_source_exists: true
+  - name: no external identity source configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-default/config"
+      asset_type: aws_iam_sso_config
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            identity_source_configured: false
