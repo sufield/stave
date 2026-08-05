@@ -47,9 +47,12 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 //   - 46/22 → 27/9 after indeterminate separation: findings where
 //     the predicate references an absent field move to
 //     IndeterminateFindings (not exposed in the public Assessment).
+//   - 27/9 → 38/14 after EvalVersion bump (stave-cel/1.2):
+//     disjunction-aware IsIndeterminate restored confirmed status to
+//     findings where at least one any-branch has present data.
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
-	const wantFindings = 27
-	const wantIssues = 9
+	const wantFindings = 38
+	const wantIssues = 14
 
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
