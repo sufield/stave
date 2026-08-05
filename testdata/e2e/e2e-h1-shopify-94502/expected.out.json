@@ -20,7 +20,8 @@
   "summary": {
     "total_assets": 3,
     "exposed_resources": 3,
-    "violations": 13
+    "violations": 10,
+    "indeterminate": 3
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
@@ -659,755 +660,6 @@
           "property_path": "storage.controls.public_access_fully_blocked",
           "current_value": "false",
           "fix_action": "set to true (enable)"
-        }
-      ],
-      "contributing_fact_ids": [
-        "626d7a51d950",
-        "8670378b902c",
-        "8488fcbf655e",
-        "353c6d8ebb92",
-        "31b1e530e7c9",
-        "c2c4f4356c60",
-        "4f4df198f0f0",
-        "905acf2f40e4",
-        "f8421ce18371",
-        "9c93f4129d5d",
-        "becbbded6a1e",
-        "9c93f4129d5d",
-        "24826196987a",
-        "9c93f4129d5d",
-        "2129b0ec861c",
-        "9c93f4129d5d",
-        "f04aa886fdb8",
-        "9c93f4129d5d",
-        "b3f11a8c780d"
-      ]
-    },
-    {
-      "finding_id": "sha256:2a93f12f82459cae",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 89712,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.algorithm",
-            "actual_value": null,
-            "operator": "ne",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "bucket",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
-            "operator": "ne",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
-            "operator": "ne",
-            "unsafe_value": "public"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
-            "operator": "present",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance_ccm_v4": [
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.",
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"confidential\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\"\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-615ea15597343a26",
-        "target": {
-          "asset_id": "shopify-owned-1",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "exploitability": "reachable",
-      "sla_deadline_hours": 336,
-      "sla_breached": true,
-      "sla_overdue_hours": 89376,
-      "sla_escalated_severity": "critical",
-      "sla_policy_source": "profile:default",
-      "exposure_score": 100,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "storage.encryption.algorithm ne \"aws:kms\"",
-          "observation_key": "storage.encryption.algorithm",
-          "operator": "ne",
-          "expected_value": "aws:kms"
-        },
-        {
-          "predicate_expr": "storage.kind eq \"bucket\"",
-          "observation_key": "storage.kind",
-          "operator": "eq",
-          "expected_value": "bucket",
-          "observed_value": "bucket"
-        },
-        {
-          "predicate_expr": "storage.tags.data-classification ne \"non-sensitive\"",
-          "observation_key": "storage.tags.data-classification",
-          "operator": "ne",
-          "expected_value": "non-sensitive",
-          "observed_value": "potentially_sensitive"
-        },
-        {
-          "predicate_expr": "storage.tags.data-classification ne \"public\"",
-          "observation_key": "storage.tags.data-classification",
-          "operator": "ne",
-          "expected_value": "public",
-          "observed_value": "potentially_sensitive"
-        },
-        {
-          "predicate_expr": "storage.tags.data-classification present true",
-          "observation_key": "storage.tags.data-classification",
-          "operator": "present",
-          "expected_value": true,
-          "observed_value": "potentially_sensitive"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "shopify-owned-1",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.ENCRYPT.004",
-          "control_name": "Sensitive Data Requires KMS Encryption",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "the encryption algorithm not equal \"aws:kms\" (observed: not set)",
-              "observation_key": "storage.encryption.algorithm"
-            },
-            {
-              "clause": "storage.kind = \"bucket\"",
-              "observation_key": "storage.kind",
-              "observed_value": "bucket"
-            },
-            {
-              "clause": "the bucket's data-classification tag not equal \"non-sensitive\" (observed: \"potentially_sensitive\")",
-              "observation_key": "storage.tags.data-classification",
-              "observed_value": "potentially_sensitive"
-            },
-            {
-              "clause": "the bucket's data-classification tag not equal \"public\" (observed: \"potentially_sensitive\")",
-              "observation_key": "storage.tags.data-classification",
-              "observed_value": "potentially_sensitive"
-            },
-            {
-              "clause": "the bucket's data-classification tag is set (observed: \"potentially_sensitive\")",
-              "observation_key": "storage.tags.data-classification",
-              "observed_value": "potentially_sensitive"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "storage.encryption.algorithm",
-            "current_value": "",
-            "required_value": "aws:kms",
-            "has_safe_default": false,
-            "description": "Set storage.encryption.algorithm to aws:kms"
-          },
-          {
-            "path": "storage.kind",
-            "current_value": "bucket",
-            "required_value": "any value other than bucket",
-            "has_safe_default": false,
-            "description": "Change storage.kind away from bucket"
-          },
-          {
-            "path": "storage.tags.data-classification",
-            "current_value": "potentially_sensitive",
-            "required_value": "non-sensitive",
-            "has_safe_default": false,
-            "description": "Set storage.tags.data-classification to non-sensitive"
-          },
-          {
-            "path": "storage.tags.data-classification",
-            "current_value": "potentially_sensitive",
-            "required_value": "public",
-            "has_safe_default": false,
-            "description": "Set storage.tags.data-classification to public"
-          },
-          {
-            "path": "storage.tags.data-classification",
-            "current_value": "potentially_sensitive",
-            "required_value": "absent",
-            "has_safe_default": false,
-            "description": "Remove storage.tags.data-classification"
-          }
-        ],
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ],
-      "delta": [
-        {
-          "property_label": "encryption algorithm",
-          "property_path": "storage.encryption.algorithm",
-          "current_value": "",
-          "fix_action": "set to aws:kms"
-        },
-        {
-          "property_label": "data classification tag",
-          "property_path": "storage.tags.data-classification",
-          "current_value": "potentially_sensitive",
-          "fix_action": "set to non-sensitive"
-        },
-        {
-          "property_label": "data classification tag",
-          "property_path": "storage.tags.data-classification",
-          "current_value": "potentially_sensitive",
-          "fix_action": "set to public"
-        },
-        {
-          "property_label": "data classification tag",
-          "property_path": "storage.tags.data-classification",
-          "current_value": "potentially_sensitive",
-          "fix_action": "remove this property from the configuration"
-        }
-      ],
-      "contributing_fact_ids": [
-        "c8dd3f3f687b",
-        "e82b8fb1643f",
-        "0eb3274e47c4",
-        "7a2709afba32",
-        "b0f4bcf11565",
-        "f9b496f88872",
-        "69f541503f6c",
-        "43fbae57c236",
-        "bbeaeda53d5e",
-        "ee36038e0fa2",
-        "b4468b971aa6",
-        "ee36038e0fa2",
-        "bed80686a657",
-        "ee36038e0fa2",
-        "4d71428195be",
-        "ee36038e0fa2",
-        "1a1bad2125bc"
-      ]
-    },
-    {
-      "finding_id": "sha256:43b35c1b0184fc08",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 89712,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.algorithm",
-            "actual_value": null,
-            "operator": "ne",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "bucket",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
-            "operator": "ne",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
-            "operator": "ne",
-            "unsafe_value": "public"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
-            "operator": "present",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance_ccm_v4": [
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.",
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"confidential\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\"\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-7e4244a99e10acdb",
-        "target": {
-          "asset_id": "shopify-owned-2",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "exploitability": "reachable",
-      "sla_deadline_hours": 336,
-      "sla_breached": true,
-      "sla_overdue_hours": 89376,
-      "sla_escalated_severity": "critical",
-      "sla_policy_source": "profile:default",
-      "exposure_score": 100,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "storage.encryption.algorithm ne \"aws:kms\"",
-          "observation_key": "storage.encryption.algorithm",
-          "operator": "ne",
-          "expected_value": "aws:kms"
-        },
-        {
-          "predicate_expr": "storage.kind eq \"bucket\"",
-          "observation_key": "storage.kind",
-          "operator": "eq",
-          "expected_value": "bucket",
-          "observed_value": "bucket"
-        },
-        {
-          "predicate_expr": "storage.tags.data-classification ne \"non-sensitive\"",
-          "observation_key": "storage.tags.data-classification",
-          "operator": "ne",
-          "expected_value": "non-sensitive",
-          "observed_value": "potentially_sensitive"
-        },
-        {
-          "predicate_expr": "storage.tags.data-classification ne \"public\"",
-          "observation_key": "storage.tags.data-classification",
-          "operator": "ne",
-          "expected_value": "public",
-          "observed_value": "potentially_sensitive"
-        },
-        {
-          "predicate_expr": "storage.tags.data-classification present true",
-          "observation_key": "storage.tags.data-classification",
-          "operator": "present",
-          "expected_value": true,
-          "observed_value": "potentially_sensitive"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "shopify-owned-2",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.ENCRYPT.004",
-          "control_name": "Sensitive Data Requires KMS Encryption",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "the encryption algorithm not equal \"aws:kms\" (observed: not set)",
-              "observation_key": "storage.encryption.algorithm"
-            },
-            {
-              "clause": "storage.kind = \"bucket\"",
-              "observation_key": "storage.kind",
-              "observed_value": "bucket"
-            },
-            {
-              "clause": "the bucket's data-classification tag not equal \"non-sensitive\" (observed: \"potentially_sensitive\")",
-              "observation_key": "storage.tags.data-classification",
-              "observed_value": "potentially_sensitive"
-            },
-            {
-              "clause": "the bucket's data-classification tag not equal \"public\" (observed: \"potentially_sensitive\")",
-              "observation_key": "storage.tags.data-classification",
-              "observed_value": "potentially_sensitive"
-            },
-            {
-              "clause": "the bucket's data-classification tag is set (observed: \"potentially_sensitive\")",
-              "observation_key": "storage.tags.data-classification",
-              "observed_value": "potentially_sensitive"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "storage.encryption.algorithm",
-            "current_value": "",
-            "required_value": "aws:kms",
-            "has_safe_default": false,
-            "description": "Set storage.encryption.algorithm to aws:kms"
-          },
-          {
-            "path": "storage.kind",
-            "current_value": "bucket",
-            "required_value": "any value other than bucket",
-            "has_safe_default": false,
-            "description": "Change storage.kind away from bucket"
-          },
-          {
-            "path": "storage.tags.data-classification",
-            "current_value": "potentially_sensitive",
-            "required_value": "non-sensitive",
-            "has_safe_default": false,
-            "description": "Set storage.tags.data-classification to non-sensitive"
-          },
-          {
-            "path": "storage.tags.data-classification",
-            "current_value": "potentially_sensitive",
-            "required_value": "public",
-            "has_safe_default": false,
-            "description": "Set storage.tags.data-classification to public"
-          },
-          {
-            "path": "storage.tags.data-classification",
-            "current_value": "potentially_sensitive",
-            "required_value": "absent",
-            "has_safe_default": false,
-            "description": "Remove storage.tags.data-classification"
-          }
-        ],
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ],
-      "delta": [
-        {
-          "property_label": "encryption algorithm",
-          "property_path": "storage.encryption.algorithm",
-          "current_value": "",
-          "fix_action": "set to aws:kms"
-        },
-        {
-          "property_label": "data classification tag",
-          "property_path": "storage.tags.data-classification",
-          "current_value": "potentially_sensitive",
-          "fix_action": "set to non-sensitive"
-        },
-        {
-          "property_label": "data classification tag",
-          "property_path": "storage.tags.data-classification",
-          "current_value": "potentially_sensitive",
-          "fix_action": "set to public"
-        },
-        {
-          "property_label": "data classification tag",
-          "property_path": "storage.tags.data-classification",
-          "current_value": "potentially_sensitive",
-          "fix_action": "remove this property from the configuration"
-        }
-      ],
-      "contributing_fact_ids": [
-        "e16765952e1d",
-        "109399fa23f9",
-        "79d725f41cf2",
-        "dee492f9a340",
-        "384f2dedfef2",
-        "61ed6f32eff4",
-        "739dd0893b31",
-        "f705c8dd760e",
-        "2ce53d85a9ac",
-        "2da1fdd521f0",
-        "c4b5c4c8b892",
-        "2da1fdd521f0",
-        "90736660739a",
-        "2da1fdd521f0",
-        "c0d2b6f1b2df",
-        "2da1fdd521f0",
-        "294e64ccb1c6"
-      ]
-    },
-    {
-      "finding_id": "sha256:97d0355fc7d11de3",
-      "control_id": "CTL.S3.ENCRYPT.004",
-      "control_name": "Sensitive Data Requires KMS Encryption",
-      "control_description": "S3 buckets with any non-public data classification must use SSE-KMS encryption with a customer-managed key, not SSE-S3 (AES256). AES256 uses AWS-managed keys with no customer control over key rotation, access policies, or audit trails. This fires on all classified data except explicitly public or non-sensitive buckets.\n",
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2015-10-18T00:00:00Z",
-        "last_seen_unsafe_at": "2015-10-26T00:00:00Z",
-        "unsafe_duration_hours": 89712,
-        "misconfigurations": [
-          {
-            "property": "storage.encryption.algorithm",
-            "actual_value": null,
-            "operator": "ne",
-            "unsafe_value": "aws:kms"
-          },
-          {
-            "property": "storage.kind",
-            "actual_value": "bucket",
-            "operator": "eq",
-            "unsafe_value": "bucket"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
-            "operator": "ne",
-            "unsafe_value": "non-sensitive"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
-            "operator": "ne",
-            "unsafe_value": "public"
-          },
-          {
-            "property": "storage.tags.data-classification",
-            "actual_value": "potentially_sensitive",
-            "operator": "present",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 89712 hours (SLA: 0 hours). Exposed since 2015-10-18T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance_ccm_v4": [
-        "CEK-03"
-      ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "Bucket with classified data is using SSE-S3 (AES256) instead of SSE-KMS. AWS-managed keys provide no customer control over key rotation, access policies, or audit trails.",
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings.",
-        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"data-classification\": \"confidential\"\n    },\n    \"encryption\": {\n      \"algorithm\": \"aws:kms\"\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-655489696a02bf28",
-        "target": {
-          "asset_id": "shopify-writeable-1",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "exploitability": "reachable",
-      "sla_deadline_hours": 336,
-      "sla_breached": true,
-      "sla_overdue_hours": 89376,
-      "sla_escalated_severity": "critical",
-      "sla_policy_source": "profile:default",
-      "exposure_score": 100,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "storage.encryption.algorithm ne \"aws:kms\"",
-          "observation_key": "storage.encryption.algorithm",
-          "operator": "ne",
-          "expected_value": "aws:kms"
-        },
-        {
-          "predicate_expr": "storage.kind eq \"bucket\"",
-          "observation_key": "storage.kind",
-          "operator": "eq",
-          "expected_value": "bucket",
-          "observed_value": "bucket"
-        },
-        {
-          "predicate_expr": "storage.tags.data-classification ne \"non-sensitive\"",
-          "observation_key": "storage.tags.data-classification",
-          "operator": "ne",
-          "expected_value": "non-sensitive",
-          "observed_value": "potentially_sensitive"
-        },
-        {
-          "predicate_expr": "storage.tags.data-classification ne \"public\"",
-          "observation_key": "storage.tags.data-classification",
-          "operator": "ne",
-          "expected_value": "public",
-          "observed_value": "potentially_sensitive"
-        },
-        {
-          "predicate_expr": "storage.tags.data-classification present true",
-          "observation_key": "storage.tags.data-classification",
-          "operator": "present",
-          "expected_value": true,
-          "observed_value": "potentially_sensitive"
-        }
-      ],
-      "remediation_context": {
-        "asset": {
-          "id": "shopify-writeable-1",
-          "type": "aws_s3_bucket",
-          "vendor": "aws"
-        },
-        "violation": {
-          "control_id": "CTL.S3.ENCRYPT.004",
-          "control_name": "Sensitive Data Requires KMS Encryption",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "the encryption algorithm not equal \"aws:kms\" (observed: not set)",
-              "observation_key": "storage.encryption.algorithm"
-            },
-            {
-              "clause": "storage.kind = \"bucket\"",
-              "observation_key": "storage.kind",
-              "observed_value": "bucket"
-            },
-            {
-              "clause": "the bucket's data-classification tag not equal \"non-sensitive\" (observed: \"potentially_sensitive\")",
-              "observation_key": "storage.tags.data-classification",
-              "observed_value": "potentially_sensitive"
-            },
-            {
-              "clause": "the bucket's data-classification tag not equal \"public\" (observed: \"potentially_sensitive\")",
-              "observation_key": "storage.tags.data-classification",
-              "observed_value": "potentially_sensitive"
-            },
-            {
-              "clause": "the bucket's data-classification tag is set (observed: \"potentially_sensitive\")",
-              "observation_key": "storage.tags.data-classification",
-              "observed_value": "potentially_sensitive"
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "storage.encryption.algorithm",
-            "current_value": "",
-            "required_value": "aws:kms",
-            "has_safe_default": false,
-            "description": "Set storage.encryption.algorithm to aws:kms"
-          },
-          {
-            "path": "storage.kind",
-            "current_value": "bucket",
-            "required_value": "any value other than bucket",
-            "has_safe_default": false,
-            "description": "Change storage.kind away from bucket"
-          },
-          {
-            "path": "storage.tags.data-classification",
-            "current_value": "potentially_sensitive",
-            "required_value": "non-sensitive",
-            "has_safe_default": false,
-            "description": "Set storage.tags.data-classification to non-sensitive"
-          },
-          {
-            "path": "storage.tags.data-classification",
-            "current_value": "potentially_sensitive",
-            "required_value": "public",
-            "has_safe_default": false,
-            "description": "Set storage.tags.data-classification to public"
-          },
-          {
-            "path": "storage.tags.data-classification",
-            "current_value": "potentially_sensitive",
-            "required_value": "absent",
-            "has_safe_default": false,
-            "description": "Remove storage.tags.data-classification"
-          }
-        ],
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "s3"
-      ],
-      "delta": [
-        {
-          "property_label": "encryption algorithm",
-          "property_path": "storage.encryption.algorithm",
-          "current_value": "",
-          "fix_action": "set to aws:kms"
-        },
-        {
-          "property_label": "data classification tag",
-          "property_path": "storage.tags.data-classification",
-          "current_value": "potentially_sensitive",
-          "fix_action": "set to non-sensitive"
-        },
-        {
-          "property_label": "data classification tag",
-          "property_path": "storage.tags.data-classification",
-          "current_value": "potentially_sensitive",
-          "fix_action": "set to public"
-        },
-        {
-          "property_label": "data classification tag",
-          "property_path": "storage.tags.data-classification",
-          "current_value": "potentially_sensitive",
-          "fix_action": "remove this property from the configuration"
         }
       ],
       "contributing_fact_ids": [
@@ -2647,6 +1899,44 @@
       ]
     }
   ],
+  "indeterminate": [
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "severity": "high",
+      "asset_id": "shopify-owned-1",
+      "asset_type": "aws_s3_bucket",
+      "verdict": "INDETERMINATE",
+      "missing_fields": [
+        "storage.encryption.algorithm"
+      ],
+      "gap_cause": "collector_gap"
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "severity": "high",
+      "asset_id": "shopify-owned-2",
+      "asset_type": "aws_s3_bucket",
+      "verdict": "INDETERMINATE",
+      "missing_fields": [
+        "storage.encryption.algorithm"
+      ],
+      "gap_cause": "collector_gap"
+    },
+    {
+      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_name": "Sensitive Data Requires KMS Encryption",
+      "severity": "high",
+      "asset_id": "shopify-writeable-1",
+      "asset_type": "aws_s3_bucket",
+      "verdict": "INDETERMINATE",
+      "missing_fields": [
+        "storage.encryption.algorithm"
+      ],
+      "gap_cause": "collector_gap"
+    }
+  ],
   "issues": [
     {
       "issue_id": "sha256:94beec8e6c7d048b",
@@ -2658,22 +1948,6 @@
       "headline_finding_id": "sha256:5ff31ca00d60035c",
       "member_finding_ids": [
         "sha256:5ff31ca00d60035c"
-      ],
-      "consolidated_score": 100,
-      "consolidated_blast_radius": 1
-    },
-    {
-      "issue_id": "sha256:bca48dc12ebbdad3",
-      "asset_id": "shopify-owned-1",
-      "shared_keys": [
-        "storage.encryption",
-        "storage.encryption.algorithm",
-        "storage.tags",
-        "storage.tags.data-classification"
-      ],
-      "headline_finding_id": "sha256:2a93f12f82459cae",
-      "member_finding_ids": [
-        "sha256:2a93f12f82459cae"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -2725,22 +1999,6 @@
       "consolidated_blast_radius": 1
     },
     {
-      "issue_id": "sha256:dd07a3d9d174fb5f",
-      "asset_id": "shopify-owned-2",
-      "shared_keys": [
-        "storage.encryption",
-        "storage.encryption.algorithm",
-        "storage.tags",
-        "storage.tags.data-classification"
-      ],
-      "headline_finding_id": "sha256:43b35c1b0184fc08",
-      "member_finding_ids": [
-        "sha256:43b35c1b0184fc08"
-      ],
-      "consolidated_score": 100,
-      "consolidated_blast_radius": 1
-    },
-    {
       "issue_id": "sha256:27bef4f13b73d427",
       "asset_id": "shopify-writeable-1",
       "shared_keys": [
@@ -2754,22 +2012,6 @@
         "sha256:2cc8155fb0e69ce2",
         "sha256:56fd962fa2dcfc97",
         "sha256:74e6f47359fecaf5"
-      ],
-      "consolidated_score": 100,
-      "consolidated_blast_radius": 1
-    },
-    {
-      "issue_id": "sha256:b0f9a76a900a5c2e",
-      "asset_id": "shopify-writeable-1",
-      "shared_keys": [
-        "storage.encryption",
-        "storage.encryption.algorithm",
-        "storage.tags",
-        "storage.tags.data-classification"
-      ],
-      "headline_finding_id": "sha256:97d0355fc7d11de3",
-      "member_finding_ids": [
-        "sha256:97d0355fc7d11de3"
       ],
       "consolidated_score": 100,
       "consolidated_blast_radius": 1
@@ -2851,22 +2093,6 @@
       "finding_count": 1
     },
     {
-      "asset_id": "shopify-owned-1",
-      "asset_type": "aws_s3_bucket",
-      "fix_plan": {
-        "id": "fix-615ea15597343a26",
-        "target": {
-          "asset_id": "shopify-owned-1",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "contributing_controls": [
-        "CTL.S3.ENCRYPT.004"
-      ],
-      "finding_count": 1
-    },
-    {
       "asset_id": "shopify-owned-2",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
@@ -2927,22 +2153,6 @@
       "finding_count": 1
     },
     {
-      "asset_id": "shopify-owned-2",
-      "asset_type": "aws_s3_bucket",
-      "fix_plan": {
-        "id": "fix-7e4244a99e10acdb",
-        "target": {
-          "asset_id": "shopify-owned-2",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "contributing_controls": [
-        "CTL.S3.ENCRYPT.004"
-      ],
-      "finding_count": 1
-    },
-    {
       "asset_id": "shopify-writeable-1",
       "asset_type": "aws_s3_bucket",
       "fix_plan": {
@@ -2955,22 +2165,6 @@
       },
       "contributing_controls": [
         "CTL.S3.CONTROLS.001"
-      ],
-      "finding_count": 1
-    },
-    {
-      "asset_id": "shopify-writeable-1",
-      "asset_type": "aws_s3_bucket",
-      "fix_plan": {
-        "id": "fix-655489696a02bf28",
-        "target": {
-          "asset_id": "shopify-writeable-1",
-          "asset_type": "aws_s3_bucket"
-        },
-        "action": "Change the bucket default encryption to SSE-KMS with a customer-managed key. Re-encrypt existing objects by copying them in place with the new encryption settings."
-      },
-      "contributing_controls": [
-        "CTL.S3.ENCRYPT.004"
       ],
       "finding_count": 1
     },
@@ -3071,14 +2265,14 @@
     },
     {
       "finding_index": 3,
-      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-1",
       "exposure_score": 100,
       "breakdown": {
-        "base_score": 75,
+        "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
+        "exposure_multiplier": 2,
         "chain_bonus": 1,
         "blind_multiplier": 5,
         "days_blind": 3738
@@ -3087,14 +2281,14 @@
     },
     {
       "finding_index": 4,
-      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-owned-2",
       "exposure_score": 100,
       "breakdown": {
-        "base_score": 75,
+        "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
+        "exposure_multiplier": 2,
         "chain_bonus": 1,
         "blind_multiplier": 5,
         "days_blind": 3738
@@ -3103,14 +2297,14 @@
     },
     {
       "finding_index": 5,
-      "control_id": "CTL.S3.ENCRYPT.004",
+      "control_id": "CTL.S3.PUBLIC.001",
       "asset_id": "shopify-writeable-1",
       "exposure_score": 100,
       "breakdown": {
-        "base_score": 75,
+        "base_score": 100,
         "duration_factor": 5,
         "blast_multiplier": 1,
-        "exposure_multiplier": 1,
+        "exposure_multiplier": 2,
         "chain_bonus": 1,
         "blind_multiplier": 5,
         "days_blind": 3738
@@ -3119,54 +2313,6 @@
     },
     {
       "finding_index": 6,
-      "control_id": "CTL.S3.PUBLIC.001",
-      "asset_id": "shopify-owned-1",
-      "exposure_score": 100,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 7,
-      "control_id": "CTL.S3.PUBLIC.001",
-      "asset_id": "shopify-owned-2",
-      "exposure_score": 100,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 8,
-      "control_id": "CTL.S3.PUBLIC.001",
-      "asset_id": "shopify-writeable-1",
-      "exposure_score": 100,
-      "breakdown": {
-        "base_score": 100,
-        "duration_factor": 5,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 2,
-        "chain_bonus": 1,
-        "blind_multiplier": 5,
-        "days_blind": 3738
-      },
-      "silent_killer": true
-    },
-    {
-      "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.003",
       "asset_id": "shopify-writeable-1",
       "exposure_score": 100,
@@ -3182,7 +2328,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 10,
+      "finding_index": 7,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-1",
       "exposure_score": 100,
@@ -3198,7 +2344,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 11,
+      "finding_index": 8,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-owned-2",
       "exposure_score": 100,
@@ -3214,7 +2360,7 @@
       "silent_killer": true
     },
     {
-      "finding_index": 12,
+      "finding_index": 9,
       "control_id": "CTL.S3.PUBLIC.004",
       "asset_id": "shopify-writeable-1",
       "exposure_score": 100,

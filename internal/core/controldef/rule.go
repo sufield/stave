@@ -40,8 +40,12 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 
 	var disjunctionSeq int
 	var misconfigurations []Misconfiguration
-	for i := range p.Any {
-		misconfigurations = p.Any[i].collect(ctx, misconfigurations, &disjunctionSeq, 0)
+	if len(p.Any) > 0 {
+		disjunctionSeq++
+		topID := disjunctionSeq
+		for i := range p.Any {
+			misconfigurations = p.Any[i].collect(ctx, misconfigurations, &disjunctionSeq, topID)
+		}
 	}
 	for i := range p.All {
 		misconfigurations = p.All[i].collect(ctx, misconfigurations, &disjunctionSeq, 0)
