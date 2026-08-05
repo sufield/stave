@@ -36,6 +36,7 @@ description: |-
       2   - Invalid input or configuration error
       3   - Violations found
       4   - Internal error
+      5   - No violations but indeterminate results exist (data gaps)
       130 - Interrupted (SIGINT)
 
     Remediation scope:
@@ -81,6 +82,9 @@ options:
         Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.
     - name: exemption-file
       usage: Path to asset exemption list YAML file
+    - name: findings-only
+      default_value: "false"
+      usage: Show only confirmed findings, suppress indeterminate results
     - name: format
       shorthand: f
       default_value: text
@@ -106,6 +110,9 @@ options:
       default_value: "false"
       usage: |
         Include per-control (atomic) findings in output (default: compound findings only)
+    - name: indeterminate-only
+      default_value: "false"
+      usage: Show only indeterminate results, suppress confirmed findings
     - name: input
       usage: Path to observations bundle file (required with --profile)
     - name: integrity-manifest

@@ -113,13 +113,9 @@ func TestApplyProfileE2E(t *testing.T) {
 		wantExit  int
 		wantViol  int
 	}{
-		// Counts updated post-collector dedup: identical FindingIDs
-		// from overlapping strategies are now suppressed at record
-		// time, so the visible violation total matches the unique
-		// finding-ID count.
-		{"obs-public", "aws-s3-obs-public", "aws-s3", nil, 3, 13},
-		{"obs-private", "aws-s3-obs-private", "aws-s3", nil, 3, 4},
-		{"hipaa-cross-domain", "e2e-hipaa-cross-domain", "hipaa", []string{"--include-all"}, 3, 29},
+		{"obs-public", "aws-s3-obs-public", "aws-s3", nil, 3, 9},
+		{"obs-private", "aws-s3-obs-private", "aws-s3", nil, 0, 0},
+		{"hipaa-cross-domain", "e2e-hipaa-cross-domain", "hipaa", []string{"--include-all"}, 3, 21},
 	}
 
 	for _, tc := range testCases {

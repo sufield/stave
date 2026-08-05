@@ -44,9 +44,12 @@ var frozenNow = time.Date(2026, 1, 11, 0, 0, 0, 0, time.UTC)
 //   - 142/114 → 46/22 after applicable_asset_types backfill scoped
 //     non-S3 controls (IAM, Lambda, GuardDuty, etc.) away from this
 //     S3-only fixture. Only S3 controls fire on aws_s3_bucket assets.
+//   - 46/22 → 27/9 after indeterminate separation: findings where
+//     the predicate references an absent field move to
+//     IndeterminateFindings (not exposed in the public Assessment).
 func TestApply_LordofheavenBuiltinControls(t *testing.T) {
-	const wantFindings = 46
-	const wantIssues = 22
+	const wantFindings = 27
+	const wantIssues = 9
 
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
