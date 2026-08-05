@@ -1,0 +1,26 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.pipeline-propagation"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/github-actions-deploy",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "iam_role",
+          "cicd_role": true,
+          "effective_access": {
+            "ecr": true,
+            "secretsmanager": true,
+            "s3": true
+          }
+        }
+      }
+    }
+  ]
+}

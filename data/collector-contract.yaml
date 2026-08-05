@@ -1588,3 +1588,52 @@ contracts:
       hosted zone associated with VPCs).
     consumers:
       - CTL.ROUTE53.DNSSEC.DISABLED.001
+
+  # ─── IAM Identity Classification ────────────────────────────
+
+  - field: identity.cicd_role
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IAM role is identified as a CI/CD role by its
+      trust policy (OIDC principal from GitHub Actions, GitLab,
+      Bitbucket, or other CI service principals) or by name
+      patterns matching CI/CD conventions. Collectors MUST check
+      the trust policy's Principal and Condition fields, not just
+      the role name.
+    consumers:
+      - CTL.IAM.FOOTHOLD.CICD.ECR.001
+      - CTL.IAM.FOOTHOLD.CICD.SECRETS.001
+      - CTL.IAM.FOOTHOLD.CICD.S3.001
+
+  - field: identity.effective_access.ecr
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the role has effective permissions to push container
+      images to ECR (ecr:PutImage, ecr:BatchPutImage, or
+      ecr:CompleteLayerUpload) after evaluating inline policies,
+      attached managed policies, and permission boundaries.
+    consumers:
+      - CTL.IAM.FOOTHOLD.CICD.ECR.001
+
+  - field: identity.effective_access.secretsmanager
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the role has effective permissions to read secrets
+      from Secrets Manager (secretsmanager:GetSecretValue) after
+      evaluating inline policies, attached managed policies, and
+      permission boundaries.
+    consumers:
+      - CTL.IAM.FOOTHOLD.CICD.SECRETS.001
+
+  - field: identity.effective_access.s3
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the role has effective permissions to write objects
+      to S3 (s3:PutObject) after evaluating inline policies,
+      attached managed policies, and permission boundaries.
+    consumers:
+      - CTL.IAM.FOOTHOLD.CICD.S3.001

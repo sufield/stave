@@ -50,6 +50,21 @@ Lightsail managed databases must not be publicly accessible.
 
 ---
 
+### CTL.LIGHTSAIL.INSTANCE.PATCHSTATE.001
+
+**Lightsail Instance Has Pending Security Patches**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; soc2: CC7.1;
+
+Lightsail instance has pending security patches. Unlike EC2 instances managed by Systems Manager Patch Manager, Lightsail instances rely on manual patching or blueprint updates. The OpenClaw-on-Lightsail disclosure found 47 pending security patches from first boot, including three critical OpenSSH CVEs (CVE-2026-3497, CVE-2025-61984, CVE-2025-61985). Unpatched instances with public-facing services are direct RCE targets.
+
+**Remediation:** SSH into the instance and run the OS package manager to apply pending security updates. For Ubuntu: sudo apt update && sudo apt upgrade -y. Schedule regular patching or consider migrating to EC2 with Systems Manager Patch Manager for automated compliance.
+
+---
+
 ### CTL.LIGHTSAIL.INSTANCE.PUBLIC.001
 
 **Lightsail Instances Must Not Expose Public Ports Broadly**
@@ -62,6 +77,21 @@ Lightsail managed databases must not be publicly accessible.
 Lightsail instances with public IPs must not have firewall rules allowing broad public access to service ports.
 
 **Remediation:** Restrict firewall rules to specific CIDR ranges.
+
+---
+
+### CTL.LIGHTSAIL.LOG.EXPORT.001
+
+**Lightsail Instance Has No Log Export Configuration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-4, AU-9; soc2: CC7.1;
+
+Lightsail instance has no configured log export destination. Logs stored in ephemeral locations (/tmp, instance-store volumes) are lost on reboot — total forensic blindness. Unlike EC2 instances, Lightsail instances cannot attach CloudWatchAgentServerPolicy to instance roles via the standard IAM console flow. Log export requires manual CloudWatch agent installation with IAM user credentials or a custom instance profile. This manual step is easily missed, leaving the instance without any durable audit trail.
+
+**Remediation:** Install the CloudWatch agent on the Lightsail instance and configure it to export application and system logs to a CloudWatch Log Group. Create an IAM user with CloudWatchAgentServerPolicy, generate access keys, and configure the agent with those credentials. Alternatively, configure rsyslog to forward to a remote syslog server or an S3 bucket via a cron-based upload script.
 
 ---
 

@@ -1726,6 +1726,51 @@ Federated role trust policy does not require session tags. Without session tags,
 
 ---
 
+### CTL.IAM.FOOTHOLD.CICD.ECR.001
+
+**CI/CD Role Can Push Container Images to ECR**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+A CI/CD-identified role has effective permissions to push container images to ECR (ecr:PutImage, ecr:BatchPutImage, ecr:CompleteLayerUpload). If the pipeline is compromised through a supply chain attack on a dependency, the attacker can publish backdoored container images that production services pull. This is the artifact-poisoning leg of the supply chain propagation compound.
+
+**Remediation:** Scope ECR push permissions to specific repositories. Use ECR repository policies to restrict which roles can push, and enable image scanning on push to detect known vulnerabilities in published images.
+
+---
+
+### CTL.IAM.FOOTHOLD.CICD.S3.001
+
+**CI/CD Role Can Write Deployment Artifacts to S3**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+A CI/CD-identified role has effective permissions to write objects to S3 (s3:PutObject). S3 buckets are the standard artifact store for Lambda deployment zips, CloudFormation templates, Terraform state, and Helm charts. If the pipeline is compromised through a supply chain attack, the attacker modifies deployment artifacts — injecting backdoors into Lambda functions, CloudFormation templates, or Terraform state files that execute on next deploy.
+
+**Remediation:** Scope S3 write permissions to specific bucket ARNs and key prefixes. Use S3 Object Lock on artifact buckets to prevent overwrite of released artifacts. Enable S3 versioning so tampered artifacts are detectable.
+
+---
+
+### CTL.IAM.FOOTHOLD.CICD.SECRETS.001
+
+**CI/CD Role Can Read Production Secrets**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.1;
+
+A CI/CD-identified role has effective permissions to read secrets from Secrets Manager (secretsmanager:GetSecretValue) or SSM Parameter Store SecureStrings (ssm:GetParameter). If the pipeline is compromised through a supply chain attack, the attacker harvests database credentials, API keys, and service tokens. The TeamPCP/Trivy attack (March 2026) stole the BerriAI/LiteLLM PyPI publishing token from Secrets Manager through exactly this path.
+
+**Remediation:** Restrict secrets access to only the specific secrets the pipeline needs. Use resource-based conditions to scope secretsmanager:GetSecretValue to named secret ARNs. If the pipeline only needs secrets at deploy time, use a separate deploy-phase role with time-limited access.
+
+---
+
 ### CTL.IAM.FOOTHOLD.CICD.TRIPLE.001
 
 **CI/CD Deploy Role Must Not Hold CloudFormation + IAM + Secrets Together**

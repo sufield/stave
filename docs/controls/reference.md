@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3310
-**Pack hash:** `5813e66cc2c80437b5c48dc3f615196766a6cdd1e37f56386ca56da9f0cfa6ec`
+**Total controls:** 3316
+**Pack hash:** `09dc6d81286de519664d5b4d46deb3128de3b60a99dd95e21b87134ab1dedd1e`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 367 |
-| high | 1436 |
+| high | 1439 |
 | info | 19 |
 | low | 238 |
-| medium | 1250 |
+| medium | 1253 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,10 +28,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 142 |
 | encryption | 125 |
-| exposure | 1458 |
-| governance | 660 |
+| exposure | 1460 |
+| governance | 661 |
 | hygiene | 21 |
-| identity | 657 |
+| identity | 660 |
 | lifecycle | 31 |
 | network | 52 |
 | resilience | 39 |
@@ -104,7 +104,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 21 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 329 |
+| [IAM](reference/iam.md) | 332 |
 | [INSPECTOR](reference/inspector.md) | 4 |
 | [IOT](reference/iot.md) | 2 |
 | [K8S](reference/k8s.md) | 68 |
@@ -114,7 +114,7 @@ GitHub. Pick a service below.
 | [LAKEFORMATION](reference/lakeformation.md) | 3 |
 | [LAMBDA](reference/lambda.md) | 92 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
-| [LIGHTSAIL](reference/lightsail.md) | 6 |
+| [LIGHTSAIL](reference/lightsail.md) | 8 |
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 5 |
 | [MEDIASTORE](reference/mediastore.md) | 1 |
@@ -128,7 +128,7 @@ GitHub. Pick a service below.
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [NLB](reference/nlb.md) | 2 |
 | [OPENSEARCH](reference/opensearch.md) | 133 |
-| [ORG](reference/org.md) | 63 |
+| [ORG](reference/org.md) | 64 |
 | [QLDB](reference/qldb.md) | 1 |
 | [QUICKSIGHT](reference/quicksight.md) | 2 |
 | [RAM](reference/ram.md) | 3 |

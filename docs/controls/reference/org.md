@@ -830,6 +830,21 @@ No SCP prevents modification of critical security and governance IAM roles in me
 
 ---
 
+### CTL.ORG.SCP.REGIONDENY.NOTACTION.BEDROCK.001
+
+**Region-Deny SCP Exempts Bedrock Invocation Actions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+A region-deny SCP includes Bedrock invocation actions (bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream) in its NotAction list. NotAction in a Deny statement means "deny everything EXCEPT these actions" — so Bedrock invocation is exempted from region restrictions. Any principal in the account can invoke any Bedrock model in any AWS region, bypassing organizational region controls. This is the GRREGIONDENY pattern: operators add Bedrock to NotAction so cross-region inference profiles work, but the exemption allows any principal — not just the intended workload — to invoke any model anywhere.
+
+**Remediation:** Remove bedrock:InvokeModel and bedrock:InvokeModelWithResponseStream from the region-deny SCP's NotAction list. Instead, add a separate SCP statement that allows Bedrock invocation only in approved regions using an aws:RequestedRegion condition. This preserves cross-region inference profile routing for approved regions while blocking invocation from unmonitored regions.
+
+---
+
 ### CTL.ORG.SCP.S3EXPRESS.BPA.001
 
 **No SCP Restricts Directory Bucket Policy Modification**
