@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3316
-**Pack hash:** `09dc6d81286de519664d5b4d46deb3128de3b60a99dd95e21b87134ab1dedd1e`
+**Total controls:** 3317
+**Pack hash:** `f0632c08d6fea7176b2a3b98f67274a026ac554c3e834998293ae465d2f1f821`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -17,7 +17,7 @@ GitHub. Pick a service below.
 | high | 1439 |
 | info | 19 |
 | low | 238 |
-| medium | 1253 |
+| medium | 1254 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,7 +28,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 142 |
 | encryption | 125 |
-| exposure | 1460 |
+| exposure | 1461 |
 | governance | 661 |
 | hygiene | 21 |
 | identity | 660 |
@@ -114,7 +114,7 @@ GitHub. Pick a service below.
 | [LAKEFORMATION](reference/lakeformation.md) | 3 |
 | [LAMBDA](reference/lambda.md) | 92 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
-| [LIGHTSAIL](reference/lightsail.md) | 8 |
+| [LIGHTSAIL](reference/lightsail.md) | 9 |
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 5 |
 | [MEDIASTORE](reference/mediastore.md) | 1 |

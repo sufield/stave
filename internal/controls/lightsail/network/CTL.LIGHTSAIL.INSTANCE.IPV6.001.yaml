@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.LIGHTSAIL.INSTANCE.IPV6.001
+name: Lightsail Instance Has IPv6 Enabled
+description: >
+  Lightsail instance has dual-stack (IPv6) networking enabled. When
+  IPv6 is active the instance gets a publicly routable /128 address
+  that bypasses the Lightsail firewall's IPv4-only rule set in
+  default configurations. Unless firewall rules explicitly cover
+  IPv6 CIDRs, the instance is reachable on all ports over IPv6
+  while appearing firewalled over IPv4.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - lightsail
+taxonomy:
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_lightsail_instance]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - compute.network.ipv6_enabled
+remediation:
+  description: >
+    Lightsail instance has IPv6 enabled, exposing a publicly routable
+    address that may bypass IPv4-only firewall rules.
+  action: >
+    Disable IPv6 on the instance if dual-stack is not required. If
+    IPv6 is needed, add explicit firewall rules covering IPv6 CIDRs
+    (::/0) to match the IPv4 rule set.
+  example: |
+    {
+      "compute": {
+        "kind": "lightsail_instance",
+        "network": {
+          "ipv6_enabled": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.network.ipv6_enabled
+      op: eq
+      value: true
+tests:
+  - name: "instance with IPv6 enabled fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "openclaw-lightsail-ipv6"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          network:
+            ipv6_enabled: true
+  - name: "instance with IPv6 disabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "openclaw-lightsail-noipv6"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          network:
+            ipv6_enabled: false

@@ -50,6 +50,21 @@ Lightsail managed databases must not be publicly accessible.
 
 ---
 
+### CTL.LIGHTSAIL.INSTANCE.IPV6.001
+
+**Lightsail Instance Has IPv6 Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.1;
+
+Lightsail instance has dual-stack (IPv6) networking enabled. When IPv6 is active the instance gets a publicly routable /128 address that bypasses the Lightsail firewall's IPv4-only rule set in default configurations. Unless firewall rules explicitly cover IPv6 CIDRs, the instance is reachable on all ports over IPv6 while appearing firewalled over IPv4.
+
+**Remediation:** Disable IPv6 on the instance if dual-stack is not required. If IPv6 is needed, add explicit firewall rules covering IPv6 CIDRs (::/0) to match the IPv4 rule set.
+
+---
+
 ### CTL.LIGHTSAIL.INSTANCE.PATCHSTATE.001
 
 **Lightsail Instance Has Pending Security Patches**

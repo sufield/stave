@@ -1637,3 +1637,16 @@ contracts:
       attached managed policies, and permission boundaries.
     consumers:
       - CTL.IAM.FOOTHOLD.CICD.S3.001
+
+  # ─── Lightsail Instance Network ─────────────────────────────
+
+  - field: compute.network.ipv6_enabled
+    type: boolean
+    status: active
+    api_source: "lightsail:GetInstance → ipv6Addresses (non-empty = true)"
+    postcondition: >
+      True if the Lightsail instance has IPv6 enabled (dual-stack).
+      Derived from the ipv6Addresses array in the GetInstance
+      response: a non-empty array means IPv6 is active.
+    consumers:
+      - CTL.LIGHTSAIL.INSTANCE.IPV6.001
