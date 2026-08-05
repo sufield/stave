@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.LIGHTSAIL.LOG.EXPORT.001
+name: Lightsail Instance Has No Log Export Configuration
+description: >
+  Lightsail instance has no configured log export destination. Logs
+  stored in ephemeral locations (/tmp, instance-store volumes) are
+  lost on reboot — total forensic blindness. Unlike EC2 instances,
+  Lightsail instances cannot attach CloudWatchAgentServerPolicy to
+  instance roles via the standard IAM console flow. Log export
+  requires manual CloudWatch agent installation with IAM user
+  credentials or a custom instance profile. This manual step is
+  easily missed, leaving the instance without any durable audit
+  trail.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-4, AU-9"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-01", "LOG-05"]
+scope_tags:
+  - aws
+  - lightsail
+taxonomy:
+  - logging
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_lightsail_instance]
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - compute.kind
+  - compute.logging.log_export_configured
+remediation:
+  description: >
+    Lightsail instance has no log export configuration. Logs in
+    ephemeral storage are lost on reboot.
+  action: >
+    Install the CloudWatch agent on the Lightsail instance and
+    configure it to export application and system logs to a
+    CloudWatch Log Group. Create an IAM user with
+    CloudWatchAgentServerPolicy, generate access keys, and
+    configure the agent with those credentials. Alternatively,
+    configure rsyslog to forward to a remote syslog server or
+    an S3 bucket via a cron-based upload script.
+  example: |
+    {
+      "compute": {
+        "kind": "lightsail_instance",
+        "logging": {
+          "log_export_configured": true,
+          "log_storage_ephemeral": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: lightsail_instance
+    - field: properties.compute.logging.log_export_configured
+      op: ne
+      value: true
+tests:
+  - name: "instance without log export fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "openclaw-lightsail-1"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          logging:
+            log_export_configured: false
+            log_storage_ephemeral: true
+  - name: "instance with log export passes"
+    verdict: PASS
+    asset:
+      asset_id: "monitored-lightsail-1"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          logging:
+            log_export_configured: true
+            log_storage_ephemeral: false

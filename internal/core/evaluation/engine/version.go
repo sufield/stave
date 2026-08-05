@@ -15,4 +15,4 @@ package engine
 // The value retains the historical "stave-cel/" prefix so
 // existing fingerprint goldens stay stable — the migration is
 // import-path-only.
-const EvalVersion = "stave-cel/1.1"
+const EvalVersion = "stave-cel/1.2"

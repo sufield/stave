@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.REGIONDENY.NOTACTION.BEDROCK.001
+name: Region-Deny SCP Exempts Bedrock Invocation Actions
+description: >
+  A region-deny SCP includes Bedrock invocation actions
+  (bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream)
+  in its NotAction list. NotAction in a Deny statement means
+  "deny everything EXCEPT these actions" — so Bedrock invocation
+  is exempted from region restrictions. Any principal in the
+  account can invoke any Bedrock model in any AWS region,
+  bypassing organizational region controls. This is the GRREGIONDENY
+  pattern: operators add Bedrock to NotAction so cross-region
+  inference profiles work, but the exemption allows any principal —
+  not just the intended workload — to invoke any model anywhere.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-10"]
+scope_tags:
+  - aws
+  - organizations
+  - bedrock
+taxonomy:
+  - account-governance
+  - compliance-mapping
+  - trust-boundary
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+observation_fields:
+  - organization.kind
+  - organization.scp.region_deny_exempts_bedrock
+remediation:
+  description: >
+    Region-deny SCP exempts Bedrock invocation actions via NotAction.
+    Any principal can invoke any model in any region.
+  action: >
+    Remove bedrock:InvokeModel and
+    bedrock:InvokeModelWithResponseStream from the region-deny SCP's
+    NotAction list. Instead, add a separate SCP statement that allows
+    Bedrock invocation only in approved regions using an
+    aws:RequestedRegion condition. This preserves cross-region
+    inference profile routing for approved regions while blocking
+    invocation from unmonitored regions.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "scp": {
+          "region_deny_exempts_bedrock": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.scp.region_deny_exempts_bedrock
+      op: eq
+      value: true
+tests:
+  - name: "region-deny SCP exempting Bedrock fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp:
+            region_deny_exempts_bedrock: true
+  - name: "region-deny SCP not exempting Bedrock passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp:
+            region_deny_exempts_bedrock: false

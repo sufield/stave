@@ -1,0 +1,46 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.openclaw-lightsail"
+  },
+  "assets": [
+    {
+      "id": "o-openclaw/scp",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "scp_policy_set",
+          "scp": {
+            "region_deny_exempts_bedrock": false
+          }
+        }
+      }
+    },
+    {
+      "id": "openclaw-lightsail-1",
+      "type": "aws_lightsail_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "lightsail_instance",
+          "os": {
+            "kernel_version": "6.12.0-1001-aws",
+            "pending_security_patches": 0
+          },
+          "services": {
+            "openssh": {
+              "version": "9.9p2"
+            }
+          },
+          "logging": {
+            "log_export_configured": true,
+            "log_storage_ephemeral": false
+          }
+        }
+      }
+    }
+  ]
+}

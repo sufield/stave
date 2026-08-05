@@ -695,6 +695,49 @@ contracts:
     consumers:
       - CTL.ORG.SCP.DENY.S3DATAPERIMETER.001
 
+  - field: region_deny_exempts_bedrock
+    type: boolean
+    status: planned
+    postcondition: >
+      True if any region-deny SCP (Effect=Deny with
+      aws:RequestedRegion condition) includes bedrock:InvokeModel
+      or bedrock:InvokeModelWithResponseStream in its NotAction
+      list. NotAction exempts these actions from the region deny,
+      allowing any principal to invoke Bedrock models in any
+      region.
+    consumers:
+      - CTL.ORG.SCP.REGIONDENY.NOTACTION.BEDROCK.001
+
+  # ─── Lightsail Instance Host-Level Properties (Aug 2026) ─────
+  #
+  # Planned fields for Lightsail instance patch state and log
+  # export. Require SSM agent or SSH-based collection — outside
+  # the standard AWS API surface. Controls authored and tested
+  # with synthetic fixtures; collector adapter deferred.
+
+  - field: pending_security_patches
+    type: integer
+    status: planned
+    postcondition: >
+      Count of pending security-classified package updates on
+      the Lightsail instance. Derived from SSM Patch Manager
+      inventory (ssm:DescribeInstancePatches) or OS package
+      manager query via SSM Run Command.
+    consumers:
+      - CTL.LIGHTSAIL.INSTANCE.PATCHSTATE.001
+
+  - field: log_export_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Lightsail instance has any log export
+      mechanism configured (CloudWatch agent, rsyslog remote,
+      S3 upload cron). Derived from SSM inventory
+      (ssm:ListInventoryEntries for installed packages) or
+      SSH-based configuration check.
+    consumers:
+      - CTL.LIGHTSAIL.LOG.EXPORT.001
+
   - field: management_principal_count
     type: integer
     postcondition: >

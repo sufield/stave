@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.LIGHTSAIL.INSTANCE.PATCHSTATE.001
+name: Lightsail Instance Has Pending Security Patches
+description: >
+  Lightsail instance has pending security patches. Unlike EC2
+  instances managed by Systems Manager Patch Manager, Lightsail
+  instances rely on manual patching or blueprint updates. The
+  OpenClaw-on-Lightsail disclosure found 47 pending security patches
+  from first boot, including three critical OpenSSH CVEs
+  (CVE-2026-3497, CVE-2025-61984, CVE-2025-61985). Unpatched
+  instances with public-facing services are direct RCE targets.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  ccm_v4: ["TVM-02"]
+scope_tags:
+  - aws
+  - lightsail
+taxonomy:
+  - compute-hardening
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_lightsail_instance]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - compute.kind
+  - compute.os.pending_security_patches
+remediation:
+  description: >
+    Lightsail instance has pending security patches. Unpatched
+    services are exploitable.
+  action: >
+    SSH into the instance and run the OS package manager to apply
+    pending security updates. For Ubuntu: sudo apt update && sudo
+    apt upgrade -y. Schedule regular patching or consider migrating
+    to EC2 with Systems Manager Patch Manager for automated
+    compliance.
+  example: |
+    {
+      "compute": {
+        "kind": "lightsail_instance",
+        "os": {
+          "pending_security_patches": 0
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: lightsail_instance
+    - field: properties.compute.os.pending_security_patches
+      op: gt
+      value: 0
+tests:
+  - name: "instance with 47 pending patches fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "openclaw-lightsail-1"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          os:
+            pending_security_patches: 47
+  - name: "instance with 0 pending patches passes"
+    verdict: PASS
+    asset:
+      asset_id: "patched-lightsail-1"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          os:
+            pending_security_patches: 0
