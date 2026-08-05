@@ -1,6 +1,7 @@
 package toolmap
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -42,6 +43,9 @@ type CoverageResult struct {
 //
 // A prerequisite with both is "covered". Anything missing is a gap.
 func Analyze(registry *Registry, chainsDir string, loadControls ControlLoaderFunc, controlsDir string) (*CoverageResult, error) {
+	if registry == nil {
+		return nil, errors.New("toolmap: registry is nil")
+	}
 	chains, err := loadChains(chainsDir)
 	if err != nil {
 		return nil, fmt.Errorf("load chains: %w", err)

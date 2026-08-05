@@ -137,6 +137,9 @@ func polarityByPrefix(field string) (Polarity, bool) {
 }
 
 func asBool(v any) (bool, bool) {
+	if v == nil {
+		return false, true
+	}
 	b, ok := v.(bool)
 	return b, ok
 }

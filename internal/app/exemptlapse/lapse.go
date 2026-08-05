@@ -85,13 +85,18 @@ func Detect(in Input) []LapsedFinding {
 			compensatingNote = "Compensating control is failing"
 		}
 
+		exemptionID := string(f.ControlID) + "@" + string(f.AssetID)
+		if f.AssetType != "" {
+			exemptionID = string(f.ControlID) + "@" + string(f.AssetType) + "@" + string(f.AssetID)
+		}
+
 		lf := LapsedFinding{
 			FindingType:        "EXEMPTION_LAPSED",
 			ControlID:          f.ControlID,
 			AssetID:            f.AssetID,
 			Severity:           effectiveSev.BucketName(),
 			OriginalSeverity:   originalSev.BucketName(),
-			ExemptionID:        string(f.ControlID) + "@" + string(f.AssetID),
+			ExemptionID:        exemptionID,
 			GrantedAt:          f.Suppression.AcknowledgedDate,
 			ExpiredAt:          f.Suppression.ExpiryDate,
 			DaysSinceExpiry:    daysSince,

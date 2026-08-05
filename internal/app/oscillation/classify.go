@@ -3,6 +3,8 @@
 package oscillation
 
 import (
+	"slices"
+
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -47,13 +49,19 @@ func Classify(input Input) Classification {
 		minOsc = 3
 	}
 
-	totalAssessments := len(input.Assessments)
+	assessments := make([]report.Assessment, len(input.Assessments))
+	copy(assessments, input.Assessments)
+	slices.SortFunc(assessments, func(a, b report.Assessment) int {
+		return a.Run.EvalTime.Compare(b.Run.EvalTime)
+	})
+
+	totalAssessments := len(assessments)
 	failCount := 0
 	var prevFailing *bool
 	cycles := 0
 
-	for i := range input.Assessments {
-		a := &input.Assessments[i]
+	for i := range assessments {
+		a := &assessments[i]
 		failing := hasFinding(a, input.ControlID, input.AssetID)
 
 		if failing {

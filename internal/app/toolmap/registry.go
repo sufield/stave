@@ -36,12 +36,18 @@ func NewRegistry() *Registry {
 
 // Tool returns a tool by name.
 func (r *Registry) Tool(name string) (Tool, bool) {
+	if r == nil {
+		return Tool{}, false
+	}
 	t, ok := r.tools[name]
 	return t, ok
 }
 
 // All returns every registered tool, sorted by name.
 func (r *Registry) All() []Tool {
+	if r == nil {
+		return nil
+	}
 	out := make([]Tool, 0, len(r.tools))
 	for _, t := range r.tools {
 		out = append(out, t)
@@ -53,6 +59,9 @@ func (r *Registry) All() []Tool {
 // ToolsForCapability returns all tools whose prerequisites include
 // the given capability token.
 func (r *Registry) ToolsForCapability(capability string) []Tool {
+	if r == nil {
+		return nil
+	}
 	var out []Tool
 	for _, t := range r.tools {
 		for _, p := range t.Prerequisites {

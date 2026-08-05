@@ -93,6 +93,9 @@ type Input struct {
 
 // Compute produces a linear forecast.
 func Compute(input Input) (*Result, error) {
+	if input.HorizonDays < 0 {
+		return nil, fmt.Errorf("invalid horizon: %d days (must be non-negative)", input.HorizonDays)
+	}
 	if len(input.ScoreHistory) < 7 {
 		return nil, fmt.Errorf("insufficient history: %d days (minimum 7 required)", len(input.ScoreHistory))
 	}

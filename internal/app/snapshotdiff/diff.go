@@ -142,18 +142,28 @@ func Diff(before, after asset.Snapshot) *DiffResult {
 // diffProperties recursively compares two property maps and returns changes.
 func diffProperties(assetID asset.ID, before, after map[string]any, prefix string) []PropertyChange {
 	var changes []PropertyChange
+	if before == nil {
+		before = map[string]any{}
+	}
+	if after == nil {
+		after = map[string]any{}
+	}
 
 	// Check all keys in before.
 	for key, bVal := range before {
 		path := propertyPath(prefix, key)
 		aVal, exists := after[key]
 		if !exists {
-			changes = append(changes, PropertyChange{
-				AssetID:  assetID,
-				Property: path,
-				Before:   bVal,
-				After:    nil,
-			})
+			if bMap, bIsMap := bVal.(map[string]any); bIsMap {
+				changes = append(changes, diffProperties(assetID, bMap, nil, path)...)
+			} else {
+				changes = append(changes, PropertyChange{
+					AssetID:  assetID,
+					Property: path,
+					Before:   bVal,
+					After:    nil,
+				})
+			}
 			continue
 		}
 
@@ -179,12 +189,16 @@ func diffProperties(assetID asset.ID, before, after map[string]any, prefix strin
 	for key, aVal := range after {
 		path := propertyPath(prefix, key)
 		if _, exists := before[key]; !exists {
-			changes = append(changes, PropertyChange{
-				AssetID:  assetID,
-				Property: path,
-				Before:   nil,
-				After:    aVal,
-			})
+			if aMap, aIsMap := aVal.(map[string]any); aIsMap {
+				changes = append(changes, diffProperties(assetID, nil, aMap, path)...)
+			} else {
+				changes = append(changes, PropertyChange{
+					AssetID:  assetID,
+					Property: path,
+					Before:   nil,
+					After:    aVal,
+				})
+			}
 		}
 	}
 

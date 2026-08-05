@@ -76,9 +76,12 @@ func Generate(in Input) *POAM {
 
 	for i := range in.Findings {
 		f := &in.Findings[i]
-
+		itemKey := string(f.ControlID) + ":" + string(f.AssetID)
+		if f.AssetType != "" {
+			itemKey = string(f.ControlID) + ":" + string(f.AssetType) + ":" + string(f.AssetID)
+		}
 		item := POAMItem{
-			UUID:        deterministicUUID("poam-item", string(f.ControlID)+":"+string(f.AssetID)),
+			UUID:        deterministicUUID("poam-item", itemKey),
 			Title:       string(f.ControlID) + " on " + string(f.AssetID),
 			Description: f.ControlName,
 			RelatedControls: []RelatedCtl{
