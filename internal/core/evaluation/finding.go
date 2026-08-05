@@ -219,15 +219,47 @@ func (f *Finding) UnmarshalJSON(data []byte) error {
 }
 
 // IsIndeterminate reports whether this finding depends on at least one
-// absent field. When any misconfiguration in the evidence has
-// FieldAbsent=true, the predicate's verdict is uncertain — the resource
-// may or may not be insecure, but we cannot confirm either way because
-// data is missing.
+// absent field whose absence genuinely signals a data gap rather than
+// a confirmed detection.
+//
+// Exceptions that do NOT count as data gaps:
+//   - op=missing / op=present: designed to fire on absent fields.
+//   - op=any_match / any_identity_match / any_in_field: resolve from
+//     the identity collection, not the property map — absence in the
+//     property map is structural, not a data gap.
+//   - Disjunction siblings: when an `any` (OR) block has at least one
+//     branch with confirmed data (or op=missing), absent fields in
+//     other branches are irrelevant — only one branch needs to match.
 func (f *Finding) IsIndeterminate() bool {
+	// First pass: find disjunction groups that have at least one
+	// confirmed branch (present field or op=missing).
+	confirmed := map[int]bool{}
 	for _, mc := range f.Evidence.Misconfigurations {
-		if mc.FieldAbsent {
-			return true
+		if mc.DisjunctionID > 0 && (!mc.FieldAbsent || mc.Operator == predicate.OpMissing) {
+			confirmed[mc.DisjunctionID] = true
 		}
+	}
+
+	for _, mc := range f.Evidence.Misconfigurations {
+		if !mc.FieldAbsent {
+			continue
+		}
+		if isAbsenceOperator(mc.Operator) {
+			continue
+		}
+		if mc.DisjunctionID > 0 && confirmed[mc.DisjunctionID] {
+			continue
+		}
+		return true
+	}
+	return false
+}
+
+func isAbsenceOperator(op predicate.Operator) bool {
+	switch op {
+	case predicate.OpMissing, predicate.OpPresent,
+		predicate.OpAnyMatch, predicate.OpAnyIdentityMatch, predicate.OpAnyInField:
+		return true
 	}
 	return false
 }
@@ -236,11 +268,22 @@ func (f *Finding) IsIndeterminate() bool {
 // properties when this finding was produced. Only meaningful when
 // IsIndeterminate returns true.
 func (f *Finding) MissingFields() []string {
+	confirmed := map[int]bool{}
+	for _, mc := range f.Evidence.Misconfigurations {
+		if mc.DisjunctionID > 0 && (!mc.FieldAbsent || mc.Operator == predicate.OpMissing) {
+			confirmed[mc.DisjunctionID] = true
+		}
+	}
+
 	var fields []string
 	for _, mc := range f.Evidence.Misconfigurations {
-		if mc.FieldAbsent {
-			fields = append(fields, mc.DisplayProperty())
+		if !mc.FieldAbsent || isAbsenceOperator(mc.Operator) {
+			continue
 		}
+		if mc.DisjunctionID > 0 && confirmed[mc.DisjunctionID] {
+			continue
+		}
+		fields = append(fields, mc.DisplayProperty())
 	}
 	return fields
 }

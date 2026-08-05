@@ -14,14 +14,13 @@
       },
       "overall": "01000bee5669cfba41ce3f3e0803a684ccf865aaa0cc54d7b9d22db732d9d6f7"
     },
-    "policy_fingerprint": "8faae55806e4cb2605302eee56e052ca1331de7ff90c964b8ac0f06ab8414431",
+    "policy_fingerprint": "8686869b4a0895b6f8c80b06289a7e99c6b20164e25c97085ce3aefb769a2f8d",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 2,
     "exposed_resources": 2,
-    "violations": 1,
-    "indeterminate": 1
+    "violations": 2
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
@@ -47,6 +46,272 @@
     }
   ],
   "findings": [
+    {
+      "finding_id": "sha256:aa1b9f3d7a3af352",
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
+      "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
+      "control_description": "When a shared S3 bucket uses prefix-based tenant isolation, every app-signer identity that produces presigned URLs must enforce the tenant prefix.  An identity that allows path traversal (../) or disables prefix enforcement lets one tenant read or overwrite another tenant's objects.\n",
+      "asset_id": "unikrn-files",
+      "asset_type": "aws_s3_bucket",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2017-07-25T00:00:00Z",
+        "last_seen_unsafe_at": "2017-08-02T00:00:00Z",
+        "unsafe_duration_hours": 74208,
+        "misconfigurations": [
+          {
+            "property": "identities",
+            "actual_value": null,
+            "operator": "any_match",
+            "unsafe_value": {
+              "all": [
+                {
+                  "field": "type",
+                  "op": "eq",
+                  "value": "app_signer"
+                },
+                {
+                  "field": "id",
+                  "op": "contains",
+                  "value": "appsigner:s3:"
+                },
+                {
+                  "any": [
+                    {
+                      "field": "purpose",
+                      "op": "contains",
+                      "value": "allow_traversal=true"
+                    },
+                    {
+                      "field": "purpose",
+                      "op": "contains",
+                      "value": "enforce_prefix=false"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "property": "storage.kind",
+            "actual_value": "bucket",
+            "operator": "eq",
+            "unsafe_value": "bucket"
+          },
+          {
+            "property": "storage.tags.tenant_mode",
+            "actual_value": "shared",
+            "operator": "eq",
+            "unsafe_value": "shared"
+          },
+          {
+            "property": "storage.tags.tenant_prefix",
+            "actual_value": "users/{user_id}/{date}/",
+            "operator": "present",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 74208 hours (SLA: 0 hours). Exposed since 2017-07-25T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance_ccm_v4": [
+        "IVS-06"
+      ],
+      "exposure": {
+        "type": "tenant_isolation_breach",
+        "principal_scope": "cross_account"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Shared bucket has an app-signer identity that allows path traversal or disables prefix enforcement. One tenant can read or overwrite another tenant's objects.",
+        "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers.",
+        "example": "{\n  \"storage\": {\n    \"kind\": \"bucket\",\n    \"tags\": {\n      \"tenant_mode\": \"shared\",\n      \"tenant_prefix\": \"org-123\"\n    }\n  },\n  \"identities\": [\n    {\n      \"type\": \"app_signer\",\n      \"id\": \"appsigner:s3:uploads\",\n      \"purpose\": \"enforce_prefix=true allow_traversal=false\"\n    }\n  ]\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-80c941b087a66dfa",
+        "target": {
+          "asset_id": "unikrn-files",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 73872,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3092
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "identities any_match map[all:[map[field:type op:eq value:app_signer] map[field:id op:contains value:appsigner:s3:] map[any:[map[field:purpose op:contains value:allow_traversal=true] map[field:purpose op:contains value:enforce_prefix=false]]]]]",
+          "observation_key": "identities",
+          "operator": "any_match",
+          "expected_value": {
+            "all": [
+              {
+                "field": "type",
+                "op": "eq",
+                "value": "app_signer"
+              },
+              {
+                "field": "id",
+                "op": "contains",
+                "value": "appsigner:s3:"
+              },
+              {
+                "any": [
+                  {
+                    "field": "purpose",
+                    "op": "contains",
+                    "value": "allow_traversal=true"
+                  },
+                  {
+                    "field": "purpose",
+                    "op": "contains",
+                    "value": "enforce_prefix=false"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "predicate_expr": "storage.kind eq \"bucket\"",
+          "observation_key": "storage.kind",
+          "operator": "eq",
+          "expected_value": "bucket",
+          "observed_value": "bucket"
+        },
+        {
+          "predicate_expr": "storage.tags.tenant_mode eq \"shared\"",
+          "observation_key": "storage.tags.tenant_mode",
+          "operator": "eq",
+          "expected_value": "shared",
+          "observed_value": "shared"
+        },
+        {
+          "predicate_expr": "storage.tags.tenant_prefix present true",
+          "observation_key": "storage.tags.tenant_prefix",
+          "operator": "present",
+          "expected_value": true,
+          "observed_value": "users/{user_id}/{date}/"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "unikrn-files",
+          "type": "aws_s3_bucket",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.S3.TENANT.ISOLATION.001",
+          "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "the observation's identities list match at least one of map[all:[map[field:type op:eq value:app_signer] map[field:id op:contains value:appsigner:s3:] map[any:[map[field:purpose op:contains value:allow_traversal=true] map[field:purpose op:contains value:enforce_prefix=false]]]]] (observed: not set)",
+              "observation_key": "identities"
+            },
+            {
+              "clause": "storage.kind = \"bucket\"",
+              "observation_key": "storage.kind",
+              "observed_value": "bucket"
+            },
+            {
+              "clause": "the bucket's tenant_mode tag = \"shared\"",
+              "observation_key": "storage.tags.tenant_mode",
+              "observed_value": "shared"
+            },
+            {
+              "clause": "the bucket's tenant_prefix tag is set (observed: \"users/{user_id}/{date}/\")",
+              "observation_key": "storage.tags.tenant_prefix",
+              "observed_value": "users/{user_id}/{date}/"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "identities",
+            "current_value": "",
+            "required_value": "(see control definition)",
+            "has_safe_default": false,
+            "description": "Change identities from "
+          },
+          {
+            "path": "storage.kind",
+            "current_value": "bucket",
+            "required_value": "any value other than bucket",
+            "has_safe_default": false,
+            "description": "Change storage.kind away from bucket"
+          },
+          {
+            "path": "storage.tags.tenant_mode",
+            "current_value": "shared",
+            "required_value": "any value other than shared",
+            "has_safe_default": false,
+            "description": "Change storage.tags.tenant_mode away from shared"
+          },
+          {
+            "path": "storage.tags.tenant_prefix",
+            "current_value": "users/{user_id}/{date}/",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove storage.tags.tenant_prefix"
+          }
+        ],
+        "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "s3"
+      ],
+      "defect": "A shared bucket tagged with a tenant-prefix scheme has an app-signer identity that either allows path traversal (allow_traversal=true) or disables prefix enforcement (enforce_prefix=false). The signer can mint presigned URLs that escape the tenant prefix — either by including \"../\" in the signed key or by omitting the prefix entirely.\n",
+      "infection": "Any tenant using this app-signer can request a presigned URL targeting another tenant's prefix. The URL is validly signed, so the bucket policy's signature-based tenant gate never triggers — S3 honors the URL exactly as the signer minted it. This is architecturally invisible to the bucket itself: the ACL remains private, the bucket policy remains tenant-aware, but the signer's presigned URLs bypass both layers. Cross-tenant read or write happens at signing time, not at S3's request-evaluation time. In the unikrn-254200 pattern, the signer gives tenant A's session a URL that lists or overwrites tenant B's objects — no S3-layer misconfiguration to audit.\n",
+      "failure": "Cross-tenant data breach and data integrity failure. Tenant A reads, overwrites, or deletes tenant B's objects through presigned URLs the application legitimately issued. Audit logs show tenant A making signed requests against the bucket — which is normal behavior — so detection requires cross-referencing signer identity state against per-request prefixes, a correlation few shops build. Remediation requires fixing every app-signer with the unsafe setting and revoking any outstanding presigned URLs.\n",
+      "delta": [
+        {
+          "property_label": "tags tenant mode",
+          "property_path": "storage.tags.tenant_mode",
+          "current_value": "shared",
+          "fix_action": "change from \"shared\" to any other value, or remove"
+        },
+        {
+          "property_label": "tags tenant prefix",
+          "property_path": "storage.tags.tenant_prefix",
+          "current_value": "users/{user_id}/{date}/",
+          "fix_action": "remove this property from the configuration"
+        }
+      ],
+      "contributing_fact_ids": [
+        "89c8449e81e5",
+        "faa595d9e5e7",
+        "bc8e8853f4c0",
+        "cea089eb650b",
+        "dab29b562d79",
+        "4670f9e493f9",
+        "28e13196086b",
+        "ee970a4c49b3",
+        "1336fe62750f",
+        "bc65b90d74da"
+      ]
+    },
     {
       "finding_id": "sha256:78ce34e52b74511f",
       "control_id": "CTL.S3.WRITE.SCOPE.001",
@@ -235,21 +500,23 @@
       ]
     }
   ],
-  "indeterminate": [
-    {
-      "control_id": "CTL.S3.TENANT.ISOLATION.001",
-      "control_name": "Shared-Bucket Tenant Isolation Must Enforce Prefix",
-      "severity": "high",
-      "asset_id": "unikrn-files",
-      "asset_type": "aws_s3_bucket",
-      "verdict": "INDETERMINATE",
-      "missing_fields": [
-        "identities"
-      ],
-      "gap_cause": "collector_gap"
-    }
-  ],
   "issues": [
+    {
+      "issue_id": "sha256:f72f178b27c83812",
+      "asset_id": "unikrn-files",
+      "shared_keys": [
+        "identities",
+        "storage.tags",
+        "storage.tags.tenant_mode",
+        "storage.tags.tenant_prefix"
+      ],
+      "headline_finding_id": "sha256:aa1b9f3d7a3af352",
+      "member_finding_ids": [
+        "sha256:aa1b9f3d7a3af352"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    },
     {
       "issue_id": "sha256:e41ce43290a6e5bc",
       "asset_id": "upload-api-unikrn-files",
@@ -267,6 +534,22 @@
     }
   ],
   "remediation_groups": [
+    {
+      "asset_id": "unikrn-files",
+      "asset_type": "aws_s3_bucket",
+      "fix_plan": {
+        "id": "fix-80c941b087a66dfa",
+        "target": {
+          "asset_id": "unikrn-files",
+          "asset_type": "aws_s3_bucket"
+        },
+        "action": "Update the app-signer configuration to enforce tenant prefix restrictions (enforce_prefix=true) and block path traversal (allow_traversal=false) on all presigned URL signers."
+      },
+      "contributing_controls": [
+        "CTL.S3.TENANT.ISOLATION.001"
+      ],
+      "finding_count": 1
+    },
     {
       "asset_id": "upload-api-unikrn-files",
       "asset_type": "s3_upload_policy",
@@ -287,6 +570,22 @@
   "top_exposures": [
     {
       "finding_index": 0,
+      "control_id": "CTL.S3.TENANT.ISOLATION.001",
+      "asset_id": "unikrn-files",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 5,
+        "days_blind": 3092
+      },
+      "silent_killer": true
+    },
+    {
+      "finding_index": 1,
       "control_id": "CTL.S3.WRITE.SCOPE.001",
       "asset_id": "upload-api-unikrn-files",
       "exposure_score": 100,

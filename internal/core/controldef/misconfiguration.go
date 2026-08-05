@@ -66,6 +66,12 @@ type Misconfiguration struct {
 
 	// Category identifies if the proof is identity or resource bound.
 	Category Category `json:"-"`
+
+	// DisjunctionID groups clauses from the same `any` (OR) block.
+	// Zero means the clause is in an `all` (AND) context. Non-zero
+	// means it shares a disjunction group with other clauses that
+	// have the same ID — only ONE branch needs to match.
+	DisjunctionID int `json:"-"`
 }
 
 // DisplayProperty strips the internal "properties." prefix for human-friendly reporting.

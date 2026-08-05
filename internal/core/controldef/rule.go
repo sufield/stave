@@ -38,12 +38,13 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 		return nil
 	}
 
+	var disjunctionSeq int
 	var misconfigurations []Misconfiguration
 	for i := range p.Any {
-		misconfigurations = p.Any[i].collect(ctx, misconfigurations)
+		misconfigurations = p.Any[i].collect(ctx, misconfigurations, &disjunctionSeq, 0)
 	}
 	for i := range p.All {
-		misconfigurations = p.All[i].collect(ctx, misconfigurations)
+		misconfigurations = p.All[i].collect(ctx, misconfigurations, &disjunctionSeq, 0)
 	}
 
 	if len(misconfigurations) == 0 {
@@ -71,12 +72,18 @@ func ExtractMisconfigurations(p *UnsafePredicate, ctx *EvalContext) []Misconfigu
 }
 
 // collect appends discovered misconfigurations and returns the updated slice.
-func (r *PredicateRule) collect(ctx *EvalContext, misconfigurations []Misconfiguration) []Misconfiguration {
-	for i := range r.Any {
-		misconfigurations = r.Any[i].collect(ctx, misconfigurations)
+// disjunctionSeq is a monotonic counter; parentDisjunction is the ID of the
+// enclosing `any` block (0 = no enclosing disjunction).
+func (r *PredicateRule) collect(ctx *EvalContext, misconfigurations []Misconfiguration, disjunctionSeq *int, parentDisjunction int) []Misconfiguration {
+	if len(r.Any) > 0 {
+		*disjunctionSeq++
+		id := *disjunctionSeq
+		for i := range r.Any {
+			misconfigurations = r.Any[i].collect(ctx, misconfigurations, disjunctionSeq, id)
+		}
 	}
 	for i := range r.All {
-		misconfigurations = r.All[i].collect(ctx, misconfigurations)
+		misconfigurations = r.All[i].collect(ctx, misconfigurations, disjunctionSeq, parentDisjunction)
 	}
 
 	if r.Field.IsZero() {
@@ -98,10 +105,11 @@ func (r *PredicateRule) collect(ctx *EvalContext, misconfigurations []Misconfigu
 		// previous (val, _) shape collapsed "field absent" and "field
 		// has nil value" into the same evidence row — operators
 		// triaging a finding could not tell which condition fired.
-		ActualValue: val,
-		FieldAbsent: !found,
-		Operator:    r.Op,
-		UnsafeValue: unsafeVal,
-		Category:    classifyProperty(r.Field.String()),
+		ActualValue:   val,
+		FieldAbsent:   !found,
+		Operator:      r.Op,
+		UnsafeValue:   unsafeVal,
+		Category:      classifyProperty(r.Field.String()),
+		DisjunctionID: parentDisjunction,
 	})
 }
