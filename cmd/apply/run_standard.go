@@ -108,6 +108,8 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		HistoryDir:         opts.HistoryDir,
 		GraphFindingsDir:   opts.GraphFindingsDir,
 		IncludeAtomic:      opts.IncludeAtomic || opts.AllStaged,
+		FindingsOnly:       opts.FindingsOnly,
+		IndeterminateOnly:  opts.IndeterminateOnly,
 	})
 	done()
 

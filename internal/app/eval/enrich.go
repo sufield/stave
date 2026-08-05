@@ -23,6 +23,7 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 	if err != nil {
 		return appcontracts.EnrichedResult{}, err
 	}
+	indeterminate := PrepareIndeterminateFindings(enricher, sanitizer, result)
 	markers := PrepareMarkerFindings(enricher, sanitizer, result)
 	skippedAssets := result.ExemptedAssets
 	run := result.Run
@@ -33,12 +34,26 @@ func Enrich(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, re
 		sanitizeResultSidecars(sanitizer, &resultCopy)
 	}
 	return appcontracts.EnrichedResult{
-		Result:         resultCopy,
-		Findings:       findings,
-		MarkerFindings: markers,
-		ExemptedAssets: skippedAssets,
-		Run:            run,
+		Result:                resultCopy,
+		Findings:              findings,
+		IndeterminateFindings: indeterminate,
+		MarkerFindings:        markers,
+		ExemptedAssets:        skippedAssets,
+		Run:                   run,
 	}, nil
+}
+
+// PrepareIndeterminateFindings enriches indeterminate findings the same way
+// as regular findings. Returns nil when the report has no indeterminate findings.
+func PrepareIndeterminateFindings(enricher remediation.FindingEnricher, sanitizer kernel.Sanitizer, result *evaluation.ComplianceReport) []appcontracts.EnrichedFinding {
+	if enricher == nil || result == nil || len(result.IndeterminateFindings) == 0 {
+		return nil
+	}
+	findings := enricher.EnrichIndeterminateFindings(result)
+	if sanitizer != nil {
+		findings = SanitizeFindings(sanitizer, findings)
+	}
+	return toEnrichedFindings(findings)
 }
 
 // PrepareMarkerFindings is the marker counterpart to PrepareFindings.

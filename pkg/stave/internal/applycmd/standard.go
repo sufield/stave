@@ -99,6 +99,9 @@ type StandardRequest struct {
 	// When false (default), only compound chain findings are rendered;
 	// atomic findings still evaluate but are suppressed from output.
 	IncludeAtomic bool
+
+	FindingsOnly      bool // --findings-only: suppress indeterminate from output
+	IndeterminateOnly bool // --indeterminate-only: suppress confirmed findings from output
 }
 
 // StandardResult is the rendered outcome of a standard evaluation. Everything
@@ -116,6 +119,7 @@ type StandardResult struct {
 	CompoundFindingCount       int  // number of compound chain findings
 	CompoundOnlyMode           bool // true when atomic findings suppressed
 	UnchainedHighSeverityCount int  // critical/high findings not in any chain
+	IndeterminateCount         int  // controls that could not be evaluated (data gaps)
 }
 
 // EvaluateStandard runs the default `apply` pipeline: load exemption/
@@ -228,7 +232,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		out, warnings, err = evaluateNewOnly(ctx, req, report, now)
 	} else {
 		sanitizer := sanitize.Policy{SanitizeIDs: req.SanitizeIDs, PathMode: sanitize.PathMode(req.PathMode)}.NewSanitizer()
-		out, err = renderReport(ctx, req.Format, req.Verbose, req.IncludeAtomic, sanitizer, report, result.Controls)
+		out, err = renderReport(ctx, req.Format, req.Verbose, req.IncludeAtomic, req.FindingsOnly, req.IndeterminateOnly, sanitizer, report, result.Controls)
 	}
 	if err != nil {
 		return StandardResult{}, err
@@ -273,6 +277,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		CompoundFindingCount:       len(report.ChainFindings),
 		CompoundOnlyMode:           compoundOnly,
 		UnchainedHighSeverityCount: unchainedCount,
+		IndeterminateCount:         report.Summary.Indeterminate,
 	}, nil
 }
 
@@ -330,7 +335,7 @@ func checkStaleness(ctx context.Context, obsDir, assertRecent string, now time.T
 // renderReport runs the output pipeline (marshaler + enricher + coverage)
 // into a byte buffer. When includeAtomic is false, per-control findings are
 // suppressed from the output (compound-only default mode).
-func renderReport(ctx context.Context, format string, verbose bool, includeAtomic bool, sanitizer kernel.Sanitizer, report *evaluation.ComplianceReport, controls []policy.ControlDefinition) ([]byte, error) {
+func renderReport(ctx context.Context, format string, verbose bool, includeAtomic bool, findingsOnly bool, indeterminateOnly bool, sanitizer kernel.Sanitizer, report *evaluation.ComplianceReport, controls []policy.ControlDefinition) ([]byte, error) {
 	marshaler, err := buildFindingWriter(format, verbose)
 	if err != nil {
 		return nil, err
@@ -367,6 +372,13 @@ func renderReport(ctx context.Context, format string, verbose bool, includeAtomi
 				atomicControlIDs, atomicSeverities, rep.ChainFindings)
 			enriched.Result.ChainSuggestions = risk.SuggestChains(
 				atomicFailures, rep.ChainFindings, controlLookup)
+			enriched.Findings = nil
+			enriched.MarkerFindings = nil
+		}
+		if findingsOnly {
+			enriched.IndeterminateFindings = nil
+		}
+		if indeterminateOnly {
 			enriched.Findings = nil
 			enriched.MarkerFindings = nil
 		}

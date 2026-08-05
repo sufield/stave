@@ -29,20 +29,21 @@ const (
 
 // AssessmentRequest bundles inputs for constructing a security assessment.
 type AssessmentRequest struct {
-	Run                evaluation.RunInfo
-	Summary            evaluation.ComplianceSummary
-	SecurityState      evaluation.SecurityState
-	RiskSignals        findings.ThresholdItems
-	Findings           []remediation.Finding
-	MarkerFindings     []remediation.Finding
-	ChainFindings      []findings.CompoundFinding
-	NearMissChains     []findings.NearMissChain
-	AttackStageSummary map[kernel.AttackStage]string
-	TopExposures       []findings.ExposureRank
-	Issues             []evaluation.Issue
-	SkippedControls    []evaluation.SkippedControl
-	ExemptedAssets     []asset.ExemptedAsset
-	ChainSuggestions   []findings.ChainSuggestion
+	Run                   evaluation.RunInfo
+	Summary               evaluation.ComplianceSummary
+	SecurityState         evaluation.SecurityState
+	RiskSignals           findings.ThresholdItems
+	Findings              []remediation.Finding
+	IndeterminateFindings []remediation.Finding
+	MarkerFindings        []remediation.Finding
+	ChainFindings         []findings.CompoundFinding
+	NearMissChains        []findings.NearMissChain
+	AttackStageSummary    map[kernel.AttackStage]string
+	TopExposures          []findings.ExposureRank
+	Issues                []evaluation.Issue
+	SkippedControls       []evaluation.SkippedControl
+	ExemptedAssets        []asset.ExemptedAsset
+	ChainSuggestions      []findings.ChainSuggestion
 }
 
 // HasFindings reports whether the assessment carries at least one
@@ -236,47 +237,49 @@ func (c *SeverityCounts) Add(s policy.Severity) {
 
 // Assessment is the top-level schema for a security evaluation outcome.
 type Assessment struct {
-	SchemaVersion      kernel.Schema                 `json:"schema_version"`
-	Kind               Kind                          `json:"kind"`
-	Run                evaluation.RunInfo            `json:"run"`
-	Summary            evaluation.ComplianceSummary  `json:"summary"`
-	Status             evaluation.SecurityState      `json:"status"`
-	RiskSignals        findings.ThresholdItems       `json:"risk_signals,omitempty"`
-	Findings           []remediation.Finding         `json:"findings"`
-	MarkerFindings     []remediation.Finding         `json:"marker_findings,omitempty"`
-	ChainFindings      []findings.CompoundFinding    `json:"chain_findings,omitempty"`
-	NearMissChains     []findings.NearMissChain      `json:"near_miss_chains,omitempty"`
-	AttackStageSummary map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
-	TopExposures       []findings.ExposureRank       `json:"top_exposures,omitempty"`
-	Issues             []evaluation.Issue            `json:"issues,omitempty"`
-	RemediationGroups  []remediation.Group           `json:"remediation_groups,omitempty"`
-	SkippedControls    []evaluation.SkippedControl   `json:"skipped_controls,omitempty"`
-	ExemptedAssets     []asset.ExemptedAsset         `json:"exempted_assets,omitempty"`
-	ChainSuggestions   []findings.ChainSuggestion    `json:"chain_suggestions,omitempty"`
-	CoveragePosture    *coverage.CoverageIndex       `json:"-"`
-	Extensions         *evaluation.Extensions        `json:"extensions,omitempty"`
+	SchemaVersion         kernel.Schema                 `json:"schema_version"`
+	Kind                  Kind                          `json:"kind"`
+	Run                   evaluation.RunInfo            `json:"run"`
+	Summary               evaluation.ComplianceSummary  `json:"summary"`
+	Status                evaluation.SecurityState      `json:"status"`
+	RiskSignals           findings.ThresholdItems       `json:"risk_signals,omitempty"`
+	Findings              []remediation.Finding         `json:"findings"`
+	IndeterminateFindings []remediation.Finding         `json:"indeterminate_findings,omitempty"`
+	MarkerFindings        []remediation.Finding         `json:"marker_findings,omitempty"`
+	ChainFindings         []findings.CompoundFinding    `json:"chain_findings,omitempty"`
+	NearMissChains        []findings.NearMissChain      `json:"near_miss_chains,omitempty"`
+	AttackStageSummary    map[kernel.AttackStage]string `json:"attack_stage_summary,omitempty"`
+	TopExposures          []findings.ExposureRank       `json:"top_exposures,omitempty"`
+	Issues                []evaluation.Issue            `json:"issues,omitempty"`
+	RemediationGroups     []remediation.Group           `json:"remediation_groups,omitempty"`
+	SkippedControls       []evaluation.SkippedControl   `json:"skipped_controls,omitempty"`
+	ExemptedAssets        []asset.ExemptedAsset         `json:"exempted_assets,omitempty"`
+	ChainSuggestions      []findings.ChainSuggestion    `json:"chain_suggestions,omitempty"`
+	CoveragePosture       *coverage.CoverageIndex       `json:"-"`
+	Extensions            *evaluation.Extensions        `json:"extensions,omitempty"`
 }
 
 // NewAssessment constructs an Assessment with normalized slices
 // (nil → [] for stable JSON output).
 func NewAssessment(req AssessmentRequest) *Assessment {
 	return &Assessment{
-		SchemaVersion:      kernel.SchemaOutput,
-		Kind:               KindAssessment,
-		Run:                req.Run,
-		Summary:            req.Summary,
-		Status:             req.SecurityState,
-		RiskSignals:        req.RiskSignals,
-		Findings:           emptyIfNil(req.Findings),
-		MarkerFindings:     req.MarkerFindings,
-		ChainFindings:      req.ChainFindings,
-		NearMissChains:     req.NearMissChains,
-		AttackStageSummary: req.AttackStageSummary,
-		TopExposures:       req.TopExposures,
-		Issues:             req.Issues,
-		SkippedControls:    emptyIfNil(req.SkippedControls),
-		ExemptedAssets:     emptyIfNil(req.ExemptedAssets),
-		ChainSuggestions:   req.ChainSuggestions,
+		SchemaVersion:         kernel.SchemaOutput,
+		Kind:                  KindAssessment,
+		Run:                   req.Run,
+		Summary:               req.Summary,
+		Status:                req.SecurityState,
+		RiskSignals:           req.RiskSignals,
+		Findings:              emptyIfNil(req.Findings),
+		IndeterminateFindings: req.IndeterminateFindings,
+		MarkerFindings:        req.MarkerFindings,
+		ChainFindings:         req.ChainFindings,
+		NearMissChains:        req.NearMissChains,
+		AttackStageSummary:    req.AttackStageSummary,
+		TopExposures:          req.TopExposures,
+		Issues:                req.Issues,
+		SkippedControls:       emptyIfNil(req.SkippedControls),
+		ExemptedAssets:        emptyIfNil(req.ExemptedAssets),
+		ChainSuggestions:      req.ChainSuggestions,
 	}
 }
 

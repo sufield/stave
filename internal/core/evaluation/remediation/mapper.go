@@ -17,6 +17,7 @@ import (
 // hook so a marker that DOES author a suppression flow gets it.
 type FindingEnricher interface {
 	EnrichFindings(*evaluation.ComplianceReport) []Finding
+	EnrichIndeterminateFindings(*evaluation.ComplianceReport) []Finding
 	EnrichMarkerFindings(*evaluation.ComplianceReport) []Finding
 }
 

@@ -105,12 +105,13 @@ type EnrichedFinding struct {
 // JSON field so they never count toward Status / Summary.Violations
 // / exit codes. Empty when the catalog has no marker controls.
 type EnrichedResult struct {
-	Result          evaluation.ComplianceReport
-	Findings        []EnrichedFinding
-	MarkerFindings  []EnrichedFinding
-	ExemptedAssets  []asset.ExemptedAsset
-	Run             evaluation.RunInfo
-	CoveragePosture *coverage.CoverageIndex
+	Result                evaluation.ComplianceReport
+	Findings              []EnrichedFinding
+	IndeterminateFindings []EnrichedFinding
+	MarkerFindings        []EnrichedFinding
+	ExemptedAssets        []asset.ExemptedAsset
+	Run                   evaluation.RunInfo
+	CoveragePosture       *coverage.CoverageIndex
 }
 
 // FindingMarshaler transforms enriched findings into format-specific bytes

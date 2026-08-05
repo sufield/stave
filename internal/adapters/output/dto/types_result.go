@@ -30,6 +30,7 @@ type SummaryDTO struct {
 	TotalAssets      int `json:"total_assets"`
 	ExposedResources int `json:"exposed_resources"`
 	Violations       int `json:"violations"`
+	Indeterminate    int `json:"indeterminate,omitempty"`
 }
 
 // ExtensionsDTO mirrors evaluation.Extensions.
@@ -54,6 +55,19 @@ type IssueDTO struct {
 	ConsolidatedBlastRadius float64  `json:"consolidated_blast_radius"`
 }
 
+// IndeterminateDTO represents a control check that could not be completed
+// because required observation fields were absent from the snapshot.
+type IndeterminateDTO struct {
+	ControlID     string   `json:"control_id"`
+	ControlName   string   `json:"control_name"`
+	Severity      string   `json:"severity"`
+	AssetID       string   `json:"asset_id"`
+	AssetType     string   `json:"asset_type"`
+	Verdict       string   `json:"verdict"`
+	MissingFields []string `json:"missing_fields"`
+	GapCause      string   `json:"gap_cause"`
+}
+
 // TrendSummaryDTO carries baseline comparison counts when available.
 type TrendSummaryDTO struct {
 	NewCount       int `json:"new_count"`
@@ -70,6 +84,7 @@ type ResultDTO struct {
 	SecurityState     evaluation.SecurityState `json:"status"`
 	RiskSignals       []AtRiskItemDTO          `json:"risk_signals,omitempty"`
 	Findings          []FindingDTO             `json:"findings"`
+	Indeterminate     []IndeterminateDTO       `json:"indeterminate,omitempty"`
 	MarkerFindings    []FindingDTO             `json:"marker_findings,omitempty"`
 	ChainFindings     []ChainFindingDTO        `json:"chain_findings,omitempty"`
 	NearMissChains    []NearMissChainDTO       `json:"near_miss_chains,omitempty"`

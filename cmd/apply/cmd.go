@@ -119,6 +119,8 @@ type Options struct {
 	Verbose            bool
 	Auto               bool // --auto: print severity plan, then evaluate
 	IncludeAtomic      bool // --include-atomic: show per-control findings alongside compound
+	FindingsOnly       bool // --findings-only: show only confirmed findings, suppress indeterminate
+	IndeterminateOnly  bool // --indeterminate-only: show only indeterminate results, suppress findings
 }
 
 // IsNewOnlyMode reports whether the run is in new-only mode —
@@ -186,6 +188,7 @@ Exit Codes:
   2   - Invalid input or configuration error
   3   - Violations found
   4   - Internal error
+  5   - No violations but indeterminate results exist (data gaps)
   130 - Interrupted (SIGINT)
 
 Remediation scope:
@@ -284,6 +287,8 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.BoolVarP(&o.Verbose, "verbose", "v", false, "Show full evidence, reasoning, and remediation for each finding")
 	f.BoolVar(&o.IncludeAtomic, "include-atomic", false, "Include per-control (atomic) findings in output (default: compound findings only)")
 	f.BoolVar(&o.Auto, "auto", false, "Run discover→plan→evaluate: resolve services, show severity plan, evaluate in weighted order")
+	f.BoolVar(&o.FindingsOnly, "findings-only", false, "Show only confirmed findings, suppress indeterminate results")
+	f.BoolVar(&o.IndeterminateOnly, "indeterminate-only", false, "Show only indeterminate results, suppress confirmed findings")
 }
 
 // validSLAPolicyValues is the closed set of accepted --sla-policy
@@ -338,4 +343,5 @@ func (o *Options) markMutuallyExclusive(cmd *cobra.Command) {
 	// the combination at flag parse so operators don't silently get
 	// one mode's output while believing they configured the other.
 	cmd.MarkFlagsMutuallyExclusive("new-only", "new-since")
+	cmd.MarkFlagsMutuallyExclusive("findings-only", "indeterminate-only")
 }

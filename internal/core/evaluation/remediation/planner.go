@@ -52,6 +52,16 @@ func (p *Planner) EnrichFindings(result *evaluation.ComplianceReport) []Finding 
 	return p.enrichSlice(result.Findings)
 }
 
+// EnrichIndeterminateFindings processes the report's IndeterminateFindings
+// slice. These are findings that fired on absent fields only — coverage
+// gaps, not confirmed violations.
+func (p *Planner) EnrichIndeterminateFindings(result *evaluation.ComplianceReport) []Finding {
+	if result == nil {
+		return nil
+	}
+	return p.enrichSlice(result.IndeterminateFindings)
+}
+
 // EnrichMarkerFindings is the same shape as EnrichFindings but
 // processes the report's MarkerFindings slice. Markers typically
 // carry no remediation (they record a fact, not a fix), but the

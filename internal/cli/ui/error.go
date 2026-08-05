@@ -16,12 +16,13 @@ import (
 
 // Exit codes following the platform contract.
 const (
-	ExitSuccess     = 0   // No issues
-	ExitSecurity    = 1   // Security-audit gating failure
-	ExitInputError  = 2   // Invalid input, flags, or schema validation failure
-	ExitViolations  = 3   // Evaluation completed with findings/diagnostics
-	ExitInternal    = 4   // Unexpected internal error
-	ExitInterrupted = 130 // Interrupted by SIGINT (Ctrl+C)
+	ExitSuccess       = 0   // No issues
+	ExitSecurity      = 1   // Security-audit gating failure
+	ExitInputError    = 2   // Invalid input, flags, or schema validation failure
+	ExitViolations    = 3   // Evaluation completed with findings/diagnostics
+	ExitInternal      = 4   // Unexpected internal error
+	ExitIndeterminate = 5   // No findings but indeterminate results exist (data gaps)
+	ExitInterrupted   = 130 // Interrupted by SIGINT (Ctrl+C)
 )
 
 // ErrorCode is a stable string identifier for categories of failures.
@@ -58,6 +59,7 @@ var (
 	ErrValidationFailed      = appcontracts.ErrValidationFailed
 	ErrDiagnosticsFound      = errors.New("diagnostics found")
 	ErrSecurityAuditFindings = errors.New("security audit findings")
+	ErrIndeterminateOnly     = errors.New("indeterminate results only")
 	ErrInterrupted           = errors.New("interrupted")
 	ErrInternal              = errors.New("internal error")
 )
@@ -100,6 +102,8 @@ func ExitCode(err error) int {
 		return ExitInterrupted
 	case errors.Is(err, ErrViolationsFound), errors.Is(err, ErrDiagnosticsFound):
 		return ExitViolations
+	case errors.Is(err, ErrIndeterminateOnly):
+		return ExitIndeterminate
 	case errors.Is(err, ErrValidationWarnings), errors.Is(err, ErrValidationFailed):
 		return ExitInputError
 	case errors.Is(err, stave.ErrInvalidInput):
@@ -233,6 +237,7 @@ func IsSentinel(err error) bool {
 	}
 	return errors.Is(err, ErrViolationsFound) ||
 		errors.Is(err, ErrDiagnosticsFound) ||
+		errors.Is(err, ErrIndeterminateOnly) ||
 		errors.Is(err, ErrValidationWarnings) ||
 		errors.Is(err, ErrValidationFailed) ||
 		errors.Is(err, ErrSecurityAuditFindings) ||

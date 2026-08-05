@@ -582,7 +582,12 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	allFindings = append(allFindings, activeFindings...)
 	allFindings = append(allFindings, exceptedFindings...)
 
-	suppressed := buildSuppressionSet(allFindings)
+	// Separate indeterminate findings (fired on absent fields only) from
+	// confirmed violations before counting and deriving posture. Indeterminate
+	// findings are coverage gaps, not confirmed misconfigurations.
+	confirmedFindings, indeterminateFindings := partitionIndeterminateFindings(allFindings)
+
+	suppressed := buildSuppressionSet(confirmedFindings)
 	riskSignals := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                s.assessor.Controls(),
 		Snapshots:               s.snapshots,
@@ -594,8 +599,8 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	})
 
 	activeCount := 0
-	for i := range allFindings {
-		if allFindings[i].Status == evaluation.FindingActive {
+	for i := range confirmedFindings {
+		if confirmedFindings[i].Status == evaluation.FindingActive {
 			activeCount++
 		}
 	}
@@ -616,14 +621,16 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 			TotalAssets:      s.collector.SeenAssetCount(),
 			ExposedResources: s.collector.NonCompliantAssetCount(),
 			Violations:       activeCount,
+			Indeterminate:    len(indeterminateFindings),
 		},
-		SecurityState:   posture,
-		RiskSignals:     riskSignals,
-		Findings:        allFindings,
-		MarkerFindings:  markerFindings,
-		SkippedControls: snap.SkippedControls,
-		ExemptedAssets:  snap.ExemptedAssets,
-		Checks:          snap.Checks,
+		SecurityState:         posture,
+		RiskSignals:           riskSignals,
+		Findings:              confirmedFindings,
+		IndeterminateFindings: indeterminateFindings,
+		MarkerFindings:        markerFindings,
+		SkippedControls:       snap.SkippedControls,
+		ExemptedAssets:        snap.ExemptedAssets,
+		Checks:                snap.Checks,
 	}
 
 	if s.opts.GenerateEvidence && len(s.snapshots) > 0 {
@@ -649,6 +656,22 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	}
 
 	return report
+}
+
+// partitionIndeterminateFindings splits findings into confirmed violations
+// and indeterminate results. A finding is indeterminate when every
+// misconfiguration in its evidence was triggered by an absent field
+// (FieldAbsent=true) — the predicate fired due to fail-closed semantics
+// on missing data, not because the resource was confirmed insecure.
+func partitionIndeterminateFindings(findings []evaluation.Finding) (confirmed, indeterminate []evaluation.Finding) {
+	for i := range findings {
+		if findings[i].IsIndeterminate() {
+			indeterminate = append(indeterminate, findings[i])
+		} else {
+			confirmed = append(confirmed, findings[i])
+		}
+	}
+	return confirmed, indeterminate
 }
 
 // partitionMarkerFindings splits raw findings into violation

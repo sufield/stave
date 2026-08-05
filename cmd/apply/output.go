@@ -67,6 +67,9 @@ func (r *Reporter) ReportApply(res stave.StandardResult) error {
 	// `stave diagnose` and the other follow-ups are documented in --help.
 	switch res.Gate {
 	case gateAllow, gateAdvisory:
+		if res.IndeterminateCount > 0 {
+			return ui.ErrIndeterminateOnly
+		}
 		return nil
 	default: // block
 		return ui.ErrViolationsFound

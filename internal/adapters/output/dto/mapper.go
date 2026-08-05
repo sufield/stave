@@ -2,8 +2,10 @@ package dto
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -22,6 +24,7 @@ func FromEvaluation(e *report.Assessment) (ResultDTO, error) {
 		SecurityState:     e.Status,
 		RiskSignals:       fromAtRiskItems(e.RiskSignals),
 		Findings:          fromFindings(e.Findings),
+		Indeterminate:     fromIndeterminateFindings(e.IndeterminateFindings),
 		MarkerFindings:    fromFindings(e.MarkerFindings),
 		ChainFindings:     fromCompoundFindings(e.ChainFindings, e.Findings),
 		NearMissChains:    fromNearMissChains(e.NearMissChains),
@@ -33,6 +36,41 @@ func FromEvaluation(e *report.Assessment) (ResultDTO, error) {
 		CoveragePosture:   FromCoverageIndex(e.CoveragePosture),
 		Extensions:        NewExtensionsDTO(e.Extensions),
 	}, nil
+}
+
+// fromIndeterminateFindings converts remediation.Finding values whose
+// misconfigurations are all field-absent into IndeterminateDTO.
+func fromIndeterminateFindings(fs []remediation.Finding) []IndeterminateDTO {
+	if len(fs) == 0 {
+		return nil
+	}
+	out := make([]IndeterminateDTO, len(fs))
+	for i := range fs {
+		f := &fs[i]
+		out[i] = IndeterminateDTO{
+			ControlID:     string(f.ControlID),
+			ControlName:   f.ControlName,
+			Severity:      f.ControlSeverity.String(),
+			AssetID:       string(f.AssetID),
+			AssetType:     string(f.AssetType),
+			Verdict:       "INDETERMINATE",
+			MissingFields: f.MissingFields(),
+			GapCause:      classifyGapCause(f.MissingFields()),
+		}
+	}
+	return out
+}
+
+// classifyGapCause infers the gap cause from the missing field paths.
+// Fields containing "tag" or prefixed with a custom tag namespace
+// (e.g. "stave:") are tag gaps. Everything else defaults to collector gap.
+func classifyGapCause(fields []string) string {
+	for _, f := range fields {
+		if strings.Contains(f, "tag") || strings.Contains(f, "stave:") || strings.Contains(f, "intent") {
+			return "tag_gap"
+		}
+	}
+	return "collector_gap"
 }
 
 // fromIssues converts evaluation.Issue values into the DTO shape.

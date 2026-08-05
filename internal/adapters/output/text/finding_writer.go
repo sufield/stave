@@ -57,6 +57,7 @@ func (w *FindingWriter) marshalVerbose(enriched *appcontracts.EnrichedResult) ([
 	w.writeHeader(d, &result)
 	if len(result.Findings) == 0 {
 		w.writeNoViolationsSummary(d)
+		w.writeIndeterminate(d, enriched)
 		if d.err != nil {
 			return nil, d.err
 		}
@@ -71,6 +72,7 @@ func (w *FindingWriter) marshalVerbose(enriched *appcontracts.EnrichedResult) ([
 	w.writeTopExposures(d, &result)
 	w.writeFrameworkReadiness(d, &result)
 	w.writeRemediationGroups(d, remFindings)
+	w.writeIndeterminate(d, enriched)
 	w.writeSkippedControls(d, result.SkippedControls)
 	writeExemptedAssets(d, enriched.ExemptedAssets)
 
@@ -88,6 +90,7 @@ func (w *FindingWriter) marshalConcise(enriched *appcontracts.EnrichedResult) ([
 	w.writeHeader(d, &result)
 	if len(result.Findings) == 0 {
 		w.writeNoViolationsSummary(d)
+		w.writeIndeterminate(d, enriched)
 		if d.err != nil {
 			return nil, d.err
 		}
@@ -95,6 +98,7 @@ func (w *FindingWriter) marshalConcise(enriched *appcontracts.EnrichedResult) ([
 	}
 
 	w.writeConciseTable(d, enriched)
+	w.writeIndeterminate(d, enriched)
 
 	if len(result.ChainFindings) > 0 {
 		d.f("\nCompound Chains: %d\n", len(result.ChainFindings))
@@ -196,6 +200,9 @@ func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceRepo
 	d.f("  Assets evaluated:    %d\n", result.Summary.TotalAssets)
 	d.f("  Attack surface:      %d\n", result.Summary.ExposedResources)
 	d.f("  Violations:          %d\n", result.Summary.Violations)
+	if result.Summary.Indeterminate > 0 {
+		d.f("  Indeterminate:       %d\n", result.Summary.Indeterminate)
+	}
 	if len(result.Issues) > 0 {
 		d.f("  Issues (consolidated): %d\n", len(result.Issues))
 	}
@@ -329,4 +336,28 @@ func joinControls(ids []kernel.ControlID) string {
 		parts[i] = string(id)
 	}
 	return strings.Join(parts, ", ")
+}
+
+// writeIndeterminate renders the indeterminate section — controls that
+// could not be evaluated because required fields were absent from the
+// observation snapshot.
+func (w *FindingWriter) writeIndeterminate(d *drawer, enriched *appcontracts.EnrichedResult) {
+	if len(enriched.IndeterminateFindings) == 0 {
+		return
+	}
+	d.f("\nIndeterminate (%d) — cannot evaluate, data missing\n", len(enriched.IndeterminateFindings))
+	d.ln(strings.Repeat("-", 50))
+	for i := range enriched.IndeterminateFindings {
+		f := &enriched.IndeterminateFindings[i]
+		missing := f.MissingFields()
+		d.f("  %-10s %-40s %s\n",
+			f.ControlSeverity,
+			shortControlID(string(f.ControlID)),
+			shortAssetID(string(f.AssetID)),
+		)
+		if len(missing) > 0 {
+			d.f("             Missing: %s\n", strings.Join(missing, ", "))
+		}
+	}
+	d.f("\n  Collect the missing fields to convert these to confirmed findings or passes.\n")
 }

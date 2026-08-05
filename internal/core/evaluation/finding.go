@@ -218,6 +218,37 @@ func (f *Finding) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// IsIndeterminate reports whether this finding was triggered entirely by
+// absent fields rather than confirmed insecure values. When every
+// misconfiguration in the evidence has FieldAbsent=true, the predicate
+// fired due to fail-closed semantics on missing data — the resource may
+// or may not be insecure, but we cannot confirm either way.
+func (f *Finding) IsIndeterminate() bool {
+	misconfigs := f.Evidence.Misconfigurations
+	if len(misconfigs) == 0 {
+		return false
+	}
+	for _, mc := range misconfigs {
+		if !mc.FieldAbsent {
+			return false
+		}
+	}
+	return true
+}
+
+// MissingFields returns the field paths that were absent from the asset
+// properties when this finding was produced. Only meaningful when
+// IsIndeterminate returns true.
+func (f *Finding) MissingFields() []string {
+	var fields []string
+	for _, mc := range f.Evidence.Misconfigurations {
+		if mc.FieldAbsent {
+			fields = append(fields, mc.DisplayProperty())
+		}
+	}
+	return fields
+}
+
 // SortFindings sorts findings by actionable priority:
 // ExposureScore descending, with alphabetical tiebreaker.
 func SortFindings(fs []Finding) {

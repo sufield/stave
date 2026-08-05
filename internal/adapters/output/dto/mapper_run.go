@@ -50,6 +50,7 @@ func NewSummaryDTO(s evaluation.ComplianceSummary) SummaryDTO {
 		TotalAssets:      s.TotalAssets,
 		ExposedResources: s.ExposedResources,
 		Violations:       s.Violations,
+		Indeterminate:    s.Indeterminate,
 	}
 }
 

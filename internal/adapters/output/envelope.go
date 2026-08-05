@@ -23,20 +23,21 @@ func BuildAssessmentFromEnriched(enriched *appcontracts.EnrichedResult) *report.
 	}
 
 	out := report.NewAssessment(report.AssessmentRequest{
-		Run:                enriched.Run,
-		Summary:            enriched.Result.Summary,
-		SecurityState:      enriched.Result.SecurityState,
-		RiskSignals:        enriched.Result.RiskSignals,
-		Findings:           findings,
-		MarkerFindings:     toRemediationFindings(enriched.MarkerFindings),
-		SkippedControls:    enriched.Result.SkippedControls,
-		ExemptedAssets:     enriched.ExemptedAssets,
-		ChainFindings:      enriched.Result.ChainFindings,
-		NearMissChains:     enriched.Result.NearMissChains,
-		ChainSuggestions:   enriched.Result.ChainSuggestions,
-		AttackStageSummary: enriched.Result.AttackStageSummary,
-		TopExposures:       enriched.Result.TopExposures,
-		Issues:             enriched.Result.Issues,
+		Run:                   enriched.Run,
+		Summary:               enriched.Result.Summary,
+		SecurityState:         enriched.Result.SecurityState,
+		RiskSignals:           enriched.Result.RiskSignals,
+		Findings:              findings,
+		IndeterminateFindings: toRemediationFindings(enriched.IndeterminateFindings),
+		MarkerFindings:        toRemediationFindings(enriched.MarkerFindings),
+		SkippedControls:       enriched.Result.SkippedControls,
+		ExemptedAssets:        enriched.ExemptedAssets,
+		ChainFindings:         enriched.Result.ChainFindings,
+		NearMissChains:        enriched.Result.NearMissChains,
+		ChainSuggestions:      enriched.Result.ChainSuggestions,
+		AttackStageSummary:    enriched.Result.AttackStageSummary,
+		TopExposures:          enriched.Result.TopExposures,
+		Issues:                enriched.Result.Issues,
 	})
 	out.Extensions = enriched.Result.Metadata.ToExtensions()
 	out.CoveragePosture = enriched.CoveragePosture
