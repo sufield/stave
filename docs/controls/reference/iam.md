@@ -4530,6 +4530,21 @@ IAM Identity Center should be administered from a delegated administrator accoun
 
 ---
 
+### CTL.IAM.SSO.IDENTITYSOURCE.GHOST.001
+
+**SSO Identity Source References Deleted External IdP**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-2, CM-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.3; soc2: CC6.1, CC8.1;
+
+IAM Identity Center is configured with an external identity source (SAML IdP, OIDC provider, or Active Directory Connector) that no longer exists. SSO authentication depends on the external identity source to validate user credentials. When the referenced provider is deleted or disconnected, authentication fails — users cannot sign in to AWS accounts via SSO. The Identity Center console shows an identity source configured. An auditor checking "is SSO configured with an external IdP?" sees the configuration and marks it compliant. The IdP doesn't exist — SSO authentication is broken while appearing configured. Same ghost-reference archetype as CTL.VERIFIEDPERMISSIONS.IDENTITYSOURCE.GHOST.001 and CTL.EVENTBRIDGE.TARGET.GHOST.001.
+
+**Remediation:** Either reconnect the external identity source (recreate the SAML provider, OIDC configuration, or AD Connector) or reconfigure Identity Center to use a different identity source. Verify that SSO authentication succeeds after the fix by testing a sign-in flow end-to-end. Audit the gap window — users who could not authenticate during the outage may have used alternative access paths (IAM users, direct role assumption) that bypass SSO security controls.
+
+---
+
 ### CTL.IAM.SSO.LEGACY.001
 
 **Legacy IAM Users Must Not Coexist with SSO**
