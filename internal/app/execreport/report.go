@@ -191,6 +191,9 @@ func Band(score float64) (name, description string) {
 
 // GenerateSummary produces the executive summary from report data.
 func GenerateSummary(r *Report) ExecutiveSummary {
+	if r == nil {
+		return ExecutiveSummary{}
+	}
 	score := r.Posture.Score
 	delta := r.Posture.Delta30d
 	period := r.Period

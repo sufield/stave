@@ -167,8 +167,17 @@ func classifyAllNew(in Input) *Result {
 // Run.EvalTime ascending, optionally clipped to those within `newSince` of
 // `now`. A newSince of zero retains the full history.
 func sortAndFilterHistory(history []*report.Assessment, newSince time.Duration, now time.Time) []*report.Assessment {
-	sorted := make([]*report.Assessment, len(history))
-	copy(sorted, history)
+	valid := make([]*report.Assessment, 0, len(history))
+	for _, a := range history {
+		if a != nil {
+			valid = append(valid, a)
+		}
+	}
+	if len(valid) == 0 {
+		return nil
+	}
+	sorted := make([]*report.Assessment, len(valid))
+	copy(sorted, valid)
 	slices.SortFunc(sorted, func(a, b *report.Assessment) int {
 		return a.Run.EvalTime.Compare(b.Run.EvalTime)
 	})

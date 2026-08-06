@@ -85,7 +85,13 @@ type Input struct {
 
 // Suggest analyzes assessment history and produces exemption candidates.
 func Suggest(in Input) *Result {
-	if len(in.History) == 0 {
+	var valid []*report.Assessment
+	for _, a := range in.History {
+		if a != nil {
+			valid = append(valid, a)
+		}
+	}
+	if len(valid) == 0 {
 		return &Result{
 			WindowDays:   int(in.Window.Hours() / 24),
 			MinDwellDays: int(in.MinDwell.Hours() / 24),
@@ -93,8 +99,8 @@ func Suggest(in Input) *Result {
 	}
 
 	// Sort history by time.
-	sorted := make([]*report.Assessment, len(in.History))
-	copy(sorted, in.History)
+	sorted := make([]*report.Assessment, len(valid))
+	copy(sorted, valid)
 	slices.SortFunc(sorted, func(a, b *report.Assessment) int {
 		return a.Run.EvalTime.Compare(b.Run.EvalTime)
 	})

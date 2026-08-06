@@ -85,6 +85,9 @@ func Compute(before, after []policy.ControlDefinition) *Delta {
 
 // FormatTable produces a human-readable diff summary.
 func FormatTable(d *Delta) string {
+	if d == nil {
+		return ""
+	}
 	var b strings.Builder
 	b.WriteString("CATALOG UPGRADE IMPACT ANALYSIS\n")
 	b.WriteString(strings.Repeat("-", 50) + "\n")

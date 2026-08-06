@@ -19,6 +19,9 @@ type LintResult struct {
 // LintChain validates a chain definition against the control catalog
 // and the catalog-supplied capability registry.
 func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]struct{}, registry policy.CapabilityRegistry) LintResult {
+	if chain == nil {
+		return LintResult{Errors: []string{"chain definition is nil"}}
+	}
 	result := LintResult{ChainID: string(chain.ID)}
 
 	if chain.ID == "" {

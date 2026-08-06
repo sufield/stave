@@ -3,6 +3,9 @@
 package catalogquality
 
 import (
+	"slices"
+	"strings"
+
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -110,6 +113,9 @@ func Analyze(input Input) Report {
 			})
 		}
 	}
+	slices.SortFunc(blindSpots, func(a, b BlindSpot) int {
+		return strings.Compare(a.AssetType, b.AssetType)
+	})
 
 	// MITRE stage gaps.
 	allStages := []kernel.AttackStage{
