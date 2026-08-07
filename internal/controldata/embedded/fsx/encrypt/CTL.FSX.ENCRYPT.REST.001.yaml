@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.FSX.ENCRYPT.REST.001
+name: FSx File System Must Have At-Rest Encryption Enabled
+description: >
+  Amazon FSx file systems must have at-rest encryption enabled.
+  FSx stores customer data — file shares, home directories,
+  application data — on persistent storage volumes. Without
+  encryption at rest, data on the underlying disks is readable
+  by anyone with physical or snapshot access. FSx for Lustre,
+  Windows File Server, NetApp ONTAP, and OpenZFS all support
+  encryption at rest using AWS KMS keys, but it must be enabled
+  at creation time and cannot be changed afterward.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.4.1"
+  ccm_v4: ["CEK-03"]
+scope_tags: [aws, fsx]
+taxonomy:
+  - encryption-at-rest
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_fsx_filesystem]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: FSx file system does not have at-rest encryption.
+  action: >
+    Create a new FSx file system with encryption at rest enabled
+    (cannot be changed on existing file systems). Migrate data
+    from the unencrypted file system to the new encrypted one
+    using AWS DataSync or native file copy.
+  example: |
+    {
+      "storage": {
+        "kind": "fsx_filesystem",
+        "encryption": {
+          "at_rest_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: fsx_filesystem
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: false
+tests:
+  - name: unencrypted fsx fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:fsx:us-east-1:111122223333:file-system/fs-12345678"
+      asset_type: aws_fsx_filesystem
+      vendor: aws
+      properties:
+        storage:
+          kind: fsx_filesystem
+          encryption:
+            at_rest_enabled: false
+  - name: encrypted fsx passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:fsx:us-east-1:111122223333:file-system/fs-12345678"
+      asset_type: aws_fsx_filesystem
+      vendor: aws
+      properties:
+        storage:
+          kind: fsx_filesystem
+          encryption:
+            at_rest_enabled: true

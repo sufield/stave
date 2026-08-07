@@ -478,3 +478,5 @@ jobs:
           cache: true
       - name: Run consistency check
         run: make consistency-check
+      - name: Check-compare baseline (local resolver)
+        run: make check-compare-baseline

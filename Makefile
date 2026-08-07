@@ -1370,3 +1370,12 @@ sync-skills:
 	@mkdir -p $(SKILLS_DST)
 	@rsync -a --delete $(SKILLS_SRC) $(SKILLS_DST)
 	@echo "Synced $$(find $(SKILLS_DST) -type f \( -name '*.md' -o -name '*.yaml' \) | wc -l | tr -d ' ') files to $(SKILLS_DST)"
+
+# ── Check-compare baseline ──────────────────────────────────────
+# Validates Stave's IAM escalation resolver against the curated
+# check-compare corpus in --skip-aws mode (no AWS credentials
+# needed). Exit 3 if any resolver disagreement is detected.
+.PHONY: check-compare-baseline
+check-compare-baseline:
+	@echo "Running check-compare baseline (local resolver)..."
+	@$(GOCMD) run ./internal/tools/check-compare --skip-aws

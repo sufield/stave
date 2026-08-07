@@ -5,7 +5,7 @@
 >
 > Back to the [control reference index](../reference.md).
 
-### CTL.KEYSPACES.ENCRYPT.REST.001
+### CTL.KEYSPACES.ENCRYPT.CMK.001
 
 **Amazon Keyspaces Table Must Use Customer-Managed Encryption**
 

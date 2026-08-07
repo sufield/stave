@@ -35,6 +35,21 @@ Verified Permissions policy store has an identity source configured that referen
 
 ---
 
+### CTL.VERIFIEDPERMISSIONS.IDENTITYSOURCE.GHOST.POOL.001
+
+**Verified Permissions Identity Source References Deleted Provider**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Verified Permissions identity source exists but the Cognito user pool or OIDC provider it references has been deleted. The identity source is configured and appears functional in the console, but token validation fails at runtime because the upstream provider is absent. This is a 2-hop ghost reference: policy store → identity source → deleted provider. The existing IDENTITYSOURCE.GHOST.001 control catches the first hop (identity source record absent). This control catches the second hop (record present, target absent).
+
+**Remediation:** Either recreate the deleted Cognito user pool or OIDC provider, or update the identity source configuration to reference a valid provider. If the identity source is no longer needed, delete it from the policy store.
+
+---
+
 ### CTL.VERIFIEDPERMISSIONS.LOGGING.DISABLED.001
 
 **Verified Permissions Policy Store Authorization Logging Not Configured**
@@ -47,6 +62,21 @@ Verified Permissions policy store has an identity source configured that referen
 Verified Permissions policy store has no authorization decision logging configured. IsAuthorized and IsAuthorizedWithToken data events are not captured in CloudTrail unless explicitly enabled. Without logging, authorization decisions — who accessed what and when — leave no audit trail for forensics, compliance, or anomaly detection.
 
 **Remediation:** Enable CloudTrail data events for Verified Permissions (PutEventSelectors or advanced event selectors with resource type AWS::VerifiedPermissions::PolicyStore). This captures IsAuthorized, IsAuthorizedWithToken, and BatchIsAuthorized calls with their request context and decision results.
+
+---
+
+### CTL.VERIFIEDPERMISSIONS.LOGGING.GHOST.001
+
+**Verified Permissions Logging Destination Does Not Exist**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-9; soc2: CC7.2;
+
+Verified Permissions policy store has logging enabled but the log destination does not exist. The logging configuration references a CloudWatch Logs log group, S3 bucket, or Firehose delivery stream that has been deleted, moved, or is in another account that revoked access. Authorization decisions are generated but never reach the audit log. This is a ghost reference: the logging configuration appears correct but the destination is absent.
+
+**Remediation:** Verify the logging destination exists and the policy store has permission to write to it. Recreate the log group, bucket, or delivery stream if it was deleted, or update the logging configuration to point to a valid destination.
 
 ---
 

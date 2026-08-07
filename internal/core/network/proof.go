@@ -309,6 +309,9 @@ func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
 	}
 
 	for _, sub := range privateSubnets {
+		if sub.RouteTableID == "" {
+			return nil, fmt.Errorf("%w: subnet %s has no route table association — cannot prove firewall routing", ErrVacuousProof, sub.ID)
+		}
 		for _, route := range g.Routes[sub.RouteTableID] {
 			if route.Destination != "0.0.0.0/0" && route.Destination != "::/0" {
 				continue

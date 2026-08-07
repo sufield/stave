@@ -1,0 +1,27 @@
+id: eks_to_neptune_lateral
+description: >
+  EKS pods share a VPC with a Neptune cluster whose security
+  group allows broad ingress on port 8182 — a compromised pod
+  can reach the graph database without additional credential
+  theft or network pivoting. The first leg detects that the EKS
+  node group's security group permits unrestricted egress
+  (CTL.VPC.SG.EGRESS.001) — pods can initiate connections to
+  the Neptune subnet. The second leg detects that the Neptune
+  cluster's security group accepts 0.0.0.0/0 ingress on the
+  database port (CTL.NEPTUNE.SG.OPEN.001) — including from the
+  EKS node subnet. Together: pod compromise yields graph database
+  access without restriction. Neptune clusters hold relationship
+  data, identity graphs, fraud detection models — graph access
+  enables data theft and model poisoning. Removing either leg
+  breaks the chain.
+controls:
+  - CTL.VPC.SG.EGRESS.001
+  - CTL.NEPTUNE.SG.OPEN.001
+scope_field: properties.network.vpc_id
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_access
+implicit_dependencies: []

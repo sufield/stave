@@ -62,15 +62,26 @@ func fromIndeterminateFindings(fs []remediation.Finding) []IndeterminateDTO {
 }
 
 // classifyGapCause infers the gap cause from the missing field paths.
-// Fields containing "tag" or prefixed with a custom tag namespace
-// (e.g. "stave:") are tag gaps. Everything else defaults to collector gap.
+// Four categories, aligned with gaps/remediation.go:
+//   - tag_gap: tag or intent fields
+//   - api_gap: secondary API calls (access_advisor, permission_drift)
+//   - collector_gap: cross-inventory analysis (has_ghost_, delegation)
+//   - derived_gap: everything else (agent-fixable mapping additions)
 func classifyGapCause(fields []string) string {
 	for _, f := range fields {
 		if strings.Contains(f, "tag") || strings.Contains(f, "stave:") || strings.Contains(f, "intent") {
 			return "tag_gap"
 		}
+		if strings.Contains(f, "permission_drift") || strings.Contains(f, "access_advisor") ||
+			strings.Contains(f, "unused_service") {
+			return "api_gap"
+		}
+		if strings.Contains(f, "has_ghost_") || strings.Contains(f, "intent_match") ||
+			strings.Contains(f, "delegation") {
+			return "collector_gap"
+		}
 	}
-	return "collector_gap"
+	return "derived_gap"
 }
 
 // fromIssues converts evaluation.Issue values into the DTO shape.

@@ -34,6 +34,7 @@ type sarifRule struct {
 type sarifResult struct {
 	RuleID    kernel.ControlID `json:"ruleId"`
 	RuleIndex int              `json:"ruleIndex"`
+	Kind      string           `json:"kind,omitempty"`
 	Level     string           `json:"level"`
 	Message   sarifMessage     `json:"message"`
 	Locations []sarifLocation  `json:"locations"`

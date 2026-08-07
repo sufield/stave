@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "416e763f5141db64ec9edc5ea8ad3babbdbeb15d235d687ee2a76324d4b2cf26",
+    "policy_fingerprint": "f6a9650b86fc0c296edfce59108114ff1a16333ad6e33acd11da1b1aa955f3d6",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -250,7 +250,7 @@
       "missing_fields": [
         "storage.logging.destination_in_org"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.S3.LIFECYCLE.MULTIPART.001",
@@ -262,7 +262,7 @@
       "missing_fields": [
         "storage.lifecycle.aborts_incomplete_multipart"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.S3.SSEC.DISABLED.001",
@@ -274,7 +274,7 @@
       "missing_fields": [
         "storage.encryption.ssec_disabled"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     }
   ],
   "marker_findings": [

@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDPERMISSIONS.LOGGING.GHOST.001
+name: Verified Permissions Logging Destination Does Not Exist
+description: >
+  Verified Permissions policy store has logging enabled but the
+  log destination does not exist. The logging configuration
+  references a CloudWatch Logs log group, S3 bucket, or Firehose
+  delivery stream that has been deleted, moved, or is in another
+  account that revoked access. Authorization decisions are
+  generated but never reach the audit log. This is a ghost
+  reference: the logging configuration appears correct but the
+  destination is absent.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-9"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-05", "LOG-12"]
+scope_tags:
+  - aws
+  - verifiedpermissions
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_verifiedpermissions_policystore
+params:
+  attack_stage: detection_evasion
+remediation:
+  description: >
+    Logging is enabled but the destination resource does not exist.
+  action: >
+    Verify the logging destination exists and the policy store
+    has permission to write to it. Recreate the log group, bucket,
+    or delivery stream if it was deleted, or update the logging
+    configuration to point to a valid destination.
+  example: |
+    {
+      "authz": {
+        "kind": "policy_store",
+        "policystore": {
+          "logging_enabled": true,
+          "logging_destination_exists": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authz.kind
+      op: eq
+      value: policy_store
+    - field: properties.authz.policystore.logging_enabled
+      op: eq
+      value: true
+    - field: properties.authz.policystore.logging_destination_exists
+      op: eq
+      value: false
+tests:
+  - name: ghost logging destination fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-12345"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: policy_store
+          policystore:
+            logging_enabled: true
+            logging_destination_exists: false
+  - name: valid logging destination passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-12345"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: policy_store
+          policystore:
+            logging_enabled: true
+            logging_destination_exists: true
+  - name: logging disabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-12345"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: policy_store
+          policystore:
+            logging_enabled: false
+            logging_destination_exists: false

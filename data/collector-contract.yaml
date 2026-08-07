@@ -1638,6 +1638,150 @@ contracts:
     consumers:
       - CTL.IAM.FOOTHOLD.CICD.S3.001
 
+  # ─── Compute Role Scope (role_exceeds_required) ─────────────
+  #
+  # Group postcondition (applies to ALL role_exceeds_required fields):
+  #
+  #   MUST be true if the compute resource's IAM role grants actions
+  #   beyond the service's required baseline. The collector resolves
+  #   the role's inline policies, attached managed policies, and
+  #   permission boundaries, then checks for: privilege-escalation
+  #   actions (iam:PassRole, iam:CreateRole, sts:AssumeRole on broad
+  #   targets), unrestricted service wildcards (s3:*, dynamodb:*) on
+  #   Resource: *, or cross-service actions that exceed the compute
+  #   resource's operational scope.
+  #
+  #   Services where broad own-service access is legitimate (e.g.
+  #   glue:* on a Glue job) should NOT set this field to true for
+  #   own-service wildcards alone — only for wildcards on OTHER
+  #   services or privilege-escalation patterns.
+
+  - field: compute.amplify.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Amplify app's IAM role grants actions beyond
+      the app's required scope.
+    consumers:
+      - CTL.AMPLIFY.ROLE.OVERBROAD.001
+
+  - field: compute.apprunner.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the App Runner service's IAM role grants actions
+      beyond the service's required scope.
+    consumers:
+      - CTL.APPRUNNER.ROLE.OVERBROAD.001
+
+  - field: compute.batch.job.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Batch job's IAM role grants actions beyond
+      the job's required scope.
+    consumers:
+      - CTL.BATCH.JOB.ROLE.OVERBROAD.001
+
+  - field: compute.beanstalk.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Elastic Beanstalk environment's IAM role
+      grants actions beyond the environment's required scope.
+    consumers:
+      - CTL.BEANSTALK.ROLE.OVERBROAD.001
+
+  - field: compute.cloud9.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Cloud9 environment's IAM role grants actions
+      beyond the environment's required scope.
+    consumers:
+      - CTL.CLOUD9.ROLE.OVERBROAD.001
+
+  - field: compute.datasync.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the DataSync task's IAM role grants actions
+      beyond the task's required scope.
+    consumers:
+      - CTL.DATASYNC.ROLE.OVERBROAD.001
+
+  - field: compute.dms.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the DMS replication instance's IAM role grants
+      actions beyond the replication task's required scope.
+    consumers:
+      - CTL.DMS.ROLE.OVERBROAD.001
+
+  - field: compute.emr.cluster.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the EMR cluster's IAM role grants actions beyond
+      the cluster's required scope.
+    consumers:
+      - CTL.EMR.ROLE.OVERBROAD.001
+
+  - field: compute.firehose.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Firehose delivery stream's IAM role grants
+      actions beyond the stream's required scope.
+    consumers:
+      - CTL.FIREHOSE.ROLE.OVERBROAD.001
+
+  - field: compute.glue.dev_endpoint.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Glue dev endpoint's IAM role grants actions
+      beyond the endpoint's required scope.
+    consumers:
+      - CTL.GLUE.DEVENDPOINT.ROLE.OVERBROAD.001
+
+  - field: compute.glue.job.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Glue job's IAM role grants actions beyond
+      the job's required scope.
+    consumers:
+      - CTL.GLUE.JOB.ROLE.OVERBROAD.001
+
+  - field: compute.lightsail.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Lightsail instance's IAM role grants actions
+      beyond the instance's required scope.
+    consumers:
+      - CTL.LIGHTSAIL.ROLE.OVERBROAD.001
+
+  - field: compute.mwaa.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the MWAA environment's IAM role grants actions
+      beyond the environment's required scope.
+    consumers:
+      - CTL.MWAA.ROLE.OVERBROAD.001
+
+  - field: compute.sagemaker.endpoint.role_exceeds_required
+    type: boolean
+    status: active
+    postcondition: >
+      True if the SageMaker endpoint's IAM role grants actions
+      beyond the endpoint's required scope.
+    consumers:
+      - CTL.SAGEMAKER.ENDPOINT.ROLE.OVERBROAD.001
+
   # ─── Lightsail Instance Network ─────────────────────────────
 
   - field: compute.network.ipv6_enabled
@@ -1650,3 +1794,28 @@ contracts:
       response: a non-empty array means IPv6 is active.
     consumers:
       - CTL.LIGHTSAIL.INSTANCE.IPV6.001
+
+  # ─── FSx File System Encryption ──────────────────────────────
+
+  - field: storage.encryption.at_rest_enabled
+    type: boolean
+    status: active
+    postcondition: >
+      True if the FSx file system has encryption at rest enabled.
+      FSx supports encryption via AWS KMS on all file system types
+      (Lustre, Windows, ONTAP, OpenZFS). Must be set at creation
+      time; cannot be changed afterward.
+    consumers:
+      - CTL.FSX.ENCRYPT.REST.001
+
+  # ─── Transfer Family Server Encryption ───────────────────────
+
+  - field: transfer.encryption.at_rest_enabled
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Transfer Family server has at-rest encryption
+      enabled for server-managed storage (workflow intermediate
+      files, AS2 payloads, connector temporary files).
+    consumers:
+      - CTL.TRANSFER.ENCRYPT.REST.001

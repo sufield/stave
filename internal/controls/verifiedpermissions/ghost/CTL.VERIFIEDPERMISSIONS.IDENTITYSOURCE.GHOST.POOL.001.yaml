@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDPERMISSIONS.IDENTITYSOURCE.GHOST.POOL.001
+name: Verified Permissions Identity Source References Deleted Provider
+description: >
+  Verified Permissions identity source exists but the Cognito
+  user pool or OIDC provider it references has been deleted.
+  The identity source is configured and appears functional in
+  the console, but token validation fails at runtime because
+  the upstream provider is absent. This is a 2-hop ghost
+  reference: policy store → identity source → deleted provider.
+  The existing IDENTITYSOURCE.GHOST.001 control catches the
+  first hop (identity source record absent). This control
+  catches the second hop (record present, target absent).
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "IA-5"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - verifiedpermissions
+taxonomy:
+  - trust-decay
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_verifiedpermissions_policystore
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Identity source references a Cognito user pool or OIDC
+    provider that no longer exists.
+  action: >
+    Either recreate the deleted Cognito user pool or OIDC
+    provider, or update the identity source configuration to
+    reference a valid provider. If the identity source is no
+    longer needed, delete it from the policy store.
+  example: |
+    {
+      "authz": {
+        "kind": "policy_store",
+        "policystore": {
+          "identity_source_configured": true,
+          "identity_source_exists": true,
+          "identity_source_target_exists": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.authz.kind
+      op: eq
+      value: policy_store
+    - field: properties.authz.policystore.identity_source_configured
+      op: eq
+      value: true
+    - field: properties.authz.policystore.identity_source_exists
+      op: eq
+      value: true
+    - field: properties.authz.policystore.identity_source_target_exists
+      op: eq
+      value: false
+tests:
+  - name: ghost target provider fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-12345"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: policy_store
+          policystore:
+            identity_source_configured: true
+            identity_source_exists: true
+            identity_source_target_exists: false
+  - name: valid target provider passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::111122223333:policy-store/ps-12345"
+      asset_type: aws_verifiedpermissions_policystore
+      vendor: aws
+      properties:
+        authz:
+          kind: policy_store
+          policystore:
+            identity_source_configured: true
+            identity_source_exists: true
+            identity_source_target_exists: true

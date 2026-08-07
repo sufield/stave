@@ -95,6 +95,14 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	rules = append(rules, chainRules...)
 	results = append(results, chainResults...)
 
+	// Append indeterminate findings as SARIF results with kind: "review".
+	// SARIF 2.1.0 §3.27.9: kind "review" means "the result requires
+	// human evaluation" — the closest semantic match for indeterminate
+	// (data gap prevents automated verdict).
+	indetResults, indetRules := buildIndeterminateResults(enriched.IndeterminateFindings, ruleIndex)
+	rules = append(rules, indetRules...)
+	results = append(results, indetResults...)
+
 	report := sarifReport{
 		Version: "2.1.0",
 		Schema:  "https://docs.oasis-open.org/sarif/sarif/v2.1.0/cos02/schemas/sarif-schema-2.1.0.json",
@@ -484,6 +492,73 @@ func buildChainResults(chainFindings []findings.CompoundFinding, existingRules m
 						{
 							Name:               string(cf.AssetID),
 							FullyQualifiedName: string(cf.AssetID),
+							Kind:               "resource",
+						},
+					},
+				},
+			},
+			Properties: props,
+		}
+		results = append(results, result)
+	}
+
+	return results, newRules
+}
+
+// buildIndeterminateResults converts indeterminate findings to SARIF results
+// with kind "review" and adds any new rules not already in the index.
+func buildIndeterminateResults(indet []appcontracts.EnrichedFinding, existingRules map[kernel.ControlID]int) ([]sarifResult, []sarifRule) {
+	if len(indet) == 0 {
+		return nil, nil
+	}
+
+	var results []sarifResult
+	var newRules []sarifRule
+	localIndex := make(map[kernel.ControlID]int)
+
+	for i := range indet {
+		f := &indet[i]
+		ruleIdx, exists := existingRules[f.ControlID]
+		if !exists {
+			if idx, seen := localIndex[f.ControlID]; seen {
+				ruleIdx = idx
+			} else {
+				ruleIdx = len(existingRules) + len(newRules)
+				localIndex[f.ControlID] = ruleIdx
+				newRules = append(newRules, sarifRule{
+					ID:   f.ControlID,
+					Name: f.ControlName,
+					ShortDescription: sarifMessage{
+						Text: f.ControlDescription,
+					},
+					Properties: map[string]any{
+						"tags": []string{"indeterminate"},
+					},
+				})
+			}
+		}
+
+		missing := f.MissingFields()
+		msg := fmt.Sprintf("INDETERMINATE: %s on %s (%s) — missing fields: %v",
+			f.ControlID, f.AssetID, f.AssetType, missing)
+
+		props := map[string]any{
+			"stave/verdict":        "INDETERMINATE",
+			"stave/missing_fields": missing,
+		}
+
+		result := sarifResult{
+			RuleID:    f.ControlID,
+			RuleIndex: ruleIdx,
+			Kind:      "review",
+			Level:     "warning",
+			Message:   sarifMessage{Text: msg},
+			Locations: []sarifLocation{
+				{
+					LogicalLocations: []sarifLogicalLocation{
+						{
+							Name:               string(f.AssetID),
+							FullyQualifiedName: string(f.AssetID),
 							Kind:               "resource",
 						},
 					},

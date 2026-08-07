@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.TRANSFER.ENCRYPT.REST.001
+
+**Transfer Family Server Must Have At-Rest Encryption Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-28; pci_dss_v4.0: 3.4.1; soc2: CC6.7;
+
+AWS Transfer Family servers must encrypt stored data at rest. Transfer Family can store uploaded files on S3 or EFS backends. While S3 and EFS have their own encryption controls, the Transfer server configuration itself determines whether server-managed storage (workflow intermediate files, AS2 payloads, connector temporary files) is encrypted. Without at-rest encryption, data in transit through the server's managed storage is exposed to anyone with disk or snapshot access. This complements the TLS controls (CTL.TRANSFER.SECPOLICY.LEGACY.001) which protect data in transit over the network.
+
+**Remediation:** Enable at-rest encryption on the Transfer Family server or ensure the underlying S3 bucket or EFS file system has encryption enabled. For server-managed storage, configure a KMS key for the server's encryption settings.
+
+---
+
 ### CTL.TRANSFER.EXTERNAL.DESTINATION.001
 
 **Transfer Family Must Not Send Data to External Endpoints**

@@ -215,6 +215,21 @@ AWS Config delivery failures (S3 write failures, SNS publish failures) are not m
 
 ---
 
+### CTL.CONFIG.DELIVERY.HEALTH.001
+
+**AWS Config Delivery Must Be Healthy**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 3.3; fedramp_moderate: CM-3; nist_800_53_r5: CM-3, AU-6; pci_dss_v4.0: 10.3.1; soc2: CC7.2;
+
+AWS Config recorder delivery must be actively succeeding. Config can be enabled with a recorder running and delivery channel configured while S3 delivery is silently failing. The recorder captures configuration changes but if delivery to the S3 bucket fails — bucket policy changed, bucket deleted, KMS permissions revoked — configuration snapshots stop accumulating. Compliance rules continue to evaluate against stale data. This is the same ghost reference pattern as CloudTrail delivery failure: the service appears functional but the downstream artifact is not updating.
+
+**Remediation:** Check the delivery channel status via DescribeDeliveryChannelStatus. Common causes: S3 bucket policy no longer allows Config writes, bucket was deleted, KMS key policy revoked. Fix the underlying delivery issue and verify snapshots resume.
+
+---
+
 ### CTL.CONFIG.DELIVERY.NOSNS.001
 
 **Config Delivery Channel Has No SNS Topic Configured**

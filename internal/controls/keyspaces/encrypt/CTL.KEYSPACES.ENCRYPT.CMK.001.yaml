@@ -1,5 +1,5 @@
 dsl_version: ctrl.v1
-id: CTL.KEYSPACES.ENCRYPT.REST.001
+id: CTL.KEYSPACES.ENCRYPT.CMK.001
 name: Amazon Keyspaces Table Must Use Customer-Managed Encryption
 description: >
   Amazon Keyspaces tables must use a customer-managed KMS key

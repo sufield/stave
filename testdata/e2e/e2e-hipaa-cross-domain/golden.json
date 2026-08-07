@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "feecc84c95cf47906c48dd5b9ab6cad4d5e89f52d94ea51284f33ff95532761a",
+    "policy_fingerprint": "84eb715522a1b1c9578fac1ba0dfef210a9e00681482f32646a87836acf9fece",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -4005,7 +4005,7 @@
       "missing_fields": [
         "identity.cognito.auth_log_retention_compliant"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.COGNITO.COMPLIANCE.NOCMK.001",
@@ -4017,7 +4017,7 @@
       "missing_fields": [
         "identity.cognito.uses_cmk_encryption"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.COGNITO.COMPLIANCE.REGION.001",
@@ -4029,7 +4029,7 @@
       "missing_fields": [
         "identity.cognito.in_approved_region"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.COGNITO.LOCKOUT.NONE.001",
@@ -4041,7 +4041,7 @@
       "missing_fields": [
         "identity.cognito.has_brute_force_protection"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.COGNITO.VERIFY.EMAIL.001",
@@ -4053,7 +4053,7 @@
       "missing_fields": [
         "identity.cognito.email_auto_verified"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.SECRETS.ALARM.PUTVALUE.001",
@@ -4065,7 +4065,7 @@
       "missing_fields": [
         "secret.monitoring.alarm_put_value"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.SECRETS.ALARM.ROTATION.FAILURE.001",
@@ -4077,7 +4077,7 @@
       "missing_fields": [
         "secret.monitoring.alarm_rotation_failure"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.SECRETS.AUDIT.DATAEVENTS.001",
@@ -4089,7 +4089,7 @@
       "missing_fields": [
         "secret.monitoring.cloudtrail_data_events"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     }
   ],
   "chain_findings": [

@@ -1,0 +1,25 @@
+id: ecs_to_neptune_lateral
+description: >
+  ECS tasks share a VPC with a Neptune cluster whose security
+  group allows broad ingress on port 8182 — a compromised task
+  can reach the graph database without additional credential
+  theft or network pivoting. The first leg detects that the ECS
+  task's security group permits unrestricted egress
+  (CTL.VPC.SG.EGRESS.001) — tasks can initiate connections to
+  the Neptune subnet. The second leg detects that the Neptune
+  cluster's security group accepts 0.0.0.0/0 ingress on the
+  database port (CTL.NEPTUNE.SG.OPEN.001) — including from the
+  ECS task subnet. Together: task compromise yields graph database
+  access without restriction. Removing either leg breaks the
+  chain.
+controls:
+  - CTL.VPC.SG.EGRESS.001
+  - CTL.NEPTUNE.SG.OPEN.001
+scope_field: properties.network.vpc_id
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_access
+implicit_dependencies: []

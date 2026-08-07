@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3317
-**Pack hash:** `f0632c08d6fea7176b2a3b98f67274a026ac554c3e834998293ae465d2f1f821`
+**Total controls:** 3322
+**Pack hash:** `9971145f767e2e69db92ecd42a7f1db3cd8ff29bd2b6c2a07f0979695d025feb`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,8 +13,8 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 367 |
-| high | 1439 |
+| critical | 368 |
+| high | 1443 |
 | info | 19 |
 | low | 238 |
 | medium | 1254 |
@@ -28,10 +28,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 142 |
 | encryption | 125 |
-| exposure | 1461 |
+| exposure | 1465 |
 | governance | 661 |
 | hygiene | 21 |
-| identity | 660 |
+| identity | 661 |
 | lifecycle | 31 |
 | network | 52 |
 | resilience | 39 |
@@ -46,7 +46,7 @@ GitHub. Pick a service below.
 | [ACM](reference/acm.md) | 9 |
 | [ACMPCA](reference/acmpca.md) | 1 |
 | [AD](reference/ad.md) | 40 |
-| [AMPLIFY](reference/amplify.md) | 1 |
+| [AMPLIFY](reference/amplify.md) | 2 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
 | [APIGW2](reference/apigw2.md) | 2 |
 | [APPRUNNER](reference/apprunner.md) | 2 |
@@ -72,7 +72,7 @@ GitHub. Pick a service below.
 | [CODEPIPELINE](reference/codepipeline.md) | 6 |
 | [COGNITO](reference/cognito.md) | 113 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
-| [CONFIG](reference/config.md) | 51 |
+| [CONFIG](reference/config.md) | 52 |
 | [DATACLASS](reference/dataclass.md) | 5 |
 | [DATASYNC](reference/datasync.md) | 2 |
 | [DETECTIVE](reference/detective.md) | 1 |
@@ -156,8 +156,8 @@ GitHub. Pick a service below.
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
 | [TIMESTREAM](reference/timestream.md) | 1 |
-| [TRANSFER](reference/transfer.md) | 2 |
-| [VERIFIEDPERMISSIONS](reference/verifiedpermissions.md) | 4 |
+| [TRANSFER](reference/transfer.md) | 3 |
+| [VERIFIEDPERMISSIONS](reference/verifiedpermissions.md) | 6 |
 | [VPC](reference/vpc.md) | 114 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 18 |

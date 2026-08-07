@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.TRANSFER.ENCRYPT.REST.001
+name: Transfer Family Server Must Have At-Rest Encryption Enabled
+description: >
+  AWS Transfer Family servers must encrypt stored data at rest.
+  Transfer Family can store uploaded files on S3 or EFS backends.
+  While S3 and EFS have their own encryption controls, the Transfer
+  server configuration itself determines whether server-managed
+  storage (workflow intermediate files, AS2 payloads, connector
+  temporary files) is encrypted. Without at-rest encryption, data
+  in transit through the server's managed storage is exposed to
+  anyone with disk or snapshot access. This complements the TLS
+  controls (CTL.TRANSFER.SECPOLICY.LEGACY.001) which protect
+  data in transit over the network.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "3.4.1"
+  ccm_v4: ["CEK-03"]
+scope_tags: [aws, transfer]
+taxonomy:
+  - encryption-at-rest
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_transfer_server]
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Transfer Family server does not have at-rest encryption.
+  action: >
+    Enable at-rest encryption on the Transfer Family server or
+    ensure the underlying S3 bucket or EFS file system has
+    encryption enabled. For server-managed storage, configure
+    a KMS key for the server's encryption settings.
+  example: |
+    {
+      "transfer": {
+        "kind": "transfer_server",
+        "encryption": {
+          "at_rest_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.transfer.kind
+      op: eq
+      value: transfer_server
+    - field: properties.transfer.encryption.at_rest_enabled
+      op: eq
+      value: false
+tests:
+  - name: unencrypted transfer fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:transfer:us-east-1:111122223333:server/s-12345678"
+      asset_type: aws_transfer_server
+      vendor: aws
+      properties:
+        transfer:
+          kind: transfer_server
+          encryption:
+            at_rest_enabled: false
+  - name: encrypted transfer passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:transfer:us-east-1:111122223333:server/s-12345678"
+      asset_type: aws_transfer_server
+      vendor: aws
+      properties:
+        transfer:
+          kind: transfer_server
+          encryption:
+            at_rest_enabled: true

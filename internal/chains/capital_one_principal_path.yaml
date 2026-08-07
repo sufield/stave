@@ -34,11 +34,14 @@ incident_precedent:
   impact: 100M+ customer records exfiltrated via SSRF→IMDS→S3
   reference: UNC2903 attribution; SCARLETEEL (2023) same shape
 compensating_controls:
-  - control_id: CTL.VPC.NACL.DENY.001
+  - control_id: CTL.VPC.SG.UNRESTRICTED.001
     effect: blocks_path
     rationale: >
-      Network ACL denying ingress to the instance prevents the
-      SSRF entry point regardless of IMDS and role configuration.
+      A security group restricting ingress to the instance limits
+      the SSRF entry point regardless of IMDS and role configuration.
+      NACL-level ingress denial provides defense-in-depth but has
+      no dedicated control — SG ingress restriction is the
+      evaluable compensating control.
 implicit_dependencies:
   - source: reasoning.souffle.reachable_resource
     fallback: fail_closed

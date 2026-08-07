@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.CONFIG.DELIVERY.HEALTH.001
+name: AWS Config Delivery Must Be Healthy
+description: >
+  AWS Config recorder delivery must be actively succeeding.
+  Config can be enabled with a recorder running and delivery
+  channel configured while S3 delivery is silently failing.
+  The recorder captures configuration changes but if delivery
+  to the S3 bucket fails — bucket policy changed, bucket
+  deleted, KMS permissions revoked — configuration snapshots
+  stop accumulating. Compliance rules continue to evaluate
+  against stale data. This is the same ghost reference pattern
+  as CloudTrail delivery failure: the service appears
+  functional but the downstream artifact is not updating.
+domain: exposure
+severity: critical
+compliance:
+  cis_aws_v3.0: "3.3"
+  nist_800_53_r5: "CM-3, AU-6"
+  fedramp_moderate: "CM-3"
+  pci_dss_v4.0: "10.3.1"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-05", "LOG-12"]
+scope_tags:
+  - aws
+  - config
+taxonomy:
+  - trust-decay
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_config_recorder
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+defect: >
+  AWS Config delivery channel is failing. The recorder is
+  running but configuration snapshots are not reaching the
+  S3 bucket.
+infection: >
+  Config shows the recorder as active. Config rules continue
+  evaluating. Compliance dashboards report status. But S3
+  delivery has failed: the bucket policy changed, the bucket
+  was deleted, or KMS permissions were revoked. Configuration
+  snapshots stop accumulating. Compliance evaluations run
+  against stale state. The gap between reality and the
+  snapshot widens silently.
+failure: >
+  A misconfiguration is introduced. Config rules that would
+  detect it evaluate against a stale snapshot and report
+  compliant. The configuration change is invisible to the
+  compliance pipeline until someone notices delivery stopped.
+remediation:
+  description: >
+    AWS Config delivery channel is failing. Configuration
+    snapshots are not reaching the S3 bucket.
+  action: >
+    Check the delivery channel status via DescribeDeliveryChannelStatus.
+    Common causes: S3 bucket policy no longer allows Config
+    writes, bucket was deleted, KMS key policy revoked. Fix
+    the underlying delivery issue and verify snapshots resume.
+  example: |
+    {
+      "detection": {
+        "kind": "config_recorder",
+        "config": {
+          "delivery_healthy": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: config_recorder
+    - field: properties.detection.config.delivery_healthy
+      op: eq
+      value: false
+tests:
+  - name: unhealthy delivery fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:recorder/default"
+      asset_type: aws_config_recorder
+      vendor: aws
+      properties:
+        detection:
+          kind: config_recorder
+          config:
+            delivery_healthy: false
+  - name: healthy delivery passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:config:us-east-1:111122223333:recorder/default"
+      asset_type: aws_config_recorder
+      vendor: aws
+      properties:
+        detection:
+          kind: config_recorder
+          config:
+            delivery_healthy: true
