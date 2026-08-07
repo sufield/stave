@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3322
-**Pack hash:** `9971145f767e2e69db92ecd42a7f1db3cd8ff29bd2b6c2a07f0979695d025feb`
+**Total controls:** 3324
+**Pack hash:** `97a1964a9c52d583c5a611892a7b10122201c17b8d5b725a68235f173b2641ed`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 368 |
-| high | 1443 |
+| high | 1445 |
 | info | 19 |
 | low | 238 |
 | medium | 1254 |
@@ -28,7 +28,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 142 |
 | encryption | 125 |
-| exposure | 1465 |
+| exposure | 1467 |
 | governance | 661 |
 | hygiene | 21 |
 | identity | 661 |
@@ -94,6 +94,7 @@ GitHub. Pick a service below.
 | [EXPOSURE](reference/exposure.md) | 11 |
 | [FIREHOSE](reference/firehose.md) | 3 |
 | [FMS](reference/fms.md) | 3 |
+| [FSX](reference/fsx.md) | 1 |
 | [GCP](reference/gcp.md) | 72 |
 | [GCS](reference/gcs.md) | 7 |
 | [GHOST](reference/ghost.md) | 2 |
@@ -118,7 +119,7 @@ GitHub. Pick a service below.
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 5 |
 | [MEDIASTORE](reference/mediastore.md) | 1 |
-| [MEMORYDB](reference/memorydb.md) | 1 |
+| [MEMORYDB](reference/memorydb.md) | 2 |
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
 | [MQ](reference/mq.md) | 4 |
