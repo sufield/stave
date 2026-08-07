@@ -36,8 +36,8 @@ remediation:
     override per-topic where needed.
   example: |
     {
-      "messaging": {
-        "kind": "kafka_cluster",
+      "storage": {
+        "kind": "msk_cluster",
         "backup": {
           "retention_configured": true
         }
@@ -45,10 +45,10 @@ remediation:
     }
 unsafe_predicate:
   all:
-    - field: properties.messaging.kind
+    - field: properties.storage.kind
       op: eq
-      value: kafka_cluster
-    - field: properties.messaging.backup.retention_configured
+      value: msk_cluster
+    - field: properties.storage.backup.retention_configured
       op: ne
       value: true
 tests:
@@ -59,8 +59,8 @@ tests:
       asset_type: aws_msk_cluster
       vendor: aws
       properties:
-        messaging:
-          kind: kafka_cluster
+        storage:
+          kind: msk_cluster
           backup:
             retention_configured: false
   - name: retention configured passes
@@ -70,7 +70,7 @@ tests:
       asset_type: aws_msk_cluster
       vendor: aws
       properties:
-        messaging:
-          kind: kafka_cluster
+        storage:
+          kind: msk_cluster
           backup:
             retention_configured: true

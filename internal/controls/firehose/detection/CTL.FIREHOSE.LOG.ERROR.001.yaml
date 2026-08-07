@@ -33,7 +33,7 @@ remediation:
     errors.
   example: |
     {
-      "stream": {
+      "streaming": {
         "kind": "delivery_stream",
         "logging": {
           "error_logging_enabled": true
@@ -42,10 +42,10 @@ remediation:
     }
 unsafe_predicate:
   all:
-    - field: properties.stream.kind
+    - field: properties.streaming.kind
       op: eq
       value: delivery_stream
-    - field: properties.stream.logging.error_logging_enabled
+    - field: properties.streaming.logging.error_logging_enabled
       op: ne
       value: true
 tests:
@@ -56,7 +56,7 @@ tests:
       asset_type: aws_kinesis_firehose_delivery_stream
       vendor: aws
       properties:
-        stream:
+        streaming:
           kind: delivery_stream
           logging:
             error_logging_enabled: false
@@ -67,7 +67,7 @@ tests:
       asset_type: aws_kinesis_firehose_delivery_stream
       vendor: aws
       properties:
-        stream:
+        streaming:
           kind: delivery_stream
           logging:
             error_logging_enabled: true

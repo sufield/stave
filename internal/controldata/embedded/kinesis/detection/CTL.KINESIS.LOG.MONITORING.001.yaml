@@ -34,8 +34,8 @@ remediation:
     and latency metrics.
   example: |
     {
-      "stream": {
-        "kind": "data_stream",
+      "streaming": {
+        "kind": "kinesis_stream",
         "logging": {
           "enhanced_monitoring_enabled": true
         }
@@ -43,10 +43,10 @@ remediation:
     }
 unsafe_predicate:
   all:
-    - field: properties.stream.kind
+    - field: properties.streaming.kind
       op: eq
-      value: data_stream
-    - field: properties.stream.logging.enhanced_monitoring_enabled
+      value: kinesis_stream
+    - field: properties.streaming.logging.enhanced_monitoring_enabled
       op: ne
       value: true
 tests:
@@ -57,8 +57,8 @@ tests:
       asset_type: aws_kinesis_stream
       vendor: aws
       properties:
-        stream:
-          kind: data_stream
+        streaming:
+          kind: kinesis_stream
           logging:
             enhanced_monitoring_enabled: false
   - name: enhanced monitoring enabled passes
@@ -68,7 +68,7 @@ tests:
       asset_type: aws_kinesis_stream
       vendor: aws
       properties:
-        stream:
-          kind: data_stream
+        streaming:
+          kind: kinesis_stream
           logging:
             enhanced_monitoring_enabled: true

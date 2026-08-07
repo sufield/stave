@@ -19,7 +19,7 @@ taxonomy:
   - logging
 type: unsafe_state
 classification: state_assertion
-applicable_asset_types: [aws_detective_graph]
+applicable_asset_types: [aws_detective]
 params:
   attack_stage: discovery
 remediation:
@@ -31,7 +31,7 @@ remediation:
   example: |
     {
       "detection": {
-        "kind": "detective_graph",
+        "kind": "detective",
         "enabled": true
       }
     }
@@ -39,7 +39,7 @@ unsafe_predicate:
   all:
     - field: properties.detection.kind
       op: eq
-      value: detective_graph
+      value: detective
     - field: properties.detection.enabled
       op: ne
       value: true
@@ -48,19 +48,19 @@ tests:
     verdict: VIOLATION
     asset:
       asset_id: "arn:aws:detective:us-east-1:123456789012:graph:abc123"
-      asset_type: aws_detective_graph
+      asset_type: aws_detective
       vendor: aws
       properties:
         detection:
-          kind: detective_graph
+          kind: detective
           enabled: false
   - name: Detective enabled passes
     verdict: PASS
     asset:
       asset_id: "arn:aws:detective:us-east-1:123456789012:graph:abc123"
-      asset_type: aws_detective_graph
+      asset_type: aws_detective
       vendor: aws
       properties:
         detection:
-          kind: detective_graph
+          kind: detective
           enabled: true
