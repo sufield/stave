@@ -1768,7 +1768,7 @@
         "storage.encryption.algorithm",
         "storage.encryption.kms_key_id"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.S3.ENCRYPT.004",
@@ -1780,7 +1780,7 @@
       "missing_fields": [
         "storage.encryption.algorithm"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     }
   ],
   "issues": [
