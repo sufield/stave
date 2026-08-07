@@ -10,6 +10,7 @@ aco-automation
 action-recommendations
 activate
 aesop
+agent-registry
 agentaccess-mcp
 aidevops
 aiops
