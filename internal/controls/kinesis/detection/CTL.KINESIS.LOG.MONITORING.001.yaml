@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.KINESIS.LOG.MONITORING.001
+name: Kinesis Data Stream Must Have Enhanced Monitoring Enabled
+description: >
+  Kinesis data stream does not have enhanced monitoring enabled.
+  Enhanced monitoring provides per-shard metrics that expose
+  throttling, iterator age, and read/write throughput anomalies
+  not visible in basic monitoring. Without it, data exfiltration
+  via high-volume reads or stream poisoning via injected records
+  may go undetected.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2"
+scope_tags:
+  - aws
+  - kinesis
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_kinesis_stream]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Kinesis data stream enhanced monitoring is not enabled.
+  action: >
+    Enable enhanced (shard-level) monitoring for the Kinesis
+    data stream to gain per-shard visibility into throughput
+    and latency metrics.
+  example: |
+    {
+      "stream": {
+        "kind": "data_stream",
+        "logging": {
+          "enhanced_monitoring_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.stream.kind
+      op: eq
+      value: data_stream
+    - field: properties.stream.logging.enhanced_monitoring_enabled
+      op: ne
+      value: true
+tests:
+  - name: enhanced monitoring disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kinesis:us-east-1:123456789012:stream/my-stream"
+      asset_type: aws_kinesis_stream
+      vendor: aws
+      properties:
+        stream:
+          kind: data_stream
+          logging:
+            enhanced_monitoring_enabled: false
+  - name: enhanced monitoring enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kinesis:us-east-1:123456789012:stream/my-stream"
+      asset_type: aws_kinesis_stream
+      vendor: aws
+      properties:
+        stream:
+          kind: data_stream
+          logging:
+            enhanced_monitoring_enabled: true

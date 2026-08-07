@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.KEYSPACES.PITR.ENABLED.001
+name: Keyspaces Table Must Have Point-in-Time Recovery Enabled
+description: >
+  Amazon Keyspaces table does not have point-in-time recovery
+  enabled. Without PITR, accidental deletes or application bugs
+  that corrupt table data cannot be recovered.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+scope_tags:
+  - aws
+  - keyspaces
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_keyspaces_keyspace]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Keyspaces table does not have point-in-time recovery enabled.
+  action: >
+    Enable point-in-time recovery for the Keyspaces table.
+  example: |
+    {
+      "database": {
+        "kind": "keyspace",
+        "backup": {
+          "pitr_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: keyspace
+    - field: properties.database.backup.pitr_enabled
+      op: ne
+      value: true
+tests:
+  - name: keyspace without PITR fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cassandra:us-east-1:123456789012:/keyspace/my-keyspace"
+      asset_type: aws_keyspaces_keyspace
+      vendor: aws
+      properties:
+        database:
+          kind: keyspace
+          backup:
+            pitr_enabled: false
+  - name: keyspace with PITR passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cassandra:us-east-1:123456789012:/keyspace/my-keyspace"
+      asset_type: aws_keyspaces_keyspace
+      vendor: aws
+      properties:
+        database:
+          kind: keyspace
+          backup:
+            pitr_enabled: true

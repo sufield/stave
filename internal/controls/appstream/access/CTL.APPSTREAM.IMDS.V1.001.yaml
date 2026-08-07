@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.APPSTREAM.IMDS.V1.001
+name: AppStream Fleet Must Enforce IMDSv2
+description: >
+  AppStream fleet instances allow IMDSv1 access. IMDSv1 is
+  vulnerable to SSRF attacks that can steal instance credentials
+  from the metadata endpoint.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - appstream
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_appstream_fleet]
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    AppStream fleet allows IMDSv1 access.
+  action: >
+    Enforce IMDSv2 on AppStream fleet instances by requiring
+    token-based metadata requests.
+  example: |
+    {
+      "compute": {
+        "kind": "appstream_fleet",
+        "metadata": {
+          "imdsv2_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: appstream_fleet
+    - field: properties.compute.metadata.imdsv2_enforced
+      op: ne
+      value: true
+tests:
+  - name: fleet without IMDSv2 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:appstream:us-east-1:123456789012:fleet/my-fleet"
+      asset_type: aws_appstream_fleet
+      vendor: aws
+      properties:
+        compute:
+          kind: appstream_fleet
+          metadata:
+            imdsv2_enforced: false
+  - name: fleet with IMDSv2 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:appstream:us-east-1:123456789012:fleet/my-fleet"
+      asset_type: aws_appstream_fleet
+      vendor: aws
+      properties:
+        compute:
+          kind: appstream_fleet
+          metadata:
+            imdsv2_enforced: true

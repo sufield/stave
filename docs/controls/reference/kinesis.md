@@ -35,6 +35,21 @@ Kinesis Data Streams with server-side encryption must use a customer-managed KMS
 
 ---
 
+### CTL.KINESIS.LOG.MONITORING.001
+
+**Kinesis Data Stream Must Have Enhanced Monitoring Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+Kinesis data stream does not have enhanced monitoring enabled. Enhanced monitoring provides per-shard metrics that expose throttling, iterator age, and read/write throughput anomalies not visible in basic monitoring. Without it, data exfiltration via high-volume reads or stream poisoning via injected records may go undetected.
+
+**Remediation:** Enable enhanced (shard-level) monitoring for the Kinesis data stream to gain per-shard visibility into throughput and latency metrics.
+
+---
+
 ### CTL.KINESIS.MODE.PROVISIONED.001
 
 **Kinesis Stream Should Use On-Demand Capacity Mode**

@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.FSX.BACKUP.CONFIGURED.001
+name: FSx File System Must Have Backups Configured
+description: >
+  FSx file system does not have automatic backups or AWS
+  Backup configured. Without backups, ransomware encryption
+  or accidental deletion of the file system results in
+  permanent data loss. FSx supports automatic daily backups
+  with configurable retention and AWS Backup integration.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  pci_dss_v4.0: "3.4"
+  ccm_v4: ["BCR-11", "DSP-17"]
+scope_tags:
+  - aws
+  - fsx
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_fsx_file_system]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    FSx file system does not have backups configured.
+  action: >
+    Enable automatic backups on the FSx file system with
+    a retention period appropriate to the data's recovery
+    requirements, or configure AWS Backup to include the
+    file system in a backup plan.
+  example: |
+    {
+      "storage": {
+        "kind": "file_system",
+        "backup": {
+          "backup_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: file_system
+    - field: properties.storage.backup.backup_configured
+      op: ne
+      value: true
+tests:
+  - name: no backup configured fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:fsx:us-east-1:111122223333:file-system/fs-abc123"
+      asset_type: aws_fsx_file_system
+      vendor: aws
+      properties:
+        storage:
+          kind: file_system
+          backup:
+            backup_configured: false
+  - name: backup configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:fsx:us-east-1:111122223333:file-system/fs-abc123"
+      asset_type: aws_fsx_file_system
+      vendor: aws
+      properties:
+        storage:
+          kind: file_system
+          backup:
+            backup_configured: true

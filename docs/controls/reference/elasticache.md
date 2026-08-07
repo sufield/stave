@@ -50,6 +50,21 @@ ElastiCache cluster or replication group is configured as publicly accessible. E
 
 ---
 
+### CTL.ELASTICACHE.DELETION.PROTECTION.001
+
+**ElastiCache Replication Group Must Have Deletion Protection**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; pci_dss_v4.0: 3.4; soc2: A1.2;
+
+ElastiCache replication group does not have deletion protection enabled. Without deletion protection, an IAM principal with elasticache:DeleteReplicationGroup can destroy the cluster and all its data in a single API call. This enables both accidental data loss and deliberate sabotage via compromised credentials.
+
+**Remediation:** Enable deletion protection on the ElastiCache replication group. This prevents accidental or malicious deletion without first disabling the protection flag.
+
+---
+
 ### CTL.ELASTICACHE.ENCRYPT.CMK.001
 
 **ElastiCache Redis Must Use a Customer-Managed KMS Key**
@@ -136,6 +151,21 @@ ElastiCache Redis 7+ clusters should use IAM authentication instead of static AU
 The observation snapshot is missing required ElastiCache properties.
 
 **Remediation:** Ensure the extractor calls aws elasticache describe-replication-groups and maps TransitEncryptionEnabled to the cache observation properties.
+
+---
+
+### CTL.ELASTICACHE.LOG.SLOW.001
+
+**ElastiCache Cluster Must Have Slow Log Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+ElastiCache cluster does not have slow log delivery enabled. Slow logs capture queries that exceed a configurable latency threshold, providing visibility into performance degradation and potential abuse patterns such as key enumeration or denial-of-service via expensive commands.
+
+**Remediation:** Enable slow log delivery for the ElastiCache cluster. Configure log delivery to CloudWatch Logs or Kinesis Data Firehose with the slow-log log type.
 
 ---
 

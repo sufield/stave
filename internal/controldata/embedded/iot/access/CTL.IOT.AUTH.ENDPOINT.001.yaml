@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.IOT.AUTH.ENDPOINT.001
+name: IoT Core Endpoint Must Require Authentication
+description: >
+  IoT Core MQTT/HTTP endpoint does not require device
+  authentication. Without mutual TLS, custom authorizers,
+  or Cognito identity pools, any client with the endpoint
+  URL can connect to the IoT message broker. Unauthenticated
+  access allows message injection, topic subscription, and
+  shadow manipulation across the entire IoT namespace.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2"
+  ccm_v4: ["IAM-02", "IVS-06"]
+scope_tags:
+  - aws
+  - iot
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iot_account]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    IoT Core endpoint does not require authentication.
+  action: >
+    Configure IoT Core to require mutual TLS certificate
+    authentication or a custom authorizer for all device
+    connections. Disable unauthenticated access to MQTT
+    and HTTP endpoints.
+  example: |
+    {
+      "iot": {
+        "kind": "account_settings",
+        "auth": {
+          "endpoint_auth_required": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.iot.kind
+      op: eq
+      value: account_settings
+    - field: properties.iot.auth.endpoint_auth_required
+      op: ne
+      value: true
+tests:
+  - name: unauthenticated IoT endpoint fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:111122223333:account"
+      asset_type: aws_iot_account
+      vendor: aws
+      properties:
+        iot:
+          kind: account_settings
+          auth:
+            endpoint_auth_required: false
+  - name: authenticated IoT endpoint passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:111122223333:account"
+      asset_type: aws_iot_account
+      vendor: aws
+      properties:
+        iot:
+          kind: account_settings
+          auth:
+            endpoint_auth_required: true

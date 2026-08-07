@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.DETECTIVE.ENABLED.001
+name: Amazon Detective Must Be Enabled
+description: >
+  Amazon Detective is not enabled. Detective aggregates and
+  analyzes findings from GuardDuty, Security Hub, and VPC Flow
+  Logs to help investigate security incidents. Without Detective,
+  incident investigation relies on manual log correlation.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "AU-2, SI-4"
+  soc2: "CC7.2"
+scope_tags:
+  - aws
+  - detective
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_detective_graph]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Amazon Detective is not enabled.
+  action: >
+    Enable Amazon Detective in the account to provide automated
+    investigation capabilities for security findings.
+  example: |
+    {
+      "detection": {
+        "kind": "detective_graph",
+        "enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: detective_graph
+    - field: properties.detection.enabled
+      op: ne
+      value: true
+tests:
+  - name: Detective not enabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:detective:us-east-1:123456789012:graph:abc123"
+      asset_type: aws_detective_graph
+      vendor: aws
+      properties:
+        detection:
+          kind: detective_graph
+          enabled: false
+  - name: Detective enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:detective:us-east-1:123456789012:graph:abc123"
+      asset_type: aws_detective_graph
+      vendor: aws
+      properties:
+        detection:
+          kind: detective_graph
+          enabled: true

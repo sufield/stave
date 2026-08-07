@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.MEMORYDB.BACKUP.CONFIGURED.001
+name: MemoryDB Cluster Must Have Snapshots Configured
+description: >
+  MemoryDB cluster does not have snapshot (backup) configured.
+  MemoryDB is a durable Redis-compatible store — without
+  snapshots, cluster failure or accidental FLUSHALL results
+  in permanent data loss. MemoryDB supports automatic daily
+  snapshots with configurable retention.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  pci_dss_v4.0: "3.4"
+  ccm_v4: ["BCR-11", "DSP-17"]
+scope_tags:
+  - aws
+  - memorydb
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_memorydb_cluster]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    MemoryDB cluster does not have snapshots configured.
+  action: >
+    Enable automatic snapshots on the MemoryDB cluster with
+    a retention period appropriate to the data's recovery
+    requirements.
+  example: |
+    {
+      "cache": {
+        "kind": "memorydb_cluster",
+        "backup": {
+          "snapshot_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: memorydb_cluster
+    - field: properties.cache.backup.snapshot_configured
+      op: ne
+      value: true
+tests:
+  - name: no snapshot configured fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:memorydb:us-east-1:111122223333:cluster/my-cluster"
+      asset_type: aws_memorydb_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: memorydb_cluster
+          backup:
+            snapshot_configured: false
+  - name: snapshot configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:memorydb:us-east-1:111122223333:cluster/my-cluster"
+      asset_type: aws_memorydb_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: memorydb_cluster
+          backup:
+            snapshot_configured: true

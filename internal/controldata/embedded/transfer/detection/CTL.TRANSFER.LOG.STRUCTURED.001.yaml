@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.TRANSFER.LOG.STRUCTURED.001
+name: Transfer Family Server Must Have Structured Logging Enabled
+description: >
+  AWS Transfer Family server does not have structured logging
+  enabled. Structured logging captures file transfer events,
+  authentication attempts, and protocol-level details in a
+  machine-parseable format. Without it, unauthorized file
+  access, credential stuffing against SFTP endpoints, and
+  data exfiltration via file downloads cannot be detected.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2"
+scope_tags:
+  - aws
+  - transfer
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_transfer_server]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Transfer Family server structured logging is not enabled.
+  action: >
+    Enable structured logging for the Transfer Family server.
+    Configure log delivery to CloudWatch Logs to capture
+    file transfer and authentication events.
+  example: |
+    {
+      "transfer": {
+        "kind": "server",
+        "logging": {
+          "structured_logging_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.transfer.kind
+      op: eq
+      value: server
+    - field: properties.transfer.logging.structured_logging_enabled
+      op: ne
+      value: true
+tests:
+  - name: structured logging disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:transfer:us-east-1:123456789012:server/s-1234567890"
+      asset_type: aws_transfer_server
+      vendor: aws
+      properties:
+        transfer:
+          kind: server
+          logging:
+            structured_logging_enabled: false
+  - name: structured logging enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:transfer:us-east-1:123456789012:server/s-1234567890"
+      asset_type: aws_transfer_server
+      vendor: aws
+      properties:
+        transfer:
+          kind: server
+          logging:
+            structured_logging_enabled: true

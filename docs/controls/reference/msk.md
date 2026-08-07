@@ -35,6 +35,21 @@ MSK clusters must not enable unauthenticated client access. Without authenticati
 
 ---
 
+### CTL.MSK.BACKUP.RETENTION.001
+
+**MSK Cluster Must Have Retention Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; pci_dss_v4.0: 3.4; soc2: A1.2;
+
+MSK (Kafka) cluster does not have topic retention configured to meet recovery requirements. Without adequate retention, consumed messages are deleted before they can be replayed for disaster recovery or audit. MSK supports both time-based and size-based retention at the cluster and topic level.
+
+**Remediation:** Configure topic retention on the MSK cluster to meet recovery and audit requirements. Set log.retention.hours and log.retention.bytes at the cluster level, and override per-topic where needed.
+
+---
+
 ### CTL.MSK.CONNECTOR.ENCRYPT.001
 
 **MSK Connect Connectors Must Encrypt Traffic in Transit**
@@ -167,6 +182,21 @@ MSK cluster with cross-region replication has a target cluster in another region
 MSK cluster default topic replication factor must be at least 3. A replication factor below 3 means a single broker failure can cause data loss if the remaining replicas are also unavailable. Combined with min.insync.replicas < 2, producers may acknowledge writes that are stored on only one broker, creating a silent durability gap.
 
 **Remediation:** Set default.replication.factor >= 3 and min.insync.replicas >= 2 in the MSK cluster configuration. This ensures writes are acknowledged only when replicated to multiple brokers.
+
+---
+
+### CTL.MSK.SECRET.SASL.001
+
+**MSK Cluster SASL Credentials Must Use Secrets Manager**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+MSK cluster SASL/SCRAM credentials are not managed through AWS Secrets Manager. Hardcoded or manually managed SASL credentials risk exposure and complicate rotation.
+
+**Remediation:** Configure SASL/SCRAM authentication to use AWS Secrets Manager for credential storage and rotation.
 
 ---
 

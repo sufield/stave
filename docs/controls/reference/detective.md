@@ -20,3 +20,18 @@ Detective behavior graph must be actively ingesting data from its configured sou
 
 ---
 
+### CTL.DETECTIVE.ENABLED.001
+
+**Amazon Detective Must Be Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, SI-4; soc2: CC7.2;
+
+Amazon Detective is not enabled. Detective aggregates and analyzes findings from GuardDuty, Security Hub, and VPC Flow Logs to help investigate security incidents. Without Detective, incident investigation relies on manual log correlation.
+
+**Remediation:** Enable Amazon Detective in the account to provide automated investigation capabilities for security findings.
+
+---
+

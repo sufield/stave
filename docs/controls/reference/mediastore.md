@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.MEDIASTORE.LOG.ACCESS.001
+
+**MediaStore Access Logging Must Be Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+AWS Elemental MediaStore container does not have access logging enabled. Without access logging, object-level operations are not recorded, limiting forensic capability after unauthorized media access.
+
+**Remediation:** Enable access logging for the MediaStore container.
+
+---
+
 ### CTL.MEDIASTORE.POLICY.PUBLIC.001
 
 **MediaStore Container Policy Must Not Allow Public Access**

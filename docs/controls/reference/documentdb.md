@@ -215,6 +215,21 @@ DocumentDB clusters in production should have the `profiler` cluster parameter e
 
 ---
 
+### CTL.DOCUMENTDB.SECRET.PLAIN.001
+
+**DocumentDB Cluster Must Use Secrets Manager for Master Password**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; pci_dss_v4.0: 8.3; soc2: CC6.1;
+
+DocumentDB cluster master password is not managed by AWS Secrets Manager. Plaintext passwords in Terraform state, CloudFormation parameters, or environment variables are exposed to anyone with access to the deployment pipeline. Secrets Manager provides automatic rotation and audit logging for database credentials.
+
+**Remediation:** Enable Secrets Manager integration for the DocumentDB cluster master password. Use manage_master_user_password in Terraform or the ManageMasterUserPassword API parameter.
+
+---
+
 ### CTL.DOCUMENTDB.SG.OPEN.001
 
 **DocumentDB Cluster Security Group Must Not Allow 0.0.0.0/0 Ingress on 27017**

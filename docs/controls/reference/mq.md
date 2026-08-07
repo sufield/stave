@@ -20,6 +20,21 @@ Amazon MQ ActiveMQ brokers must not run engine versions that have reached end-of
 
 ---
 
+### CTL.MQ.BACKUP.CONFIGURED.001
+
+**MQ Broker Must Have Backup Configured**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; soc2: A1.2;
+
+Amazon MQ broker does not have automatic backup configured. Broker data (messages, configuration) should be backed up to enable recovery from broker failure or accidental deletion.
+
+**Remediation:** Enable automatic backup for the Amazon MQ broker.
+
+---
+
 ### CTL.MQ.ENCRYPT.REST.001
 
 **Amazon MQ Broker Storage Must Be Encrypted at Rest**
@@ -50,6 +65,21 @@ Amazon MQ brokers must not run engine versions that have reached end-of-life. Ra
 
 ---
 
+### CTL.MQ.LOG.AUDIT.001
+
+**Amazon MQ Broker Must Have Audit Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+Amazon MQ broker does not have audit logging enabled. Audit logs capture broker authentication events, connection attempts, and administrative actions. Without audit logging, unauthorized access to message queues and topics cannot be detected or investigated after the fact.
+
+**Remediation:** Enable audit logging for the Amazon MQ broker. Audit logs are delivered to CloudWatch Logs and capture authentication and connection events.
+
+---
+
 ### CTL.MQ.PUBLIC.001
 
 **Amazon MQ Brokers Must Not Be Publicly Accessible**
@@ -62,6 +92,21 @@ Amazon MQ brokers must not run engine versions that have reached end-of-life. Ra
 Amazon MQ brokers must not expose public endpoints. Public brokers allow unauthenticated or internet-based access to message queues.
 
 **Remediation:** Disable public accessibility on the broker.
+
+---
+
+### CTL.MQ.SECRET.BROKER.001
+
+**MQ Broker Credentials Must Use Secrets Manager**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+Amazon MQ broker user credentials are not managed through AWS Secrets Manager. Hardcoded broker credentials risk exposure and complicate rotation.
+
+**Remediation:** Store broker user credentials in AWS Secrets Manager and configure automatic rotation.
 
 ---
 

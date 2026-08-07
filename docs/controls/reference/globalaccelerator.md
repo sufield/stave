@@ -20,3 +20,18 @@ Global Accelerator exists in the account without documented approval. Global Acc
 
 ---
 
+### CTL.GLOBALACCELERATOR.LOG.FLOW.001
+
+**Global Accelerator Flow Logs Must Be Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+AWS Global Accelerator does not have flow logs enabled. Without flow logs, network traffic to the accelerator endpoints is not recorded, limiting visibility into connection patterns and potential abuse.
+
+**Remediation:** Enable flow logs for the Global Accelerator to record network traffic metadata to an S3 bucket.
+
+---
+

@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.LIGHTSAIL.IMDS.V1.001
+name: Lightsail Instance Must Enforce IMDSv2
+description: >
+  Lightsail instance allows IMDSv1 access. IMDSv1 is vulnerable
+  to SSRF attacks that can steal instance credentials from the
+  metadata endpoint.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - lightsail
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_lightsail_instance]
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Lightsail instance allows IMDSv1 access.
+  action: >
+    Enforce IMDSv2 on the Lightsail instance by updating the
+    metadata options to require token-based requests.
+  example: |
+    {
+      "compute": {
+        "kind": "lightsail_instance",
+        "metadata": {
+          "imdsv2_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: lightsail_instance
+    - field: properties.compute.metadata.imdsv2_enforced
+      op: ne
+      value: true
+tests:
+  - name: instance without IMDSv2 fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lightsail:us-east-1:123456789012:Instance/my-instance"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          metadata:
+            imdsv2_enforced: false
+  - name: instance with IMDSv2 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lightsail:us-east-1:123456789012:Instance/my-instance"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          metadata:
+            imdsv2_enforced: true

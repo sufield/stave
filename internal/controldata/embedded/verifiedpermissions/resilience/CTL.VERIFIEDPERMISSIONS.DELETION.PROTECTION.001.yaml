@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDPERMISSIONS.DELETION.PROTECTION.001
+name: Verified Permissions Policy Store Must Have Deletion Protection
+description: >
+  Amazon Verified Permissions policy store does not have deletion
+  protection enabled. Without deletion protection, the policy
+  store can be accidentally or maliciously deleted, removing all
+  authorization policies for applications that depend on it.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  pci_dss_v4.0: "3.4"
+scope_tags:
+  - aws
+  - verifiedpermissions
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_verifiedpermissions_policy_store]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Verified Permissions policy store deletion protection is
+    not enabled.
+  action: >
+    Enable deletion protection on the Verified Permissions
+    policy store.
+  example: |
+    {
+      "auth": {
+        "kind": "policy_store",
+        "deletion_protection_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.auth.kind
+      op: eq
+      value: policy_store
+    - field: properties.auth.deletion_protection_enabled
+      op: ne
+      value: true
+tests:
+  - name: deletion protection disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::123456789012:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policy_store
+      vendor: aws
+      properties:
+        auth:
+          kind: policy_store
+          deletion_protection_enabled: false
+  - name: deletion protection enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:verifiedpermissions::123456789012:policy-store/ps-abc123"
+      asset_type: aws_verifiedpermissions_policy_store
+      vendor: aws
+      properties:
+        auth:
+          kind: policy_store
+          deletion_protection_enabled: true

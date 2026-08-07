@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.FMS.ENABLED.001
+name: AWS Firewall Manager Must Be Enabled
+description: >
+  AWS Firewall Manager is not enabled. Firewall Manager
+  centrally configures and manages firewall rules across
+  accounts and resources in an organization. Without it,
+  firewall rules must be managed individually per account.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "AU-2, SI-4"
+  soc2: "CC7.2"
+scope_tags:
+  - aws
+  - fms
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_fms_admin_account]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    AWS Firewall Manager is not enabled.
+  action: >
+    Enable AWS Firewall Manager by designating an admin account
+    in your AWS Organization.
+  example: |
+    {
+      "detection": {
+        "kind": "fms_admin",
+        "enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: fms_admin
+    - field: properties.detection.enabled
+      op: ne
+      value: true
+tests:
+  - name: FMS not enabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:fms:us-east-1:123456789012:admin-account"
+      asset_type: aws_fms_admin_account
+      vendor: aws
+      properties:
+        detection:
+          kind: fms_admin
+          enabled: false
+  - name: FMS enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:fms:us-east-1:123456789012:admin-account"
+      asset_type: aws_fms_admin_account
+      vendor: aws
+      properties:
+        detection:
+          kind: fms_admin
+          enabled: true

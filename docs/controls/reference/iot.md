@@ -5,6 +5,36 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.IOT.AUTH.ENDPOINT.001
+
+**IoT Core Endpoint Must Require Authentication**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3, IA-2; pci_dss_v4.0: 7.2; soc2: CC6.1;
+
+IoT Core MQTT/HTTP endpoint does not require device authentication. Without mutual TLS, custom authorizers, or Cognito identity pools, any client with the endpoint URL can connect to the IoT message broker. Unauthenticated access allows message injection, topic subscription, and shadow manipulation across the entire IoT namespace.
+
+**Remediation:** Configure IoT Core to require mutual TLS certificate authentication or a custom authorizer for all device connections. Disable unauthenticated access to MQTT and HTTP endpoints.
+
+---
+
+### CTL.IOT.LOG.AUDIT.001
+
+**IoT Core Must Have Audit Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+IoT Core account does not have audit logging enabled. IoT audit logs capture device authentication events, policy evaluation results, and administrative actions. Without audit logging, compromised IoT devices, unauthorized MQTT connections, and policy misconfigurations cannot be detected or investigated.
+
+**Remediation:** Enable IoT Device Defender audit logging and configure IoT Core logging at the account level to capture device activity and authentication events.
+
+---
+
 ### CTL.IOT.POLICY.PUBLIC.001
 
 **IoT Policy Must Not Allow Public Access**

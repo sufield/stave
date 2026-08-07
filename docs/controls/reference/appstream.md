@@ -20,6 +20,21 @@ AppStream 2.0 images must not use deprecated OS platforms. Windows Server 2012 R
 
 ---
 
+### CTL.APPSTREAM.IMDS.V1.001
+
+**AppStream Fleet Must Enforce IMDSv2**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+AppStream fleet instances allow IMDSv1 access. IMDSv1 is vulnerable to SSRF attacks that can steal instance credentials from the metadata endpoint.
+
+**Remediation:** Enforce IMDSv2 on AppStream fleet instances by requiring token-based metadata requests.
+
+---
+
 ### CTL.APPSTREAM.INTERNET.001
 
 **AppStream Fleets Must Disable Default Internet Access**

@@ -35,6 +35,21 @@ No Transfer Family server should have workflow steps that target S3 buckets or E
 
 ---
 
+### CTL.TRANSFER.LOG.STRUCTURED.001
+
+**Transfer Family Server Must Have Structured Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+AWS Transfer Family server does not have structured logging enabled. Structured logging captures file transfer events, authentication attempts, and protocol-level details in a machine-parseable format. Without it, unauthorized file access, credential stuffing against SFTP endpoints, and data exfiltration via file downloads cannot be detected.
+
+**Remediation:** Enable structured logging for the Transfer Family server. Configure log delivery to CloudWatch Logs to capture file transfer and authentication events.
+
+---
+
 ### CTL.TRANSFER.SECPOLICY.LEGACY.001
 
 **Transfer Family Server Must Not Use Legacy Security Policy**

@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.VERIFIEDPERMISSIONS.DELETION.PROTECTION.001
+
+**Verified Permissions Policy Store Must Have Deletion Protection**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; pci_dss_v4.0: 3.4; soc2: A1.2;
+
+Amazon Verified Permissions policy store does not have deletion protection enabled. Without deletion protection, the policy store can be accidentally or maliciously deleted, removing all authorization policies for applications that depend on it.
+
+**Remediation:** Enable deletion protection on the Verified Permissions policy store.
+
+---
+
 ### CTL.VERIFIEDPERMISSIONS.ENCRYPT.CMK.001
 
 **Verified Permissions Policy Store Not Encrypted with Customer-Managed KMS Key**

@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.BEANSTALK.IMDS.V1.001
+
+**Elastic Beanstalk Environment Must Enforce IMDSv2**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2; soc2: CC6.1;
+
+Elastic Beanstalk environment EC2 instances allow IMDSv1 access to the instance metadata service. IMDSv1 is vulnerable to SSRF attacks — a compromised web application on a Beanstalk instance can steal IAM credentials from the metadata endpoint via a simple HTTP GET. IMDSv2 requires a session token obtained via PUT, which SSRF payloads cannot forge. Beanstalk environments host web applications that are often internet-facing, making SSRF a direct threat.
+
+**Remediation:** Set the aws:ec2:instances DisableIMDSv1 option to true in the Beanstalk environment configuration. This enforces IMDSv2 for all instances in the environment. Test applications for IMDSv2 compatibility before enforcing.
+
+---
+
 ### CTL.BEANSTALK.LOG.001
 
 **Elastic Beanstalk Environments Must Stream Logs to CloudWatch**

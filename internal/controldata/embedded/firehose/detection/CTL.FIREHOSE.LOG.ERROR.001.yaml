@@ -1,0 +1,73 @@
+dsl_version: ctrl.v1
+id: CTL.FIREHOSE.LOG.ERROR.001
+name: Firehose Delivery Stream Must Have Error Logging Enabled
+description: >
+  Firehose delivery stream does not have error logging enabled.
+  Error logging captures delivery failures, transformation
+  errors, and format conversion issues to CloudWatch. Without
+  it, data loss from failed deliveries and potential data
+  exfiltration via delivery redirection go undetected.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2"
+scope_tags:
+  - aws
+  - firehose
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_kinesis_firehose_delivery_stream]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Firehose delivery stream error logging is not enabled.
+  action: >
+    Enable CloudWatch error logging for the Firehose delivery
+    stream to capture delivery failures and transformation
+    errors.
+  example: |
+    {
+      "stream": {
+        "kind": "delivery_stream",
+        "logging": {
+          "error_logging_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.stream.kind
+      op: eq
+      value: delivery_stream
+    - field: properties.stream.logging.error_logging_enabled
+      op: ne
+      value: true
+tests:
+  - name: error logging disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:123456789012:deliverystream/my-stream"
+      asset_type: aws_kinesis_firehose_delivery_stream
+      vendor: aws
+      properties:
+        stream:
+          kind: delivery_stream
+          logging:
+            error_logging_enabled: false
+  - name: error logging enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:123456789012:deliverystream/my-stream"
+      asset_type: aws_kinesis_firehose_delivery_stream
+      vendor: aws
+      properties:
+        stream:
+          kind: delivery_stream
+          logging:
+            error_logging_enabled: true

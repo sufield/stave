@@ -35,6 +35,21 @@ MWAA environment web server is configured with PUBLIC_ONLY access mode, making t
 
 ---
 
+### CTL.MWAA.LOG.TASK.001
+
+**MWAA Environment Must Have Task Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+MWAA environment does not have task logging enabled. Task logs capture Airflow task execution details including DAG runs, operator outputs, and failure traces. Without task logging, unauthorized DAG modifications or data pipeline tampering cannot be detected through execution records.
+
+**Remediation:** Enable task logging for the MWAA environment. Configure the task log level to at least INFO to capture DAG execution events in CloudWatch Logs.
+
+---
+
 ### CTL.MWAA.ROLE.OVERBROAD.001
 
 **MWAA Environment Execution Role Exceeds Required Permissions**

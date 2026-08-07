@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.MEDIASTORE.LOG.ACCESS.001
+name: MediaStore Access Logging Must Be Enabled
+description: >
+  AWS Elemental MediaStore container does not have access logging
+  enabled. Without access logging, object-level operations are
+  not recorded, limiting forensic capability after unauthorized
+  media access.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2"
+scope_tags:
+  - aws
+  - mediastore
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_mediastore_container]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    MediaStore access logging is not enabled.
+  action: >
+    Enable access logging for the MediaStore container.
+  example: |
+    {
+      "storage": {
+        "kind": "media_container",
+        "logging": {
+          "access_log_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: media_container
+    - field: properties.storage.logging.access_log_enabled
+      op: ne
+      value: true
+tests:
+  - name: access logging disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:mediastore:us-east-1:123456789012:container/my-container"
+      asset_type: aws_mediastore_container
+      vendor: aws
+      properties:
+        storage:
+          kind: media_container
+          logging:
+            access_log_enabled: false
+  - name: access logging enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:mediastore:us-east-1:123456789012:container/my-container"
+      asset_type: aws_mediastore_container
+      vendor: aws
+      properties:
+        storage:
+          kind: media_container
+          logging:
+            access_log_enabled: true

@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.KEYSPACES.AUTH.REQUIRED.001
+name: Keyspaces Table Must Require Authentication
+description: >
+  Amazon Keyspaces (Cassandra-compatible) endpoint does not
+  require IAM or SigV4 authentication. Keyspaces supports
+  both SigV4 (IAM-based) and service-specific credentials.
+  Without authentication enforcement, any client with
+  network access to the CQL endpoint can read and write
+  table data.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2"
+  ccm_v4: ["IAM-02", "IVS-06"]
+scope_tags:
+  - aws
+  - keyspaces
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_keyspaces_keyspace]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Keyspaces endpoint does not require authentication.
+  action: >
+    Configure Keyspaces to require SigV4 (IAM) authentication
+    for all CQL connections. Avoid service-specific credentials
+    where IAM authentication is available.
+  example: |
+    {
+      "database": {
+        "kind": "keyspace",
+        "auth": {
+          "auth_required": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: keyspace
+    - field: properties.database.auth.auth_required
+      op: ne
+      value: true
+tests:
+  - name: unauthenticated Keyspaces endpoint fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cassandra:us-east-1:111122223333:/keyspace/my_keyspace"
+      asset_type: aws_keyspaces_keyspace
+      vendor: aws
+      properties:
+        database:
+          kind: keyspace
+          auth:
+            auth_required: false
+  - name: authenticated Keyspaces endpoint passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cassandra:us-east-1:111122223333:/keyspace/my_keyspace"
+      asset_type: aws_keyspaces_keyspace
+      vendor: aws
+      properties:
+        database:
+          kind: keyspace
+          auth:
+            auth_required: true

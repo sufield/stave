@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.TIMESTREAM.LOG.AUDIT.001
+name: Timestream Audit Logging Must Be Enabled
+description: >
+  Amazon Timestream database does not have audit logging enabled.
+  Without audit logging, queries and writes to the time-series
+  database are not recorded, limiting forensic capability.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2"
+scope_tags:
+  - aws
+  - timestream
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_timestream_database]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Timestream audit logging is not enabled.
+  action: >
+    Enable audit logging for the Timestream database.
+  example: |
+    {
+      "database": {
+        "kind": "timestream_database",
+        "logging": {
+          "audit_log_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: timestream_database
+    - field: properties.database.logging.audit_log_enabled
+      op: ne
+      value: true
+tests:
+  - name: audit logging disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:timestream:us-east-1:123456789012:database/my_db"
+      asset_type: aws_timestream_database
+      vendor: aws
+      properties:
+        database:
+          kind: timestream_database
+          logging:
+            audit_log_enabled: false
+  - name: audit logging enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:timestream:us-east-1:123456789012:database/my_db"
+      asset_type: aws_timestream_database
+      vendor: aws
+      properties:
+        database:
+          kind: timestream_database
+          logging:
+            audit_log_enabled: true

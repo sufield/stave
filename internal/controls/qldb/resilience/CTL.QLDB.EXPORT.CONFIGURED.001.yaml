@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.QLDB.EXPORT.CONFIGURED.001
+name: QLDB Ledger Must Have Export Configured
+description: >
+  QLDB ledger does not have journal export configured. QLDB is
+  being deprecated — data should be exported to S3 for long-term
+  retention and migration to alternative services.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+scope_tags:
+  - aws
+  - qldb
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_qldb_ledger]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    QLDB ledger does not have journal export configured.
+  action: >
+    Configure journal export to S3 for the QLDB ledger.
+  example: |
+    {
+      "database": {
+        "kind": "qldb_ledger",
+        "backup": {
+          "export_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: qldb_ledger
+    - field: properties.database.backup.export_configured
+      op: ne
+      value: true
+tests:
+  - name: ledger without export fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:qldb:us-east-1:123456789012:ledger/my-ledger"
+      asset_type: aws_qldb_ledger
+      vendor: aws
+      properties:
+        database:
+          kind: qldb_ledger
+          backup:
+            export_configured: false
+  - name: ledger with export passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:qldb:us-east-1:123456789012:ledger/my-ledger"
+      asset_type: aws_qldb_ledger
+      vendor: aws
+      properties:
+        database:
+          kind: qldb_ledger
+          backup:
+            export_configured: true

@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.MSK.BACKUP.RETENTION.001
+name: MSK Cluster Must Have Retention Configured
+description: >
+  MSK (Kafka) cluster does not have topic retention
+  configured to meet recovery requirements. Without
+  adequate retention, consumed messages are deleted before
+  they can be replayed for disaster recovery or audit.
+  MSK supports both time-based and size-based retention
+  at the cluster and topic level.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  pci_dss_v4.0: "3.4"
+  ccm_v4: ["BCR-11", "DSP-17"]
+scope_tags:
+  - aws
+  - msk
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_msk_cluster]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    MSK cluster does not have retention configured.
+  action: >
+    Configure topic retention on the MSK cluster to meet
+    recovery and audit requirements. Set log.retention.hours
+    and log.retention.bytes at the cluster level, and
+    override per-topic where needed.
+  example: |
+    {
+      "messaging": {
+        "kind": "kafka_cluster",
+        "backup": {
+          "retention_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: kafka_cluster
+    - field: properties.messaging.backup.retention_configured
+      op: ne
+      value: true
+tests:
+  - name: no retention configured fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kafka:us-east-1:111122223333:cluster/my-cluster/abc123"
+      asset_type: aws_msk_cluster
+      vendor: aws
+      properties:
+        messaging:
+          kind: kafka_cluster
+          backup:
+            retention_configured: false
+  - name: retention configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kafka:us-east-1:111122223333:cluster/my-cluster/abc123"
+      asset_type: aws_msk_cluster
+      vendor: aws
+      properties:
+        messaging:
+          kind: kafka_cluster
+          backup:
+            retention_configured: true

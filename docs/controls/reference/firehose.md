@@ -35,6 +35,21 @@ Amazon Data Firehose delivery stream is configured to deliver records to an S3 b
 
 ---
 
+### CTL.FIREHOSE.LOG.ERROR.001
+
+**Firehose Delivery Stream Must Have Error Logging Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3; pci_dss_v4.0: 10.2; soc2: CC7.2;
+
+Firehose delivery stream does not have error logging enabled. Error logging captures delivery failures, transformation errors, and format conversion issues to CloudWatch. Without it, data loss from failed deliveries and potential data exfiltration via delivery redirection go undetected.
+
+**Remediation:** Enable CloudWatch error logging for the Firehose delivery stream to capture delivery failures and transformation errors.
+
+---
+
 ### CTL.FIREHOSE.ROLE.OVERBROAD.001
 
 **Firehose Delivery Stream Role Exceeds Required Permissions**

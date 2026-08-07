@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.DAX.AUTH.REQUIRED.001
+name: DAX Cluster Must Require Authentication
+description: >
+  DynamoDB Accelerator (DAX) cluster does not require IAM
+  authentication. Without authentication, any application
+  with network access to the cluster endpoint can read and
+  write cached data without credentials.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2"
+scope_tags:
+  - aws
+  - dax
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_dax_cluster]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    DAX cluster does not require authentication.
+  action: >
+    Enable IAM authentication for the DAX cluster.
+  example: |
+    {
+      "cache": {
+        "kind": "dax_cluster",
+        "auth": {
+          "auth_required": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: dax_cluster
+    - field: properties.cache.auth.auth_required
+      op: ne
+      value: true
+tests:
+  - name: unauthenticated DAX cluster fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dax:us-east-1:123456789012:cache/my-dax"
+      asset_type: aws_dax_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: dax_cluster
+          auth:
+            auth_required: false
+  - name: authenticated DAX cluster passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dax:us-east-1:123456789012:cache/my-dax"
+      asset_type: aws_dax_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: dax_cluster
+          auth:
+            auth_required: true

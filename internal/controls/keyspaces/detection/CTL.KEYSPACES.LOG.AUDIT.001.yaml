@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.KEYSPACES.LOG.AUDIT.001
+name: Keyspaces Audit Logging Must Be Enabled
+description: >
+  Amazon Keyspaces table does not have audit logging enabled.
+  Without audit logging, CQL operations against the keyspace
+  are not recorded, limiting forensic capability after a data
+  breach or unauthorized access event.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2"
+scope_tags:
+  - aws
+  - keyspaces
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_keyspaces_keyspace]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    Keyspaces audit logging is not enabled.
+  action: >
+    Enable audit logging for the Keyspaces keyspace to record
+    CQL operations in CloudWatch Logs.
+  example: |
+    {
+      "database": {
+        "kind": "keyspace",
+        "logging": {
+          "audit_log_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: keyspace
+    - field: properties.database.logging.audit_log_enabled
+      op: ne
+      value: true
+tests:
+  - name: audit logging disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cassandra:us-east-1:123456789012:/keyspace/my_keyspace"
+      asset_type: aws_keyspaces_keyspace
+      vendor: aws
+      properties:
+        database:
+          kind: keyspace
+          logging:
+            audit_log_enabled: false
+  - name: audit logging enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cassandra:us-east-1:123456789012:/keyspace/my_keyspace"
+      asset_type: aws_keyspaces_keyspace
+      vendor: aws
+      properties:
+        database:
+          kind: keyspace
+          logging:
+            audit_log_enabled: true

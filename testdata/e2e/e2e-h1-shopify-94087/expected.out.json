@@ -330,7 +330,7 @@
       "missing_fields": [
         "storage.encryption.algorithm"
       ],
-      "gap_cause": "derived_gap"
+      "gap_cause": "collector_gap"
     }
   ],
   "issues": [

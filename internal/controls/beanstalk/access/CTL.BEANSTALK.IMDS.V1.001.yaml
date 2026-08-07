@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.BEANSTALK.IMDS.V1.001
+name: Elastic Beanstalk Environment Must Enforce IMDSv2
+description: >
+  Elastic Beanstalk environment EC2 instances allow IMDSv1
+  access to the instance metadata service. IMDSv1 is
+  vulnerable to SSRF attacks — a compromised web application
+  on a Beanstalk instance can steal IAM credentials from the
+  metadata endpoint via a simple HTTP GET. IMDSv2 requires a
+  session token obtained via PUT, which SSRF payloads cannot
+  forge. Beanstalk environments host web applications that
+  are often internet-facing, making SSRF a direct threat.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - beanstalk
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_elastic_beanstalk_environment]
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Elastic Beanstalk environment allows IMDSv1 on its EC2
+    instances.
+  action: >
+    Set the aws:ec2:instances DisableIMDSv1 option to true in
+    the Beanstalk environment configuration. This enforces
+    IMDSv2 for all instances in the environment. Test
+    applications for IMDSv2 compatibility before enforcing.
+  example: |
+    {
+      "compute": {
+        "kind": "beanstalk_environment",
+        "metadata": {
+          "imdsv2_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: beanstalk_environment
+    - field: properties.compute.metadata.imdsv2_enforced
+      op: ne
+      value: true
+tests:
+  - name: IMDSv1 allowed fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticbeanstalk:us-east-1:111122223333:environment/my-app/my-env"
+      asset_type: aws_elastic_beanstalk_environment
+      vendor: aws
+      properties:
+        compute:
+          kind: beanstalk_environment
+          metadata:
+            imdsv2_enforced: false
+  - name: IMDSv2 enforced passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticbeanstalk:us-east-1:111122223333:environment/my-app/my-env"
+      asset_type: aws_elastic_beanstalk_environment
+      vendor: aws
+      properties:
+        compute:
+          kind: beanstalk_environment
+          metadata:
+            imdsv2_enforced: true

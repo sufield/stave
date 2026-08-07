@@ -1,0 +1,68 @@
+dsl_version: ctrl.v1
+id: CTL.MQ.BACKUP.CONFIGURED.001
+name: MQ Broker Must Have Backup Configured
+description: >
+  Amazon MQ broker does not have automatic backup configured.
+  Broker data (messages, configuration) should be backed up to
+  enable recovery from broker failure or accidental deletion.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+scope_tags:
+  - aws
+  - mq
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_mq_broker]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    MQ broker does not have backup configured.
+  action: >
+    Enable automatic backup for the Amazon MQ broker.
+  example: |
+    {
+      "messaging": {
+        "kind": "broker",
+        "backup": {
+          "backup_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.messaging.kind
+      op: eq
+      value: broker
+    - field: properties.messaging.backup.backup_configured
+      op: ne
+      value: true
+tests:
+  - name: broker without backup fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:mq:us-east-1:123456789012:broker:my-broker"
+      asset_type: aws_mq_broker
+      vendor: aws
+      properties:
+        messaging:
+          kind: broker
+          backup:
+            backup_configured: false
+  - name: broker with backup passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:mq:us-east-1:123456789012:broker:my-broker"
+      asset_type: aws_mq_broker
+      vendor: aws
+      properties:
+        messaging:
+          kind: broker
+          backup:
+            backup_configured: true

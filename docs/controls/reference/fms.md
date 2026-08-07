@@ -35,6 +35,21 @@ Firewall Manager policy evaluation is not delivering compliance data from member
 
 ---
 
+### CTL.FMS.ENABLED.001
+
+**AWS Firewall Manager Must Be Enabled**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, SI-4; soc2: CC7.2;
+
+AWS Firewall Manager is not enabled. Firewall Manager centrally configures and manages firewall rules across accounts and resources in an organization. Without it, firewall rules must be managed individually per account.
+
+**Remediation:** Enable AWS Firewall Manager by designating an admin account in your AWS Organization.
+
+---
+
 ### CTL.FMS.POLICY.NONCOMPLIANT.001
 
 **Firewall Manager Policy Has Non-Compliant Member Accounts**

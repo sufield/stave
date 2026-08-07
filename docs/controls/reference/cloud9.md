@@ -35,6 +35,21 @@ Cloud9 environment is configured with CONNECT_SSH connection type, which require
 
 ---
 
+### CTL.CLOUD9.IMDS.V1.001
+
+**Cloud9 Environment Must Enforce IMDSv2**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Cloud9 environment EC2 instance allows IMDSv1 access. IMDSv1 is vulnerable to SSRF attacks that can steal instance credentials from the metadata endpoint.
+
+**Remediation:** Enforce IMDSv2 on the Cloud9 environment EC2 instance.
+
+---
+
 ### CTL.CLOUD9.ROLE.OVERBROAD.001
 
 **Cloud9 Environment Role Exceeds Required Permissions**

@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.APPSYNC.LOG.REQUEST.001
+name: AppSync Request-Level Logging Must Be Enabled
+description: >
+  AWS AppSync GraphQL API does not have request-level logging
+  enabled. Without request logging, individual GraphQL queries
+  and mutations are not recorded in CloudWatch Logs, limiting
+  forensic capability after unauthorized data access.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2"
+scope_tags:
+  - aws
+  - appsync
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_appsync_graphql_api]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    AppSync request-level logging is not enabled.
+  action: >
+    Enable request-level logging for the AppSync API to
+    record GraphQL operations in CloudWatch Logs.
+  example: |
+    {
+      "api": {
+        "kind": "graphql_api",
+        "logging": {
+          "request_log_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: graphql_api
+    - field: properties.api.logging.request_log_enabled
+      op: ne
+      value: true
+tests:
+  - name: request logging disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:appsync:us-east-1:123456789012:apis/abc123"
+      asset_type: aws_appsync_graphql_api
+      vendor: aws
+      properties:
+        api:
+          kind: graphql_api
+          logging:
+            request_log_enabled: false
+  - name: request logging enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:appsync:us-east-1:123456789012:apis/abc123"
+      asset_type: aws_appsync_graphql_api
+      vendor: aws
+      properties:
+        api:
+          kind: graphql_api
+          logging:
+            request_log_enabled: true

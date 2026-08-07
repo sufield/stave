@@ -1,0 +1,71 @@
+dsl_version: ctrl.v1
+id: CTL.QLDB.AUTH.SESSION.001
+name: QLDB Ledger Must Require Session Authentication
+description: >
+  Amazon QLDB ledger does not require session authentication.
+  Without session-level authentication, any principal with
+  network access can open a QLDB session and execute PartiQL
+  queries against the ledger.
+domain: exposure
+severity: low
+compliance:
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2"
+scope_tags:
+  - aws
+  - qldb
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_qldb_ledger]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    QLDB ledger does not require session authentication.
+  action: >
+    Configure the QLDB ledger to require IAM session
+    authentication.
+  example: |
+    {
+      "database": {
+        "kind": "qldb_ledger",
+        "auth": {
+          "session_auth_required": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: qldb_ledger
+    - field: properties.database.auth.session_auth_required
+      op: ne
+      value: true
+tests:
+  - name: unauthenticated QLDB fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:qldb:us-east-1:123456789012:ledger/my-ledger"
+      asset_type: aws_qldb_ledger
+      vendor: aws
+      properties:
+        database:
+          kind: qldb_ledger
+          auth:
+            session_auth_required: false
+  - name: authenticated QLDB passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:qldb:us-east-1:123456789012:ledger/my-ledger"
+      asset_type: aws_qldb_ledger
+      vendor: aws
+      properties:
+        database:
+          kind: qldb_ledger
+          auth:
+            session_auth_required: true

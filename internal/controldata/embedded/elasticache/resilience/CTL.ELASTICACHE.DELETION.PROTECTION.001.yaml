@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.ELASTICACHE.DELETION.PROTECTION.001
+name: ElastiCache Replication Group Must Have Deletion Protection
+description: >
+  ElastiCache replication group does not have deletion
+  protection enabled. Without deletion protection, an
+  IAM principal with elasticache:DeleteReplicationGroup
+  can destroy the cluster and all its data in a single
+  API call. This enables both accidental data loss and
+  deliberate sabotage via compromised credentials.
+domain: resilience
+severity: medium
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  pci_dss_v4.0: "3.4"
+  ccm_v4: ["BCR-11", "DSP-17"]
+scope_tags:
+  - aws
+  - elasticache
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_elasticache_cluster]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ElastiCache replication group does not have deletion
+    protection enabled.
+  action: >
+    Enable deletion protection on the ElastiCache replication
+    group. This prevents accidental or malicious deletion
+    without first disabling the protection flag.
+  example: |
+    {
+      "cache": {
+        "kind": "cluster",
+        "deletion_protection_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: cluster
+    - field: properties.cache.deletion_protection_enabled
+      op: ne
+      value: true
+tests:
+  - name: no deletion protection fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticache:us-east-1:111122223333:replicationgroup:my-cache"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: cluster
+          deletion_protection_enabled: false
+  - name: deletion protection enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticache:us-east-1:111122223333:replicationgroup:my-cache"
+      asset_type: aws_elasticache_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: cluster
+          deletion_protection_enabled: true

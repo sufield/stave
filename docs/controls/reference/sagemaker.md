@@ -500,6 +500,21 @@ SageMaker pipeline execution roles must be scoped to the minimum permissions req
 
 ---
 
+### CTL.SAGEMAKER.SECRET.ENV.001
+
+**SageMaker Notebook Must Not Contain Plaintext Secrets**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+SageMaker notebook instance contains plaintext secrets in environment variables or lifecycle configuration. Secrets are visible in the SageMaker console and API responses.
+
+**Remediation:** Move secrets to AWS Secrets Manager or SSM Parameter Store and access them programmatically from the notebook.
+
+---
+
 ### CTL.SAGEMAKER.SPACE.SHARING.001
 
 **SageMaker Space Must Use Private Sharing**

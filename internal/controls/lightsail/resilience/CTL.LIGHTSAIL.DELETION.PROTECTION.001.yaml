@@ -1,0 +1,66 @@
+dsl_version: ctrl.v1
+id: CTL.LIGHTSAIL.DELETION.PROTECTION.001
+name: Lightsail Instance Must Have Deletion Protection
+description: >
+  Amazon Lightsail instance does not have deletion protection
+  enabled. Without deletion protection, the instance can be
+  accidentally or maliciously deleted, causing data loss for
+  any locally stored application data.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+  pci_dss_v4.0: "3.4"
+scope_tags:
+  - aws
+  - lightsail
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_lightsail_instance]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lightsail instance deletion protection is not enabled.
+  action: >
+    Enable deletion protection on the Lightsail instance.
+  example: |
+    {
+      "compute": {
+        "kind": "lightsail_instance",
+        "deletion_protection_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: lightsail_instance
+    - field: properties.compute.deletion_protection_enabled
+      op: ne
+      value: true
+tests:
+  - name: deletion protection disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lightsail:us-east-1:123456789012:Instance/my-instance"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          deletion_protection_enabled: false
+  - name: deletion protection enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lightsail:us-east-1:123456789012:Instance/my-instance"
+      asset_type: aws_lightsail_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: lightsail_instance
+          deletion_protection_enabled: true

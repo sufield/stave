@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.IOT.LOG.AUDIT.001
+name: IoT Core Must Have Audit Logging Enabled
+description: >
+  IoT Core account does not have audit logging enabled. IoT
+  audit logs capture device authentication events, policy
+  evaluation results, and administrative actions. Without
+  audit logging, compromised IoT devices, unauthorized MQTT
+  connections, and policy misconfigurations cannot be detected
+  or investigated.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2"
+scope_tags:
+  - aws
+  - iot
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iot_account]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    IoT Core audit logging is not enabled.
+  action: >
+    Enable IoT Device Defender audit logging and configure
+    IoT Core logging at the account level to capture device
+    activity and authentication events.
+  example: |
+    {
+      "iot": {
+        "kind": "account_settings",
+        "logging": {
+          "audit_log_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.iot.kind
+      op: eq
+      value: account_settings
+    - field: properties.iot.logging.audit_log_enabled
+      op: ne
+      value: true
+tests:
+  - name: audit logging disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:123456789012:account-settings"
+      asset_type: aws_iot_account
+      vendor: aws
+      properties:
+        iot:
+          kind: account_settings
+          logging:
+            audit_log_enabled: false
+  - name: audit logging enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:123456789012:account-settings"
+      asset_type: aws_iot_account
+      vendor: aws
+      properties:
+        iot:
+          kind: account_settings
+          logging:
+            audit_log_enabled: true

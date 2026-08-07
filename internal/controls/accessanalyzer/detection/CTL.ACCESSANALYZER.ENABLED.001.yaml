@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.ACCESSANALYZER.ENABLED.001
+name: IAM Access Analyzer Must Be Enabled
+description: >
+  IAM Access Analyzer is not enabled. Access Analyzer
+  identifies resources shared with external entities and
+  validates IAM policies against best practices. Without it,
+  unintended cross-account or public resource sharing goes
+  undetected.
+domain: detection
+severity: low
+compliance:
+  nist_800_53_r5: "AU-2, SI-4"
+  soc2: "CC7.2"
+scope_tags:
+  - aws
+  - accessanalyzer
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_accessanalyzer_analyzer]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    IAM Access Analyzer is not enabled.
+  action: >
+    Enable IAM Access Analyzer with an account or organization
+    zone of trust to detect unintended resource sharing.
+  example: |
+    {
+      "detection": {
+        "kind": "access_analyzer",
+        "enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.detection.kind
+      op: eq
+      value: access_analyzer
+    - field: properties.detection.enabled
+      op: ne
+      value: true
+tests:
+  - name: Access Analyzer not enabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:access-analyzer:us-east-1:123456789012:analyzer/my-analyzer"
+      asset_type: aws_accessanalyzer_analyzer
+      vendor: aws
+      properties:
+        detection:
+          kind: access_analyzer
+          enabled: false
+  - name: Access Analyzer enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:access-analyzer:us-east-1:123456789012:analyzer/my-analyzer"
+      asset_type: aws_accessanalyzer_analyzer
+      vendor: aws
+      properties:
+        detection:
+          kind: access_analyzer
+          enabled: true

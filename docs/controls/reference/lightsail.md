@@ -50,6 +50,36 @@ Lightsail managed databases must not be publicly accessible.
 
 ---
 
+### CTL.LIGHTSAIL.DELETION.PROTECTION.001
+
+**Lightsail Instance Must Have Deletion Protection**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-9; pci_dss_v4.0: 3.4; soc2: A1.2;
+
+Amazon Lightsail instance does not have deletion protection enabled. Without deletion protection, the instance can be accidentally or maliciously deleted, causing data loss for any locally stored application data.
+
+**Remediation:** Enable deletion protection on the Lightsail instance.
+
+---
+
+### CTL.LIGHTSAIL.IMDS.V1.001
+
+**Lightsail Instance Must Enforce IMDSv2**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Lightsail instance allows IMDSv1 access. IMDSv1 is vulnerable to SSRF attacks that can steal instance credentials from the metadata endpoint.
+
+**Remediation:** Enforce IMDSv2 on the Lightsail instance by updating the metadata options to require token-based requests.
+
+---
+
 ### CTL.LIGHTSAIL.INSTANCE.IPV6.001
 
 **Lightsail Instance Has IPv6 Enabled**

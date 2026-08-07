@@ -275,3 +275,18 @@ Glue ML transforms must encrypt user data at rest using SSE-KMS. Unencrypted tra
 
 ---
 
+### CTL.GLUE.VERSION.OUTDATED.001
+
+**Glue Job Must Not Run Outdated ETL Version**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** lifecycle
+- **Compliance:** nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3; soc2: CC7.1;
+
+Glue job is configured with an outdated ETL version. AWS Glue ETL versions (2.0, 3.0, 4.0) correspond to Spark and Python runtime versions. Older versions lack security patches, performance improvements, and may use EOL dependencies. Running on deprecated versions increases vulnerability surface and blocks access to security features in newer runtimes.
+
+**Remediation:** Upgrade the Glue job to the latest supported ETL version (currently 4.0). Test the job with the new version in a non-production environment before promoting. Review the Glue version migration guide for breaking changes.
+
+---
+

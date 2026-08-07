@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.APPRUNNER.AUTH.REQUIRED.001
+name: App Runner Service Must Require Authentication
+description: >
+  App Runner service exposes a public HTTPS endpoint without
+  requiring authentication. App Runner services are internet-
+  facing by default — any client with the URL can invoke the
+  service. Without an authentication layer (IAM auth, Cognito,
+  or application-level auth enforcement), the service is
+  accessible to the entire internet. This is the compute-level
+  equivalent of an S3 bucket with public access: the blast
+  radius includes any data the service can reach via its
+  instance role.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2, 8.3"
+  ccm_v4: ["IAM-02", "IVS-06"]
+scope_tags:
+  - aws
+  - apprunner
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_apprunner_service]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    App Runner service is publicly accessible without
+    authentication.
+  action: >
+    Enable IAM authentication on the App Runner service to
+    require signed requests, or deploy the service behind an
+    API Gateway or ALB with authentication configured. If the
+    service must be public, ensure application-level auth is
+    enforced and document the public exposure intent.
+  example: |
+    {
+      "compute": {
+        "kind": "apprunner_service",
+        "apprunner": {
+          "auth_required": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: apprunner_service
+    - field: properties.compute.apprunner.auth_required
+      op: ne
+      value: true
+tests:
+  - name: unauthenticated App Runner service fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:apprunner:us-east-1:111122223333:service/api-backend/abc123"
+      asset_type: aws_apprunner_service
+      vendor: aws
+      properties:
+        compute:
+          kind: apprunner_service
+          apprunner:
+            auth_required: false
+  - name: authenticated App Runner service passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:apprunner:us-east-1:111122223333:service/api-backend/abc123"
+      asset_type: aws_apprunner_service
+      vendor: aws
+      properties:
+        compute:
+          kind: apprunner_service
+          apprunner:
+            auth_required: true

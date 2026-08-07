@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.MEMORYDB.LOG.SLOW.001
+name: MemoryDB Cluster Must Have Slow Log Enabled
+description: >
+  MemoryDB cluster does not have slow log delivery enabled.
+  Slow logs capture Redis commands that exceed a configurable
+  latency threshold. Without slow log delivery, performance
+  degradation from expensive commands and potential abuse
+  patterns such as key enumeration go undetected. MemoryDB
+  clusters hold durable Redis data — visibility into command
+  patterns is essential for detecting data theft or poisoning.
+domain: detection
+severity: medium
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.2"
+  pci_dss_v4.0: "10.2"
+scope_tags:
+  - aws
+  - memorydb
+taxonomy:
+  - compliance-mapping
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_memorydb_cluster]
+params:
+  attack_stage: discovery
+remediation:
+  description: >
+    MemoryDB cluster slow log delivery is not enabled.
+  action: >
+    Enable slow log delivery for the MemoryDB cluster.
+    Configure delivery to CloudWatch Logs or Kinesis Data
+    Firehose to capture slow commands.
+  example: |
+    {
+      "cache": {
+        "kind": "memorydb_cluster",
+        "logging": {
+          "slow_log_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: memorydb_cluster
+    - field: properties.cache.logging.slow_log_enabled
+      op: ne
+      value: true
+tests:
+  - name: slow log disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:memorydb:us-east-1:123456789012:cluster/my-cluster"
+      asset_type: aws_memorydb_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: memorydb_cluster
+          logging:
+            slow_log_enabled: false
+  - name: slow log enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:memorydb:us-east-1:123456789012:cluster/my-cluster"
+      asset_type: aws_memorydb_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: memorydb_cluster
+          logging:
+            slow_log_enabled: true

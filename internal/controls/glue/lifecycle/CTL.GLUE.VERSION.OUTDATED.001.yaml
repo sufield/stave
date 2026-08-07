@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.VERSION.OUTDATED.001
+name: Glue Job Must Not Run Outdated ETL Version
+description: >
+  Glue job is configured with an outdated ETL version. AWS
+  Glue ETL versions (2.0, 3.0, 4.0) correspond to Spark and
+  Python runtime versions. Older versions lack security patches,
+  performance improvements, and may use EOL dependencies.
+  Running on deprecated versions increases vulnerability
+  surface and blocks access to security features in newer
+  runtimes.
+domain: lifecycle
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-2"
+  soc2: "CC7.1"
+  pci_dss_v4.0: "6.3"
+  ccm_v4: ["TVM-02"]
+scope_tags:
+  - aws
+  - glue
+taxonomy:
+  - compliance-mapping
+  - deprecation
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_glue_job]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Glue job runs an outdated ETL version.
+  action: >
+    Upgrade the Glue job to the latest supported ETL version
+    (currently 4.0). Test the job with the new version in a
+    non-production environment before promoting. Review the
+    Glue version migration guide for breaking changes.
+  example: |
+    {
+      "compute": {
+        "kind": "glue_job",
+        "version": {
+          "is_outdated": false,
+          "current_version": "4.0"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: glue_job
+    - field: properties.compute.version.is_outdated
+      op: eq
+      value: true
+tests:
+  - name: outdated Glue version fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:job/etl-pipeline"
+      asset_type: aws_glue_job
+      vendor: aws
+      properties:
+        compute:
+          kind: glue_job
+          version:
+            is_outdated: true
+            current_version: "2.0"
+  - name: current Glue version passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:job/etl-pipeline"
+      asset_type: aws_glue_job
+      vendor: aws
+      properties:
+        compute:
+          kind: glue_job
+          version:
+            is_outdated: false
+            current_version: "4.0"

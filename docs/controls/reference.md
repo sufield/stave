@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3324
-**Pack hash:** `97a1964a9c52d583c5a611892a7b10122201c17b8d5b725a68235f173b2641ed`
+**Total controls:** 3375
+**Pack hash:** `80075f3487f072c3995759b0637189cf0746fda527d86ef336b203004ffdd44d`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 368 |
-| high | 1445 |
+| high | 1447 |
 | info | 19 |
-| low | 238 |
-| medium | 1254 |
+| low | 265 |
+| medium | 1276 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,15 +26,15 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | compute | 1 |
 | config | 2 |
-| detection | 142 |
+| detection | 160 |
 | encryption | 125 |
-| exposure | 1467 |
+| exposure | 1480 |
 | governance | 661 |
 | hygiene | 21 |
-| identity | 661 |
-| lifecycle | 31 |
+| identity | 670 |
+| lifecycle | 32 |
 | network | 52 |
-| resilience | 39 |
+| resilience | 49 |
 | secrets | 4 |
 | storage | 8 |
 
@@ -42,6 +42,7 @@ GitHub. Pick a service below.
 
 | Service | Controls |
 |---------|----------|
+| [ACCESSANALYZER](reference/accessanalyzer.md) | 1 |
 | [ACCOUNT](reference/account.md) | 3 |
 | [ACM](reference/acm.md) | 9 |
 | [ACMPCA](reference/acmpca.md) | 1 |
@@ -49,19 +50,20 @@ GitHub. Pick a service below.
 | [AMPLIFY](reference/amplify.md) | 2 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
 | [APIGW2](reference/apigw2.md) | 2 |
-| [APPRUNNER](reference/apprunner.md) | 2 |
-| [APPSTREAM](reference/appstream.md) | 2 |
+| [APPRUNNER](reference/apprunner.md) | 5 |
+| [APPSTREAM](reference/appstream.md) | 3 |
+| [APPSYNC](reference/appsync.md) | 2 |
 | [ATHENA](reference/athena.md) | 5 |
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
 | [BACKUP](reference/backup.md) | 14 |
-| [BATCH](reference/batch.md) | 4 |
-| [BEANSTALK](reference/beanstalk.md) | 4 |
+| [BATCH](reference/batch.md) | 5 |
+| [BEANSTALK](reference/beanstalk.md) | 5 |
 | [BEDROCK](reference/bedrock.md) | 49 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
-| [CLOUD9](reference/cloud9.md) | 3 |
+| [CLOUD9](reference/cloud9.md) | 4 |
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
 | [CLOUDFORMATION](reference/cloudformation.md) | 12 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
@@ -75,10 +77,11 @@ GitHub. Pick a service below.
 | [CONFIG](reference/config.md) | 52 |
 | [DATACLASS](reference/dataclass.md) | 5 |
 | [DATASYNC](reference/datasync.md) | 2 |
-| [DETECTIVE](reference/detective.md) | 1 |
+| [DAX](reference/dax.md) | 3 |
+| [DETECTIVE](reference/detective.md) | 2 |
 | [DMS](reference/dms.md) | 9 |
 | [DNS](reference/dns.md) | 3 |
-| [DOCUMENTDB](reference/documentdb.md) | 18 |
+| [DOCUMENTDB](reference/documentdb.md) | 19 |
 | [DYNAMODB](reference/dynamodb.md) | 39 |
 | [EBS](reference/ebs.md) | 3 |
 | [EC2](reference/ec2.md) | 113 |
@@ -86,62 +89,62 @@ GitHub. Pick a service below.
 | [ECS](reference/ecs.md) | 59 |
 | [EFS](reference/efs.md) | 15 |
 | [EKS](reference/eks.md) | 118 |
-| [ELASTICACHE](reference/elasticache.md) | 13 |
+| [ELASTICACHE](reference/elasticache.md) | 15 |
 | [ELB](reference/elb.md) | 80 |
-| [EMR](reference/emr.md) | 8 |
+| [EMR](reference/emr.md) | 9 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 97 |
 | [EVS](reference/evs.md) | 1 |
 | [EXPOSURE](reference/exposure.md) | 11 |
-| [FIREHOSE](reference/firehose.md) | 3 |
-| [FMS](reference/fms.md) | 3 |
-| [FSX](reference/fsx.md) | 1 |
+| [FIREHOSE](reference/firehose.md) | 4 |
+| [FMS](reference/fms.md) | 4 |
+| [FSX](reference/fsx.md) | 2 |
 | [GCP](reference/gcp.md) | 72 |
 | [GCS](reference/gcs.md) | 7 |
 | [GHOST](reference/ghost.md) | 2 |
 | [GITHUB](reference/github.md) | 22 |
 | [GLACIER](reference/glacier.md) | 3 |
-| [GLOBALACCELERATOR](reference/globalaccelerator.md) | 1 |
-| [GLUE](reference/glue.md) | 18 |
+| [GLOBALACCELERATOR](reference/globalaccelerator.md) | 2 |
+| [GLUE](reference/glue.md) | 19 |
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 21 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
 | [IAM](reference/iam.md) | 332 |
 | [INSPECTOR](reference/inspector.md) | 4 |
-| [IOT](reference/iot.md) | 2 |
+| [IOT](reference/iot.md) | 4 |
 | [K8S](reference/k8s.md) | 68 |
-| [KEYSPACES](reference/keyspaces.md) | 1 |
-| [KINESIS](reference/kinesis.md) | 5 |
+| [KEYSPACES](reference/keyspaces.md) | 5 |
+| [KINESIS](reference/kinesis.md) | 6 |
 | [KMS](reference/kms.md) | 47 |
 | [LAKEFORMATION](reference/lakeformation.md) | 3 |
 | [LAMBDA](reference/lambda.md) | 92 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
-| [LIGHTSAIL](reference/lightsail.md) | 9 |
+| [LIGHTSAIL](reference/lightsail.md) | 11 |
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 5 |
-| [MEDIASTORE](reference/mediastore.md) | 1 |
-| [MEMORYDB](reference/memorydb.md) | 2 |
+| [MEDIASTORE](reference/mediastore.md) | 2 |
+| [MEMORYDB](reference/memorydb.md) | 5 |
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
-| [MQ](reference/mq.md) | 4 |
-| [MSK](reference/msk.md) | 12 |
-| [MWAA](reference/mwaa.md) | 3 |
+| [MQ](reference/mq.md) | 7 |
+| [MSK](reference/msk.md) | 14 |
+| [MWAA](reference/mwaa.md) | 4 |
 | [NEPTUNE](reference/neptune.md) | 21 |
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [NLB](reference/nlb.md) | 2 |
 | [OPENSEARCH](reference/opensearch.md) | 133 |
 | [ORG](reference/org.md) | 64 |
-| [QLDB](reference/qldb.md) | 1 |
+| [QLDB](reference/qldb.md) | 3 |
 | [QUICKSIGHT](reference/quicksight.md) | 2 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 73 |
 | [RECYCLEBIN](reference/recyclebin.md) | 2 |
-| [REDSHIFT](reference/redshift.md) | 26 |
+| [REDSHIFT](reference/redshift.md) | 27 |
 | [ROUTE53](reference/route53.md) | 54 |
 | [S3](reference/s3.md) | 149 |
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 3 |
-| [SAGEMAKER](reference/sagemaker.md) | 46 |
+| [SAGEMAKER](reference/sagemaker.md) | 47 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
@@ -156,9 +159,9 @@ GitHub. Pick a service below.
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
-| [TIMESTREAM](reference/timestream.md) | 1 |
-| [TRANSFER](reference/transfer.md) | 3 |
-| [VERIFIEDPERMISSIONS](reference/verifiedpermissions.md) | 6 |
+| [TIMESTREAM](reference/timestream.md) | 4 |
+| [TRANSFER](reference/transfer.md) | 4 |
+| [VERIFIEDPERMISSIONS](reference/verifiedpermissions.md) | 7 |
 | [VPC](reference/vpc.md) | 114 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 18 |

@@ -1,0 +1,69 @@
+dsl_version: ctrl.v1
+id: CTL.TIMESTREAM.ARCHIVE.CONFIGURED.001
+name: Timestream Database Must Have Archive Configured
+description: >
+  Timestream database does not have data archival configured.
+  Timestream data should be archived via scheduled queries to
+  S3 for long-term retention beyond the magnetic store
+  retention period.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: "CP-9"
+  soc2: "A1.2"
+scope_tags:
+  - aws
+  - timestream
+taxonomy:
+  - compliance-mapping
+  - data-protection
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_timestream_database]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Timestream database does not have archive configured.
+  action: >
+    Configure scheduled queries to archive Timestream data to S3.
+  example: |
+    {
+      "database": {
+        "kind": "timestream_database",
+        "backup": {
+          "archive_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: timestream_database
+    - field: properties.database.backup.archive_configured
+      op: ne
+      value: true
+tests:
+  - name: database without archive fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:timestream:us-east-1:123456789012:database/my-db"
+      asset_type: aws_timestream_database
+      vendor: aws
+      properties:
+        database:
+          kind: timestream_database
+          backup:
+            archive_configured: false
+  - name: database with archive passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:timestream:us-east-1:123456789012:database/my-db"
+      asset_type: aws_timestream_database
+      vendor: aws
+      properties:
+        database:
+          kind: timestream_database
+          backup:
+            archive_configured: true

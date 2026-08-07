@@ -69,3 +69,18 @@ AWS Batch job definitions must have a log driver configured in containerProperti
 
 ---
 
+### CTL.BATCH.SECRET.ENV.001
+
+**Batch Job Definition Must Not Contain Plaintext Secrets**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+AWS Batch job definition contains plaintext secrets in environment variables. Secrets in environment variables are visible in the Batch console, API responses, and CloudTrail logs.
+
+**Remediation:** Move secrets to AWS Secrets Manager or SSM Parameter Store and reference them via the Batch secrets configuration.
+
+---
+

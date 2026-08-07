@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.APPSYNC.AUTH.REQUIRED.001
+name: AppSync API Must Require Authentication
+description: >
+  AppSync GraphQL API does not require authentication. AppSync
+  APIs can be configured with API_KEY auth (effectively public
+  with a rotatable token) or no auth at all. Without IAM,
+  Cognito, or OIDC authentication, any client with the API
+  endpoint can execute queries and mutations. GraphQL APIs
+  typically expose read and write operations on backend data
+  sources (DynamoDB, RDS, Lambda) — unauthenticated access
+  means anonymous internet users can query or mutate
+  application data.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2, 8.3"
+  ccm_v4: ["IAM-02", "IVS-06"]
+scope_tags:
+  - aws
+  - appsync
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_appsync_graphql_api]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    AppSync GraphQL API is accessible without authentication.
+  action: >
+    Configure the AppSync API to require IAM, Cognito User
+    Pool, or OIDC authentication. Remove API_KEY as the sole
+    authentication type unless the API is intentionally public
+    and documented as such. Use multiple auth modes with IAM
+    as the default and API_KEY only for specific public
+    operations.
+  example: |
+    {
+      "api": {
+        "kind": "graphql_api",
+        "appsync": {
+          "auth_required": true,
+          "auth_type": "AWS_IAM"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.api.kind
+      op: eq
+      value: graphql_api
+    - field: properties.api.appsync.auth_required
+      op: ne
+      value: true
+tests:
+  - name: unauthenticated AppSync API fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:appsync:us-east-1:111122223333:apis/abc123"
+      asset_type: aws_appsync_graphql_api
+      vendor: aws
+      properties:
+        api:
+          kind: graphql_api
+          appsync:
+            auth_required: false
+            auth_type: API_KEY
+  - name: authenticated AppSync API passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:appsync:us-east-1:111122223333:apis/abc123"
+      asset_type: aws_appsync_graphql_api
+      vendor: aws
+      properties:
+        api:
+          kind: graphql_api
+          appsync:
+            auth_required: true
+            auth_type: AWS_IAM

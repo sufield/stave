@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.MEMORYDB.AUTH.REQUIRED.001
+name: MemoryDB Cluster Must Require Authentication
+description: >
+  MemoryDB cluster does not require ACL-based authentication.
+  Without authentication, any client with network access to
+  port 6379 can execute Redis commands against the cluster.
+  MemoryDB stores durable data — session state, feature
+  stores, real-time caches — unauthenticated access enables
+  data theft, poisoning, and lateral movement from
+  compromised compute within the VPC.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2"
+  ccm_v4: ["IAM-02", "IVS-06"]
+scope_tags:
+  - aws
+  - memorydb
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_memorydb_cluster]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    MemoryDB cluster does not require authentication.
+  action: >
+    Enable ACL-based authentication on the MemoryDB cluster.
+    Create ACL users with strong passwords and assign the ACL
+    to the cluster. Remove the default open-access ACL.
+  example: |
+    {
+      "cache": {
+        "kind": "memorydb_cluster",
+        "auth": {
+          "auth_required": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cache.kind
+      op: eq
+      value: memorydb_cluster
+    - field: properties.cache.auth.auth_required
+      op: ne
+      value: true
+tests:
+  - name: unauthenticated MemoryDB cluster fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:memorydb:us-east-1:111122223333:cluster/my-cluster"
+      asset_type: aws_memorydb_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: memorydb_cluster
+          auth:
+            auth_required: false
+  - name: authenticated MemoryDB cluster passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:memorydb:us-east-1:111122223333:cluster/my-cluster"
+      asset_type: aws_memorydb_cluster
+      vendor: aws
+      properties:
+        cache:
+          kind: memorydb_cluster
+          auth:
+            auth_required: true

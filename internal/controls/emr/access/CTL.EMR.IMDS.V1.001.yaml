@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.EMR.IMDS.V1.001
+name: EMR Cluster Must Enforce IMDSv2
+description: >
+  EMR cluster EC2 instances allow IMDSv1 access to the instance
+  metadata service. IMDSv1 is vulnerable to SSRF attacks — a
+  compromised application on an EMR node can steal IAM
+  credentials from the metadata endpoint via a simple HTTP GET.
+  IMDSv2 requires a session token obtained via PUT, which SSRF
+  payloads cannot forge. EMR clusters process sensitive data
+  and typically have broad IAM permissions for S3, DynamoDB,
+  and KMS access.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - emr
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_emr_cluster]
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    EMR cluster allows IMDSv1 on its EC2 instances.
+  action: >
+    Set HttpTokens to required in the EMR cluster's EC2
+    instance metadata options. This enforces IMDSv2 for all
+    nodes in the cluster. Test applications for IMDSv2
+    compatibility before enforcing.
+  example: |
+    {
+      "compute": {
+        "kind": "emr_cluster",
+        "metadata": {
+          "imdsv2_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: emr_cluster
+    - field: properties.compute.metadata.imdsv2_enforced
+      op: ne
+      value: true
+tests:
+  - name: IMDSv1 allowed fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticmapreduce:us-east-1:111122223333:cluster/j-ABC123"
+      asset_type: aws_emr_cluster
+      vendor: aws
+      properties:
+        compute:
+          kind: emr_cluster
+          metadata:
+            imdsv2_enforced: false
+  - name: IMDSv2 enforced passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticmapreduce:us-east-1:111122223333:cluster/j-ABC123"
+      asset_type: aws_emr_cluster
+      vendor: aws
+      properties:
+        compute:
+          kind: emr_cluster
+          metadata:
+            imdsv2_enforced: true
