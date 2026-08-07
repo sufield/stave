@@ -14,7 +14,7 @@
       },
       "overall": "dc22b6fe3206dca1fdda772ee929e95ec8c40c8f8120b2715161ab23a137f093"
     },
-    "policy_fingerprint": "6f269b146e4dcd01499dd7e3b33bde6fd93731c62e001114532e2a26c9236057",
+    "policy_fingerprint": "19550daf5cb31b75b3a671c8231fd42517e3f22acb4432cee68f4a866ef0d639",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -1910,7 +1910,7 @@
       "missing_fields": [
         "storage.encryption.algorithm"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.S3.ENCRYPT.004",
@@ -1922,7 +1922,7 @@
       "missing_fields": [
         "storage.encryption.algorithm"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     },
     {
       "control_id": "CTL.S3.ENCRYPT.004",
@@ -1934,7 +1934,7 @@
       "missing_fields": [
         "storage.encryption.algorithm"
       ],
-      "gap_cause": "collector_gap"
+      "gap_cause": "derived_gap"
     }
   ],
   "issues": [
