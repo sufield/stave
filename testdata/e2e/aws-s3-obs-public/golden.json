@@ -250,7 +250,7 @@
             "initial_access",
             "exfiltration"
           ],
-          "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
+          "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or lacks access logging. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
         }
       ],
       "exploitability": "exploitable",
@@ -462,7 +462,7 @@
             "initial_access",
             "exfiltration"
           ],
-          "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
+          "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or lacks access logging. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
         }
       ],
       "exploitability": "exploitable",
@@ -1889,18 +1889,19 @@
       "finding_id": "sha256:87538f4534260b95",
       "chain": "classified_data_unprotected_storage",
       "asset_id": "public-test-bucket",
-      "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n",
+      "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or lacks access logging. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n",
       "controls_failing": [
         "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
         "CTL.S3.PUBLIC.001"
       ],
       "missing_safeguards": [
         "CTL.DATACLASS.TAG.INVERTED.001",
-        "CTL.S3.ENCRYPT.001"
+        "CTL.S3.ENCRYPT.001",
+        "CTL.S3.LOG.001"
       ],
       "compound_score": 100,
       "severity": "high",
-      "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or has both. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n Failing: CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001, CTL.S3.PUBLIC.001.",
+      "narrative": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or lacks access logging. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n Failing: CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001, CTL.S3.PUBLIC.001.",
       "attack_stages": [
         "exfiltration",
         "initial_access"
