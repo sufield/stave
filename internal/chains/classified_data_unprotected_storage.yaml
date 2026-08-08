@@ -3,9 +3,9 @@ description: >
   A resource tagged with a high-sensitivity classification
   (confidential, restricted, PII, PHI, PCI) is stored in or
   accessed from an unprotected storage resource — one that is
-  publicly accessible, lacks encryption, or has both. The
-  classification tag declares the data as sensitive; the storage
-  posture contradicts that declaration. Individually the
+  publicly accessible, lacks encryption, or lacks access logging.
+  The classification tag declares the data as sensitive; the
+  storage posture contradicts that declaration. Individually the
   classification and storage controls may pass their own checks;
   the compound finding is that the two together create a gap.
 controls:
@@ -13,6 +13,7 @@ controls:
   - CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001
   - CTL.S3.PUBLIC.001
   - CTL.S3.ENCRYPT.001
+  - CTL.S3.LOG.001
 escalation_threshold: 2
 compound_severity: high
 preconditions:
