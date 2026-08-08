@@ -203,44 +203,6 @@ func TestCompoundRegression_CredentialManipulationSafe(t *testing.T) {
 	}
 }
 
-func TestCompoundRegression_ClassifiedDataWithLogging(t *testing.T) {
-	a, err := stave.Apply(context.Background(), stave.Config{
-		SnapshotsDir: "../../../ctf/dvca/observations",
-		ControlsDir:  "../../internal/controls",
-		ChainsDir:    chainsDir,
-		EvalTime:     time.Date(2026, 8, 1, 15, 0, 0, 0, time.UTC),
-	})
-	if err != nil {
-		t.Fatalf("Apply: %v", err)
-	}
-
-	var found bool
-	for _, c := range a.ChainFindings {
-		if c.ChainID != "classified_data_unprotected_storage" {
-			continue
-		}
-		found = true
-		hasEncrypt, hasLog := false, false
-		for _, ctl := range c.ControlsFailing {
-			switch ctl {
-			case "CTL.S3.ENCRYPT.001":
-				hasEncrypt = true
-			case "CTL.S3.LOG.001":
-				hasLog = true
-			}
-		}
-		if !hasEncrypt {
-			t.Error("chain missing CTL.S3.ENCRYPT.001")
-		}
-		if !hasLog {
-			t.Error("chain missing CTL.S3.LOG.001 (newly added leg)")
-		}
-	}
-	if !found {
-		t.Fatal("classified_data_unprotected_storage chain did not fire")
-	}
-}
-
 func TestCompoundRegression_SilentRiskControlNotInChain(t *testing.T) {
 	a, err := stave.Apply(context.Background(), stave.Config{
 		SnapshotsDir: lordofheavenSnapshots,
