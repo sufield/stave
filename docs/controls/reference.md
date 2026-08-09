@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3381
-**Pack hash:** `becc301ebe8630d1b409de244a1b04781e037038b04a04d6759258d7e5a9df09`
+**Total controls:** 3395
+**Pack hash:** `0918944541e7fa6c4f8ea60fb2440ddbfba9a494bd81a59fe70147a303a57c49`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 368 |
-| high | 1448 |
+| critical | 370 |
+| high | 1452 |
 | info | 19 |
-| low | 266 |
-| medium | 1280 |
+| low | 270 |
+| medium | 1284 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,8 +28,8 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 160 |
 | encryption | 125 |
-| exposure | 1481 |
-| governance | 665 |
+| exposure | 1486 |
+| governance | 674 |
 | hygiene | 21 |
 | identity | 671 |
 | lifecycle | 32 |
@@ -79,6 +79,7 @@ GitHub. Pick a service below.
 | [DATASYNC](reference/datasync.md) | 2 |
 | [DAX](reference/dax.md) | 3 |
 | [DETECTIVE](reference/detective.md) | 2 |
+| [DIRECTORYSERVICE](reference/directoryservice.md) | 2 |
 | [DMS](reference/dms.md) | 9 |
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 19 |
@@ -149,6 +150,7 @@ GitHub. Pick a service below.
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
 | [SECURITYHUB](reference/securityhub.md) | 8 |
+| [SECURITYIR](reference/securityir.md) | 2 |
 | [SECURITYLAKE](reference/securitylake.md) | 4 |
 | [SERVERLESSREPO](reference/serverlessrepo.md) | 1 |
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |
@@ -161,8 +163,10 @@ GitHub. Pick a service below.
 | [TAGS](reference/tags.md) | 1 |
 | [TIMESTREAM](reference/timestream.md) | 4 |
 | [TRANSFER](reference/transfer.md) | 4 |
+| [VERIFIEDACCESS](reference/verifiedaccess.md) | 5 |
 | [VERIFIEDPERMISSIONS](reference/verifiedpermissions.md) | 7 |
 | [VPC](reference/vpc.md) | 114 |
+| [VPCLATTICE](reference/vpclattice.md) | 5 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 18 |
 | [WORKSPACES](reference/workspaces.md) | 1 |
