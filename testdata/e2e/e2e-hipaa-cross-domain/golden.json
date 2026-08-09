@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "84eb715522a1b1c9578fac1ba0dfef210a9e00681482f32646a87836acf9fece",
+    "policy_fingerprint": "0a1b337022a1de74a1d793cc420626e4c770c720d08f98b4aea46b8ef772dbdd",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -759,9 +759,11 @@
         "hipaa": "164.312(a)(1)",
         "nist_800_53_r5": "IA-2",
         "owasp_nhi": "NHI2",
+        "owasp_subtractive": "S07",
         "pci_dss_v3.2.1": "2.1",
         "pci_dss_v4.0": "8.3.4",
-        "soc2": "CC6.1"
+        "soc2": "CC6.1",
+        "subtractive_tier": "deletion"
       },
       "control_compliance_ccm_v4": [
         "IAM-09",
@@ -1301,8 +1303,10 @@
         "hipaa": "164.312(a)(1)",
         "iso_27001_2022": "A.8.3",
         "nist_800_53_r5": "AC-3",
+        "owasp_subtractive": "S08",
         "pci_dss_v4.0": "7.2.1",
-        "soc2": "CC6.1"
+        "soc2": "CC6.1",
+        "subtractive_tier": "deletion"
       },
       "control_compliance_ccm_v4": [
         "DSP-17",
