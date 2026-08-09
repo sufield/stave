@@ -15,7 +15,7 @@ Step-by-step from zero to first evaluation.
 What Stave checks and what it outputs.
 
 - [Control catalog](controls/reference.md) — controls by service (generated)
-- [Chain catalog](../chains/README.md) — compound attack chains by family
+- [Chain catalog](../internal/chains/README.md) — compound attack chains by family
 - [Command reference](command-reference.md) — every command and flag (generated)
 - [Schemas](../schemas/README.md) — JSON Schema definitions for all data formats
 - [Compliance frameworks](reference/compliance-frameworks.md) — NIST, CIS, FFIEC, ISO 27001, OWASP NHI, CSA
