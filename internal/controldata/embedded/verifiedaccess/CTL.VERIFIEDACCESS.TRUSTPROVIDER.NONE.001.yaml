@@ -17,7 +17,7 @@ scope_tags:
   - verifiedaccess
 taxonomy:
   - trust-boundary
-  - authentication
+  - identity-perimeter
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_verified_access_instance]
