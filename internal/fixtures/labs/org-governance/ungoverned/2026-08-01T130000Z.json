@@ -186,6 +186,202 @@
           }
         }
       }
+    },
+    {
+      "id": "arn:aws:iam::111111111111:user/admin-user",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "has_admin_access": true,
+            "has_cross_account_resource": true
+          },
+          "access_keys": {
+            "has_stale_key": true
+          },
+          "console_access": {
+            "enabled": true,
+            "mfa_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "111111111111/root",
+      "type": "aws_iam_account",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "account",
+          "root": {
+            "has_access_keys": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::ungoverned-bucket",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "access": {
+            "public_read": true
+          },
+          "encryption": {
+            "at_rest_enabled": false
+          },
+          "logging": {
+            "enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-ungoverned-default",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "security_group",
+          "is_default": true,
+          "rules_empty": false,
+          "inbound_rules": {
+            "high_risk_ports_unrestricted": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ec2:us-east-1:111111111111:instance/i-ungoverned",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "network": {
+            "imdsv2_required": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:elasticache:us-east-1:111111111111:cluster:ungov-cache",
+      "type": "aws_elasticache_cluster",
+      "vendor": "aws",
+      "properties": {
+        "cache": {
+          "kind": "cluster",
+          "encryption": {
+            "in_transit_enabled": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:kms:us-east-1:111111111111:key/ungov-key",
+      "type": "aws_kms_key",
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kind": "key",
+          "key_rotation_enabled": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:111111111111:trail/ungov-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "multi_region_enabled": false
+        },
+        "trail": {
+          "log_file_validation_enabled": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:111111111111:recorder/ungov",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "recorder",
+          "recording_enabled": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:111111111111:function:ungov-fn",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "env": {
+            "kms_encrypted": false
+          },
+          "function_url": {
+            "auth_type_none": true
+          },
+          "logging": {
+            "has_been_invoked": true,
+            "log_group_exists": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:secretsmanager:us-east-1:111111111111:secret:ungov-secret",
+      "type": "aws_secretsmanager_secret",
+      "vendor": "aws",
+      "properties": {
+        "secrets": {
+          "kind": "secret",
+          "rotation_enabled": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:guardduty:us-east-1:111111111111:detector/ungov",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:dynamodb:us-east-1:111111111111:table/ungov-table",
+      "type": "aws_dynamodb_table",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "deletion_protection": false,
+          "pitr_enabled": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:glue:us-east-1:111111111111:job/ungov-etl",
+      "type": "aws_glue_job",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "glue_job",
+          "version": {
+            "is_outdated": true,
+            "current_version": "2.0"
+          }
+        }
+      }
     }
   ]
 }

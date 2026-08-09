@@ -1,0 +1,256 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:instance/i-0abcd1234efgh5678",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "instance_profile": {
+            "is_overprivileged": false,
+            "role_arn": "arn:aws:iam::111122223333:role/ec2-web-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api:12",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "task_definition",
+          "execution_role": {
+            "is_overprivileged": false,
+            "role_arn": "arn:aws:iam::111122223333:role/ecsExecRole-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:endpoint/prod-inference",
+      "type": "aws_sagemaker_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "sagemaker_endpoint",
+          "sagemaker": {
+            "endpoint": {
+              "role_exceeds_required": false,
+              "role_arn": "arn:aws:iam::111122223333:role/sm-endpoint-minimal"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:batch:us-east-1:111122223333:job-definition/etl-job:3",
+      "type": "aws_batch_job_definition",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "batch_job",
+          "batch": {
+            "job": {
+              "role_exceeds_required": false,
+              "role_arn": "arn:aws:iam::111122223333:role/batch-etl-minimal"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:glue:us-east-1:111122223333:job/nightly-transform",
+      "type": "aws_glue_job",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "glue_job",
+          "glue": {
+            "job": {
+              "role_exceeds_required": false,
+              "role_arn": "arn:aws:iam::111122223333:role/glue-job-minimal"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:glue:us-east-1:111122223333:devEndpoint/notebook-dev",
+      "type": "aws_glue_dev_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "glue_dev_endpoint",
+          "glue": {
+            "dev_endpoint": {
+              "role_exceeds_required": false,
+              "role_arn": "arn:aws:iam::111122223333:role/glue-dev-minimal"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:emr:us-east-1:111122223333:cluster/j-ABCDEF123456",
+      "type": "aws_emr_cluster",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "emr_cluster",
+          "emr": {
+            "cluster": {
+              "role_exceeds_required": false,
+              "role_arn": "arn:aws:iam::111122223333:role/emr-cluster-minimal"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:firehose:us-east-1:111122223333:deliverystream/logs-to-s3",
+      "type": "aws_kinesis_firehose_delivery_stream",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "firehose_stream",
+          "firehose": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/firehose-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:dms:us-east-1:111122223333:rep:ABCDEFGHIJKLMNOP",
+      "type": "aws_dms_replication_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "dms_replication",
+          "dms": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/dms-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:datasync:us-east-1:111122223333:task/task-01234567890abcdef",
+      "type": "aws_datasync_task",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "datasync_task",
+          "datasync": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/datasync-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:mwaa:us-east-1:111122223333:environment/prod-airflow",
+      "type": "aws_mwaa_environment",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "mwaa_env",
+          "mwaa": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/mwaa-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:apprunner:us-east-1:111122223333:service/api-svc/abcdef",
+      "type": "aws_apprunner_service",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "apprunner_service",
+          "apprunner": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/apprunner-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloud9:us-east-1:111122223333:environment:abcdef0123456789",
+      "type": "aws_cloud9_environment",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "cloud9_env",
+          "cloud9": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/cloud9-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lightsail:us-east-1:111122223333:Instance/web-prod",
+      "type": "aws_lightsail_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "lightsail_instance",
+          "lightsail": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/lightsail-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:elasticbeanstalk:us-east-1:111122223333:environment/app/prod-env",
+      "type": "aws_elastic_beanstalk_environment",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "beanstalk_env",
+          "beanstalk": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/beanstalk-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:amplify:us-east-1:111122223333:apps/d1234567890",
+      "type": "aws_amplify_app",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "amplify_app",
+          "amplify": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/amplify-minimal"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:knowledge-base/KB0123456789",
+      "type": "aws_bedrock_knowledge_base",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_knowledge_base",
+          "knowledge_base": {
+            "retrieval_broader_than_embedding": false,
+            "embedding_data_sources": ["s3://kb-docs-prod/"],
+            "retrieval_scope": "s3://kb-docs-prod/"
+          }
+        }
+      }
+    }
+  ]
+}

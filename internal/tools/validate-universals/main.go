@@ -22,36 +22,34 @@ type universal struct {
 	Patterns []string
 }
 
+// 27 scorecard universals (U1-U20 minus U16/N/A, plus U26-U33).
 var universals = []universal{
-	{"U1", "Unrestricted PM on wildcard", []string{".ADMIN.", ".PERMISSIONS.", ".WILDCARD."}},
-	{"U2", "Cross-account without org boundary", []string{".CROSS.", ".PRINCIPAL."}},
-	{"U3", "Federation without subject", []string{".FEDERATION.", ".SAML.", ".OIDC."}},
-	{"U4", "Credential lifetime (access keys)", []string{".KEY.ROTATION.", ".KEY.AGE."}},
-	{"U5", "Session without attribution", []string{".MFA.", ".SESSION."}},
-	{"U6", "Policy removal without compensation", []string{".DETACH.", ".REMOVAL."}},
-	{"U7", "Encryption at rest", []string{".ENCRYPT.", ".KMS.", ".SSE."}},
-	{"U9", "Endpoint without TLS", []string{".TLS.", ".SSL.", ".HTTPS.", ".TRANSIT."}},
-	{"U10", "Public accessibility", []string{".PUBLIC."}},
-	{"U11", "Network isolation", []string{".SG.", ".NACL.", ".SUBNET."}},
-	{"U12", "Management port open", []string{".PORT.", ".SSH.", ".RDP."}},
-	{"U13", "Default VPC active", []string{".DEFAULT.VPC."}},
-	{"U14", "CloudTrail coverage", []string{".CLOUDTRAIL.", ".TRAIL."}},
-	{"U15", "Detection delivery", []string{".DELIVERY."}},
-	{"U16", "Detection scope", []string{".SCOPE.", ".REGION."}},
-	{"U17", "Tamper-proof logs", []string{".INTEGRITY.", ".VALIDATION."}},
-	{"U18", "Credential lifetime (general)", []string{".ROTATION.", ".PASSWORD.", ".CREDENTIAL."}},
-	{"U19", "Rotation stalled", []string{".STALL.", ".PENDING.ROTATION."}},
-	{"U20", "Root account usage", []string{".ROOT."}},
-	{"U21", "Intent vs state drift", []string{".DRIFT.", ".INTENT."}},
-	{"U22", "Ghost/dangling references", []string{".GHOST.", ".DANGLING.", ".INCOMPLETE."}},
-	{"U25", "Compute role admin", []string{".ESCALATE."}},
-	{"U26", "Service logging", []string{".LOG.", ".AUDIT.", ".LOGGING.", ".ACCESSLOG."}},
-	{"U27", "Endpoint authentication", []string{".AUTH."}},
-	{"U28", "Deletion protection", []string{".DELETION.", ".TERMINATION."}},
-	{"U29", "Backup/recovery", []string{".BACKUP.", ".SNAPSHOT.", ".PITR.", ".RECOVERY.", ".REPLICATION."}},
-	{"U30", "Plaintext secrets", []string{".SECRET.", ".CREDS."}},
-	{"U31", "Version currency", []string{".VERSION.", ".RUNTIME.", ".ENGINE.", ".UPGRADE.", ".EOL.", ".DEPRECATED."}},
-	{"U32", "IMDSv2 enforcement", []string{".IMDS."}},
+	{"U1", "Least privilege", []string{".ADMIN.", ".WILDCARD.", ".SERVICEWILDCARD."}},
+	{"U2", "No long-lived credentials", []string{".CRED.", ".TTL.", ".UNUSED."}},
+	{"U3", "MFA enforcement", []string{".MFA."}},
+	{"U4", "No root account usage", []string{".ROOT."}},
+	{"U5", "Block public access", []string{".PUBLIC.", ".PAB."}},
+	{"U6", "Default deny on network", []string{".SG.", ".NACL."}},
+	{"U7", "No management ports open", []string{".RESTRICTED.PORTS.", ".SSH."}},
+	{"U8", "Encryption at rest", []string{".ENCRYPT.", ".SSE.", ".KMS."}},
+	{"U9", "Encryption in transit", []string{".TRANSIT.", ".TLS.", ".HTTPS."}},
+	{"U10", "KMS key rotation", []string{".ROTATION."}},
+	{"U11", "CloudTrail enabled", []string{".CLOUDTRAIL."}},
+	{"U12", "Resource-specific logging", []string{".LOG."}},
+	{"U13", "Log integrity", []string{".VALIDATION.", ".INTEGRITY."}},
+	{"U14", "AWS Config enabled", []string{".CONFIG."}},
+	{"U15", "Configuration drift detection", []string{".DRIFT.", ".SNAPSHOT.STALE."}},
+	{"U17", "No plaintext secrets", []string{".SECRET.", ".SECRETS.", ".CREDS.", ".ENV.ENCRYPT."}},
+	{"U18", "Secrets rotation", []string{".ROTATION."}},
+	{"U19", "SCPs active", []string{".ORG."}},
+	{"U20", "Environment isolation", []string{".CROSSACCOUNT.", ".CROSS.ENV."}},
+	{"U26", "Service-level logging", []string{".LOG.", ".AUDIT.", ".LOGGING.", ".NOLOGGING."}},
+	{"U27", "Endpoint authentication", []string{".AUTH.", ".NOAUTH."}},
+	{"U28", "Deletion protection", []string{".DELETEPROT.", ".DELETION."}},
+	{"U29", "Backup configured", []string{".BACKUP.", ".PITR.", ".RECOVERY."}},
+	{"U30", "No plaintext secrets in config", []string{".SECRET.", ".SECRETS.", ".CREDS.", ".ENV.ENCRYPT."}},
+	{"U31", "Version currency", []string{".VERSION.", ".RUNTIME.", ".ENGINE.", ".EOL."}},
+	{"U32", "IMDSv2 enforced", []string{".IMDSV2.", ".IMDS."}},
 	{"U33", "Security service enabled", []string{".ENABLED."}},
 }
 
@@ -67,19 +65,9 @@ func runStave(obsDir string) ([]finding, error) {
 	cmd := exec.Command("./stave", "apply",
 		"--observations", obsDir,
 		"--eval-time", "2026-08-01T15:00:00Z",
-		"--format", "json",
-		"--quiet=false")
+		"--format", "json")
+	cmd.Stderr = os.Stderr
 	rawOut, _ := cmd.Output()
-	if len(rawOut) == 0 {
-		// exit 3/5 writes to stdout, but cmd.Output() only captures stdout
-		// re-run capturing stdout explicitly
-		cmd2 := exec.Command("./stave", "apply",
-			"--observations", obsDir,
-			"--eval-time", "2026-08-01T15:00:00Z",
-			"--format", "json")
-		cmd2.Stderr = os.Stderr
-		rawOut, _ = cmd2.Output()
-	}
 	if len(rawOut) == 0 {
 		return nil, fmt.Errorf("no output from stave apply on %s", obsDir)
 	}
