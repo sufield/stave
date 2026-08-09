@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3376
-**Pack hash:** `e9fa3fa942a3832360ca0a87661c2ca50f7e50e0231c964294a2b334a72d39b2`
+**Total controls:** 3380
+**Pack hash:** `696f82428ebdca16c9c216528bb1f237a30f6fe1beeccdcd4d8eda49634b3bb5`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -16,8 +16,8 @@ GitHub. Pick a service below.
 | critical | 368 |
 | high | 1448 |
 | info | 19 |
-| low | 265 |
-| medium | 1276 |
+| low | 266 |
+| medium | 1279 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,7 +29,7 @@ GitHub. Pick a service below.
 | detection | 160 |
 | encryption | 125 |
 | exposure | 1480 |
-| governance | 661 |
+| governance | 665 |
 | hygiene | 21 |
 | identity | 671 |
 | lifecycle | 32 |
@@ -45,7 +45,7 @@ GitHub. Pick a service below.
 | [ACCESSANALYZER](reference/accessanalyzer.md) | 1 |
 | [ACCOUNT](reference/account.md) | 3 |
 | [ACM](reference/acm.md) | 9 |
-| [ACMPCA](reference/acmpca.md) | 1 |
+| [ACMPCA](reference/acmpca.md) | 4 |
 | [AD](reference/ad.md) | 40 |
 | [AMPLIFY](reference/amplify.md) | 2 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
@@ -149,7 +149,7 @@ GitHub. Pick a service below.
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
 | [SECURITYHUB](reference/securityhub.md) | 8 |
-| [SECURITYLAKE](reference/securitylake.md) | 3 |
+| [SECURITYLAKE](reference/securitylake.md) | 4 |
 | [SERVERLESSREPO](reference/serverlessrepo.md) | 1 |
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |
 | [SES](reference/ses.md) | 3 |

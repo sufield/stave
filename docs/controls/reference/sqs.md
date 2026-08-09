@@ -416,7 +416,7 @@ SQS source queue has send activity (NumberOfMessagesSent > 0) but no receive act
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.5.19; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 1.2, 7.1, 7.2; soc2: CC6.1, CC6.6;
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.5.19; nist_800_53_r5: AC-3, AC-4, AC-6; owasp_subtractive: S05; pci_dss_v4.0: 1.2, 7.1, 7.2; soc2: CC6.1, CC6.6; subtractive_tier: deletion;
 
 SQS queue policy grants actions to principals in external AWS accounts without an aws:PrincipalOrgID condition (or an equivalent SourceAccount restriction limited to the organization's account list). Any principal in the external account can perform the granted actions — if the external account is compromised, or leaves the organization, the queue policy still trusts it. PrincipalOrgID ensures only accounts currently in the organization can access the queue. Distinct from CTL.SQS.POLICY.PUBLIC.001 (Principal: "*") — this control fires on policies that name specific external accounts but lack an org boundary.
 
@@ -476,7 +476,7 @@ SQS queue policies must not grant access to principal ARNs that don't exist in t
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** aws_security_hub: SQS.1; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** aws_security_hub: SQS.1; nist_800_53_r5: AC-3; owasp_subtractive: S02; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 SQS queue resource policies must not grant sqs:SendMessage, sqs:ReceiveMessage, sqs:DeleteMessage, or sqs:* to Principal "*" or to unauthenticated principals without restricting via aws:SourceArn, aws:SourceAccount, or aws:PrincipalOrgID conditions. Public queue access allows unauthorized message injection (sending malicious payloads to downstream consumers) or message interception (reading messages meant for internal services).
 

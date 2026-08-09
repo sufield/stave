@@ -849,7 +849,7 @@ RDS Proxies must require TLS for the backend connection from Proxy to RDS instan
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 2.3.2; cis_aws_v3.0: 2.3.3; fedramp_moderate: AC-3; ffiec: ISH-4; gdpr: Art.32; hipaa: 164.312(a)(1); iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 2.3.2; cis_aws_v3.0: 2.3.3; fedramp_moderate: AC-3; ffiec: ISH-4; gdpr: Art.32; hipaa: 164.312(a)(1); iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_subtractive: S08; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 RDS instances must not have public accessibility enabled. A publicly accessible database is reachable from the internet, exposing it to brute force attacks, SQL injection, and unauthorized data access.
 
@@ -999,7 +999,7 @@ RDS snapshot is encrypted with a KMS key whose origin is EXTERNAL (imported key 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** mitre_attack: T1537; nist_800_53_r5: AC-3;
+- **Compliance:** mitre_attack: T1537; nist_800_53_r5: AC-3; owasp_subtractive: S08; subtractive_tier: deletion;
 
 RDS snapshots must not be publicly accessible. A public snapshot can be copied to any AWS account and restored as a full database, granting complete read access to all data.
 

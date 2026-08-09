@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYIR.ENABLED.001
+name: AWS Security Incident Response Not Enabled
+description: >
+  AWS Security Incident Response membership is not active. Security
+  Incident Response provides automated triage and case management
+  for security events. Without an active membership, security
+  events require manual triage and coordination with no centralized
+  case tracking.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "IR-4, IR-5"
+  soc2: "CC7.3"
+  ccm_v4: ["SEF-03"]
+scope_tags:
+  - aws
+  - securityir
+taxonomy:
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_security_incident_response]
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    AWS Security Incident Response membership is not active.
+  action: >
+    Enable Security Incident Response from the security tooling
+    account: aws security-ir create-membership.
+  example: |
+    {
+      "security": {
+        "kind": "incident_response",
+        "incident_response": {
+          "membership_active": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security.kind
+      op: eq
+      value: incident_response
+    - field: properties.security.incident_response.membership_active
+      op: ne
+      value: true
+tests:
+  - name: "membership not active fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:security-ir:us-east-1:111122223333:membership/m-abc"
+      asset_type: aws_security_incident_response
+      vendor: aws
+      properties:
+        security:
+          kind: incident_response
+          incident_response:
+            membership_active: false
+  - name: "membership active passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:security-ir:us-east-1:111122223333:membership/m-abc"
+      asset_type: aws_security_incident_response
+      vendor: aws
+      properties:
+        security:
+          kind: incident_response
+          incident_response:
+            membership_active: true

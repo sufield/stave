@@ -19,6 +19,8 @@ compliance:
   ffiec: "ISH-4"
   iso_27001_2022: "A.8.3"
   ccm_v4: ["DSP-17", "IAM-16"]
+  owasp_subtractive: "S08"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - rds

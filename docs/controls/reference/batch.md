@@ -29,7 +29,7 @@ Inspired by Doyensec CloudsecTidbits No. 3 — Messing Around With AWS Batch For
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.6; nist_800_53_r5: CM-6, AC-6; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.6; nist_800_53_r5: CM-6, AC-6; owasp_subtractive: S01; pci_dss_v4.0: 2.2.1; soc2: CC6.6; subtractive_tier: deletion;
 
 An AWS Batch compute environment with EC2 (or SPOT) orchestration runs job containers with host networking, so they share the host EC2 instance's network interface and can reach the instance metadata service at 169.254.169.254. When IMDS is reachable from jobs, any job container can retrieve the EC2 instance role credentials — typically far more privileged than the job execution role (the instance role manages EFS mounts, EC2 lifecycle, networking). Fargate orchestration has no host IMDS and is out of scope.
 The collector resolves batch.imds_accessible_from_jobs with the same logic as CTL.EC2.IMDSV2.002: reachable when the launch template's hop limit is > 1, the endpoint is enabled with host/bridge networking, OR the launch-template metadata options are absent (fail-loud — unknown defaults are treated as reachable). IMDSv2 enforcement WITHOUT a hop-limit restriction is still reachable: a job container completes the PUT-for-token handshake just like the host.

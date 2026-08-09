@@ -342,7 +342,7 @@ SageMaker notebook instance has been idle for more than 30 days. An idle noteboo
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3, SC-7; soc2: CC6.1, CC6.6;
+- **Compliance:** nist_800_53_r5: AC-3, SC-7; owasp_subtractive: S01; soc2: CC6.1, CC6.6; subtractive_tier: deletion;
 
 SageMaker notebook instance does not require Instance Metadata Service v2 (IMDSv2). IMDSv1 is vulnerable to SSRF attacks — an attacker who can make the notebook issue HTTP requests (e.g. through a malicious notebook cell or imported library) can steal the notebook's IAM role credentials from the metadata endpoint at 169.254.169.254. IMDSv2 requires a PUT request with a hop-limited token header, blocking most SSRF vectors. AWS added InstanceMetadataServiceConfiguration to CreateNotebookInstance in 2023; notebooks created before that default to IMDSv1.
 

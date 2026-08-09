@@ -15,6 +15,8 @@ compliance:
   nist_800_53_r5: "AC-2(3)"
   soc2: "CC6.2"
   ccm_v4: ["IAM-05"]
+  owasp_subtractive: "S07"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - iam

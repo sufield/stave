@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.VPCLATTICE.SERVICE.ENCRYPT.001
+name: VPC Lattice Service Not Encrypted
+description: >
+  A VPC Lattice service does not use encryption for service-to-service
+  communication. Without encryption, traffic between services is
+  transmitted in cleartext within the VPC, exposing it to interception
+  by any workload with network access.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - vpclattice
+taxonomy:
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_vpc_lattice_service]
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 2.0
+remediation:
+  description: >
+    VPC Lattice service does not use encryption.
+  action: >
+    Configure the service listener to use HTTPS: aws vpc-lattice
+    create-listener --service-identifier <service-id> --protocol HTTPS.
+  example: |
+    {
+      "lattice": {
+        "kind": "service",
+        "service": {
+          "encryption": {
+            "enabled": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.lattice.kind
+      op: eq
+      value: service
+    - field: properties.lattice.service.encryption.enabled
+      op: ne
+      value: true
+tests:
+  - name: "unencrypted service fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "svc-abc123"
+      asset_type: aws_vpc_lattice_service
+      vendor: aws
+      properties:
+        lattice:
+          kind: service
+          service:
+            encryption:
+              enabled: false
+  - name: "encrypted service passes"
+    verdict: PASS
+    asset:
+      asset_id: "svc-abc123"
+      asset_type: aws_vpc_lattice_service
+      vendor: aws
+      properties:
+        lattice:
+          kind: service
+          service:
+            encryption:
+              enabled: true

@@ -22,6 +22,8 @@ compliance:
   ccm_v4:
   - DSP-17
   - IVS-03
+  owasp_subtractive: "S08"
+  subtractive_tier: "deletion"
 scope_tags:
 - aws
 - redshift

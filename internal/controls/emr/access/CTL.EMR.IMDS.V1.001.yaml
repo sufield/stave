@@ -17,6 +17,8 @@ compliance:
   soc2: "CC6.1"
   pci_dss_v4.0: "7.2"
   ccm_v4: ["IVS-06"]
+  owasp_subtractive: "S01"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - emr

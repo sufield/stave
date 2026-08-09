@@ -976,7 +976,7 @@ OpenSearch ISM policy declares a `hot → warm` transition but the domain has Ul
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; owasp_subtractive: S03; soc2: CC6.1; subtractive_tier: deletion;
 
 OpenSearch Dashboards (Kibana) endpoints must not be publicly accessible without authentication. Dashboards provide a query interface to the entire cluster — a public, unauthenticated dashboard is functionally equivalent to giving attackers a SQL client connected to your database. The Darkbeam breach exposed both the Elasticsearch API and the Kibana dashboard to the public internet.
 
@@ -1569,7 +1569,7 @@ OpenSearch domain access policy uses `Principal: "*"` with an `aws:SourceIp` con
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SC-7; iso_27001_2022: A.8.20; nist_800_53_r5: SC-7, AC-3; pci_dss_v4.0: 1.3.4; soc2: CC6.1, CC6.6;
+- **Compliance:** fedramp_moderate: SC-7; iso_27001_2022: A.8.20; nist_800_53_r5: SC-7, AC-3; owasp_subtractive: S02; pci_dss_v4.0: 1.3.4; soc2: CC6.1, CC6.6; subtractive_tier: deletion;
 
 OpenSearch domain accessed via AWS PrivateLink / Interface VPC Endpoint has an endpoint policy with `Principal: "*"` and no scoping conditions. The endpoint policy is the only network-layer filter on what callers reach the domain through the VPC endpoint; with a wildcard principal, any IAM identity in the consumer VPC's account can invoke the domain via the PrivateLink path. Often default state — the endpoint policy is auto-created open and never tightened.
 
@@ -1589,7 +1589,7 @@ OpenSearch domain accessed via AWS PrivateLink / Interface VPC Endpoint has an e
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.20; nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.20; nist_800_53_r5: AC-3; owasp_subtractive: S03; pci_dss_v4.0: 1.3.1; soc2: CC6.1; subtractive_tier: deletion;
 
 OpenSearch domains must not have public endpoints accessible from the internet. A publicly accessible domain allows anyone to query, index, or enumerate data without network-level restrictions. The Darkbeam breach (2023) exposed 3.8 billion records from an Elasticsearch instance left unprotected on the public internet. Domains must be deployed within a VPC.
 

@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.DIRECTORYSERVICE.ENABLED.001
+name: Directory Service Not Using Enterprise Edition
+description: >
+  AWS Managed Microsoft AD directory is not using the Enterprise
+  edition. For production hybrid AD environments, the Enterprise
+  edition provides higher availability, more domain controllers,
+  and trust relationship support required by the SRA shared
+  services account pattern.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02"]
+scope_tags:
+  - aws
+  - directoryservice
+taxonomy:
+  - account-governance
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_directory_service]
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: governance
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    AWS Managed Microsoft AD directory is not using Enterprise
+    edition.
+  action: >
+    For production workloads, create a new Enterprise edition
+    directory: aws ds create-microsoft-ad --name corp.example.com
+    --edition Enterprise.
+  example: |
+    {
+      "directory": {
+        "kind": "managed_ad",
+        "type": "MicrosoftAD",
+        "edition": "Enterprise"
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.directory.kind
+      op: eq
+      value: managed_ad
+    - field: properties.directory.type
+      op: eq
+      value: MicrosoftAD
+    - field: properties.directory.edition
+      op: ne
+      value: Enterprise
+tests:
+  - name: "Standard edition fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "d-123456abcd"
+      asset_type: aws_directory_service
+      vendor: aws
+      properties:
+        directory:
+          kind: managed_ad
+          type: MicrosoftAD
+          edition: Standard
+  - name: "Enterprise edition passes"
+    verdict: PASS
+    asset:
+      asset_id: "d-123456abcd"
+      asset_type: aws_directory_service
+      vendor: aws
+      properties:
+        directory:
+          kind: managed_ad
+          type: MicrosoftAD
+          edition: Enterprise

@@ -511,7 +511,7 @@ NLB is configured as a VPC endpoint service (PrivateLink) but the endpoint servi
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, SC-7; pci_dss_v4.0: 11.5.1; soc2: CC6.1, CC8.1;
+- **Compliance:** fedramp_moderate: CM-2; iso_27001_2022: A.5.16, A.8.32; nist_800_53_r5: CM-2, SC-7; owasp_subtractive: S05; pci_dss_v4.0: 11.5.1; soc2: CC6.1, CC8.1; subtractive_tier: deletion;
 
 Multiple services from different teams or applications share the same ALB via listener rules. A single ALB-level change — TLS policy downgrade, WAF removal, security-group modification — affects every service behind it. The blast radius spans multiple service owners. Shared ALBs are sometimes intentional (cost optimization) but the increased blast radius warrants explicit acknowledgement. Heuristic threshold: more than 5 distinct services on one ALB.
 

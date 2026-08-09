@@ -42,7 +42,7 @@ ElastiCache Redis replication groups must have automatic backups enabled with a 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3, SC-7; soc2: CC6.1, CC6.6;
+- **Compliance:** nist_800_53_r5: AC-3, SC-7; owasp_subtractive: S03; soc2: CC6.1, CC6.6; subtractive_tier: deletion;
 
 ElastiCache cluster or replication group is configured as publicly accessible. ElastiCache Redis and Memcached clusters should be VPC-internal only. A publicly accessible cluster exposes cached data (session tokens, API responses, user data) to the internet. Even with AUTH enabled, public network exposure increases the attack surface — brute-force attacks, protocol vulnerabilities, and credential stuffing all become possible. Scott Piper's aws_exposable_resources notes ElastiCache as a network-exposable resource type.
 

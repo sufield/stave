@@ -523,7 +523,7 @@ DynamoDB table resource policy grants actions to principals in external AWS acco
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S08; soc2: CC6.1; subtractive_tier: deletion;
 
 DynamoDB table resource policies (added November 2023) must not grant access to Principal "*" or unauthenticated principals without restricting via aws:SourceArn, aws:SourceAccount, or aws:PrincipalOrgID conditions. Resource policies on DynamoDB tables enable cross-account access without IAM role assumption — the same confused-deputy surface that exists on S3 buckets, SNS topics, SQS queues, and Lambda functions. CloudFox enumerates DynamoDB tables and checks resource policies for public access. A table with a public resource policy exposes all items to any AWS principal, bypassing the table owner's IAM policies entirely. This is the same risk pattern as CTL.SNS.POLICY.PUBLIC.001 and CTL.SQS.POLICY.PUBLIC.001 applied to the DynamoDB confused-deputy surface.
 

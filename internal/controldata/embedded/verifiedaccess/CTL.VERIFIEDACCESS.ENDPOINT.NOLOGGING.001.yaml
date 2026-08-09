@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDACCESS.ENDPOINT.NOLOGGING.001
+name: Verified Access Logging Not Enabled
+description: >
+  A Verified Access instance does not have access logging enabled.
+  Without logging, access decisions — grants, denials, and trust
+  context — are not recorded, making incident investigation and
+  access pattern analysis impossible.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - verifiedaccess
+taxonomy:
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_verified_access_instance]
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: service
+    multiplier: 3.0
+remediation:
+  description: >
+    Verified Access access logging is not enabled.
+  action: >
+    Enable logging: aws ec2
+    modify-verified-access-instance-logging-configuration
+    --verified-access-instance-id <vai-id>
+    --access-logs Enabled=true,CloudWatchLogs={Enabled=true,LogGroup=<group>}.
+  example: |
+    {
+      "verified_access": {
+        "kind": "instance",
+        "logging": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.verified_access.kind
+      op: eq
+      value: instance
+    - field: properties.verified_access.logging.enabled
+      op: ne
+      value: true
+tests:
+  - name: "logging disabled fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vai-abc123"
+      asset_type: aws_verified_access_instance
+      vendor: aws
+      properties:
+        verified_access:
+          kind: instance
+          logging:
+            enabled: false
+  - name: "logging enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "vai-abc123"
+      asset_type: aws_verified_access_instance
+      vendor: aws
+      properties:
+        verified_access:
+          kind: instance
+          logging:
+            enabled: true

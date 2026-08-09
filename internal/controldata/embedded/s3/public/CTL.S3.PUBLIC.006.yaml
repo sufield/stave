@@ -9,6 +9,8 @@ description: >
   from exposing all object keys.
 compliance:
   ccm_v4: ["DSP-07", "DSP-17"]
+  owasp_subtractive: "S08"
+  subtractive_tier: "deletion"
 domain: exposure
 exposure:
   type: latent_public_list

@@ -22,6 +22,8 @@ compliance:
   pci_dss_v4.0: "7.2.1"
   iso_27001_2022: "A.8.3"
   ccm_v4: ["IAM-02", "IAM-05"]
+  owasp_subtractive: "S02"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - iam

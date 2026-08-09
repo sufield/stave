@@ -27,6 +27,8 @@ compliance:
   soc2: "CC6.1, CC9.2"
   iso_27001_2022: "A.8.3"
   ccm_v4: ["DCS-07", "IAM-16"]
+  owasp_subtractive: "S05"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - iam

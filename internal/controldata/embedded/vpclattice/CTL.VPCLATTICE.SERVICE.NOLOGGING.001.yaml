@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.VPCLATTICE.SERVICE.NOLOGGING.001
+name: VPC Lattice Service Access Logging Not Enabled
+description: >
+  A VPC Lattice service does not have access logging enabled.
+  Without logging, service-to-service traffic patterns, failed
+  authentication attempts, and anomalous access are not recorded.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2, AU-3"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-03"]
+scope_tags:
+  - aws
+  - vpclattice
+taxonomy:
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_vpc_lattice_service]
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: service
+    multiplier: 2.0
+remediation:
+  description: >
+    VPC Lattice service access logging is not enabled.
+  action: >
+    Create an access log subscription: aws vpc-lattice
+    create-access-log-subscription --resource-identifier <service-id>
+    --destination-arn <s3-or-cloudwatch-arn>.
+  example: |
+    {
+      "lattice": {
+        "kind": "service",
+        "service": {
+          "logging": {
+            "enabled": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.lattice.kind
+      op: eq
+      value: service
+    - field: properties.lattice.service.logging.enabled
+      op: ne
+      value: true
+tests:
+  - name: "no logging fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "svc-abc123"
+      asset_type: aws_vpc_lattice_service
+      vendor: aws
+      properties:
+        lattice:
+          kind: service
+          service:
+            logging:
+              enabled: false
+  - name: "logging enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "svc-abc123"
+      asset_type: aws_vpc_lattice_service
+      vendor: aws
+      properties:
+        lattice:
+          kind: service
+          service:
+            logging:
+              enabled: true

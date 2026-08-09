@@ -21,6 +21,8 @@ compliance:
   fedramp_moderate: "CM-2"
   iso_27001_2022: "A.5.16, A.8.32"
   ccm_v4: ["IVS-04"]
+  owasp_subtractive: "S05"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - elb

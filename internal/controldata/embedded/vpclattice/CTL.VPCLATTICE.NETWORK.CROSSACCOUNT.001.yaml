@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.VPCLATTICE.NETWORK.CROSSACCOUNT.001
+name: VPC Lattice Service Network Has Cross-Account Associations
+description: >
+  A VPC Lattice service network has VPC associations from accounts
+  outside the organization. Cross-account service network
+  associations extend the trust boundary to external accounts,
+  creating lateral movement paths between organizations.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, AC-4"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-09"]
+scope_tags:
+  - aws
+  - vpclattice
+taxonomy:
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_vpc_lattice_service_network]
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: exposure
+    scope: organization
+    multiplier: 3.0
+remediation:
+  description: >
+    VPC Lattice service network has cross-account VPC associations
+    from outside the organization.
+  action: >
+    Review and remove external VPC associations: aws vpc-lattice
+    list-service-network-vpc-associations --service-network-identifier
+    <network-id>. Delete associations from untrusted accounts.
+  example: |
+    {
+      "lattice": {
+        "kind": "service_network",
+        "network": {
+          "has_external_associations": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.lattice.kind
+      op: eq
+      value: service_network
+    - field: properties.lattice.network.has_external_associations
+      op: eq
+      value: true
+tests:
+  - name: "external associations fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "sn-abc123"
+      asset_type: aws_vpc_lattice_service_network
+      vendor: aws
+      properties:
+        lattice:
+          kind: service_network
+          network:
+            has_external_associations: true
+  - name: "no external associations passes"
+    verdict: PASS
+    asset:
+      asset_id: "sn-abc123"
+      asset_type: aws_vpc_lattice_service_network
+      vendor: aws
+      properties:
+        lattice:
+          kind: service_network
+          network:
+            has_external_associations: false

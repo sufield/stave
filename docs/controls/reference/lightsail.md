@@ -72,7 +72,7 @@ Amazon Lightsail instance does not have deletion protection enabled. Without del
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S01; soc2: CC6.1; subtractive_tier: deletion;
 
 Lightsail instance allows IMDSv1 access. IMDSv1 is vulnerable to SSRF attacks that can steal instance credentials from the metadata endpoint.
 

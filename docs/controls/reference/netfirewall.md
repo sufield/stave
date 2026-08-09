@@ -57,7 +57,7 @@ Network Firewalls must enable deletion protection to prevent accidental or malic
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** network
-- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_subtractive: S06; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 When Network Firewall uses domain-based filtering, all DNS resolution paths must route through the firewall. If instances can resolve via external DNS servers (e.g., 8.8.8.8), the firewall's domain rules don't apply. The VPC must either use Route 53 Resolver DNS Firewall or restrict outbound UDP/53 to only AWS-provided DNS. Technique: hackingthe.cloud Network Firewall egress filtering bypass.
 
@@ -117,7 +117,7 @@ Network Firewalls must be deployed with subnet mappings in multiple Availability
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_subtractive: S06; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Network Firewall policies must have at least one stateful or stateless rule group associated. An empty policy means the firewall sits in the network path without evaluating any rules — all traffic is handled by the default action alone.
 
@@ -132,7 +132,7 @@ Network Firewall policies must have at least one stateful or stateless rule grou
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; owasp_subtractive: S06; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 AWS Network Firewall is deployed but no route tables direct traffic through the firewall endpoints. The firewall appears active, its policy and rule groups are configured, and logs may show zero events — but no traffic is actually being inspected. The firewall sits in the VPC as an unreferenced endpoint while packets flow around it via route tables that bypass it. This is the network security equivalent of a smoke detector that is installed but not connected to power. Dashboards show the detector; nothing it is supposed to watch actually reaches it.
 
@@ -162,7 +162,7 @@ Network Firewall rule groups should encrypt their configuration at rest with a c
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; owasp_subtractive: S06; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 A Network Firewall rule group contains a rule that allows all traffic (action `pass`, protocol `any`, source `any`, destination `any`). The rule group exists and is associated with the policy, but a catch-all pass rule short-circuits inspection for every packet that reaches it. This is the NF equivalent of a WAF that runs in count-only mode with a bypass rule — the control exists, evaluates packets, and does nothing with them. Distinct from `CTL.NETFIREWALL.DEFAULT.FULL.001` (which checks the stateless default action); this control checks for explicit allow-any rules inside rule groups.
 

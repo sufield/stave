@@ -10,6 +10,8 @@ severity: low
 compliance:
   nist_800_53_r5: "AC-3"
   soc2: "CC6.1"
+  owasp_subtractive: "S01"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - lightsail

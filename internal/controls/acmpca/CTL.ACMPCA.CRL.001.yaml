@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.ACMPCA.CRL.001
+name: Private CA Has No CRL Distribution Configured
+description: >
+  An ACM Private CA does not have a Certificate Revocation List
+  (CRL) distribution point configured. Without CRL or OCSP,
+  revoked certificates cannot be validated by relying parties,
+  meaning compromised certificates remain trusted until expiry.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - acmpca
+taxonomy:
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_acmpca_certificate_authority]
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: compliance
+    scope: service
+    multiplier: 2.0
+remediation:
+  description: >
+    Private CA has no CRL distribution configured.
+  action: >
+    Configure CRL distribution: aws acm-pca
+    update-certificate-authority --certificate-authority-arn <arn>
+    --revocation-configuration CrlConfiguration={Enabled=true,
+    S3BucketName=<bucket>}.
+  example: |
+    {
+      "security": {
+        "kind": "certificate_authority",
+        "acmpca": {
+          "crl_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security.kind
+      op: eq
+      value: certificate_authority
+    - field: properties.security.acmpca.crl_configured
+      op: ne
+      value: true
+tests:
+  - name: "no CRL fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/abc123"
+      asset_type: aws_acmpca_certificate_authority
+      vendor: aws
+      properties:
+        security:
+          kind: certificate_authority
+          acmpca:
+            crl_configured: false
+  - name: "CRL configured passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/abc123"
+      asset_type: aws_acmpca_certificate_authority
+      vendor: aws
+      properties:
+        security:
+          kind: certificate_authority
+          acmpca:
+            crl_configured: true

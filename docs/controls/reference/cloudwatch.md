@@ -650,7 +650,7 @@ A CloudWatch metric filter and alarm must monitor iam policy changes. IAM policy
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AU-12; owasp_nhi: NHI8; soc2: CC7.1;
+- **Compliance:** nist_800_53_r5: AU-12; owasp_nhi: NHI8; owasp_subtractive: S01; soc2: CC7.1; subtractive_tier: deletion;
 
 CloudWatch alarms must detect changes to EC2 instance metadata options (ModifyInstanceMetadataOptions). Without monitoring, an attacker can downgrade IMDSv2 to IMDSv1 silently.
 

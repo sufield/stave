@@ -13,6 +13,8 @@ compliance:
   nist_800_53_r5: "SC-8"
   soc2: "CC6.6"
   ccm_v4: ["IVS-03"]
+  owasp_subtractive: "S10"
+  subtractive_tier: "deletion+constraint"
 scope_tags:
   - aws
   - vpc

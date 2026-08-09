@@ -6,6 +6,8 @@ description: S3 buckets must not have latent public read exposure where a public
   expose the bucket.
 compliance:
   ccm_v4: ["DSP-07", "DSP-17"]
+  owasp_subtractive: "S08"
+  subtractive_tier: "deletion"
 domain: storage
 exposure:
   type: latent_public_read

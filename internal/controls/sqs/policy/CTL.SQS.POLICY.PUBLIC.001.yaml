@@ -17,6 +17,8 @@ compliance:
   pci_dss_v4.0: "7.2.1"
   aws_security_hub: "SQS.1"
   ccm_v4: ["DSP-17", "IVS-03"]
+  owasp_subtractive: "S02"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - sqs

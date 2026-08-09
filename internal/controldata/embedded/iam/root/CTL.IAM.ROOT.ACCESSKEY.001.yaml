@@ -18,6 +18,8 @@ compliance:
   nist_800_53_r5: "IA-2"
   fedramp_moderate: "IA-2"
   ccm_v4: ["IAM-09", "IAM-14"]
+  owasp_subtractive: "S07"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - iam

@@ -20,6 +20,8 @@ compliance:
   soc2: "CC6.6"
   hipaa: "164.312(e)(1)"
   ccm_v4: ["IVS-03", "IVS-04"]
+  owasp_subtractive: "S06"
+  subtractive_tier: "deletion+constraint"
 scope_tags:
   - aws
   - networkfirewall

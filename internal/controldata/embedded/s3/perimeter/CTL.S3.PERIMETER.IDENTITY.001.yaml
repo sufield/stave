@@ -22,6 +22,8 @@ compliance:
   hipaa: "164.312(a)(1)"
   soc2: "CC6.1"
   ccm_v4: ["IAM-05", "IAM-16"]
+  owasp_subtractive: "S02"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - s3

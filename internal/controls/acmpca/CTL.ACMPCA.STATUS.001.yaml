@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.ACMPCA.STATUS.001
+name: Private CA Not in Active State
+description: >
+  An ACM Private CA is not in ACTIVE state. A CA in DISABLED,
+  PENDING_CERTIFICATE, DELETED, EXPIRED, or FAILED state cannot
+  issue certificates, breaking downstream services that depend on
+  it for TLS or mutual authentication.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-04"]
+scope_tags:
+  - aws
+  - acmpca
+taxonomy:
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_acmpca_certificate_authority]
+params:
+  attack_stage: impact
+  blast_radius:
+    type: availability
+    scope: service
+    multiplier: 2.0
+remediation:
+  description: >
+    Private CA is not in ACTIVE state.
+  action: >
+    Check the CA status and resolve: aws acm-pca
+    describe-certificate-authority --certificate-authority-arn <arn>.
+    If PENDING_CERTIFICATE, import the signed CA certificate.
+    If DISABLED, re-enable with update-certificate-authority.
+  example: |
+    {
+      "security": {
+        "kind": "certificate_authority",
+        "acmpca": {
+          "status": "ACTIVE"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security.kind
+      op: eq
+      value: certificate_authority
+    - field: properties.security.acmpca.status
+      op: ne
+      value: ACTIVE
+tests:
+  - name: "disabled CA fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/abc123"
+      asset_type: aws_acmpca_certificate_authority
+      vendor: aws
+      properties:
+        security:
+          kind: certificate_authority
+          acmpca:
+            status: DISABLED
+  - name: "active CA passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/abc123"
+      asset_type: aws_acmpca_certificate_authority
+      vendor: aws
+      properties:
+        security:
+          kind: certificate_authority
+          acmpca:
+            status: ACTIVE

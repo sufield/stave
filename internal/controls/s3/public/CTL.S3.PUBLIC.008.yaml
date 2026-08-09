@@ -11,6 +11,8 @@ description: >
   list grants; the identity-policy path is its own finding.
 compliance:
   ccm_v4: ["DSP-07", "DSP-17"]
+  owasp_subtractive: "S08"
+  subtractive_tier: "deletion"
 domain: exposure
 exposure:
   type: list_via_identity

@@ -53,8 +53,16 @@
           "suspended_ou_has_deny_all_scp": true,
           "delegated_admin": {
             "access_analyzer_configured": true,
+            "auditmanager_configured": true,
+            "cloudtrail_configured": true,
+            "config_configured": true,
+            "fms_configured": true,
             "guardduty_configured": true,
-            "securityhub_configured": true
+            "inspector_configured": true,
+            "macie_configured": true,
+            "securityhub_configured": true,
+            "securitylake_configured": true,
+            "sso_configured": true
           }
         },
         "guardduty": {
@@ -97,8 +105,16 @@
           },
           "delegated_admin": {
             "access_analyzer_configured": true,
+            "auditmanager_configured": true,
+            "cloudtrail_configured": true,
+            "config_configured": true,
+            "fms_configured": true,
             "guardduty_configured": true,
-            "securityhub_configured": true
+            "inspector_configured": true,
+            "macie_configured": true,
+            "securityhub_configured": true,
+            "securitylake_configured": true,
+            "sso_configured": true
           }
         },
         "guardduty": {
@@ -142,8 +158,16 @@
           },
           "delegated_admin": {
             "access_analyzer_configured": true,
+            "auditmanager_configured": true,
+            "cloudtrail_configured": true,
+            "config_configured": true,
+            "fms_configured": true,
             "guardduty_configured": true,
-            "securityhub_configured": true
+            "inspector_configured": true,
+            "macie_configured": true,
+            "securityhub_configured": true,
+            "securitylake_configured": true,
+            "sso_configured": true
           }
         },
         "guardduty": {
@@ -170,8 +194,16 @@
           },
           "delegated_admin": {
             "access_analyzer_configured": true,
+            "auditmanager_configured": true,
+            "cloudtrail_configured": true,
+            "config_configured": true,
+            "fms_configured": true,
             "guardduty_configured": true,
-            "securityhub_configured": true
+            "inspector_configured": true,
+            "macie_configured": true,
+            "securityhub_configured": true,
+            "securitylake_configured": true,
+            "sso_configured": true
           }
         },
         "guardduty": {
@@ -193,8 +225,16 @@
           },
           "delegated_admin": {
             "access_analyzer_configured": true,
+            "auditmanager_configured": true,
+            "cloudtrail_configured": true,
+            "config_configured": true,
+            "fms_configured": true,
             "guardduty_configured": true,
-            "securityhub_configured": true
+            "inspector_configured": true,
+            "macie_configured": true,
+            "securityhub_configured": true,
+            "securitylake_configured": true,
+            "sso_configured": true
           }
         },
         "guardduty": {
@@ -212,8 +252,16 @@
         "organization": {
           "delegated_admin": {
             "access_analyzer_configured": true,
+            "auditmanager_configured": true,
+            "cloudtrail_configured": true,
+            "config_configured": true,
+            "fms_configured": true,
             "guardduty_configured": true,
-            "securityhub_configured": true
+            "inspector_configured": true,
+            "macie_configured": true,
+            "securityhub_configured": true,
+            "securitylake_configured": true,
+            "sso_configured": true
           }
         },
         "identity": {
@@ -303,8 +351,16 @@
         "organization": {
           "delegated_admin": {
             "access_analyzer_configured": true,
+            "auditmanager_configured": true,
+            "cloudtrail_configured": true,
+            "config_configured": true,
+            "fms_configured": true,
             "guardduty_configured": true,
-            "securityhub_configured": true
+            "inspector_configured": true,
+            "macie_configured": true,
+            "securityhub_configured": true,
+            "securitylake_configured": true,
+            "sso_configured": true
           }
         },
         "guardduty": {

@@ -18,6 +18,8 @@ compliance:
   soc2: "CC6.1"
   mitre_attack: "T1552.005"
   ccm_v4: ["IAM-04", "IVS-03"]
+  owasp_subtractive: "S01"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - ec2

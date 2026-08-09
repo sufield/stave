@@ -19,6 +19,8 @@ compliance:
   pci_dss_v4.0: "1.2.1"
   soc2: "CC6.6"
   ccm_v4: ["IVS-03", "IVS-09"]
+  owasp_subtractive: "S03"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - vpc

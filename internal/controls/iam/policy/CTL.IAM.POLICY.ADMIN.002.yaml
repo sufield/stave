@@ -23,6 +23,8 @@ compliance:
   iso_27001_2022: "A.8.3"
   nist_csf_2.0: "PR.AA"
   ccm_v4: ["IAM-05", "IAM-16"]
+  owasp_subtractive: "S02"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - iam

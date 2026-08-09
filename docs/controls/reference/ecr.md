@@ -101,7 +101,7 @@ ECR repository policies must not grant ecr:GetDownloadUrlForLayer, ecr:BatchGetI
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; owasp_subtractive: S08; soc2: CC6.1; subtractive_tier: deletion;
 
 ECR repositories must not be publicly accessible. A public ECR repository allows anyone to pull container images, potentially exposing proprietary code, embedded credentials, internal architecture details, and software supply chain artifacts. Public repositories should use ECR Public Gallery only for intentionally open-source images.
 

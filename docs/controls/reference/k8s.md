@@ -537,7 +537,7 @@ kubectl exec (pods/exec) allows executing commands in running pods. Granting thi
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** mitre_attack: TA0006; nist_800_53_r5: AC-4;
+- **Compliance:** mitre_attack: TA0006; nist_800_53_r5: AC-4; owasp_subtractive: S01; subtractive_tier: deletion;
 
 Kubernetes clusters must have a NetworkPolicy blocking pod egress to the cloud instance metadata service at 169.254.169.254. A pod with hostNetwork=true and CAP_NET_RAW can intercept IMDS traffic and inject crafted responses containing attacker-controlled SSH keys, gaining root access to the node. A NetworkPolicy blocking 169.254.169.254/32 egress prevents this escalation even when pod security controls fail.
 

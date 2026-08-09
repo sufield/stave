@@ -25,6 +25,8 @@ compliance:
   fedramp_moderate: "AC-3"
   iso_27001_2022: "A.8.3"
   ccm_v4: ["IAM-05", "IAM-16"]
+  owasp_subtractive: "S05"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - iam

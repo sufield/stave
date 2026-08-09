@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDACCESS.TRUSTPROVIDER.NONE.001
+name: Verified Access Instance Has No Trust Provider
+description: >
+  A Verified Access instance has no trust provider attached. Without
+  a trust provider, Verified Access endpoints have no identity
+  verification — any network-reachable client can access the
+  application. This defeats the purpose of zero-trust access.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02", "IVS-06"]
+scope_tags:
+  - aws
+  - verifiedaccess
+taxonomy:
+  - trust-boundary
+  - authentication
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_verified_access_instance]
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: exposure
+    scope: service
+    multiplier: 5.0
+remediation:
+  description: >
+    Verified Access instance has no trust provider. Endpoints
+    have no identity verification.
+  action: >
+    Attach a trust provider: aws ec2
+    attach-verified-access-trust-provider
+    --verified-access-instance-id <vai-id>
+    --verified-access-trust-provider-id <vatp-id>.
+  example: |
+    {
+      "verified_access": {
+        "kind": "instance",
+        "trust_providers": ["vatp-abc123"]
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.verified_access.kind
+      op: eq
+      value: instance
+    - any:
+        - field: properties.verified_access.trust_providers
+          op: missing
+        - field: properties.verified_access.trust_providers
+          op: list_empty
+tests:
+  - name: "no trust provider fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vai-abc123"
+      asset_type: aws_verified_access_instance
+      vendor: aws
+      properties:
+        verified_access:
+          kind: instance
+          trust_providers: []
+  - name: "trust provider attached passes"
+    verdict: PASS
+    asset:
+      asset_id: "vai-abc123"
+      asset_type: aws_verified_access_instance
+      vendor: aws
+      properties:
+        verified_access:
+          kind: instance
+          trust_providers: ["vatp-abc123"]

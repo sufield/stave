@@ -299,7 +299,7 @@ ECS task definitions must reference container images from the organization's tru
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.6; nist_800_53_r5: CM-6, AC-6; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.6; nist_800_53_r5: CM-6, AC-6; owasp_subtractive: S01; pci_dss_v4.0: 2.2.1; soc2: CC6.6; subtractive_tier: deletion;
 
 An ECS task with EC2 launch type runs on a container instance whose host network is reachable, so the task container can query the host instance metadata service at 169.254.169.254 and retrieve the EC2 container-instance role credentials. That instance role is typically more privileged than the task role. This is distinct from the ECS task metadata endpoint (169.254.170.2, covered by CTL.ECS.METADATA.CREDENTIAL.001): here the task reaches the HOST instance role, the same escalation Doyensec documented for AWS Batch. Fargate tasks have no host IMDS and are out of scope.
 The collector resolves container.reaches_host_imds with CTL.EC2.IMDSV2.002 logic (host/bridge networking + hop limit > 1, fail-loud on unknown).

@@ -26,6 +26,8 @@ compliance:
   fedramp_moderate: "CM-7"
   soc2: "CC6.1"
   ccm_v4: ["IVS-03"]
+  owasp_subtractive: "S01"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - ec2

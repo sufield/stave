@@ -27,7 +27,7 @@ EMR clusters must have a security configuration enabling encryption at rest (EMR
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S01; pci_dss_v4.0: 7.2; soc2: CC6.1; subtractive_tier: deletion;
 
 EMR cluster EC2 instances allow IMDSv1 access to the instance metadata service. IMDSv1 is vulnerable to SSRF attacks — a compromised application on an EMR node can steal IAM credentials from the metadata endpoint via a simple HTTP GET. IMDSv2 requires a session token obtained via PUT, which SSRF payloads cannot forge. EMR clusters process sensitive data and typically have broad IAM permissions for S3, DynamoDB, and KMS access.
 

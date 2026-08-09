@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDACCESS.POLICY.PERMISSIVE.001
+name: Verified Access Group Policy Is Overly Permissive
+description: >
+  A Verified Access group has a policy with no conditions. An
+  unconditional allow policy grants access to all authenticated
+  users regardless of device posture, IP, or identity attributes,
+  negating the zero-trust intent of Verified Access.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - verifiedaccess
+taxonomy:
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_verified_access_group]
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: exposure
+    scope: service
+    multiplier: 3.0
+remediation:
+  description: >
+    Verified Access group policy has no conditions — all
+    authenticated users are granted access.
+  action: >
+    Add trust context conditions to the group policy: aws ec2
+    modify-verified-access-group-policy --verified-access-group-id
+    <vag-id> --policy-document <policy-with-conditions>.
+  example: |
+    {
+      "verified_access": {
+        "kind": "group",
+        "policy": {
+          "has_conditions": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.verified_access.kind
+      op: eq
+      value: group
+    - field: properties.verified_access.policy.has_conditions
+      op: ne
+      value: true
+tests:
+  - name: "no conditions fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vag-abc123"
+      asset_type: aws_verified_access_group
+      vendor: aws
+      properties:
+        verified_access:
+          kind: group
+          policy:
+            has_conditions: false
+  - name: "conditions present passes"
+    verdict: PASS
+    asset:
+      asset_id: "vag-abc123"
+      asset_type: aws_verified_access_group
+      vendor: aws
+      properties:
+        verified_access:
+          kind: group
+          policy:
+            has_conditions: true

@@ -357,7 +357,7 @@ AgentCore gateway does not have a WAF web ACL (webAclArn is absent). Without WAF
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3, SC-23; owasp_nhi: NHI5; soc2: CC6.1;
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-3, SC-23; owasp_nhi: NHI5; owasp_subtractive: S01; soc2: CC6.1; subtractive_tier: deletion;
 
 AgentCore runtime metadataConfiguration.requireMMDSV2 is false — the runtime accepts IMDSv1 requests. IMDSv1 uses a simple GET without a session token, making it exploitable via SSRF attacks: any code running in the agent that can issue HTTP requests to 169.254.169.254 can steal the runtime's IAM credentials. IMDSv2 requires a PUT-based token exchange that SSRF payloads typically cannot perform. This mirrors CTL.EC2.IMDSV2.001 applied to the AgentCore execution environment.
 

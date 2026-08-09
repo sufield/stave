@@ -1842,3 +1842,140 @@ contracts:
       files, AS2 payloads, connector temporary files).
     consumers:
       - CTL.TRANSFER.ENCRYPT.REST.001
+
+  # ─── Verified Access (ec2 namespace) ─────────────────────────
+
+  - field: verified_access.trust_providers
+    type: list
+    status: planned
+    postcondition: >
+      List of trust provider IDs attached to the Verified Access
+      instance. Empty list or absent means no trust provider is
+      configured. Sourced from ec2:DescribeVerifiedAccessInstances
+      VerifiedAccessTrustProviders field.
+    consumers:
+      - CTL.VERIFIEDACCESS.TRUSTPROVIDER.NONE.001
+
+  - field: verified_access.logging.enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Verified Access instance has access logging
+      enabled. Sourced from
+      ec2:DescribeVerifiedAccessInstanceLoggingConfigurations.
+    consumers:
+      - CTL.VERIFIEDACCESS.ENDPOINT.NOLOGGING.001
+
+  - field: verified_access.policy.has_conditions
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Verified Access group policy contains at least
+      one condition clause beyond a blanket allow. Sourced from
+      ec2:GetVerifiedAccessGroupPolicy.
+    consumers:
+      - CTL.VERIFIEDACCESS.POLICY.PERMISSIVE.001
+
+  - field: verified_access.encryption.enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Verified Access endpoint uses encrypted
+      connections. Sourced from
+      ec2:DescribeVerifiedAccessEndpoints.
+    consumers:
+      - CTL.VERIFIEDACCESS.ENDPOINT.NOENCRYPT.001
+
+  # ─── VPC Lattice ─────────────────────────────────────────────
+
+  - field: lattice.service.auth_policy_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the VPC Lattice service has an auth policy
+      configured. Sourced from vpc-lattice:GetAuthPolicy per
+      service.
+    consumers:
+      - CTL.VPCLATTICE.SERVICE.NOAUTH.001
+
+  - field: lattice.service.logging.enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the VPC Lattice service has at least one access
+      log subscription. Sourced from
+      vpc-lattice:ListAccessLogSubscriptions.
+    consumers:
+      - CTL.VPCLATTICE.SERVICE.NOLOGGING.001
+
+  - field: lattice.network.auth_policy_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the VPC Lattice service network has an auth policy.
+      Sourced from vpc-lattice:GetAuthPolicy per network.
+    consumers:
+      - CTL.VPCLATTICE.NETWORK.NOAUTH.001
+
+  - field: lattice.network.has_external_associations
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the service network has VPC associations from
+      accounts outside the organization. Sourced from
+      vpc-lattice:ListServiceNetworkVpcAssociations cross-
+      referenced with organization account list.
+    consumers:
+      - CTL.VPCLATTICE.NETWORK.CROSSACCOUNT.001
+
+  - field: lattice.service.encryption.enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the VPC Lattice service uses HTTPS listeners.
+      Sourced from vpc-lattice:ListListeners.
+    consumers:
+      - CTL.VPCLATTICE.SERVICE.ENCRYPT.001
+
+  # ─── Security Incident Response ──────────────────────────────
+
+  - field: security.incident_response.membership_active
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the account has an active Security Incident
+      Response membership. Sourced from
+      security-ir:ListMemberships / GetMembership.
+    consumers:
+      - CTL.SECURITYIR.ENABLED.001
+
+  - field: security.incident_response.notification_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if Security Incident Response notification routing
+      is configured. Sourced from security-ir:GetMembership
+      notification settings.
+    consumers:
+      - CTL.SECURITYIR.NOTIFICATION.001
+
+  # ─── Directory Service ───────────────────────────────────────
+
+  - field: directory.type
+    type: string
+    status: planned
+    postcondition: >
+      The directory type (SimpleAD, ADConnector, MicrosoftAD).
+      Sourced from ds:DescribeDirectories.
+    consumers:
+      - CTL.DIRECTORYSERVICE.ENABLED.001
+
+  - field: directory.logging.cloudwatch_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Directory Service directory has log forwarding
+      to CloudWatch configured. Sourced from
+      ds:ListLogSubscriptions.
+    consumers:
+      - CTL.DIRECTORYSERVICE.LOGGING.001

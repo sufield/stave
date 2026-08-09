@@ -1,0 +1,72 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDACCESS.ENDPOINT.NOENCRYPT.001
+name: Verified Access Endpoint Not Encrypted
+description: >
+  A Verified Access endpoint does not use encryption for the
+  connection to the application. Unencrypted endpoints expose
+  application traffic to interception on the internal network.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - verifiedaccess
+taxonomy:
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_verified_access_endpoint]
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 2.0
+remediation:
+  description: >
+    Verified Access endpoint does not use encryption.
+  action: >
+    Ensure the endpoint uses HTTPS for the application connection.
+  example: |
+    {
+      "verified_access": {
+        "kind": "endpoint",
+        "encryption": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.verified_access.kind
+      op: eq
+      value: endpoint
+    - field: properties.verified_access.encryption.enabled
+      op: ne
+      value: true
+tests:
+  - name: "unencrypted endpoint fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vae-abc123"
+      asset_type: aws_verified_access_endpoint
+      vendor: aws
+      properties:
+        verified_access:
+          kind: endpoint
+          encryption:
+            enabled: false
+  - name: "encrypted endpoint passes"
+    verdict: PASS
+    asset:
+      asset_id: "vae-abc123"
+      asset_type: aws_verified_access_endpoint
+      vendor: aws
+      properties:
+        verified_access:
+          kind: endpoint
+          encryption:
+            enabled: true

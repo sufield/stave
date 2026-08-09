@@ -1,0 +1,70 @@
+dsl_version: ctrl.v1
+id: CTL.VERIFIEDACCESS.FIPS.001
+name: Verified Access Instance Not Using FIPS Endpoints
+description: >
+  A Verified Access instance is not configured to use FIPS
+  endpoints. For government and regulated workloads, FIPS-validated
+  cryptographic modules are required for data in transit.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "SC-13"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-01"]
+scope_tags:
+  - aws
+  - verifiedaccess
+taxonomy:
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_verified_access_instance]
+params:
+  attack_stage: collection
+  blast_radius:
+    type: compliance
+    scope: service
+    multiplier: 1.0
+remediation:
+  description: >
+    Verified Access instance is not using FIPS endpoints.
+  action: >
+    Enable FIPS on the Verified Access instance: aws ec2
+    modify-verified-access-instance --verified-access-instance-id
+    <vai-id> --fips-enabled.
+  example: |
+    {
+      "verified_access": {
+        "kind": "instance",
+        "fips_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.verified_access.kind
+      op: eq
+      value: instance
+    - field: properties.verified_access.fips_enabled
+      op: ne
+      value: true
+tests:
+  - name: "FIPS not enabled fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vai-abc123"
+      asset_type: aws_verified_access_instance
+      vendor: aws
+      properties:
+        verified_access:
+          kind: instance
+          fips_enabled: false
+  - name: "FIPS enabled passes"
+    verdict: PASS
+    asset:
+      asset_id: "vai-abc123"
+      asset_type: aws_verified_access_instance
+      vendor: aws
+      properties:
+        verified_access:
+          kind: instance
+          fips_enabled: true

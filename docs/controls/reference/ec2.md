@@ -12,7 +12,7 @@
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S08; soc2: CC6.1; subtractive_tier: deletion;
 
 AMI block public access must be set to block-new-sharing at the account level. Without it, any IAM principal with ec2:ModifyImageAttribute can make a custom AMI public, exposing the full disk image — including OS configuration, installed software, hard-coded credentials, SSH keys, and application code. The per-AMI control (CTL.EC2.AMI.PUBLIC.001) detects AMIs that are already public; this control prevents the condition from being created. Account-level toggle — same pattern as CTL.EC2.EBS.DEFAULT.001.
 
@@ -147,7 +147,7 @@ Auto Scaling Groups must reference a launch template, not a legacy launch config
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws: 4.9; nist_800_53_r5: SC-7;
+- **Compliance:** cis_aws: 4.9; nist_800_53_r5: SC-7; owasp_subtractive: S04; subtractive_tier: deletion;
 
 EC2 instances must not be deployed in the default VPC. The default VPC has a flat network topology with no segmentation, making lateral movement trivial after a single instance compromise.
 
@@ -687,7 +687,7 @@ EBS volume uses the gp2 type. gp3 is the successor with consistent 3,000 IOPS / 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** network
-- **Compliance:** mitre_attack: T1021.008; nist_800_53_r5: AC-17; soc2: CC6.6;
+- **Compliance:** mitre_attack: T1021.008; nist_800_53_r5: AC-17; owasp_subtractive: S03; soc2: CC6.6; subtractive_tier: deletion;
 
 EC2 Instance Connect Endpoints (EICE) must be configured with security group rules that restrict which subnets and instances can be reached. EICE creates a tunnel from the internet to a private instance without requiring the instance to have a public IP or an open inbound port — it bypasses security groups entirely for the initial connection. MITRE ATT&CK T1021.008 (Remote Services: Direct Cloud VM Connections) documents this as a lateral movement technique: an attacker with ec2-instance-connect:OpenTunnel permission can reach any instance in the EICE's VPC without triggering security group denials. An unrestricted EICE with broad security group rules turns every private instance into a reachable target. The endpoint's security group is the only network-level control — if it allows all traffic, the EICE provides unrestricted private network access.
 
@@ -745,7 +745,7 @@ EC2 instances that access AWS services must use IAM instance profiles (roles) in
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** mitre_attack: T1552.005; nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** mitre_attack: T1552.005; nist_800_53_r5: AC-3; owasp_subtractive: S01; soc2: CC6.1; subtractive_tier: deletion;
 
 The account-level instance metadata default must set HttpTokens to required, enforcing IMDSv2 for all new instances that do not specify their own metadata configuration. Without this default, instances launched via auto-scaling, CloudFormation, or manual console/API calls inherit IMDSv1, which is vulnerable to SSRF-based credential theft. The per-instance control (CTL.EC2.IMDSV2.001) catches instances already running without IMDSv2 — this control prevents new instances from being created in the vulnerable state.
 
@@ -760,7 +760,7 @@ The account-level instance metadata default must set HttpTokens to required, enf
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.6; fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 2.2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 5.6; fedramp_moderate: AC-3; nist_800_53_r5: AC-3; owasp_subtractive: S01; pci_dss_v4.0: 2.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 Instance metadata service hop limit (`HttpPutResponseHopLimit`) is greater than 1. The hop limit is the TTL applied to HTTP responses from the metadata endpoint at 169.254.169.254. With a hop limit of 1, only the instance itself can reach the metadata service — single-hop, direct access. With a hop limit of 2 or more, the metadata response can traverse additional network hops: containers attached via Docker bridge networking, in-process proxies, sidecar containers, NAT-style routing inside the host. Each added hop is a new SSRF surface — a vulnerable application that proxies a metadata request from a containerized client reaches the host's IAM role credentials. AWS sets the default to 1 for new instances; the broader value is a deliberate operator choice that warrants a corresponding awareness of the attack surface it opens. The higher-confidence container-aware check (`CTL.EC2.IMDSV2.002`) fires when containers are detected; this control is the fallback signal when container detection is not available from the observation source.
 
@@ -775,7 +775,7 @@ Instance metadata service hop limit (`HttpPutResponseHopLimit`) is greater than 
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** hygiene
-- **Compliance:** cis_aws_v3.0: 5.6; fedramp_moderate: CM-7; nist_800_53_r5: CM-7; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 5.6; fedramp_moderate: CM-7; nist_800_53_r5: CM-7; owasp_subtractive: S01; soc2: CC6.1; subtractive_tier: deletion;
 
 Instance has the metadata service enabled (`HttpEndpoint: enabled`) but no IAM instance profile attached. The metadata service responds to requests but serves no IAM credentials — there is no role to deliver. IMDS still exposes instance identity information that aids reconnaissance: account ID, instance ID, region, availability zone, instance type, public/private IPs, security group IDs, network interfaces. An attacker who has reached the metadata endpoint can build a profile of the instance's environment without obtaining credentials. If IMDS is not actually needed (no role attached, no application code that calls `GetInstanceIdentityDocument`), it should be disabled entirely with `HttpEndpoint: disabled`. The finding is a hardening recommendation, not a vulnerability — IMDS without a role does not directly leak credentials.
 
@@ -790,7 +790,7 @@ Instance has the metadata service enabled (`HttpEndpoint: enabled`) but no IAM i
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.6; cis_aws_v3.0: 5.6; fedramp_moderate: CM-6; nist_800_53_r5: CM-6; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v1.4.0: 5.6; cis_aws_v3.0: 5.6; fedramp_moderate: CM-6; nist_800_53_r5: CM-6; owasp_subtractive: S01; pci_dss_v4.0: 2.2.1; soc2: CC6.6; subtractive_tier: deletion;
 
 EC2 instances must enforce Instance Metadata Service Version 2 (IMDSv2). IMDSv1 is vulnerable to SSRF attacks that can steal instance credentials from the metadata endpoint.
 
@@ -805,7 +805,7 @@ EC2 instances must enforce Instance Metadata Service Version 2 (IMDSv2). IMDSv1 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.6; cis_aws_v3.0: 5.6; fedramp_moderate: CM-6; nist_800_53_r5: CM-6; pci_dss_v4.0: 2.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v1.4.0: 5.6; cis_aws_v3.0: 5.6; fedramp_moderate: CM-6; nist_800_53_r5: CM-6; owasp_subtractive: S01; pci_dss_v4.0: 2.2.1; soc2: CC6.6; subtractive_tier: deletion;
 
 EC2 instances running containerized workloads must not expose the instance metadata service to containers. IMDSv2's HttpTokens=required requirement is defeated from inside a container because the container can complete the IMDSv2 PUT-for-token handshake just like the host. AWS provides two closures: HttpPutResponseHopLimit=1 (rejects requests from bridge-networked containers, which add a hop) and avoiding host-network containers (which share the host's network namespace and bypass the hop limit entirely). This control fires when IMDSv2 is enforced on the instance (so CTL.EC2.IMDSV2.001 is silent) but the compound is still bypassable: containers are present AND either the hop limit is > 1 with bridge-networked containers, or any container uses host networking. Pentest practice confirms this as the realistic exposure posture for EKS, ECS, and Docker-on-EC2 workloads — basic IMDSv2 enforcement alone is theater on containerized hosts.
 
@@ -1331,7 +1331,7 @@ EC2 instances booted in UEFI mode must enable Secure Boot. Secure Boot creates a
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-17; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-17; owasp_subtractive: S03; soc2: CC6.1; subtractive_tier: deletion;
 
 EC2 Serial Console access must be disabled at the account level unless explicitly needed for emergency debugging. Serial console provides direct TTY access to EC2 instances, bypassing SSH, security groups, NACLs, and all network-layer controls. An attacker with ec2-instance-connect:SendSerialConsoleSSHPublicKey permission and instance-level access can use serial console to interact with the instance OS outside the network path that monitoring tools observe. This gap was discovered through cross-cloud transposition — GCP has CTL.GCP.COMPUTE.SERIALPORT.001 in the Stave catalog but no AWS analog existed despite AWS offering the same capability via EnableSerialConsoleAccess. Account-level toggle — same pattern as CTL.EC2.EBS.DEFAULT.001.
 
@@ -1346,7 +1346,7 @@ EC2 Serial Console access must be disabled at the account level unless explicitl
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** network
-- **Compliance:** aws_security_hub: EC2.2; cis_aws_v3.0: 4.4; nist_800_53_r5: SC-7;
+- **Compliance:** aws_security_hub: EC2.2; cis_aws_v3.0: 4.4; nist_800_53_r5: SC-7; owasp_subtractive: S04; subtractive_tier: deletion;
 
 The default security group in every VPC allows all inbound traffic from other members of the same security group and all outbound traffic. Any EC2 instance launched without an explicit security group uses the default — inheriting this permissive posture. Restricting the default to no rules means accidental use results in a non-functional but safe instance.
 
@@ -1391,7 +1391,7 @@ Security groups with 0.0.0.0/0 inbound rules on ports other than 80/443 expose i
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** network
-- **Compliance:** aws_security_hub: EC2.14; cis_aws_v3.0: 4.1; mitre_attack: TA0001; nist_800_53_r5: SC-7;
+- **Compliance:** aws_security_hub: EC2.14; cis_aws_v3.0: 4.1; mitre_attack: TA0001; nist_800_53_r5: SC-7; owasp_subtractive: S03; subtractive_tier: deletion;
 
 Security groups must not allow unrestricted inbound access on high-risk ports: RDP (3389), Telnet (23), FTP (20/21), VNC (5900), database ports (3306/5432/1433/27017), Redis (6379), and Memcached (11211). Each of these has been the source of high-profile breaches when accidentally exposed to 0.0.0.0/0.
 
@@ -1466,7 +1466,7 @@ EBS snapshots that were created as the backing store for an AMI must be deleted 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S08; soc2: CC6.1; subtractive_tier: deletion;
 
 EBS snapshot block public access must be set to block-all-sharing at the account level. Without it, any IAM principal with ec2:ModifySnapshotAttribute can make a snapshot public, exposing the full block-level contents of an EBS volume — databases, credentials, application code, and customer data. The account-level toggle is a preventive control that blocks the entire class of public-snapshot exposure regardless of individual IAM permissions. Unlike per-snapshot auditing (CTL.EC2.SNAPSHOT.PUBLIC.001), which detects the symptom after the fact, this control prevents the condition from being created.
 

@@ -87,7 +87,7 @@ The Control Tower landing zone has detected configuration drift from its baselin
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** nist_800_53_r5: AC-3, CM-2; scs_c02: 1.4; soc2: CC6.1, CC8.1;
+- **Compliance:** nist_800_53_r5: AC-3, CM-2; owasp_subtractive: S09; scs_c02: 1.4; soc2: CC6.1, CC8.1; subtractive_tier: constraint;
 
 AWS Control Tower is not enabled. Control Tower provides a governed landing zone with preventive and detective guardrails across member accounts. Without it, account provisioning and baseline security configuration must be managed manually, leading to configuration drift and inconsistent security posture across the organization.
 
@@ -147,7 +147,7 @@ No delegated administrator account is registered for Security Hub. Without deleg
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S08; soc2: CC6.1; subtractive_tier: deletion;
 
 No declarative policy blocks public AMI sharing at the organizational level. The policy type is ec2_attributes.image_block_public_access with state = "block_new_sharing". Without this, any account admin can share AMIs publicly, potentially exposing proprietary software, credentials baked into images, or internal architecture details.
 
@@ -162,7 +162,7 @@ No declarative policy blocks public AMI sharing at the organizational level. The
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** nist_800_53_r5: CM-6; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: CM-6; owasp_subtractive: S01; soc2: CC6.1; subtractive_tier: deletion;
 
 No declarative policy enforces IMDSv2 at the organizational level. Existing controls check individual instances for IMDSv1 (CTL.EC2.IMDS.001); this control checks whether the organizational enforcement prevents IMDSv1 instances from being launched at all. Declarative policy enforcement is stronger than per-instance checks because it is preventive, not detective. The policy type is ec2_attributes.instance_metadata_defaults with http_tokens = "required". IMDSv2 is the Capital One chain's first member control — organizational enforcement closes the gap where a single instance launched without the flag reintroduces the SSRF-to-credential path.
 
@@ -177,7 +177,7 @@ No declarative policy enforces IMDSv2 at the organizational level. Existing cont
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S08; soc2: CC6.1; subtractive_tier: deletion;
 
 No declarative policy blocks public EBS snapshot sharing at the organizational level. The policy type is ec2_attributes.snapshot_block_public_access with state = "block_all_sharing". Without this, any account admin can share EBS snapshots publicly, exposing disk contents including databases, log files, and credentials.
 
@@ -417,7 +417,7 @@ Resource Control Policies (RCPs) are not enabled as a policy type in the organiz
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S02; soc2: CC6.1; subtractive_tier: deletion;
 
 No RCP denies resource actions when aws:PrincipalOrgID does not match the organization. This is the resource-side complement to SCP-based identity perimeter controls. Without this RCP, resources with overly permissive resource policies (Principal: *) are accessible to any AWS principal, not just org members. The RCP creates a resource perimeter that blocks external principal access regardless of individual resource policy configuration.
 
@@ -477,7 +477,7 @@ No RCP enforces BucketOwnerEnforced object ownership on new S3 buckets. S3 ACLs 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: CM-7; gdpr: Art.32; hipaa: 164.312(b); nist_800_53_r5: CM-7; pci_dss_v4.0: 12.5.2; soc2: CC7.1;
+- **Compliance:** fedramp_moderate: CM-7; gdpr: Art.32; hipaa: 164.312(b); nist_800_53_r5: CM-7; owasp_subtractive: S09; pci_dss_v4.0: 12.5.2; soc2: CC7.1; subtractive_tier: constraint;
 
 AWS Organizations must have a Service Control Policy that restricts resource creation to an approved set of AWS regions. Without a region restriction SCP, any IAM principal can create resources in any of 30+ regions — including regions where the organization has no CloudTrail, no GuardDuty, no Config recording, and no monitoring infrastructure. MITRE ATT&CK T1535 documents this as a defense evasion technique: attackers deliberately operate in unused regions to bypass cloud monitoring. A region restriction SCP closes all unmonitored regions simultaneously with a single organizational policy rather than requiring monitoring deployment to every region. This is the architectural complement to per-region monitoring controls — it eliminates the regions where monitoring is not deployed.
 
@@ -837,7 +837,7 @@ No SCP prevents modification of critical security and governance IAM roles in me
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_subtractive: S09; soc2: CC6.1; subtractive_tier: constraint;
 
 A region-deny SCP includes Bedrock invocation actions (bedrock:InvokeModel, bedrock:InvokeModelWithResponseStream) in its NotAction list. NotAction in a Deny statement means "deny everything EXCEPT these actions" — so Bedrock invocation is exempted from region restrictions. Any principal in the account can invoke any Bedrock model in any AWS region, bypassing organizational region controls. This is the GRREGIONDENY pattern: operators add Bedrock to NotAction so cross-region inference profiles work, but the exemption allows any principal — not just the intended workload — to invoke any model anywhere.
 

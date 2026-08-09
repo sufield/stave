@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.ACMPCA.KEYALGORITHM.001
+name: Private CA Uses Weak Key Algorithm
+description: >
+  An ACM Private CA uses RSA 2048-bit keys. For root and
+  subordinate CAs with long validity periods, RSA 4096 or
+  EC P384 provides better long-term security margins.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "SC-12, SC-13"
+  soc2: "CC6.7"
+  ccm_v4: ["CEK-01"]
+scope_tags:
+  - aws
+  - acmpca
+taxonomy:
+  - encryption-in-transit
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_acmpca_certificate_authority]
+params:
+  attack_stage: collection
+  blast_radius:
+    type: compliance
+    scope: service
+    multiplier: 1.0
+remediation:
+  description: >
+    Private CA uses RSA 2048-bit key algorithm.
+  action: >
+    Create a new CA with a stronger key algorithm: aws acm-pca
+    create-certificate-authority --certificate-authority-configuration
+    KeyAlgorithm=RSA_4096 (or EC_prime256v1 / EC_secp384r1).
+  example: |
+    {
+      "security": {
+        "kind": "certificate_authority",
+        "acmpca": {
+          "key_algorithm": "RSA_4096"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security.kind
+      op: eq
+      value: certificate_authority
+    - field: properties.security.acmpca.key_algorithm
+      op: eq
+      value: RSA_2048
+tests:
+  - name: "RSA 2048 fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/abc123"
+      asset_type: aws_acmpca_certificate_authority
+      vendor: aws
+      properties:
+        security:
+          kind: certificate_authority
+          acmpca:
+            key_algorithm: RSA_2048
+  - name: "RSA 4096 passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/abc123"
+      asset_type: aws_acmpca_certificate_authority
+      vendor: aws
+      properties:
+        security:
+          kind: certificate_authority
+          acmpca:
+            key_algorithm: RSA_4096

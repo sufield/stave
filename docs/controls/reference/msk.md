@@ -147,7 +147,7 @@ MSK clusters must use enhanced monitoring (PER_BROKER or higher). Default monito
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_subtractive: S03; soc2: CC6.6; subtractive_tier: deletion;
 
 MSK cluster broker endpoints must not be exposed to the public internet. Public brokers allow unauthorized consumers to read topics, rogue producers to inject events, and internet-wide scanning to enumerate cluster metadata.
 

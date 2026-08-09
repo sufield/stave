@@ -14,6 +14,8 @@ description: >
   CTL.S3.ACL.ESCALATION.001 (WRITE_ACP grants).
 compliance:
   ccm_v4: ["DSP-07", "DSP-17"]
+  owasp_subtractive: "S08"
+  subtractive_tier: "deletion"
 domain: storage
 exposure:
   type: policy_public_read

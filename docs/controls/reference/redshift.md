@@ -86,7 +86,7 @@ Each cross-account consumer associated with a Redshift datashare must be in the 
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S08; pci_dss_v4.0: 1.3.4; soc2: CC6.6; subtractive_tier: deletion;
 
 Redshift datashares can be created with `AllowPubliclyAccessibleConsumers=true` — a setting that permits a datashare to be consumed by clusters whose `PubliclyAccessible` flag is set. Combining a datashare with public consumers effectively re-exports warehouse data to any internet-reachable cluster the consumer account creates, bypassing the producer's network controls entirely. This is distinct from the cross-account share check: a cross-account share to a trusted partner is fine, but allowing that partner to consume from a public-facing cluster reintroduces the exposure the producer's PUBLIC.001 control was preventing.
 
@@ -266,7 +266,7 @@ Production Redshift clusters on the RA3 node family should run with `multi_az=tr
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S08; pci_dss_v4.0: 1.3.4; soc2: CC6.6; subtractive_tier: deletion;
 
 Redshift clusters must not have the publicly accessible setting enabled.
 

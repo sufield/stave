@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.VPCLATTICE.SERVICE.NOAUTH.001
+name: VPC Lattice Service Has No Auth Policy
+description: >
+  A VPC Lattice service has no auth policy configured. Without an
+  auth policy, any source in the service network can send traffic
+  to this service with no identity verification — equivalent to
+  an open security group for service-to-service communication.
+domain: exposure
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-3, IA-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - vpclattice
+taxonomy:
+  - trust-boundary
+  - authentication
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_vpc_lattice_service]
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: exposure
+    scope: service
+    multiplier: 4.0
+remediation:
+  description: >
+    VPC Lattice service has no auth policy. Any source in the
+    service network can reach this service.
+  action: >
+    Apply an auth policy: aws vpc-lattice put-auth-policy
+    --resource-identifier <service-id> --policy <json>.
+  example: |
+    {
+      "lattice": {
+        "kind": "service",
+        "service": {
+          "auth_policy_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.lattice.kind
+      op: eq
+      value: service
+    - field: properties.lattice.service.auth_policy_configured
+      op: ne
+      value: true
+tests:
+  - name: "no auth policy fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "svc-abc123"
+      asset_type: aws_vpc_lattice_service
+      vendor: aws
+      properties:
+        lattice:
+          kind: service
+          service:
+            auth_policy_configured: false
+  - name: "auth policy configured passes"
+    verdict: PASS
+    asset:
+      asset_id: "svc-abc123"
+      asset_type: aws_vpc_lattice_service
+      vendor: aws
+      properties:
+        lattice:
+          kind: service
+          service:
+            auth_policy_configured: true

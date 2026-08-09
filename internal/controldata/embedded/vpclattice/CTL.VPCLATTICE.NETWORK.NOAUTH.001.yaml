@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.VPCLATTICE.NETWORK.NOAUTH.001
+name: VPC Lattice Service Network Has No Auth Policy
+description: >
+  A VPC Lattice service network has no auth policy configured.
+  The service network is the trust boundary for all associated
+  services and VPCs. Without a network-level auth policy, any
+  VPC associated with the network can reach all services with
+  no centralized access control.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - vpclattice
+taxonomy:
+  - trust-boundary
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_vpc_lattice_service_network]
+params:
+  attack_stage: lateral_movement
+  blast_radius:
+    type: exposure
+    scope: service
+    multiplier: 3.0
+remediation:
+  description: >
+    VPC Lattice service network has no auth policy.
+  action: >
+    Apply a network-level auth policy: aws vpc-lattice
+    put-auth-policy --resource-identifier <network-id>
+    --policy <json>.
+  example: |
+    {
+      "lattice": {
+        "kind": "service_network",
+        "network": {
+          "auth_policy_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.lattice.kind
+      op: eq
+      value: service_network
+    - field: properties.lattice.network.auth_policy_configured
+      op: ne
+      value: true
+tests:
+  - name: "no network auth policy fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "sn-abc123"
+      asset_type: aws_vpc_lattice_service_network
+      vendor: aws
+      properties:
+        lattice:
+          kind: service_network
+          network:
+            auth_policy_configured: false
+  - name: "network auth policy configured passes"
+    verdict: PASS
+    asset:
+      asset_id: "sn-abc123"
+      asset_type: aws_vpc_lattice_service_network
+      vendor: aws
+      properties:
+        lattice:
+          kind: service_network
+          network:
+            auth_policy_configured: true

@@ -523,7 +523,7 @@ KMS key policies must not grant wildcard principal access. A key policy with Pri
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.24; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.24; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; owasp_subtractive: S02; pci_dss_v4.0: 3.6.1; soc2: CC6.1; subtractive_tier: deletion;
 
 KMS key policies must not grant key administration actions (kms:Create*, kms:Put*, kms:Disable*, kms:ScheduleKeyDeletion, kms:EnableKey, kms:EnableKeyRotation, kms:UpdateKeyDescription) to principals beyond designated key administrators. Broad administrative access allows any granted principal to disable the key, schedule it for deletion, or modify its policy — disrupting every resource encrypted by the key.
 
@@ -553,7 +553,7 @@ KMS key policies granting usage actions (kms:Decrypt, kms:Encrypt, kms:GenerateD
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; owasp_nhi: NHI6; pci_dss_v4.0: 3.4.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.24; nist_800_53_r5: AC-3; owasp_nhi: NHI6; owasp_subtractive: S05; pci_dss_v4.0: 3.4.1; soc2: CC6.1; subtractive_tier: deletion;
 
 KMS key policies must not grant kms:Decrypt, kms:Encrypt, kms:GenerateDataKey, or kms:* to external account principals without restricting via kms:CallerAccount, kms:ViaService, or aws:PrincipalOrgID conditions. Unlike IAM policies, the key policy is the primary authorization mechanism — IAM policies alone cannot grant KMS access unless the key policy permits it. Broad cross-account key access allows external principals to decrypt every resource encrypted by this key.
 

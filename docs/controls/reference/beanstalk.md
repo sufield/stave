@@ -12,7 +12,7 @@
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S01; pci_dss_v4.0: 7.2; soc2: CC6.1; subtractive_tier: deletion;
 
 Elastic Beanstalk environment EC2 instances allow IMDSv1 access to the instance metadata service. IMDSv1 is vulnerable to SSRF attacks — a compromised web application on a Beanstalk instance can steal IAM credentials from the metadata endpoint via a simple HTTP GET. IMDSv2 requires a session token obtained via PUT, which SSRF payloads cannot forge. Beanstalk environments host web applications that are often internet-facing, making SSRF a direct threat.
 

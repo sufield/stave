@@ -12,6 +12,8 @@ compliance:
   hipaa: "164.312(a)(2)(i)"
   pci_dss_v4.0: "8.1.4"
   ccm_v4: ["CCC-07", "IAM-08"]
+  owasp_subtractive: "S07"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - iam

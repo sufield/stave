@@ -12,7 +12,7 @@
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7, AC-4; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7, AC-4; owasp_subtractive: S03; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion;
 
 Account does not have VPC Block Public Access (BPA) enabled. VPC BPA is an account-level setting (launched re:Invent 2024) that prevents resources in any VPC from obtaining internet connectivity through Internet Gateways. Without BPA, each VPC's internet exposure depends on individual IGW attachments, route tables, and security groups — a single misconfiguration in any VPC grants internet access. BPA enforces a network perimeter at the account level regardless of per-VPC configuration, analogous to S3 Block Public Access for storage.
 
@@ -147,7 +147,7 @@ Client VPN connection logging is not enabled. The endpoint does not record who c
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: AC-17; hipaa: 164.312(e)(1); nist_800_53_r5: AC-17; pci_dss_v4.0: 1.3.4; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: AC-17; hipaa: 164.312(e)(1); nist_800_53_r5: AC-17; owasp_subtractive: S10; pci_dss_v4.0: 1.3.4; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Client VPN endpoint has split tunneling enabled. Only VPC-destined traffic routes through the VPN; all other traffic leaves the client device directly to the internet. The client is simultaneously connected to the trusted VPC and the untrusted internet. An attacker who compromises the device via the internet path (malicious website, phishing, drive-by download) can pivot directly into the VPC through the VPN — the laptop becomes the corporate network perimeter. Split tunneling is a legitimate choice for bandwidth-sensitive use cases; triage should weigh that tradeoff rather than prescribe full-tunnel unconditionally.
 
@@ -177,7 +177,7 @@ Workloads must not run in the default VPC. The default VPC is created automatica
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws: 4.7; nist_800_53_r5: SC-7;
+- **Compliance:** cis_aws: 4.7; nist_800_53_r5: SC-7; owasp_subtractive: S04,S06; subtractive_tier: deletion+constraint;
 
 The default VPC must not have an internet gateway route in its route tables. AWS creates a default VPC in every region with a route table that sends all internet-bound traffic through an attached internet gateway. Resources launched into the default VPC without explicit network configuration receive a public IP and are directly reachable from the internet. The default VPC is frequently used for ad-hoc testing and forgotten resources — any instance, Lambda VPC attachment, or RDS instance placed in the default VPC inherits internet exposure by default. Removing the internet gateway route from the default VPC eliminates this accidental exposure path without affecting production workloads which should be in purpose-built VPCs.
 
@@ -192,7 +192,7 @@ The default VPC must not have an internet gateway route in its route tables. AWS
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; owasp_subtractive: S04; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion;
 
 Active resources (EC2 instances, RDS instances, VPC-configured Lambda functions, ECS tasks) exist in the default VPC. The default VPC ships with unsafe defaults: public subnets in every AZ with `MapPublicIpOnLaunch` enabled, a default security group that permits all intra-VPC traffic, and an Internet Gateway. Production workloads inherit all of those defaults. Strengthens `CTL.VPC.DEFAULT.001` (which detects the default VPC's existence) by focusing on the actionable problem — resources deployed in it.
 
@@ -299,7 +299,7 @@ DNS Firewall is associated with the VPC but the rule group does not include AWS 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** network
-- **Compliance:** nist_800_53_r5: SC-8; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-8; owasp_subtractive: S10; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Direct Connect virtual interfaces must configure BGP MD5 authentication. Without BGP authentication, an attacker on the same physical link or co-location facility can inject BGP route advertisements, redirecting traffic through attacker-controlled paths. BGP MD5 authentication prevents unauthorized route injection.
 
@@ -359,7 +359,7 @@ AWS Direct Connect should have at least two connections for resiliency. A single
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_subtractive: S06; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 VPC with isolation_intent "egress-restricted" has egress paths other than VPC endpoints. Internet gateway, NAT gateway, VPC peering, TGW attachment, or VPN/DX provide egress that bypasses the endpoint-only restriction. The declared intent is that all egress routes through VPC endpoints with resource-scoped policies, but actual network topology provides uncontrolled egress. The OpenAI ExploitGym incident (July 2026) demonstrated this gap: a sandbox VPC's sole sanctioned egress was an internal registry proxy, but the proxy's network path provided unfiltered internet connectivity.
 
@@ -374,7 +374,7 @@ VPC with isolation_intent "egress-restricted" has egress paths other than VPC en
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_subtractive: S06; pci_dss_v4.0: 1.3.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 A private subnet has no internet gateway route (correctly designated as private) but routes all outbound traffic through a NAT gateway to 0.0.0.0/0 with no egress filtering. No Network Firewall inspects egress traffic and no VPC endpoint policy restricts outbound destinations. Resources in the subnet can reach any internet endpoint, enabling data exfiltration despite the "private" designation. The subnet is private in name only — the NAT gateway provides unrestricted outbound connectivity that negates the isolation benefit.
 
@@ -494,7 +494,7 @@ Interface VPC endpoint does not have Private DNS enabled. Without Private DNS, t
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** hygiene
-- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_subtractive: S06; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Gateway VPC endpoint (S3 or DynamoDB) exists but has no route table association. The endpoint is a ghost — no traffic is routed through it. If the endpoint was created to restrict S3 or DynamoDB access to the VPC (replacing NAT-routed internet paths), the restriction is not in effect. Traffic continues via the prior path (NAT gateway, IGW, or fails silently). A gateway endpoint without route table entries provides no connectivity and no policy enforcement.
 
@@ -554,7 +554,7 @@ Interface VPC endpoint targets a PrivateLink service hosted in a different AWS a
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** network
-- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-4; owasp_subtractive: S03; soc2: CC6.1; subtractive_tier: deletion;
 
 Interface VPC endpoint uses the default full-access policy (Principal *, Action *, Resource *). The default policy places no restriction on which principals can invoke the service through the endpoint or what operations they can perform. In an isolated VPC, this turns the interface endpoint into an unrestricted egress path to the backing service — any workload in the VPC can reach the service without IAM-level endpoint constraints.
 
@@ -614,7 +614,7 @@ VPCs must have an S3 VPC gateway endpoint to route S3 traffic privately through 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.4; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.4; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; owasp_subtractive: S10; pci_dss_v4.0: 1.3.2; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Interface VPC endpoint's security group permits inbound traffic from the entire VPC CIDR rather than from specific subnets or other security groups. Every resource in the VPC — including resources that have no business using the service — can reach the endpoint. A compromised instance can call KMS, fetch secrets, assume roles, or pull ECR images via the endpoint without any additional firewall exemption. The endpoint security group should be scoped to the subnets or SGs whose workloads actually use the service.
 
@@ -764,7 +764,7 @@ Subnet flagged as containing sensitive resources (databases, management instance
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** hygiene
-- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; owasp_subtractive: S06; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 VPC has an Internet Gateway attached but no resources have public IP addresses and no subnets have routes pointing to the IGW. The IGW provides internet connectivity that nothing uses — residual from initial setup, or attached for a purpose that no longer exists. An unattached-but-present IGW is a latent attack surface: one route table change (adding 0.0.0.0/0 → IGW to a subnet) or one public IP assignment converts any instance in the VPC from private to internet-facing. For VPCs intended to have no internet connectivity (data processing, database, internal services), the IGW should be detached.
 
@@ -898,7 +898,7 @@ Subnet is associated with the VPC's default Network ACL, which ships with allow-
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_subtractive: S06; pci_dss_v4.0: 1.3.2; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 NACL in a VPC with airgapped or egress-restricted isolation intent allows outbound traffic to destinations outside the VPC CIDR. The enclave subnet can route to egress-capable subnets in other VPCs or to the internet via peered or transit routes. NACLs are the defense-in-depth layer below security groups — even if SG rules are correct, a permissive NACL provides a fallback egress path that survives SG rule changes.
 
@@ -1108,7 +1108,7 @@ Route table has a ::/0 route pointing to an egress-only internet gateway. IPv6 t
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; owasp_subtractive: S06; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 The VPC's main (default) route table has a 0.0.0.0/0 route to an Internet Gateway. Any new subnet created without an explicit custom route-table association inherits the main route table — so every new subnet is public by default. The operator creating the subnet must remember to associate a private route table; omission produces an internet-facing subnet silently. The safe default is a main route table with no IGW route, so subnets are private unless explicitly associated with a public route table.
 
@@ -1138,7 +1138,7 @@ Route table exists but is not associated with any subnet, implicit or explicit. 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_subtractive: S06; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Route table (main or custom) has a 0.0.0.0/0 route to an internet gateway. Any subnet associated with this route table has internet egress. Unlike CTL.VPC.ROUTETABLE.MAIN.PUBLIC.001 (which fires only on the main route table to catch the implicit-inheritance risk), this control fires on ANY route table with an IGW route — including custom route tables explicitly configured for public subnets. Use this control for egress inventory: it enumerates every IPv4 internet path in the VPC regardless of route table role.
 
@@ -1153,7 +1153,7 @@ Route table (main or custom) has a 0.0.0.0/0 route to an internet gateway. Any s
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: AC-17; hipaa: 164.312(e)(1); nist_800_53_r5: AC-17; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: AC-17; hipaa: 164.312(e)(1); nist_800_53_r5: AC-17; owasp_subtractive: S10; pci_dss_v4.0: 1.3.2; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 A bastion or jump host (identified by tag or name containing "bastion"/"jump"/"jumpbox", or an instance with a public IP and SSH ingress from 0.0.0.0/0) has a security group that permits outbound to all internal subnets on management ports (SSH/22, RDP/3389). The bastion is, by design, the bridge between the public internet and the internal network — making it the highest-value lateral-movement target. A compromise of the bastion with unrestricted internal egress yields management-plane access to every instance in the VPC. The bastion's egress should be scoped to specific destination subnets and ports.
 
@@ -1168,7 +1168,7 @@ A bastion or jump host (identified by tag or name containing "bastion"/"jump"/"j
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; owasp_subtractive: S10; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Traffic transiting the Transit Gateway between attached VPCs is not routed through a Network Firewall or inspection VPC. Cross- VPC packets flow directly from source VPC to destination VPC without any inspection — no IDS/IPS, no protocol anomaly detection, no domain reputation checks, no logging beyond flow-log metadata. East-west lateral movement between workloads is uninspected. The recommended pattern routes all inter-VPC traffic through a centralized inspection VPC whose Network Firewall enforces stateful policy on every cross-VPC flow.
 
@@ -1183,7 +1183,7 @@ Traffic transiting the Transit Gateway between attached VPCs is not routed throu
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; owasp_subtractive: S10; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Production and non-production (development, staging, testing) resources exist in the same VPC, or in VPCs connected via peering or Transit Gateway with route-table entries that permit cross- environment traffic. Network segmentation between environments is the primary blast-radius control: a compromised low-trust workload in development should not have a network path to production databases. When environments share a VPC or have unrestricted inter-VPC routing, that control is absent. Strengthens `CTL.VPC.ENV.ISOLATION.001` with explicit detection of mixed environments sharing a network path.
 
@@ -1198,7 +1198,7 @@ Production and non-production (development, staging, testing) resources exist in
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; owasp_subtractive: S10; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Lambda function configured with VPC access has a security group that permits outbound to all subnets in the VPC. The Lambda ENI can reach every resource in every subnet — databases, caches, internal APIs, management interfaces. Lambda functions should have egress restricted to the specific subnets and ports they require; the function code is small, the surface it should reach is well-defined, and unrestricted egress allows a compromised function to pivot anywhere in the VPC.
 
@@ -1213,7 +1213,7 @@ Lambda function configured with VPC access has a security group that permits out
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; owasp_subtractive: S10; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 Web-facing resources (load balancers, web servers), application logic (app servers, Lambda ENIs, ECS tasks), and data stores (RDS, ElastiCache, Redshift) share the same subnet. With no subnet tier separation, security groups become the only network control — there is no NACL boundary between tiers. A compromise at any tier reaches every other tier on the same broadcast domain at the network layer; only SG rules stand in the way. Tier separation puts web in public subnets, application in private subnets, and data in private subnets associated with database-only NACLs.
 
@@ -1258,7 +1258,7 @@ Security group has ingress rules with RFC 1918 CIDR sources that do not cover al
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v1.4.0: 5.4; cis_aws_v3.0: 5.4; fedramp_moderate: AC-4; hipaa: 164.312(a)(1); nist_800_53_r5: AC-4; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+- **Compliance:** cis_aws_v1.4.0: 5.4; cis_aws_v3.0: 5.4; fedramp_moderate: AC-4; hipaa: 164.312(a)(1); nist_800_53_r5: AC-4; owasp_subtractive: S04; pci_dss_v4.0: 1.3.2; soc2: CC6.6; subtractive_tier: deletion;
 
 The default VPC security group should not allow any inbound or outbound traffic. Resources should use custom security groups with explicit rules instead of relying on the default group.
 
@@ -1558,7 +1558,7 @@ A VPC whose tags or name signal network isolation (keywords such as "isolated", 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; nist_800_53_r5: SC-7, AC-3; pci_dss_v4.0: 1.2.1; soc2: CC6.1, CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; nist_800_53_r5: SC-7, AC-3; owasp_subtractive: S10; pci_dss_v4.0: 1.2.1; soc2: CC6.1, CC6.6; subtractive_tier: deletion+constraint;
 
 Transit Gateway has AutoAcceptSharedAttachments enabled. Any VPC in a shared account can attach to the TGW without approval. A rogue or compromised account in an AWS Organization can attach its VPC to the shared TGW and gain network reachability to every other attached VPC. Disabling auto-accept forces manual or programmatic approval of each attachment — the operator decides which VPCs join the network fabric.
 
@@ -1588,7 +1588,7 @@ Transit Gateway route table contains blackhole routes — destinations where tra
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.2.1; soc2: CC6.6;
+- **Compliance:** cis_aws_v3.0: 5.5; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; owasp_subtractive: S04,S10; pci_dss_v4.0: 1.2.1; soc2: CC6.6; subtractive_tier: deletion+constraint;
 
 All Transit Gateway VPC attachments are associated with the default route table. A single shared route table means every attached VPC can route to every other — the TGW is a flat network bridge. Segmented route tables (one per security zone) are the standard pattern for isolating production, staging, development, and shared-services VPCs from each other while allowing controlled cross-zone communication through explicit static routes.
 

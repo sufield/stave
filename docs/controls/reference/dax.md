@@ -12,7 +12,7 @@
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: AC-3, IA-2; pci_dss_v4.0: 7.2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3, IA-2; owasp_subtractive: S03; pci_dss_v4.0: 7.2; soc2: CC6.1; subtractive_tier: deletion;
 
 DynamoDB Accelerator (DAX) cluster does not require IAM authentication. Without authentication, any application with network access to the cluster endpoint can read and write cached data without credentials.
 

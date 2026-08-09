@@ -25,6 +25,8 @@ compliance:
   soc2: "CC6.6"
   pci_dss_v4.0: "2.2.1"
   ccm_v4: ["IVS-03", "IVS-04"]
+  owasp_subtractive: "S01"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - ecs

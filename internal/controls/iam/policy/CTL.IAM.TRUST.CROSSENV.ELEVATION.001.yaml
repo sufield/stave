@@ -23,6 +23,8 @@ compliance:
   pci_dss_v4.0: "7.2.1"
   nist_800_53_r5: "AC-4"
   ccm_v4: ["IAM-05", "IAM-16"]
+  owasp_subtractive: "S05"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - iam

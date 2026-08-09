@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYIR.NOTIFICATION.001
+name: Security Incident Response Notification Not Configured
+description: >
+  AWS Security Incident Response has an active membership but
+  notification routing is not configured. Without notifications,
+  new security cases and triage results are not delivered to the
+  security team, defeating the purpose of automated triage.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "IR-6"
+  soc2: "CC7.3"
+  ccm_v4: ["SEF-03"]
+scope_tags:
+  - aws
+  - securityir
+taxonomy:
+  - monitoring
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_security_incident_response]
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+remediation:
+  description: >
+    Security Incident Response notification routing is not
+    configured.
+  action: >
+    Configure notification routing in the Security Incident
+    Response membership settings to deliver case updates to the
+    security operations team.
+  example: |
+    {
+      "security": {
+        "kind": "incident_response",
+        "incident_response": {
+          "membership_active": true,
+          "notification_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security.kind
+      op: eq
+      value: incident_response
+    - field: properties.security.incident_response.membership_active
+      op: eq
+      value: true
+    - field: properties.security.incident_response.notification_configured
+      op: ne
+      value: true
+tests:
+  - name: "active membership without notification fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:security-ir:us-east-1:111122223333:membership/m-abc"
+      asset_type: aws_security_incident_response
+      vendor: aws
+      properties:
+        security:
+          kind: incident_response
+          incident_response:
+            membership_active: true
+            notification_configured: false
+  - name: "active membership with notification passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:security-ir:us-east-1:111122223333:membership/m-abc"
+      asset_type: aws_security_incident_response
+      vendor: aws
+      properties:
+        security:
+          kind: incident_response
+          incident_response:
+            membership_active: true
+            notification_configured: true

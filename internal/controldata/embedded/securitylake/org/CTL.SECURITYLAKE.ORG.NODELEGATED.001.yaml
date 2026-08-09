@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYLAKE.ORG.NODELEGATED.001
+name: Security Lake Has No Delegated Administrator
+description: >
+  Security Lake is managed from the management account because no
+  delegated administrator is registered. Day-to-day Security Lake
+  administration — managing log sources, subscribers, and rollup
+  regions — concentrates operational footprint in the management
+  account. AWS best practice is to delegate Security Lake
+  administration to a dedicated log archive or security account.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6(5)"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-09"]
+scope_tags:
+  - aws
+  - securitylake
+taxonomy:
+  - account-governance
+  - compliance-mapping
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_securitylake_data_lake]
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: governance
+    scope: organization
+    multiplier: 3.0
+remediation:
+  description: >
+    No delegated administrator registered for Security Lake.
+    Management account handles all Security Lake administration.
+  action: >
+    Register a log archive or security account as delegated admin:
+    aws securitylake register-data-lake-delegated-administrator
+    --account-id <log-archive-acct>.
+  example: |
+    {
+      "logging": {
+        "kind": "security_lake_organization",
+        "security_lake": {
+          "delegated_admin_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.logging.kind
+      op: eq
+      value: security_lake_organization
+    - field: properties.logging.security_lake.delegated_admin_configured
+      op: ne
+      value: true
+tests:
+  - name: "Security Lake org without delegated admin fails"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake/org"
+      asset_type: aws_security_lake_organization
+      vendor: aws
+      properties:
+        logging:
+          kind: security_lake_organization
+          security_lake:
+            delegated_admin_configured: false
+  - name: "Security Lake org with delegated admin passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake/org"
+      asset_type: aws_security_lake_organization
+      vendor: aws
+      properties:
+        logging:
+          kind: security_lake_organization
+          security_lake:
+            delegated_admin_configured: true

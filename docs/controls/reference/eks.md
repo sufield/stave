@@ -514,7 +514,7 @@ Create a Security Hub insight on Severity=CRITICAL+HIGH for routing to the on-ca
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_subtractive: S03; soc2: CC6.6; subtractive_tier: deletion;
 
 EKS clusters must enable private endpoint access so kubectl and API traffic can use a VPC-resolved private endpoint. Without private access, all control plane traffic traverses the public internet, expanding the attack surface and adding an internet dependency for cluster management.
 
@@ -820,7 +820,7 @@ IRSA role's trust policy doesn't include the `aud` (audience) condition checking
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3, IA-5; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-3, AC-4, IA-5; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3, CC6.6;
+- **Compliance:** fedramp_moderate: AC-3, IA-5; iso_27001_2022: A.5.15, A.8.2; nist_800_53_r5: AC-3, AC-4, IA-5; owasp_subtractive: S05; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3, CC6.6; subtractive_tier: deletion;
 
 EKS IRSA role's trust policy permits assumption from an OIDC issuer in a different AWS account (cross-account IRSA) without an `aws:PrincipalOrgID` condition. Cross-account IRSA is occasionally legitimate (shared services account pattern), but unrestricted cross-account trust means any compromised cluster's OIDC tokens can assume the role across the organization boundary.
 
@@ -1115,7 +1115,7 @@ EKS node group's launch template has `MetadataOptions.HttpPutResponseHopLimit` g
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** governance
-- **Compliance:** fedramp_moderate: AC-3, IA-2; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, IA-2, SC-7; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3;
+- **Compliance:** fedramp_moderate: AC-3, IA-2; iso_27001_2022: A.5.15, A.8.16; nist_800_53_r5: AC-3, IA-2, SC-7; owasp_subtractive: S01; pci_dss_v4.0: 7.2; soc2: CC6.1, CC6.3; subtractive_tier: deletion;
 
 EKS managed node group's launch template has `MetadataOptions.HttpTokens: optional` — IMDSv1 (the legacy unauthenticated metadata service) is permitted in addition to IMDSv2. IMDSv1 is reachable via simple HTTP GET to 169.254.169.254 with no token; SSRF / proxy / XSPA exploits in pod workloads commonly target it to exfiltrate the node's IAM instance profile credentials. IMDSv2 (HttpTokens: required) requires a session token obtained via PUT first, which most SSRF surfaces can't produce.
 

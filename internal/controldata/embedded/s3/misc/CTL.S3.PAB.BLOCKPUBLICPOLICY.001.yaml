@@ -27,6 +27,8 @@ compliance:
   iso_27001_2022: "A.8.3"
   nist_csf_2.0: "PR.PS"
   ccm_v4: ["DSP-07", "DSP-17"]
+  owasp_subtractive: "S08"
+  subtractive_tier: "deletion"
 scope_tags:
   - aws
   - s3

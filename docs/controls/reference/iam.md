@@ -12,7 +12,7 @@
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.1.4; soc2: CC6.2;
+- **Compliance:** cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; owasp_nhi: NHI1; owasp_subtractive: S07; pci_dss_v4.0: 8.1.4; soc2: CC6.2; subtractive_tier: deletion;
 
 IAM accounts with no login or API activity for 90 days or more must be disabled. Dormant accounts are high-value targets — they have permissions but no active user monitoring their usage. Legacy accounts, test accounts, and accounts from departed employees accumulate over time and provide persistent, unmonitored access paths for attackers.
 
@@ -151,7 +151,7 @@ IAM Access Analyzer should include an organization-level analyzer (type ORGANIZA
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(3); scs_c02: 12.5; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6(3); owasp_subtractive: S07; scs_c02: 12.5; soc2: CC6.1; subtractive_tier: deletion;
 
 No IAM Access Analyzer of type UNUSED_ACCESS exists. The unused access analyzer identifies IAM roles and users with permissions they have not used within a specified period, plus unused access keys and passwords. Without it, over-privileged identities accumulate permissions that expand the blast radius of credential compromise.
 
@@ -436,7 +436,7 @@ IAM credentials must have a defined maximum lifetime. Credentials without expiry
 - **Severity:** high
 - **Type:** unsafe_recurrence
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; pci_dss_v4.0: 8.1.4; soc2: CC7.1;
+- **Compliance:** fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; owasp_subtractive: S07; pci_dss_v4.0: 8.1.4; soc2: CC7.1; subtractive_tier: deletion;
 
 IAM user console password has been disabled and re-enabled more than once in 30 days. Password lifecycle manipulation — disable, re-enable, repeat — is the pattern of an attacker maintaining persistence through credential lifecycle events that would otherwise revoke access.
 
@@ -451,7 +451,7 @@ IAM user console password has been disabled and re-enabled more than once in 30 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.14; cis_aws_v3.0: 1.14; fedramp_moderate: IA-5(1); hipaa: 164.312(a)(2)(i); nist_800_53_r5: IA-5(1); owasp_nhi: NHI7; pci_dss_v3.2.1: 8.2.4; pci_dss_v4.0: 8.3.9; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.14; cis_aws_v3.0: 1.14; fedramp_moderate: IA-5(1); hipaa: 164.312(a)(2)(i); nist_800_53_r5: IA-5(1); owasp_nhi: NHI7; owasp_subtractive: S07; pci_dss_v3.2.1: 8.2.4; pci_dss_v4.0: 8.3.9; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM user access keys older than 90 days must be rotated. Long-lived access keys accumulate exposure risk and may have been leaked in code repositories, logs, or configuration files.
 
@@ -496,7 +496,7 @@ Each IAM user must have at most one active access key. Multiple active keys incr
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: IA-5; hipaa: 164.312(d); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, AC-2; owasp_nhi: NHI7; pci_dss_v4.0: 8.3.5; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: IA-5; hipaa: 164.312(d); iso_27001_2022: A.5.16, A.8.5; nist_800_53_r5: IA-5, AC-2; owasp_nhi: NHI7; owasp_subtractive: S07; pci_dss_v4.0: 8.3.5; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM credential has a declared TTL (maximum lifetime) and the current age exceeds it. The credential should have been rotated or deactivated when its TTL elapsed. A credential beyond its TTL is a permanent attack surface masquerading as a temporary one. Distinct from CTL.IAM.CRED.EXPIRY.001 which checks whether an expiry IS DECLARED — this control checks whether the declared expiry HAS ELAPSED. A credential with has_expiry=true and ttl_exceeded=true passed the first check and fails the second: the operator set a TTL but nobody enforced it. Same shape as CTL.AD.KRBTGT.ROTATION.001 (krbtgt_password_age_days > 180) and CTL.IAM.CRED.UNUSED45.001 (access_key_unused_days > 45) — the Time-Bound Credential Invariant stricter variant called out in the temporal-features audit (GAP-L, row 12b).
 
@@ -516,7 +516,7 @@ Then issue a new credential with a fresh TTL, or migrate the workload to ephemer
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.12; cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; owasp_nhi: NHI1; pci_dss_v4.0: 8.1.4; soc2: CC6.2;
+- **Compliance:** cis_aws_v1.4.0: 1.12; cis_aws_v3.0: 1.12; fedramp_moderate: AC-2; hipaa: 164.312(a)(2)(i); nist_800_53_r5: AC-2; owasp_nhi: NHI1; owasp_subtractive: S07; pci_dss_v4.0: 8.1.4; soc2: CC6.2; subtractive_tier: deletion;
 
 IAM credentials unused for 90 days or more must be disabled. Dormant credentials are a persistent attack surface that provides access without triggering normal usage patterns.
 
@@ -531,7 +531,7 @@ IAM credentials unused for 90 days or more must be disabled. Dormant credentials
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.12; owasp_nhi: NHI1;
+- **Compliance:** cis_aws_v3.0: 1.12; owasp_nhi: NHI1; owasp_subtractive: S07; subtractive_tier: deletion;
 
 IAM credentials (passwords and access keys) unused for 45 or more days must be disabled. CIS v3.0 requires a 45-day threshold, which is stricter than the 90-day HIPAA threshold.
 
@@ -1840,7 +1840,7 @@ IAM group has policies granting access to sensitive services (SecretsManager, KM
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_subtractive: S05; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM roles must not be able to reach more than 50 resources through direct permissions and transitive role assumption chains. A role with wide blast radius means a single credential compromise gives an attacker access to a large surface area. The extractor computes reachable resources by traversing sts:AssumeRole edges and collecting data access permissions per reachable role.
 
@@ -1855,7 +1855,7 @@ IAM roles must not be able to reach more than 50 resources through direct permis
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; owasp_subtractive: S05; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM roles with cross-account blast radius (can reach resources in other AWS accounts) must require an external ID condition on the trust policy. Without an external ID, any principal in the trusted account can assume the role — including compromised service accounts and test tenants. Combined with cross-account reach, this is the maximum blast radius configuration.
 
@@ -2264,7 +2264,7 @@ An IAM identity has signin:AuthorizeOAuth2Access with Resource: * rather than sc
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_subtractive: S02; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 An IAM identity has OAuth MCP Server permissions via a wildcard action (signin:* or *). This is likely an unintentional grant — the signin:AuthorizeOAuth2Access and signin:CreateOAuth2Token actions were introduced on July 9, 2026. Any policy with signin:* or * in the Action field now implicitly grants OAuth agent authorization.
 The wildcard grant is dangerous because the identity owner may not know they have OAuth permissions. Unlike explicit grants, wildcards are not reviewed when new actions are added to a namespace.
@@ -2505,7 +2505,7 @@ IAM policy uses tag-based condition keys (aws:ResourceTag, aws:RequestTag, aws:T
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; owasp_nhi: NHI5; owasp_subtractive: S02; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 No IAM policy with Effect Allow on Action "*" and Resource "*" should be attached to any IAM entity. Full admin policies violate least privilege and grant unrestricted access to all services.
 
@@ -2520,7 +2520,7 @@ No IAM policy with Effect Allow on Action "*" and Resource "*" should be attache
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** cis_aws_v3.0: 1.16; fedramp_moderate: AC-6; ffiec: CAT-D3; gdpr: Art.32; iso_27001_2022: A.8.3; nist_800_53_r5: AC-6; nist_csf_2.0: PR.AA; owasp_nhi: NHI5; owasp_subtractive: S02; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM groups must not have policies granting Effect Allow on Action "*" and Resource "*". An admin policy on a group grants every member full admin access by group membership alone — the group becomes a shadow admin factory. Adding a user to the group (iam:AddUserToGroup) is a single API call that bypasses all per-user permission review. CTL.IAM.POLICY.ADMIN.001 enforces this for users; this control enforces it for groups.
 
@@ -2595,7 +2595,7 @@ Policy uses the NotResource element. NotResource inverts the resource scope — 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S02; soc2: CC6.1; subtractive_tier: deletion;
 
 A resource-based policy grants cross-account access without the aws:PrincipalOrgID condition. Without this condition, access can be granted to principals from any AWS account — not just accounts in the organization. aws:PrincipalOrgID restricts access to principals whose accounts are members of the specified organization, preventing access from accounts that have left the org or were never members.
 
@@ -2610,7 +2610,7 @@ A resource-based policy grants cross-account access without the aws:PrincipalOrg
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_subtractive: S09; soc2: CC6.1; subtractive_tier: constraint;
 
 No aws:RequestedRegion condition on actions that create resources. Resources can be created in any AWS region including regions without organizational monitoring, CloudTrail, Config, or GuardDuty. An attacker deploys resources in an unmonitored region to evade detection.
 
@@ -2850,7 +2850,7 @@ IAM policies governing destructive operations (s3:DeleteBucket, iam:CreateUser, 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_subtractive: S02; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM policies must not grant effective administrative access via wildcard obfuscation patterns. Instead of "Action": "*" or "iam:*", an attacker uses patterns like "iam:Creat*" which match CreateAccessKey, CreateUser, etc. via IAM wildcard matching rules but evade string-comparison detection. The control must evaluate the EXPANDED action set against the sensitive action registry. Implementation requires wildcard expansion against the IAM action namespace. Technique: hackingthe.cloud obfuscated admin policy.
 
@@ -2910,7 +2910,7 @@ IAM entity has the AWS-managed ReadOnlyAccess policy attached. ReadOnlyAccess gr
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6; nist_800_53_r5: AC-6; owasp_nhi: NHI5; owasp_subtractive: S02; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM policies granting sensitive actions (s3:*, kms:Decrypt, dynamodb:*, secretsmanager:GetSecretValue, rds:*, ec2:*, lambda:InvokeFunction, sts:AssumeRole) must scope the Resource element to specific ARNs. Resource "*" on sensitive actions grants the action on every resource in the account, vastly exceeding least privilege. CTL.IAM.POLICY.PASSROLE.001 and CTL.IAM.POLICY.ASSUMEROLE.001 enforce resource scoping for PassRole and AssumeRole specifically; this control generalizes the pattern to all sensitive actions.
 
@@ -2940,7 +2940,7 @@ IAM principal has policies granting actions from the sensitive action registry w
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-6(5); iso_27001_2022: A.8.3; nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; owasp_subtractive: S02; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM users and roles must not have any attached policy (inline or customer-managed) that grants `<service>:*` on `Resource: "*"` for services on the denied list. Service-wildcard grants are scoped to a single service but still exceed least-privilege for high-blast-radius services. The default denied list covers three Prowler-flagged services:
 
@@ -3094,7 +3094,7 @@ A customer-managed IAM policy has 5 versions (AWS maximum). iam:CreatePolicyVers
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-2; owasp_nhi: NHI1; soc2: CC6.2;
+- **Compliance:** nist_800_53_r5: AC-2; owasp_nhi: NHI1; owasp_subtractive: S07; soc2: CC6.2; subtractive_tier: deletion;
 
 IAM user has credentials unused for 90+ days AND has administrative permissions. A stale credential with admin access is the highest-risk pollution pattern: the key has no active operational purpose (unused), maximum blast radius (admin), and is likely unmonitored (no one watches for its use because no one remembers it exists). This is the compound of CTL.IAM.CRED.UNUSED.001 (stale credential) and CTL.IAM.POLICY.ADMIN.001 (admin access) — neither alone captures the distinct risk class of an abandoned admin key. Farris: "access keys that are who knows where, waiting to be exposed."
 
@@ -3170,7 +3170,7 @@ A principal that can enumerate all IAM principals (iam:ListUsers/ListRoles), rea
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; soc2: CC6.3;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI5; owasp_subtractive: S05; soc2: CC6.3; subtractive_tier: deletion;
 
 IAM role's policy grants access to resources in a different AWS account via a cross-account Resource ARN. The role can read from or write to S3 buckets, DynamoDB tables, or other resources in an external account. This creates a data boundary violation: data can flow between accounts without the receiving account's resource-based policy being the sole gating control. Combined with a compromised principal, cross-account resource grants become exfiltration channels.
 
@@ -3245,7 +3245,7 @@ IAM role outside the security admin set has CredentialExposure-classified action
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.3;
+- **Compliance:** nist_800_53_r5: AC-6(1); owasp_subtractive: S05; soc2: CC6.3; subtractive_tier: deletion;
 
 IAM role that allows external account assume has the AWS-managed ReadOnlyAccess policy attached. ReadOnlyAccess includes DataAccess actions — s3:GetObject, dynamodb:GetItem, secretsmanager:GetSecretValue, and others that read sensitive data. On a cross-account role, ReadOnlyAccess means the external account can read all data in the account. Use a scoped policy that grants only the specific read actions the external party needs.
 
@@ -3394,7 +3394,7 @@ IAM role assumed by external parties has effective permissions that include Data
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v3.0: 1.21; nist_800_53_r5: AC-2(3); owasp_nhi: NHI1; soc2: CC6.2;
+- **Compliance:** cis_aws_v3.0: 1.21; nist_800_53_r5: AC-2(3); owasp_nhi: NHI1; owasp_subtractive: S07; soc2: CC6.2; subtractive_tier: deletion;
 
 IAM role has not been assumed in 90 or more days. The role exists with attached permissions but serves no active purpose. Unused roles are a latent attack surface — if compromised, their permissions are available but not being monitored for anomalous usage because nobody uses them normally.
 
@@ -3409,7 +3409,7 @@ IAM role has not been assumed in 90 or more days. The role exists with attached 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6, AU-3; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6, AU-3; owasp_subtractive: S05; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM role participates in an assume-role chain deeper than the recommended threshold. AWS allows role chaining up to the session duration limit, but deep chains (3+ hops) obscure the original principal's identity in CloudTrail, complicate access reviews, and create fragile dependency chains where revoking one role breaks downstream automation. Each hop reduces the maximum session duration (capped at 1 hour for chained sessions), signaling that the architecture relies on transitive trust rather than direct grants.
 
@@ -3484,7 +3484,7 @@ IAM Roles Anywhere trust anchors must reference only approved certificate author
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** cis_aws_v1.4.0: 1.4; cis_aws_v3.0: 1.4; fedramp_moderate: IA-2; hipaa: 164.312(a)(1); nist_800_53_r5: IA-2; owasp_nhi: NHI2; pci_dss_v3.2.1: 2.1; pci_dss_v4.0: 8.3.4; soc2: CC6.1;
+- **Compliance:** cis_aws_v1.4.0: 1.4; cis_aws_v3.0: 1.4; fedramp_moderate: IA-2; hipaa: 164.312(a)(1); nist_800_53_r5: IA-2; owasp_nhi: NHI2; owasp_subtractive: S07; pci_dss_v3.2.1: 2.1; pci_dss_v4.0: 8.3.4; soc2: CC6.1; subtractive_tier: deletion;
 
 The AWS root account must not have active access keys. Root access keys provide unrestricted programmatic access. Use IAM users or roles for programmatic access instead.
 
@@ -3994,7 +3994,7 @@ SCP does not deny internet gateway creation in member accounts. Without this SCP
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: SC-7; owasp_nhi: NHI9; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: SC-7; owasp_nhi: NHI9; owasp_subtractive: S01; soc2: CC6.1; subtractive_tier: deletion;
 
 SCP does not deny EC2 instance launches without IMDSv2 required. Without this SCP, any identity in the organization can launch instances with IMDSv1 enabled. IMDSv1 is the primary credential-theft vector via SSRF — an attacker who compromises a web application on an EC2 instance can query the metadata service at 169.254.169.254 to steal IAM role credentials. The SCP denies ec2:RunInstances when ec2:MetadataHttpTokens is not "required", preventing IMDSv1 instances at the organizational boundary.
 
@@ -4114,7 +4114,7 @@ Safety mechanism integrity control. Checks that security guardrails are actively
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_subtractive: S09; soc2: CC6.1; subtractive_tier: constraint;
 
 SCP does not restrict which AWS regions member accounts can use. Resources can be created in any region including regions without organizational monitoring, CloudTrail, or Config. An attacker deploys resources in an unmonitored region to evade detection.
 
@@ -4144,7 +4144,7 @@ SCP does not deny ec2:PurchaseReservedInstancesOffering in member accounts. This
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI6; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI6; owasp_subtractive: S07; soc2: CC6.1; subtractive_tier: deletion;
 
 SCP does not deny iam:CreateAccessKey for root users in member accounts. Root access keys provide unrestricted API access to the entire AWS account — every service, every resource, every action. They bypass IAM policies and permission boundaries. Once created, root access keys persist until explicitly deleted.
 
@@ -4688,7 +4688,7 @@ This control reads the four per-layer derived booleans (each encoding correctnes
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC9.2;
+- **Compliance:** fedramp_moderate: AC-3; hipaa: 164.312(a)(1); iso_27001_2022: A.8.3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI4; owasp_subtractive: S05; pci_dss_v4.0: 7.2.1; soc2: CC6.1, CC9.2; subtractive_tier: deletion;
 
 IAM roles trusting a third-party account root principal (arn:aws:iam::X:root from outside the organization) without sts:ExternalId or aws:SourceAccount conditions are maximally exposed to the confused deputy problem. Any customer of the same third-party vendor can assume your role through the vendor's IAM system — because the trust grants access to ALL principals in the account, not just one specific role. The Microsoft Midnight Blizzard 2024 breach exploited a legacy cross-tenant trust without per-customer binding to pivot from a test tenant to production Exchange mailboxes. Account-root trust is critical because the blast radius is the entire third-party account's principal population.
 
@@ -4718,7 +4718,7 @@ IAM roles trusting a specific third-party role ARN (arn:aws:iam::X:role/Name fro
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-4; owasp_nhi: NHI6; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-4; owasp_nhi: NHI6; owasp_subtractive: S05; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM role has cross-environment production access AND administrative permissions. This is the Midnight Blizzard compound: a role that bridges environments is dangerous; a role that bridges environments with admin permissions is catastrophic. The Microsoft breach (2024) demonstrated this exact shape — a test OAuth application with production-scope grants and elevated permissions enabled a nation-state actor to read executive email across the organization. Neither cross-env access alone (CTL.IAM.CROSS.ENV.001) nor admin access alone (CTL.IAM.POLICY.ADMIN.001) captures the distinct risk of an environment-crossing principal with unrestricted permissions. The compound fires only when both conditions hold on the same role.
 
@@ -4763,7 +4763,7 @@ IAM role trust policy references a principal from an external cloud provider (GC
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_nhi: NHI4; owasp_subtractive: S05; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM roles trusting an account root principal (arn:aws:iam::X:root) without an sts:ExternalId condition allow ANY principal in the trusted account to assume the role. This is the most dangerous cross-account trust pattern — a compromised service account, OAuth app, or test tenant in the trusted account can assume the role. The Microsoft Midnight Blizzard 2024 breach exploited a legacy test OAuth app to assume a role with full_access_as_app permissions, pivoting from a test tenant to production Exchange mailboxes. Account-root trust without ExternalId is critical because the blast radius is the entire trusted account's principal population.
 
@@ -4793,7 +4793,7 @@ IAM roles trusting a specific role or user ARN (arn:aws:iam::X:role/Name) withou
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-3; owasp_nhi: NHI1; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-3; owasp_nhi: NHI1; owasp_subtractive: S05; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM role trust policies must not allow assumption by principals in external AWS accounts that are not recognized as known partners or organization members. Unknown external trust creates lateral access paths outside the organization's control. AWS does not notify the trusting account when a trusted account changes ownership, is decommissioned, or is compromised.
 
@@ -4943,7 +4943,7 @@ IAM roles trusted by AWS service principals (*.amazonaws.com) must include aws:S
 - **Severity:** critical
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_nhi: NHI4; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.8.3; nist_800_53_r5: AC-3; owasp_nhi: NHI4; owasp_subtractive: S02; pci_dss_v4.0: 7.2.1; soc2: CC6.1; subtractive_tier: deletion;
 
 IAM role trust policies must not use Principal "*" or Principal: {AWS: "*"}. A wildcard principal allows any AWS principal in any account to attempt role assumption. This is the most dangerous trust configuration — the role is effectively public to the entire AWS ecosystem.
 
@@ -4989,7 +4989,7 @@ User-scoped sibling of CTL.IAM.ROLE.PERMISSIONDRIFT.001 — same Access Advisor 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** identity
-- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: AC-2; owasp_subtractive: S07; soc2: CC6.1; subtractive_tier: deletion;
 
 Cross-account roles granted to external vendors (SaaS providers, auditors, consultants) must be actively used or decommissioned. A vendor role unused for more than 90 days is "ghost access" — the vendor may no longer need it, the contract may have ended, but the access persists. Each dormant vendor role is an unmonitored ingress path that can be exploited if the vendor is compromised.
 
