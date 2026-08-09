@@ -28,7 +28,7 @@ compliance:
   pci_dss_v4.0: "3.6"
   fedramp_moderate: "SC-12"
   iso_27001_2022: "A.8.24"
-  ccm_v4: ["CEK-03", "CEK-05"]
+  ccm_v4: ["CEK-03", "CEK-05", "CEK-12"]
 scope_tags:
   - aws
   - kms

@@ -31,7 +31,7 @@ compliance:
   fedramp_moderate: "SC-12(1)"
   hipaa: "164.312(a)(1)"
   iso_27001_2022: "A.8.24"
-  ccm_v4: ["CEK-03", "BCR-08", "BCR-11"]
+  ccm_v4: ["CEK-03", "CEK-14", "BCR-08", "BCR-11"]
 scope_tags:
   - aws
   - kms

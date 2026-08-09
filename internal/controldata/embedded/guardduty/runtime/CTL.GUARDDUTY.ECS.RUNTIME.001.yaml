@@ -12,7 +12,7 @@ compliance:
   soc2: "CC7.1"
   nist_800_53_r5: "SI-4"
   fedramp_moderate: "SI-4"
-  ccm_v4: ["TVM-01", "TVM-03"]
+  ccm_v4: ["TVM-01", "TVM-03", "UEM-10"]
 scope_tags:
   - aws
   - guardduty

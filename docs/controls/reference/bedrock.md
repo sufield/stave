@@ -440,6 +440,21 @@ AgentCore runtime lifecycleConfiguration.maxLifetime exceeds the recommended thr
 
 ---
 
+### CTL.BEDROCK.AGENTCORE.SHARED.EXECUTION.ROLE.001
+
+**AgentCore Runtimes Must Not Share Execution Roles**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** hipaa: 164.312(a)(1); nist_800_53_r5: AC-6(3); owasp_nhi: NHI5; soc2: CC6.3;
+
+Multiple Bedrock AgentCore runtimes share the same IAM execution role. Compromising any one runtime — via prompt injection, tool abuse, or code interpreter escape — grants the attacker the shared role's credentials. Those credentials reach every other runtime's resources: ECR images, memory stores, code interpreters, and S3 log buckets. Each runtime should have a dedicated execution role scoped to its own resource set. The collector pre-computes whether the runtime's execution role ARN is referenced by another runtime in the same account.
+
+**Remediation:** Create a dedicated IAM execution role per AgentCore runtime. Scope each role to the specific resources that runtime's tools require — its own ECR repository, memory store, code interpreter sandbox, and S3 log prefix. Use resource-based conditions (aws:ResourceTag, StringEquals on ARN prefix) to enforce isolation.
+
+---
+
 ### CTL.BEDROCK.AGENTCORE.STALE.001
 
 **AgentCore Runtime Must Not Be Idle Beyond Threshold**

@@ -26,7 +26,7 @@ compliance:
   soc2: "CC7.2"
   hipaa: "164.312(b)"
   iso_27001_2022: "A.8.16"
-  ccm_v4: ["LOG-08", "CEK-03"]
+  ccm_v4: ["LOG-08", "CEK-03", "CEK-14"]
 scope_tags:
   - aws
   - kms

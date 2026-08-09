@@ -26,7 +26,7 @@ compliance:
   pci_dss_v4.0: "7.2.4"
   fedramp_moderate: "AC-2"
   hipaa: "164.312(a)(1)"
-  ccm_v4: ["CEK-03", "IAM-08"]
+  ccm_v4: ["CEK-03", "CEK-21", "IAM-08"]
 scope_tags:
   - aws
   - kms

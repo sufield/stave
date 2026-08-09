@@ -23,7 +23,7 @@ compliance:
   nist_800_53_r5: "CM-2"
   pci_dss_v4.0: "3.6.1"
   fedramp_moderate: "CM-2"
-  ccm_v4: ["CEK-03", "BCR-08"]
+  ccm_v4: ["CEK-03", "CEK-21", "BCR-08"]
 scope_tags:
   - aws
   - kms

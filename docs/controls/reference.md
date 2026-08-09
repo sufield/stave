@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3375
-**Pack hash:** `80075f3487f072c3995759b0637189cf0746fda527d86ef336b203004ffdd44d`
+**Total controls:** 3376
+**Pack hash:** `e9fa3fa942a3832360ca0a87661c2ca50f7e50e0231c964294a2b334a72d39b2`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 368 |
-| high | 1447 |
+| high | 1448 |
 | info | 19 |
 | low | 265 |
 | medium | 1276 |
@@ -31,7 +31,7 @@ GitHub. Pick a service below.
 | exposure | 1480 |
 | governance | 661 |
 | hygiene | 21 |
-| identity | 670 |
+| identity | 671 |
 | lifecycle | 32 |
 | network | 52 |
 | resilience | 49 |
@@ -60,7 +60,7 @@ GitHub. Pick a service below.
 | [BACKUP](reference/backup.md) | 14 |
 | [BATCH](reference/batch.md) | 5 |
 | [BEANSTALK](reference/beanstalk.md) | 5 |
-| [BEDROCK](reference/bedrock.md) | 49 |
+| [BEDROCK](reference/bedrock.md) | 50 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
 | [CLOUD9](reference/cloud9.md) | 4 |

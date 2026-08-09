@@ -18,7 +18,7 @@ compliance:
   ffiec: "ISH-4"
   iso_27001_2022: "A.8.24"
   nist_csf_2.0: "PR.DS"
-  ccm_v4: ["CEK-03", "CEK-05"]
+  ccm_v4: ["CEK-03", "CEK-05", "CEK-12"]
 scope_tags:
   - aws
   - kms

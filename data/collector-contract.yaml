@@ -1152,6 +1152,29 @@ contracts:
     consumers:
       - CTL.BEDROCK.AGENTCORE.VERSION.UNPINNED.001
 
+  - field: agentcore_execution_role_shared
+    type: boolean
+    status: planned
+    postcondition: >
+      True if another AgentCore runtime in the same account
+      references the same execution role ARN. Derived by
+      grouping ListAgentRuntimes results by execution role ARN
+      and flagging any runtime whose role appears more than once.
+    consumers:
+      - CTL.BEDROCK.AGENTCORE.SHARED.EXECUTION.ROLE.001
+
+  - field: agentcore_execution_role_arn
+    type: string
+    status: planned
+    postcondition: >
+      The IAM execution role ARN attached to the AgentCore
+      runtime. Sourced from GetAgentRuntime response.
+      Used as the scope_field for the
+      agentcore_cross_agent_escalation chain to correlate
+      runtime findings with IAM role findings.
+    consumers:
+      - CTL.BEDROCK.AGENTCORE.SHARED.EXECUTION.ROLE.001
+
   # ─── Athena Federated Query Connectors (Jul 2026) ───────
 
   - field: connector_version_vulnerable

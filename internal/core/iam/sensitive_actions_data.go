@@ -456,7 +456,20 @@ var defaultActions = []ActionClassification{
 	{Action: "omics:GetReadSet", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
 	{Action: "omics:GetVariant", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
 
+	// --- DataAccess additions: Bedrock AgentCore invocation ---
+	{Action: "bedrock-agentcore:InvokeAgentRuntime", Categories: []ActionRiskCategory{ActionDataAccess, ActionPrivEsc}, Source: "stave"},
+	{Action: "bedrock-agentcore:InvokeAgentRuntimeCommand", Categories: []ActionRiskCategory{ActionDataAccess, ActionPrivEsc}, Source: "stave"},
+	{Action: "bedrock-agentcore:InvokeAgentRuntimeCommandShell", Categories: []ActionRiskCategory{ActionDataAccess, ActionPrivEsc}, Source: "stave"},
+	{Action: "bedrock-agentcore:InvokeCodeInterpreter", Categories: []ActionRiskCategory{ActionDataAccess, ActionPrivEsc}, Source: "stave"},
+
+	// --- CredentialExposure additions: Bedrock AgentCore token vault ---
+	{Action: "bedrock-agentcore:GetResourceApiKey", Categories: []ActionRiskCategory{ActionCredentialExposure}, Source: "stave"},
+	{Action: "bedrock-agentcore:GetResourceOauth2Token", Categories: []ActionRiskCategory{ActionCredentialExposure}, Source: "stave"},
+	{Action: "bedrock-agentcore:GetWorkloadAccessToken", Categories: []ActionRiskCategory{ActionCredentialExposure}, Source: "stave"},
+
 	// --- PrivEsc additions ---
+	{Action: "bedrock-agentcore:CreateAgentRuntime", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
+	{Action: "bedrock-agentcore:UpdateAgentRuntime", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
 	{Action: "bedrock:CreateAgent", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
 	{Action: "bedrock:InvokeAgent", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
 	{Action: "bedrock:CreateAgentActionGroup", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
@@ -467,6 +480,11 @@ var defaultActions = []ActionClassification{
 	{Action: "sso:ProvisionPermissionSet", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
 	{Action: "iam:CreateServiceLinkedRole", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "stave"},
 	{Action: "ssm:SendCommand", Categories: []ActionRiskCategory{ActionResourceExposure, ActionPrivEsc}, Source: "stave"},
+
+	// --- ResourceExposure additions: Bedrock AgentCore access control ---
+	{Action: "bedrock-agentcore:AuthorizeAction", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "bedrock-agentcore:InvokeGateway", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "bedrock-agentcore:DeleteResourcePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 
 	// --- ResourceExposure additions ---
 	{Action: "datapipeline:CreatePipeline", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},

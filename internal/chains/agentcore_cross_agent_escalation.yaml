@@ -1,0 +1,26 @@
+id: agentcore_cross_agent_escalation
+description: >
+  Cross-agent privilege escalation via shared execution role with
+  wildcard permissions. Multiple AgentCore runtimes share an IAM
+  execution role that grants wildcard Resource scope on sensitive
+  AgentCore actions (InvokeCodeInterpreter, InvokeAgentRuntime,
+  GetResourceApiKey, etc.). Compromising any single runtime —
+  via prompt injection, tool manipulation, or code interpreter
+  escape — yields credentials that reach every other runtime's
+  ECR images, memory stores, interpreters, and log buckets. The
+  shared role is the lateral movement primitive; the wildcard
+  scope removes the resource-level barrier that would otherwise
+  contain the blast radius to one runtime's resources.
+  Named incident precedent: Mitigant/Unit 42 Bedrock AgentCore
+  cross-agent privilege escalation (June 2026).
+controls:
+  - CTL.BEDROCK.AGENTCORE.SHARED.EXECUTION.ROLE.001
+  - CTL.IAM.POLICY.RESOURCE.WILDCARD.001
+escalation_threshold: 2
+compound_severity: critical
+scope_field: properties.ai.runtime.execution_role_arn
+preconditions:
+  - initial_access
+postconditions:
+  - lateral_movement
+implicit_dependencies: []

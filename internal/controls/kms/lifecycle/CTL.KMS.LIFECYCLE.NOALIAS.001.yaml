@@ -28,7 +28,7 @@ compliance:
   nist_800_53_r5: "CM-2, CM-3"
   fedramp_moderate: "CM-2"
   iso_27001_2022: "A.5.9, A.8.24"
-  ccm_v4: ["CEK-03"]
+  ccm_v4: ["CEK-03", "CEK-21"]
 scope_tags:
   - aws
   - kms

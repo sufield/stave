@@ -1,0 +1,67 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-08T13:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-data-pipeline",
+      "type": "aws_bedrock_agentcore_runtime",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agentcore_runtime",
+          "runtime": {
+            "execution_role_shared": false,
+            "execution_role_arn": "arn:aws:iam::111122223333:role/data-pipeline-agent-role"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-customer-support",
+      "type": "aws_bedrock_agentcore_runtime",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agentcore_runtime",
+          "runtime": {
+            "execution_role_shared": false,
+            "execution_role_arn": "arn:aws:iam::111122223333:role/customer-support-agent-role"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/data-pipeline-agent-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "workload_type": "agent"
+          },
+          "policies": {
+            "has_resource_wildcard_on_sensitive": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/customer-support-agent-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role": {
+            "workload_type": "agent"
+          },
+          "policies": {
+            "has_resource_wildcard_on_sensitive": false
+          }
+        }
+      }
+    }
+  ]
+}
