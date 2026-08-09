@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.AMI.UNSIGNED.001
+name: AMI Is Not Signed
+description: >
+  AMI does not have a cryptographic signature verifiable through
+  AWS Signer or an equivalent signing service. Without a signature,
+  the AMI's integrity cannot be verified before launch — an attacker
+  who replaces or modifies the AMI (via shared-account access,
+  compromised Image Builder pipeline, or snapshot manipulation)
+  inserts malicious code into every instance launched from it.
+  AMI signing with AWS Signer creates a Notation-compatible
+  signature stored alongside the AMI; launch-time or pipeline-gate
+  verification confirms the image was built by a trusted publisher
+  and has not been tampered with since signing.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC6.8"
+  ccm_v4: ["AIS-06", "CCC-04"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - supply-chain
+  - compute-hardening
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ami
+params:
+  attack_stage: persistence
+observation_fields:
+  - compute.kind
+  - compute.ami.signed
+remediation:
+  description: >
+    AMI is not signed. Integrity cannot be verified before launch.
+  action: >
+    Sign AMIs during the build pipeline using AWS Signer. Create a
+    signing profile, sign the AMI after Image Builder or Packer
+    produces it, and add a launch gate that rejects unsigned AMIs.
+  example: |
+    {
+      "compute": {
+        "kind": "ami",
+        "ami": {
+          "signed": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ami
+    - field: properties.compute.ami.signed
+      op: ne
+      value: true
+tests:
+  - name: "unsigned AMI — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "ami-0123456789abcdef0"
+      asset_type: aws_ami
+      vendor: aws
+      properties:
+        compute:
+          kind: ami
+          ami:
+            signed: false
+  - name: "signed AMI — passes"
+    verdict: PASS
+    asset:
+      asset_id: "ami-abcdef0123456789a"
+      asset_type: aws_ami
+      vendor: aws
+      properties:
+        compute:
+          kind: ami
+          ami:
+            signed: true

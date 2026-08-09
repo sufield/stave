@@ -95,6 +95,21 @@ A publicly shared AMI exposes the complete disk contents of the base image — i
 
 ---
 
+### CTL.EC2.AMI.UNSIGNED.001
+
+**AMI Is Not Signed**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-7; soc2: CC6.8;
+
+AMI does not have a cryptographic signature verifiable through AWS Signer or an equivalent signing service. Without a signature, the AMI's integrity cannot be verified before launch — an attacker who replaces or modifies the AMI (via shared-account access, compromised Image Builder pipeline, or snapshot manipulation) inserts malicious code into every instance launched from it. AMI signing with AWS Signer creates a Notation-compatible signature stored alongside the AMI; launch-time or pipeline-gate verification confirms the image was built by a trusted publisher and has not been tampered with since signing.
+
+**Remediation:** Sign AMIs during the build pipeline using AWS Signer. Create a signing profile, sign the AMI after Image Builder or Packer produces it, and add a launch gate that rejects unsigned AMIs.
+
+---
+
 ### CTL.EC2.AMI.UNTRUSTED.001
 
 **Instance Launched From Untrusted AMI Source**
