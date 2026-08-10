@@ -320,6 +320,23 @@ CloudTrail trails must include Lambda data events to log function invocations. W
 
 ---
 
+### CTL.CLOUDTRAIL.DATA.S3VECTORS.001
+
+**CloudTrail Data Events Not Enabled for S3 Vectors**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-2, AU-3, AU-12; soc2: CC7.1, CC7.2;
+
+CloudTrail is not configured to log S3 Vectors data events. S3 Vectors data-plane operations (PutVectors, GetVectors, DeleteVectors, QueryVectors) are not logged by default. Without data events on the AWS::S3Vectors::VectorBucket and AWS::S3Vectors::Index resource types, there is no audit trail for vector writes — an attacker who gains PutVectors access can poison RAG embeddings without any record. Even when enabled, AWS strips request parameters (vector keys, embeddings, metadata) from the log entry, but the event itself records who wrote, when, and from where. That is sufficient to detect unauthorized writes and correlate with incident timelines.
+
+**Remediation:** Add S3 Vectors data-event selectors to the trail: aws cloudtrail put-event-selectors --trail-name <trail> --advanced-event-selectors '[{"Name":"S3 Vectors data events","FieldSelectors":[
+  {"Field":"eventCategory","Equals":["Data"]},
+  {"Field":"resources.type","Equals":["AWS::S3Vectors::VectorBucket","AWS::S3Vectors::Index"]}]}]'.
+
+---
+
 ### CTL.CLOUDTRAIL.DATAEVENTS.S3.001
 
 **CloudTrail Data Events Not Enabled for Sensitive S3 Buckets**

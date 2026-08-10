@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.S3VECTORS.IAM.PUTVECTORS.WILDCARD.001
+name: IAM Policy Grants s3vectors:PutVectors With Wildcard Resource
+description: >
+  An IAM policy grants s3vectors:PutVectors (or s3vectors:*)
+  with Resource "*". This permits the principal to write
+  embeddings to any vector index in the account. The
+  s3vectors: namespace is separate from s3:, so policies
+  restricting s3:PutObject do not constrain vector writes.
+  A principal with wildcard PutVectors can poison any RAG
+  pipeline's embeddings — the entire attack surface described
+  in RAG poisoning research starts with this permission.
+  The mitigation is a dedicated ingester role scoped to
+  specific vector bucket and index ARNs.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6, AC-3"
+  soc2: "CC6.1, CC6.3"
+  ccm_v4: ["IAM-05", "IAM-09"]
+scope_tags:
+  - aws
+  - s3vectors
+  - iam
+taxonomy:
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+  - aws_iam_user
+  - aws_iam_policy
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: data
+    scope: account
+    multiplier: 3.0
+observation_fields:
+  - identity.kind
+  - identity.iam.has_s3vectors_putvectors_wildcard
+defect: >
+  IAM policy grants s3vectors:PutVectors with Resource "*".
+  Principal can write embeddings to any vector index.
+infection: >
+  Any principal with this permission can write arbitrary
+  embeddings to any vector index in the account. RAG
+  pipelines consuming those indexes return attacker-chosen
+  content — citations to malicious URLs, factually wrong
+  answers, or prompt injection payloads that hijack
+  downstream tool calls.
+failure: >
+  Compromised principal writes poisoned embeddings across
+  all vector indexes. Every RAG-powered application in the
+  account serves attacker-controlled content. Detected only
+  when users report incorrect answers or incident response
+  traces the vectors.
+remediation:
+  description: >
+    IAM policy grants s3vectors:PutVectors with wildcard
+    resource scope.
+  action: >
+    Scope the policy to specific vector bucket and index ARNs:
+    "Resource": ["arn:aws:s3vectors:us-east-1:123456789012:bucket/rag-embeddings/index/product-catalog"].
+    Create a dedicated ingester role with only the indexes
+    it needs to write. Remove s3vectors:PutVectors from
+    shared roles, CI pipelines, and human users.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "iam": {
+          "has_s3vectors_putvectors_wildcard": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.iam.has_s3vectors_putvectors_wildcard
+      op: eq
+      value: true
+tests:
+  - name: role with wildcard PutVectors fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/rag-ingester-broad"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          iam:
+            has_s3vectors_putvectors_wildcard: true
+  - name: role with scoped PutVectors passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/rag-ingester-scoped"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          iam:
+            has_s3vectors_putvectors_wildcard: false

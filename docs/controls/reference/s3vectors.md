@@ -20,6 +20,36 @@ Vector Bucket policies must not grant access to external AWS accounts without or
 
 ---
 
+### CTL.S3VECTORS.ENCRYPTION.001
+
+**Vector Bucket Encryption Not Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; soc2: CC6.1;
+
+S3 Vectors bucket does not have encryption configured. Vector embeddings encode semantic content of source documents — encryption at rest protects against unauthorized access to the underlying storage. S3 Vectors inherits the S3 encryption model but uses the s3vectors: IAM namespace, so S3 bucket-level encryption defaults do not apply to Vector Buckets.
+
+**Remediation:** Enable SSE-KMS encryption on the Vector Bucket with a customer-managed KMS key. S3 Vectors encryption is set at bucket creation; for existing unencrypted buckets, recreate with encryption enabled and re-index.
+
+---
+
+### CTL.S3VECTORS.IAM.PUTVECTORS.WILDCARD.001
+
+**IAM Policy Grants s3vectors:PutVectors With Wildcard Resource**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6, AC-3; soc2: CC6.1, CC6.3;
+
+An IAM policy grants s3vectors:PutVectors (or s3vectors:*) with Resource "*". This permits the principal to write embeddings to any vector index in the account. The s3vectors: namespace is separate from s3:, so policies restricting s3:PutObject do not constrain vector writes. A principal with wildcard PutVectors can poison any RAG pipeline's embeddings — the entire attack surface described in RAG poisoning research starts with this permission. The mitigation is a dedicated ingester role scoped to specific vector bucket and index ARNs.
+
+**Remediation:** Scope the policy to specific vector bucket and index ARNs: "Resource": ["arn:aws:s3vectors:us-east-1:123456789012:bucket/rag-embeddings/index/product-catalog"]. Create a dedicated ingester role with only the indexes it needs to write. Remove s3vectors:PutVectors from shared roles, CI pipelines, and human users.
+
+---
+
 ### CTL.S3VECTORS.POLICY.CROSSACCOUNT.001
 
 **Vector Bucket Policy Must Restrict Cross-Account Access**

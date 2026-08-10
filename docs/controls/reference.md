@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3403
-**Pack hash:** `cae63fd45266c12c6f7307340dd87598515a215d85099b6fb437366ebd030d2f`
+**Total controls:** 3406
+**Pack hash:** `b372fed1feb7fdb3598fbabc14c8e42b1e3626bea776c787f5d25e249177a93b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 370 |
-| high | 1456 |
+| high | 1458 |
 | info | 19 |
 | low | 270 |
-| medium | 1288 |
+| medium | 1289 |
 
 | Domain | Count |
 |--------|-------|
@@ -26,10 +26,10 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | compute | 1 |
 | config | 2 |
-| detection | 160 |
+| detection | 161 |
 | encryption | 125 |
-| exposure | 1486 |
-| governance | 682 |
+| exposure | 1487 |
+| governance | 683 |
 | hygiene | 21 |
 | identity | 671 |
 | lifecycle | 32 |
@@ -67,7 +67,7 @@ GitHub. Pick a service below.
 | [CLOUDFLARE](reference/cloudflare.md) | 29 |
 | [CLOUDFORMATION](reference/cloudformation.md) | 12 |
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
-| [CLOUDTRAIL](reference/cloudtrail.md) | 65 |
+| [CLOUDTRAIL](reference/cloudtrail.md) | 66 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 68 |
 | [CODEBUILD](reference/codebuild.md) | 13 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
@@ -146,7 +146,7 @@ GitHub. Pick a service below.
 | [S3](reference/s3.md) | 149 |
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
-| [S3VECTORS](reference/s3vectors.md) | 3 |
+| [S3VECTORS](reference/s3vectors.md) | 5 |
 | [SAGEMAKER](reference/sagemaker.md) | 49 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |

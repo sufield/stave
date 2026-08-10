@@ -2013,3 +2013,57 @@ contracts:
       designated ML accounts/OUs.
     consumers:
       - CTL.ORG.SCP.AI.SERVICE.RESTRICT.001
+
+  # ─── S3 Vectors ────────────────────────────────────────────
+
+  - field: storage.access.has_external_access
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Vector Bucket policy grants access to
+      principals in external AWS accounts. Sourced from
+      s3vectors:GetVectorBucketPolicy, parsed and evaluated
+      against the owning account ID.
+    consumers:
+      - CTL.S3VECTORS.POLICY.CROSSACCOUNT.001
+
+  - field: storage.access.has_wildcard_principal
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Vector Bucket policy grants access to
+      wildcard (*) or anonymous principals. Sourced from
+      s3vectors:GetVectorBucketPolicy.
+    consumers:
+      - CTL.S3VECTORS.POLICY.PUBLIC.001
+
+  - field: storage.encryption.enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Vector Bucket has encryption configured.
+      Sourced from s3vectors:GetVectorBucket encryption
+      configuration.
+    consumers:
+      - CTL.S3VECTORS.ENCRYPTION.001
+
+  - field: audit.cloudtrail.data_events_s3vectors
+    type: boolean
+    status: planned
+    postcondition: >
+      True if CloudTrail advanced event selectors include
+      AWS::S3Vectors::VectorBucket or AWS::S3Vectors::Index
+      resource types. Sourced from
+      cloudtrail:GetEventSelectors.
+    consumers:
+      - CTL.CLOUDTRAIL.DATA.S3VECTORS.001
+
+  - field: identity.iam.has_s3vectors_putvectors_wildcard
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IAM principal has a policy granting
+      s3vectors:PutVectors (or s3vectors:*) with Resource "*".
+      Derived from IAM policy analysis.
+    consumers:
+      - CTL.S3VECTORS.IAM.PUTVECTORS.WILDCARD.001

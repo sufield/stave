@@ -621,4 +621,11 @@ var defaultActions = []ActionClassification{
 	{Action: "redshift:AuthorizeEndpointAccess", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "sar-pm-2026-07"},
 	{Action: "redshift:ModifyClusterIamRoles", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
 	{Action: "redshift:CreateClusterUser", Categories: []ActionRiskCategory{ActionPrivEsc}, Source: "sar-pm-2026-07"},
+
+	// --- S3 Vectors data + resource exposure (5) ---
+	{Action: "s3vectors:PutVectors", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+	{Action: "s3vectors:DeleteVectors", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+	{Action: "s3vectors:GetVectors", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+	{Action: "s3vectors:QueryVectors", Categories: []ActionRiskCategory{ActionDataAccess}, Source: "stave"},
+	{Action: "s3vectors:PutVectorBucketPolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 }

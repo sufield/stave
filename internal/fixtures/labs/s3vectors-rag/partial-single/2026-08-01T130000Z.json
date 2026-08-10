@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.s3vectors-rag"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:222233334444:trail/org-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit": {
+          "kind": "trail",
+          "cloudtrail": {
+            "data_events_s3vectors": false
+          }
+        }
+      }
+    }
+  ]
+}

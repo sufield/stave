@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.DATA.S3VECTORS.001
+name: CloudTrail Data Events Not Enabled for S3 Vectors
+description: >
+  CloudTrail is not configured to log S3 Vectors data events.
+  S3 Vectors data-plane operations (PutVectors, GetVectors,
+  DeleteVectors, QueryVectors) are not logged by default. Without
+  data events on the AWS::S3Vectors::VectorBucket and
+  AWS::S3Vectors::Index resource types, there is no audit trail
+  for vector writes — an attacker who gains PutVectors access can
+  poison RAG embeddings without any record. Even when enabled,
+  AWS strips request parameters (vector keys, embeddings, metadata)
+  from the log entry, but the event itself records who wrote,
+  when, and from where. That is sufficient to detect unauthorized
+  writes and correlate with incident timelines.
+domain: detection
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2, AU-3, AU-12"
+  soc2: "CC7.1, CC7.2"
+  ccm_v4: ["LOG-02", "LOG-13"]
+scope_tags:
+  - aws
+  - cloudtrail
+  - s3vectors
+taxonomy:
+  - logging
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cloudtrail_trail
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 4.0
+observation_fields:
+  - audit.kind
+  - audit.cloudtrail.data_events_s3vectors
+defect: >
+  CloudTrail data events are not enabled for S3 Vectors
+  resources.
+infection: >
+  S3 Vectors management events (CreateVectorBucket, CreateIndex)
+  are logged by default. Data events (PutVectors, GetVectors,
+  QueryVectors, DeleteVectors) are NOT logged by default.
+  Without data events: who wrote poisoned embeddings is unknown,
+  when the RAG index was modified is unrecorded, whether an
+  attacker exfiltrated vector data is unverifiable.
+failure: >
+  No data-access audit trail for S3 Vectors. Vector-level
+  operations are unrecorded; embedding poisoning and
+  unauthorized queries cannot be reconstructed.
+remediation:
+  description: >
+    CloudTrail does not log S3 Vectors data events. Vector-level
+    operations are unrecorded.
+  action: >
+    Add S3 Vectors data-event selectors to the trail:
+    aws cloudtrail put-event-selectors --trail-name <trail>
+    --advanced-event-selectors
+    '[{"Name":"S3 Vectors data events","FieldSelectors":[
+      {"Field":"eventCategory","Equals":["Data"]},
+      {"Field":"resources.type","Equals":["AWS::S3Vectors::VectorBucket","AWS::S3Vectors::Index"]}]}]'.
+  example: |
+    {
+      "audit": {
+        "kind": "trail",
+        "cloudtrail": {
+          "data_events_s3vectors": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit.kind
+      op: eq
+      value: trail
+    - field: properties.audit.cloudtrail.data_events_s3vectors
+      op: eq
+      value: false
+tests:
+  - name: trail without S3 Vectors data events fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            data_events_s3vectors: false
+  - name: trail with S3 Vectors data events passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit:
+          kind: trail
+          cloudtrail:
+            data_events_s3vectors: true

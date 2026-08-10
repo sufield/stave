@@ -1,0 +1,30 @@
+id: s3vectors_rag_poisoning_path
+description: >
+  Undetectable RAG poisoning path via S3 Vectors. When a
+  principal has wildcard s3vectors:PutVectors, the vector
+  bucket policy permits cross-account access, and CloudTrail
+  data events are not enabled for S3 Vectors resources, an
+  attacker can write poisoned embeddings to any index without
+  any audit trail. The poisoned vectors alter RAG pipeline
+  outputs — citations, facts, tool-call arguments — for every
+  consumer of the index. Each control alone is a gap; together
+  they form a complete kill chain from access to persistence
+  to detection evasion.
+controls:
+  - CTL.S3VECTORS.IAM.PUTVECTORS.WILDCARD.001
+  - CTL.S3VECTORS.POLICY.CROSSACCOUNT.001
+  - CTL.S3VECTORS.POLICY.PUBLIC.001
+  - CTL.CLOUDTRAIL.DATA.S3VECTORS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - cross_account_access
+postconditions:
+  - data_poisoning
+  - detection_evasion
+implicit_dependencies:
+  - source: observation.s3vectors_buckets
+    fallback: fail_closed
+    diagnostic: >
+      S3 Vectors observations not captured. Vector bucket
+      configuration is invisible to the catalog.

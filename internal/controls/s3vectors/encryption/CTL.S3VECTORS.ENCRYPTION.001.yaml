@@ -1,0 +1,81 @@
+dsl_version: ctrl.v1
+id: CTL.S3VECTORS.ENCRYPTION.001
+name: Vector Bucket Encryption Not Configured
+description: >
+  S3 Vectors bucket does not have encryption configured.
+  Vector embeddings encode semantic content of source
+  documents — encryption at rest protects against
+  unauthorized access to the underlying storage. S3
+  Vectors inherits the S3 encryption model but uses the
+  s3vectors: IAM namespace, so S3 bucket-level encryption
+  defaults do not apply to Vector Buckets.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03", "DSP-17"]
+scope_tags:
+  - aws
+  - s3vectors
+taxonomy:
+  - encryption-at-rest
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3vectors_vector_bucket
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.enabled
+remediation:
+  description: >
+    Vector Bucket does not have encryption configured.
+    Embedding data is stored unencrypted at rest.
+  action: >
+    Enable SSE-KMS encryption on the Vector Bucket with a
+    customer-managed KMS key. S3 Vectors encryption is set
+    at bucket creation; for existing unencrypted buckets,
+    recreate with encryption enabled and re-index.
+  example: |
+    {
+      "storage": {
+        "kind": "vector_bucket",
+        "encryption": {
+          "enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: vector_bucket
+    - field: properties.storage.encryption.enabled
+      op: eq
+      value: false
+tests:
+  - name: unencrypted vector bucket fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3vectors:us-east-1:123456789012:bucket/rag-embeddings
+      asset_type: aws_s3vectors_vector_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: vector_bucket
+          encryption:
+            enabled: false
+  - name: encrypted vector bucket passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3vectors:us-east-1:123456789012:bucket/rag-embeddings
+      asset_type: aws_s3vectors_vector_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: vector_bucket
+          encryption:
+            enabled: true
