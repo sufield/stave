@@ -1979,3 +1979,37 @@ contracts:
       ds:ListLogSubscriptions.
     consumers:
       - CTL.DIRECTORYSERVICE.LOGGING.001
+
+  # ─── Shadow AI Governance ──────────────────────────────────
+
+  - field: account.ai_workload_authorized
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the account is designated for AI/ML workloads via
+      the stave:ai-workload-authorized tag. Sourced from
+      organizations:ListTagsForResource or
+      resourcegroupstaggingapi:GetResources.
+    consumers:
+      - CTL.ACCOUNT.AI.UNSANCTIONED.001
+
+  - field: account.ai_services.has_active_services
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the account has active AI/ML service resources
+      (Bedrock model access, SageMaker endpoints, Comprehend
+      endpoints, etc.). Derived from service-specific list APIs.
+    consumers:
+      - CTL.ACCOUNT.AI.UNSANCTIONED.001
+
+  - field: organization.scp.denies_ai_services
+    type: boolean
+    status: planned
+    postcondition: >
+      True if an SCP in the organization denies AI/ML service
+      actions (bedrock:*, sagemaker:*, comprehend:*, textract:*,
+      rekognition:*, etc.) with condition exceptions for
+      designated ML accounts/OUs.
+    consumers:
+      - CTL.ORG.SCP.AI.SERVICE.RESTRICT.001
