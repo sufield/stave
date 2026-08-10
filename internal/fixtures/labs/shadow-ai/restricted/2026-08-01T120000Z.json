@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.shadow-ai"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:organizations::444455556666:organization/o-restricted",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "scp_policy_set",
+          "scp": {
+            "denies_ai_services": true,
+            "denies_sagemaker": true
+          }
+        }
+      }
+    },
+    {
+      "id": "444455556666:ai-services",
+      "type": "aws_account",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "kind": "ai_service_inventory",
+          "ai_workload_authorized": false,
+          "ai_services": {
+            "has_active_services": false,
+            "active_services": []
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.SHADOW.NOTEBOOK.001
+name: SageMaker Notebook in Account Not Designated for AI Workloads
+description: >
+  A SageMaker notebook instance is active in an account not
+  designated for AI workloads. Notebooks provide interactive
+  compute with IAM execution roles and optional direct internet
+  access. In an unsanctioned account, notebooks can be used to
+  develop and test models against production data without
+  governance controls, and their internet access enables data
+  exfiltration.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7, AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_notebook
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: exposure
+    scope: service
+    multiplier: 3.0
+observation_fields:
+  - sagemaker.notebook_exists
+  - account.ai_workload_authorized
+remediation:
+  description: >
+    SageMaker notebook running in an unsanctioned account.
+  action: >
+    Stop the notebook or authorize the account for AI workloads
+    after security review.
+  example: |
+    {
+      "sagemaker": {
+        "notebook_exists": true
+      },
+      "account": {
+        "ai_workload_authorized": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.sagemaker.notebook_exists
+      op: eq
+      value: true
+    - field: properties.account.ai_workload_authorized
+      op: ne
+      value: true
+tests:
+  - name: "unsanctioned sagemaker notebook fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:999988887777:notebook-instance/shadow-notebook"
+      asset_type: aws_sagemaker_notebook
+      vendor: aws
+      properties:
+        sagemaker:
+          notebook_exists: true
+        account:
+          ai_workload_authorized: false
+  - name: "authorized sagemaker notebook passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:notebook-instance/authorized-notebook"
+      asset_type: aws_sagemaker_notebook
+      vendor: aws
+      properties:
+        sagemaker:
+          notebook_exists: true
+        account:
+          ai_workload_authorized: true

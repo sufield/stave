@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.ACCOUNT.AI.UNSANCTIONED.001
+name: AI/ML Services Detected in Account Not Designated for AI Workloads
+description: >
+  AI/ML service resources detected in an account not designated
+  for AI workloads. Shadow AI usage bypasses governance, security
+  review, data classification, and cost controls. Teams scanning
+  endpoints for AI artifacts nearly always find something they
+  never sanctioned (Eric Doerr, Tenable). Unlike misconfigured AI
+  (where an authorized service is set up incorrectly), shadow AI
+  is unauthorized usage — the service should not exist in this
+  account at all.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7, CM-8, AC-3"
+  soc2: "CC6.1, CC8.1"
+  ccm_v4: ["IAM-10", "GRC-03", "DSP-01"]
+scope_tags:
+  - aws
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: exposure
+    scope: account
+    multiplier: 4.0
+observation_fields:
+  - account.kind
+  - account.ai_workload_authorized
+  - account.ai_services.has_active_services
+remediation:
+  description: >
+    AI/ML services detected in an account not designated for AI
+    workloads.
+  action: >
+    Either authorize this account for AI workloads (add
+    stave:ai-workload-authorized tag after security review) or
+    decommission the unsanctioned AI resources. Investigate who
+    provisioned them and whether data was processed.
+  example: |
+    {
+      "account": {
+        "kind": "ai_service_inventory",
+        "ai_workload_authorized": true,
+        "ai_services": {
+          "has_active_services": true,
+          "active_services": ["bedrock"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.account.kind
+      op: eq
+      value: ai_service_inventory
+    - field: properties.account.ai_services.has_active_services
+      op: eq
+      value: true
+    - field: properties.account.ai_workload_authorized
+      op: ne
+      value: true
+tests:
+  - name: "unsanctioned AI services fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "999988887777:ai-services"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          kind: ai_service_inventory
+          ai_workload_authorized: false
+          ai_services:
+            has_active_services: true
+            active_services: ["bedrock", "sagemaker"]
+  - name: "authorized AI account passes"
+    verdict: PASS
+    asset:
+      asset_id: "111122223333:ai-services"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          kind: ai_service_inventory
+          ai_workload_authorized: true
+          ai_services:
+            has_active_services: true
+            active_services: ["bedrock"]
+  - name: "no AI services passes"
+    verdict: PASS
+    asset:
+      asset_id: "444455556666:ai-services"
+      asset_type: aws_account
+      vendor: aws
+      properties:
+        account:
+          kind: ai_service_inventory
+          ai_workload_authorized: false
+          ai_services:
+            has_active_services: false
+            active_services: []

@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.ACCOUNT.AI.UNSANCTIONED.001
+
+**AI/ML Services Detected in Account Not Designated for AI Workloads**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-7, CM-8, AC-3; soc2: CC6.1, CC8.1;
+
+AI/ML service resources detected in an account not designated for AI workloads. Shadow AI usage bypasses governance, security review, data classification, and cost controls. Teams scanning endpoints for AI artifacts nearly always find something they never sanctioned (Eric Doerr, Tenable). Unlike misconfigured AI (where an authorized service is set up incorrectly), shadow AI is unauthorized usage — the service should not exist in this account at all.
+
+**Remediation:** Either authorize this account for AI workloads (add stave:ai-workload-authorized tag after security review) or decommission the unsanctioned AI resources. Investigate who provisioned them and whether data was processed.
+
+---
+
 ### CTL.ACCOUNT.DEPRECATED.SERVICE.001
 
 **No Resources Must Exist for AWS-Deprecated Services**

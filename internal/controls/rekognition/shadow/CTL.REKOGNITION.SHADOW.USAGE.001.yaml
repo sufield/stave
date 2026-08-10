@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.REKOGNITION.SHADOW.USAGE.001
+name: Rekognition Usage in Account Not Designated for AI Workloads
+description: >
+  Rekognition usage detected in an account not designated for AI
+  workloads. Rekognition processes images and video for face
+  detection, content moderation, and object recognition. In an
+  unsanctioned account, Rekognition can process biometric and
+  visual data without privacy controls or consent management.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7, AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10", "DSP-01"]
+scope_tags:
+  - aws
+  - rekognition
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_rekognition_usage
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 3.0
+observation_fields:
+  - rekognition.usage_detected
+  - account.ai_workload_authorized
+remediation:
+  description: >
+    Rekognition usage detected in an unsanctioned account.
+  action: >
+    Restrict Rekognition API access via IAM policies or authorize
+    the account for AI workloads after security review.
+  example: |
+    {
+      "rekognition": {
+        "usage_detected": false
+      },
+      "account": {
+        "ai_workload_authorized": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.rekognition.usage_detected
+      op: eq
+      value: true
+    - field: properties.account.ai_workload_authorized
+      op: ne
+      value: true
+tests:
+  - name: "unsanctioned rekognition usage fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "999988887777:rekognition-usage"
+      asset_type: aws_rekognition_usage
+      vendor: aws
+      properties:
+        rekognition:
+          usage_detected: true
+        account:
+          ai_workload_authorized: false
+  - name: "authorized rekognition usage passes"
+    verdict: PASS
+    asset:
+      asset_id: "111122223333:rekognition-usage"
+      asset_type: aws_rekognition_usage
+      vendor: aws
+      properties:
+        rekognition:
+          usage_detected: true
+        account:
+          ai_workload_authorized: true

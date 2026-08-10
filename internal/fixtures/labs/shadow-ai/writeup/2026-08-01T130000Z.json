@@ -1,0 +1,96 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.shadow-ai"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:organizations::999988887777:organization/o-shadowai",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "scp_policy_set",
+          "scp": {
+            "denies_ai_services": false,
+            "denies_sagemaker": false
+          }
+        }
+      }
+    },
+    {
+      "id": "999988887777:ai-services",
+      "type": "aws_account",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "kind": "ai_service_inventory",
+          "ai_workload_authorized": false,
+          "ai_services": {
+            "has_active_services": true,
+            "active_services": ["bedrock", "sagemaker"]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:bedrock:us-east-1:999988887777:model-access/anthropic.claude-3",
+      "type": "aws_bedrock_model_access",
+      "vendor": "aws",
+      "properties": {
+        "bedrock": {
+          "model_access_configured": true,
+          "model_id": "anthropic.claude-3-sonnet-20240229-v1:0"
+        },
+        "account": {
+          "ai_workload_authorized": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-east-1:999988887777:endpoint/shadow-inference",
+      "type": "aws_sagemaker_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "sagemaker": {
+          "endpoint_exists": true,
+          "endpoint_name": "shadow-inference",
+          "instance_type": "ml.m5.xlarge"
+        },
+        "account": {
+          "ai_workload_authorized": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:sagemaker:us-east-1:999988887777:notebook-instance/shadow-notebook",
+      "type": "aws_sagemaker_notebook",
+      "vendor": "aws",
+      "properties": {
+        "sagemaker": {
+          "notebook_exists": true,
+          "notebook_name": "shadow-notebook",
+          "direct_internet_access": true
+        },
+        "account": {
+          "ai_workload_authorized": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:999988887777:trail/main",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "cloudtrail": {
+          "data_events": {
+            "covers_bedrock": false,
+            "covers_sagemaker": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.SHADOW.MODEL.ACCESS.001
+name: Bedrock Model Access in Account Not Designated for AI Workloads
+description: >
+  Bedrock model access is configured in an account not designated
+  for AI workloads. Model access grants principals the ability to
+  invoke foundation models — once enabled, any role with
+  bedrock:InvokeModel can call models without further approval.
+  In an unsanctioned account, this means unreviewed prompts can
+  process unclassified data through foundation models outside
+  governance controls.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7, AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10", "DSP-01"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_model_access
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: exposure
+    scope: service
+    multiplier: 4.0
+observation_fields:
+  - bedrock.model_access_configured
+  - account.ai_workload_authorized
+remediation:
+  description: >
+    Bedrock model access configured in an unsanctioned account.
+  action: >
+    Disable model access in this account or authorize the account
+    for AI workloads after security review.
+  example: |
+    {
+      "bedrock": {
+        "model_access_configured": true
+      },
+      "account": {
+        "ai_workload_authorized": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.bedrock.model_access_configured
+      op: eq
+      value: true
+    - field: properties.account.ai_workload_authorized
+      op: ne
+      value: true
+tests:
+  - name: "unsanctioned bedrock model access fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:999988887777:model-access/anthropic.claude-3"
+      asset_type: aws_bedrock_model_access
+      vendor: aws
+      properties:
+        bedrock:
+          model_access_configured: true
+        account:
+          ai_workload_authorized: false
+  - name: "authorized bedrock model access passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:model-access/anthropic.claude-3"
+      asset_type: aws_bedrock_model_access
+      vendor: aws
+      properties:
+        bedrock:
+          model_access_configured: true
+        account:
+          ai_workload_authorized: true

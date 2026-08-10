@@ -515,6 +515,36 @@ SageMaker notebook instance contains plaintext secrets in environment variables 
 
 ---
 
+### CTL.SAGEMAKER.SHADOW.ENDPOINT.001
+
+**SageMaker Endpoint in Account Not Designated for AI Workloads**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-7, AC-3; soc2: CC6.1;
+
+A SageMaker inference endpoint is running in an account not designated for AI workloads. SageMaker endpoints provision compute instances with IAM execution roles that often have broad S3 and KMS access for model artifacts and training data. In an unsanctioned account, these endpoints process data outside governance controls and their execution roles may access production data stores without security review.
+
+**Remediation:** Decommission the endpoint or authorize the account for AI workloads after security review.
+
+---
+
+### CTL.SAGEMAKER.SHADOW.NOTEBOOK.001
+
+**SageMaker Notebook in Account Not Designated for AI Workloads**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-7, AC-3; soc2: CC6.1;
+
+A SageMaker notebook instance is active in an account not designated for AI workloads. Notebooks provide interactive compute with IAM execution roles and optional direct internet access. In an unsanctioned account, notebooks can be used to develop and test models against production data without governance controls, and their internet access enables data exfiltration.
+
+**Remediation:** Stop the notebook or authorize the account for AI workloads after security review.
+
+---
+
 ### CTL.SAGEMAKER.SPACE.SHARING.001
 
 **SageMaker Space Must Use Private Sharing**

@@ -500,6 +500,21 @@ No SCP restricts marketplace subscriptions, domain registrations, or AI model ag
 
 ---
 
+### CTL.ORG.SCP.AI.SERVICE.RESTRICT.001
+
+**No SCP Restricts AI/ML Service Usage to Designated Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-7, AC-3; soc2: CC6.6, CC6.1;
+
+Organization SCPs do not restrict AI/ML service usage to designated accounts. Without an SCP denying AI service actions (bedrock:*, sagemaker:*, comprehend:*, textract:*, rekognition:*, etc.) with condition exceptions for designated ML accounts, any account in the organization can provision Bedrock agents, SageMaker endpoints, or other AI services without organizational approval. This is the preventive layer of shadow AI governance — it stops unauthorized AI provisioning at the organizational level before detective controls need to find it.
+
+**Remediation:** Create an SCP denying AI service actions (bedrock:*, sagemaker:*, comprehend:*, textract:*, rekognition:*, translate:*, polly:*, transcribe:*, forecast:*, personalize:*, kendra:*, lex:*) in all OUs except the designated ML/AI OU. This prevents shadow AI provisioning at the organizational level.
+
+---
+
 ### CTL.ORG.SCP.AMPLIFY.DENY.001
 
 **SCP Does Not Deny Amplify Usage**

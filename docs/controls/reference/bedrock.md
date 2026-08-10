@@ -742,6 +742,21 @@ Bedrock model invocation logging must be enabled to capture request/response dat
 
 ---
 
+### CTL.BEDROCK.SHADOW.MODEL.ACCESS.001
+
+**Bedrock Model Access in Account Not Designated for AI Workloads**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-7, AC-3; soc2: CC6.1;
+
+Bedrock model access is configured in an account not designated for AI workloads. Model access grants principals the ability to invoke foundation models — once enabled, any role with bedrock:InvokeModel can call models without further approval. In an unsanctioned account, this means unreviewed prompts can process unclassified data through foundation models outside governance controls.
+
+**Remediation:** Disable model access in this account or authorize the account for AI workloads after security review.
+
+---
+
 ### CTL.BEDROCK.VPC.ENDPOINTS.001
 
 **VPC Must Have Bedrock Interface Endpoints Configured**

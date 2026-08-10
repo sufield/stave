@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.COMPREHEND.SHADOW.ENDPOINT.001
+name: Comprehend Endpoint in Account Not Designated for AI Workloads
+description: >
+  A Comprehend endpoint is deployed in an account not designated
+  for AI workloads. Comprehend processes natural language text
+  for sentiment, entities, and PII detection. In an unsanctioned
+  account, Comprehend endpoints can process sensitive documents
+  without data classification controls.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7, AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10", "DSP-01"]
+scope_tags:
+  - aws
+  - comprehend
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_comprehend_endpoint
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 3.0
+observation_fields:
+  - comprehend.endpoint_exists
+  - account.ai_workload_authorized
+remediation:
+  description: >
+    Comprehend endpoint deployed in an unsanctioned account.
+  action: >
+    Delete the endpoint or authorize the account for AI workloads
+    after security review.
+  example: |
+    {
+      "comprehend": {
+        "endpoint_exists": true
+      },
+      "account": {
+        "ai_workload_authorized": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.comprehend.endpoint_exists
+      op: eq
+      value: true
+    - field: properties.account.ai_workload_authorized
+      op: ne
+      value: true
+tests:
+  - name: "unsanctioned comprehend endpoint fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:comprehend:us-east-1:999988887777:document-classifier-endpoint/shadow"
+      asset_type: aws_comprehend_endpoint
+      vendor: aws
+      properties:
+        comprehend:
+          endpoint_exists: true
+        account:
+          ai_workload_authorized: false
+  - name: "authorized comprehend endpoint passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:comprehend:us-east-1:111122223333:document-classifier-endpoint/approved"
+      asset_type: aws_comprehend_endpoint
+      vendor: aws
+      properties:
+        comprehend:
+          endpoint_exists: true
+        account:
+          ai_workload_authorized: true

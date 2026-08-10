@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3395
-**Pack hash:** `0918944541e7fa6c4f8ea60fb2440ddbfba9a494bd81a59fe70147a303a57c49`
+**Total controls:** 3403
+**Pack hash:** `cae63fd45266c12c6f7307340dd87598515a215d85099b6fb437366ebd030d2f`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 370 |
-| high | 1452 |
+| high | 1456 |
 | info | 19 |
 | low | 270 |
-| medium | 1284 |
+| medium | 1288 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,7 +29,7 @@ GitHub. Pick a service below.
 | detection | 160 |
 | encryption | 125 |
 | exposure | 1486 |
-| governance | 674 |
+| governance | 682 |
 | hygiene | 21 |
 | identity | 671 |
 | lifecycle | 32 |
@@ -43,7 +43,7 @@ GitHub. Pick a service below.
 | Service | Controls |
 |---------|----------|
 | [ACCESSANALYZER](reference/accessanalyzer.md) | 1 |
-| [ACCOUNT](reference/account.md) | 3 |
+| [ACCOUNT](reference/account.md) | 4 |
 | [ACM](reference/acm.md) | 9 |
 | [ACMPCA](reference/acmpca.md) | 4 |
 | [AD](reference/ad.md) | 40 |
@@ -60,7 +60,7 @@ GitHub. Pick a service below.
 | [BACKUP](reference/backup.md) | 14 |
 | [BATCH](reference/batch.md) | 5 |
 | [BEANSTALK](reference/beanstalk.md) | 5 |
-| [BEDROCK](reference/bedrock.md) | 50 |
+| [BEDROCK](reference/bedrock.md) | 51 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
 | [CLOUD9](reference/cloud9.md) | 4 |
@@ -74,6 +74,7 @@ GitHub. Pick a service below.
 | [CODEPIPELINE](reference/codepipeline.md) | 6 |
 | [COGNITO](reference/cognito.md) | 113 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
+| [COMPREHEND](reference/comprehend.md) | 1 |
 | [CONFIG](reference/config.md) | 52 |
 | [DATACLASS](reference/dataclass.md) | 5 |
 | [DATASYNC](reference/datasync.md) | 2 |
@@ -133,19 +134,20 @@ GitHub. Pick a service below.
 | [NETFIREWALL](reference/netfirewall.md) | 13 |
 | [NLB](reference/nlb.md) | 2 |
 | [OPENSEARCH](reference/opensearch.md) | 133 |
-| [ORG](reference/org.md) | 64 |
+| [ORG](reference/org.md) | 65 |
 | [QLDB](reference/qldb.md) | 3 |
 | [QUICKSIGHT](reference/quicksight.md) | 2 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 73 |
 | [RECYCLEBIN](reference/recyclebin.md) | 2 |
 | [REDSHIFT](reference/redshift.md) | 27 |
+| [REKOGNITION](reference/rekognition.md) | 1 |
 | [ROUTE53](reference/route53.md) | 54 |
 | [S3](reference/s3.md) | 149 |
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 3 |
-| [SAGEMAKER](reference/sagemaker.md) | 47 |
+| [SAGEMAKER](reference/sagemaker.md) | 49 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
@@ -161,6 +163,7 @@ GitHub. Pick a service below.
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
+| [TEXTRACT](reference/textract.md) | 1 |
 | [TIMESTREAM](reference/timestream.md) | 4 |
 | [TRANSFER](reference/transfer.md) | 4 |
 | [VERIFIEDACCESS](reference/verifiedaccess.md) | 5 |

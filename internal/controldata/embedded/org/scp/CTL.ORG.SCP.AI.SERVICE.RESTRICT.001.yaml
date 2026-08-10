@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.AI.SERVICE.RESTRICT.001
+name: No SCP Restricts AI/ML Service Usage to Designated Accounts
+description: >
+  Organization SCPs do not restrict AI/ML service usage to
+  designated accounts. Without an SCP denying AI service actions
+  (bedrock:*, sagemaker:*, comprehend:*, textract:*,
+  rekognition:*, etc.) with condition exceptions for designated
+  ML accounts, any account in the organization can provision
+  Bedrock agents, SageMaker endpoints, or other AI services
+  without organizational approval. This is the preventive layer
+  of shadow AI governance — it stops unauthorized AI provisioning
+  at the organizational level before detective controls need to
+  find it.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7, AC-3"
+  soc2: "CC6.6, CC6.1"
+  ccm_v4: ["IAM-10", "GRC-03"]
+scope_tags:
+  - aws
+  - organizations
+taxonomy:
+  - account-governance
+  - resource-sprawl
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: exposure
+    scope: organization
+    multiplier: 5.0
+observation_fields:
+  - organization.kind
+  - organization.scp.denies_ai_services
+remediation:
+  description: >
+    Organization SCPs do not restrict AI/ML service usage to
+    designated accounts.
+  action: >
+    Create an SCP denying AI service actions (bedrock:*,
+    sagemaker:*, comprehend:*, textract:*, rekognition:*,
+    translate:*, polly:*, transcribe:*, forecast:*,
+    personalize:*, kendra:*, lex:*) in all OUs except the
+    designated ML/AI OU. This prevents shadow AI provisioning
+    at the organizational level.
+  example: |
+    {
+      "organization": {
+        "kind": "scp_policy_set",
+        "scp": {
+          "denies_ai_services": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.organization.kind
+      op: eq
+      value: scp_policy_set
+    - field: properties.organization.scp.denies_ai_services
+      op: ne
+      value: true
+tests:
+  - name: "no AI service SCP fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::999988887777:organization/o-shadowai"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_ai_services: false}
+  - name: "AI service SCP exists passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-governed"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        organization:
+          kind: scp_policy_set
+          scp: {denies_ai_services: true}

@@ -1,0 +1,82 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.SHADOW.ENDPOINT.001
+name: SageMaker Endpoint in Account Not Designated for AI Workloads
+description: >
+  A SageMaker inference endpoint is running in an account not
+  designated for AI workloads. SageMaker endpoints provision
+  compute instances with IAM execution roles that often have
+  broad S3 and KMS access for model artifacts and training data.
+  In an unsanctioned account, these endpoints process data
+  outside governance controls and their execution roles may
+  access production data stores without security review.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7, AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10", "DSP-01"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_endpoint
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: exposure
+    scope: service
+    multiplier: 4.0
+observation_fields:
+  - sagemaker.endpoint_exists
+  - account.ai_workload_authorized
+remediation:
+  description: >
+    SageMaker endpoint running in an unsanctioned account.
+  action: >
+    Decommission the endpoint or authorize the account for AI
+    workloads after security review.
+  example: |
+    {
+      "sagemaker": {
+        "endpoint_exists": true
+      },
+      "account": {
+        "ai_workload_authorized": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.sagemaker.endpoint_exists
+      op: eq
+      value: true
+    - field: properties.account.ai_workload_authorized
+      op: ne
+      value: true
+tests:
+  - name: "unsanctioned sagemaker endpoint fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:999988887777:endpoint/shadow-inference"
+      asset_type: aws_sagemaker_endpoint
+      vendor: aws
+      properties:
+        sagemaker:
+          endpoint_exists: true
+        account:
+          ai_workload_authorized: false
+  - name: "authorized sagemaker endpoint passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:endpoint/authorized-inference"
+      asset_type: aws_sagemaker_endpoint
+      vendor: aws
+      properties:
+        sagemaker:
+          endpoint_exists: true
+        account:
+          ai_workload_authorized: true

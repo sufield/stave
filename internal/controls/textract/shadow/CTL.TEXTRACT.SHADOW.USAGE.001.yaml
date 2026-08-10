@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.TEXTRACT.SHADOW.USAGE.001
+name: Textract Usage in Account Not Designated for AI Workloads
+description: >
+  Textract usage detected in an account not designated for AI
+  workloads. Textract extracts text and structured data from
+  scanned documents. In an unsanctioned account, Textract can
+  process sensitive documents (contracts, financial records,
+  medical forms) without data classification or DLP controls.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-7, AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10", "DSP-01"]
+scope_tags:
+  - aws
+  - textract
+taxonomy:
+  - account-governance
+  - resource-sprawl
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_textract_usage
+params:
+  attack_stage: collection
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 3.0
+observation_fields:
+  - textract.usage_detected
+  - account.ai_workload_authorized
+remediation:
+  description: >
+    Textract usage detected in an unsanctioned account.
+  action: >
+    Restrict Textract API access via IAM policies or authorize
+    the account for AI workloads after security review.
+  example: |
+    {
+      "textract": {
+        "usage_detected": false
+      },
+      "account": {
+        "ai_workload_authorized": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.textract.usage_detected
+      op: eq
+      value: true
+    - field: properties.account.ai_workload_authorized
+      op: ne
+      value: true
+tests:
+  - name: "unsanctioned textract usage fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "999988887777:textract-usage"
+      asset_type: aws_textract_usage
+      vendor: aws
+      properties:
+        textract:
+          usage_detected: true
+        account:
+          ai_workload_authorized: false
+  - name: "authorized textract usage passes"
+    verdict: PASS
+    asset:
+      asset_id: "111122223333:textract-usage"
+      asset_type: aws_textract_usage
+      vendor: aws
+      properties:
+        textract:
+          usage_detected: true
+        account:
+          ai_workload_authorized: true
