@@ -169,6 +169,13 @@ categories:
       masking, data classification, sensitive data identification
       in messages and logs.
 
+  - id: supply-chain
+    name: Supply Chain
+    definition: >
+      Controls that detect vulnerable, unsigned, or untrusted software
+      components. Container images from public registries without
+      digest pinning, unverified dependencies.
+
   - id: compliance-mapping
     name: Compliance Mapping
     definition: >
