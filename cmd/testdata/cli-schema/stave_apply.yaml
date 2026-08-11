@@ -37,6 +37,7 @@ description: |-
       3   - Violations found
       4   - Internal error
       5   - No violations but indeterminate results exist (data gaps)
+      6   - Attestation verification failed (tampered or unsigned when required)
       130 - Interrupted (SIGINT)
 
     Remediation scope:
@@ -149,6 +150,9 @@ options:
     - name: profile-file
       default_value: '[]'
       usage: custom compliance profile YAML (can be repeated)
+    - name: require-signed
+      default_value: "false"
+      usage: Refuse to evaluate unsigned (unattested) snapshots
     - name: services
       default_value: '[]'
       usage: |
@@ -178,6 +182,9 @@ options:
       default_value: "false"
       usage: |
         Show full evidence, reasoning, and remediation for each finding
+    - name: verify-key
+      usage: |
+        Path to Ed25519 public key PEM for snapshot attestation verification
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"

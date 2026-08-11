@@ -122,7 +122,7 @@ jobs:
 
       - name: Commit updated goldens
         run: |
-          git add testdata/ internal/contracts/schema/embedded internal/controldata/embedded internal/adapters/coverage/embedded
+          git add -A
           git diff --cached --quiet || git commit -m "auto-update goldens [behavioral: $(git diff --cached --name-only testdata/ | wc -l) files]"
 
       - name: Push updated goldens
