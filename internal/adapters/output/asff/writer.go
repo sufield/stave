@@ -5,6 +5,7 @@ package asff
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -13,27 +14,6 @@ import (
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
-
-// unknownAWSAccountID is the placeholder ASFF AccountId emitted when
-// the asset identifier doesn't carry an extractable AWS account ID.
-// AWS Security Hub validates the field's shape (12 digits) but
-// accepts the all-zero sentinel as the documented "unknown owner"
-// marker, so downstream rules that pivot on AccountId still parse
-// the row instead of rejecting it for a missing field.
-const unknownAWSAccountID = "000000000000"
-
-// extractAWSAccountID pulls the 12-digit AWS account from an asset
-// identifier (typically an ARN). Returns the unknown-account
-// sentinel when no account could be parsed so the ASFF AccountId
-// field stays well-formed. Mirrors the graph builder's account-ID
-// extraction so the two output paths agree on what "owns" each
-// finding.
-func extractAWSAccountID(assetID string) string {
-	if id := iam.ExtractAccountID(assetID); id != "" {
-		return id
-	}
-	return unknownAWSAccountID
-}
 
 // ASFFinding represents a single finding in AWS Security Finding Format.
 type ASFFinding struct {
@@ -77,38 +57,71 @@ type ASFFResource struct {
 
 // ASFFOptions configures the ASFF output.
 type ASFFOptions struct {
-	AccountID string // 12-digit AWS account for the ProductARN; empty uses "000000000000"
-	Region    string // AWS region for the ProductARN; empty uses "us-east-1"
+	AccountID string // 12-digit AWS account for the ProductARN
+	Region    string // AWS region for the ProductARN
 }
 
-func (o ASFFOptions) productARN() string {
-	acct := o.AccountID
-	if acct == "" {
-		acct = unknownAWSAccountID
+// resolveProductARN builds the ProductARN from explicit options or
+// observation ARNs. Returns an error when neither source provides
+// account or region. Environment variable fallback belongs at the
+// CLI boundary, not here.
+func resolveProductARN(opts ASFFOptions, assessment *report.Assessment) (string, error) {
+	acct := opts.AccountID
+	region := opts.Region
+
+	if (acct == "" || region == "") && assessment != nil {
+		derivedAcct, derivedRegion := deriveFromFindings(assessment)
+		if acct == "" {
+			acct = derivedAcct
+		}
+		if region == "" {
+			region = derivedRegion
+		}
 	}
-	region := o.Region
-	if region == "" {
-		region = "us-east-1"
+
+	if acct == "" || region == "" {
+		var missing []string
+		if acct == "" {
+			missing = append(missing, "account ID")
+		}
+		if region == "" {
+			missing = append(missing, "region")
+		}
+		return "", fmt.Errorf("ASFF output requires %s; pass --asff-account/--asff-region or ensure observations contain ARNs with account information",
+			strings.Join(missing, " and "))
 	}
-	return fmt.Sprintf("arn:aws:securityhub:%s:%s:product/%s/stave", region, acct, acct)
+
+	return fmt.Sprintf("arn:aws:securityhub:%s:%s:product/%s/stave", region, acct, acct), nil
 }
 
-// MapAssessmentWithOptions transforms a Stave assessment into ASFF findings.
-func MapAssessmentWithOptions(assessment *report.Assessment, opts ASFFOptions) []ASFFinding {
-	if assessment == nil {
-		return []ASFFinding{}
-	}
-	timestamp := evalTimestamp(assessment)
-	version := assessment.Run.StaveVersion
-	productARN := opts.productARN()
-	findings := make([]ASFFinding, 0, len(assessment.Findings))
-
+// deriveFromFindings extracts account ID and region from the first
+// finding whose asset ID is a parseable ARN with those fields.
+func deriveFromFindings(assessment *report.Assessment) (account, region string) {
 	for i := range assessment.Findings {
-		f := &assessment.Findings[i]
-		findings = append(findings, mapFinding(f, timestamp, version, productARN))
+		parsed := iam.ParseARN(string(assessment.Findings[i].AssetID))
+		if account == "" && parsed.AccountID != "" {
+			account = parsed.AccountID
+		}
+		if region == "" && parsed.Region != "" {
+			region = parsed.Region
+		}
+		if account != "" && region != "" {
+			return
+		}
 	}
-
-	return findings
+	for i := range assessment.ChainFindings {
+		parsed := iam.ParseARN(string(assessment.ChainFindings[i].AssetID))
+		if account == "" && parsed.AccountID != "" {
+			account = parsed.AccountID
+		}
+		if region == "" && parsed.Region != "" {
+			region = parsed.Region
+		}
+		if account != "" && region != "" {
+			return
+		}
+	}
+	return
 }
 
 func mapFinding(f *remediation.Finding, timestamp, version, productARN string) ASFFinding {
@@ -144,13 +157,17 @@ func mapFinding(f *remediation.Finding, timestamp, version, productARN string) A
 	return af
 }
 
+// extractAWSAccountID pulls the 12-digit AWS account from an asset
+// identifier (typically an ARN). Returns "unknown" when no account
+// could be parsed.
+func extractAWSAccountID(assetID string) string {
+	if id := iam.ExtractAccountID(assetID); id != "" {
+		return id
+	}
+	return "unknown"
+}
+
 // mapChainFindings adds compound chain findings as ASFF entries.
-// Reads cf.ChainID / .AssetID / .Severity.String() / .CompoundScore /
-// .Narrative / .Description through range with `:=` so this file
-// never names findings.CompoundFinding directly. The chain-description
-// fallback (Narrative preferred, Description as fallback) is inlined
-// here — it used to live in a separate helper that pulled the
-// risk type into its signature.
 func mapChainFindings(assessment *report.Assessment, timestamp, productARN string) []ASFFinding {
 	if assessment == nil || len(assessment.ChainFindings) == 0 {
 		return nil
@@ -189,8 +206,7 @@ func mapChainFindings(assessment *report.Assessment, timestamp, productARN strin
 }
 
 // MarshalASFF produces the complete ASFF JSON output.
-// Returns an empty JSON array when assessment is nil rather than
-// dereferencing assessment.ChainFindings.
+// Returns an error when account ID or region cannot be determined.
 func MarshalASFF(assessment *report.Assessment) ([]byte, error) {
 	return MarshalASFFWithOptions(assessment, ASFFOptions{})
 }
@@ -200,17 +216,34 @@ func MarshalASFFWithOptions(assessment *report.Assessment, opts ASFFOptions) ([]
 	if assessment == nil {
 		return []byte("[]"), nil
 	}
+
+	productARN, err := resolveProductARN(opts, assessment)
+	if err != nil {
+		return nil, err
+	}
+
 	timestamp := evalTimestamp(assessment)
-	productARN := opts.productARN()
-	findings := MapAssessmentWithOptions(assessment, opts)
-	findings = append(findings, mapChainFindings(assessment, timestamp, productARN)...)
-	return json.MarshalIndent(findings, "", "  ")
+	version := assessment.Run.StaveVersion
+	all := make([]ASFFinding, 0, len(assessment.Findings)+len(assessment.ChainFindings))
+
+	for i := range assessment.Findings {
+		f := &assessment.Findings[i]
+		all = append(all, mapFinding(f, timestamp, version, productARN))
+	}
+	all = append(all, mapChainFindings(assessment, timestamp, productARN)...)
+
+	if len(all) == 0 {
+		return []byte("[]"), nil
+	}
+
+	return json.MarshalIndent(all, "", "  ")
 }
 
+// ErrMissingIdentity is returned when the ASFF writer cannot determine
+// account ID or region from any source.
+var ErrMissingIdentity = errors.New("ASFF output requires account ID and region")
+
 // evalTimestamp returns the RFC3339 eval-time from the assessment's RunInfo.
-// Panics when EvalTime is zero — callers must ensure the assessment carries
-// a valid eval-time (all production paths set it; a zero value indicates a
-// bug in the upstream pipeline, not a missing-data condition).
 func evalTimestamp(a *report.Assessment) string {
 	if a.Run.EvalTime.IsZero() {
 		panic("ASFF: assessment has zero EvalTime — the upstream pipeline must set RunInfo.EvalTime")
@@ -219,8 +252,7 @@ func evalTimestamp(a *report.Assessment) string {
 }
 
 // buildProductFields creates ASFF ProductFields with all compliance
-// citations and enrichment fields from the finding. Mirrors the
-// properties bag built by the SARIF writer's buildFindingProperties.
+// citations and enrichment fields from the finding.
 func buildProductFields(f *remediation.Finding, version string) map[string]string {
 	if version == "" {
 		version = "unknown"
@@ -264,9 +296,6 @@ func mapSeverity(sev string) ASFFSeverity {
 	}
 }
 
-// asffSeverityLabel maps a Stave severity string to the ASFF-required
-// uppercase label. ASFF v2018-10-08 requires one of: CRITICAL, HIGH,
-// MEDIUM, LOW, INFORMATIONAL. Stave's "info" maps to INFORMATIONAL.
 func asffSeverityLabel(sev string) string {
 	trimmed := strings.TrimSpace(sev)
 	switch {

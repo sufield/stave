@@ -68,7 +68,11 @@ func BuildEvidenceBundle(ctx context.Context, assessmentJSON []byte, observation
 		ChainFindings: len(assessment.ChainFindings),
 	}
 	if includeASFF {
-		asffData, asffErr := asff.MarshalASFF(&assessment)
+		opts := asff.ASFFOptions{
+			AccountID: os.Getenv("AWS_ACCOUNT_ID"),
+			Region:    os.Getenv("AWS_REGION"),
+		}
+		asffData, asffErr := asff.MarshalASFFWithOptions(&assessment, opts)
 		if asffErr != nil {
 			return EvidenceBundleResult{}, fmt.Errorf("marshal ASFF: %w", asffErr)
 		}
