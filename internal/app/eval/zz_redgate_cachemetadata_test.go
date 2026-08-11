@@ -60,7 +60,7 @@ func Test_RedGate_CacheMetadata(t *testing.T) {
 		},
 	}
 
-	if err := c.Persist(k, want); err != nil {
+	if err := c.Persist(k, &want); err != nil {
 		t.Fatalf("persist: %v", err)
 	}
 	got, ok := c.Load(k)

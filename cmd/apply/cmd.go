@@ -117,8 +117,8 @@ type Options struct {
 	SkipFreshness      bool
 	GraphFindingsDir   string
 	Verbose            bool
-	Auto               bool // --auto: print severity plan, then evaluate
-	IncludeAtomic      bool // --include-atomic: show per-control findings alongside compound
+	Auto               bool   // --auto: print severity plan, then evaluate
+	IncludeAtomic      bool   // --include-atomic: show per-control findings alongside compound
 	FindingsOnly       bool   // --findings-only: show only confirmed findings, suppress indeterminate
 	IndeterminateOnly  bool   // --indeterminate-only: show only indeterminate results, suppress findings
 	VerifyKey          string // --verify-key: Ed25519 public key PEM for snapshot attestation verification

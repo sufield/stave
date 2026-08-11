@@ -20,8 +20,8 @@ func sampleKey() Key {
 	}
 }
 
-func sampleReport() evaluation.ComplianceReport {
-	return evaluation.ComplianceReport{
+func sampleReport() *evaluation.ComplianceReport {
+	return &evaluation.ComplianceReport{
 		SecurityState: evaluation.StateCompliant,
 		Findings:      []evaluation.Finding{},
 	}

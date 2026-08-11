@@ -16,14 +16,14 @@ import (
 
 // Exit codes following the platform contract.
 const (
-	ExitSuccess       = 0   // No issues
-	ExitSecurity      = 1   // Security-audit gating failure
-	ExitInputError    = 2   // Invalid input, flags, or schema validation failure
-	ExitViolations    = 3   // Evaluation completed with findings/diagnostics
-	ExitInternal      = 4   // Unexpected internal error
-	ExitIndeterminate      = 5   // No findings but indeterminate results exist (data gaps)
-	ExitAttestationFailed  = 6   // Attestation verification failed (tampered or unsigned when required)
-	ExitInterrupted        = 130 // Interrupted by SIGINT (Ctrl+C)
+	ExitSuccess           = 0   // No issues
+	ExitSecurity          = 1   // Security-audit gating failure
+	ExitInputError        = 2   // Invalid input, flags, or schema validation failure
+	ExitViolations        = 3   // Evaluation completed with findings/diagnostics
+	ExitInternal          = 4   // Unexpected internal error
+	ExitIndeterminate     = 5   // No findings but indeterminate results exist (data gaps)
+	ExitAttestationFailed = 6   // Attestation verification failed (tampered or unsigned when required)
+	ExitInterrupted       = 130 // Interrupted by SIGINT (Ctrl+C)
 )
 
 // ErrorCode is a stable string identifier for categories of failures.

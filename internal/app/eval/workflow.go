@@ -271,7 +271,7 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 		// clock-independent. Best-effort: a persist failure is a
 		// missed optimisation, not a correctness problem, so log
 		// and continue rather than poisoning the assessment.
-		if persistErr := cache.Persist(cacheKey, report); persistErr != nil {
+		if persistErr := cache.Persist(cacheKey, &report); persistErr != nil {
 			if w.Logger != nil {
 				w.Logger.Warn("assessment cache persist failed", "err", persistErr)
 			}

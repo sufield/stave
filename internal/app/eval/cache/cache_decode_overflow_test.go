@@ -42,7 +42,7 @@ func TestDecode_OversizedLengthsRejected(t *testing.T) {
 // Sanity: a well-formed buffer still round-trips, so the tightened guard
 // did not reject legitimate input.
 func TestDecode_ValidRoundTripStillWorks(t *testing.T) {
-	data, err := encode("abc123", evaluation.ComplianceReport{})
+	data, err := encode("abc123", &evaluation.ComplianceReport{})
 	if err != nil {
 		t.Fatalf("encode: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestDecode_TruncatedBuffersRejectedWithoutPanic(t *testing.T) {
 // length), so encode("") succeeds. This pins the lower bound of the guard
 // (n >= 0), distinct from its rejection of negative/oversized lengths.
 func TestEncode_EmptyKeyAccepted(t *testing.T) {
-	data, err := encode("", evaluation.ComplianceReport{})
+	data, err := encode("", &evaluation.ComplianceReport{})
 	if err != nil {
 		t.Fatalf("empty key must encode (len 0 fits uint32), got error: %v", err)
 	}

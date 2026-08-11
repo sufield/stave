@@ -330,7 +330,7 @@ func (c *Cache) Load(k Key) (evaluation.ComplianceReport, bool) {
 // Persist writes the report under the key. Atomic rename so a
 // concurrent reader sees either no file or the full file; never a
 // torn write.
-func (c *Cache) Persist(k Key, report evaluation.ComplianceReport) error {
+func (c *Cache) Persist(k Key, report *evaluation.ComplianceReport) error {
 	if c == nil || c.dir == "" || IsDisabled() {
 		return nil
 	}
@@ -388,7 +388,7 @@ func (c *Cache) path(k Key) string {
 // cache's JSON round-trip, silently dropping the output extensions
 // block on a cache hit.
 
-func encode(keyHex string, report evaluation.ComplianceReport) ([]byte, error) {
+func encode(keyHex string, report *evaluation.ComplianceReport) ([]byte, error) {
 	body, err := json.Marshal(report)
 	if err != nil {
 		return nil, err

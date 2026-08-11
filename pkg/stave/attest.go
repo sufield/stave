@@ -171,28 +171,6 @@ func VerifyObservationsDir(dir string, publicKey ed25519.PublicKey) (*evaluation
 	}, nil
 }
 
-// CheckObservationsAttested scans an observations directory and reports
-// whether any snapshot file contains an inline attestation field.
-func CheckObservationsAttested(dir string) (bool, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return false, fmt.Errorf("read observations dir: %w", err)
-	}
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(strings.ToLower(entry.Name()), ".json") {
-			continue
-		}
-		data, readErr := fsutil.ReadFileLimited(filepath.Join(dir, entry.Name()))
-		if readErr != nil {
-			return false, readErr
-		}
-		if _, has := probeAttestation(data); has {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
 // probeAttestation checks whether raw JSON contains an inline attestation field.
 func probeAttestation(data []byte) (*appatt.InlineAttestation, bool) {
 	var probe struct {
