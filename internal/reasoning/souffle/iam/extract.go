@@ -102,6 +102,9 @@ var declaredInputs = []string{
 	// Deferred G-phases: G5 (network topology), G6 (temporal patterns),
 	// G7 (service quotas), G8 (cost anomalies) — no consumers yet.
 	//
+	// Scope token — emitted by emitScopeFacts below. Account_id
+	// parsed from ARNs; used by rules.dl scope-aware joins.
+	"has_scope",
 	// G3 — emitted by emitAuthFacts/emitSensitivityFacts below,
 	// not from the JSONL stream. Listed here so preCreateEmpty
 	// is idempotent (it's a no-op for these because the G3 phase
@@ -221,6 +224,14 @@ func main() {
 	if err != nil {
 		fail("split JSONL: %v", err)
 	}
+
+	// Scope tokens — parse account_id from asset ARNs for
+	// scope-aware Datalog joins (HAZOP v1 2.5).
+	scopeStats, err := emitScopeFacts(opts.out)
+	if err != nil {
+		fail("emit scope facts: %v", err)
+	}
+	maps.Copy(stats, scopeStats)
 
 	// G3 — derive authorized + sensitivity facts from the
 	// per-asset tag data + asset type discrimination. Reads
@@ -388,6 +399,43 @@ func emitG3Facts(outDir string) (map[string]int, error) {
 		"authorized":  authCount,
 		"sensitivity": sensCount,
 	}, nil
+}
+
+// emitScopeFacts reads has_type.facts, parses the account_id from
+// each asset's ARN, and writes has_scope.facts. Used by rules.dl's
+// scope-aware joins to eliminate cross-account Cartesian false
+// positives in effective_allow (HAZOP v1 2.5).
+//
+// ARN format: arn:partition:service:region:account:resource
+// Account is field[4]. Empty for S3 buckets (arn:aws:s3:::name)
+// and global resources — those are skipped (the rules.dl fallback
+// handles them via full Cartesian).
+func emitScopeFacts(outDir string) (map[string]int, error) {
+	types, err := readFactPairs(filepath.Join(outDir, "has_type.facts"))
+	if err != nil {
+		return nil, fmt.Errorf("read has_type.facts: %w", err)
+	}
+
+	seen := map[string]struct{}{}
+	var rows []string
+	for _, t := range types {
+		if _, dup := seen[t.Subject]; dup {
+			continue
+		}
+		seen[t.Subject] = struct{}{}
+		acct := accountFromARN(t.Subject)
+		if acct == "" {
+			continue
+		}
+		rows = append(rows, fmt.Sprintf("%s\t%s", t.Subject, acct))
+	}
+	slices.Sort(rows)
+
+	counts := map[string]int{}
+	if err := writeLines(filepath.Join(outDir, "has_scope.facts"), rows, counts, "has_scope"); err != nil {
+		return nil, err
+	}
+	return counts, nil
 }
 
 // ownershipValues returns the resource's set of ownership-tag values

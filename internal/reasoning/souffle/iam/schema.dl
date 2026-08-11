@@ -183,6 +183,16 @@
 .decl has_advanced_security_enabled(asset: symbol, flag: symbol)
 .input has_advanced_security_enabled
 
+// has_scope — account-level scope token for scope-aware Datalog
+// joins. Emitted by extract.go by parsing account_id from asset
+// ARNs. Used by rules.dl to scope-constrain effective_allow,
+// eliminating cross-account Cartesian false positives (HAZOP v1
+// 2.5). Every IAM principal (user/role) has an account_id in its
+// ARN; resources without an account fall through to the unscoped
+// fallback in rules.dl.
+.decl has_scope(asset: symbol, account_id: symbol)
+.input has_scope
+
 // =====================================================
 // G3 — Authorization + sensitivity model.
 //
@@ -308,6 +318,7 @@ _g0_input_count("maps_auth_to",        n) :- n = count : { maps_auth_to(_, _) }.
 _g0_input_count("allows_unauthenticated", n) :- n = count : { allows_unauthenticated(_, _) }.
 _g0_input_count("self_registration_unrestricted", n) :- n = count : { self_registration_unrestricted(_, _) }.
 _g0_input_count("contributed_by",      n) :- n = count : { contributed_by(_, _) }.
+_g0_input_count("has_scope",           n) :- n = count : { has_scope(_, _) }.
 
 .decl _g0_principal_count(type: symbol, n: number)
 .output _g0_principal_count

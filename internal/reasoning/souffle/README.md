@@ -11,7 +11,7 @@ control cannot see.
 | Directory | Program | What It Detects |
 |-----------|---------|-----------------|
 | `iam/` | `schema.dl` | G0 base-fact schema — input relations from SIR-facts, derived views (principal/resource/trust), sanity counts |
-| `iam/` | `rules.dl` | G1 transitive closure + effective access — role-assumption chains, reachable actions/resources, unauthorized access, CIA violation queries (G4 Confidentiality, G5 Integrity) |
+| `iam/` | `rules.dl` | G1 transitive closure + scope-aware effective access — role-assumption chains, scoped reachable actions/resources (account-level joins), unauthorized access, CIA violation queries (G4 Confidentiality, G5 Integrity) |
 | `iam/` | `action_classes.dl` | Read/write action classification for CIA queries — covers S3, DynamoDB, KMS, Secrets Manager, RDS, Redshift, Glue |
 | `discovery/` | `discovery.dl` | Path-tracking reachability — emits full hop sequences with security classification (escalation, exfiltration, external, confused deputy) |
 | `discovery/` | `bucket_hijack.dl` | Bucket hijacking chains — dangling destinations, delete-to-exfiltrate, security telemetry hijack, cross-account destinations |
@@ -63,11 +63,12 @@ souffle reasoning/souffle/discovery/bucket_hijack.dl \
 Input (SIR-facts)          Derived (Datalog)
 ─────────────────          ─────────────────
 has_type              ──→  principal_type, resource
-has_action            ──→  reachable_action
-has_resource          ──→  reachable_resource
+has_action            ──→  reachable_action, scoped_reachable_action
+has_resource          ──→  reachable_resource, scoped_reachable_resource
+has_scope             ──→  scoped_reachable_action, scoped_reachable_resource
 can_assume            ──→  transitive_assume
 has_deny_action       ──→  reachable_deny_action
-                      ──→  effective_allow / effective_deny
+                      ──→  effective_allow (scope-constrained) / effective_deny
                       ──→  effective_permission
                       ──→  effective_access
 authorized            ──→  unauthorized_access
@@ -82,7 +83,7 @@ sensitivity           ──→  violation_c (confidentiality)
 Documented in `schema.dl` and `rules.dl` headers:
 
 1. **No group membership** — `aws_iam_group` not in the observation contract
-2. **Cartesian permission product** — effective access is an over-approximation (more permissive than per-statement reasoning)
+2. **Intra-account Cartesian** — effective access within a single identity context is still an over-approximation (more permissive than per-statement reasoning); cross-account Cartesian eliminated by scope-aware joins
 3. **Partial condition support** — condition-aware trust queries need extended SIR-facts emission
 4. **ARN matching** — exact, universal `*`, and trailing `*` only; no mid-pattern wildcards
 
