@@ -9,10 +9,11 @@ import (
 // Metadata holds typed provenance for an evaluation run: how controls were
 // selected, where they came from, and the state of the source repository.
 type Metadata struct {
-	ContextName   string            `json:"context_name"`
-	ControlSource ControlSourceInfo `json:"control_source"`
-	ResolvedPaths ResolvedPaths     `json:"resolved_paths"`
-	Integrity     *IntegrityStatus  `json:"integrity,omitempty"`
+	ContextName   string             `json:"context_name"`
+	ControlSource ControlSourceInfo  `json:"control_source"`
+	ResolvedPaths ResolvedPaths      `json:"resolved_paths"`
+	Integrity     *IntegrityStatus   `json:"integrity,omitempty"`
+	Attestation   *AttestationStatus `json:"attestation,omitempty"`
 }
 
 // IntegrityStatus records whether observation integrity was verified.
@@ -21,6 +22,22 @@ type IntegrityStatus struct {
 	ManifestPath   string    `json:"manifest_path,omitempty"`
 	KeyFingerprint string    `json:"key_fingerprint,omitempty"`
 	VerifiedAt     time.Time `json:"verified_at,omitzero"`
+}
+
+// AttestationStatusValue identifies the outcome of snapshot attestation verification.
+type AttestationStatusValue string
+
+const (
+	AttestationUnsigned AttestationStatusValue = "UNSIGNED"
+	AttestationVerified AttestationStatusValue = "VERIFIED"
+	AttestationFailed   AttestationStatusValue = "FAILED"
+)
+
+// AttestationStatus records whether observation snapshots were attested (Ed25519 signed).
+type AttestationStatus struct {
+	Status         AttestationStatusValue `json:"status"`
+	KeyFingerprint string                 `json:"key_fingerprint,omitempty"`
+	SignedAt       string                 `json:"signed_at,omitempty"`
 }
 
 // ControlSourceMode identifies how controls were selected for evaluation.

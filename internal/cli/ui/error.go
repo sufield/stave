@@ -21,8 +21,9 @@ const (
 	ExitInputError    = 2   // Invalid input, flags, or schema validation failure
 	ExitViolations    = 3   // Evaluation completed with findings/diagnostics
 	ExitInternal      = 4   // Unexpected internal error
-	ExitIndeterminate = 5   // No findings but indeterminate results exist (data gaps)
-	ExitInterrupted   = 130 // Interrupted by SIGINT (Ctrl+C)
+	ExitIndeterminate      = 5   // No findings but indeterminate results exist (data gaps)
+	ExitAttestationFailed  = 6   // Attestation verification failed (tampered or unsigned when required)
+	ExitInterrupted        = 130 // Interrupted by SIGINT (Ctrl+C)
 )
 
 // ErrorCode is a stable string identifier for categories of failures.
@@ -60,6 +61,7 @@ var (
 	ErrDiagnosticsFound      = errors.New("diagnostics found")
 	ErrSecurityAuditFindings = errors.New("security audit findings")
 	ErrIndeterminateOnly     = errors.New("indeterminate results only")
+	ErrAttestationFailed     = stave.ErrAttestationFailed
 	ErrInterrupted           = errors.New("interrupted")
 	ErrInternal              = errors.New("internal error")
 )
@@ -121,6 +123,8 @@ func ExitCode(err error) int {
 		// when at least one control test case didn't match its
 		// expected verdict.
 		return ExitViolations
+	case errors.Is(err, ErrAttestationFailed):
+		return ExitAttestationFailed
 	case errors.Is(err, ErrSecurityAuditFindings):
 		return ExitSecurity
 	case errors.Is(err, ErrInternal):

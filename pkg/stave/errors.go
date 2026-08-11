@@ -31,6 +31,12 @@ import "errors"
 // "not-found" precedent.
 var ErrInvalidInput = errors.New("invalid input")
 
+// ErrAttestationFailed marks an attestation verification failure —
+// a tampered snapshot, a key mismatch, or an unsigned snapshot when
+// --require-signed is set. The CLI exit-code shim maps this to exit 6
+// (ExitAttestationFailed).
+var ErrAttestationFailed = errors.New("attestation verification failed")
+
 // asInvalidInput tags err as a user-input error so the CLI exit-code shim maps
 // it to exit 2, WITHOUT appending redundant "invalid input" text. The engine
 // errors it wraps already carry an internal input sentinel in their message

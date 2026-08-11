@@ -191,10 +191,12 @@ func stripControlChars(s string) string {
 func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceReport) {
 	d.ln("Evaluation Results")
 	d.ln("==================")
-	d.f("\nRun: %s (max-unsafe: %s, snapshots: %d)\n\n",
+	d.f("\nRun: %s (max-unsafe: %s, snapshots: %d)\n",
 		result.Run.EvalTime.Format("2006-01-02 15:04:05 UTC"),
 		result.Run.MaxUnsafeDuration.String(),
 		result.Run.Snapshots)
+	w.writeAttestationStatus(d, result)
+	d.f("\n")
 	d.ln("Summary")
 	d.ln("-------")
 	d.f("  Assets evaluated:    %d\n", result.Summary.TotalAssets)
@@ -207,6 +209,21 @@ func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceRepo
 		d.f("  Issues (consolidated): %d\n", len(result.Issues))
 	}
 	d.f("\n")
+}
+
+func (w *FindingWriter) writeAttestationStatus(d *drawer, result *evaluation.ComplianceReport) {
+	att := result.Metadata.Attestation
+	if att == nil {
+		return
+	}
+	switch att.Status {
+	case evaluation.AttestationVerified:
+		d.f("Attestation: VERIFIED (key: %s)\n", att.KeyFingerprint)
+	case evaluation.AttestationFailed:
+		d.f("Attestation: FAILED — DATA INTEGRITY COMPROMISED\n")
+	case evaluation.AttestationUnsigned:
+		d.f("Attestation: UNSIGNED\n")
+	}
 }
 
 func (w *FindingWriter) writeNoViolationsSummary(d *drawer) {

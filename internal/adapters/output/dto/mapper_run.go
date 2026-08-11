@@ -80,5 +80,12 @@ func NewExtensionsDTO(e *evaluation.Extensions) *ExtensionsDTO {
 		PackRegistryVersion: e.PackRegistryVersion,
 		PackRegistryHash:    e.PackRegistryHash,
 	}
+	if e.Attestation != nil {
+		dto.Attestation = &AttestationStatusDTO{
+			Status:         e.Attestation.Status,
+			KeyFingerprint: e.Attestation.KeyFingerprint,
+			SignedAt:       e.Attestation.SignedAt,
+		}
+	}
 	return dto
 }

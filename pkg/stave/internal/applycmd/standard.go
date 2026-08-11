@@ -102,6 +102,14 @@ type StandardRequest struct {
 
 	FindingsOnly      bool // --findings-only: suppress indeterminate from output
 	IndeterminateOnly bool // --indeterminate-only: suppress confirmed findings from output
+
+	VerifyKey     string // --verify-key: path to Ed25519 public key PEM
+	RequireSigned bool   // --require-signed: refuse to evaluate unsigned snapshots
+
+	// AttestationStatus is populated by the facade's pre-evaluation
+	// verification pass when --verify-key is set. Nil when no
+	// verification was requested.
+	AttestationStatus *evaluation.AttestationStatus
 }
 
 // StandardResult is the rendered outcome of a standard evaluation. Everything
@@ -213,6 +221,10 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		return StandardResult{}, fmt.Errorf("evaluate: %w", err)
 	}
 	report := result.Report
+
+	if req.AttestationStatus != nil {
+		report.Metadata.Attestation = req.AttestationStatus
+	}
 
 	if err = annotateOwners(report, req.TeamManifest, req.OwnerFilter); err != nil {
 		return StandardResult{}, err

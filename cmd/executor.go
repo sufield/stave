@@ -324,7 +324,7 @@ func logExecutionOutcome(logger *slog.Logger, err error, msg string, exitCode in
 		logger.Info("command interrupted by context cancellation", "exit_code", exitCode)
 	case errors.Is(err, context.DeadlineExceeded):
 		logger.Info("command interrupted by deadline", "exit_code", exitCode)
-	case exitCode == ui.ExitViolations || exitCode == ui.ExitSecurity:
+	case exitCode == ui.ExitViolations || exitCode == ui.ExitSecurity || exitCode == ui.ExitAttestationFailed:
 		logger.Info("command completed with findings", "error", msg, "exit_code", exitCode)
 	default:
 		logger.Warn("command failed", "error", msg, "exit_code", exitCode)

@@ -119,8 +119,10 @@ type Options struct {
 	Verbose            bool
 	Auto               bool // --auto: print severity plan, then evaluate
 	IncludeAtomic      bool // --include-atomic: show per-control findings alongside compound
-	FindingsOnly       bool // --findings-only: show only confirmed findings, suppress indeterminate
-	IndeterminateOnly  bool // --indeterminate-only: show only indeterminate results, suppress findings
+	FindingsOnly       bool   // --findings-only: show only confirmed findings, suppress indeterminate
+	IndeterminateOnly  bool   // --indeterminate-only: show only indeterminate results, suppress findings
+	VerifyKey          string // --verify-key: Ed25519 public key PEM for snapshot attestation verification
+	RequireSigned      bool   // --require-signed: refuse to evaluate unsigned snapshots
 }
 
 // IsNewOnlyMode reports whether the run is in new-only mode —
@@ -144,6 +146,7 @@ func (o *Options) normalize() {
 	o.InputFile = fsutil.CleanUserPath(o.InputFile)
 	o.HistoryDir = fsutil.CleanUserPath(o.HistoryDir)
 	o.SARIFBaseline = fsutil.CleanUserPath(o.SARIFBaseline)
+	o.VerifyKey = fsutil.CleanUserPath(o.VerifyKey)
 }
 
 // NewApplyCmd constructs the apply command.
@@ -189,6 +192,7 @@ Exit Codes:
   3   - Violations found
   4   - Internal error
   5   - No violations but indeterminate results exist (data gaps)
+  6   - Attestation verification failed (tampered or unsigned when required)
   130 - Interrupted (SIGINT)
 
 Remediation scope:
@@ -289,6 +293,8 @@ func (o *Options) bindApplySpecific(cmd *cobra.Command) {
 	f.BoolVar(&o.Auto, "auto", false, "Run discover→plan→evaluate: resolve services, show severity plan, evaluate in weighted order")
 	f.BoolVar(&o.FindingsOnly, "findings-only", false, "Show only confirmed findings, suppress indeterminate results")
 	f.BoolVar(&o.IndeterminateOnly, "indeterminate-only", false, "Show only indeterminate results, suppress confirmed findings")
+	f.StringVar(&o.VerifyKey, "verify-key", "", "Path to Ed25519 public key PEM for snapshot attestation verification")
+	f.BoolVar(&o.RequireSigned, "require-signed", false, "Refuse to evaluate unsigned (unattested) snapshots")
 }
 
 // validSLAPolicyValues is the closed set of accepted --sla-policy
@@ -328,6 +334,9 @@ func (o *Options) validate() error {
 	if !o.hasSupportedSLAPolicy() {
 		return &ui.UserError{Err: fmt.Errorf("--sla-policy %q invalid (allowed: %s)",
 			o.SLAPolicy, strings.Join(validSLAPolicyValues, ", "))}
+	}
+	if o.RequireSigned && o.VerifyKey == "" {
+		return &ui.UserError{Err: errors.New("--require-signed requires --verify-key (the public key is needed to verify attestation)")}
 	}
 	return nil
 }

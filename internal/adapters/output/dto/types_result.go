@@ -35,13 +35,21 @@ type SummaryDTO struct {
 
 // ExtensionsDTO mirrors evaluation.Extensions.
 type ExtensionsDTO struct {
-	SelectedSource      string             `json:"selected_controls_source,omitempty"`
-	ContextName         string             `json:"context_name,omitempty"`
-	ResolvedPaths       map[string]string  `json:"resolved_paths,omitempty"`
-	EnabledPacks        []string           `json:"enabled_control_packs,omitempty"`
-	ResolvedControlIDs  []kernel.ControlID `json:"resolved_control_ids,omitempty"`
-	PackRegistryVersion string             `json:"pack_registry_version,omitempty"`
-	PackRegistryHash    kernel.Digest      `json:"pack_registry_hash,omitempty"`
+	SelectedSource      string                `json:"selected_controls_source,omitempty"`
+	ContextName         string                `json:"context_name,omitempty"`
+	ResolvedPaths       map[string]string     `json:"resolved_paths,omitempty"`
+	EnabledPacks        []string              `json:"enabled_control_packs,omitempty"`
+	ResolvedControlIDs  []kernel.ControlID    `json:"resolved_control_ids,omitempty"`
+	PackRegistryVersion string                `json:"pack_registry_version,omitempty"`
+	PackRegistryHash    kernel.Digest         `json:"pack_registry_hash,omitempty"`
+	Attestation         *AttestationStatusDTO `json:"attestation,omitempty"`
+}
+
+// AttestationStatusDTO surfaces snapshot attestation (Ed25519 signature) status in JSON output.
+type AttestationStatusDTO struct {
+	Status         string `json:"status"`
+	KeyFingerprint string `json:"key_fingerprint,omitempty"`
+	SignedAt       string `json:"signed_at,omitempty"`
 }
 
 // IssueDTO mirrors evaluation.Issue for JSON output.

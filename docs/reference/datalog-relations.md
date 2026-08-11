@@ -48,6 +48,7 @@ Run: `go run ./internal/tools/gendatalogdocs`
 | [`has_data_event_logging`](#has_data_event_logging) | `asset: symbol, flag: symbol` | input |  |
 | [`has_mfa_enforced`](#has_mfa_enforced) | `asset: symbol, flag: symbol` | input |  |
 | [`has_advanced_security_enabled`](#has_advanced_security_enabled) | `asset: symbol, flag: symbol` | input |  |
+| [`has_scope`](#has_scope) | `asset: symbol, account_id: symbol` | input | account-level scope token for scope-aware Datalog |
 | [`authorized`](#authorized) | `principal_id: symbol, resource_id: symbol` | input | Authorization + sensitivity model |
 | [`sensitivity`](#sensitivity) | `resource_id: symbol, level: symbol` | input |  |
 | [`is_principal_type`](#is_principal_type) | `t: symbol` | derived | Option B Datalog-readability renames |
@@ -66,7 +67,9 @@ Run: `go run ./internal/tools/gendatalogdocs`
 | [`reachable_resource`](#reachable_resource) | `principal_id: symbol, resource_pattern: symbol` | output |  |
 | [`reachable_deny_action`](#reachable_deny_action) | `principal_id: symbol, action: symbol` | output | Same shape for the Deny side. Sirfacts emits has_deny_* |
 | [`reachable_deny_resource`](#reachable_deny_resource) | `principal_id: symbol, resource_pattern: symbol` | output |  |
-| [`effective_allow`](#effective_allow) | `principal_id: symbol, action: symbol, resource_pattern: symbol` | output | the cartesian |
+| [`scoped_reachable_action`](#scoped_reachable_action) | `principal_id: symbol, action: symbol, scope: symbol` | output | carry the identity context |
+| [`scoped_reachable_resource`](#scoped_reachable_resource) | `principal_id: symbol, resource_pattern: symbol, scope: symbol` | output |  |
+| [`effective_allow`](#effective_allow) | `principal_id: symbol, action: symbol, resource_pattern: symbol` | output | scope-constrained join (HAZOP v1 |
 | [`effective_deny`](#effective_deny) | `principal_id: symbol, action: symbol, resource_pattern: symbol` | output |  |
 | [`effective_permission`](#effective_permission) | `principal_id: symbol, action: symbol, resource_pattern: symbol` | output | allow minus deny. Per Caveat 2, |
 | [`arn_matches`](#arn_matches) | `pattern: symbol, arn: symbol` | derived | pattern matching for AWS resource ARNs |
@@ -513,6 +516,24 @@ Caveat 3. Populate by extending sirfacts trust-policy parsing.
 .decl has_advanced_security_enabled(asset: symbol, flag: symbol)
 ```
 
+### has_scope
+
+**Source:** `internal/reasoning/souffle/iam/schema.dl`
+
+**Kind:** input
+
+```datalog
+.decl has_scope(asset: symbol, account_id: symbol)
+```
+
+has_scope — account-level scope token for scope-aware Datalog
+joins. Emitted by extract.go by parsing account_id from asset
+ARNs. Used by rules.dl to scope-constrain effective_allow,
+eliminating cross-account Cartesian false positives (HAZOP v1
+2.5). Every IAM principal (user/role) has an account_id in its
+ARN; resources without an account fall through to the unscoped
+fallback in rules.dl.
+
 ### authorized
 
 **Source:** `internal/reasoning/souffle/iam/schema.dl`
@@ -731,6 +752,33 @@ empty, so under Option B these are typically sparse.
 .decl reachable_deny_resource(principal_id: symbol, resource_pattern: symbol)
 ```
 
+### scoped_reachable_action
+
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
+
+**Kind:** output
+
+```datalog
+.decl scoped_reachable_action(principal_id: symbol, action: symbol, scope: symbol)
+```
+
+Scope-aware reachable — carry the identity context
+(account_id) through role-assumption chains. When
+principal P in account A assumes role R in account B,
+R's actions/resources are scoped to B. The effective_
+allow join below requires scope match, so A's actions
+don't Cartesian-combine with B's resources.
+
+### scoped_reachable_resource
+
+**Source:** `internal/reasoning/souffle/iam/rules.dl`
+
+**Kind:** output
+
+```datalog
+.decl scoped_reachable_resource(principal_id: symbol, resource_pattern: symbol, scope: symbol)
+```
+
 ### effective_allow
 
 **Source:** `internal/reasoning/souffle/iam/rules.dl`
@@ -741,11 +789,14 @@ empty, so under Option B these are typically sparse.
 .decl effective_allow(principal_id: symbol, action: symbol, resource_pattern: symbol)
 ```
 
-effective_allow / effective_deny — the cartesian
-product of reachable_action × reachable_resource per
-principal. See Caveat 1 in the file header for why
-this is necessarily an over-approximation under
-Option B.
+effective_allow — scope-constrained join (HAZOP v1
+2.5). Actions and resources from the same identity
+context combine; cross-scope combinations are
+eliminated. Fallback rules preserve the full Cartesian
+for principals without scope data (no false negatives).
+
+effective_deny stays as the full Cartesian — over-
+denying is conservative (fewer permissions, not more).
 
 ### effective_deny
 

@@ -110,10 +110,15 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		IncludeAtomic:      opts.IncludeAtomic || opts.AllStaged,
 		FindingsOnly:       opts.FindingsOnly,
 		IndeterminateOnly:  opts.IndeterminateOnly,
+		VerifyKey:          opts.VerifyKey,
+		RequireSigned:      opts.RequireSigned,
 	})
 	done()
 
 	if err != nil {
+		if errors.Is(err, stave.ErrAttestationFailed) {
+			return err //nolint:wrapcheck // sentinel carries the exit-code tag; re-wrapping would drop it.
+		}
 		if errors.Is(err, stave.ErrInvalidInput) {
 			return &ui.UserError{Err: err}
 		}

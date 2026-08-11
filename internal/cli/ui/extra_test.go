@@ -58,6 +58,12 @@ func TestExitCode_InternalError(t *testing.T) {
 	}
 }
 
+func TestExitCode_AttestationFailed(t *testing.T) {
+	if ExitCode(ErrAttestationFailed) != ExitAttestationFailed {
+		t.Errorf("ExitCode(ErrAttestationFailed) = %d, want %d", ExitCode(ErrAttestationFailed), ExitAttestationFailed)
+	}
+}
+
 func TestWithTitle_NilReceiver(t *testing.T) {
 	var info *ErrorInfo
 	result := info.WithTitle("title")

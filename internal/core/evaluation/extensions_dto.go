@@ -18,6 +18,7 @@ type Extensions struct {
 	PackRegistryVersion string             `json:"pack_registry_version,omitempty"`
 	PackRegistryHash    kernel.Digest      `json:"pack_registry_hash,omitempty"`
 	Integrity           *ExtIntegrity      `json:"integrity,omitempty"`
+	Attestation         *ExtAttestation    `json:"attestation,omitempty"`
 }
 
 // ExtIntegrity surfaces observation integrity verification status.
@@ -27,6 +28,13 @@ type ExtIntegrity struct {
 	ManifestPath   string    `json:"manifest_path,omitempty"`
 	KeyFingerprint string    `json:"key_fingerprint,omitempty"`
 	VerifiedAt     time.Time `json:"verified_at,omitzero"`
+}
+
+// ExtAttestation surfaces snapshot attestation (Ed25519 signature) status.
+type ExtAttestation struct {
+	Status         string `json:"status"`
+	KeyFingerprint string `json:"key_fingerprint,omitempty"`
+	SignedAt       string `json:"signed_at,omitempty"`
 }
 
 // ToExtensions projects the internal Metadata into the report-friendly Extensions DTO.
@@ -58,6 +66,14 @@ func (m Metadata) ToExtensions() *Extensions {
 			ManifestPath:   m.Integrity.ManifestPath,
 			KeyFingerprint: m.Integrity.KeyFingerprint,
 			VerifiedAt:     m.Integrity.VerifiedAt,
+		}
+	}
+
+	if m.Attestation != nil {
+		ext.Attestation = &ExtAttestation{
+			Status:         string(m.Attestation.Status),
+			KeyFingerprint: m.Attestation.KeyFingerprint,
+			SignedAt:       m.Attestation.SignedAt,
 		}
 	}
 
