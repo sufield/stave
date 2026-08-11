@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.POLICY.NOPRINCIPAL.001
+name: VPC Endpoint Policy Has No Principal Restriction
+description: >
+  VPC endpoint policy uses Principal: * or omits Principal restrictions
+  entirely — any IAM principal in the VPC can invoke the service through
+  this endpoint. Without a Principal restriction, compromising any
+  workload in the VPC grants full service access through the endpoint.
+  Restrictive endpoint policies should limit Principal to specific roles
+  or accounts that legitimately need the endpoint.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03", "IVS-04"]
+  owasp_subtractive: "S03"
+  subtractive_tier: "narrowing"
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - least-privilege
+  - data-perimeter
+subtractive_category:
+  - S02
+  - S03
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: lateral_movement
+remediation:
+  description: >
+    VPC endpoint policy does not restrict which principals can use the
+    endpoint. Any role or user in the VPC can reach the backing service.
+  action: >
+    Add a Principal restriction to the endpoint policy limiting access
+    to specific IAM roles, users, or AWS accounts that require this
+    network path.
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "vpc_endpoint": {
+          "policy_has_principal_restriction": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.policy_has_principal_restriction
+      op: eq
+      value: false
+tests:
+  - name: "endpoint policy with no principal restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0abc123noprinc"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            policy_has_principal_restriction: false
+  - name: "endpoint policy with principal restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0def456princ"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            policy_has_principal_restriction: true
+  - name: "gateway endpoint with no principal restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0ghi789gwnoprinc"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            policy_has_principal_restriction: false

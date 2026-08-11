@@ -60,7 +60,7 @@ func Test(controlPath, passFixture, failFixture, snapshotPath string, verbose bo
 			return nil, fmt.Errorf("load pass fixture: %w", loadErr)
 		}
 		for _, a := range assets {
-			unsafe, evalErr := celEval(ctl, a, nil)
+			unsafe, evalErr := celEval(&ctl, a, nil)
 			if evalErr != nil {
 				fmt.Fprintf(&buf, "X %s -- pass fixture: ERROR  %v\n", ctl.ID, evalErr)
 				failed++
@@ -83,7 +83,7 @@ func Test(controlPath, passFixture, failFixture, snapshotPath string, verbose bo
 			return nil, fmt.Errorf("load fail fixture: %w", loadErr)
 		}
 		for _, a := range assets {
-			unsafe, evalErr := celEval(ctl, a, nil)
+			unsafe, evalErr := celEval(&ctl, a, nil)
 			if evalErr != nil {
 				fmt.Fprintf(&buf, "X %s -- fail fixture: ERROR  %v\n", ctl.ID, evalErr)
 				failed++
@@ -109,7 +109,7 @@ func Test(controlPath, passFixture, failFixture, snapshotPath string, verbose bo
 			snap := snaps[len(snaps)-1]
 			matchCount := 0
 			for i := range snap.Assets {
-				unsafe, evalErr := celEval(ctl, snap.Assets[i], nil)
+				unsafe, evalErr := celEval(&ctl, snap.Assets[i], nil)
 				if evalErr != nil {
 					continue
 				}

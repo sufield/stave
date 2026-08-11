@@ -101,7 +101,7 @@ func TestRunDirectoryEvaluation_Success(t *testing.T) {
 	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	repo := &mockObsRepo{result: appcontracts.LoadResult{Snapshots: testSnapshots(base)}}
 
-	celEval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	celEval := func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return false, nil // all safe
 	}
 

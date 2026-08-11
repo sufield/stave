@@ -65,7 +65,7 @@ func isTriggered(ctl *ControlDefinition, snapshots []asset.Snapshot, eval Predic
 			if !ctl.AppliesToAssetType(a.Type) {
 				continue
 			}
-			unsafe, err := eval(*ctl, a, snap.Identities)
+			unsafe, err := eval(ctl, a, snap.Identities)
 			if err == nil && unsafe {
 				return true
 			}

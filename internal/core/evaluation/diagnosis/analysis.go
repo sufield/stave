@@ -177,7 +177,7 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 		for id, history := range assetHistories {
 			streak, matched := analyzeAssetStreak(&assetStreakRequest{
 				Points:  history,
-				Control: *ctl,
+				Control: ctl,
 				EndTime: endTime,
 				Eval:    input.PredicateEval,
 			})

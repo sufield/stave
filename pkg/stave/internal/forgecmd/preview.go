@@ -64,7 +64,7 @@ func Preview(snapshotPath, assetType, field, op, value, predicateExpr string) ([
 		if assetType != "" && string(a.Type) != assetType {
 			continue
 		}
-		unsafe, evalErr := celEval(ctl, *a, nil)
+		unsafe, evalErr := celEval(&ctl, *a, nil)
 		if evalErr != nil {
 			fmt.Fprintf(&buf, "  ERROR  %s  %v\n", a.ID, evalErr)
 			errCount++
@@ -122,7 +122,7 @@ func LivePreview(snapshotPath, assetType, field, op, value string) ([]byte, erro
 		if assetType != "" && string(a.Type) != assetType {
 			continue
 		}
-		unsafe, evalErr := celEval(ctl, *a, nil)
+		unsafe, evalErr := celEval(&ctl, *a, nil)
 		if evalErr != nil {
 			continue
 		}

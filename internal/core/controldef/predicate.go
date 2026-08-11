@@ -30,7 +30,7 @@ func (p UnsafePredicate) IsEmpty() bool {
 // PredicateEval evaluates whether an asset is unsafe according to a control's
 // predicate. This function type decouples evaluation consumers from the
 // evaluation engine implementation (CEL or built-in).
-type PredicateEval func(ctl ControlDefinition, a asset.Asset, identities []asset.CloudIdentity) (unsafe bool, err error)
+type PredicateEval func(ctl *ControlDefinition, a asset.Asset, identities []asset.CloudIdentity) (unsafe bool, err error)
 
 // EvalContext encapsulates all state available to a predicate during evaluation.
 type EvalContext struct {

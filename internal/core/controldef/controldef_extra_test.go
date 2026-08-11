@@ -393,7 +393,7 @@ func TestCheckEffectivenessNeverTriggered(t *testing.T) {
 		{ID: kernel.ControlID("CTL.TEST.001"), Name: "test"},
 	}
 	snapshots := []asset.Snapshot{}
-	eval := func(_ ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := func(_ *ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return false, nil
 	}
 	issues := CheckEffectiveness(controls, snapshots, eval)
@@ -410,7 +410,7 @@ func TestCheckEffectivenessTriggered(t *testing.T) {
 	snapshots := []asset.Snapshot{
 		{Assets: []asset.Asset{{ID: "a1"}}},
 	}
-	eval := func(_ ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := func(_ *ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil
 	}
 	issues := CheckEffectiveness(controls, snapshots, eval)
@@ -440,7 +440,7 @@ func TestCheckEffectivenessRespectsAppliesToAssetType(t *testing.T) {
 		},
 	}
 	// The evaluator says any asset is unsafe
-	eval := func(_ ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := func(_ *ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil
 	}
 	issues := CheckEffectiveness(controls, snapshots, eval)

@@ -100,7 +100,7 @@ func TestHIPAAControl_NetworkVPC(t *testing.T) {
 			a := testAsset(map[string]any{
 				"storage": map[string]any{"kind": "bucket", "access": tt.access},
 			})
-			got, err := eval(ctl, a, nil)
+			got, err := eval(&ctl, a, nil)
 			if err != nil {
 				t.Fatalf("evaluate: %v", err)
 			}
@@ -132,7 +132,7 @@ func TestHIPAAControl_NetworkPolicy(t *testing.T) {
 			a := testAsset(map[string]any{
 				"storage": map[string]any{"kind": "bucket", "network": tt.network},
 			})
-			got, err := eval(ctl, a, nil)
+			got, err := eval(&ctl, a, nil)
 			if err != nil {
 				t.Fatalf("evaluate: %v", err)
 			}
@@ -163,7 +163,7 @@ func TestHIPAAControl_PresignedURL(t *testing.T) {
 			a := testAsset(map[string]any{
 				"storage": map[string]any{"kind": "bucket", "access": tt.access},
 			})
-			got, err := eval(ctl, a, nil)
+			got, err := eval(&ctl, a, nil)
 			if err != nil {
 				t.Fatalf("evaluate: %v", err)
 			}
@@ -194,7 +194,7 @@ func TestHIPAAControl_AuditObjectLevel(t *testing.T) {
 			a := testAsset(map[string]any{
 				"storage": map[string]any{"kind": "bucket", "logging": tt.logging},
 			})
-			got, err := eval(ctl, a, nil)
+			got, err := eval(&ctl, a, nil)
 			if err != nil {
 				t.Fatalf("evaluate: %v", err)
 			}

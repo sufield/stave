@@ -86,7 +86,7 @@ func TestAnalyzeAssetStreak_ReportsLongestOfMultipleStreaks(t *testing.T) {
 		points[i].state = asset.Asset{ID: asset.ID(points[i].at.Format(time.RFC3339))}
 	}
 	safeAt := base.Add(48 * time.Hour).Format(time.RFC3339)
-	timeAwareEval := func(_ policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	timeAwareEval := func(_ *policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		if string(a.ID) == safeAt {
 			return false, nil // safe: ends streak A
 		}
@@ -95,7 +95,7 @@ func TestAnalyzeAssetStreak_ReportsLongestOfMultipleStreaks(t *testing.T) {
 
 	req := &assetStreakRequest{
 		Points:  points,
-		Control: policy.ControlDefinition{},
+		Control: &policy.ControlDefinition{},
 		EndTime: endTime,
 		Eval:    timeAwareEval,
 	}

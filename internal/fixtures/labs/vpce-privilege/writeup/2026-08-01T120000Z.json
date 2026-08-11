@@ -1,0 +1,59 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.vpce-privilege"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111111111111:role/broad-data-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "policies": {
+            "has_resource_wildcard_on_sensitive": true
+          }
+        }
+      }
+    },
+    {
+      "id": "vpce-0aaa111default",
+      "type": "aws_vpc_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc_endpoint",
+          "vpc_endpoint": {
+            "kind": "Interface",
+            "service_name": "com.amazonaws.us-east-1.s3",
+            "vpc_id": "vpc-0prod001",
+            "has_default_full_access_policy": true,
+            "policy_has_wildcard_action": true,
+            "policy_has_principal_restriction": false
+          }
+        }
+      }
+    },
+    {
+      "id": "vpce-0bbb222gateway",
+      "type": "aws_vpc_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc_endpoint",
+          "vpc_endpoint": {
+            "kind": "Gateway",
+            "service_name": "com.amazonaws.us-east-1.dynamodb",
+            "vpc_id": "vpc-0prod001",
+            "has_default_full_access_policy": true,
+            "policy_has_wildcard_action": true,
+            "policy_has_principal_restriction": false
+          }
+        }
+      }
+    }
+  ]
+}

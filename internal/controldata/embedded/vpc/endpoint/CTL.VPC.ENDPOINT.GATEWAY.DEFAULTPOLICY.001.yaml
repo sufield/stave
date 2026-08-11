@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.GATEWAY.DEFAULTPOLICY.001
+name: Gateway VPC Endpoint Has Full-Access Default Policy
+description: >
+  Gateway VPC endpoint (S3 or DynamoDB) uses the default full-access
+  policy (Principal *, Action *, Resource *). The default policy places
+  no restriction on which principals can reach the backing service or
+  which resources they can access through the endpoint. Any workload
+  with a route to this endpoint can call any operation on any resource
+  in the target service. Gateway endpoints are free but the default
+  policy makes them a convenience feature, not a security boundary.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03", "DSP-17"]
+  owasp_subtractive: "S03"
+  subtractive_tier: "deletion"
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - data-perimeter
+  - network-isolation
+subtractive_category:
+  - S02
+  - S03
+  - S04
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Gateway endpoint uses the default full-access policy. Any principal
+    with a route to this endpoint can call any action on any resource
+    in the target service.
+  action: >
+    Replace the default policy with a scoped policy that restricts
+    Principal to authorized roles, Action to required operations, and
+    Resource to specific ARNs. For S3 endpoints, restrict to specific
+    bucket ARNs. For DynamoDB endpoints, restrict to specific table ARNs.
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "vpc_endpoint": {
+          "kind": "Gateway",
+          "has_default_full_access_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.kind
+      op: eq
+      value: Gateway
+    - field: properties.network.vpc_endpoint.has_default_full_access_policy
+      op: eq
+      value: true
+tests:
+  - name: "gateway endpoint with default policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0abc123gwdefault"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            has_default_full_access_policy: true
+  - name: "gateway endpoint with scoped policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0def456gwscoped"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            has_default_full_access_policy: false
+  - name: "interface endpoint with default policy passes (wrong type)"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0ghi789interface"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            has_default_full_access_policy: true

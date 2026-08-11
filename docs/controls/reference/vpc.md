@@ -487,6 +487,21 @@ Interface VPC endpoint does not have Private DNS enabled. Without Private DNS, t
 
 ---
 
+### CTL.VPC.ENDPOINT.GATEWAY.DEFAULTPOLICY.001
+
+**Gateway VPC Endpoint Has Full-Access Default Policy**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; owasp_subtractive: S03; soc2: CC6.1; subtractive_tier: deletion;
+
+Gateway VPC endpoint (S3 or DynamoDB) uses the default full-access policy (Principal *, Action *, Resource *). The default policy places no restriction on which principals can reach the backing service or which resources they can access through the endpoint. Any workload with a route to this endpoint can call any operation on any resource in the target service. Gateway endpoints are free but the default policy makes them a convenience feature, not a security boundary.
+
+**Remediation:** Replace the default policy with a scoped policy that restricts Principal to authorized roles, Action to required operations, and Resource to specific ARNs. For S3 endpoints, restrict to specific bucket ARNs. For DynamoDB endpoints, restrict to specific table ARNs.
+
+---
+
 ### CTL.VPC.ENDPOINT.GATEWAY.NOROUTE.001
 
 **Gateway VPC Endpoint Has No Route Table Association**
@@ -589,6 +604,36 @@ VPC with private subnets does not have interface endpoints for one or more criti
 VPC endpoint policies for data services (S3, DynamoDB, Secrets Manager, Bedrock, SageMaker) must restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific resource ARNs. Without destination restriction, a compromised workload can reach any resource in the service globally — including attacker-controlled resources in external accounts — through the organization's own endpoint. This is the network-level enforcement layer that catches what IAM policy gaps miss.
 
 **Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict access to resources owned by your organization, or restrict the Resource field to specific resource ARNs.
+
+---
+
+### CTL.VPC.ENDPOINT.POLICY.NOPRINCIPAL.001
+
+**VPC Endpoint Policy Has No Principal Restriction**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-3; owasp_subtractive: S03; soc2: CC6.1; subtractive_tier: narrowing;
+
+VPC endpoint policy uses Principal: * or omits Principal restrictions entirely — any IAM principal in the VPC can invoke the service through this endpoint. Without a Principal restriction, compromising any workload in the VPC grants full service access through the endpoint. Restrictive endpoint policies should limit Principal to specific roles or accounts that legitimately need the endpoint.
+
+**Remediation:** Add a Principal restriction to the endpoint policy limiting access to specific IAM roles, users, or AWS accounts that require this network path.
+
+---
+
+### CTL.VPC.ENDPOINT.POLICY.WILDCARD.001
+
+**VPC Endpoint Policy Allows Wildcard Action**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-6; owasp_subtractive: S03; soc2: CC6.1; subtractive_tier: narrowing;
+
+VPC endpoint policy includes Action: * or Action: service:* — allowing any API action through the endpoint. Endpoint policies that allow all actions provide no restriction beyond what IAM already permits. A restrictive endpoint policy should limit Action to the specific operations that workloads behind the endpoint actually need, reducing the blast radius if a principal is compromised.
+
+**Remediation:** Replace the wildcard action with specific actions that workloads behind this endpoint require (e.g., s3:GetObject, s3:PutObject instead of s3:*).
 
 ---
 

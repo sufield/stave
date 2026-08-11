@@ -69,7 +69,7 @@ func simpleControls() []policy.ControlDefinition {
 }
 
 func celEvalAllSafe() policy.PredicateEval {
-	return func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	return func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return false, nil
 	}
 }

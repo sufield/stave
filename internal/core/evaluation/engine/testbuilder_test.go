@@ -58,7 +58,7 @@ func (b *assessorBuilder) withControls(ctls ...policy.ControlDefinition) *assess
 
 // alwaysUnsafe sets the predicate evaluator to always return true (asset is unsafe).
 func (b *assessorBuilder) alwaysUnsafe() *assessorBuilder {
-	b.predicateEval = func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	b.predicateEval = func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil
 	}
 	return b
@@ -66,7 +66,7 @@ func (b *assessorBuilder) alwaysUnsafe() *assessorBuilder {
 
 // alwaysSafe sets the predicate evaluator to always return false (asset is safe).
 func (b *assessorBuilder) alwaysSafe() *assessorBuilder {
-	b.predicateEval = func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	b.predicateEval = func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return false, nil
 	}
 	return b
@@ -88,7 +88,7 @@ func (b *assessorBuilder) build() *Assessor {
 	if a.predicateEval == nil {
 		// Default the precondition fields so tests that don't care about
 		// predicate evaluation continue to satisfy Assess()'s preconditions.
-		a.predicateEval = func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		a.predicateEval = func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return false, nil
 		}
 	}

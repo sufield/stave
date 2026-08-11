@@ -118,7 +118,7 @@ func (r *ControlStore) Filtered(selectors []Selector) ([]policy.ControlDefinitio
 		return all, err
 	}
 	return slices.DeleteFunc(all, func(ctl policy.ControlDefinition) bool {
-		return !MatchesAny(ctl, selectors)
+		return !MatchesAny(&ctl, selectors)
 	}), nil
 }
 

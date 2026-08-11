@@ -37,7 +37,7 @@ func NewPredicateEvalWithCompiler(opts ...CompilerOption) (policy.PredicateEval,
 // semantics. Any future per-call logic (tracing, metrics, fallback)
 // lands here once and reaches both callers.
 func wrapEval(compiler *Compiler) policy.PredicateEval {
-	return func(ctl policy.ControlDefinition, a asset.Asset, identities []asset.CloudIdentity) (bool, error) {
+	return func(ctl *policy.ControlDefinition, a asset.Asset, identities []asset.CloudIdentity) (bool, error) {
 		cp, compileErr := compiler.Compile(ctl.UnsafePredicate)
 		if compileErr != nil {
 			return false, compileErr

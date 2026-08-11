@@ -24,7 +24,7 @@ import (
 // The exact value is less important than that it's non-trivial:
 // the parallelisation win is invisible when the inner call is
 // ~10ns because the loop is memory-bound, not compute-bound.
-func slowPredicateEval(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+func slowPredicateEval(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 	deadline := time.Now().Add(30 * time.Microsecond)
 	x := 0
 	for time.Now().Before(deadline) {

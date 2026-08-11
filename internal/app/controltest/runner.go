@@ -121,7 +121,7 @@ func runCase(ctl *policy.ControlDefinition, tc *policy.ControlTest, eval policy.
 	}
 
 	// Call the SAME evaluation path as stave apply.
-	unsafe, err := eval(*ctl, a, nil)
+	unsafe, err := eval(ctl, a, nil)
 
 	var actualVerdict string
 	switch {

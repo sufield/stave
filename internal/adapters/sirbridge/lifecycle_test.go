@@ -15,7 +15,7 @@ import (
 // "is_exposed_for_test=true", and "secure" otherwise. Lets the
 // bridge test exercise the engine pipeline without bringing in
 // the real CEL evaluator.
-func stubPredicateEval(_ controldef.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+func stubPredicateEval(_ *controldef.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 	if v, ok := a.Properties["is_exposed_for_test"].(bool); ok && v {
 		return true, nil
 	}

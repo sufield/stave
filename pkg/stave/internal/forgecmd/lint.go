@@ -134,7 +134,7 @@ func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintR
 
 	if celEval != nil && ctl.RequiresCELValidation() {
 		testAsset := dummyAsset()
-		isUnsafe, evalErr := celEval(ctl, testAsset, nil)
+		isUnsafe, evalErr := celEval(&ctl, testAsset, nil)
 		if evalErr != nil {
 			errStr := evalErr.Error()
 			if strings.Contains(errStr, "undeclared") || strings.Contains(errStr, "syntax") {

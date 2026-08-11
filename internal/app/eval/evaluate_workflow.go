@@ -164,7 +164,7 @@ func noopPredicateParser(_ any) (*policy.UnsafePredicate, error) {
 // engine records a definitive PASS or VIOLATION instead of marking the
 // control inconclusive. Controls without the field get the original
 // inconclusive behavior (error return).
-func inconclusiveCELEvaluator(ctl policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+func inconclusiveCELEvaluator(ctl *policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 	switch ctl.VerdictOnError {
 	case "safe":
 		return false, nil

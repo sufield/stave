@@ -41,10 +41,10 @@ func (e *Explainer) Run(ctx context.Context, input Input) (contracts.ExplainResu
 	if err != nil {
 		return contracts.ExplainResult{}, fmt.Errorf("find by i d: %w", err)
 	}
-	return analyze(ctl), nil
+	return analyze(&ctl), nil
 }
 
-func analyze(ctl policy.ControlDefinition) contracts.ExplainResult {
+func analyze(ctl *policy.ControlDefinition) contracts.ExplainResult {
 	fields, rules := walkPredicate(ctl.UnsafePredicate, ctl.Params)
 	slices.Sort(fields)
 	return contracts.ExplainResult{

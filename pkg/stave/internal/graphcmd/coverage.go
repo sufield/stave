@@ -177,7 +177,7 @@ func CoverageEdges(
 	for i := range controls {
 		ctl := &controls[i]
 		for _, rid := range assetIDs {
-			unsafe, err := eval(*ctl, assetMap[rid], identities)
+			unsafe, err := eval(ctl, assetMap[rid], identities)
 			if err != nil || !unsafe {
 				continue
 			}

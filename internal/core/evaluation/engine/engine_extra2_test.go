@@ -33,7 +33,7 @@ func TestBuildLifecyclesPerControl_Basic(t *testing.T) {
 	}
 
 	// Use a simple predicate evaluator that always returns false (safe)
-	celEval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	celEval := func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return false, nil
 	}
 
@@ -66,7 +66,7 @@ func TestBuildLifecyclesPerControl_CancelledContextAborts(t *testing.T) {
 	// A predicate that would fail the test if it ever runs under a
 	// cancelled context — the per-snapshot ctx.Err() check must abort
 	// before any asset work begins.
-	celEval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	celEval := func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		t.Error("predicate must not run under a pre-cancelled context")
 		return false, nil
 	}
@@ -96,7 +96,7 @@ func TestBuildLifecyclesPerControl_UnsafePredicate(t *testing.T) {
 	}
 
 	// Evaluator returns true (unsafe)
-	celEval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	celEval := func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil
 	}
 
@@ -157,7 +157,7 @@ func TestCheckUnsafe_EvaluatorError(t *testing.T) {
 	a := asset.Asset{ID: "bucket-1"}
 	snap := asset.Snapshot{}
 
-	eval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, errors.New("some error")
 	}
 
@@ -326,7 +326,7 @@ func TestAssessorAssess_EmptySnapshots(t *testing.T) {
 		clock:      stubClock{t: time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)},
 		exemptions: policy.NewExemptionConfig("", nil),
 		exceptions: policy.NewExceptionConfig(nil),
-		predicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		predicateEval: func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return false, nil
 		},
 		predicateParser: func(_ any) (*policy.UnsafePredicate, error) {
@@ -357,7 +357,7 @@ func TestAssessorAssess_BasicViolation(t *testing.T) {
 		clock:        stubClock{t: base.Add(48 * time.Hour)},
 		exemptions:   policy.NewExemptionConfig("", nil),
 		exceptions:   policy.NewExceptionConfig(nil),
-		predicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		predicateEval: func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return true, nil
 		},
 		predicateParser: func(_ any) (*policy.UnsafePredicate, error) {

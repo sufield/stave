@@ -63,7 +63,7 @@ func ParseSelector(s string) (Selector, error) {
 // Matches returns true if the control satisfies all selector criteria.
 // All tags must be present in the control's ScopeTags (case-insensitive).
 // If MinSeverity is set, the control's severity must meet or exceed it.
-func (sel Selector) Matches(ctl policy.ControlDefinition) bool {
+func (sel Selector) Matches(ctl *policy.ControlDefinition) bool {
 	// Check severity first for a fast fail path.
 	if sel.MinSeverity.IsSet() && !ctl.Severity.Gte(sel.MinSeverity) {
 		return false
@@ -83,7 +83,7 @@ func (sel Selector) Matches(ctl policy.ControlDefinition) bool {
 }
 
 // MatchesAny returns true if the control matches any of the given selectors.
-func MatchesAny(ctl policy.ControlDefinition, selectors []Selector) bool {
+func MatchesAny(ctl *policy.ControlDefinition, selectors []Selector) bool {
 	if len(selectors) == 0 {
 		return true // no selectors = include all
 	}

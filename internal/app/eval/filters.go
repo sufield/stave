@@ -37,7 +37,7 @@ func FilterControls(controls []policy.ControlDefinition, f ControlFilter) ([]pol
 	filtered := make([]policy.ControlDefinition, 0, len(controls))
 	for i := range controls {
 		ctl := &controls[i]
-		if f.matches(*ctl, excluded) {
+		if f.matches(ctl, excluded) {
 			filtered = append(filtered, *ctl)
 		}
 	}
@@ -46,7 +46,7 @@ func FilterControls(controls []policy.ControlDefinition, f ControlFilter) ([]pol
 }
 
 // matches reports whether a single control passes all filter criteria.
-func (f ControlFilter) matches(ctl policy.ControlDefinition, excluded map[kernel.ControlID]struct{}) bool {
+func (f ControlFilter) matches(ctl *policy.ControlDefinition, excluded map[kernel.ControlID]struct{}) bool {
 	if f.ControlID != "" && ctl.ID != f.ControlID {
 		return false
 	}

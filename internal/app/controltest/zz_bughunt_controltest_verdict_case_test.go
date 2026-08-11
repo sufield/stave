@@ -24,7 +24,7 @@ func TestBugHunt_Run_MixedCaseVerdictDiagnosis(t *testing.T) {
 		},
 	}
 
-	eval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil // evaluates to VIOLATION (unsafe)
 	}
 

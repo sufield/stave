@@ -21,8 +21,8 @@ func noopPredicateParser(_ any) (*policy.UnsafePredicate, error) {
 	return &policy.UnsafePredicate{}, nil
 }
 
-func celEvalAllSafe() func(policy.ControlDefinition, asset.Asset, []asset.CloudIdentity) (bool, error) {
-	return func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+func celEvalAllSafe() func(*policy.ControlDefinition, asset.Asset, []asset.CloudIdentity) (bool, error) {
+	return func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return false, nil
 	}
 }

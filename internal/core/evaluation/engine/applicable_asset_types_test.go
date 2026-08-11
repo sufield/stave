@@ -50,7 +50,7 @@ func TestBuildLifecycles_AssetTypeGate(t *testing.T) {
 	// asks it to evaluate. The gate must filter CTL.A before this is
 	// invoked for the ec2_instance asset.
 	var evaluated []string
-	celEval := func(c policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	celEval := func(c *policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		evaluated = append(evaluated, string(c.ID)+"|"+string(a.ID))
 		return false, nil
 	}
@@ -112,7 +112,7 @@ func TestBuildLifecycles_AssetTypeGate_MatchingAsset(t *testing.T) {
 			}},
 		},
 	}
-	celEval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	celEval := func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil // unsafe
 	}
 

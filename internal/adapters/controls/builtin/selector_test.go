@@ -88,7 +88,7 @@ func TestSelector_Matches(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := tt.selector.Matches(tt.ctl)
+			got := tt.selector.Matches(&tt.ctl)
 			if got != tt.want {
 				t.Errorf("Matches() = %v, want %v", got, tt.want)
 			}
@@ -105,7 +105,7 @@ func TestMatchesAny(t *testing.T) {
 	}
 
 	t.Run("empty selectors matches all", func(t *testing.T) {
-		if !MatchesAny(ctl, nil) {
+		if !MatchesAny(&ctl, nil) {
 			t.Error("expected true for nil selectors")
 		}
 	})
@@ -115,7 +115,7 @@ func TestMatchesAny(t *testing.T) {
 			{Tags: []string{"gcp"}},
 			{Tags: []string{"aws"}},
 		}
-		if !MatchesAny(ctl, sels) {
+		if !MatchesAny(&ctl, sels) {
 			t.Error("expected true when one selector matches")
 		}
 	})
@@ -125,7 +125,7 @@ func TestMatchesAny(t *testing.T) {
 			{Tags: []string{"gcp"}},
 			{MinSeverity: policy.SeverityCritical},
 		}
-		if MatchesAny(ctl, sels) {
+		if MatchesAny(&ctl, sels) {
 			t.Error("expected false when no selectors match")
 		}
 	})

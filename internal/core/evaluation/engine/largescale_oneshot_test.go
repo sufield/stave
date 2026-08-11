@@ -58,7 +58,7 @@ func TestLargeScale_WallClock(t *testing.T) {
 		// precondition check at the top of Assess() returns immediately
 		// and the benchmark measures the error-return cost, not the
 		// evaluation path.
-		predicateEval: func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+		predicateEval: func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return true, nil
 		},
 		predicateParser: func(_ any) (*policy.UnsafePredicate, error) {

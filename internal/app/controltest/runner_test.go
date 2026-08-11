@@ -152,7 +152,7 @@ func TestRun_Filter(t *testing.T) {
 		},
 	}
 
-	eval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return false, nil // always safe
 	}
 
@@ -178,7 +178,7 @@ func TestRun_FailFast(t *testing.T) {
 		},
 	}
 
-	eval := func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return false, nil // always safe — first test expects VIOLATION, will fail
 	}
 

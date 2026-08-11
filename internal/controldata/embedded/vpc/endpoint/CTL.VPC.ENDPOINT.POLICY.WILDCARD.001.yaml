@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.POLICY.WILDCARD.001
+name: VPC Endpoint Policy Allows Wildcard Action
+description: >
+  VPC endpoint policy includes Action: * or Action: service:* — allowing
+  any API action through the endpoint. Endpoint policies that allow all
+  actions provide no restriction beyond what IAM already permits. A
+  restrictive endpoint policy should limit Action to the specific
+  operations that workloads behind the endpoint actually need, reducing
+  the blast radius if a principal is compromised.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03"]
+  owasp_subtractive: "S03"
+  subtractive_tier: "narrowing"
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - least-privilege
+subtractive_category:
+  - S02
+  - S03
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    VPC endpoint policy allows wildcard actions. The endpoint does not
+    restrict which API operations can transit it.
+  action: >
+    Replace the wildcard action with specific actions that workloads
+    behind this endpoint require (e.g., s3:GetObject, s3:PutObject
+    instead of s3:*).
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "vpc_endpoint": {
+          "policy_has_wildcard_action": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.policy_has_wildcard_action
+      op: eq
+      value: true
+tests:
+  - name: "endpoint policy with wildcard action fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0abc123wildcard"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            policy_has_wildcard_action: true
+  - name: "endpoint policy with scoped actions passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0def456scoped"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            policy_has_wildcard_action: false
+  - name: "gateway endpoint with wildcard action fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0ghi789gwwild"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            policy_has_wildcard_action: true

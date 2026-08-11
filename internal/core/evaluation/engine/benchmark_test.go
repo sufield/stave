@@ -25,7 +25,7 @@ import (
 // returning errors.New("precondition failed: Assessor requires a
 // PredicateEval"). The reported ~200 ns/op figures were the
 // error-string-construction cost, not the evaluation cost.
-var benchPredicateEval policy.PredicateEval = func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+var benchPredicateEval policy.PredicateEval = func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 	return true, nil
 }
 

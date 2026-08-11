@@ -32,7 +32,7 @@ func TestComputeItems_VendorScopedControlSkipsForeignVendor(t *testing.T) {
 	}}
 	// Always-fires predicate. Without vendor filtering this would
 	// generate a risk signal for the Azure asset.
-	eval := policy.PredicateEval(func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := policy.PredicateEval(func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil
 	})
 
@@ -67,7 +67,7 @@ func TestComputeItems_UniversalControlAppliesToAllVendors(t *testing.T) {
 			{ID: "azure-asset", Type: "azure_storage", Vendor: "azure"},
 		},
 	}}
-	eval := policy.PredicateEval(func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := policy.PredicateEval(func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil
 	})
 
@@ -104,7 +104,7 @@ func TestComputeItems_ExemptedAssetSkippedFromRisk(t *testing.T) {
 			{ID: "exempted-id", Type: "aws_s3_bucket", Vendor: "aws"},
 		},
 	}}
-	eval := policy.PredicateEval(func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := policy.PredicateEval(func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil
 	})
 	exemptions := policy.NewExemptionConfig("v1", []policy.ExemptionRule{
@@ -147,7 +147,7 @@ func TestComputeItems_SuppressedFindingExcluded(t *testing.T) {
 			{ID: "asset-1", Type: "aws_s3_bucket", Vendor: "aws"},
 		},
 	}}
-	eval := policy.PredicateEval(func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := policy.PredicateEval(func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil
 	})
 	suppressed := map[SuppressionKey]struct{}{
@@ -189,7 +189,7 @@ func TestComputeItems_DerivedSecurityState_AcksDontTriggerAtRisk(t *testing.T) {
 			{ID: "asset-1", Type: "aws_s3_bucket", Vendor: "aws"},
 		},
 	}}
-	eval := policy.PredicateEval(func(_ policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	eval := policy.PredicateEval(func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		return true, nil
 	})
 	suppressed := map[SuppressionKey]struct{}{

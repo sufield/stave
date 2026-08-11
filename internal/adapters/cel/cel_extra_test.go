@@ -375,7 +375,7 @@ func TestNewPredicateEval(t *testing.T) {
 		},
 	}
 	a := asset.Asset{Properties: map[string]any{"x": true}}
-	unsafe, err := eval(ctl, a, nil)
+	unsafe, err := eval(&ctl, a, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

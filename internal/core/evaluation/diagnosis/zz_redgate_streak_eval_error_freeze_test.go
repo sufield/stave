@@ -45,7 +45,7 @@ func Test_RedGate_StreakEvalErrorFreeze(t *testing.T) {
 	for i := range points {
 		points[i].state = asset.Asset{ID: asset.ID(points[i].at.Format(time.RFC3339))}
 	}
-	timeAwareEval := func(_ policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
+	timeAwareEval := func(_ *policy.ControlDefinition, a asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 		switch string(a.ID) {
 		case base.Add(24 * time.Hour).Format(time.RFC3339):
 			return false, evalErr // inconclusive: must freeze, not reset
@@ -56,7 +56,7 @@ func Test_RedGate_StreakEvalErrorFreeze(t *testing.T) {
 
 	req := &assetStreakRequest{
 		Points:  points,
-		Control: policy.ControlDefinition{},
+		Control: &policy.ControlDefinition{},
 		EndTime: endTime,
 		Eval:    timeAwareEval,
 	}

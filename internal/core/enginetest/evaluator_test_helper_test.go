@@ -76,7 +76,7 @@ func testCELEvaluator() policy.PredicateEval {
 	if err != nil {
 		panic("testCELEvaluator: " + err.Error())
 	}
-	return func(ctl policy.ControlDefinition, a asset.Asset, identities []asset.CloudIdentity) (bool, error) {
+	return func(ctl *policy.ControlDefinition, a asset.Asset, identities []asset.CloudIdentity) (bool, error) {
 		cp, err := compiler.Compile(ctl.UnsafePredicate)
 		if err != nil {
 			return false, fmt.Errorf("compile: %w", err)

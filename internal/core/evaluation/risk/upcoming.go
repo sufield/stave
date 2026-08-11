@@ -169,7 +169,7 @@ func computeAssetStates(
 			if eval == nil {
 				continue
 			}
-			result, evalErr := eval(*ctl, a, snap.Identities)
+			result, evalErr := eval(ctl, a, snap.Identities)
 			if evalErr != nil {
 				// Inconclusive evaluation — freeze streak, do not reset.
 				// LastObservedAt above keeps the asset in the risk

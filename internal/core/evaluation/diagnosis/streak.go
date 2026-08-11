@@ -45,7 +45,7 @@ func (t *streakTracker) endStreak(at time.Time) time.Duration {
 
 type assetStreakRequest struct {
 	Points  []observation
-	Control policy.ControlDefinition
+	Control *policy.ControlDefinition
 	EndTime time.Time
 	Eval    policy.PredicateEval
 }

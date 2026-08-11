@@ -48,7 +48,7 @@ func matchesAnyControl(a asset.Asset, snap asset.Snapshot, controls []policy.Con
 		return false
 	}
 	for i := range controls {
-		unsafe, err := eval(controls[i], a, snap.Identities)
+		unsafe, err := eval(&controls[i], a, snap.Identities)
 		if err == nil && unsafe {
 			return true
 		}
