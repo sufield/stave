@@ -17,6 +17,8 @@ scope_tags:
   - rds
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_rds_instance]

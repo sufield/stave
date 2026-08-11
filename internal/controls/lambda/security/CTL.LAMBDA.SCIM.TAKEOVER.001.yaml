@@ -42,6 +42,10 @@ taxonomy:
   - compliance-mapping
   - compute-hardening
   - network-perimeter
+subtractive_category:
+  - S02
+  - S03
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -18,6 +18,8 @@ scope_tags:
   - directoryservice
 taxonomy:
   - account-governance
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_directory_service]

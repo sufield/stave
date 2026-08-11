@@ -14,6 +14,8 @@ scope_tags:
   - gcs
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
 applicable_asset_types:
   - gcp_storage_bucket
 type: unsafe_state

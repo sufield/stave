@@ -21,6 +21,9 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - confused-deputy
+subtractive_category:
+  - S05
+  - S08
 type: unsafe_state
 classification: state_assertion
 scope: compound

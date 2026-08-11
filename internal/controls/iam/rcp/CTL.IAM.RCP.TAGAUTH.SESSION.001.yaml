@@ -37,6 +37,8 @@ taxonomy:
   - account-governance
   - confused-deputy
   - identity-perimeter
+subtractive_category:
+  - S05
 params:
   attack_stage: privilege_escalation
   tag_prefix: "scp-"

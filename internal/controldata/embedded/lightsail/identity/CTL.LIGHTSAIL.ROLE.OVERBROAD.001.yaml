@@ -29,6 +29,9 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - least-privilege
+subtractive_category:
+  - S01
+  - S02
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -19,6 +19,9 @@ scope_tags:
   - waf
 taxonomy:
   - logging
+subtractive_category:
+  - S03
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_waf_web_acl]

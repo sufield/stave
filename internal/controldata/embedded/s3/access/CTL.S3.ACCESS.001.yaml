@@ -23,6 +23,8 @@ taxonomy:
   - compliance-mapping
   - identity-perimeter
   - trust-boundary
+subtractive_category:
+  - S05
 type: unsafe_state
 classification: parameterized_check
 applicable_asset_types:

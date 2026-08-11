@@ -38,6 +38,8 @@ taxonomy:
   - account-governance
   - compliance-mapping
   - compute-hardening
+subtractive_category:
+  - S02
 params:
   attack_stage: privilege_escalation
   tagger_role: "tagger"

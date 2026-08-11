@@ -38,6 +38,8 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - least-privilege
+subtractive_category:
+  - S02
 observation_fields:
   - ai.kind
   - ai.knowledge_base.retrieval_broader_than_embedding

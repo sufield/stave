@@ -24,6 +24,9 @@ scope_tags:
 taxonomy:
   - network-isolation
   - network-perimeter
+subtractive_category:
+  - S03
+  - S06
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

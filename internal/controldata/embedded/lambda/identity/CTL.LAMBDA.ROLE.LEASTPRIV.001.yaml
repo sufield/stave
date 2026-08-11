@@ -27,6 +27,9 @@ taxonomy:
   - compliance-mapping
   - compute-hardening
   - least-privilege
+subtractive_category:
+  - S02
+  - S03
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -36,6 +36,8 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - trust-boundary
+subtractive_category:
+  - S02
 type: unsafe_state
 classification: parameterized_check
 applicable_asset_types:

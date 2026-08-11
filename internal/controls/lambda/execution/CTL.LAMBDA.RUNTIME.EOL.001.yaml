@@ -23,6 +23,8 @@ taxonomy:
   - credential-lifecycle
   - monitoring
   - deprecation
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

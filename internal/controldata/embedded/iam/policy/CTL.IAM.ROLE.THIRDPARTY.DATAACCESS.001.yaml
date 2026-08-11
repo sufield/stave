@@ -24,6 +24,8 @@ taxonomy:
   - least-privilege
   - trust-boundary
   - data-perimeter
+subtractive_category:
+  - S02
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

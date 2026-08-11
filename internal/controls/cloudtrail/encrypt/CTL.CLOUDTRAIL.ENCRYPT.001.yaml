@@ -23,6 +23,9 @@ taxonomy:
   - compliance-mapping
   - encryption-at-rest
   - logging
+subtractive_category:
+  - S09
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

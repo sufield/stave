@@ -41,6 +41,10 @@ taxonomy:
   - monitoring
   - resource-sprawl
   - trust-boundary
+subtractive_category:
+  - S02
+  - S05
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

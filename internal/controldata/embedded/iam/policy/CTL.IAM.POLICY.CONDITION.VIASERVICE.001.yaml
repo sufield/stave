@@ -19,6 +19,8 @@ scope_tags:
   - kms
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

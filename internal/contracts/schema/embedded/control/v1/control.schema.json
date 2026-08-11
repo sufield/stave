@@ -222,6 +222,16 @@
             "minLength": 1
           }
         },
+        "subtractive_category": {
+          "type": "array",
+          "title": "Subtractive Attack-Surface Category",
+          "description": "Attack surfaces this control reduces (S01-S10). S01=IMDS, S02=WILDCARD, S03=PUBLIC, S04=DEFAULT, S05=CROSS_ACCT, S06=EGRESS, S07=CREDENTIAL, S08=GHOST, S09=DETECTION, S10=ENCRYPTION.",
+          "items": {
+            "type": "string",
+            "pattern": "^S(0[1-9]|10)$"
+          },
+          "uniqueItems": true
+        },
         "axioms": {
           "type": "array",
           "title": "Axiom Anchors",

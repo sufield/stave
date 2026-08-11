@@ -16,6 +16,9 @@ scope_tags:
   - lambda
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S03
+  - S08
 type: unsafe_state
 classification: absence_check
 applicable_asset_types:

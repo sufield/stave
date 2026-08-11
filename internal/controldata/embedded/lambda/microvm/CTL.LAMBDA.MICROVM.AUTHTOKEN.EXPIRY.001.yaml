@@ -39,6 +39,10 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - credential-lifecycle
+subtractive_category:
+  - S02
+  - S07
+  - S08
 params:
   attack_stage: persistence
 observation_fields:

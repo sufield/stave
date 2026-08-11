@@ -24,6 +24,9 @@ taxonomy:
   - account-governance
   - detection-evasion
   - monitoring
+subtractive_category:
+  - S02
+  - S09
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

@@ -29,6 +29,10 @@ taxonomy:
   - key-management
   - trust-decay
   - formal-semantics
+subtractive_category:
+  - S07
+  - S08
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

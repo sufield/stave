@@ -29,6 +29,10 @@ taxonomy:
   - logging
   - network-perimeter
   - trust-boundary
+subtractive_category:
+  - S02
+  - S05
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

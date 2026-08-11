@@ -15,6 +15,8 @@ scope_tags:
   - compliance
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
 applicable_asset_types:
   - aws_reachability_analysis
 type: unsafe_state

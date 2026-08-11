@@ -16,6 +16,8 @@ compliance:
 scope_tags: [aws, ssm]
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S05
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

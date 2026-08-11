@@ -33,6 +33,8 @@ taxonomy:
   - logging
   - network-perimeter
   - resource-sprawl
+subtractive_category:
+  - S02
 type: unsafe_state
 classification: state_assertion
 corpus_reference: MITRE:T1078.004

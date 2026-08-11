@@ -17,6 +17,10 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - logging
+subtractive_category:
+  - S05
+  - S06
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_fms_admin_account]

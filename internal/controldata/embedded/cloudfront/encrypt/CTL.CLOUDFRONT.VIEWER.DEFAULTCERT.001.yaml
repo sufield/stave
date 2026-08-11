@@ -29,6 +29,10 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - encryption-in-transit
+subtractive_category:
+  - S02
+  - S03
+  - S04
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_cloudfront_distribution]

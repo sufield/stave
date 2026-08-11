@@ -16,6 +16,10 @@ taxonomy:
   - compute-hardening
   - least-privilege
   - trust-decay
+subtractive_category:
+  - S02
+  - S07
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_directory_service_directory]

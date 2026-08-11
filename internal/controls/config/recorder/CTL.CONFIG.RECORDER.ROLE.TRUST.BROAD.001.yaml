@@ -34,6 +34,9 @@ taxonomy:
   - logging
   - monitoring
   - trust-boundary
+subtractive_category:
+  - S07
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_config_recorder]

@@ -15,6 +15,9 @@ scope_tags: [gcp]
 taxonomy:
   - compliance-mapping
   - network-perimeter
+subtractive_category:
+  - S03
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [gcp_resource]

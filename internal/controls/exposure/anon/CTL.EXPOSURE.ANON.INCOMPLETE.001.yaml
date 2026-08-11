@@ -16,6 +16,9 @@ scope_tags:
   - cross-service
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S03
+  - S08
 applicable_asset_types:
   - aws_reachability_analysis
 type: unsafe_state

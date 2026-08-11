@@ -38,6 +38,8 @@ scope_tags:
   - rag
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S02
 observation_fields:
   - ai.kind
   - ai.knowledge_base.retrieval_exceeds_declared_scope

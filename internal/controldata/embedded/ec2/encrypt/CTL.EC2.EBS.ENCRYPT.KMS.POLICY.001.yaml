@@ -25,6 +25,10 @@ scope_tags:
 taxonomy:
   - encryption-at-rest
   - key-management
+subtractive_category:
+  - S02
+  - S08
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -25,6 +25,8 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - data-protection
+subtractive_category:
+  - S04
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

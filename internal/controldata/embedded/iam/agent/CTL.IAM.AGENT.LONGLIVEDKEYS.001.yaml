@@ -42,6 +42,8 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - least-privilege
+subtractive_category:
+  - S07
 observation_fields:
   - identity.role.workload_type
   - identity.role.long_lived_keys_present

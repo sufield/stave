@@ -29,6 +29,9 @@ taxonomy:
   - credential-lifecycle
   - least-privilege
   - logging
+subtractive_category:
+  - S05
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

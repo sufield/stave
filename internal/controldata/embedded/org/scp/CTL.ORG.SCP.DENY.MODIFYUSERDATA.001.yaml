@@ -22,6 +22,8 @@ scope_tags:
   - ec2
 taxonomy:
   - account-governance
+subtractive_category:
+  - S02
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

@@ -15,6 +15,9 @@ taxonomy:
   - compliance-mapping
   - key-management
   - trust-boundary
+subtractive_category:
+  - S08
+  - S10
 type: unsafe_state
 classification: absence_check
 applicable_asset_types:

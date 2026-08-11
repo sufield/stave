@@ -32,6 +32,9 @@ taxonomy:
   - logging
   - monitoring
   - resource-sprawl
+subtractive_category:
+  - S09
+  - S10
 type: unsafe_state
 classification: state_assertion
 params:

@@ -28,6 +28,8 @@ taxonomy:
   - account-governance
   - compliance-mapping
   - trust-boundary
+subtractive_category:
+  - S02
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

@@ -33,6 +33,10 @@ taxonomy:
   - compute-hardening
   - credential-lifecycle
   - network-perimeter
+subtractive_category:
+  - S01
+  - S02
+  - S03
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

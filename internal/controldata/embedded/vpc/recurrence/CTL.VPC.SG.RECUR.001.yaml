@@ -19,6 +19,9 @@ taxonomy:
   - compliance-mapping
   - logging
   - network-perimeter
+subtractive_category:
+  - S03
+  - S09
 type: unsafe_recurrence
 classification: aggregate_check
 applicable_asset_types: [aws_vpc]

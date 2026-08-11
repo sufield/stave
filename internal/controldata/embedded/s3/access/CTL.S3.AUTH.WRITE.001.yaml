@@ -17,6 +17,8 @@ severity: high
 scope_tags: [aws, s3]
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_s3_bucket]

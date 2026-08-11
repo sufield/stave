@@ -23,6 +23,8 @@ taxonomy:
   - compliance-mapping
   - key-management
   - least-privilege
+subtractive_category:
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

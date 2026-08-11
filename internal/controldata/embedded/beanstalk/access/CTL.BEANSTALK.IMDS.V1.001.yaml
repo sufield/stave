@@ -25,6 +25,10 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - credential-lifecycle
+subtractive_category:
+  - S01
+  - S03
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_elastic_beanstalk_environment]

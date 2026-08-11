@@ -38,6 +38,9 @@ scope_tags:
   - iam
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S02
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -12,6 +12,8 @@ scope_tags:
   - apigateway
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
 applicable_asset_types:
   - aws_apigateway_rest_api
 type: unsafe_state

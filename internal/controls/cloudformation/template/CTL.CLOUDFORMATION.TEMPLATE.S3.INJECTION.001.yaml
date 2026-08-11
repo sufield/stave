@@ -28,6 +28,10 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - ai-supply-chain
+subtractive_category:
+  - S08
+  - S09
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_cloudformation_stack]

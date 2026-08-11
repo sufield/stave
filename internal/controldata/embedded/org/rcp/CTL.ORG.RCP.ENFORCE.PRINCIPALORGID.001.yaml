@@ -25,6 +25,9 @@ taxonomy:
   - account-governance
   - identity-perimeter
   - trust-boundary
+subtractive_category:
+  - S02
+  - S05
 payer_exempt: true
 type: unsafe_state
 classification: state_assertion

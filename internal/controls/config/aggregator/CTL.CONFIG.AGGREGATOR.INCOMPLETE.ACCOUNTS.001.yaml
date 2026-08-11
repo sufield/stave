@@ -26,6 +26,9 @@ taxonomy:
   - account-governance
   - compliance-mapping
   - compute-hardening
+subtractive_category:
+  - S08
+  - S09
 applicable_asset_types:
   - aws_config_aggregator
 type: unsafe_state

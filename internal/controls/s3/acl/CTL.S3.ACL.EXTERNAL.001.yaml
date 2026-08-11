@@ -34,6 +34,10 @@ scope_tags:
 taxonomy:
   - trust-boundary
   - compliance-mapping
+subtractive_category:
+  - S03
+  - S05
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

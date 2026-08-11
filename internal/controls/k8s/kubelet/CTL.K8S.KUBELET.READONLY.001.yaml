@@ -15,6 +15,9 @@ scope_tags:
   - kubelet
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S03
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [k8s_kubelet]

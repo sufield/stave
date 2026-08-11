@@ -26,6 +26,10 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - logging
+subtractive_category:
+  - S02
+  - S09
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_config_recorder]

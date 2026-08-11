@@ -21,6 +21,8 @@ taxonomy:
   - ai-guardrails
   - compliance-mapping
   - credential-lifecycle
+subtractive_category:
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

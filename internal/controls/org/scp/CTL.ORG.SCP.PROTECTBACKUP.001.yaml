@@ -26,6 +26,9 @@ scope_tags:
 taxonomy:
   - account-governance
   - data-protection
+subtractive_category:
+  - S02
+  - S08
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

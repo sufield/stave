@@ -16,6 +16,9 @@ compliance:
 scope_tags: [aws, backup]
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_backup_vault]

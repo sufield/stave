@@ -25,6 +25,9 @@ scope_tags:
 taxonomy:
   - account-governance
   - encryption-at-rest
+subtractive_category:
+  - S04
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

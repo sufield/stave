@@ -22,6 +22,9 @@ taxonomy:
   - compliance-mapping
   - network-isolation
   - trust-decay
+subtractive_category:
+  - S03
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_elb]

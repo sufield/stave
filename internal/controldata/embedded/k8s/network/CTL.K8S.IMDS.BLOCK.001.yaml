@@ -23,6 +23,11 @@ taxonomy:
   - compute-hardening
   - credential-lifecycle
   - network-perimeter
+subtractive_category:
+  - S01
+  - S02
+  - S06
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [k8s_cluster]

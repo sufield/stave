@@ -27,6 +27,9 @@ taxonomy:
   - identity-perimeter
   - network-perimeter
   - trust-boundary
+subtractive_category:
+  - S05
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_cloudwatch_alarm]

@@ -13,6 +13,9 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - monitoring
+subtractive_category:
+  - S08
+  - S09
 applicable_asset_types:
   - aws_guardduty_detector
 type: unsafe_state

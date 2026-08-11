@@ -24,6 +24,10 @@ scope_tags:
 taxonomy:
   - identity-perimeter
   - data-protection
+subtractive_category:
+  - S03
+  - S05
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

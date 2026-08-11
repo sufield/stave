@@ -17,6 +17,9 @@ scope_tags: [azure]
 taxonomy:
   - compliance-mapping
   - credential-lifecycle
+subtractive_category:
+  - S03
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [azure_resource]

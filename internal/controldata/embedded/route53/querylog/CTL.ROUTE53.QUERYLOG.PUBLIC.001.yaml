@@ -34,6 +34,10 @@ taxonomy:
   - compliance-mapping
   - logging
   - network-perimeter
+subtractive_category:
+  - S03
+  - S08
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_route53_hosted_zone]

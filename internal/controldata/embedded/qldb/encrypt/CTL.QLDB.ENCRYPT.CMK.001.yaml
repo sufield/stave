@@ -23,6 +23,8 @@ taxonomy:
   - compliance-mapping
   - encryption-at-rest
   - key-management
+subtractive_category:
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

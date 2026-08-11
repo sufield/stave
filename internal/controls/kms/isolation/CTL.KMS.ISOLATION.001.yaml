@@ -18,6 +18,8 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - key-management
+subtractive_category:
+  - S10
 compliance:
   hipaa: "164.312(a)(2)(iv)"
   nist_800_53_r5: "SC-12, SC-28"

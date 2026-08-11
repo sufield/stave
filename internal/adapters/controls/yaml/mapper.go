@@ -48,6 +48,7 @@ func (y yamlControlDefinition) ToDomain() (policy.ControlDefinition, error) {
 		ValidatedAgainst:         labValidationToDomain(y.ValidatedAgainst),
 		Tests:                    y.Tests,
 		Taxonomy:                 y.Taxonomy,
+		SubtractiveCategory:      y.SubtractiveCategory,
 		PayerExempt:              y.PayerExempt,
 		PayerCompensatingControl: y.PayerCompensatingControl,
 		Defect:                   y.Defect,

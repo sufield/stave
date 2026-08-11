@@ -24,6 +24,8 @@ taxonomy:
   - compliance-mapping
   - monitoring
   - network-perimeter
+subtractive_category:
+  - S04
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

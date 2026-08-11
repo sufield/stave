@@ -32,6 +32,10 @@ taxonomy:
   - credential-lifecycle
   - encryption-at-rest
   - logging
+subtractive_category:
+  - S08
+  - S09
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_ecs_task_definition]

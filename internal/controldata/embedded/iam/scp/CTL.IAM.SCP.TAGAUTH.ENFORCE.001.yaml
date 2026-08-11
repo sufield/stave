@@ -37,6 +37,8 @@ taxonomy:
   - account-governance
   - credential-lifecycle
   - network-perimeter
+subtractive_category:
+  - S02
 params:
   attack_stage: privilege_escalation
   tag_prefix: "scp-"

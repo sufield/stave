@@ -24,6 +24,9 @@ taxonomy:
   - compute-hardening
   - credential-lifecycle
   - network-perimeter
+subtractive_category:
+  - S02
+  - S07
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

@@ -17,6 +17,8 @@ scope_tags: [aws, inspector2]
 taxonomy:
   - compliance-mapping
   - monitoring
+subtractive_category:
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

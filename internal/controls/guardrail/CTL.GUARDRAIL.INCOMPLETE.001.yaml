@@ -13,6 +13,9 @@ scope_tags:
   - guardrail
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
+  - S09
 applicable_asset_types:
   - aws_bedrock_guardrail
 type: unsafe_state

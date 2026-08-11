@@ -13,6 +13,8 @@ compliance:
 scope_tags: [gcp]
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [gcp_resource]

@@ -36,6 +36,10 @@ taxonomy:
   - least-privilege
   - logging
   - monitoring
+subtractive_category:
+  - S05
+  - S09
+  - S10
 type: unsafe_state
 classification: state_assertion
 params:

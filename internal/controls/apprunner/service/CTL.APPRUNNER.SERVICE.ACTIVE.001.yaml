@@ -16,6 +16,8 @@ compliance:
   ccm_v4: ["DSP-04"]
 scope_tags: [aws, apprunner]
 taxonomy: [resource-sprawl]
+subtractive_category:
+  - S02
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_account]

@@ -27,6 +27,9 @@ scope_tags:
   - sqs
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S02
+  - S05
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -28,6 +28,8 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - trust-decay
+subtractive_category:
+  - S08
 applicable_asset_types: [stave_meta]
 type: unsafe_state
 classification: state_assertion

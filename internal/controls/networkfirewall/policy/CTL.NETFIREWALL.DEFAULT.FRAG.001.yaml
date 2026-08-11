@@ -15,6 +15,8 @@ compliance:
 scope_tags: [aws, networkfirewall]
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S04
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_networkfirewall_firewall]

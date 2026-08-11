@@ -18,6 +18,8 @@ compliance:
 scope_tags: [aws, config]
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_config_recorder]

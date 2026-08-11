@@ -32,6 +32,8 @@ scope_tags:
   - hipaa
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S03
 remediation:
   description: >
     No remediation. PHI tagging is the desired state.

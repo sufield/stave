@@ -30,6 +30,10 @@ taxonomy:
   - compliance-mapping
   - compute-hardening
   - credential-lifecycle
+subtractive_category:
+  - S01
+  - S03
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

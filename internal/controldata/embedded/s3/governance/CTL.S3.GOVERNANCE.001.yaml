@@ -17,6 +17,8 @@ scope_tags:
   - s3
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S03
 type: unsafe_state
 classification: absence_check
 applicable_asset_types:

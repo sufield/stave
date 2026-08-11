@@ -22,6 +22,10 @@ taxonomy:
   - compute-hardening
   - encryption-at-rest
   - monitoring
+subtractive_category:
+  - S01
+  - S08
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

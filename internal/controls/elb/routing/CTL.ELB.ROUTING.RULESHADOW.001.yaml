@@ -30,6 +30,10 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - resource-sprawl
+subtractive_category:
+  - S02
+  - S03
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_elb]

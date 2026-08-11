@@ -31,6 +31,10 @@ taxonomy:
   - encryption-at-rest
   - key-management
   - logging
+subtractive_category:
+  - S08
+  - S09
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_route53_hosted_zone]

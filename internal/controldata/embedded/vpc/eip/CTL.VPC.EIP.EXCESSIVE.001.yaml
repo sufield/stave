@@ -25,6 +25,8 @@ taxonomy:
   - compliance-mapping
   - network-perimeter
   - resource-sprawl
+subtractive_category:
+  - S06
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

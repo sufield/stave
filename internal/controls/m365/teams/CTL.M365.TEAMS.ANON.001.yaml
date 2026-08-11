@@ -13,6 +13,10 @@ compliance:
 scope_tags: [m365]
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S03
+  - S07
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [m365_resource]

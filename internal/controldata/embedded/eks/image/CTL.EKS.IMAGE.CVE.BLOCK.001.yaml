@@ -26,6 +26,9 @@ scope_tags:
 taxonomy:
   - ai-supply-chain
   - compliance-mapping
+subtractive_category:
+  - S02
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -24,6 +24,8 @@ taxonomy:
   - account-governance
   - identity-perimeter
   - trust-boundary
+subtractive_category:
+  - S05
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

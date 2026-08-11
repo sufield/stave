@@ -12,6 +12,8 @@ scope_tags:
   - sns
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
 applicable_asset_types:
   - aws_sns_topic
 type: unsafe_state

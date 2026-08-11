@@ -20,6 +20,11 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - credential-lifecycle
+subtractive_category:
+  - S02
+  - S06
+  - S07
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [cisco_device]

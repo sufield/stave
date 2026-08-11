@@ -34,6 +34,11 @@ taxonomy:
   - identity-perimeter
   - trust-boundary
   - trust-decay
+subtractive_category:
+  - S05
+  - S07
+  - S08
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

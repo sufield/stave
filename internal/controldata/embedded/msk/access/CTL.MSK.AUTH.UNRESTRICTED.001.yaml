@@ -18,6 +18,10 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - network-perimeter
+subtractive_category:
+  - S03
+  - S07
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_msk_cluster]

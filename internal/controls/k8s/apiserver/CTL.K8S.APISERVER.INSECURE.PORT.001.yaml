@@ -16,6 +16,8 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - network-perimeter
+subtractive_category:
+  - S03
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [k8s_apiserver]

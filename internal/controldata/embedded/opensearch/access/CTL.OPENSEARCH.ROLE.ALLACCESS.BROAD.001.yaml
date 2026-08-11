@@ -25,6 +25,8 @@ taxonomy:
   - compliance-mapping
   - least-privilege
   - resource-sprawl
+subtractive_category:
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

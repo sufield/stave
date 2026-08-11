@@ -29,6 +29,9 @@ scope_tags:
   - s3
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

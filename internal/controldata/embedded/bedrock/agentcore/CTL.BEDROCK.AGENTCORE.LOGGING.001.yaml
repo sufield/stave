@@ -23,6 +23,8 @@ taxonomy:
   - compliance-mapping
   - logging
   - attribution
+subtractive_category:
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

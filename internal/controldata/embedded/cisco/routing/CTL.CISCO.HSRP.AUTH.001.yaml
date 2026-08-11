@@ -22,6 +22,8 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - network-isolation
+subtractive_category:
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [cisco_device]

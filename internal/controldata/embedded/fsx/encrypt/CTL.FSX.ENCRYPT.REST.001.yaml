@@ -21,6 +21,8 @@ scope_tags: [aws, fsx]
 taxonomy:
   - encryption-at-rest
   - compliance-mapping
+subtractive_category:
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_fsx_filesystem]

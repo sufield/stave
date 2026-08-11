@@ -21,6 +21,8 @@ scope_tags:
   - federation
 taxonomy:
   - trust-boundary
+subtractive_category:
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_iam_saml_provider]

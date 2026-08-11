@@ -31,6 +31,8 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - deprecation
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_rds_instance]

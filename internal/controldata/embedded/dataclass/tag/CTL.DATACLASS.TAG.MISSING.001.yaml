@@ -43,6 +43,8 @@ scope_tags:
   - dataclass
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S09
 observation_fields:
   - governance.is_data_bearing
   - governance.data_classification

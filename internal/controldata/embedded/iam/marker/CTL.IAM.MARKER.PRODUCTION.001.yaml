@@ -30,6 +30,8 @@ scope_tags:
   - iam
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S02
 remediation:
   description: >
     No remediation. Production tagging on IAM roles is the

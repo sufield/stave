@@ -21,6 +21,9 @@ scope_tags:
 taxonomy:
   - encryption-in-transit
   - compliance-mapping
+subtractive_category:
+  - S08
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

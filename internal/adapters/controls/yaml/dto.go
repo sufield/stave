@@ -32,7 +32,8 @@ type yamlControlDefinition struct {
 	ValidatedAgainst     []yamlLabValidation  `yaml:"validated_against,omitempty"`
 	Tests                []policy.ControlTest `yaml:"tests,omitempty"`
 
-	Taxonomy []kernel.CategoryID `yaml:"taxonomy,omitempty"`
+	Taxonomy            []kernel.CategoryID `yaml:"taxonomy,omitempty"`
+	SubtractiveCategory []string            `yaml:"subtractive_category,omitempty"`
 
 	PayerExempt              *bool   `yaml:"payer_exempt,omitempty"`
 	PayerCompensatingControl *string `yaml:"payer_compensating_control,omitempty"`

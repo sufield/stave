@@ -31,6 +31,8 @@ taxonomy:
   - compliance-mapping
   - trust-decay
   - data-protection
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_kinesis_firehose_delivery_stream]

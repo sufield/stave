@@ -26,6 +26,8 @@ taxonomy:
   - compliance-mapping
   - network-perimeter
   - trust-decay
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

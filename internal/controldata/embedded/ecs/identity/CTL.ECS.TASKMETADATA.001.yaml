@@ -30,6 +30,10 @@ taxonomy:
   - compute-hardening
   - credential-lifecycle
   - least-privilege
+subtractive_category:
+  - S01
+  - S02
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_ecs_task_definition]

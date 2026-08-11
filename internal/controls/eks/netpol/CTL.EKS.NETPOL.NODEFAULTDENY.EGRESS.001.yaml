@@ -26,6 +26,10 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - network-perimeter
+subtractive_category:
+  - S01
+  - S04
+  - S06
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -37,6 +37,8 @@ scope_tags:
   - ai
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
 observation_fields:
   - ai.model_artifact.kind
   - ai.model_artifact.serialization_format

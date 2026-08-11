@@ -24,6 +24,9 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - network-isolation
+subtractive_category:
+  - S03
+  - S06
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_opensearch_domain]

@@ -26,6 +26,8 @@ taxonomy:
   - compliance-mapping
   - encryption-in-transit
   - key-management
+subtractive_category:
+  - S04
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_redshift_cluster]

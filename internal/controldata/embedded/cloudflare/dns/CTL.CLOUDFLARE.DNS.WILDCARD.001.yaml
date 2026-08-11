@@ -12,6 +12,10 @@ compliance:
 scope_tags: [cloudflare]
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S02
+  - S03
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [cloudflare_zone]

@@ -23,6 +23,11 @@ taxonomy:
   - network-perimeter
   - data-perimeter
   - network-isolation
+subtractive_category:
+  - S02
+  - S03
+  - S04
+  - S06
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

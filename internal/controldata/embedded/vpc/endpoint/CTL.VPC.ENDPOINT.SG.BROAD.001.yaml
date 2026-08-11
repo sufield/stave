@@ -29,6 +29,8 @@ taxonomy:
   - compliance-mapping
   - least-privilege
   - network-isolation
+subtractive_category:
+  - S06
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

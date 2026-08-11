@@ -28,6 +28,9 @@ taxonomy:
   - logging
   - monitoring
   - network-perimeter
+subtractive_category:
+  - S05
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -25,6 +25,10 @@ taxonomy:
   - credential-lifecycle
   - network-isolation
   - network-perimeter
+subtractive_category:
+  - S03
+  - S06
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

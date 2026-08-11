@@ -20,6 +20,8 @@ scope_tags:
 taxonomy:
   - data-protection
   - compliance-mapping
+subtractive_category:
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_cloudwatch_alarm]

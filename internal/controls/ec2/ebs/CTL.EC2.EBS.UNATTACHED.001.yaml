@@ -30,6 +30,8 @@ taxonomy:
   - credential-lifecycle
   - encryption-at-rest
   - trust-decay
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

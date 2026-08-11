@@ -22,6 +22,9 @@ taxonomy:
   - account-governance
   - identity-perimeter
   - data-perimeter
+subtractive_category:
+  - S02
+  - S05
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

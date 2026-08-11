@@ -23,6 +23,8 @@ scope_tags: [aws, transfer]
 taxonomy:
   - encryption-at-rest
   - compliance-mapping
+subtractive_category:
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_transfer_server]

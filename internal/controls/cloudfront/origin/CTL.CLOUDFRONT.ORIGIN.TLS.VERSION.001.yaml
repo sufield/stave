@@ -30,6 +30,10 @@ taxonomy:
   - compliance-mapping
   - encryption-in-transit
   - deprecation
+subtractive_category:
+  - S03
+  - S08
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_cloudfront_distribution]

@@ -30,6 +30,8 @@ taxonomy:
   - key-management
   - logging
   - deprecation
+subtractive_category:
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_cloudfront_distribution]

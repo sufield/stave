@@ -20,6 +20,8 @@ scope_tags:
   - organizations
 taxonomy:
   - account-governance
+subtractive_category:
+  - S02
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_organization]

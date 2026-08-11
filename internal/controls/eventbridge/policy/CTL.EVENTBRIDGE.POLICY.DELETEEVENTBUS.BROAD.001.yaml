@@ -25,6 +25,9 @@ taxonomy:
   - compliance-mapping
   - least-privilege
   - trust-decay
+subtractive_category:
+  - S08
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

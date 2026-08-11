@@ -21,6 +21,8 @@ scope_tags:
 taxonomy:
   - trust-decay
   - data-protection
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_backup_vault]

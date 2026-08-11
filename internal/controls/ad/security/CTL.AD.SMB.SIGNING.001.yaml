@@ -19,6 +19,8 @@ taxonomy:
   - ai-supply-chain
   - compliance-mapping
   - credential-lifecycle
+subtractive_category:
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_directory_service_directory]

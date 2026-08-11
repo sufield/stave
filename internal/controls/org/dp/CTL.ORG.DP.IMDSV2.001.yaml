@@ -29,6 +29,9 @@ scope_tags:
 taxonomy:
   - account-governance
   - credential-lifecycle
+subtractive_category:
+  - S01
+  - S02
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

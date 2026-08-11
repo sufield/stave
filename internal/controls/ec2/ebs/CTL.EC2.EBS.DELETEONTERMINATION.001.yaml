@@ -29,6 +29,8 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - trust-decay
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

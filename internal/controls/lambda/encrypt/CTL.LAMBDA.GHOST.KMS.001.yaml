@@ -30,6 +30,10 @@ scope_tags: [aws, lambda]
 taxonomy:
   - compliance-mapping
   - trust-decay
+subtractive_category:
+  - S07
+  - S08
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

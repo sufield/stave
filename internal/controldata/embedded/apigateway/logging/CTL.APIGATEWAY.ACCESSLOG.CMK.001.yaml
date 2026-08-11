@@ -32,6 +32,11 @@ taxonomy:
   - encryption-at-rest
   - key-management
   - logging
+subtractive_category:
+  - S03
+  - S07
+  - S09
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_apigateway_rest_api]

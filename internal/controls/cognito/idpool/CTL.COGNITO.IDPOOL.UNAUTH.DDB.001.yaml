@@ -27,6 +27,10 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - logging
+subtractive_category:
+  - S02
+  - S03
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

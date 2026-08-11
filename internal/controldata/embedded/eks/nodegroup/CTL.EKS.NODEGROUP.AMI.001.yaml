@@ -25,6 +25,9 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - compute-hardening
+subtractive_category:
+  - S02
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_eks_cluster]

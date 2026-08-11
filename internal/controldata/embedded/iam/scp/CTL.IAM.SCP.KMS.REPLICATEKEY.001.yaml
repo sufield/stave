@@ -27,6 +27,9 @@ taxonomy:
   - account-governance
   - compliance-mapping
   - key-management
+subtractive_category:
+  - S02
+  - S10
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

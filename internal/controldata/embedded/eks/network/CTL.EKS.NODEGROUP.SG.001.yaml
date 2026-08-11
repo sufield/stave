@@ -19,6 +19,10 @@ scope_tags:
   - eks
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S04
+  - S06
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_eks_cluster]

@@ -20,6 +20,9 @@ scope_tags:
   - cross-service
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S02
+  - S06
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_resource]

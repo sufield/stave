@@ -13,6 +13,8 @@ scope_tags:
   - active_directory
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S07
 type: unsafe_state
 classification: parameterized_check
 applicable_asset_types: [aws_directory_service_directory]

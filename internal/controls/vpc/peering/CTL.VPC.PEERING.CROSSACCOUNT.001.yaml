@@ -27,6 +27,9 @@ taxonomy:
   - compliance-mapping
   - network-isolation
   - trust-boundary
+subtractive_category:
+  - S05
+  - S06
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -36,6 +36,9 @@ scope_tags:
 taxonomy:
   - account-governance
   - compliance-mapping
+subtractive_category:
+  - S02
+  - S05
 params:
   attack_stage: privilege_escalation
   tag_prefix: "scp-"

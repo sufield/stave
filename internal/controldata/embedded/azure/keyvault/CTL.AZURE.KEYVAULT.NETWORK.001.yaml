@@ -16,6 +16,9 @@ compliance:
 scope_tags: [azure]
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S03
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [azure_resource]

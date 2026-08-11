@@ -20,6 +20,8 @@ taxonomy:
   - compliance-mapping
   - compute-hardening
   - credential-lifecycle
+subtractive_category:
+  - S01
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_sagemaker_notebook]

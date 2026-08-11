@@ -13,6 +13,8 @@ scope_tags: [gcp]
 taxonomy:
   - compliance-mapping
   - trust-decay
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [gcp_resource]

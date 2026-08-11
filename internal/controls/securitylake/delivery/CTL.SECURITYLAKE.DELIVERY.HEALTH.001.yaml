@@ -27,6 +27,10 @@ scope_tags:
 taxonomy:
   - trust-decay
   - logging
+subtractive_category:
+  - S05
+  - S08
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

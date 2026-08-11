@@ -22,6 +22,8 @@ taxonomy:
   - compliance-mapping
   - compute-hardening
   - trust-boundary
+subtractive_category:
+  - S02
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

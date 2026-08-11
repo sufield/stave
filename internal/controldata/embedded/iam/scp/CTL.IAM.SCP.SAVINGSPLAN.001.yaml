@@ -20,6 +20,8 @@ scope_tags:
   - iam
 taxonomy:
   - account-governance
+subtractive_category:
+  - S02
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

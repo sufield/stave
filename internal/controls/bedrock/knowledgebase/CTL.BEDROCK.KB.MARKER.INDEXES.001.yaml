@@ -26,6 +26,8 @@ scope_tags:
   - bedrock
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S02
 remediation:
   description: >
     No remediation. A knowledge base indexing an S3 bucket is the

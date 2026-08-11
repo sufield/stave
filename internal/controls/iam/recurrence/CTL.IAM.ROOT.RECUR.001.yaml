@@ -20,6 +20,8 @@ taxonomy:
   - compliance-mapping
   - credential-lifecycle
   - logging
+subtractive_category:
+  - S02
 type: unsafe_recurrence
 classification: aggregate_check
 applicable_asset_types: [aws_iam_user, aws_iam_role]

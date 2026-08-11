@@ -28,6 +28,10 @@ taxonomy:
   - compute-hardening
   - credential-lifecycle
   - least-privilege
+subtractive_category:
+  - S02
+  - S03
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

@@ -28,6 +28,9 @@ taxonomy:
   - encryption-in-transit
   - trust-decay
   - deprecation
+subtractive_category:
+  - S09
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_sns_topic]

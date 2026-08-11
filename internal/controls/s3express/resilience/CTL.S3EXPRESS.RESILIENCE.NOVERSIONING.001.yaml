@@ -20,6 +20,9 @@ scope_tags:
   - s3express
 taxonomy:
   - data-protection
+subtractive_category:
+  - S05
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

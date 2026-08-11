@@ -35,6 +35,8 @@ scope_tags:
   - rcp
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S02
 params:
   attack_stage: privilege_escalation
 observation_fields:

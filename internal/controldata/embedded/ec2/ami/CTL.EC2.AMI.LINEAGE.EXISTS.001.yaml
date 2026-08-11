@@ -21,6 +21,8 @@ scope_tags:
   - ec2
 taxonomy:
   - compute-hardening
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

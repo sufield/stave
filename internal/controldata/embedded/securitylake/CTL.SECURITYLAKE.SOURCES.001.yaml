@@ -19,6 +19,8 @@ scope_tags:
 taxonomy:
   - monitoring
   - compliance-mapping
+subtractive_category:
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_securitylake_data_lake]

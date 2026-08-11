@@ -28,6 +28,10 @@ taxonomy:
   - identity-perimeter
   - network-perimeter
   - trust-boundary
+subtractive_category:
+  - S02
+  - S03
+  - S08
 version: ctrl.v1
 type: unsafe_duration
 classification: aggregate_check

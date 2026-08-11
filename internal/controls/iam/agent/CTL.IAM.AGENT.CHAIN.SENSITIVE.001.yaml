@@ -44,6 +44,8 @@ scope_tags:
   - agent
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S10
 observation_fields:
   - identity.role.workload_type
   - identity.agent_reaches_sensitive

@@ -21,6 +21,10 @@ scope_tags:
   - cloudformation
 taxonomy:
   - account-governance
+subtractive_category:
+  - S02
+  - S05
+  - S08
 payer_exempt: true
 payer_compensating_control: null
 type: unsafe_state

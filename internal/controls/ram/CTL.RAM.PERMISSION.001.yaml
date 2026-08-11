@@ -18,6 +18,9 @@ scope_tags: [aws, ram]
 taxonomy:
   - compliance-mapping
   - network-isolation
+subtractive_category:
+  - S02
+  - S05
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_ram_resource_share]

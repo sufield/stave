@@ -18,6 +18,8 @@ scope_tags:
   - dns
 taxonomy:
   - compliance-mapping
+subtractive_category:
+  - S08
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [dns_zone]

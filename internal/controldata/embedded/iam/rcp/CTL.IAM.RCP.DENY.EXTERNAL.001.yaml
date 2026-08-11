@@ -24,6 +24,9 @@ taxonomy:
   - account-governance
   - compliance-mapping
   - identity-perimeter
+subtractive_category:
+  - S05
+  - S10
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_iam_user, aws_iam_role]

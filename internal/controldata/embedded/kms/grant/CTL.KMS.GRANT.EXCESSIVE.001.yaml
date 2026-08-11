@@ -29,6 +29,8 @@ taxonomy:
   - key-management
   - resource-sprawl
   - trust-decay
+subtractive_category:
+  - S10
 type: unsafe_state
 classification: state_assertion
 params:

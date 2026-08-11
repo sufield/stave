@@ -35,6 +35,8 @@ taxonomy:
   - compute-hardening
   - credential-lifecycle
   - redundancy
+subtractive_category:
+  - S01
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

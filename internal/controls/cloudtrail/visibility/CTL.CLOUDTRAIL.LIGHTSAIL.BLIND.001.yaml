@@ -21,6 +21,9 @@ taxonomy:
   - logging
   - detection-evasion
   - resource-sprawl
+subtractive_category:
+  - S07
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types:

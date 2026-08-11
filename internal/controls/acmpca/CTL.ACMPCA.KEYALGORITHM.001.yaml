@@ -16,6 +16,8 @@ scope_tags:
   - acmpca
 taxonomy:
   - encryption-in-transit
+subtractive_category:
+  - S07
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_acmpca_certificate_authority]

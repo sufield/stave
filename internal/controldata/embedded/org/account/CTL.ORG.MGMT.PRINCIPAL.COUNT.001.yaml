@@ -23,6 +23,8 @@ scope_tags:
 taxonomy:
   - account-governance
   - least-privilege
+subtractive_category:
+  - S02
 payer_exempt: true
 type: unsafe_state
 classification: state_assertion

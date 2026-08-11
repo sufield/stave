@@ -25,6 +25,10 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - credential-lifecycle
+subtractive_category:
+  - S02
+  - S07
+  - S09
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_iam_user, aws_iam_role]
