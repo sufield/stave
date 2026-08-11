@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.AMPLIFY.ROLE.OVERBROAD.001
+name: Amplify App IAM Role Exceeds Required Permissions
+description: >
+  Amplify app's IAM role has permissions beyond what the app
+  requires. Amplify apps need access to specific S3 buckets for
+  build artifacts, CloudFront for distribution management, and
+  CloudWatch Logs for build output. Any action outside this set
+  — iam:PassRole, sts:AssumeRole on broad targets, s3:* on
+  Resource:* — means a compromised or misconfigured Amplify app
+  can access resources far beyond its deployment scope. Amplify
+  apps build and deploy continuously; an overbroad role turns
+  every build into a lateral movement opportunity.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - amplify
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_amplify_app
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Amplify app IAM role has permissions beyond the app's
+    required scope.
+  action: >
+    Scope the Amplify app role to only the resources the app
+    needs: specific S3 buckets for build artifacts, CloudFront
+    distributions for deployment, and CloudWatch Logs for build
+    output. Remove wildcard actions and broad Resource targets.
+  example: |
+    {
+      "compute": {
+        "kind": "amplify_app",
+        "amplify": {
+          "role_exceeds_required": false,
+          "role_arn": "arn:aws:iam::111122223333:role/amplify-scoped"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: amplify_app
+    - field: properties.compute.amplify.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  Amplify app IAM role grants actions beyond the app's
+  required permissions: the role includes wildcard or
+  privilege-escalation actions on broad resource targets.
+infection: >
+  Amplify apps build and deploy code continuously from source
+  repositories. An overbroad role means a compromised build
+  — or a build triggered by a malicious commit — can access
+  any S3 bucket, assume other roles, retrieve secrets, or
+  modify IAM resources.
+failure: >
+  Amplify app role blast radius expansion. A compromised build
+  accesses resources outside its deployment scope or escalates
+  privilege via the overbroad role.
+tests:
+  - name: overbroad Amplify app role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:amplify:us-east-1:111122223333:apps/d1234567890"
+      asset_type: aws_amplify_app
+      vendor: aws
+      properties:
+        compute:
+          kind: amplify_app
+          amplify:
+            role_exceeds_required: true
+            role_arn: "arn:aws:iam::111122223333:role/amplify-admin-role"
+            excess_actions:
+              - "s3:*"
+              - "iam:PassRole"
+  - name: scoped Amplify app role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:amplify:us-east-1:111122223333:apps/d1234567890"
+      asset_type: aws_amplify_app
+      vendor: aws
+      properties:
+        compute:
+          kind: amplify_app
+          amplify:
+            role_exceeds_required: false
+            role_arn: "arn:aws:iam::111122223333:role/amplify-scoped"

@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:glue:us-east-1:123456789012:job/my-etl-job",
+      "properties": {"compute": {"kind": "glue_job", "glue": {"job": {"role_exceeds_required": true}}}},
+      "type": "aws_glue_job",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

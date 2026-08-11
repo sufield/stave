@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:apprunner:us-east-1:123456789012:service/my-svc/abc123",
+      "properties": {"compute": {"kind": "apprunner_service", "apprunner": {"role_exceeds_required": true}}},
+      "type": "aws_apprunner_service",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

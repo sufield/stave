@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:123456789012:knowledge-base/KB123ABC",
+      "properties": {"ai": {"kind": "bedrock_knowledge_base", "knowledge_base": {"retrieval_broader_than_embedding": false}}},
+      "type": "aws_bedrock_knowledge_base",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

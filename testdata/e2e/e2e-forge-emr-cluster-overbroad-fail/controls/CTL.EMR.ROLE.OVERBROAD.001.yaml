@@ -1,0 +1,121 @@
+dsl_version: ctrl.v1
+id: CTL.EMR.ROLE.OVERBROAD.001
+name: EMR Cluster IAM Role Exceeds Required Permissions
+description: >
+  EMR cluster's IAM role has permissions beyond what the big
+  data workload requires. EMR clusters need specific S3
+  access for input data, output, and logs, plus
+  elasticmapreduce:* on the cluster resource, EC2 describe
+  for cluster management, and CloudWatch for metrics. Any
+  action outside this set — s3:* on *, iam:PassRole,
+  sts:AssumeRole on broad targets — means a compromised
+  Spark or Hive job running on the cluster can access data
+  and services far beyond its analytics scope. EMR clusters
+  run long-lived compute with multiple users submitting
+  jobs; an overbroad role is shared across all jobs.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - emr
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+subtractive_category:
+  - S02
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_emr_cluster
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    EMR cluster IAM role has permissions beyond the
+    cluster's required scope.
+  action: >
+    Scope the EMR cluster role to specific S3 buckets for
+    data and logs, the EMR service actions needed, and
+    CloudWatch for metrics. Use EMR runtime roles for
+    per-job credential scoping. Remove wildcard actions
+    and broad Resource targets from the cluster role.
+  example: |
+    {
+      "compute": {
+        "kind": "emr_cluster",
+        "emr": {
+          "cluster": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/emr-cluster-scoped"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: emr_cluster
+    - field: properties.compute.emr.cluster.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  EMR cluster IAM role grants actions beyond the big data
+  workload's required permissions.
+infection: >
+  EMR clusters run long-lived Spark, Hive, and Presto
+  workloads. Multiple users submit jobs to the same
+  cluster, all sharing the cluster's IAM role via IMDS.
+  An overbroad role means any job — including one
+  submitted by an attacker who has gained EMR step
+  submission access — can read arbitrary S3 buckets,
+  assume roles, or access secrets beyond the analytics
+  scope.
+failure: >
+  EMR cluster role blast radius expansion. Compromised
+  or malicious Spark job accesses data outside its
+  analytics scope via the shared overbroad cluster role.
+tests:
+  - name: overbroad EMR cluster role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticmapreduce:us-east-1:111122223333:cluster/j-ABC123"
+      asset_type: aws_emr_cluster
+      vendor: aws
+      properties:
+        compute:
+          kind: emr_cluster
+          emr:
+            cluster:
+              role_exceeds_required: true
+              role_arn: "arn:aws:iam::111122223333:role/emr-full-access"
+              excess_actions:
+                - "s3:*"
+                - "iam:PassRole"
+                - "sts:AssumeRole"
+  - name: scoped EMR cluster role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticmapreduce:us-east-1:111122223333:cluster/j-ABC123"
+      asset_type: aws_emr_cluster
+      vendor: aws
+      properties:
+        compute:
+          kind: emr_cluster
+          emr:
+            cluster:
+              role_exceeds_required: false
+              role_arn: "arn:aws:iam::111122223333:role/emr-cluster-scoped"

@@ -13,6 +13,9 @@ description: |-
       choke-point     What is the minimum set of statements whose removal
                       breaks a reachability path?
       invariant       Is a control's unsafe condition reachable for ANY input?
+      universal       Do all universal security statements hold for this snapshot?
+                      Evaluates U26-U33 via Z3 subprocess (no CGO required).
+                      sat = violation, unsat = property holds.
 
     Inputs:
       --observations, -o  Observation snapshots directory (required)
@@ -55,6 +58,13 @@ options:
       shorthand: f
       default_value: json
       usage: 'output format: json, text'
+    - name: formulas
+      default_value: data/universals
+      usage: |
+        directory containing universal SMT-LIB formulas (universal query)
+    - name: grounding-map
+      usage: |
+        path to grounding-map.yaml (default: <formulas>/grounding-map.yaml)
     - name: help
       shorthand: h
       default_value: "false"
@@ -179,6 +189,10 @@ example: |4-
         --certificate ./proofs/proof.smt2 \
         --history ./proofs/ \
         --compliance all
+
+      # Evaluate all universal security statements
+      stave prove -o observations --query universal
+      stave prove -o observations --query universal --format text
 see_also:
     - stave - Configuration safety evaluator
     - stave prove history - Show proof result timeline

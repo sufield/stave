@@ -1,0 +1,118 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.DEVENDPOINT.ROLE.OVERBROAD.001
+name: Glue Dev Endpoint Role Exceeds Required Permissions
+description: >
+  Glue development endpoint's IAM role has permissions
+  beyond what interactive development requires. Dev
+  endpoints provide interactive Spark and Zeppelin sessions
+  for ETL development. The minimum required set is S3 access
+  for development data, Glue Data Catalog read access, and
+  CloudWatch Logs. Any action outside this set — s3:*,
+  iam:PassRole, sts:AssumeRole on broad targets — means an
+  interactive development session has production-level
+  access. Dev endpoints are deprecated but still active in
+  many accounts; if present, they often carry admin-like
+  roles from initial setup.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - glue
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_glue_dev_endpoint
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+remediation:
+  description: >
+    Glue dev endpoint role has permissions beyond the
+    development session's required scope.
+  action: >
+    Scope the dev endpoint role to development-specific S3
+    buckets and read-only Glue Catalog access. Better yet,
+    migrate to Glue Interactive Sessions which support
+    per-session IAM roles. Dev endpoints are deprecated —
+    consider removing them entirely (see
+    CTL.GLUE.DEVENDPOINT.DEPRECATED.001).
+  example: |
+    {
+      "compute": {
+        "kind": "glue_dev_endpoint",
+        "glue": {
+          "dev_endpoint": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/glue-dev-scoped"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: glue_dev_endpoint
+    - field: properties.compute.glue.dev_endpoint.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  Glue dev endpoint role grants actions beyond the
+  development session's required permissions.
+infection: >
+  Dev endpoints provide interactive SSH and notebook access
+  to a Spark environment. An overbroad role means anyone
+  with dev endpoint access — including developers who should
+  only see development data — can access production S3
+  buckets, assume roles, and retrieve secrets. Dev endpoints
+  are deprecated and often carry legacy admin-like roles
+  from initial Glue setup.
+failure: >
+  Glue dev endpoint role blast radius expansion. Interactive
+  development session yields production access via overbroad
+  legacy role.
+tests:
+  - name: overbroad Glue dev endpoint role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:devEndpoint/dev-etl"
+      asset_type: aws_glue_dev_endpoint
+      vendor: aws
+      properties:
+        compute:
+          kind: glue_dev_endpoint
+          glue:
+            dev_endpoint:
+              role_exceeds_required: true
+              role_arn: "arn:aws:iam::111122223333:role/glue-admin-role"
+              excess_actions:
+                - "s3:*"
+                - "iam:PassRole"
+  - name: scoped Glue dev endpoint role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:devEndpoint/dev-etl"
+      asset_type: aws_glue_dev_endpoint
+      vendor: aws
+      properties:
+        compute:
+          kind: glue_dev_endpoint
+          glue:
+            dev_endpoint:
+              role_exceeds_required: false
+              role_arn: "arn:aws:iam::111122223333:role/glue-dev-scoped"

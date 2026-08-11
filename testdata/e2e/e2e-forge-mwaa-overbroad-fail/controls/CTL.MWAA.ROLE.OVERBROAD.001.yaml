@@ -1,0 +1,117 @@
+dsl_version: ctrl.v1
+id: CTL.MWAA.ROLE.OVERBROAD.001
+name: MWAA Environment Execution Role Exceeds Required Permissions
+description: >
+  MWAA (Managed Workflows for Apache Airflow) environment's
+  execution role has permissions beyond what the Airflow DAGs
+  require. MWAA environments need specific S3 access for DAG
+  storage and logs, CloudWatch Logs, SQS for Celery executor,
+  and Secrets Manager for connection strings. Any action
+  outside this set — s3:*, iam:PassRole, sts:AssumeRole on
+  broad targets, lambda:InvokeFunction on * — means every
+  DAG task running in the environment can access resources
+  far beyond its workflow scope. Airflow DAGs are code that
+  runs on a schedule with the environment's credentials;
+  an overbroad role turns DAG modification into lateral
+  movement.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - mwaa
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_mwaa_environment
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+remediation:
+  description: >
+    MWAA environment execution role has permissions beyond
+    the DAGs' required scope.
+  action: >
+    Scope the MWAA execution role to the specific S3 bucket
+    for DAGs and logs, Secrets Manager secrets for connection
+    strings, and the specific AWS services the DAGs invoke.
+    Remove wildcard actions. Consider using Airflow's
+    connection-level credential delegation instead of a
+    single broad environment role.
+  example: |
+    {
+      "compute": {
+        "kind": "mwaa_env",
+        "mwaa": {
+          "role_exceeds_required": false,
+          "role_arn": "arn:aws:iam::111122223333:role/mwaa-prod-scoped"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: mwaa_env
+    - field: properties.compute.mwaa.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  MWAA environment execution role grants actions beyond
+  the DAGs' required permissions.
+infection: >
+  MWAA environments run Airflow DAGs — arbitrary Python code
+  that executes on a schedule using the environment's
+  execution role. An attacker who can modify a DAG file in
+  the S3 bucket (or who compromises a DAG author's access)
+  can inject code that runs with the full execution role
+  permissions. An overbroad role turns DAG modification into
+  account-wide lateral movement: read arbitrary S3 buckets,
+  invoke Lambda functions, assume roles, retrieve secrets.
+failure: >
+  MWAA execution role blast radius expansion. DAG
+  modification or Airflow web UI compromise yields
+  account-wide access via overbroad environment role.
+tests:
+  - name: overbroad MWAA execution role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:airflow:us-east-1:111122223333:environment/prod-workflows"
+      asset_type: aws_mwaa_environment
+      vendor: aws
+      properties:
+        compute:
+          kind: mwaa_env
+          mwaa:
+            role_exceeds_required: true
+            role_arn: "arn:aws:iam::111122223333:role/mwaa-full-access"
+            excess_actions:
+              - "s3:*"
+              - "lambda:InvokeFunction"
+              - "sts:AssumeRole"
+  - name: scoped MWAA execution role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:airflow:us-east-1:111122223333:environment/prod-workflows"
+      asset_type: aws_mwaa_environment
+      vendor: aws
+      properties:
+        compute:
+          kind: mwaa_env
+          mwaa:
+            role_exceeds_required: false
+            role_arn: "arn:aws:iam::111122223333:role/mwaa-prod-scoped"

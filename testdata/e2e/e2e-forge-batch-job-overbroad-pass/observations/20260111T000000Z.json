@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:batch:us-east-1:123456789012:job-definition/my-job:1",
+      "properties": {"compute": {"kind": "batch_job", "batch": {"job": {"role_exceeds_required": false}}}},
+      "type": "aws_batch_job_definition",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

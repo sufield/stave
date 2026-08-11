@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:firehose:us-east-1:123456789012:deliverystream/my-stream",
+      "properties": {"compute": {"kind": "firehose_stream", "firehose": {"role_exceeds_required": true}}},
+      "type": "aws_kinesis_firehose_delivery_stream",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

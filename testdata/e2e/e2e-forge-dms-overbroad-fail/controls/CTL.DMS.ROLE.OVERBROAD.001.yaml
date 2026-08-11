@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.DMS.ROLE.OVERBROAD.001
+name: DMS Replication Instance Role Exceeds Required Permissions
+description: >
+  DMS replication instance's IAM role has permissions beyond
+  what database migration requires. DMS needs access to the
+  specific source and target endpoints (database connections,
+  S3 buckets for CDC targets, Kinesis streams for change
+  capture) and CloudWatch Logs for task logging. Any action
+  outside this set — s3:*, iam:PassRole, sts:AssumeRole on
+  broad targets, rds:* — means a compromised DMS instance
+  can access databases and storage beyond its replication
+  scope. DMS instances sit between source and target data
+  stores; an overbroad role grants cross-database access
+  that should not exist.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - dms
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+subtractive_category:
+  - S02
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_dms_replication_instance
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+remediation:
+  description: >
+    DMS replication instance role has permissions beyond
+    the migration task's required scope.
+  action: >
+    Scope the DMS role to the specific source and target
+    endpoints, S3 buckets for CDC output, and CloudWatch
+    Logs. Use separate roles for replication instances with
+    different source-target pairs. Remove wildcard database
+    and storage actions.
+  example: |
+    {
+      "compute": {
+        "kind": "dms_replication",
+        "dms": {
+          "role_exceeds_required": false,
+          "role_arn": "arn:aws:iam::111122223333:role/dms-prod-migration-scoped"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: dms_replication
+    - field: properties.compute.dms.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  DMS replication instance role grants actions beyond the
+  migration task's required permissions.
+infection: >
+  DMS replication instances have network access to both
+  source and target databases. An overbroad role means the
+  instance can access databases, S3 buckets, and Kinesis
+  streams beyond its replication scope. The DMS instance
+  is a bridge between data stores — excess permissions
+  turn it into a lateral movement path between otherwise
+  isolated databases.
+failure: >
+  DMS role blast radius expansion. Compromised replication
+  instance accesses databases outside its source-target
+  pair via overbroad role.
+tests:
+  - name: overbroad DMS role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dms:us-east-1:111122223333:rep:ABCDEFG"
+      asset_type: aws_dms_replication_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: dms_replication
+          dms:
+            role_exceeds_required: true
+            role_arn: "arn:aws:iam::111122223333:role/dms-full-access"
+            excess_actions:
+              - "s3:*"
+              - "rds:*"
+  - name: scoped DMS role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dms:us-east-1:111122223333:rep:ABCDEFG"
+      asset_type: aws_dms_replication_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: dms_replication
+          dms:
+            role_exceeds_required: false
+            role_arn: "arn:aws:iam::111122223333:role/dms-prod-migration-scoped"

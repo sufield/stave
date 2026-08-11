@@ -1,0 +1,125 @@
+dsl_version: ctrl.v1
+id: CTL.GLUE.JOB.ROLE.OVERBROAD.001
+name: Glue Job IAM Role Exceeds Required Permissions
+description: >
+  Glue job's IAM role has permissions beyond what the ETL job
+  requires. Glue jobs process data across S3 buckets, Glue Data
+  Catalog, and CloudWatch Logs. The minimum required set is:
+  s3:GetObject and s3:PutObject on specific source and target
+  buckets, glue:GetTable and glue:GetDatabase on the Data
+  Catalog, and logs:CreateLogGroup, logs:CreateLogStream,
+  logs:PutLogEvents for job logging. Any action outside this
+  set — s3:*, iam:PassRole, sts:AssumeRole on broad targets,
+  secretsmanager:*, dynamodb:* — means a compromised or
+  misconfigured Glue job can access data and services far
+  beyond its ETL scope. Glue jobs run unattended on a schedule
+  and process high-value data; an overbroad role turns every
+  job into a lateral movement opportunity.
+domain: identity
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - glue
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_glue_job
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+    multiplier: 2.0
+remediation:
+  description: >
+    Glue job IAM role has permissions beyond the job's
+    required scope.
+  action: >
+    Scope the Glue job role to only the resources the job
+    needs: specific S3 buckets for source and target data,
+    the Glue Data Catalog databases and tables the job reads,
+    and CloudWatch Logs for job output. Remove wildcard
+    actions (s3:*, glue:*, iam:PassRole) and broad Resource
+    targets. Use separate roles for jobs with different data
+    access requirements.
+  example: |
+    {
+      "compute": {
+        "kind": "glue_job",
+        "glue": {
+          "job": {
+            "role_exceeds_required": false,
+            "role_arn": "arn:aws:iam::111122223333:role/glue-etl-scoped"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: glue_job
+    - field: properties.compute.glue.job.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  Glue job IAM role grants actions beyond the ETL job's
+  required permissions: the role includes wildcard or
+  privilege-escalation actions on broad resource targets.
+infection: >
+  Glue jobs run unattended, often on schedules, processing
+  data across S3 buckets. An overbroad role means a
+  compromised job — or a job modified by an attacker who has
+  gained Glue:UpdateJob permission — can access any S3 bucket,
+  assume other roles, retrieve secrets, or modify IAM
+  resources. The job's ETL code becomes an execution
+  environment with far more privilege than the data pipeline
+  requires.
+failure: >
+  Glue job role blast radius expansion. A compromised or
+  modified ETL job accesses data outside its pipeline scope
+  or escalates privilege via the overbroad role.
+tests:
+  - name: overbroad Glue job role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:job/etl-daily-load"
+      asset_type: aws_glue_job
+      vendor: aws
+      properties:
+        compute:
+          kind: glue_job
+          glue:
+            job:
+              role_exceeds_required: true
+              role_arn: "arn:aws:iam::111122223333:role/glue-admin-role"
+              excess_actions:
+                - "s3:*"
+                - "iam:PassRole"
+                - "sts:AssumeRole"
+  - name: scoped Glue job role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:glue:us-east-1:111122223333:job/etl-daily-load"
+      asset_type: aws_glue_job
+      vendor: aws
+      properties:
+        compute:
+          kind: glue_job
+          glue:
+            job:
+              role_exceeds_required: false
+              role_arn: "arn:aws:iam::111122223333:role/glue-etl-scoped"

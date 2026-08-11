@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:airflow:us-east-1:123456789012:environment/my-airflow",
+      "properties": {"compute": {"kind": "mwaa_env", "mwaa": {"role_exceeds_required": true}}},
+      "type": "aws_mwaa_environment",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -35,6 +35,7 @@ func TestCoreRuntimeNoHardwiredSideEffects(t *testing.T) {
 		filepath.Join("internal", "core", "network", "proof.go"):         {}, // elapsed-time profiling (SolveTimeMs)
 		filepath.Join("internal", "app", "eval", "evaluation_output.go"): {}, // elapsed-time profiling
 		filepath.Join("internal", "app", "hygiene", "request.go"):        {}, // NowFunc default fallback
+		filepath.Join("internal", "app", "universals", "evaluate.go"):    {}, // elapsed-time profiling (SolveTimeMs)
 	}
 
 	var violations []string

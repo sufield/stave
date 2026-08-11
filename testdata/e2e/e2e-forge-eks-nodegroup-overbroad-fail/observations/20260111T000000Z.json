@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:eks:us-east-1:123456789012:nodegroup/my-cluster/my-ng/abc123",
+      "properties": {"k8s": {"nodegroup": {"role_exceeds_kubelet_minimum": true}}},
+      "type": "aws_eks_nodegroup",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

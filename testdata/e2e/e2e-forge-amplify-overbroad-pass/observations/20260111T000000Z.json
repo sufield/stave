@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:amplify:us-east-1:123456789012:apps/d1234abcde",
+      "properties": {"compute": {"kind": "amplify_app", "amplify": {"role_exceeds_required": false}}},
+      "type": "aws_amplify_app",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

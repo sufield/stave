@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.KB.RETRIEVAL.OVERBROAD.001
+name: KB Retrieval Role Must Not Be Broader Than the Embedding Role
+description: >
+  A Bedrock Knowledge Base has two roles: the embedding role (ingestion/sync —
+  reads source data, writes the vector store) and the retrieval role (query —
+  should only read the vector store and call bedrock:Retrieve). The retrieval
+  role's effective permissions must be a strict subset of the embedding role's
+  on data sources, and the retrieval role must hold no write access at all. If
+  retrieval is broader — a wildcard the embedding role lacks, write access, or
+  reach to a source the embedding role cannot touch — the query path can read or
+  mutate data the KB was never designed to expose.
+
+  This is a two-role comparison, not a single-role check. The reasoning layer
+  resolves each role's effective permissions (inline + attached managed +
+  boundary, with wildcards expanded) and computes the set difference, emitting
+  ai.knowledge_base.retrieval_broader_than_embedding. The reasoning spec —
+  Soufflé set-difference plus a Z3 cross-check — lives at
+  examples/rag-retrieval-vs-embedding/.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1078.004
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_knowledge_base
+params:
+  attack_stage: privilege_escalation
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "AIS-08"]
+scope_tags:
+  - aws
+  - bedrock
+  - rag
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+subtractive_category:
+  - S02
+observation_fields:
+  - ai.kind
+  - ai.knowledge_base.retrieval_broader_than_embedding
+remediation:
+  description: >
+    The Knowledge Base retrieval role holds permissions the embedding role does
+    not — a wildcard, write access, or reach beyond the embedding role's
+    sources. Retrieval should be strictly read-only and strictly narrower.
+  action: >
+    Scope the retrieval role to read-only on exactly the vector store and the
+    sources the embedding role reads, plus bedrock:Retrieve on the KB. Remove
+    any write actions (s3:PutObject/DeleteObject, opensearchserverless
+    Create/Update/Delete, bedrock:StartIngestionJob) and any wildcard grants.
+    Check attached managed policies, not just inline.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_knowledge_base",
+        "knowledge_base": { "retrieval_broader_than_embedding": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_knowledge_base
+    - field: properties.ai.knowledge_base.retrieval_broader_than_embedding
+      op: eq
+      value: true
+defect: >
+  The KB retrieval role's effective permissions are not a strict subset of the
+  embedding role's (broader scope, write access, or extra services).
+infection: >
+  The query-time connector — the most exposed surface of a RAG system — can read
+  or mutate data outside the KB's indexed sources, turning a retrieval request
+  into an exfiltration or tampering primitive.
+failure: >
+  A prompt-driven retrieval reads a bucket the KB never indexed, or writes to the
+  vector store / source data, because the retrieval role was over-permissioned.
+tests:
+  - name: retrieval role with an s3 wildcard the embedding role lacks fires (vulnerable)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:knowledge-base/customer-support-kb"
+      asset_type: aws_bedrock_knowledge_base
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_knowledge_base
+          knowledge_base:
+            retrieval_broader_than_embedding: true
+  - name: retrieval role a strict read-only subset passes (false-positive trap)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:knowledge-base/product-kb"
+      asset_type: aws_bedrock_knowledge_base
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_knowledge_base
+          knowledge_base:
+            retrieval_broader_than_embedding: false
+  - name: retrieval role with hidden secretsmanager access via an attached managed policy fires (false-negative trap)
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:knowledge-base/internal-kb"
+      asset_type: aws_bedrock_knowledge_base
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_knowledge_base
+          knowledge_base:
+            retrieval_broader_than_embedding: true

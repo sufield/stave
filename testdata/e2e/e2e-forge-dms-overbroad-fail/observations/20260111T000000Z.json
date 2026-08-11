@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:dms:us-east-1:123456789012:rep:my-replication",
+      "properties": {"compute": {"kind": "dms_replication", "dms": {"role_exceeds_required": true}}},
+      "type": "aws_dms_replication_instance",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

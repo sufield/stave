@@ -1,12 +1,10 @@
 package universals
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -29,11 +27,15 @@ var universalNames = map[string]string{
 
 var idPattern = regexp.MustCompile(`^u(\d+)-`)
 
+// Solver runs an SMT-LIB formula and returns "sat", "unsat", "unknown", or "error".
+type Solver func(formula string) (verdict string, output string)
+
 // EvaluateConfig holds parameters for a universal evaluation run.
 type EvaluateConfig struct {
 	FormulaDir    string // directory containing *.smt2 files
 	GroundingPath string // path to grounding-map.yaml (empty = co-located with formulas)
 	Assets        []asset
+	Solver        Solver // injected Z3 runner
 }
 
 // LoadGroundingMap reads and parses the grounding-map.yaml.
@@ -87,10 +89,10 @@ func LoadAssetsFromDir(dir string) ([]asset, error) {
 }
 
 // EvaluateAll runs all universal formulas against the provided assets
-// using Z3 subprocess and returns a summary.
+// using the injected solver and returns a summary.
 func EvaluateAll(cfg EvaluateConfig) (*Summary, error) {
-	if _, err := exec.LookPath("z3"); err != nil {
-		return nil, errors.New("z3 not found in PATH — install with: apt install z3")
+	if cfg.Solver == nil {
+		return nil, errors.New("no solver provided")
 	}
 
 	groundingPath := cfg.GroundingPath
@@ -110,7 +112,7 @@ func EvaluateAll(cfg EvaluateConfig) (*Summary, error) {
 
 	summary := &Summary{Total: len(formulas)}
 	for _, f := range formulas {
-		r := evaluateOne(f, cfg.Assets, gm)
+		r := evaluateOne(f, cfg.Assets, gm, cfg.Solver)
 		summary.Results = append(summary.Results, r)
 		switch {
 		case r.Error != "":
@@ -165,7 +167,7 @@ func extractID(filename string) string {
 	return "U" + m[1]
 }
 
-func evaluateOne(f formula, assets []asset, gm *GroundingMap) Result {
+func evaluateOne(f formula, assets []asset, gm *GroundingMap, solve Solver) Result {
 	r := Result{ID: f.id, Name: f.name}
 
 	ug, ok := gm.Universals[f.id]
@@ -183,7 +185,7 @@ func evaluateOne(f formula, assets []asset, gm *GroundingMap) Result {
 	combined := insertGrounding(f.content, grounding)
 
 	start := time.Now()
-	verdict, _ := runZ3(combined)
+	verdict, _ := solve(combined)
 	r.SolveTimeMs = time.Since(start).Milliseconds()
 	r.Verdict = verdict
 
@@ -227,31 +229,4 @@ func insertGrounding(formulaContent, grounding string) string {
 		return formulaContent
 	}
 	return formulaContent[:idx] + grounding + "\n" + formulaContent[idx:]
-}
-
-func runZ3(formulaContent string) (result, output string) {
-	tmp, err := os.CreateTemp("", "prove-*.smt2")
-	if err != nil {
-		return "error", err.Error()
-	}
-	defer os.Remove(tmp.Name())
-	_, _ = fmt.Fprint(tmp, formulaContent)
-	_ = tmp.Close()
-
-	cmd := exec.Command("z3", tmp.Name()) //nolint:gosec,noctx // z3 binary with temp file; no cancellation needed
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	_ = cmd.Run()
-
-	out := strings.TrimSpace(stdout.String())
-	lines := strings.Split(out, "\n")
-	for i := len(lines) - 1; i >= 0; i-- {
-		line := strings.TrimSpace(lines[i])
-		switch line {
-		case "sat", "unsat", "unknown":
-			return line, out
-		}
-	}
-	return "error", out + "\n" + stderr.String()
 }

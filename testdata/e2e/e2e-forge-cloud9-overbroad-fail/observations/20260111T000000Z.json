@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:cloud9:us-east-1:123456789012:environment:env-abc123",
+      "properties": {"compute": {"kind": "cloud9_env", "cloud9": {"role_exceeds_required": true}}},
+      "type": "aws_cloud9_environment",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

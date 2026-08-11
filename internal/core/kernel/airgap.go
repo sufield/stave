@@ -130,6 +130,9 @@ func DefaultPolicy() AirgapPolicy {
 			"internal/cli/ui/pager.go": {
 				`"os/exec"`: {},
 			},
+			"pkg/stave/prove_universal.go": {
+				`"os/exec"`: {},
+			},
 			"internal/cli/ui/template.go": {
 				`"text/template"`: {},
 			},

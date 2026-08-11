@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.FIREHOSE.ROLE.OVERBROAD.001
+name: Firehose Delivery Stream Role Exceeds Required Permissions
+description: >
+  Kinesis Data Firehose delivery stream's IAM role has
+  permissions beyond what the delivery pipeline requires.
+  Firehose streams need write access to the specific
+  destination (a single S3 bucket, Redshift cluster,
+  OpenSearch domain, or HTTP endpoint), optional KMS
+  encrypt permissions for the destination key, and
+  CloudWatch Logs for delivery error logging. Any action
+  outside this set — s3:*, redshift:*, opensearch:* on
+  broad targets — means a compromised or misconfigured
+  delivery stream role can write to storage beyond its
+  pipeline scope or read data it should not access.
+domain: identity
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.3"
+  nist_800_53_r5: "AC-6"
+  pci_dss_v4.0: "7.2"
+  fedramp_moderate: "AC-6"
+  iso_27001_2022: "A.5.15, A.8.2"
+  ccm_v4: ["IAM-04", "IAM-14"]
+scope_tags:
+  - aws
+  - firehose
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - least-privilege
+subtractive_category:
+  - S02
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kinesis_firehose_delivery_stream
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: control
+    scope: account
+remediation:
+  description: >
+    Firehose delivery stream role has permissions beyond
+    the pipeline's required scope.
+  action: >
+    Scope the delivery role to the specific destination
+    resource: the target S3 bucket ARN, the specific
+    Redshift cluster, or the OpenSearch domain. Remove
+    wildcard storage actions. Each delivery stream should
+    have its own role scoped to its single destination.
+  example: |
+    {
+      "compute": {
+        "kind": "firehose_stream",
+        "firehose": {
+          "role_exceeds_required": false,
+          "role_arn": "arn:aws:iam::111122223333:role/firehose-logs-to-s3-scoped"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: firehose_stream
+    - field: properties.compute.firehose.role_exceeds_required
+      op: eq
+      value: true
+defect: >
+  Firehose delivery stream role grants actions beyond
+  the pipeline's required permissions.
+infection: >
+  Firehose delivery streams continuously write data to
+  a destination. An overbroad role means the stream can
+  be redirected (via UpdateDestination) to write to
+  arbitrary S3 buckets or read from storage it should
+  not access. The delivery role is also used for data
+  transformation Lambda invocations — wildcard Lambda
+  permissions turn the stream into an arbitrary code
+  execution path.
+failure: >
+  Firehose delivery role blast radius expansion.
+  Stream redirection or transformation Lambda abuse
+  via overbroad delivery role.
+tests:
+  - name: overbroad Firehose delivery role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:111122223333:deliverystream/logs-to-s3"
+      asset_type: aws_kinesis_firehose_delivery_stream
+      vendor: aws
+      properties:
+        compute:
+          kind: firehose_stream
+          firehose:
+            role_exceeds_required: true
+            role_arn: "arn:aws:iam::111122223333:role/firehose-admin"
+            excess_actions:
+              - "s3:*"
+              - "lambda:InvokeFunction"
+  - name: scoped Firehose delivery role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:111122223333:deliverystream/logs-to-s3"
+      asset_type: aws_kinesis_firehose_delivery_stream
+      vendor: aws
+      properties:
+        compute:
+          kind: firehose_stream
+          firehose:
+            role_exceeds_required: false
+            role_arn: "arn:aws:iam::111122223333:role/firehose-logs-to-s3-scoped"

@@ -15,16 +15,25 @@ jobs:
   sweep:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Run catalog sweep
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Fetch TrackIAM service list
-          curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/glassechidna/trackiam/contents/services" | \
-            jq -r '.[].name' | sed 's/\.yml$//' | sort > /tmp/trackiam-services.txt
+          # Fetch TrackIAM service list (paginated)
+          page=1
+          > /tmp/trackiam-services.txt
+          while true; do
+            batch=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+              "https://api.github.com/repos/glassechidna/trackiam/contents/services?per_page=100&page=${page}" | \
+              jq -r '.[].name // empty' 2>/dev/null)
+            [ -z "$batch" ] && break
+            echo "$batch" >> /tmp/trackiam-services.txt
+            page=$((page + 1))
+          done
+          sed -i 's/\.yml$//' /tmp/trackiam-services.txt
+          sort -o /tmp/trackiam-services.txt /tmp/trackiam-services.txt
 
           TOTAL=$(wc -l < /tmp/trackiam-services.txt)
 
@@ -62,25 +71,25 @@ jobs:
 
           # Generate report
           DATE=$(date +%Y-%m)
-          cat > docs-internal/monthly-sweeps/${DATE}.md << EOF
-          # Monthly Catalog Sweep — ${DATE}
-
-          ## Summary
-          - Total IAM service prefixes: ${TOTAL}
-          - New since last sweep: ${NEW_COUNT}
-          - Not in shadow registry: ${UNREGISTERED}
-
-          ## New Services (>5 actions)
-          | Service | Actions | Dangerous |
-          |---|---|---|
-          $(echo -e "$DANGEROUS")
-
-          ## Action Required
-          Review new services above. For each with dangerous actions:
-          1. Add to shadow_services.yaml if security-relevant
-          2. Add creation actions to classifyPrivilege if destructive
-          3. Add to denied_service_wildcards if appropriate
-          EOF
+          {
+          echo "# Monthly Catalog Sweep — ${DATE}"
+          echo ""
+          echo "## Summary"
+          echo "- Total IAM service prefixes: ${TOTAL}"
+          echo "- New since last sweep: ${NEW_COUNT}"
+          echo "- Not in shadow registry: ${UNREGISTERED}"
+          echo ""
+          echo "## New Services (>5 actions)"
+          echo "| Service | Actions | Dangerous |"
+          echo "|---|---|---|"
+          echo -e "$DANGEROUS"
+          echo ""
+          echo "## Action Required"
+          echo "Review new services above. For each with dangerous actions:"
+          echo "1. Add to shadow_services.yaml if security-relevant"
+          echo "2. Add creation actions to classifyPrivilege if destructive"
+          echo "3. Add to denied_service_wildcards if appropriate"
+          } > "docs-internal/monthly-sweeps/${DATE}.md"
 
           # Commit the snapshot and report
           git config user.name "github-actions[bot]"
@@ -109,7 +118,5 @@ jobs:
           1. Review the report for new services with dangerous actions
           2. Update shadow_services.yaml if needed
           3. Update classifyPrivilege if needed
-          4. Close this issue when reviewed
-
-          Task definition: \`docs-internal/tasks/monthly-catalog-sweep.md\`" \
+          4. Close this issue when reviewed" \
             --label "catalog-sweep"

@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:glue:us-east-1:123456789012:devEndpoint/my-endpoint",
+      "properties": {"compute": {"kind": "glue_dev_endpoint", "glue": {"dev_endpoint": {"role_exceeds_required": false}}}},
+      "type": "aws_glue_dev_endpoint",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}
