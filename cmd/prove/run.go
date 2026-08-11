@@ -14,6 +14,10 @@ import (
 )
 
 func run(cmd *cobra.Command, o *options) error {
+	if o.query == "universal" {
+		return runUniversal(cmd, o)
+	}
+
 	renderer, err := NewRenderer(o.format)
 	if err != nil {
 		return err

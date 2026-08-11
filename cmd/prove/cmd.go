@@ -24,6 +24,9 @@ Queries:
   choke-point     What is the minimum set of statements whose removal
                   breaks a reachability path?
   invariant       Is a control's unsafe condition reachable for ANY input?
+  universal       Do all universal security statements hold for this snapshot?
+                  Evaluates U26-U33 via Z3 subprocess (no CGO required).
+                  sat = violation, unsat = property holds.
 
 Inputs:
   --observations, -o  Observation snapshots directory (required)
@@ -94,7 +97,11 @@ Requires: binary built with -tags 'cgo z3' and libz3 installed.` + metadata.Offl
     --resource arn:aws:s3:::my-bucket \
     --certificate ./proofs/proof.smt2 \
     --history ./proofs/ \
-    --compliance all`,
+    --compliance all
+
+  # Evaluate all universal security statements
+  stave prove -o observations --query universal
+  stave prove -o observations --query universal --format text`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,

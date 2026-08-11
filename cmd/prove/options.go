@@ -17,6 +17,7 @@ var validQueries = []string{
 	"conflict",
 	"choke-point",
 	"invariant",
+	"universal",
 }
 
 type options struct {
@@ -31,6 +32,8 @@ type options struct {
 	certificatePath string
 	compliance      string
 	historyDir      string
+	formulaDir      string
+	groundingPath   string
 }
 
 func addFlags(cmd *cobra.Command, o *options) {
@@ -46,6 +49,8 @@ func addFlags(cmd *cobra.Command, o *options) {
 	f.StringVar(&o.certificatePath, "certificate", "", "write SMT-LIB proof certificate to this path")
 	f.StringVar(&o.compliance, "compliance", "", "compliance frameworks to map (comma-separated, or 'all')")
 	f.StringVar(&o.historyDir, "history", "", "append result to proof history in this directory")
+	f.StringVar(&o.formulaDir, "formulas", "data/universals", "directory containing universal SMT-LIB formulas (universal query)")
+	f.StringVar(&o.groundingPath, "grounding-map", "", "path to grounding-map.yaml (default: <formulas>/grounding-map.yaml)")
 	_ = cmd.MarkFlagRequired("observations")
 	_ = cmd.MarkFlagRequired("query")
 }
@@ -56,7 +61,7 @@ func (o *options) Prepare(_ *cobra.Command) error {
 
 	if !isValidQuery(o.query) {
 		return &ui.UserError{
-			Err: fmt.Errorf("unknown --query %q (valid: compatibility, reachability, conflict, choke-point, invariant)", o.query),
+			Err: fmt.Errorf("unknown --query %q (valid: compatibility, reachability, conflict, choke-point, invariant, universal)", o.query),
 		}
 	}
 

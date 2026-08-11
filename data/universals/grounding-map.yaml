@@ -1,0 +1,204 @@
+# Grounding map for universal security statements (U26–U33).
+#
+# Maps observation asset types and property paths to SMT-LIB predicates.
+# Each universal declares its sort, predicates, and per-asset-type groundings.
+#
+# Predicate value types:
+#   true / false          — constant boolean
+#   .path.to.field        — property lookup (bool, default false if absent)
+#   !.path.to.field       — negated property lookup
+#
+# Optional "when" key: only ground this asset type if the path resolves
+# to a non-nil map (used for conditional features like Lambda function URLs).
+
+universals:
+  U26:
+    sort: Resource
+    predicates: [generates_security_events, logging_enabled]
+    groundings:
+      aws_s3_bucket:
+        generates_security_events: true
+        logging_enabled: .storage.logging.enabled
+      aws_lambda_function:
+        generates_security_events: true
+        logging_enabled: .compute.logging.log_group_exists
+      aws_rds_instance:
+        generates_security_events: true
+        logging_enabled: .database.logging.audit_enabled
+      aws_cloudfront_distribution:
+        generates_security_events: true
+        logging_enabled: .cdn.logging.enabled
+      aws_apigateway_rest_api:
+        generates_security_events: true
+        logging_enabled: .api.logging.enabled
+      aws_elb_load_balancer:
+        generates_security_events: true
+        logging_enabled: .network.logging.access_log_enabled
+      aws_vpc:
+        generates_security_events: true
+        logging_enabled: .network.flow_logs.enabled
+      aws_eks_cluster:
+        generates_security_events: true
+        logging_enabled: .compute.logging.control_plane_logging
+      aws_msk_cluster:
+        generates_security_events: true
+        logging_enabled: .messaging.logging.broker_logging_enabled
+
+  U27:
+    sort: Endpoint
+    predicates: [accepts_requests, intent_public, requires_auth]
+    groundings:
+      aws_lambda_function:
+        when: .compute.function_url
+        accepts_requests: true
+        intent_public: false
+        requires_auth: "!.compute.function_url.auth_type_none"
+      aws_apigateway_rest_api:
+        accepts_requests: true
+        intent_public: false
+        requires_auth: .api.authorization.default_authorizer_configured
+      aws_appsync_graphql_api:
+        accepts_requests: true
+        intent_public: false
+        requires_auth: "!.api.authentication.api_key_only"
+      aws_dax_cluster:
+        accepts_requests: true
+        intent_public: false
+        requires_auth: .database.authentication.iam_auth_enabled
+      aws_iot_thing:
+        accepts_requests: true
+        intent_public: false
+        requires_auth: .iot.authentication.requires_auth
+
+  U28:
+    sort: Resource
+    predicates: [stores_data, supports_deletion_protection, deletion_protected]
+    groundings:
+      aws_dynamodb_table:
+        stores_data: true
+        supports_deletion_protection: true
+        deletion_protected: .database.deletion_protection
+      aws_rds_instance:
+        stores_data: true
+        supports_deletion_protection: true
+        deletion_protected: .database.deletion_protection
+      aws_elasticache_replication_group:
+        stores_data: true
+        supports_deletion_protection: true
+        deletion_protected: .database.deletion_protection
+      aws_cloudformation_stack:
+        stores_data: true
+        supports_deletion_protection: true
+        deletion_protected: .governance.termination_protection
+
+  U29:
+    sort: Resource
+    predicates: [stores_data, has_backup]
+    groundings:
+      aws_dynamodb_table:
+        stores_data: true
+        has_backup: .database.pitr_enabled
+      aws_rds_instance:
+        stores_data: true
+        has_backup: .database.backup.automated_backup_enabled
+      aws_efs_file_system:
+        stores_data: true
+        has_backup: .storage.backup.configured
+      aws_fsx_file_system:
+        stores_data: true
+        has_backup: .storage.backup.configured
+      aws_documentdb_cluster:
+        stores_data: true
+        has_backup: .database.backup.automated_backup_enabled
+
+  U30:
+    sort: Config
+    predicates: [has_credential_field, references_secret_manager]
+    groundings:
+      aws_lambda_function:
+        when: .compute.env
+        has_credential_field: true
+        references_secret_manager: .compute.env.kms_encrypted
+      aws_ecs_task_definition:
+        when: .compute.env
+        has_credential_field: true
+        references_secret_manager: .compute.env.secrets_manager_refs
+      aws_codebuild_project:
+        when: .compute.env
+        has_credential_field: true
+        references_secret_manager: .compute.env.secrets_manager_refs
+      aws_batch_job_definition:
+        when: .compute.env
+        has_credential_field: true
+        references_secret_manager: .compute.env.kms_encrypted
+      aws_apprunner_service:
+        when: .compute.env
+        has_credential_field: true
+        references_secret_manager: .compute.env.secrets_manager_refs
+
+  U31:
+    sort: Resource
+    predicates: [has_managed_version, version_deprecated, version_eol]
+    groundings:
+      aws_glue_job:
+        has_managed_version: true
+        version_deprecated: .compute.version.is_outdated
+        version_eol: false
+      aws_rds_instance:
+        has_managed_version: true
+        version_deprecated: .database.engine.is_deprecated
+        version_eol: .database.engine.is_eol
+      aws_lambda_function:
+        has_managed_version: true
+        version_deprecated: .compute.runtime.is_deprecated
+        version_eol: .compute.runtime.is_eol
+      aws_eks_cluster:
+        has_managed_version: true
+        version_deprecated: .compute.version.is_deprecated
+        version_eol: .compute.version.is_eol
+
+  U32:
+    sort: ComputeResource
+    predicates: [has_metadata_endpoint, enforces_imdsv2]
+    groundings:
+      aws_ec2_instance:
+        has_metadata_endpoint: true
+        enforces_imdsv2: .compute.network.imdsv2_required
+      aws_ec2_launch_template:
+        has_metadata_endpoint: true
+        enforces_imdsv2: .compute.network.imdsv2_required
+      aws_beanstalk_environment:
+        has_metadata_endpoint: true
+        enforces_imdsv2: .compute.network.imdsv2_required
+      aws_sagemaker_notebook:
+        has_metadata_endpoint: true
+        enforces_imdsv2: .compute.network.imdsv2_required
+      aws_emr_cluster:
+        has_metadata_endpoint: true
+        enforces_imdsv2: .compute.network.imdsv2_required
+
+  U33:
+    sort: DetectionService
+    predicates: [in_required_services, detection_enabled]
+    groundings:
+      aws_guardduty_detector:
+        in_required_services: true
+        detection_enabled: .threat_detection.enabled
+      aws_config_recorder:
+        in_required_services: true
+        detection_enabled: .compliance.recording_enabled
+      aws_securityhub_hub:
+        in_required_services: true
+        detection_enabled: .security.enabled
+      aws_inspector2_enablement:
+        in_required_services: true
+        detection_enabled: .security.enabled
+      aws_macie2_session:
+        in_required_services: true
+        detection_enabled: .security.enabled
+      aws_detective_graph:
+        in_required_services: true
+        detection_enabled: .security.enabled
+      aws_securitylake_data_lake:
+        in_required_services: true
+        detection_enabled: .security.enabled

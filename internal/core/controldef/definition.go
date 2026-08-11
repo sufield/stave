@@ -53,8 +53,8 @@ type ControlDefinition struct {
 	ValidatedAgainst     []LabValidation  // vendor lab verification records
 	Tests                []ControlTest    `yaml:"tests,omitempty" json:"-"`
 
-	Taxonomy             []kernel.CategoryID
-	SubtractiveCategory  []string
+	Taxonomy            []kernel.CategoryID
+	SubtractiveCategory []string
 
 	PayerExempt              *bool   `yaml:"payer_exempt,omitempty" json:"payer_exempt,omitempty"`
 	PayerCompensatingControl *string `yaml:"payer_compensating_control,omitempty" json:"payer_compensating_control,omitempty"`
