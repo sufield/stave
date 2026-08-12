@@ -18,9 +18,9 @@ allows metadata access, and an S3 bucket containing PHI are each
 acceptable alone; together they're an exfiltration path. The unit of
 analysis is the tuple, not the row.
 
-**In the code:** [`chains/`](./chains/) holds 585+ compound-risk
+**In the code:** [`chains/`](../internal/chains/) holds 585+ compound-risk
 chains alongside 2,650+ single-resource controls in
-[`controls/`](./controls/). The same `apply` engine evaluates both —
+[`controls/`](../internal/controls/). The same `apply` engine evaluates both —
 a single-resource control is a chain of size 1. The chain
 visualizer (`stave-mcp --render-chains`) renders each chain's
 co-failing controls flowing into a compound-risk node.
@@ -33,7 +33,7 @@ Detection is what you do after the unsafe state forms; prevention is
 what you do so it doesn't form. The unsafe state forms through drift
 over time, and the cheapest place to stop it is the merge gate.
 
-**In the code:** [`stave ci gate`](./docs/workflows/06-ci-pipeline-gate.md)
+**In the code:** `stave ci gate`
 returns exit 3 when the policy fails — the unsafe state never
 reaches production. Three real policies, not arbitrary thresholds:
 `fail_on_new_violation` (block regressions), `fail_on_overdue_upcoming`
@@ -49,8 +49,8 @@ The catalog is operator-authored. You decide what "unsafe" means for
 your account. Stave does not ship a vendor opinion that you cannot
 inspect, fork, or contradict.
 
-**In the code:** [`controls/`](./controls/) is plain YAML. The
-[`stave forge`](./cmd/forge/) command authors and tests new controls.
+**In the code:** [`controls/`](../internal/controls/) is plain YAML. The
+[`stave forge`](../cmd/forge/) command authors and tests new controls.
 Every control carries an `intent_rationale` field that the engine
 surfaces verbatim into output — the *why* travels with the *what*.
 `stave apply --controls ./my-controls` evaluates against your fork.
@@ -79,8 +79,8 @@ the catalog decides.
 Evaluation runs where the snapshot lives. We do not require — or
 accept — credentialed access to your cloud.
 
-**In the code:** the [`stave apply`](./cmd/apply/) path makes zero
-network calls; [`--require-offline`](./cmd/apply/) makes that an
+**In the code:** the [`stave apply`](../cmd/apply/) path makes zero
+network calls; [`--require-offline`](../cmd/apply/) makes that an
 *assertion* (it fails if proxy env vars are even set). The [MCP
 server's `--hosted` mode](./cmd/mcp/README.md) is the strongest
 form: the snapshot-touching tools are physically absent from the
@@ -99,8 +99,8 @@ Steampipe, Pulumi, AWS CLI, your custom Python script, an agent: all
 produce `obs.v0.1`. Stave consumes it. The catalog produces verdict
 JSON. Anything reads it.
 
-**In the code:** the schemas are at [`schemas/`](./schemas/);
-[`docs/how-to/generate-snapshots/steampipe.md`](./docs/how-to/generate-snapshots/steampipe.md)
+**In the code:** the schemas are at [`schemas/`](../internal/schemas/);
+the Steampipe integration
 shows the mapping query. The CLI is a Unix tool: stdout, stderr,
 exit codes 0/2/3/4. `stave apply --format json | stave ci gate
 --policy fail_on_any_violation --in -` works because both sides
@@ -117,7 +117,7 @@ the uncommon one. Not "you must configure 14 fields before the tool
 runs."
 
 **In the code:** every flag has a sensible default
-([`cmd/cmdutil/cliflags/flags.go`](./cmd/cmdutil/cliflags/flags.go)
+([`cmd/cmdutil/cliflags/flags.go`](../cmd/cmdutil/cliflags/flags.go)
 documents the stable names). The embedded catalog is the default
 `--controls`. `./chains` is the auto-discovered chains directory.
 The chosen defaults match the project layout the Coder workspace,
@@ -136,8 +136,8 @@ every account, in every CI run, with no ML drift and no vendor
 roadmap.
 
 **In the code:** 2,907 controls + 622 chains today, growing with
-every incident. The engine in [`pkg/stave/`](./pkg/stave/) exposes
-~16 public functions ([`pkg/stave/doc.go`](./pkg/stave/doc.go)) —
+every incident. The engine in [`pkg/stave/`](../pkg/stave/) exposes
+~16 public functions ([`pkg/stave/doc.go`](../pkg/stave/doc.go)) —
 small enough to fit in your head. The catalog growth is the value
 delta release-to-release.
 
@@ -154,9 +154,9 @@ orchestration belongs to a matrix CI job. We do not pretend
 otherwise.
 
 **In the code:**
-[`features/scope.yaml`](./features/scope.yaml) is the versioned
+[`features/scope.yaml`](../features/scope.yaml) is the versioned
 out-of-scope manifest. The
-[`TestFeaturesScopeManifest_NoForbiddenCommands`](./cmd/features_scope_lint_test.go)
+[`TestFeaturesScopeManifest_NoForbiddenCommands`](../cmd/features_scope_lint_test.go)
 test fails the build if any of the 13 deliberately-out-of-scope
 capabilities (continuous monitoring, remediation planning, incident
 forensics, external enrichment, multi-account orchestration, …)

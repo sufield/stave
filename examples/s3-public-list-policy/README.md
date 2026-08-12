@@ -3,7 +3,7 @@
 Demonstrates the `s3-public-list-policy` pattern using Stave's
 library API, grounded in
 **3** of the 35 H1/disclosure fixtures catalogued in
-[`h1-stages.md`](../../../h1-stages.md): `e2e-h1-shopify-57505`,
+the HackerOne stages reference: `e2e-h1-shopify-57505`,
 `e2e-h1-zomato-507097` (read+list), and the `e2e-disclosure-sriram-2017`
 LIST+WRITE pattern.
 

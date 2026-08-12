@@ -66,4 +66,4 @@ stave template eject critical-findings
 stave template verify my-org-assessment
 ```
 
-See [`templates/README.md`](../../templates/README.md) for template structure.
+See [`templates/README.md`](../../internal/templates/README.md) for template structure.

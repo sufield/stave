@@ -18,7 +18,7 @@ Upload findings to GitHub Code Scanning:
     sarif_file: results.sarif
 ```
 
-See [integrations/github-actions-sarif/](../../integrations/github-actions-sarif/)
+See [integrations/github-actions-sarif/](../../internal/integrations/github-actions-sarif/)
 for a complete workflow.
 
 ## CI gate (fail on findings)
@@ -40,10 +40,10 @@ stave ci gate --policy fail_on_new_violation --in output/evaluation.json --basel
 stave validate --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations
 ```
 
-See [integrations/pre-commit/](../../integrations/pre-commit/) for configuration.
+See [integrations/pre-commit/](../../internal/integrations/pre-commit/) for configuration.
 
 ## More integrations
 
-- [Atlantis](../../integrations/atlantis/) — Terraform PR automation
-- [Slack webhook](../../integrations/slack-webhook/) — post findings to a channel
-- [All integrations](../../integrations/README.md)
+- [Atlantis](../../internal/integrations/atlantis/) — Terraform PR automation
+- [Slack webhook](../../internal/integrations/slack-webhook/) — post findings to a channel
+- [All integrations](../../internal/integrations/README.md)

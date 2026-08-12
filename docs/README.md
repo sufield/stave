@@ -8,7 +8,7 @@ Step-by-step from zero to first evaluation.
 - [First evaluation](getting-started/first-evaluation.md) — run against demo fixtures
 - [Import your snapshots](getting-started/import-snapshots.md) — AWS Config, Steampipe, or aws+jq collector
 - [CI integration](getting-started/ci-integration.md) — GitHub Actions, GitLab CI, SARIF upload
-- [Onboarding skills](../_skills/README.md) — six guided walkthroughs for AI coding agents
+- [Onboarding skills](../internal/_skills/README.md) — six guided walkthroughs for AI coding agents
 
 ## Reference
 
@@ -17,13 +17,13 @@ What Stave checks and what it outputs.
 - [Control catalog](controls/reference.md) — controls by service (generated)
 - [Chain catalog](../internal/chains/README.md) — compound attack chains by family
 - [Command reference](command-reference.md) — every command and flag (generated)
-- [Schemas](../schemas/README.md) — JSON Schema definitions for all data formats
+- [Schemas](../internal/schemas/README.md) — JSON Schema definitions for all data formats
 - [Compliance frameworks](reference/compliance-frameworks.md) — NIST, CIS, FFIEC, ISO 27001, OWASP NHI, CSA
 - [Output formats](reference/output-formats.md) — JSON, SARIF, text, JSONL, exit codes
 - [Observation contract](contract/README.md) — required fields per asset type
 - [Remediation output](remediation/README.md) — machine-readable property changes
 - [Collector IAM policy](trust/collector-policy.md) — read-only IAM policy with SMT proof
-- [Steampipe mappings](../contracts/steampipe/README.md) — Steampipe column → obs.v0.1 field maps
+- [Steampipe mappings](../internal/contracts/steampipe/README.md) — Steampipe column → obs.v0.1 field maps
 
 ## How-To
 
@@ -34,7 +34,7 @@ Task-oriented guides.
 - [Use packs](how-to/use-packs.md) — scoped control bundles (IAM, GuardDuty, FedRAMP, …)
 - [Evaluate exploitability](how-to/evaluate-exploitability.md) — compound chains and severity tiers
 - [Generate evidence packets](how-to/evidence-packet.md) — tamper-evident bundles for auditors
-- [Integrate with other tools](../integrations/README.md) — Terraform, Steampipe, AWS Config, Slack, pre-commit
+- [Integrate with other tools](../internal/integrations/README.md) — Terraform, Steampipe, AWS Config, Slack, pre-commit
 - [Write a control](how-to/write-a-control.md) — contributing to the catalog
 
 ## Explanation
@@ -47,7 +47,7 @@ How and why things work.
 - [Snapshot model](explanation/snapshot-model.md) — why snapshots, not live APIs
 - [Evaluation semantics](evaluation-semantics.md) — how predicates, thresholds, and duration work
 - [Ontology](ontology/README.md) — attack stages, resource classes, domain taxonomy
-- [Reasoning engines](../reasoning-specs/README.md) — Z3, Soufflé, Clingo, Prolog specs
+- [Reasoning engines](../internal/reasoning-specs/README.md) — Z3, Soufflé, Clingo, Prolog specs
 - [Snapshot capture](transform/capture.md) — how to capture cloud state
 
 ## Compliance Coverage
@@ -84,6 +84,5 @@ Framework-specific mapping with control counts.
 - [Glossary](GLOSSARY.md) — term definitions
 - [CLI style guide](cli-style-guide.md) — output conventions
 - [Community scripts](../contrib/README.md) — Atlantis, hooks
-- [Control definitions](../controls/README.md) — 97 service directories
-- [Coverage audits](audits/) — ATT&CK, IAM, S3, Lambda coverage reports
+- [Control definitions](../internal/controls/README.md) — 97 service directories
 - [Tool comparison](comparison/aws-compliance-mod.md) — Stave vs Steampipe compliance mod

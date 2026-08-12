@@ -106,7 +106,7 @@ docker run --rm --network=none -v "$(pwd):/work" -w /work golang:1.26 \
 
 **Runtime:** Stave requires zero outbound network connections. Corporate firewalls, egress policies, and NSGs can deny all outbound traffic and Stave will operate normally. No proxy configuration, DNS resolution, or TLS certificates are needed.
 
-**Build/CI/Release:** Building from source and release signing require network access for Go module downloads, CI runners, Sigstore signing, and artifact uploads. See [Offline & Air-Gapped Operation](https://www.systeminvariant.dev/docs/explanation/offline-airgapped) and [Release Security](docs/trust/02-release-security.md) for the full inventory.
+**Build/CI/Release:** Building from source and release signing require network access for Go module downloads, CI runners, Sigstore signing, and artifact uploads. See [Offline & Air-Gapped Operation](https://www.systeminvariant.dev/docs/explanation/offline-airgapped) and [Release Security](trust/02-release-security.md) for the full inventory.
 
 ## Privileges
 

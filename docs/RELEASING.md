@@ -73,7 +73,7 @@ Tags with pre-release suffixes (e.g., `v0.1.0-rc.1`) are automatically marked as
 | `GITHUB_TOKEN` | Automatic — used for release creation, Docker push to GHCR, Cosign OIDC signing |
 | `TAP_GITHUB_TOKEN` | PAT with `repo` scope for pushing to `sufield/homebrew-tap` |
 
-See [Homebrew Tap Setup](docs/homebrew-tap-setup.md) for `TAP_GITHUB_TOKEN` configuration.
+Configure `TAP_GITHUB_TOKEN` with a PAT that has `repo` scope for `sufield/homebrew-tap`.
 
 ## Local Testing
 

@@ -3,7 +3,7 @@
 Demonstrates the `s3-dotgit-readable` pattern using Stave's
 library API, grounded in
 **1** of the 35 H1/disclosure fixtures in
-[`h1-stages.md`](../../../h1-stages.md): Mozilla report
+the HackerOne stages reference: Mozilla report
 [2383486](https://hackerone.com/reports/2383486).
 
 The bug: a public S3 bucket serving a static site contains

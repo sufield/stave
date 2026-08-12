@@ -4,7 +4,7 @@ Demonstrates the `s3-tenant-prefix-isolation` pattern using
 both **CEL** (`pkg/stave`) and **Z3** (the
 `aclements/go-z3` binding), grounded in
 **2** of the 35 H1/disclosure fixtures in
-[`h1-stages.md`](../../../h1-stages.md): Shopify report 94087
+the HackerOne stages reference: Shopify report 94087
 (path traversal in signed S3 object keys) and Unikrn 254200
 (cross-tenant write).
 

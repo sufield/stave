@@ -25,7 +25,7 @@ make build       # rebuild ./stave after changes
 make mcp         # rebuild ./stave-mcp after changes
 ```
 
-See [`stave-workspace/README.md`](./stave-workspace/README.md) for
+See [`stave-workspace/README.md`](../stave-workspace/README.md) for
 what the image includes, how to customize it, and the honest
 caveats (no code-server, no AWS creds, no extra Steampipe plugins).
 The workspace is the lowest-friction contributor path: no Go install

@@ -9,5 +9,5 @@ From zero to first evaluation in four steps.
 | 3 | [Import your snapshots](import-snapshots.md) | 15 min |
 | 4 | [CI integration](ci-integration.md) | 15 min |
 
-Or use the [onboarding skills](../../_skills/README.md) — six guided
+Or use the [onboarding skills](../../internal/_skills/README.md) — six guided
 walkthroughs your AI coding agent can execute step by step.

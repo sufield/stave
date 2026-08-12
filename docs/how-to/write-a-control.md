@@ -35,10 +35,10 @@ stave forge test CTL.S3.MY_CONTROL.001
 
 ## Guided walkthrough
 
-The [write-your-first-control skill](../../_skills/write-your-first-control/SKILL.md)
+The [write-your-first-control skill](../../internal/_skills/write-your-first-control/SKILL.md)
 walks through the full process step by step.
 
 ## Contributing checklist
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the full PR checklist,
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for the full PR checklist,
 including golden file regeneration and consistency checks.

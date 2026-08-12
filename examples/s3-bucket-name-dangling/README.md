@@ -3,7 +3,7 @@
 Demonstrates the `s3-bucket-name-dangling` (bucket-takeover)
 pattern using Stave's library API, grounded in
 **8** of the 35 H1/disclosure fixtures catalogued in
-[`h1-stages.md`](../../../h1-stages.md): Bime, Brave (twice — for
+the HackerOne stages reference: Bime, Brave (twice — for
 their APT and RPM package channels), DoD, HackerOne, IBM, Khan
 Academy, Tendermint.
 

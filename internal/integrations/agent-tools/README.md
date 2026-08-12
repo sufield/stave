@@ -56,7 +56,7 @@ skill.SKILL_SPEC                        # name/description/input/output spec for
 ## Inner loop vs outer loop
 
 This package is the **inner-loop skill**: the agent *chooses* to call it to self-correct. The
-**outer-loop gate** (CI requires it before deploy) is the [GitHub Action](../../.github/actions/stave-verify)
+**outer-loop gate** (CI requires it before deploy) is the [GitHub Action](../../../.github/actions/stave-verify)
 and equivalents. Same engine, two positions: the agent fixes its own work with the skill so it
 can pass the gate.
 

@@ -6,8 +6,8 @@ Rules for AI agents working on this codebase. These patterns were established th
 
 If this file disagrees with one of these, the canonical doc wins — open an issue noting the drift:
 
-- **Architecture:** [`docs/architecture/pkg-stave-facade.md`](docs/architecture/pkg-stave-facade.md) — the facade migration plan. `pkg/stave/` is the stable public API; both `cmd/` and `cmd/mcp/` consume it. `cmd/mcp/architecture_test.go` enforces zero `internal/` imports for the MCP server today; the CLI proper is mid-migration.
-- **Build + testing:** [`TESTING.md`](TESTING.md) and the project [`CLAUDE.md`](../CLAUDE.md).
+- **Architecture:** the facade migration plan. `pkg/stave/` is the stable public API; both `cmd/` and `cmd/mcp/` consume it. `cmd/mcp/architecture_test.go` enforces zero `internal/` imports for the MCP server today; the CLI proper is mid-migration.
+- **Build + testing:** [`TESTING.md`](TESTING.md).
 - **Goldens:** the regen-and-triage workflow at the top of `CLAUDE.md` (`make regenerate-goldens` with categorized diff).
 
 ## Architecture
@@ -49,7 +49,7 @@ core/          Domain model: ZERO external imports (no os, no fmt, no net)
 - Import `adapters/` from `app/` or `core/`. This is the #1 hexagonal violation.
 - Import `cobra`, `os.Exit`, `fmt.Printf`, `fmt.Println`, `os.Stderr`, `os.Stdout` from `core/` or `app/`.
 - Import `net/http`, `os/exec`, `database/sql`, or `flag` from test files in `core/` or `app/`.
-- Add internal-only domain code to `pkg/`. New domain code goes under `internal/`. The `pkg/stave/` facade is the **exception**, not the rule: it re-exports a narrow public API the CLI and MCP server consume. New capability lands in `internal/app/` first, then surfaces through `pkg/stave/` if it belongs in the public contract. See [`docs/architecture/pkg-stave-facade.md`](docs/architecture/pkg-stave-facade.md).
+- Add internal-only domain code to `pkg/`. New domain code goes under `internal/`. The `pkg/stave/` facade is the **exception**, not the rule: it re-exports a narrow public API the CLI and MCP server consume. New capability lands in `internal/app/` first, then surfaces through `pkg/stave/` if it belongs in the public contract. See the facade architecture docs.
 - Add pass-through "workflow" or "bridge" packages between layers. If a package only forwards calls, delete it.
 - Move domain models, evaluation types, or security logic into `cmd/`. This is logic leakage.
 

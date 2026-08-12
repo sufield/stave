@@ -9,7 +9,9 @@ offline, credential-free.
 
 [Documentation](docs/README.md) ·
 [Control Reference](docs/controls/reference.md) ·
-[Command Reference](docs/command-reference.md)
+[Command Reference](docs/command-reference.md) ·
+[How-to Guides](docs/how-to/README.md) ·
+[Integrations](internal/integrations/README.md)
 
 ## Install
 
@@ -156,7 +158,7 @@ A Bedrock agent with broad Lambda invoke + no guardrail + a Lambda tool that rea
 
 **The dashboard is green**. Stave's compound chains compose those individually-passing settings into the attack story they describe — agent → Lambda → S3 PHI, no audit trail.
 
-AI surface coverage spans [Bedrock](controls/bedrock/) (agent, guardrail, model, logging) and [SageMaker](controls/sagemaker/) (training, notebook, pipeline, endpoint) with compound chains across both. Every AI control maps to the OWASP Non-Human Identity (NHI) Top 10 — see [`docs/compliance/owasp-nhi-top10.md`](docs/compliance/owasp-nhi-top10.md). Current counts in [`docs/metrics.yaml`](docs/metrics.yaml).
+AI surface coverage spans [Bedrock](internal/controls/bedrock/) (agent, guardrail, model, logging) and [SageMaker](internal/controls/sagemaker/) (training, notebook, pipeline, endpoint) with compound chains across both. Every AI control maps to the OWASP Non-Human Identity (NHI) Top 10 — see [`docs/compliance/owasp-nhi-top10.md`](docs/compliance/owasp-nhi-top10.md).
 
 | | CSPM tools | Cloud configuration verifier |
 |---|---|---|
@@ -187,16 +189,6 @@ source code. Supply-side: exhaustive API surface diffing against
 botocore response schemas, cross-cloud transposition from CIS
 Azure/GCP benchmarks, and formal policy-semantics analysis grounded
 in AWS's own Zelkova research.
-
-## Documentation
-
-[→ Full documentation](docs/README.md)
-
-[Get started](docs/getting-started/first-evaluation.md) ·
-[Control catalog](docs/controls/reference.md) ·
-[CLI reference](docs/command-reference.md) ·
-[How-to guides](docs/how-to/README.md) ·
-[Integrations](integrations/README.md)
 
 ## Contributing
 

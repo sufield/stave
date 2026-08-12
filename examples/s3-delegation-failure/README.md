@@ -51,7 +51,7 @@ and an unknown account has the same access."
 
 ## Relationship to vendor_attack_path
 
-[`chains/vendor_attack_path.yaml`](../../chains/vendor_attack_path.yaml)
+[`chains/vendor_attack_path.yaml`](../../internal/chains/vendor_attack_path.yaml)
 checks whether a vendor CAN reach the bucket via confused-deputy
 (IAM trust policy + S3 access). This chain checks whether the
 delegation governance itself is intact (vendor registry,

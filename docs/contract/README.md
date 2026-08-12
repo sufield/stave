@@ -297,7 +297,7 @@ dictionary for `storage.*` does not re-document them.
 
 Do not hand-author production observations. Generate observations using an
 extractor written in any language that outputs `obs.v0.1` JSON. Treat manual
-JSON edits as test-only. See [Building an Extractor](extractor-prompt.md)
+JSON edits as test-only. See [Building an Extractor](../extractor-prompt.md)
 for a jumpstart template.
 ## Unused-field review (closed)
 

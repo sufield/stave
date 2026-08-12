@@ -105,10 +105,9 @@ chmod +x extract-steampipe-s3.sh
 | `tags_src`                                | `properties.storage.tags`                                                 |
 
 For the canonical query that uses Postgres `json_build_object`
-directly (no jq required), see
-[`docs/how-to/generate-snapshots/steampipe.md`](../../docs/how-to/generate-snapshots/steampipe.md).
+directly (no jq required), see the Steampipe mapping contract.
 The shell-script form above is the lowest-friction starter; the
-docs form is the production reference.
+contract form is the production reference.
 
 ## Run
 

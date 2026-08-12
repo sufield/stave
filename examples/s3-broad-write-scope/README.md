@@ -4,7 +4,7 @@ Demonstrates the `s3-broad-write-scope` pattern using both
 **CEL** (state assertion via `pkg/stave`) and **Z3** (witness
 extraction via the `aclements/go-z3` binding), grounded in
 **4** of the 35 H1/disclosure fixtures in
-[`h1-stages.md`](../../../h1-stages.md): Shopify reports 93691
+the HackerOne stages reference: Shopify reports 93691
 and 98819, BCM 764243, and Shopify 94502.
 
 The bug: a signed S3 upload policy uses a **prefix** rule

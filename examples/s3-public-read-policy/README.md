@@ -3,7 +3,7 @@
 Demonstrates the `s3-public-read-policy` pattern using Stave's
 library API, grounded in
 **11** of the 35 H1/disclosure fixtures catalogued in
-[`h1-stages.md`](../../../h1-stages.md): the same configuration
+the HackerOne stages reference: the same configuration
 defect appears across Greenhouse, Mapbox, Mozilla, Omise, Slack,
 Uber, Zomato, multiple Shopify reports, and three named
 disclosures.

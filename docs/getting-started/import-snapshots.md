@@ -5,7 +5,7 @@ Stave evaluates `obs.v0.1` JSON snapshots. Three ways to produce them.
 ## Option 1: aws CLI + jq
 
 Capture directly from the AWS APIs using the included collector script.
-See the [snapshot-your-account skill](../../_skills/snapshot-your-account/SKILL.md)
+See the [snapshot-your-account skill](../../internal/_skills/snapshot-your-account/SKILL.md)
 for a guided walkthrough.
 
 ```bash
@@ -16,12 +16,12 @@ for a guided walkthrough.
 ## Option 2: Steampipe
 
 Query cloud state via SQL and convert to `obs.v0.1`.
-See [integrations/steampipe/](../../integrations/steampipe/) for setup.
+See [integrations/steampipe/](../../internal/integrations/steampipe/) for setup.
 
 ## Option 3: AWS Config
 
 Convert AWS Config snapshots to `obs.v0.1`.
-See [integrations/aws-config/](../../integrations/aws-config/) for setup.
+See [integrations/aws-config/](../../internal/integrations/aws-config/) for setup.
 
 ## Multi-source aggregation
 
