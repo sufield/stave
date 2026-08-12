@@ -4515,6 +4515,21 @@ Role trust policy does not require sts:SourceIdentity. In role chaining (A assum
 
 ---
 
+### CTL.IAM.SSO.ACCOUNT.ACCESS.DISABLED.001
+
+**Identity Center Account Access Management Must Be Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+IAM Identity Center has AWS account access management disabled — permission sets cannot be assigned and the Identity Center service-linked role is not provisioned in member accounts. AWS account access is not governed through Identity Center. If application-only SSO is intentional, apply an exemption. If unintentional, enable account access management through instance settings or the UpdateInstance API.
+
+**Remediation:** If account access is needed: enable it via Identity Center instance settings or the UpdateInstance API. If application-only is intentional: apply an exemption for this control on the instance.
+
+---
+
 ### CTL.IAM.SSO.APP.ACCOUNTACCESS.001
 
 **Identity Center Application Must Not Have Account Access Scope**
@@ -4602,6 +4617,21 @@ IAM Identity Center instance is encrypted with an AWS-managed key instead of a c
 IAM Identity Center instance is configured for multi-Region replication but the encryption KMS key is single-region — the instance replicates to the secondary Region but decryption fails because the key does not exist there. Authentication in the failover Region fails silently. This is a ghost failover: multi-Region is configured but the encryption dependency prevents it from functioning.
 
 **Remediation:** Replace the single-region KMS key with a multi-Region KMS key. Create a multi-Region key with aws kms create-key --multi-region, then update the Identity Center instance to use the new key. The key must replicate to every Region the instance is replicated to.
+
+---
+
+### CTL.IAM.SSO.GOVERNANCE.FALLBACK.001
+
+**Identity Center Disabled With Local IAM Console Users Present**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; soc2: CC6.1;
+
+IAM Identity Center has account access management disabled AND member accounts have local IAM users with console access — AWS account access has fallen back to per-account IAM management instead of centralized SSO governance. This is less auditable, harder to revoke, and creates credential sprawl across accounts. The combination of both mechanisms with neither providing complete governance is worse than either alone.
+
+**Remediation:** Enable account access management in Identity Center and migrate local IAM console users to SSO-based access. This centralizes authentication, enables MFA enforcement from one place, and provides a single point of revocation.
 
 ---
 

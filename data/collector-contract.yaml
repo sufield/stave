@@ -902,6 +902,42 @@ contracts:
     consumers:
       - CTL.SSO.INSTANCE.SINGLEREGION.001
 
+  - field: identity.sso.account_access_management_enabled
+    type: boolean
+    postcondition: >
+      Whether AWS account access management is enabled on the
+      Identity Center instance. When false, Identity Center
+      manages application access only — no permission sets,
+      no account assignments, no service-linked role in member
+      accounts. Source: sso-admin:DescribeInstance →
+      InstanceAccessControlAttributeConfiguration or
+      instance settings.
+    consumers:
+      - CTL.IAM.SSO.ACCOUNT.ACCESS.DISABLED.001
+      - CTL.IAM.SSO.GOVERNANCE.FALLBACK.001
+
+  - field: identity.sso.service_linked_role_provisioned
+    type: boolean
+    postcondition: >
+      Whether the Identity Center service-linked role is
+      provisioned in member accounts. False when account
+      access management is disabled. Derived: check for
+      AWSServiceRoleForSSO in member accounts via
+      iam:GetRole.
+    consumers:
+      - CTL.IAM.SSO.ACCOUNT.ACCESS.DISABLED.001
+
+  - field: identity.sso.member_accounts_have_console_users
+    type: boolean
+    postcondition: >
+      Whether member accounts have IAM users with console
+      access enabled (password set). When true AND SSO
+      account access is disabled, access governance is
+      fragmented across IAM and SSO. Derived: check
+      iam:GetLoginProfile across member accounts.
+    consumers:
+      - CTL.IAM.SSO.GOVERNANCE.FALLBACK.001
+
   - field: ou_depth
     type: integer
     postcondition: >

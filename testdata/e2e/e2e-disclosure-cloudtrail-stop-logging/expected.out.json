@@ -14,7 +14,7 @@
       },
       "overall": "96dc031b8adf0fa7bbadfd1f8a3145d077aec7a6eef685ffce43766f2f727901"
     },
-    "policy_fingerprint": "2bb67ef593844dc3b9d7590f4ac4372d34dd952032b8f8754ace640a1db0288d",
+    "policy_fingerprint": "2d1d034ea03b909df9b8cfa6e613e54a808c5063f85275fd2ba19b8ac52627b5",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -35,88 +35,166 @@
       "threshold_hours": 168
     }
   ],
-  "findings": [],
-  "chain_findings": [
+  "findings": [
     {
-      "finding_id": "sha256:f40f90d0dd0c7953",
-      "chain": "cloudtrail_audit_blind",
+      "finding_id": "sha256:787088d7544b3cd7",
+      "control_id": "CTL.CLOUDTRAIL.STOP.DETECT.001",
+      "control_name": "CloudTrail Trails Must Be Actively Logging in All Regions",
+      "control_description": "CloudTrail must be actively logging and configured as a multi-region trail. Stopping CloudTrail is the first action attackers take after gaining access — it eliminates the audit trail of subsequent actions.\n",
       "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
-      "description": "Any audit blindness — trail S3 bucket deleted, CW Logs group deleted, or trail stopped. Each independently means the audit trail is non-functional. No API calls are recorded (S3 ghost or stopped) or no real-time detection works (CW Logs ghost). The detection infrastructure for every service is blind. Threshold of 1 fires whenever any single audit-layer failure is present.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.STOP.DETECT.001"
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2024-08-01T00:00:00Z",
+        "last_seen_unsafe_at": "2024-08-11T00:00:00Z",
+        "unsafe_duration_hours": 12672,
+        "misconfigurations": [
+          {
+            "property": "trail.is_logging",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          },
+          {
+            "property": "trail.is_multi_region_trail",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 12672 hours (SLA: 0 hours). Exposed since 2024-08-01T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "hipaa": "164.312(b)",
+        "mitre_attack": "T1562.008",
+        "nist_800_53_r5": "AU-12"
+      },
+      "control_compliance_ccm_v4": [
+        "CCC-04",
+        "LOG-05"
       ],
-      "missing_safeguards": [
-        "CTL.CLOUDTRAIL.GHOST.S3BUCKET.001",
-        "CTL.CLOUDTRAIL.GHOST.CWLOGS.001"
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CloudTrail is not actively logging or is not multi-region.",
+        "action": "aws cloudtrail start-logging --name \u003ctrail-name\u003e aws cloudtrail update-trail --name \u003ctrail-name\u003e --is-multi-region-trail"
+      },
+      "fix_plan": {
+        "id": "fix-4ddda2232b9d8792",
+        "target": {
+          "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+          "asset_type": "aws_cloudtrail_trail"
+        },
+        "action": "aws cloudtrail start-logging --name org-audit-trail aws cloudtrail update-trail --name org-audit-trail --is-multi-region-trail"
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 12600,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 3,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 2.4465753424657537,
+        "days_blind": 528
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "trail.is_logging eq false",
+          "observation_key": "trail.is_logging",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        },
+        {
+          "predicate_expr": "trail.is_multi_region_trail eq false",
+          "observation_key": "trail.is_multi_region_trail",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": true
+        }
       ],
-      "compound_score": 90,
-      "severity": "critical",
-      "narrative": "Any audit blindness — trail S3 bucket deleted, CW Logs group deleted, or trail stopped. Each independently means the audit trail is non-functional. No API calls are recorded (S3 ghost or stopped) or no real-time detection works (CW Logs ghost). The detection infrastructure for every service is blind. Threshold of 1 fires whenever any single audit-layer failure is present.\n Failing: CTL.CLOUDTRAIL.STOP.DETECT.001.",
-      "attack_stages": [
-        "detection_evasion"
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+          "type": "aws_cloudtrail_trail",
+          "vendor": "aws",
+          "arn": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.CLOUDTRAIL.STOP.DETECT.001",
+          "control_name": "CloudTrail Trails Must Be Actively Logging in All Regions",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "trail.is_logging = false",
+              "observation_key": "trail.is_logging",
+              "observed_value": false
+            },
+            {
+              "clause": "trail.is_multi_region_trail = true",
+              "observation_key": "trail.is_multi_region_trail",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "trail.is_logging",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set trail.is_logging to true"
+          },
+          {
+            "path": "trail.is_multi_region_trail",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set trail.is_multi_region_trail to false"
+          }
+        ],
+        "action": "aws cloudtrail start-logging --name org-audit-trail aws cloudtrail update-trail --name org-audit-trail --is-multi-region-trail"
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cloudtrail"
+      ],
+      "delta": [
+        {
+          "property_label": "is logging",
+          "property_path": "trail.is_logging",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        },
+        {
+          "property_label": "is multi region trail",
+          "property_path": "trail.is_multi_region_trail",
+          "current_value": "true",
+          "fix_action": "set to true (enable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "22c4f3f8e4f3",
+        "54bfd9358f76",
+        "eb27b8960c42",
+        "320fc99761e4",
+        "a6a80ff01311",
+        "6ccccb8f55ae",
+        "2f8e4c5d1af5"
       ]
-    }
-  ],
-  "near_miss_chains": [
-    {
-      "chain": "cloudtrail_defense_bypassable",
-      "description": "Broad StopLogging access plus either no StopLogging alarm or trail already stopped. Many IAM principals CAN stop the trail AND either stopping goes undetected or the trail is already inactive. Multiple layers of audit-trail defense are weak — too many can stop it, stopping may not be detected, and the trail may already be off. Threshold of 2 fires when the broad StopLogging surface compounds with either the detection gap or the stopped state.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.STOP.DETECT.001"
-      ],
-      "missing_control": "CTL.CLOUDTRAIL.ACCESS.STOPLOGGING.IAM.001",
-      "severity": "critical",
-      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
-    },
-    {
-      "chain": "cloudtrail_defense_bypassable",
-      "description": "Broad StopLogging access plus either no StopLogging alarm or trail already stopped. Many IAM principals CAN stop the trail AND either stopping goes undetected or the trail is already inactive. Multiple layers of audit-trail defense are weak — too many can stop it, stopping may not be detected, and the trail may already be off. Threshold of 2 fires when the broad StopLogging surface compounds with either the detection gap or the stopped state.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.STOP.DETECT.001"
-      ],
-      "missing_control": "CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001",
-      "severity": "critical",
-      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
-    },
-    {
-      "chain": "cloudtrail_defense_stripped",
-      "description": "Trail stopped plus either no Object Lock or no StopLogging alarm. The trail is actively stopped AND either existing logs can be tampered (no Object Lock) or the trail disablement went undetected (no alarm). The attacker has both stopped the trail AND either can erase evidence or did so without notification. Threshold of 2 fires when the trail-stopped state compounds with a missing protection layer.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.STOP.DETECT.001"
-      ],
-      "missing_control": "CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001",
-      "severity": "critical",
-      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
-    },
-    {
-      "chain": "cloudtrail_defense_stripped",
-      "description": "Trail stopped plus either no Object Lock or no StopLogging alarm. The trail is actively stopped AND either existing logs can be tampered (no Object Lock) or the trail disablement went undetected (no alarm). The attacker has both stopped the trail AND either can erase evidence or did so without notification. Threshold of 2 fires when the trail-stopped state compounds with a missing protection layer.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.STOP.DETECT.001"
-      ],
-      "missing_control": "CTL.CLOUDTRAIL.S3.OBJECTLOCK.001",
-      "severity": "critical",
-      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
-    },
-    {
-      "chain": "cloudwatch_silence_as_safety",
-      "description": "Detection that interprets data-source silence as the resource being safe. A security alarm with TreatMissingData = notBreaching stays in OK when its metric stops publishing; a CloudTrail trail in stopped state means the audit log stream that feeds many security alarms has gone silent; a metric filter parsing a deleted log group has nothing to filter. When two or more of these compound, the detection plane is structurally biased toward silence — the attacker's first move (stop the trail, delete the log group, kill the Lambda that publishes the metric) silences the alarm rather than triggering it. Threshold of 2 because the dangerous pattern is the compounding, not any single instance.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.STOP.DETECT.001"
-      ],
-      "missing_control": "CTL.CLOUDWATCH.ALARM.MISSINGDATA.NOTBREACHING.001",
-      "severity": "critical",
-      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
-    },
-    {
-      "chain": "cloudwatch_silence_as_safety",
-      "description": "Detection that interprets data-source silence as the resource being safe. A security alarm with TreatMissingData = notBreaching stays in OK when its metric stops publishing; a CloudTrail trail in stopped state means the audit log stream that feeds many security alarms has gone silent; a metric filter parsing a deleted log group has nothing to filter. When two or more of these compound, the detection plane is structurally biased toward silence — the attacker's first move (stop the trail, delete the log group, kill the Lambda that publishes the metric) silences the alarm rather than triggering it. Threshold of 2 because the dangerous pattern is the compounding, not any single instance.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.STOP.DETECT.001"
-      ],
-      "missing_control": "CTL.CLOUDWATCH.GHOST.METRICFILTER.LOGGROUP.001",
-      "severity": "critical",
-      "scope_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail"
     }
   ],
   "issues": [
@@ -135,6 +213,24 @@
       "consolidated_blast_radius": 1
     }
   ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "fix_plan": {
+        "id": "fix-4ddda2232b9d8792",
+        "target": {
+          "asset_id": "arn:aws:cloudtrail:us-east-1:111122223333:trail/org-audit-trail",
+          "asset_type": "aws_cloudtrail_trail"
+        },
+        "action": "aws cloudtrail start-logging --name org-audit-trail aws cloudtrail update-trail --name org-audit-trail --is-multi-region-trail"
+      },
+      "contributing_controls": [
+        "CTL.CLOUDTRAIL.STOP.DETECT.001"
+      ],
+      "finding_count": 1
+    }
+  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -146,7 +242,7 @@
         "duration_factor": 3,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1.5,
+        "chain_bonus": 1,
         "blind_multiplier": 2.4465753424657537,
         "days_blind": 528
       },

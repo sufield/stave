@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.ACCOUNT.ACCESS.DISABLED.001
+name: Identity Center Account Access Management Must Be Enabled
+description: >
+  IAM Identity Center has AWS account access management disabled —
+  permission sets cannot be assigned and the Identity Center
+  service-linked role is not provisioned in member accounts. AWS
+  account access is not governed through Identity Center. If
+  application-only SSO is intentional, apply an exemption. If
+  unintentional, enable account access management through instance
+  settings or the UpdateInstance API.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: AC-2
+  soc2: CC6.1
+  ccm_v4:
+    - IAM-04
+scope_tags:
+  - aws
+  - iam
+  - sso
+taxonomy:
+  - compliance-mapping
+  - account-governance
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sso_instance]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.sso.account_access_management_enabled
+remediation:
+  description: >
+    IAM Identity Center account access management is disabled.
+    Permission sets and account assignments do not function.
+  action: >
+    If account access is needed: enable it via Identity Center
+    instance settings or the UpdateInstance API. If application-only
+    is intentional: apply an exemption for this control on the
+    instance.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_config",
+        "sso": {
+          "account_access_management_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_config
+    - field: properties.identity.sso.account_access_management_enabled
+      op: eq
+      value: false
+tests:
+  - name: Account access disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-1234567890abcdef"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            account_access_management_enabled: false
+  - name: Account access enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-cccc111122223333"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            account_access_management_enabled: true

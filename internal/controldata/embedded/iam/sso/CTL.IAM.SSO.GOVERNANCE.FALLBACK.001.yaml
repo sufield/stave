@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.GOVERNANCE.FALLBACK.001
+name: Identity Center Disabled With Local IAM Console Users Present
+description: >
+  IAM Identity Center has account access management disabled AND
+  member accounts have local IAM users with console access — AWS
+  account access has fallen back to per-account IAM management
+  instead of centralized SSO governance. This is less auditable,
+  harder to revoke, and creates credential sprawl across accounts.
+  The combination of both mechanisms with neither providing
+  complete governance is worse than either alone.
+domain: identity
+severity: high
+scope: compound
+compliance:
+  nist_800_53_r5: AC-2
+  soc2: CC6.1
+  ccm_v4:
+    - IAM-04
+    - IAM-14
+scope_tags:
+  - aws
+  - iam
+  - sso
+taxonomy:
+  - compliance-mapping
+  - account-governance
+  - least-privilege
+subtractive_category:
+  - S02
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sso_instance]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - identity.sso.account_access_management_enabled
+  - identity.sso.member_accounts_have_console_users
+remediation:
+  description: >
+    IAM Identity Center account access management is disabled and
+    member accounts have local IAM console users. Access governance
+    is fragmented across IAM and SSO.
+  action: >
+    Enable account access management in Identity Center and migrate
+    local IAM console users to SSO-based access. This centralizes
+    authentication, enables MFA enforcement from one place, and
+    provides a single point of revocation.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_config",
+        "sso": {
+          "account_access_management_enabled": true,
+          "member_accounts_have_console_users": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_config
+    - field: properties.identity.sso.account_access_management_enabled
+      op: eq
+      value: false
+    - field: properties.identity.sso.member_accounts_have_console_users
+      op: eq
+      value: true
+tests:
+  - name: Disabled account access with local console users fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-1234567890abcdef"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            account_access_management_enabled: false
+            member_accounts_have_console_users: true
+  - name: Disabled account access without local console users passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-abcdef1234567890"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            account_access_management_enabled: false
+            member_accounts_have_console_users: false
+  - name: Enabled account access with local console users passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-cccc111122223333"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            account_access_management_enabled: true
+            member_accounts_have_console_users: true
