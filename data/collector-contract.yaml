@@ -990,6 +990,50 @@ contracts:
     consumers:
       - CTL.WAF.MANAGED.COUNTONLY.001
 
+  - field: network.waf.webacl.protects_aiml_endpoint
+    type: boolean
+    postcondition: >
+      Whether the associated resource serves AI/ML traffic —
+      SageMaker endpoints, Bedrock agents, LLM gateways, or
+      model-serving APIs behind the WAF. Derived: check if
+      targets include SageMaker, Bedrock, or AI/ML-tagged
+      workloads.
+    consumers:
+      - CTL.WAF.AIML.NORULES.001
+
+  - field: network.waf.webacl.has_aiml_rule_group
+    type: boolean
+    postcondition: >
+      Whether the Web ACL includes a managed rule group that
+      detects attacks targeting AI/ML application stacks —
+      agent frameworks, LLM gateways, model-serving
+      infrastructure, prompt injection, model extraction.
+      Derived: wafv2:GetWebACL → Rules →
+      ManagedRuleGroupStatement.
+    consumers:
+      - CTL.WAF.AIML.NORULES.001
+
+  - field: network.waf.webacl.protects_public_endpoint
+    type: boolean
+    postcondition: >
+      Whether the associated resource is internet-facing (ALB
+      with public subnet, CloudFront distribution, API Gateway
+      with public endpoint). Derived: check associated resource
+      network configuration.
+    consumers:
+      - CTL.WAF.KEV.NORULES.001
+
+  - field: network.waf.webacl.has_emerging_threat_rule_group
+    type: boolean
+    postcondition: >
+      Whether the Web ACL includes a managed rule group covering
+      actively exploited vulnerabilities and the CISA KEV
+      catalog — provides virtual patching at the WAF layer.
+      Derived: wafv2:GetWebACL → Rules →
+      ManagedRuleGroupStatement.
+    consumers:
+      - CTL.WAF.KEV.NORULES.001
+
   - field: ou_depth
     type: integer
     postcondition: >

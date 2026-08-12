@@ -1,0 +1,18 @@
+id: waf_aiml_unprotected_model
+description: >
+  AI/ML endpoint is behind a WAF without AI/ML-specific rules AND
+  the model endpoint accepts unauthenticated invocations. Prompt
+  injection, model extraction, and training-data poisoning attacks
+  reach the model endpoint unfiltered. The lack of authentication
+  means any attacker who can reach the endpoint can invoke the
+  model directly.
+controls:
+  - CTL.WAF.AIML.NORULES.001
+  - CTL.BEDROCK.AGENTCORE.NOAUTH.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - model_compromise
+implicit_dependencies: []

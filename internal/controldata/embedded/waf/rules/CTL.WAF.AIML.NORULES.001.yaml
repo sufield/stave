@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.AIML.NORULES.001
+name: WAF Protecting AI/ML Endpoint Must Have AI/ML Rule Group
+description: >
+  Web ACL protects a resource serving AI/ML traffic but has no
+  managed rule group for AI/ML application threat detection.
+  AI/ML application stacks (agent frameworks, LLM gateways,
+  model-serving endpoints) have attack patterns distinct from
+  traditional web applications — prompt injection via HTTP
+  parameters, model extraction through crafted inference
+  requests, and training data poisoning via API calls. Generic
+  WAF rules and MCP-specific rules do not cover these AI
+  application-layer attacks.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SI-3
+  soc2: CC6.6
+  ccm_v4:
+    - IVS-09
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+subtractive_category:
+  - S03
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_waf_web_acl]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.waf.webacl.protects_aiml_endpoint
+  - network.waf.webacl.has_aiml_rule_group
+remediation:
+  description: >
+    WAF Web ACL protects an AI/ML endpoint but has no AI/ML-specific
+    managed rule group. AI application-layer attacks are not
+    inspected.
+  action: >
+    Subscribe to a WAF managed rule group with AI/ML application
+    protection (e.g., Miggo AI/ML Application Protection from AWS
+    Marketplace). Add to the Web ACL in BLOCK mode.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "has_aiml_rule_group": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.webacl.protects_aiml_endpoint
+      op: eq
+      value: true
+    - field: properties.waf.rules.has_aiml_rule_group
+      op: eq
+      value: false
+tests:
+  - name: AI/ML endpoint without AI/ML rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/aiml-acl/abc123"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_aiml_endpoint: true
+          rules:
+            has_aiml_rule_group: false
+            has_managed_rules: true
+  - name: AI/ML endpoint with AI/ML rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/aiml-acl/def456"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_aiml_endpoint: true
+          rules:
+            has_aiml_rule_group: true
+            has_managed_rules: true
+  - name: Non-AI/ML endpoint without AI/ML rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/web-acl/ghi789"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_aiml_endpoint: false
+          rules:
+            has_aiml_rule_group: false
+            has_managed_rules: true

@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.WAF.AIML.NORULES.001
+
+**WAF Protecting AI/ML Endpoint Must Have AI/ML Rule Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-3; soc2: CC6.6;
+
+Web ACL protects a resource serving AI/ML traffic but has no managed rule group for AI/ML application threat detection. AI/ML application stacks (agent frameworks, LLM gateways, model-serving endpoints) have attack patterns distinct from traditional web applications — prompt injection via HTTP parameters, model extraction through crafted inference requests, and training data poisoning via API calls. Generic WAF rules and MCP-specific rules do not cover these AI application-layer attacks.
+
+**Remediation:** Subscribe to a WAF managed rule group with AI/ML application protection (e.g., Miggo AI/ML Application Protection from AWS Marketplace). Add to the Web ACL in BLOCK mode.
+
+---
+
 ### CTL.WAF.API.NORULES.001
 
 **WAF Protecting API Endpoint Must Have API Rule Group**
@@ -91,6 +106,21 @@ WAF assessment data is incomplete. The extractor must populate waf.rules.has_man
 A WAF IP set exists but contains no IP addresses. Any rule referencing this IP set matches nothing. If used in an allow rule, no traffic is allowed through that path. If used in a block rule, no traffic is blocked. Either case indicates a misconfiguration or stale resource.
 
 **Remediation:** Add IP addresses to the IP set or delete the unused IP set. Use aws wafv2 update-ip-set to add addresses.
+
+---
+
+### CTL.WAF.KEV.NORULES.001
+
+**WAF Protecting Public Endpoint Must Have Emerging Threat Rules**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-2; pci_dss_v4.0: 6.3.3; soc2: CC7.1;
+
+Web ACL protects an internet-facing application but has no managed rule group covering actively exploited vulnerabilities (CISA KEV catalog). Emerging threat rule groups provide virtual patching — they block exploitation of known vulnerabilities at the WAF layer before the application is patched. Without them, the application is exposed to every KEV-listed vulnerability from disclosure until the application patch is deployed.
+
+**Remediation:** Subscribe to a WAF managed rule group covering emerging threats and the CISA KEV catalog (e.g., Miggo High Emerging Application Threats from AWS Marketplace). Add to the Web ACL in BLOCK mode.
 
 ---
 

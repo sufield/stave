@@ -1,0 +1,19 @@
+id: waf_kev_patching_gap
+description: >
+  Public-facing application is behind a WAF without emerging threat
+  rules AND a backend Lambda runs an end-of-life runtime. The WAF
+  gap means actively exploited vulnerabilities (CISA KEV catalog)
+  are not blocked at the perimeter. The EOL runtime means the
+  application itself cannot be patched — the language runtime no
+  longer receives security updates. Together, the attacker has a
+  known exploit and no defense at either layer.
+controls:
+  - CTL.WAF.KEV.NORULES.001
+  - CTL.LAMBDA.RUNTIME.EOL.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - code_execution
+implicit_dependencies: []

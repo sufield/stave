@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.KEV.NORULES.001
+name: WAF Protecting Public Endpoint Must Have Emerging Threat Rules
+description: >
+  Web ACL protects an internet-facing application but has no
+  managed rule group covering actively exploited vulnerabilities
+  (CISA KEV catalog). Emerging threat rule groups provide virtual
+  patching — they block exploitation of known vulnerabilities at
+  the WAF layer before the application is patched. Without them,
+  the application is exposed to every KEV-listed vulnerability
+  from disclosure until the application patch is deployed.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SI-2
+  soc2: CC7.1
+  pci_dss_v4.0: 6.3.3
+  ccm_v4:
+    - TVM-02
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+subtractive_category:
+  - S03
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_waf_web_acl]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.waf.webacl.protects_public_endpoint
+  - network.waf.webacl.has_emerging_threat_rule_group
+remediation:
+  description: >
+    WAF Web ACL protects an internet-facing application but has no
+    emerging threat managed rule group. No virtual patching for
+    actively exploited vulnerabilities.
+  action: >
+    Subscribe to a WAF managed rule group covering emerging threats
+    and the CISA KEV catalog (e.g., Miggo High Emerging Application
+    Threats from AWS Marketplace). Add to the Web ACL in BLOCK mode.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "has_emerging_threat_rule_group": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.webacl.protects_public_endpoint
+      op: eq
+      value: true
+    - field: properties.waf.rules.has_emerging_threat_rule_group
+      op: eq
+      value: false
+tests:
+  - name: Public endpoint without KEV rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/pub-acl/abc123"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_public_endpoint: true
+          rules:
+            has_emerging_threat_rule_group: false
+            has_managed_rules: true
+  - name: Public endpoint with KEV rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/pub-acl/def456"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_public_endpoint: true
+          rules:
+            has_emerging_threat_rule_group: true
+            has_managed_rules: true
+  - name: Internal endpoint without KEV rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/int-acl/ghi789"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_public_endpoint: false
+          rules:
+            has_emerging_threat_rule_group: false
+            has_managed_rules: true
