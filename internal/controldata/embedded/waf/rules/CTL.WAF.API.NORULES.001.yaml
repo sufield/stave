@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.API.NORULES.001
+name: WAF Protecting API Endpoint Must Have API Rule Group
+description: >
+  Web ACL protects an API endpoint but has no managed rule group
+  for API-specific attack detection. API attacks (GraphQL query
+  abuse, JWT token anomalies, SSRF via API parameters, prototype
+  pollution, credential brute force on login endpoints) are not
+  covered by generic AWS managed rules
+  (AWSManagedRulesCommonRuleSet). API-specific rule groups detect
+  these patterns.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SI-3
+  soc2: CC6.6
+  pci_dss_v4.0: 6.4.1
+  ccm_v4:
+    - IVS-09
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+subtractive_category:
+  - S03
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_waf_web_acl]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.waf.webacl.protects_api_endpoint
+  - network.waf.webacl.has_api_rule_group
+remediation:
+  description: >
+    WAF Web ACL protects an API endpoint but has no API-specific
+    managed rule group. API attack patterns are not inspected.
+  action: >
+    Subscribe to a WAF managed rule group with API threat detection.
+    Options include Salt Security and other Marketplace vendors with
+    API-specific rules. Add in BLOCK mode alongside existing AWS
+    managed rules.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "has_api_rule_group": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.webacl.protects_api_endpoint
+      op: eq
+      value: true
+    - field: properties.waf.rules.has_api_rule_group
+      op: eq
+      value: false
+tests:
+  - name: API endpoint without API rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/api-acl/abc123"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_api_endpoint: true
+          rules:
+            has_api_rule_group: false
+            has_managed_rules: true
+  - name: API endpoint with API rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/api-acl/def456"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_api_endpoint: true
+          rules:
+            has_api_rule_group: true
+            has_managed_rules: true
+  - name: Non-API endpoint without API rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/static-acl/ghi789"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_api_endpoint: false
+          rules:
+            has_api_rule_group: false
+            has_managed_rules: true

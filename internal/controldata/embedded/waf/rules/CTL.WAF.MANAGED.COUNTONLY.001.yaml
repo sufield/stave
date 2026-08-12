@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.MANAGED.COUNTONLY.001
+name: WAF Managed Rule Groups Must Not All Be in COUNT Mode
+description: >
+  All managed rule groups on this Web ACL are configured with
+  COUNT override action — rules detect threats but do not block
+  them. This is false protection: the WAF logs show detections
+  but malicious requests pass through to the application.
+  Managed rule groups should use BLOCK mode (or no override,
+  which defaults to the rule group's action) for active
+  protection.
+domain: exposure
+severity: high
+archetype: ghost-reference
+compliance:
+  nist_800_53_r5: SI-3
+  soc2: CC6.6
+  pci_dss_v4.0: 6.4.1
+  ccm_v4:
+    - IVS-09
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+subtractive_category:
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_waf_web_acl]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.waf.webacl.has_managed_rules_in_count_only
+remediation:
+  description: >
+    All managed rule groups are in COUNT mode. Threats are detected
+    but not blocked.
+  action: >
+    Change the override action on managed rule groups from COUNT to
+    NONE (use the rule group's default action, which is BLOCK for
+    most rules). If specific rules need COUNT for tuning, override
+    individual rules within the group rather than the entire group.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "has_managed_rules_in_count_only": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.rules.has_managed_rules_in_count_only
+      op: eq
+      value: true
+tests:
+  - name: All managed rules in COUNT mode fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/count-acl/abc123"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          rules:
+            has_managed_rules: true
+            has_managed_rules_in_count_only: true
+  - name: Managed rules in BLOCK mode passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/block-acl/def456"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          rules:
+            has_managed_rules: true
+            has_managed_rules_in_count_only: false

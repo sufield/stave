@@ -938,6 +938,58 @@ contracts:
     consumers:
       - CTL.IAM.SSO.GOVERNANCE.FALLBACK.001
 
+  # ─── WAF Managed Rule Group Coverage (Aug 2026) ──────────
+  #     MCP/API rule coverage, managed rule group inventory,
+  #     and COUNT-only detection.
+
+  - field: network.waf.webacl.protects_mcp_endpoint
+    type: boolean
+    postcondition: >
+      Whether the Web ACL is associated with a resource that
+      serves MCP/AI agent traffic (MCP server endpoints,
+      Bedrock AgentCore, tool-calling APIs). Derived: check
+      ALB/CloudFront/APIGW target configuration.
+    consumers:
+      - CTL.WAF.MCP.NORULES.001
+
+  - field: network.waf.webacl.has_mcp_rule_group
+    type: boolean
+    postcondition: >
+      Whether the Web ACL includes a managed rule group that
+      detects MCP/AI agent traffic patterns (e.g., Salt
+      Security AI Agent & API Security rules). Derived:
+      wafv2:GetWebACL → Rules → ManagedRuleGroupStatement.
+    consumers:
+      - CTL.WAF.MCP.NORULES.001
+
+  - field: network.waf.webacl.protects_api_endpoint
+    type: boolean
+    postcondition: >
+      Whether the Web ACL is associated with an API endpoint
+      (API Gateway, ALB with API-serving targets). Derived:
+      check associated resource type.
+    consumers:
+      - CTL.WAF.API.NORULES.001
+
+  - field: network.waf.webacl.has_api_rule_group
+    type: boolean
+    postcondition: >
+      Whether the Web ACL includes a managed rule group that
+      detects API-specific attacks (GraphQL abuse, JWT
+      anomalies, SSRF, credential brute force). Derived:
+      wafv2:GetWebACL → Rules → ManagedRuleGroupStatement.
+    consumers:
+      - CTL.WAF.API.NORULES.001
+
+  - field: network.waf.webacl.has_managed_rules_in_count_only
+    type: boolean
+    postcondition: >
+      True if ALL managed rule groups are in COUNT mode
+      (monitoring only, no blocking). Derived: check if every
+      managed rule group has OverrideAction == COUNT.
+    consumers:
+      - CTL.WAF.MANAGED.COUNTONLY.001
+
   - field: ou_depth
     type: integer
     postcondition: >

@@ -1,0 +1,18 @@
+id: waf_mcp_unprotected_agent
+description: >
+  MCP/AI agent endpoint is behind a WAF without MCP-specific rules
+  AND the agent role has broad permissions. API-level attacks on the
+  MCP endpoint (unauthenticated tool calls, prompt injection, SSRF)
+  can reach an agent with access to production resources. The WAF
+  gap means the attack is not filtered; the broad role means the
+  compromised agent can act on production data.
+controls:
+  - CTL.WAF.MCP.NORULES.001
+  - CTL.BEDROCK.AGENTCORE.OVERPERM.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

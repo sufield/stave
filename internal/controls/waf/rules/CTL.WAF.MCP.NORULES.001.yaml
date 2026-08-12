@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.MCP.NORULES.001
+name: WAF Protecting MCP Endpoint Must Have MCP Rule Group
+description: >
+  Web ACL protects a resource serving MCP/AI agent traffic but has
+  no managed rule group for MCP threat detection. MCP endpoints
+  accept tool calls, function invocations, and agent-to-agent
+  communication — attack patterns that generic WAF rules do not
+  cover. Without MCP-specific rules, unauthenticated MCP access,
+  prompt injection via tool parameters, and MCP-based SSRF go
+  undetected at the WAF layer.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SI-3
+  soc2: CC6.6
+  ccm_v4:
+    - IVS-09
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - network-perimeter
+subtractive_category:
+  - S03
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_waf_web_acl]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.waf.webacl.protects_mcp_endpoint
+  - network.waf.webacl.has_mcp_rule_group
+remediation:
+  description: >
+    WAF Web ACL protects an MCP endpoint but has no MCP-specific
+    managed rule group. Agent traffic is not inspected for
+    MCP-specific attack patterns.
+  action: >
+    Subscribe to a WAF managed rule group with MCP threat detection
+    (e.g., Salt Security AI Agent & API Security from AWS
+    Marketplace). Add the rule group to the Web ACL in BLOCK mode.
+  example: |
+    {
+      "waf": {
+        "kind": "web_acl",
+        "rules": {
+          "has_mcp_rule_group": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: web_acl
+    - field: properties.waf.webacl.protects_mcp_endpoint
+      op: eq
+      value: true
+    - field: properties.waf.rules.has_mcp_rule_group
+      op: eq
+      value: false
+tests:
+  - name: MCP endpoint without MCP rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/mcp-acl/abc123"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_mcp_endpoint: true
+          rules:
+            has_mcp_rule_group: false
+            has_managed_rules: true
+  - name: MCP endpoint with MCP rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/mcp-acl/def456"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_mcp_endpoint: true
+          rules:
+            has_mcp_rule_group: true
+            has_managed_rules: true
+  - name: Non-MCP endpoint without MCP rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/webacl/web-acl/ghi789"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: web_acl
+          webacl:
+            protects_mcp_endpoint: false
+          rules:
+            has_mcp_rule_group: false
+            has_managed_rules: true

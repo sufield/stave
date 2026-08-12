@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.WAF.API.NORULES.001
+
+**WAF Protecting API Endpoint Must Have API Rule Group**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-3; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+Web ACL protects an API endpoint but has no managed rule group for API-specific attack detection. API attacks (GraphQL query abuse, JWT token anomalies, SSRF via API parameters, prototype pollution, credential brute force on login endpoints) are not covered by generic AWS managed rules (AWSManagedRulesCommonRuleSet). API-specific rule groups detect these patterns.
+
+**Remediation:** Subscribe to a WAF managed rule group with API threat detection. Options include Salt Security and other Marketplace vendors with API-specific rules. Add in BLOCK mode alongside existing AWS managed rules.
+
+---
+
 ### CTL.WAF.CLASSIC.DEPRECATED.001
 
 **No Resource Must Use WAF Classic (Retired September 2025)**
@@ -109,6 +124,21 @@ The WAF logging configuration redacts all request fields. Logs contain rule matc
 
 ---
 
+### CTL.WAF.MANAGED.COUNTONLY.001
+
+**WAF Managed Rule Groups Must Not All Be in COUNT Mode**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-3; pci_dss_v4.0: 6.4.1; soc2: CC6.6;
+
+All managed rule groups on this Web ACL are configured with COUNT override action — rules detect threats but do not block them. This is false protection: the WAF logs show detections but malicious requests pass through to the application. Managed rule groups should use BLOCK mode (or no override, which defaults to the rule group's action) for active protection.
+
+**Remediation:** Change the override action on managed rule groups from COUNT to NONE (use the rule group's default action, which is BLOCK for most rules). If specific rules need COUNT for tuning, override individual rules within the group rather than the entire group.
+
+---
+
 ### CTL.WAF.MANAGEDRULE.IPREP.MISSING.001
 
 **WAF Web ACL Missing IP Reputation Managed Rule Group**
@@ -121,6 +151,21 @@ The WAF logging configuration redacts all request fields. Logs contain rule matc
 The Web ACL does not include the Amazon IP Reputation List or Anonymous IP List managed rule group. Traffic from known-bad sources — botnets, Tor exit nodes, hosting providers used for attacks — is not automatically blocked. This control differs from CTL.WAF.RULES.001 (any managed rules) and CTL.WAF.RULES.OWASP.001 (OWASP core coverage) by checking specifically for IP reputation intelligence.
 
 **Remediation:** Add the AWSManagedRulesAmazonIpReputationList managed rule group to the Web ACL. Consider also adding AWSManagedRulesAnonymousIpList for Tor and VPN traffic.
+
+---
+
+### CTL.WAF.MCP.NORULES.001
+
+**WAF Protecting MCP Endpoint Must Have MCP Rule Group**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-3; soc2: CC6.6;
+
+Web ACL protects a resource serving MCP/AI agent traffic but has no managed rule group for MCP threat detection. MCP endpoints accept tool calls, function invocations, and agent-to-agent communication — attack patterns that generic WAF rules do not cover. Without MCP-specific rules, unauthenticated MCP access, prompt injection via tool parameters, and MCP-based SSRF go undetected at the WAF layer.
+
+**Remediation:** Subscribe to a WAF managed rule group with MCP threat detection (e.g., Salt Security AI Agent & API Security from AWS Marketplace). Add the rule group to the Web ACL in BLOCK mode.
 
 ---
 
