@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-12T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.securityhub-extended"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:securityhub:us-east-1:111122223333:hub/default",
+      "type": "aws_securityhub_hub",
+      "vendor": "aws",
+      "properties": {
+        "security_hub": {
+          "kind": "hub",
+          "enabled": true,
+          "plan": "extended",
+          "extended_category_count": 9,
+          "supply_chain_enabled": false
+        }
+      }
+    }
+  ]
+}

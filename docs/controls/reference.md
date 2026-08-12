@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3419
-**Pack hash:** `c0978963d47bbcf7516d463408ebb23968339f3d56c56bb033d682f69682ae60`
+**Total controls:** 3421
+**Pack hash:** `95b5157edd2fd93b6a435ed63e0bad4a007cfe2c31f75e9d2ef381d25368062b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 370 |
-| high | 1465 |
+| high | 1466 |
 | info | 19 |
 | low | 270 |
-| medium | 1295 |
+| medium | 1296 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,7 +29,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 161 |
 | encryption | 125 |
-| exposure | 1494 |
+| exposure | 1496 |
 | governance | 683 |
 | hygiene | 21 |
 | identity | 673 |
@@ -152,7 +152,7 @@ GitHub. Pick a service below.
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
-| [SECURITYHUB](reference/securityhub.md) | 8 |
+| [SECURITYHUB](reference/securityhub.md) | 10 |
 | [SECURITYIR](reference/securityir.md) | 2 |
 | [SECURITYLAKE](reference/securitylake.md) | 4 |
 | [SERVERLESSREPO](reference/serverlessrepo.md) | 1 |

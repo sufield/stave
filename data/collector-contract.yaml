@@ -1111,6 +1111,37 @@ contracts:
       the detector does not support it.
     consumers: []
 
+  # ─── Security Hub Extended Plan (Aug 2026) ─────────────────
+
+  - field: security_hub.plan
+    type: string
+    postcondition: >
+      Security Hub plan — "standard" (AWS checks only) or
+      "extended" (AWS + 23 curated partner solutions across
+      10 security categories).
+    consumers:
+      - CTL.SECURITYHUB.SUPPLYCHAIN.DISABLED.001
+      - CTL.SECURITYHUB.EXTENDED.INCOMPLETE.001
+
+  - field: security_hub.extended_category_count
+    type: integer
+    postcondition: >
+      Number of Extended plan categories activated (0–10).
+      Full set: endpoint, identity, email, network, data,
+      browser, cloud, ai, security_operations, supply_chain.
+    consumers:
+      - CTL.SECURITYHUB.EXTENDED.INCOMPLETE.001
+
+  - field: security_hub.supply_chain_enabled
+    type: boolean
+    postcondition: >
+      Whether the supply chain security category is activated
+      in Security Hub Extended — includes Chainguard (hardened
+      container images) and Socket (malicious dependency
+      detection) partner integrations.
+    consumers:
+      - CTL.SECURITYHUB.SUPPLYCHAIN.DISABLED.001
+
   # ─── Account Resource Counts (B2) ────────────────────────
 
   - field: resource_count_by_service

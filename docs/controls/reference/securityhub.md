@@ -50,6 +50,21 @@ Security Hub must be enabled to aggregate security findings from GuardDuty, Insp
 
 ---
 
+### CTL.SECURITYHUB.EXTENDED.INCOMPLETE.001
+
+**Security Hub Extended Must Have All Categories Enabled**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Security Hub Extended plan is active but not all 10 security categories are enabled — gaps in coverage mean entire attack surfaces (endpoint, identity, email, network, data, browser, cloud, AI, security operations, supply chain) are not monitored through the centralized Security Hub view. Each disabled category is a blind spot where partner-detected findings do not reach the security team.
+
+**Remediation:** Review disabled Extended categories in Security Hub → Extended → Categories. Enable all 10 for full-stack visibility: endpoint, identity, email, network, data, browser, cloud, AI, security operations, and supply chain.
+
+---
+
 ### CTL.SECURITYHUB.INCOMPLETE.001
 
 **Complete Data Required for Security Hub Assessment**
@@ -121,6 +136,21 @@ Safety mechanism integrity control. Checks that security guardrails are actively
 Security Hub must have at least one security standard enabled (AWS Foundational Security Best Practices, CIS Benchmarks, or PCI DSS). Security Hub without standards is a findings aggregator with no baseline — it collects third-party findings but performs no continuous posture evaluation. Standards provide automated security checks that run continuously against account resources.
 
 **Remediation:** Enable security standards in Security Hub: aws securityhub batch-enable-standards. At minimum enable AWS Foundational Security Best Practices (FSBP).
+
+---
+
+### CTL.SECURITYHUB.SUPPLYCHAIN.DISABLED.001
+
+**Security Hub Extended Must Have Supply Chain Category Enabled**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SA-12; soc2: CC6.6;
+
+Security Hub Extended plan does not have the supply chain security category enabled — malicious dependencies and untrusted container images are not detected before they enter build pipelines. Supply chain attacks (dependency confusion, typosquatting, compromised maintainer accounts) are a top-5 breach vector. Chainguard and Socket integrations detect these patterns and emit findings in OCSF format to Security Hub for centralized visibility.
+
+**Remediation:** Enable the supply chain security category in Security Hub Extended. Navigate to Security Hub → Extended → Categories → Supply Chain and activate Chainguard and/or Socket.
 
 ---
 

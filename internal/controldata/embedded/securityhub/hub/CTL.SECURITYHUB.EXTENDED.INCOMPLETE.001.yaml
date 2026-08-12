@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYHUB.EXTENDED.INCOMPLETE.001
+name: Security Hub Extended Must Have All Categories Enabled
+description: >
+  Security Hub Extended plan is active but not all 10 security
+  categories are enabled — gaps in coverage mean entire attack
+  surfaces (endpoint, identity, email, network, data, browser,
+  cloud, AI, security operations, supply chain) are not monitored
+  through the centralized Security Hub view. Each disabled
+  category is a blind spot where partner-detected findings do not
+  reach the security team.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SI-4
+  soc2: CC7.1
+  ccm_v4:
+    - LOG-03
+scope_tags:
+  - aws
+  - securityhub
+taxonomy:
+  - compliance-mapping
+  - monitoring
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_securityhub_hub]
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - detection.securityhub.plan
+  - detection.securityhub.extended_category_count
+remediation:
+  description: >
+    Security Hub Extended plan is active but fewer than 10
+    categories are enabled. Attack surfaces covered by disabled
+    categories are not monitored.
+  action: >
+    Review disabled Extended categories in Security Hub →
+    Extended → Categories. Enable all 10 for full-stack
+    visibility: endpoint, identity, email, network, data,
+    browser, cloud, AI, security operations, and supply chain.
+  example: |
+    {
+      "security_hub": {
+        "kind": "hub",
+        "plan": "extended",
+        "extended_category_count": 10
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security_hub.kind
+      op: eq
+      value: hub
+    - field: properties.security_hub.plan
+      op: eq
+      value: "extended"
+    - field: properties.security_hub.extended_category_count
+      op: lt
+      value: 10
+tests:
+  - name: Extended with 9 categories fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub
+          plan: "extended"
+          extended_category_count: 9
+          supply_chain_enabled: false
+  - name: Extended with all 10 passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub
+          plan: "extended"
+          extended_category_count: 10
+          supply_chain_enabled: true
+  - name: Standard plan does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub
+          plan: "standard"
+          enabled: true

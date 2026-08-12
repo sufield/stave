@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYHUB.SUPPLYCHAIN.DISABLED.001
+name: Security Hub Extended Must Have Supply Chain Category Enabled
+description: >
+  Security Hub Extended plan does not have the supply chain
+  security category enabled — malicious dependencies and
+  untrusted container images are not detected before they
+  enter build pipelines. Supply chain attacks (dependency
+  confusion, typosquatting, compromised maintainer accounts)
+  are a top-5 breach vector. Chainguard and Socket integrations
+  detect these patterns and emit findings in OCSF format to
+  Security Hub for centralized visibility.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SA-12
+  soc2: CC6.6
+  ccm_v4:
+    - STA-04
+scope_tags:
+  - aws
+  - securityhub
+taxonomy:
+  - supply-chain
+  - monitoring
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_securityhub_hub]
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - detection.securityhub.plan
+  - detection.securityhub.supply_chain_enabled
+remediation:
+  description: >
+    Security Hub Extended plan is active but supply chain security
+    category is not enabled. Malicious dependencies and container
+    image compromise are not detected.
+  action: >
+    Enable the supply chain security category in Security Hub
+    Extended. Navigate to Security Hub → Extended → Categories →
+    Supply Chain and activate Chainguard and/or Socket.
+  example: |
+    {
+      "security_hub": {
+        "kind": "hub",
+        "plan": "extended",
+        "supply_chain_enabled": true
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.security_hub.kind
+      op: eq
+      value: hub
+    - field: properties.security_hub.plan
+      op: eq
+      value: "extended"
+    - field: properties.security_hub.supply_chain_enabled
+      op: eq
+      value: false
+tests:
+  - name: Extended without supply chain fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub
+          plan: "extended"
+          extended_category_count: 9
+          supply_chain_enabled: false
+  - name: Extended with supply chain passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub
+          plan: "extended"
+          extended_category_count: 10
+          supply_chain_enabled: true
+  - name: Standard plan does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securityhub:us-east-1:111122223333:hub/default"
+      asset_type: aws_securityhub_hub
+      vendor: aws
+      properties:
+        security_hub:
+          kind: hub
+          plan: "standard"
+          enabled: true

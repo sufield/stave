@@ -1,0 +1,18 @@
+id: securityhub_supply_chain_blind
+description: >
+  Security Hub supply chain category is not enabled AND ECR image
+  scanning is disabled AND Lambda code signing is not enforced —
+  no layer of the deployment pipeline verifies artifact integrity.
+  Malicious dependencies, compromised container images, and
+  unsigned Lambda code all reach production undetected.
+controls:
+  - CTL.SECURITYHUB.SUPPLYCHAIN.DISABLED.001
+  - CTL.ECR.SCAN.001
+  - CTL.LAMBDA.CODESIGN.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - supply_chain_compromise
+postconditions:
+  - code_execution
+implicit_dependencies: []
