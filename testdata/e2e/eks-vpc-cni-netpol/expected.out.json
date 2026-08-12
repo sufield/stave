@@ -15,7 +15,7 @@
       },
       "overall": "bd49ea33d36e888fe31897260f974b68308fbe3b51a7c73b38e6995e2d8a7000"
     },
-    "policy_fingerprint": "4022f916d256ad111c7a5b010b9f1dbd518a74e7f1939181ff47b54526b56e32",
+    "policy_fingerprint": "6433929c1e92a3425c56205c55b5a41f5530e1d5c51ac49e2a223bd09b3e06ed",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -98,7 +98,18 @@
         },
         "action": "Option 1: Enable the TTLAfterFinished feature gate at cluster level. Option 2: Set ttlSecondsAfterFinished on all Job specs. Option 3: Update VPC CNI to a version with pod completion handling. Verify VPC CNI version:\n  kubectl describe daemonset aws-node -n kube-system | grep Image"
       },
-      "exploitability": "reachable",
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "eks_stale_netpol_ip_reuse_path",
+          "chain_severity": "high",
+          "missing_control": "CTL.K8S.JOB.TTL.001",
+          "controls_failing": [
+            "CTL.EKS.VPC.CNI.NETPOL.TTL.001"
+          ],
+          "description": "VPC CNI NetworkPolicy enforcement is active but completed pod firewall rules are not flushed, AND Jobs in NetworkPolicy namespaces have no TTL configured. Completed pods accumulate with stale firewall rules. Their IPs are recycled and new pods silently inherit the original pod's network access — a reliable lateral movement path.\n"
+        }
+      ],
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -223,6 +234,18 @@
         "0cde9e236454",
         "696eb4b3a1ce"
       ]
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "eks_stale_netpol_ip_reuse_path",
+      "description": "VPC CNI NetworkPolicy enforcement is active but completed pod firewall rules are not flushed, AND Jobs in NetworkPolicy namespaces have no TTL configured. Completed pods accumulate with stale firewall rules. Their IPs are recycled and new pods silently inherit the original pod's network access — a reliable lateral movement path.\n",
+      "controls_failing": [
+        "CTL.EKS.VPC.CNI.NETPOL.TTL.001"
+      ],
+      "missing_control": "CTL.K8S.JOB.TTL.001",
+      "severity": "high",
+      "scope_id": "arn:aws:eks:us-east-1:123:cluster/staging"
     }
   ],
   "issues": [

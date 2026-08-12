@@ -14,7 +14,7 @@
       },
       "overall": "1f42818f7e4162e6088433d5bb8bd91706828f4d20f9782ec49b178aa24617f1"
     },
-    "policy_fingerprint": "dab99400d260297bc4df48905470f84c3e1ad4eedc47842fbf9b31163344e5d4",
+    "policy_fingerprint": "e36695186a164a71e9ab7f9f435738b8ebd5bd80bc6a1574eabc0f6a50d74312",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -35,191 +35,48 @@
       "threshold_hours": 168
     }
   ],
-  "findings": [
+  "findings": [],
+  "chain_findings": [
     {
-      "finding_id": "sha256:cf3903e9b863400e",
-      "control_id": "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001",
-      "control_name": "Managed Policy Has Multiple Versions",
-      "control_description": "A customer-managed IAM policy has more than one version. Dormant versions may contain broader permissions that can be activated via iam:SetDefaultPolicyVersion — a single-API-call escalation path. Policies should be cleaned to a single version after changes are verified.\n",
+      "finding_id": "sha256:86ed3ff4d3e8e41e",
+      "chain": "iam_privesc_by_rollback",
       "asset_id": "arn:aws:iam::111122223333:user/mallory",
-      "asset_type": "aws_iam_user",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "misconfigurations": [
-          {
-            "property": "identity.kind",
-            "actual_value": "user",
-            "operator": "eq",
-            "unsafe_value": "user"
-          },
-          {
-            "property": "identity.policy.version_count",
-            "actual_value": 3,
-            "operator": "gt",
-            "unsafe_value": 1
-          },
-          {
-            "property": "identity.policy.version_count",
-            "actual_value": 3,
-            "operator": "present"
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "control_severity": "medium",
-      "control_compliance": {
-        "nist_800_53_r5": "AC-6",
-        "soc2": "CC6.1"
-      },
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "IAM managed policy has multiple versions — dormant versions are a precondition for the SetDefaultPolicyVersion escalation path.",
-        "action": "Delete non-default policy versions after verifying the current default version is correct. Use aws iam delete-policy-version to remove dormant versions. Alternatively, enable an SCP that denies iam:SetDefaultPolicyVersion in workload accounts.",
-        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"policy\": {\n      \"version_count\": 1\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-0e6504c8cf7ba713",
-        "target": {
-          "asset_id": "arn:aws:iam::111122223333:user/mallory",
-          "asset_type": "aws_iam_user"
-        },
-        "action": "Delete non-default policy versions after verifying the current default version is correct. Use aws iam delete-policy-version to remove dormant versions. Alternatively, enable an SCP that denies iam:SetDefaultPolicyVersion in workload accounts."
-      },
-      "exploitability": "reachable",
-      "sla_deadline_hours": 1440,
-      "sla_breached": false,
-      "sla_policy_source": "profile:default",
-      "exposure_score": 51.369863013698634,
-      "score_breakdown": {
-        "base_score": 50,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "identity.kind eq \"user\"",
-          "observation_key": "identity.kind",
-          "operator": "eq",
-          "expected_value": "user",
-          "observed_value": "user"
-        },
-        {
-          "predicate_expr": "identity.policy.version_count gt 1",
-          "observation_key": "identity.policy.version_count",
-          "operator": "gt",
-          "expected_value": 1,
-          "observed_value": 3
-        },
-        {
-          "predicate_expr": "identity.policy.version_count present",
-          "observation_key": "identity.policy.version_count",
-          "operator": "present",
-          "observed_value": 3
-        }
+      "description": "IAM privilege escalation via policy version manipulation. A user has iam:CreatePolicyVersion or iam:SetDefaultPolicyVersion — enabling them to either create a new policy version with broader permissions or roll back to a previous version that already has them. This is a single-API-call escalation path documented in Rhino Security's CloudGoat (iam_privesc_by_rollback) and Bishop Fox's IAM Vulnerable. The escalation is latent: the principal has only the version-manipulation permission today, but one API call activates a broader version. Threshold of 1: either create or set-default alone is sufficient.\n",
+      "controls_failing": [
+        "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001"
       ],
-      "remediation_context": {
-        "asset": {
-          "id": "arn:aws:iam::111122223333:user/mallory",
-          "type": "aws_iam_user",
-          "vendor": "aws",
-          "arn": "arn:aws:iam::111122223333:user/mallory"
-        },
-        "violation": {
-          "control_id": "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001",
-          "control_name": "Managed Policy Has Multiple Versions",
-          "severity": "medium",
-          "reasoning": [
-            {
-              "clause": "identity.kind = \"user\"",
-              "observation_key": "identity.kind",
-              "observed_value": "user"
-            },
-            {
-              "clause": "identity.policy.version_count be greater than 1 (observed: 3)",
-              "observation_key": "identity.policy.version_count",
-              "observed_value": 3
-            },
-            {
-              "clause": "identity.policy.version_count is set (observed: 3)",
-              "observation_key": "identity.policy.version_count",
-              "observed_value": 3
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "identity.kind",
-            "current_value": "user",
-            "required_value": "any value other than user",
-            "has_safe_default": false,
-            "description": "Change identity.kind away from user"
-          },
-          {
-            "path": "identity.policy.version_count",
-            "current_value": "3",
-            "required_value": "(see control definition)",
-            "has_safe_default": false,
-            "description": "Change identity.policy.version_count from 3"
-          },
-          {
-            "path": "identity.policy.version_count",
-            "current_value": "3",
-            "required_value": "absent",
-            "has_safe_default": false,
-            "description": "Remove identity.policy.version_count"
-          }
-        ],
-        "action": "Delete non-default policy versions after verifying the current default version is correct. Use aws iam delete-policy-version to remove dormant versions. Alternatively, enable an SCP that denies iam:SetDefaultPolicyVersion in workload accounts."
-      },
-      "alternatives": [
-        {
-          "tool": "prowler",
-          "check_id": "iam_policy_no_full_access_to_cloudwatch_logs",
-          "coverage": "partial",
-          "note": "No direct Prowler check for version accumulation; partial overlap with broad IAM policy checks."
-        }
+      "missing_safeguards": [
+        "CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001",
+        "CTL.IAM.POLICY.VERSIONS.001"
       ],
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "iam"
+      "compound_score": 50,
+      "severity": "critical",
+      "narrative": "IAM privilege escalation via policy version manipulation. A user has iam:CreatePolicyVersion or iam:SetDefaultPolicyVersion — enabling them to either create a new policy version with broader permissions or roll back to a previous version that already has them. This is a single-API-call escalation path documented in Rhino Security's CloudGoat (iam_privesc_by_rollback) and Bishop Fox's IAM Vulnerable. The escalation is latent: the principal has only the version-manipulation permission today, but one API call activates a broader version. Threshold of 1: either create or set-default alone is sufficient.\n Failing: CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001.",
+      "attack_stages": [
+        "privilege_escalation"
+      ]
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "iam_dormant_escalation",
+      "description": "Switchable policy versions with broader permissions AND a principal that can create or switch policy versions. The escalation precondition (permissive dormant versions) AND the escalation capability (CreatePolicyVersion with set-as-default) both exist.\n",
+      "controls_failing": [
+        "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001"
       ],
-      "delta": [
-        {
-          "property_label": "policy version count",
-          "property_path": "identity.policy.version_count",
-          "current_value": "3",
-          "fix_action": "reduce to 1 or below"
-        },
-        {
-          "property_label": "policy version count",
-          "property_path": "identity.policy.version_count",
-          "current_value": "3",
-          "fix_action": "remove this property from the configuration"
-        }
+      "missing_control": "CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:iam::111122223333:user/mallory"
+    },
+    {
+      "chain": "iam_dormant_escalation",
+      "description": "Switchable policy versions with broader permissions AND a principal that can create or switch policy versions. The escalation precondition (permissive dormant versions) AND the escalation capability (CreatePolicyVersion with set-as-default) both exist.\n",
+      "controls_failing": [
+        "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001"
       ],
-      "contributing_fact_ids": [
-        "c9983f77dd2b",
-        "b8ea4ffd96ff",
-        "3ddeef540f13",
-        "32c1edbc9ba2",
-        "bcc68d65d019",
-        "afd903f7837d"
-      ],
-      "deciding_layer": "identity_policy"
+      "missing_control": "CTL.IAM.POLICY.VERSIONS.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:iam::111122223333:user/mallory"
     }
   ],
   "issues": [
@@ -234,26 +91,8 @@
       "member_finding_ids": [
         "sha256:cf3903e9b863400e"
       ],
-      "consolidated_score": 51.369863013698634,
+      "consolidated_score": 77.05479452054796,
       "consolidated_blast_radius": 1
-    }
-  ],
-  "remediation_groups": [
-    {
-      "asset_id": "arn:aws:iam::111122223333:user/mallory",
-      "asset_type": "aws_iam_user",
-      "fix_plan": {
-        "id": "fix-0e6504c8cf7ba713",
-        "target": {
-          "asset_id": "arn:aws:iam::111122223333:user/mallory",
-          "asset_type": "aws_iam_user"
-        },
-        "action": "Delete non-default policy versions after verifying the current default version is correct. Use aws iam delete-policy-version to remove dormant versions. Alternatively, enable an SCP that denies iam:SetDefaultPolicyVersion in workload accounts."
-      },
-      "contributing_controls": [
-        "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001"
-      ],
-      "finding_count": 1
     }
   ],
   "top_exposures": [
@@ -261,13 +100,13 @@
       "finding_index": 0,
       "control_id": "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001",
       "asset_id": "arn:aws:iam::111122223333:user/mallory",
-      "exposure_score": 51.369863013698634,
+      "exposure_score": 77.05479452054796,
       "breakdown": {
         "base_score": 50,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },

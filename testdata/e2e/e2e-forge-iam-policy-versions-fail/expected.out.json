@@ -14,7 +14,7 @@
       },
       "overall": "dc3259b713e2014edaf6c96f10187ae11c6bfa69c8993a036ce2be5c4625a0b0"
     },
-    "policy_fingerprint": "aeb80203a6e559244271cb4a88ff0e95407e5bc834dbdde324a019c6c3f60758",
+    "policy_fingerprint": "5efc0206142fcb610062c7606e74d5297493afe10c0cc4b53bb3bed1332c104d",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -35,166 +35,48 @@
       "threshold_hours": 168
     }
   ],
-  "findings": [
+  "findings": [],
+  "chain_findings": [
     {
-      "finding_id": "sha256:890521bb47370803",
-      "control_id": "CTL.IAM.POLICY.VERSIONS.001",
-      "control_name": "Policy Has Non-Default Versions with Broader Permissions",
-      "control_description": "A customer-managed IAM policy has non-default versions containing broader permissions than the currently active default version. An attacker with iam:SetDefaultPolicyVersion can switch to a more permissive version without creating a new policy. The escalation path is pre-authored in the policy's version history — the attacker activates it with a single API call.\n",
+      "finding_id": "sha256:86ed3ff4d3e8e41e",
+      "chain": "iam_privesc_by_rollback",
       "asset_id": "arn:aws:iam::111122223333:user/mallory",
-      "asset_type": "aws_iam_user",
-      "asset_vendor": "aws",
-      "evidence": {
-        "first_unsafe_at": "2026-01-01T00:00:00Z",
-        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
-        "unsafe_duration_hours": 240,
-        "misconfigurations": [
-          {
-            "property": "identity.kind",
-            "actual_value": "user",
-            "operator": "eq",
-            "unsafe_value": "user"
-          },
-          {
-            "property": "identity.policy.has_broader_inactive_version",
-            "actual_value": true,
-            "operator": "eq",
-            "unsafe_value": true
-          }
-        ],
-        "root_causes": [
-          "general"
-        ],
-        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
-      },
-      "control_severity": "high",
-      "control_compliance": {
-        "nist_800_53_r5": "AC-6",
-        "pci_dss_v4.0": "7.2.1",
-        "soc2": "CC6.1"
-      },
-      "control_compliance_ccm_v4": [
-        "IAM-05"
+      "description": "IAM privilege escalation via policy version manipulation. A user has iam:CreatePolicyVersion or iam:SetDefaultPolicyVersion — enabling them to either create a new policy version with broader permissions or roll back to a previous version that already has them. This is a single-API-call escalation path documented in Rhino Security's CloudGoat (iam_privesc_by_rollback) and Bishop Fox's IAM Vulnerable. The escalation is latent: the principal has only the version-manipulation permission today, but one API call activates a broader version. Threshold of 1: either create or set-default alone is sufficient.\n",
+      "controls_failing": [
+        "CTL.IAM.POLICY.VERSIONS.001"
       ],
-      "posture_drift": {
-        "pattern": "persistent",
-        "exposure_window_count": 1
-      },
-      "remediation": {
-        "description": "IAM policy has dormant versions with broader permissions than the active default — switchable escalation path.",
-        "action": "Delete non-default policy versions that contain broader permissions than the current default. Use aws iam delete-policy-version to remove dormant escalation paths.",
-        "example": "{\n  \"identity\": {\n    \"kind\": \"user\",\n    \"policy\": {\n      \"has_broader_inactive_version\": false\n    }\n  }\n}\n"
-      },
-      "fix_plan": {
-        "id": "fix-0e6504c8cf7ba713",
-        "target": {
-          "asset_id": "arn:aws:iam::111122223333:user/mallory",
-          "asset_type": "aws_iam_user"
-        },
-        "action": "Delete non-default policy versions that contain broader permissions than the current default. Use aws iam delete-policy-version to remove dormant escalation paths."
-      },
-      "exploitability": "reachable",
-      "sla_deadline_hours": 336,
-      "sla_breached": false,
-      "sla_policy_source": "profile:default",
-      "exposure_score": 100,
-      "score_breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1.5,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0273972602739727,
-        "days_blind": 10
-      },
-      "reasoning_trace": [
-        {
-          "predicate_expr": "identity.kind eq \"user\"",
-          "observation_key": "identity.kind",
-          "operator": "eq",
-          "expected_value": "user",
-          "observed_value": "user"
-        },
-        {
-          "predicate_expr": "identity.policy.has_broader_inactive_version eq true",
-          "observation_key": "identity.policy.has_broader_inactive_version",
-          "operator": "eq",
-          "expected_value": true,
-          "observed_value": true
-        }
+      "missing_safeguards": [
+        "CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001",
+        "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001"
       ],
-      "remediation_context": {
-        "asset": {
-          "id": "arn:aws:iam::111122223333:user/mallory",
-          "type": "aws_iam_user",
-          "vendor": "aws",
-          "arn": "arn:aws:iam::111122223333:user/mallory"
-        },
-        "violation": {
-          "control_id": "CTL.IAM.POLICY.VERSIONS.001",
-          "control_name": "Policy Has Non-Default Versions with Broader Permissions",
-          "severity": "high",
-          "reasoning": [
-            {
-              "clause": "identity.kind = \"user\"",
-              "observation_key": "identity.kind",
-              "observed_value": "user"
-            },
-            {
-              "clause": "identity.policy.has_broader_inactive_version = true",
-              "observation_key": "identity.policy.has_broader_inactive_version",
-              "observed_value": true
-            }
-          ]
-        },
-        "changes": [
-          {
-            "path": "identity.kind",
-            "current_value": "user",
-            "required_value": "any value other than user",
-            "has_safe_default": false,
-            "description": "Change identity.kind away from user"
-          },
-          {
-            "path": "identity.policy.has_broader_inactive_version",
-            "current_value": "true",
-            "required_value": "false",
-            "has_safe_default": true,
-            "description": "Set identity.policy.has_broader_inactive_version to false"
-          }
-        ],
-        "action": "Delete non-default policy versions that contain broader permissions than the current default. Use aws iam delete-policy-version to remove dormant escalation paths."
-      },
-      "alternatives": [
-        {
-          "tool": "prowler",
-          "check_id": "iam_policy_no_full_access_to_cloudwatch_logs",
-          "coverage": "partial",
-          "note": "Prowler checks specific service scoping; this control checks condition-level enforcement patterns."
-        }
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "IAM privilege escalation via policy version manipulation. A user has iam:CreatePolicyVersion or iam:SetDefaultPolicyVersion — enabling them to either create a new policy version with broader permissions or roll back to a previous version that already has them. This is a single-API-call escalation path documented in Rhino Security's CloudGoat (iam_privesc_by_rollback) and Bishop Fox's IAM Vulnerable. The escalation is latent: the principal has only the version-manipulation permission today, but one API call activates a broader version. Threshold of 1: either create or set-default alone is sufficient.\n Failing: CTL.IAM.POLICY.VERSIONS.001.",
+      "attack_stages": [
+        "privilege_escalation"
+      ]
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "iam_dormant_escalation",
+      "description": "Switchable policy versions with broader permissions AND a principal that can create or switch policy versions. The escalation precondition (permissive dormant versions) AND the escalation capability (CreatePolicyVersion with set-as-default) both exist.\n",
+      "controls_failing": [
+        "CTL.IAM.POLICY.VERSIONS.001"
       ],
-      "classification": "state_assertion",
-      "scope_tags": [
-        "aws",
-        "iam"
+      "missing_control": "CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:iam::111122223333:user/mallory"
+    },
+    {
+      "chain": "iam_dormant_escalation",
+      "description": "Switchable policy versions with broader permissions AND a principal that can create or switch policy versions. The escalation precondition (permissive dormant versions) AND the escalation capability (CreatePolicyVersion with set-as-default) both exist.\n",
+      "controls_failing": [
+        "CTL.IAM.POLICY.VERSIONS.001"
       ],
-      "delta": [
-        {
-          "property_label": "policy has broader inactive version",
-          "property_path": "identity.policy.has_broader_inactive_version",
-          "current_value": "true",
-          "fix_action": "set to false (disable)"
-        }
-      ],
-      "contributing_fact_ids": [
-        "c9983f77dd2b",
-        "b8ea4ffd96ff",
-        "3ddeef540f13",
-        "32c1edbc9ba2",
-        "bcc68d65d019",
-        "82ed6c441933"
-      ],
-      "deciding_layer": "identity_policy"
+      "missing_control": "CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:iam::111122223333:user/mallory"
     }
   ],
   "issues": [
@@ -213,24 +95,6 @@
       "consolidated_blast_radius": 1.5
     }
   ],
-  "remediation_groups": [
-    {
-      "asset_id": "arn:aws:iam::111122223333:user/mallory",
-      "asset_type": "aws_iam_user",
-      "fix_plan": {
-        "id": "fix-0e6504c8cf7ba713",
-        "target": {
-          "asset_id": "arn:aws:iam::111122223333:user/mallory",
-          "asset_type": "aws_iam_user"
-        },
-        "action": "Delete non-default policy versions that contain broader permissions than the current default. Use aws iam delete-policy-version to remove dormant escalation paths."
-      },
-      "contributing_controls": [
-        "CTL.IAM.POLICY.VERSIONS.001"
-      ],
-      "finding_count": 1
-    }
-  ],
   "top_exposures": [
     {
       "finding_index": 0,
@@ -242,7 +106,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 1.5,
         "blind_multiplier": 1.0273972602739727,
         "days_blind": 10
       },

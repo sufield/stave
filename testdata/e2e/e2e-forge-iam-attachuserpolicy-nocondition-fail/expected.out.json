@@ -14,7 +14,7 @@
       },
       "overall": "1a725d67c3af88326967f123f12cc9fd8c315f3828104af759878654b794b1f6"
     },
-    "policy_fingerprint": "4df22308acc587550fb5a72f3fa5d9815a5aa2267b6a03385154f37f377a7338",
+    "policy_fingerprint": "19fb56d237fbd8b5e048a4c5d75e6ddd9b183e9e401a25281baffcf910cb3b7e",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -104,7 +104,18 @@
         },
         "action": "Add a `Condition` block with `ArnEquals` or `StringEquals` on `iam:PolicyARN` to restrict which managed policies can be attached. Example: `\"Condition\": {\"ArnEquals\": {\"iam:PolicyARN\": \"arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess\"}}`. If the principal should not attach policies at all, remove `iam:AttachUserPolicy` entirely."
       },
-      "exploitability": "reachable",
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "iam_unrestricted_user_policy_attachment",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001",
+          "controls_failing": [
+            "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.NOCONDITION.001"
+          ],
+          "description": "Unrestricted iam:AttachUserPolicy privilege escalation. A user has iam:AttachUserPolicy on self (ATTACHUSERPOLICY.001) AND the grant lacks an iam:PolicyARN condition (NOCONDITION.001). Together this means the principal can attach any of AWS's 1,000+ managed policies — including AdministratorAccess — to itself with a single API call. Unlike AddUserToGroup (which requires a pre-existing privileged group), AttachUserPolicy is self-sufficient: AWS managed policies are the escalation payload and they are always available. Threshold 2: both must fire to confirm the path is unrestricted. A condition-restricted AttachUserPolicy (partial case) fires only the capability control, not this chain.\n"
+        }
+      ],
       "sla_deadline_hours": 72,
       "sla_breached": true,
       "sla_overdue_hours": 168,
@@ -234,6 +245,18 @@
         "18974265c499"
       ],
       "deciding_layer": "identity_policy"
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "iam_unrestricted_user_policy_attachment",
+      "description": "Unrestricted iam:AttachUserPolicy privilege escalation. A user has iam:AttachUserPolicy on self (ATTACHUSERPOLICY.001) AND the grant lacks an iam:PolicyARN condition (NOCONDITION.001). Together this means the principal can attach any of AWS's 1,000+ managed policies — including AdministratorAccess — to itself with a single API call. Unlike AddUserToGroup (which requires a pre-existing privileged group), AttachUserPolicy is self-sufficient: AWS managed policies are the escalation payload and they are always available. Threshold 2: both must fire to confirm the path is unrestricted. A condition-restricted AttachUserPolicy (partial case) fires only the capability control, not this chain.\n",
+      "controls_failing": [
+        "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.NOCONDITION.001"
+      ],
+      "missing_control": "CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:iam::111122223333:user/mallory"
     }
   ],
   "issues": [

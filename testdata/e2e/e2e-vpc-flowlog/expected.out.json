@@ -14,7 +14,7 @@
       },
       "overall": "af6f2ec75f5c0f1b4444517d79878fffc4e3b227ae2f2961bc319199f726355c"
     },
-    "policy_fingerprint": "1a5af1cb2a97802fb3c815ccc857964f7c67582dd09c79b0e5397db5488436a5",
+    "policy_fingerprint": "f0d11715eb044301bedd9a874e75aa9aebbf4eb46cf11c6cda025ff77ab14279",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -97,7 +97,180 @@
         },
         "action": "Enable VPC flow logs to CloudWatch Logs or S3. Run: aws ec2 create-flow-logs --resource-type VPC --resource-ids vpc-xxx --traffic-type ALL --log-destination-type cloud-watch-logs"
       },
-      "exploitability": "reachable",
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "agent_sandbox_escape_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.AGENT.CHAIN.SENSITIVE.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n"
+        },
+        {
+          "chain_id": "agent_sandbox_escape_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n"
+        },
+        {
+          "chain_id": "bastion_bypass_unmonitored",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EC2.SG.SSH.INTERNAL.CIDR.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n"
+        },
+        {
+          "chain_id": "bastion_bypass_unmonitored",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SEGMENT.BASTION.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EXPOSURE.EXFIL.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "data_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.EXPOSURE.EXFIL.002",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CONFIG.ENABLED.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "elasticache_unauthenticated_unmonitored",
+          "chain_severity": "high",
+          "missing_control": "CTL.ELASTICACHE.AUTH.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Redis cache has no AUTH token AND the VPC has no flow logs. Without AUTH, any client with network access reads and writes cached data (sessions, credentials, application state). Without flow logs, there is no record of which hosts connected to the cache endpoint. The combination is an unauthenticated data store with zero network forensics — an attacker exfiltrates cached data and the breach leaves no evidence trail. Either control alone mitigates: AUTH blocks unauthorized access; flow logs record connection attempts for post-incident investigation.\n"
+        },
+        {
+          "chain_id": "enclave_lateral_to_egress",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EASTWEST.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n"
+        },
+        {
+          "chain_id": "enclave_lateral_to_egress",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n"
+        },
+        {
+          "chain_id": "vpc_dns_exfiltration",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.DNSFIREWALL.ENABLED.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
+        },
+        {
+          "chain_id": "vpc_dns_exfiltration",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
+        },
+        {
+          "chain_id": "vpc_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
+        },
+        {
+          "chain_id": "vpc_exfiltration_path",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
+        },
+        {
+          "chain_id": "vpc_no_inspection",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.NETWORK.FIREWALL.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
+        },
+        {
+          "chain_id": "vpc_no_inspection",
+          "chain_severity": "high",
+          "missing_control": "CTL.VPC.SG.EGRESS.001",
+          "controls_failing": [
+            "CTL.VPC.FLOWLOG.001"
+          ],
+          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
+        }
+      ],
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -189,6 +362,198 @@
         "7abc74e0b5d1",
         "70f526a6ebe6"
       ]
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "agent_sandbox_escape_path",
+      "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.IAM.AGENT.CHAIN.SENSITIVE.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "agent_sandbox_escape_path",
+      "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "bastion_bypass_unmonitored",
+      "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.EC2.SG.SSH.INTERNAL.CIDR.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "bastion_bypass_unmonitored",
+      "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SEGMENT.BASTION.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "data_exfiltration_path",
+      "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "data_exfiltration_path",
+      "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.EXPOSURE.EXFIL.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "data_exfiltration_path",
+      "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.EXPOSURE.EXFIL.002",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.CONFIG.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "detection_blindness",
+      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "elasticache_unauthenticated_unmonitored",
+      "description": "Redis cache has no AUTH token AND the VPC has no flow logs. Without AUTH, any client with network access reads and writes cached data (sessions, credentials, application state). Without flow logs, there is no record of which hosts connected to the cache endpoint. The combination is an unauthenticated data store with zero network forensics — an attacker exfiltrates cached data and the breach leaves no evidence trail. Either control alone mitigates: AUTH blocks unauthorized access; flow logs record connection attempts for post-incident investigation.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.ELASTICACHE.AUTH.001",
+      "severity": "high",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "enclave_lateral_to_egress",
+      "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EASTWEST.001",
+      "severity": "high",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "enclave_lateral_to_egress",
+      "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001",
+      "severity": "high",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "vpc_dns_exfiltration",
+      "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.DNSFIREWALL.ENABLED.001",
+      "severity": "high",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "vpc_dns_exfiltration",
+      "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+      "severity": "high",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "vpc_exfiltration_path",
+      "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "vpc_exfiltration_path",
+      "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
+      "severity": "critical",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "vpc_no_inspection",
+      "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.NETWORK.FIREWALL.001",
+      "severity": "high",
+      "scope_id": "vpc-test-001"
+    },
+    {
+      "chain": "vpc_no_inspection",
+      "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n",
+      "controls_failing": [
+        "CTL.VPC.FLOWLOG.001"
+      ],
+      "missing_control": "CTL.VPC.SG.EGRESS.001",
+      "severity": "high",
+      "scope_id": "vpc-test-001"
     }
   ],
   "issues": [

@@ -14,7 +14,7 @@
       },
       "overall": "bac65af6d2fea562488a7e1e3fb529b0d61bd2418c6e70303aa3e00866b3037b"
     },
-    "policy_fingerprint": "366c2fb4488e1b2c8016d4974f46ff8fed6b0b037f6fab2e52c54c55df7f15d8",
+    "policy_fingerprint": "43411659e55853710590d0b3a05f982d2b92c81395437deb4b16b787bfd637a0",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -98,7 +98,18 @@
         },
         "action": "Remove `iam:PutUserPolicy` from the principal. If the principal must manage inline policies for service accounts, scope the Resource field to specific user ARNs that do not include the principal itself. Deny at the organization boundary with an SCP."
       },
-      "exploitability": "reachable",
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "iam_putuserpolicy_self_escalation",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ESCALATE.PUTUSERPOLICY.001",
+          "controls_failing": [
+            "CTL.IAM.ESCALATE.PUTUSERPOLICY.NOCONDITION.001"
+          ],
+          "description": "PutUserPolicy self-escalation to arbitrary permissions. A user has iam:PutUserPolicy (NOCONDITION.001) AND the Resource covers the user's own ARN (PUTUSERPOLICY.001). Together this means the principal can write any inline policy document onto itself — including {\"Action\": \"*\", \"Resource\": \"*\"} — with a single API call. Unlike AttachUserPolicy (limited to existing managed policies) or AddUserToGroup (requires a pre-existing privileged group), PutUserPolicy lets the attacker author the payload directly. There is no IAM Condition key that restricts inline policy content, so the Resource restriction is the only defense. Threshold 2: both must fire to confirm the self-escalation path is open. A Resource-scoped PutUserPolicy (partial case — user can put policies on service accounts but not on self) fires only the capability control, not this chain.\n"
+        }
+      ],
       "sla_deadline_hours": 336,
       "sla_breached": false,
       "sla_policy_source": "profile:default",
@@ -208,6 +219,18 @@
         "9ec2ec6dc280"
       ],
       "deciding_layer": "identity_policy"
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "iam_putuserpolicy_self_escalation",
+      "description": "PutUserPolicy self-escalation to arbitrary permissions. A user has iam:PutUserPolicy (NOCONDITION.001) AND the Resource covers the user's own ARN (PUTUSERPOLICY.001). Together this means the principal can write any inline policy document onto itself — including {\"Action\": \"*\", \"Resource\": \"*\"} — with a single API call. Unlike AttachUserPolicy (limited to existing managed policies) or AddUserToGroup (requires a pre-existing privileged group), PutUserPolicy lets the attacker author the payload directly. There is no IAM Condition key that restricts inline policy content, so the Resource restriction is the only defense. Threshold 2: both must fire to confirm the self-escalation path is open. A Resource-scoped PutUserPolicy (partial case — user can put policies on service accounts but not on self) fires only the capability control, not this chain.\n",
+      "controls_failing": [
+        "CTL.IAM.ESCALATE.PUTUSERPOLICY.NOCONDITION.001"
+      ],
+      "missing_control": "CTL.IAM.ESCALATE.PUTUSERPOLICY.001",
+      "severity": "critical",
+      "scope_id": "arn:aws:iam::111122223333:user/mallory"
     }
   ],
   "issues": [
