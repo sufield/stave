@@ -4575,6 +4575,36 @@ IAM Identity Center should be administered from a delegated administrator accoun
 
 ---
 
+### CTL.IAM.SSO.ENCRYPT.CMK.001
+
+**IAM Identity Center Must Use a Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+IAM Identity Center instance is encrypted with an AWS-managed key instead of a customer-managed KMS key — the organization cannot control key rotation schedule, key policy, or key deletion. Identity Center stores workforce identity data including group memberships and permission set assignments that may be subject to compliance requirements mandating customer-controlled encryption.
+
+**Remediation:** Configure a customer-managed KMS key for the Identity Center instance. For multi-Region instances, use a multi-Region KMS key so the key replicates alongside the instance.
+
+---
+
+### CTL.IAM.SSO.ENCRYPT.MULTIREGIONKEY.001
+
+**Multi-Region Identity Center Must Use a Multi-Region KMS Key**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12; pci_dss_v4.0: 3.6.1; soc2: CC6.7;
+
+IAM Identity Center instance is configured for multi-Region replication but the encryption KMS key is single-region — the instance replicates to the secondary Region but decryption fails because the key does not exist there. Authentication in the failover Region fails silently. This is a ghost failover: multi-Region is configured but the encryption dependency prevents it from functioning.
+
+**Remediation:** Replace the single-region KMS key with a multi-Region KMS key. Create a multi-Region key with aws kms create-key --multi-region, then update the Identity Center instance to use the new key. The key must replicate to every Region the instance is replicated to.
+
+---
+
 ### CTL.IAM.SSO.IDENTITYSOURCE.GHOST.001
 
 **SSO Identity Source References Deleted External IdP**
@@ -4587,6 +4617,21 @@ IAM Identity Center should be administered from a delegated administrator accoun
 IAM Identity Center is configured with an external identity source (SAML IdP, OIDC provider, or Active Directory Connector) that no longer exists. SSO authentication depends on the external identity source to validate user credentials. When the referenced provider is deleted or disconnected, authentication fails — users cannot sign in to AWS accounts via SSO. The Identity Center console shows an identity source configured. An auditor checking "is SSO configured with an external IdP?" sees the configuration and marks it compliant. The IdP doesn't exist — SSO authentication is broken while appearing configured. Same ghost-reference archetype as CTL.VERIFIEDPERMISSIONS.IDENTITYSOURCE.GHOST.001 and CTL.EVENTBRIDGE.TARGET.GHOST.001.
 
 **Remediation:** Either reconnect the external identity source (recreate the SAML provider, OIDC configuration, or AD Connector) or reconfigure Identity Center to use a different identity source. Verify that SSO authentication succeeds after the fix by testing a sign-in flow end-to-end. Audit the gap window — users who could not authenticate during the outage may have used alternative access paths (IAM users, direct role assumption) that bypass SSO security controls.
+
+---
+
+### CTL.IAM.SSO.INSTANCE.SINGLEREGION.001
+
+**IAM Identity Center Must Not Be Single-Region**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** availability
+- **Compliance:** nist_800_53_r5: CP-7; soc2: A1.2;
+
+IAM Identity Center is configured as a single-Region instance — a disruption in the primary Region prevents all workforce authentication across the organization. Every AWS account accessible through Identity Center becomes unreachable until the primary Region recovers. Multi-Region instances replicate to a secondary Region for resilient authentication.
+
+**Remediation:** Enable multi-Region support for the IAM Identity Center instance. For new instances: select "Multi-Region instance" during setup. For existing instances: follow the Region replication guide to add a secondary Region. Standard KMS charges apply for the auto-created multi-Region key.
 
 ---
 

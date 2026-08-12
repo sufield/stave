@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.INSTANCE.SINGLEREGION.001
+name: IAM Identity Center Must Not Be Single-Region
+description: >
+  IAM Identity Center is configured as a single-Region instance —
+  a disruption in the primary Region prevents all workforce
+  authentication across the organization. Every AWS account
+  accessible through Identity Center becomes unreachable until
+  the primary Region recovers. Multi-Region instances replicate
+  to a secondary Region for resilient authentication.
+domain: availability
+severity: medium
+compliance:
+  nist_800_53_r5: CP-7
+  soc2: A1.2
+  ccm_v4:
+    - BCR-03
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - redundancy
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sso_instance]
+params:
+  attack_stage: impact
+observation_fields:
+  - identity.sso.instance_configuration_type
+remediation:
+  description: >
+    IAM Identity Center is a single-Region instance with no
+    failover — a regional disruption denies authentication to
+    every account in the organization.
+  action: >
+    Enable multi-Region support for the IAM Identity Center
+    instance. For new instances: select "Multi-Region instance"
+    during setup. For existing instances: follow the Region
+    replication guide to add a secondary Region. Standard KMS
+    charges apply for the auto-created multi-Region key.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_config",
+        "sso": {
+          "instance_configuration_type": "multi-region",
+          "replicated_regions": ["us-west-2"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_config
+    - field: properties.identity.sso.instance_configuration_type
+      op: eq
+      value: "single-region"
+tests:
+  - name: Single-region SSO instance fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-1234567890abcdef"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            instance_configuration_type: "single-region"
+  - name: Multi-region SSO instance passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-abcdef1234567890"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            instance_configuration_type: "multi-region"
+            replicated_regions: ["us-west-2"]

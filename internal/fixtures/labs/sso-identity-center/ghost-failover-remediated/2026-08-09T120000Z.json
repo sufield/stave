@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-09T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.sso-ghost-failover"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:sso:::instance/ssoins-bbbb222233334444",
+      "type": "aws_sso_instance",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "sso_config",
+          "sso": {
+            "instance_configuration_type": "multi-region",
+            "kms_key_arn": "arn:aws:kms:us-east-1:111122223333:key/mrk-abcd-5678-efgh",
+            "kms_key_customer_managed": true,
+            "kms_key_multi_region": true,
+            "replicated_regions": ["us-west-2"]
+          }
+        }
+      }
+    }
+  ]
+}

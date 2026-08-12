@@ -848,6 +848,60 @@ contracts:
     consumers:
       - CTL.ORG.IDENTITYCENTER.ENABLED.001
 
+  # ─── Identity Center Instance Configuration (Aug 2026) ────
+  #     Multi-region support, encryption, and key replication.
+
+  - field: identity.sso.instance_configuration_type
+    type: string
+    postcondition: >
+      Instance configuration type: "single-region", "multi-region",
+      or "custom". Single-region has no failover — a region
+      disruption prevents all workforce authentication across
+      the organization. Multi-region auto-replicates to a
+      secondary region.
+    consumers:
+      - CTL.SSO.INSTANCE.SINGLEREGION.001
+
+  - field: identity.sso.kms_key_arn
+    type: string
+    postcondition: >
+      ARN of the KMS key encrypting the SSO instance.
+      Source: sso-admin:DescribeInstance → IdentityStoreId
+      cross-referenced with kms:ListAliases for the Identity
+      Center service alias.
+    consumers:
+      - CTL.SSO.ENCRYPT.CMK.001
+      - CTL.SSO.ENCRYPT.MULTIREGIONKEY.001
+
+  - field: identity.sso.kms_key_customer_managed
+    type: boolean
+    postcondition: >
+      True if the encryption key is customer-managed, false if
+      AWS-managed. Derived: kms:DescribeKey on the key ARN,
+      KeyManager == "CUSTOMER" vs "AWS".
+    consumers:
+      - CTL.SSO.ENCRYPT.CMK.001
+
+  - field: identity.sso.kms_key_multi_region
+    type: boolean
+    postcondition: >
+      True if the KMS key is a multi-region key, false if
+      single-region. Derived: kms:DescribeKey on the key ARN,
+      MultiRegion field. A multi-region SSO instance with a
+      single-region key creates a ghost failover.
+    consumers:
+      - CTL.SSO.ENCRYPT.MULTIREGIONKEY.001
+
+  - field: identity.sso.replicated_regions
+    type: array[string]
+    postcondition: >
+      List of regions the SSO instance is replicated to. Empty
+      for single-region instances. Source:
+      sso-admin:ListInstances → InstanceMetadata or
+      sso-admin:DescribeInstance region list.
+    consumers:
+      - CTL.SSO.INSTANCE.SINGLEREGION.001
+
   - field: ou_depth
     type: integer
     postcondition: >

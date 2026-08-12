@@ -1,0 +1,116 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.SSO.ENCRYPT.MULTIREGIONKEY.001
+name: Multi-Region Identity Center Must Use a Multi-Region KMS Key
+description: >
+  IAM Identity Center instance is configured for multi-Region
+  replication but the encryption KMS key is single-region —
+  the instance replicates to the secondary Region but decryption
+  fails because the key does not exist there. Authentication in
+  the failover Region fails silently. This is a ghost failover:
+  multi-Region is configured but the encryption dependency
+  prevents it from functioning.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: SC-12
+  soc2: CC6.7
+  pci_dss_v4.0: 3.6.1
+  ccm_v4:
+    - CEK-04
+    - BCR-03
+scope_tags:
+  - aws
+  - iam
+archetype: ghost-reference
+taxonomy:
+  - compliance-mapping
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S08
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sso_instance]
+params:
+  attack_stage: impact
+observation_fields:
+  - identity.sso.instance_configuration_type
+  - identity.sso.kms_key_multi_region
+remediation:
+  description: >
+    Multi-Region Identity Center is using a single-region KMS key.
+    Failover Region cannot decrypt identity data — authentication
+    will fail silently in the secondary Region.
+  action: >
+    Replace the single-region KMS key with a multi-Region KMS key.
+    Create a multi-Region key with aws kms create-key --multi-region,
+    then update the Identity Center instance to use the new key.
+    The key must replicate to every Region the instance is
+    replicated to.
+  example: |
+    {
+      "identity": {
+        "kind": "sso_config",
+        "sso": {
+          "instance_configuration_type": "multi-region",
+          "kms_key_arn": "arn:aws:kms:us-east-1:111122223333:key/mrk-1234",
+          "kms_key_multi_region": true,
+          "kms_key_customer_managed": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: sso_config
+    - field: properties.identity.sso.instance_configuration_type
+      op: ne
+      value: "single-region"
+    - field: properties.identity.sso.kms_key_multi_region
+      op: eq
+      value: false
+tests:
+  - name: Multi-region SSO with single-region key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-1234567890abcdef"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            instance_configuration_type: "multi-region"
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/abcd-1234"
+            kms_key_multi_region: false
+            kms_key_customer_managed: true
+  - name: Multi-region SSO with multi-region key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-abcdef1234567890"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            instance_configuration_type: "multi-region"
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/mrk-5678"
+            kms_key_multi_region: true
+            kms_key_customer_managed: true
+  - name: Single-region SSO with single-region key does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sso:::instance/ssoins-ccccddddeeee1111"
+      asset_type: aws_sso_instance
+      vendor: aws
+      properties:
+        identity:
+          kind: sso_config
+          sso:
+            instance_configuration_type: "single-region"
+            kms_key_arn: "arn:aws:kms:us-east-1:111122223333:key/abcd-1234"
+            kms_key_multi_region: false
+            kms_key_customer_managed: true
