@@ -1,0 +1,107 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.PROXY.NOTLS.001
+name: Proxy-Mode Network Firewall Must Have TLS Inspection
+description: >
+  Network Firewall is deployed in proxy mode without TLS
+  inspection — HTTPS traffic passes through the firewall
+  encrypted. The firewall can enforce domain-based rules using
+  SNI but cannot inspect request content, headers, or payload.
+  L7 rules, IDS/IPS signatures, and managed threat rule groups
+  that inspect HTTP content are ineffective on encrypted traffic.
+  In proxy mode TLS inspection is essential because the firewall
+  is the only inspection point — unlike transparent mode where
+  route-table enforcement provides a fallback.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: SI-4
+  soc2: CC7.1
+  ccm_v4:
+    - CEK-10
+    - IVS-04
+scope_tags:
+  - aws
+  - networkfirewall
+taxonomy:
+  - encryption-in-transit
+  - network-perimeter
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_networkfirewall_firewall]
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.firewall.proxy_enabled
+  - network.firewall.tls_inspection_enabled
+remediation:
+  description: >
+    Proxy-mode Network Firewall does not have TLS inspection.
+    HTTPS traffic bypasses L7 content inspection.
+  action: >
+    Enable TLS inspection on the Network Firewall. Import your
+    enterprise CA certificate or create an AWS Private CA
+    subordinate. Configure the TLS inspection configuration on
+    the firewall policy.
+  example: |
+    {
+      "network": {
+        "kind": "network_firewall",
+        "firewall": {
+          "proxy_enabled": true,
+          "tls_inspection_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.proxy_enabled
+      op: eq
+      value: true
+    - field: properties.network.firewall.tls_inspection_enabled
+      op: eq
+      value: false
+tests:
+  - name: Proxy mode without TLS inspection fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:network-firewall:us-east-1:111122223333:firewall/proxy-fw"
+      asset_type: aws_networkfirewall_firewall
+      vendor: aws
+      properties:
+        network:
+          kind: network_firewall
+          firewall:
+            proxy_enabled: true
+            tls_inspection_enabled: false
+            policy_rule_count: 5
+  - name: Proxy mode with TLS inspection passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:network-firewall:us-east-1:111122223333:firewall/proxy-fw"
+      asset_type: aws_networkfirewall_firewall
+      vendor: aws
+      properties:
+        network:
+          kind: network_firewall
+          firewall:
+            proxy_enabled: true
+            tls_inspection_enabled: true
+            policy_rule_count: 5
+  - name: Transparent mode without TLS does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:network-firewall:us-east-1:111122223333:firewall/transparent-fw"
+      asset_type: aws_networkfirewall_firewall
+      vendor: aws
+      properties:
+        network:
+          kind: network_firewall
+          firewall:
+            proxy_enabled: false
+            tls_inspection_enabled: false
+            policy_rule_count: 5

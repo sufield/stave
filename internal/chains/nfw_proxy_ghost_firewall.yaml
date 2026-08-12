@@ -1,0 +1,20 @@
+id: nfw_proxy_ghost_firewall
+description: >
+  Network Firewall is deployed in proxy mode with no rules AND at
+  least one compute workload in the VPC does not configure proxy
+  env vars — the firewall exists but workload traffic bypasses it.
+  The ghost firewall pattern: protection is configured, traffic
+  does not traverse it, egress is unfiltered for non-proxied
+  workloads.
+controls:
+  - CTL.NETFIREWALL.PROXY.NORULES.001
+  - CTL.ECS.PROXY.BYPASS.001
+  - CTL.EKS.PROXY.BYPASS.001
+  - CTL.LAMBDA.PROXY.BYPASS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - data_exfiltration
+implicit_dependencies: []

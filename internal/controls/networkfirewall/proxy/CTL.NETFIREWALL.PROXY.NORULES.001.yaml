@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.NETFIREWALL.PROXY.NORULES.001
+name: Proxy-Mode Network Firewall Has No Rules
+description: >
+  Network Firewall is deployed in proxy mode with zero rules in
+  the policy — all traffic passes through unfiltered. The firewall
+  exists and the proxy is configured but provides no protection.
+  This is worse than no firewall because it creates the appearance
+  of security without the function. The ghost firewall pattern:
+  configured protection that does not function because the policy
+  is empty.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+compliance:
+  nist_800_53_r5: SC-7
+  soc2: CC6.6
+  ccm_v4:
+    - IVS-09
+    - IVS-12
+scope_tags:
+  - aws
+  - networkfirewall
+taxonomy:
+  - network-perimeter
+subtractive_category:
+  - S06
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_networkfirewall_firewall]
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - network.firewall.proxy_enabled
+  - network.firewall.policy_rule_count
+remediation:
+  description: >
+    Proxy-mode Network Firewall has zero rules. All traffic
+    passes through unfiltered despite the firewall existing.
+  action: >
+    Add stateful rules to the Network Firewall policy. At
+    minimum add the AWS managed rule groups: domain blocklist,
+    threat signatures, and active threat defense. Then add
+    custom domain allowlist rules for specific egress
+    requirements.
+  example: |
+    {
+      "network": {
+        "kind": "network_firewall",
+        "firewall": {
+          "proxy_enabled": true,
+          "policy_rule_count": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_firewall
+    - field: properties.network.firewall.proxy_enabled
+      op: eq
+      value: true
+    - field: properties.network.firewall.policy_rule_count
+      op: eq
+      value: 0
+tests:
+  - name: Proxy mode with zero rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:network-firewall:us-east-1:111122223333:firewall/proxy-fw"
+      asset_type: aws_networkfirewall_firewall
+      vendor: aws
+      properties:
+        network:
+          kind: network_firewall
+          firewall:
+            proxy_enabled: true
+            policy_rule_count: 0
+  - name: Proxy mode with rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:network-firewall:us-east-1:111122223333:firewall/proxy-fw"
+      asset_type: aws_networkfirewall_firewall
+      vendor: aws
+      properties:
+        network:
+          kind: network_firewall
+          firewall:
+            proxy_enabled: true
+            policy_rule_count: 12
+  - name: Transparent mode with zero rules does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:network-firewall:us-east-1:111122223333:firewall/transparent-fw"
+      asset_type: aws_networkfirewall_firewall
+      vendor: aws
+      properties:
+        network:
+          kind: network_firewall
+          firewall:
+            proxy_enabled: false
+            policy_rule_count: 0

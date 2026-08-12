@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3421
-**Pack hash:** `95b5157edd2fd93b6a435ed63e0bad4a007cfe2c31f75e9d2ef381d25368062b`
+**Total controls:** 3428
+**Pack hash:** `97cbd16dd687d710a92d6196de5de6e01f242d4238b2bdeeb3869acb924d6134`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 370 |
-| high | 1466 |
+| critical | 371 |
+| high | 1470 |
 | info | 19 |
 | low | 270 |
-| medium | 1296 |
+| medium | 1298 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,12 +29,12 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 161 |
 | encryption | 125 |
-| exposure | 1496 |
-| governance | 683 |
+| exposure | 1498 |
+| governance | 685 |
 | hygiene | 21 |
 | identity | 673 |
 | lifecycle | 32 |
-| network | 55 |
+| network | 58 |
 | resilience | 49 |
 | secrets | 4 |
 | storage | 8 |
@@ -45,7 +45,7 @@ GitHub. Pick a service below.
 |---------|----------|
 | [ACCESSANALYZER](reference/accessanalyzer.md) | 1 |
 | [ACCOUNT](reference/account.md) | 4 |
-| [ACM](reference/acm.md) | 9 |
+| [ACM](reference/acm.md) | 11 |
 | [ACMPCA](reference/acmpca.md) | 4 |
 | [AD](reference/ad.md) | 40 |
 | [AMPLIFY](reference/amplify.md) | 2 |
@@ -89,9 +89,9 @@ GitHub. Pick a service below.
 | [EBS](reference/ebs.md) | 3 |
 | [EC2](reference/ec2.md) | 114 |
 | [ECR](reference/ecr.md) | 10 |
-| [ECS](reference/ecs.md) | 59 |
+| [ECS](reference/ecs.md) | 60 |
 | [EFS](reference/efs.md) | 15 |
-| [EKS](reference/eks.md) | 118 |
+| [EKS](reference/eks.md) | 119 |
 | [ELASTICACHE](reference/elasticache.md) | 15 |
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 9 |
@@ -119,7 +119,7 @@ GitHub. Pick a service below.
 | [KINESIS](reference/kinesis.md) | 6 |
 | [KMS](reference/kms.md) | 47 |
 | [LAKEFORMATION](reference/lakeformation.md) | 3 |
-| [LAMBDA](reference/lambda.md) | 92 |
+| [LAMBDA](reference/lambda.md) | 93 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 11 |
 | [M365](reference/m365.md) | 73 |
@@ -132,7 +132,7 @@ GitHub. Pick a service below.
 | [MSK](reference/msk.md) | 14 |
 | [MWAA](reference/mwaa.md) | 4 |
 | [NEPTUNE](reference/neptune.md) | 21 |
-| [NETFIREWALL](reference/netfirewall.md) | 13 |
+| [NETFIREWALL](reference/netfirewall.md) | 15 |
 | [NLB](reference/nlb.md) | 2 |
 | [OPENSEARCH](reference/opensearch.md) | 133 |
 | [ORG](reference/org.md) | 65 |

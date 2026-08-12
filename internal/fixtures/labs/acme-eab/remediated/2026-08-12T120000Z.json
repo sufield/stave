@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-12T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.acme-eab"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:acm:us-east-1:111122223333:acme-endpoint/secure-eab",
+      "type": "aws_acm_acme_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "acm_acme_endpoint",
+          "acme_endpoint": {
+            "status": "ACTIVE",
+            "eab_has_expiration": true,
+            "eab_mackey_in_secrets_manager": true
+          }
+        }
+      }
+    }
+  ]
+}

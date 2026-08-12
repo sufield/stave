@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.PROXY.BYPASS.001
+name: EKS Cluster Must Configure Proxy When VPC Uses Proxy-Mode Firewall
+description: >
+  EKS pods do not have HTTP_PROXY/HTTPS_PROXY configured — when
+  the VPC uses Network Firewall in proxy mode, pod egress traffic
+  bypasses the firewall. For EKS, proxy configuration should be
+  enforced via admission controller, init container, or node-level
+  environment variable injection — not per-pod configuration which
+  is error-prone and impossible to audit at scale.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: SC-7
+  soc2: CC6.6
+  ccm_v4:
+    - IVS-09
+scope_tags:
+  - aws
+  - eks
+  - networkfirewall
+taxonomy:
+  - network-perimeter
+  - network-isolation
+subtractive_category:
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_eks_cluster]
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - k8s.cluster.nfw_proxy_enabled
+  - k8s.cluster.proxy_env_configured
+remediation:
+  description: >
+    EKS pods do not configure proxy variables. Egress traffic
+    bypasses the proxy-mode Network Firewall.
+  action: >
+    Configure proxy environment variables at the node level or
+    use a mutating admission webhook to inject HTTP_PROXY and
+    HTTPS_PROXY into all pod specs automatically.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "nfw_proxy_enabled": true,
+          "proxy_env_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.nfw_proxy_enabled
+      op: eq
+      value: true
+    - field: properties.k8s.cluster.proxy_env_configured
+      op: eq
+      value: false
+tests:
+  - name: EKS cluster without proxy in proxy VPC fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            nfw_proxy_enabled: true
+            proxy_env_configured: false
+  - name: EKS cluster with proxy configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            nfw_proxy_enabled: true
+            proxy_env_configured: true
+  - name: EKS cluster in transparent-mode VPC passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            nfw_proxy_enabled: false
+            proxy_env_configured: false

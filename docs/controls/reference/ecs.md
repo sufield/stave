@@ -458,6 +458,21 @@ ECS container definitions must not enable privileged mode. A privileged containe
 
 ---
 
+### CTL.ECS.PROXY.BYPASS.001
+
+**ECS Task Must Configure Proxy When VPC Uses Proxy-Mode Firewall**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+ECS task definition does not set HTTP_PROXY/HTTPS_PROXY environment variables — when the VPC uses Network Firewall in proxy mode (no-source-preservation), this task's egress traffic bypasses the firewall entirely. Unlike transparent firewall mode where route tables force all traffic through the firewall, proxy mode requires each workload to opt in. A task without proxy configuration has unfiltered internet access through the NAT Gateway.
+
+**Remediation:** Add HTTP_PROXY and HTTPS_PROXY environment variables to the ECS task definition pointing to the Network Firewall proxy endpoint FQDN. Also set NO_PROXY for internal VPC endpoints and the metadata service.
+
+---
+
 ### CTL.ECS.ROOT.001
 
 **ECS Containers Must Not Run as Root User**

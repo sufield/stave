@@ -1,0 +1,26 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-12T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.nfw-proxy"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:network-firewall:us-east-1:111122223333:firewall/proxy-fw",
+      "type": "aws_networkfirewall_firewall",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "proxy_enabled": true,
+            "tls_inspection_enabled": false,
+            "policy_rule_count": 8,
+            "has_managed_rule_groups": true
+          }
+        }
+      }
+    }
+  ]
+}

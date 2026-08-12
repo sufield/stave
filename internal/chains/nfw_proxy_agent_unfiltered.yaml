@@ -1,0 +1,17 @@
+id: nfw_proxy_agent_unfiltered
+description: >
+  AI agent workload does not configure proxy variables AND the
+  VPC's only egress filtering is proxy-mode Network Firewall —
+  the agent has unfiltered internet access. The agent can reach
+  any endpoint without inspection while holding broad permissions
+  to production resources.
+controls:
+  - CTL.ECS.PROXY.BYPASS.001
+  - CTL.BEDROCK.AGENTCORE.OVERPERM.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - data_exfiltration
+implicit_dependencies: []

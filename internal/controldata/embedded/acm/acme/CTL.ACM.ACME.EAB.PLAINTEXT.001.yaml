@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.ACM.ACME.EAB.PLAINTEXT.001
+name: ACME EAB MacKey Must Be Stored in Secrets Manager
+description: >
+  ACME EAB MacKey is not stored in Secrets Manager — the
+  credential may be hardcoded in client configuration, CI/CD
+  variables, or Kubernetes secrets without rotation or access
+  logging. The MacKey is a bearer credential that grants
+  certificate issuance capability for every domain on the
+  endpoint. AWS recommends storing the MacKey in Secrets Manager
+  for rotation, access logging, and least-privilege access
+  control.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: IA-5
+  soc2: CC6.1
+  ccm_v4:
+    - IAM-10
+scope_tags:
+  - aws
+  - acm
+taxonomy:
+  - credential-lifecycle
+  - key-management
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_acm_acme_endpoint]
+params:
+  attack_stage: credential_access
+observation_fields:
+  - governance.acme_endpoint.eab_mackey_in_secrets_manager
+remediation:
+  description: >
+    ACME EAB MacKey is not stored in Secrets Manager. The
+    credential may be hardcoded without rotation or access
+    logging.
+  action: >
+    Store the EAB MacKey in AWS Secrets Manager. Configure
+    automatic rotation and restrict access via IAM policy to
+    only the ACME client principals that need it. Update
+    client configuration to retrieve the MacKey from Secrets
+    Manager at runtime.
+  example: |
+    {
+      "governance": {
+        "kind": "acm_acme_endpoint",
+        "acme_endpoint": {
+          "eab_mackey_in_secrets_manager": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: acm_acme_endpoint
+    - field: properties.governance.acme_endpoint.eab_mackey_in_secrets_manager
+      op: eq
+      value: false
+tests:
+  - name: MacKey not in Secrets Manager fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/plaintext-key"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            eab_mackey_in_secrets_manager: false
+  - name: MacKey in Secrets Manager passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/managed-key"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            eab_mackey_in_secrets_manager: true

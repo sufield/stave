@@ -1543,6 +1543,21 @@ EKS Pod Identity association binds an IAM role to a specific Kubernetes ServiceA
 
 ---
 
+### CTL.EKS.PROXY.BYPASS.001
+
+**EKS Cluster Must Configure Proxy When VPC Uses Proxy-Mode Firewall**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+EKS pods do not have HTTP_PROXY/HTTPS_PROXY configured — when the VPC uses Network Firewall in proxy mode, pod egress traffic bypasses the firewall. For EKS, proxy configuration should be enforced via admission controller, init container, or node-level environment variable injection — not per-pod configuration which is error-prone and impossible to audit at scale.
+
+**Remediation:** Configure proxy environment variables at the node level or use a mutating admission webhook to inject HTTP_PROXY and HTTPS_PROXY into all pod specs automatically.
+
+---
+
 ### CTL.EKS.PSA.AUDITONLY.001
 
 **EKS Namespace Has PSA In Audit-Only Mode On Production Workload**

@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.ACM.ACME.EAB.NOEXPIRY.001
+name: ACME EAB Credential Must Have Expiration
+description: >
+  ACME External Account Binding credential has no expiration — a
+  stolen EAB KeyId/MacKey provides indefinite certificate issuance
+  capability for every pre-approved domain on the endpoint. EAB
+  credentials are bearer tokens: anyone with the MacKey can issue
+  certificates. Without an expiration, a compromised credential
+  works forever. Same principle as IAM access key rotation —
+  credentials must have a lifetime.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: IA-5
+  soc2: CC6.1
+  ccm_v4:
+    - IAM-10
+scope_tags:
+  - aws
+  - acm
+taxonomy:
+  - credential-lifecycle
+  - key-management
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_acm_acme_endpoint]
+params:
+  attack_stage: credential_access
+observation_fields:
+  - governance.acme_endpoint.eab_has_expiration
+remediation:
+  description: >
+    ACME EAB credential has no expiration. A compromised MacKey
+    provides indefinite certificate issuance capability.
+  action: >
+    Set an expiration on the EAB credential. Rotate EAB
+    credentials on a schedule aligned with your certificate
+    lifecycle (e.g., 90 days). Store the MacKey in Secrets
+    Manager with automatic rotation.
+  example: |
+    {
+      "governance": {
+        "kind": "acm_acme_endpoint",
+        "acme_endpoint": {
+          "eab_has_expiration": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: acm_acme_endpoint
+    - field: properties.governance.acme_endpoint.eab_has_expiration
+      op: eq
+      value: false
+tests:
+  - name: EAB without expiration fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/no-expiry"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            eab_has_expiration: false
+  - name: EAB with expiration passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:acme-endpoint/with-expiry"
+      asset_type: aws_acm_acme_endpoint
+      vendor: aws
+      properties:
+        governance:
+          kind: acm_acme_endpoint
+          acme_endpoint:
+            status: ACTIVE
+            eab_has_expiration: true

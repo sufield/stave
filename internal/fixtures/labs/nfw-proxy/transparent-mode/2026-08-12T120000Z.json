@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-12T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.nfw-proxy"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:network-firewall:us-east-1:111122223333:firewall/transparent-fw",
+      "type": "aws_networkfirewall_firewall",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "proxy_enabled": false,
+            "tls_inspection_enabled": false,
+            "policy_rule_count": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ecs:us-east-1:111122223333:task-definition/api-service:5",
+      "type": "aws_ecs_task_definition",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "ecs_task_definition",
+          "network": {
+            "nfw_proxy_enabled": false,
+            "proxy_env_configured": false
+          }
+        }
+      }
+    }
+  ]
+}

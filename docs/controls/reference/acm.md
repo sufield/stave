@@ -5,6 +5,36 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.ACM.ACME.EAB.NOEXPIRY.001
+
+**ACME EAB Credential Must Have Expiration**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+ACME External Account Binding credential has no expiration — a stolen EAB KeyId/MacKey provides indefinite certificate issuance capability for every pre-approved domain on the endpoint. EAB credentials are bearer tokens: anyone with the MacKey can issue certificates. Without an expiration, a compromised credential works forever. Same principle as IAM access key rotation — credentials must have a lifetime.
+
+**Remediation:** Set an expiration on the EAB credential. Rotate EAB credentials on a schedule aligned with your certificate lifecycle (e.g., 90 days). Store the MacKey in Secrets Manager with automatic rotation.
+
+---
+
+### CTL.ACM.ACME.EAB.PLAINTEXT.001
+
+**ACME EAB MacKey Must Be Stored in Secrets Manager**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: IA-5; soc2: CC6.1;
+
+ACME EAB MacKey is not stored in Secrets Manager — the credential may be hardcoded in client configuration, CI/CD variables, or Kubernetes secrets without rotation or access logging. The MacKey is a bearer credential that grants certificate issuance capability for every domain on the endpoint. AWS recommends storing the MacKey in Secrets Manager for rotation, access logging, and least-privilege access control.
+
+**Remediation:** Store the EAB MacKey in AWS Secrets Manager. Configure automatic rotation and restrict access via IAM policy to only the ACME client principals that need it. Update client configuration to retrieve the MacKey from Secrets Manager at runtime.
+
+---
+
 ### CTL.ACM.ACME.SCOPE.WILDCARD.001
 
 **ACM ACME Endpoint Domain Scope Must Not Use Wildcards**

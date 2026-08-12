@@ -1113,6 +1113,21 @@ Lambda resource-based policies granting lambda:InvokeFunction to all principals 
 
 ---
 
+### CTL.LAMBDA.PROXY.BYPASS.001
+
+**Lambda Must Configure Proxy When VPC Uses Proxy-Mode Firewall**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Lambda function in a VPC with Network Firewall proxy mode does not set HTTP_PROXY/HTTPS_PROXY — function egress traffic bypasses the firewall. The function has unfiltered internet access through the NAT Gateway while the firewall sits idle.
+
+**Remediation:** Add HTTP_PROXY and HTTPS_PROXY to Lambda function environment variables pointing to the Network Firewall proxy FQDN.
+
+---
+
 ### CTL.LAMBDA.ROLE.LEASTPRIV.001
 
 **Lambda Execution Role Must Follow Least Privilege**

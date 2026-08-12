@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.PROXY.BYPASS.001
+name: ECS Task Must Configure Proxy When VPC Uses Proxy-Mode Firewall
+description: >
+  ECS task definition does not set HTTP_PROXY/HTTPS_PROXY
+  environment variables — when the VPC uses Network Firewall
+  in proxy mode (no-source-preservation), this task's egress
+  traffic bypasses the firewall entirely. Unlike transparent
+  firewall mode where route tables force all traffic through
+  the firewall, proxy mode requires each workload to opt in.
+  A task without proxy configuration has unfiltered internet
+  access through the NAT Gateway.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: SC-7
+  soc2: CC6.6
+  ccm_v4:
+    - IVS-09
+scope_tags:
+  - aws
+  - ecs
+  - networkfirewall
+taxonomy:
+  - network-perimeter
+  - network-isolation
+subtractive_category:
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_ecs_task_definition]
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - container.network.nfw_proxy_enabled
+  - container.network.proxy_env_configured
+remediation:
+  description: >
+    ECS task does not configure proxy variables. Egress traffic
+    bypasses the proxy-mode Network Firewall.
+  action: >
+    Add HTTP_PROXY and HTTPS_PROXY environment variables to the
+    ECS task definition pointing to the Network Firewall proxy
+    endpoint FQDN. Also set NO_PROXY for internal VPC endpoints
+    and the metadata service.
+  example: |
+    {
+      "container": {
+        "kind": "ecs_task_definition",
+        "network": {
+          "nfw_proxy_enabled": true,
+          "proxy_env_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: ecs_task_definition
+    - field: properties.container.network.nfw_proxy_enabled
+      op: eq
+      value: true
+    - field: properties.container.network.proxy_env_configured
+      op: eq
+      value: false
+tests:
+  - name: ECS task without proxy in proxy VPC fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/api-service:3"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: ecs_task_definition
+          network:
+            nfw_proxy_enabled: true
+            proxy_env_configured: false
+  - name: ECS task with proxy configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/api-service:4"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: ecs_task_definition
+          network:
+            nfw_proxy_enabled: true
+            proxy_env_configured: true
+  - name: ECS task in transparent-mode VPC passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:task-definition/api-service:5"
+      asset_type: aws_ecs_task_definition
+      vendor: aws
+      properties:
+        container:
+          kind: ecs_task_definition
+          network:
+            nfw_proxy_enabled: false
+            proxy_env_configured: false

@@ -1034,6 +1034,130 @@ contracts:
     consumers:
       - CTL.WAF.KEV.NORULES.001
 
+  # ─── ACM ACME EAB Credential (Aug 2026) ─────────────────
+
+  - field: governance.acme_endpoint.eab_has_expiration
+    type: boolean
+    postcondition: >
+      Whether the ACME EAB credential has an expiration set.
+      Derived from the endpoint configuration — false when
+      no expiration is configured on the KeyId/MacKey pair.
+    consumers:
+      - CTL.ACM.ACME.EAB.NOEXPIRY.001
+
+  - field: governance.acme_endpoint.eab_mackey_in_secrets_manager
+    type: boolean
+    postcondition: >
+      Whether the ACME EAB MacKey is stored in AWS Secrets
+      Manager rather than hardcoded in client configuration.
+      Derived by checking if the MacKey ARN references a
+      Secrets Manager secret.
+    consumers:
+      - CTL.ACM.ACME.EAB.PLAINTEXT.001
+
+  # ─── Network Firewall Proxy Mode (Aug 2026) ─────────────
+
+  - field: network.firewall.deployment_mode
+    type: string
+    postcondition: >
+      Network Firewall deployment mode — "source-preservation"
+      (transparent, route-table forced) or "no-source-preservation"
+      (proxy mode, workload opt-in via HTTP_PROXY).
+    consumers:
+      - CTL.NETFIREWALL.PROXY.NOTLS.001
+      - CTL.NETFIREWALL.PROXY.NORULES.001
+
+  - field: network.firewall.proxy_enabled
+    type: boolean
+    postcondition: >
+      Whether the Network Firewall is deployed in proxy mode
+      (no-source-preservation with listeners). When true,
+      workloads must set HTTP_PROXY/HTTPS_PROXY to route
+      traffic through the firewall.
+    consumers:
+      - CTL.NETFIREWALL.PROXY.NOTLS.001
+      - CTL.NETFIREWALL.PROXY.NORULES.001
+      - CTL.ECS.PROXY.BYPASS.001
+      - CTL.EKS.PROXY.BYPASS.001
+      - CTL.LAMBDA.PROXY.BYPASS.001
+
+  - field: network.firewall.nat_gateway_attached
+    type: boolean
+    postcondition: >
+      Whether a NAT Gateway is attached to the
+      no-source-preservation firewall — required for proxy mode.
+    consumers: []
+
+  - field: network.firewall.policy_rule_count
+    type: integer
+    postcondition: >
+      Number of rules in the firewall policy — zero rules
+      means traffic passes through unfiltered.
+    consumers:
+      - CTL.NETFIREWALL.PROXY.NORULES.001
+
+  - field: network.firewall.has_managed_rule_groups
+    type: boolean
+    postcondition: >
+      Whether AWS managed rule groups (threat signatures,
+      domain blocklists, active threat defense) are attached
+      to the firewall policy.
+    consumers: []
+
+  - field: container.network.nfw_proxy_enabled
+    type: boolean
+    postcondition: >
+      Whether the VPC hosting this ECS task has a
+      proxy-mode Network Firewall. Derived by collector
+      from VPC firewall configuration.
+    consumers:
+      - CTL.ECS.PROXY.BYPASS.001
+
+  - field: container.network.proxy_env_configured
+    type: boolean
+    postcondition: >
+      Whether the ECS task definition sets HTTP_PROXY and
+      HTTPS_PROXY environment variables pointing to the
+      Network Firewall proxy endpoint.
+    consumers:
+      - CTL.ECS.PROXY.BYPASS.001
+
+  - field: k8s.cluster.nfw_proxy_enabled
+    type: boolean
+    postcondition: >
+      Whether the VPC hosting this EKS cluster has a
+      proxy-mode Network Firewall. Derived by collector
+      from VPC firewall configuration.
+    consumers:
+      - CTL.EKS.PROXY.BYPASS.001
+
+  - field: k8s.cluster.proxy_env_configured
+    type: boolean
+    postcondition: >
+      Whether EKS pod specs have HTTP_PROXY/HTTPS_PROXY
+      configured (via admission webhook, node env, or
+      init container).
+    consumers:
+      - CTL.EKS.PROXY.BYPASS.001
+
+  - field: compute.network.nfw_proxy_enabled
+    type: boolean
+    postcondition: >
+      Whether the VPC hosting this Lambda function has a
+      proxy-mode Network Firewall. Derived by collector
+      from VPC firewall configuration.
+    consumers:
+      - CTL.LAMBDA.PROXY.BYPASS.001
+
+  - field: compute.network.proxy_env_configured
+    type: boolean
+    postcondition: >
+      Whether Lambda function environment variables include
+      HTTP_PROXY/HTTPS_PROXY pointing to the Network
+      Firewall proxy endpoint.
+    consumers:
+      - CTL.LAMBDA.PROXY.BYPASS.001
+
   - field: ou_depth
     type: integer
     postcondition: >

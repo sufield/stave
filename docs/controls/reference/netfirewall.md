@@ -125,6 +125,36 @@ Network Firewall policies must have at least one stateful or stateless rule grou
 
 ---
 
+### CTL.NETFIREWALL.PROXY.NORULES.001
+
+**Proxy-Mode Network Firewall Has No Rules**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
+
+Network Firewall is deployed in proxy mode with zero rules in the policy — all traffic passes through unfiltered. The firewall exists and the proxy is configured but provides no protection. This is worse than no firewall because it creates the appearance of security without the function. The ghost firewall pattern: configured protection that does not function because the policy is empty.
+
+**Remediation:** Add stateful rules to the Network Firewall policy. At minimum add the AWS managed rule groups: domain blocklist, threat signatures, and active threat defense. Then add custom domain allowlist rules for specific egress requirements.
+
+---
+
+### CTL.NETFIREWALL.PROXY.NOTLS.001
+
+**Proxy-Mode Network Firewall Must Have TLS Inspection**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-4; soc2: CC7.1;
+
+Network Firewall is deployed in proxy mode without TLS inspection — HTTPS traffic passes through the firewall encrypted. The firewall can enforce domain-based rules using SNI but cannot inspect request content, headers, or payload. L7 rules, IDS/IPS signatures, and managed threat rule groups that inspect HTTP content are ineffective on encrypted traffic. In proxy mode TLS inspection is essential because the firewall is the only inspection point — unlike transparent mode where route-table enforcement provides a fallback.
+
+**Remediation:** Enable TLS inspection on the Network Firewall. Import your enterprise CA certificate or create an AWS Private CA subordinate. Configure the TLS inspection configuration on the firewall policy.
+
+---
+
 ### CTL.NETFIREWALL.ROUTING.001
 
 **Network Firewall Not in Traffic Path**

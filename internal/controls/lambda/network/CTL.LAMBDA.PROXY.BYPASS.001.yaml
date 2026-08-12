@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.PROXY.BYPASS.001
+name: Lambda Must Configure Proxy When VPC Uses Proxy-Mode Firewall
+description: >
+  Lambda function in a VPC with Network Firewall proxy mode does
+  not set HTTP_PROXY/HTTPS_PROXY — function egress traffic
+  bypasses the firewall. The function has unfiltered internet
+  access through the NAT Gateway while the firewall sits idle.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: SC-7
+  soc2: CC6.6
+  ccm_v4:
+    - IVS-09
+scope_tags:
+  - aws
+  - lambda
+  - networkfirewall
+taxonomy:
+  - network-perimeter
+  - network-isolation
+subtractive_category:
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_lambda_function]
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - compute.network.nfw_proxy_enabled
+  - compute.network.proxy_env_configured
+remediation:
+  description: >
+    Lambda function does not configure proxy variables. Egress
+    traffic bypasses the proxy-mode Network Firewall.
+  action: >
+    Add HTTP_PROXY and HTTPS_PROXY to Lambda function environment
+    variables pointing to the Network Firewall proxy FQDN.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "network": {
+          "nfw_proxy_enabled": true,
+          "proxy_env_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.network.nfw_proxy_enabled
+      op: eq
+      value: true
+    - field: properties.compute.network.proxy_env_configured
+      op: eq
+      value: false
+tests:
+  - name: Lambda without proxy in proxy VPC fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:api-handler"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          network:
+            nfw_proxy_enabled: true
+            proxy_env_configured: false
+  - name: Lambda with proxy configured passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:api-handler"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          network:
+            nfw_proxy_enabled: true
+            proxy_env_configured: true
+  - name: Lambda in transparent-mode VPC passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-east-1:111122223333:function:api-handler"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          network:
+            nfw_proxy_enabled: false
+            proxy_env_configured: false
