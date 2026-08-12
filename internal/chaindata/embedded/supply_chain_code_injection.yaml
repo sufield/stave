@@ -1,0 +1,17 @@
+id: supply_chain_code_injection
+description: >
+  CodeCommit repositories have no approval rules on protected branches
+  and deployment artifact signing is not enforced. Malicious code can
+  enter through the repository and deploy without integrity checks at
+  either the source or artifact layer.
+controls:
+  - CTL.CODECOMMIT.APPROVAL.001
+  - CTL.LAMBDA.CODESIGN.ENFORCE.001
+  - CTL.ECR.SIGNING.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

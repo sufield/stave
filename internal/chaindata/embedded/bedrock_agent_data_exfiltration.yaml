@@ -1,0 +1,28 @@
+id: bedrock_agent_data_exfiltration
+description: >
+  Bedrock agent execution role grants broad lambda:InvokeFunction
+  on Resource: *, the agent's tool list references a Lambda that
+  no longer exists (ghost reference), and the agent role has
+  overbroad S3 write. An attacker who gains prompt control can
+  invoke arbitrary Lambdas (including ones replaced by an
+  adversary via the ghost ARN), and the agent role can write
+  exfiltrated data to S3 buckets outside the intended tenant
+  boundary. All three conditions must stack: broad Lambda reach
+  provides the mechanism, the ghost reference provides the
+  exploitation vector, and overbroad S3 provides the
+  exfiltration destination. Drop any one and the chain breaks.
+controls:
+  - CTL.BEDROCK.AGENT.OVERPERM.LAMBDA.001
+  - CTL.BEDROCK.AGENT.GHOST.LAMBDA.001
+  - CTL.BEDROCK.AGENT.OVERPERM.S3.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - automation_hijack
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

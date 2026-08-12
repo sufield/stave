@@ -1,0 +1,16 @@
+id: azure_app_exposure
+description: >
+  App Service without authentication plus either unrestricted network
+  access or no logging. Unauthenticated application accessible from
+  any IP, potentially with no audit trail.
+controls:
+  - CTL.AZURE.APP.AUTH.001
+  - CTL.AZURE.APP.NETWORK.001
+  - CTL.AZURE.APP.LOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

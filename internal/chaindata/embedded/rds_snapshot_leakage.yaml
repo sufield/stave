@@ -1,0 +1,23 @@
+id: rds_snapshot_leakage
+description: >
+  Any of: snapshot shared with named accounts unencrypted,
+  production snapshot shared with a non-production account, or
+  snapshot publicly accessible (uses existing
+  CTL.RDS.SNAPSHOT.PUBLIC.001). Each member independently
+  exposes production database content outside its intended
+  boundary — to a named third-party account in plaintext, to
+  a less-secured non-production account, or to the entire
+  AWS principal pool. Threshold of 1 makes this a fast-firing
+  chain: any single sharing failure is the architectural
+  signal that the snapshot data boundary has been crossed.
+controls:
+  - CTL.RDS.SNAPSHOT.UNENCRYPTED.SHARED.001
+  - CTL.RDS.SNAPSHOT.CROSSENV.001
+  - CTL.RDS.SNAPSHOT.PUBLIC.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - network_access_rds
+postconditions:
+  - rds_data_access
+implicit_dependencies: []

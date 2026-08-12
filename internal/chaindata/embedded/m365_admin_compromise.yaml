@@ -1,0 +1,15 @@
+id: m365_admin_compromise
+description: >
+  Admin MFA not enabled or not phishing-resistant, plus admin
+  accounts synced from on-prem. Multiple admin identity weaknesses.
+controls:
+  - CTL.M365.ENTRA.ADMIN.MFA.001
+  - CTL.M365.ENTRA.ADMIN.PHISHING.001
+  - CTL.M365.ENTRA.ADMIN.CLOUDONLY.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

@@ -1,0 +1,17 @@
+id: unmonitored_region_evasion
+description: >
+  No region restriction SCP exists and monitoring controls are not
+  deployed in all regions. An attacker can operate in unmonitored
+  regions with no detection. The defense evasion path requires no
+  exploitation — only knowledge of which regions are unmonitored.
+controls:
+  - CTL.ORG.REGION.SCP.001
+  - CTL.GUARDDUTY.ENABLED.001
+  - CTL.CONFIG.ENABLED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

@@ -1,0 +1,27 @@
+id: vpc_peering_exposure
+description: >
+  VPC peering terminates in an account outside the organization AND the
+  peering route table targets the full peer VPC CIDR. External-account
+  connectivity is combined with overly broad routing — the untrusted
+  peer has network access to every subnet in the local VPC. Maximum
+  exposure via untrusted peering.
+controls:
+  - CTL.VPC.PEERING.CROSSACCOUNT.001
+  - CTL.VPC.PEERING.ROUTES.001
+escalation_threshold: 2
+compound_severity: critical
+# Member predicates require mutually exclusive `kind` values
+# (peering_connection vs route_table). Without scope_field, the
+# chain engine groups findings by asset.ID and the two findings
+# can never co-occur on a single asset. The peering connection ID
+# is the logical resource both findings describe — group by it.
+scope_field: properties.network.peering.id
+preconditions:
+  - network_access_vpc
+postconditions:
+  - network_access_ec2
+implicit_dependencies:
+  - source: observation.network_topology
+    fallback: fail_closed
+    diagnostic: >-
+      Network topology resolution not available. Routing-dependent controls cannot verify reachability between segments.

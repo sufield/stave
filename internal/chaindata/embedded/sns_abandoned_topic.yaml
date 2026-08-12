@@ -1,0 +1,22 @@
+id: sns_abandoned_topic
+description: >
+  Dormant topic plus either orphan alarm reference or no
+  subscribers. Multiple lifecycle indicators: the topic is
+  unused AND either its purpose (alarm notification) no
+  longer exists or it has no delivery targets. Abandoned
+  notification infrastructure that retains policy and
+  configuration without serving any function. Threshold of 2
+  fires when dormancy combines with another lifecycle
+  failure, distinguishing abandoned topics from temporarily
+  idle but still-purposed ones.
+controls:
+  - CTL.SNS.LIFECYCLE.DORMANT.001
+  - CTL.SNS.LIFECYCLE.ORPHAN.ALARM.001
+  - CTL.SNS.LIFECYCLE.NOSUBSCRIBERS.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

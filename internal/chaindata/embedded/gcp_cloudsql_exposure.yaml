@@ -1,0 +1,16 @@
+id: gcp_cloudsql_exposure
+description: >
+  Public Cloud SQL instance plus either no SSL or incomplete logging.
+  Database accessible from the internet with either plaintext
+  connections or incomplete forensics.
+controls:
+  - CTL.GCP.CLOUDSQL.PUBLIC.001
+  - CTL.GCP.CLOUDSQL.SSL.001
+  - CTL.GCP.CLOUDSQL.PG.LOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

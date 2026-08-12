@@ -1,0 +1,32 @@
+id: ec2_to_rds_lateral
+description: >
+  EC2 instance shares a VPC with an RDS instance that
+  accepts broad security-group ingress — a compromised
+  instance can reach the database without additional
+  credential theft or network pivoting. The first leg
+  detects that the EC2 instance's security group permits
+  unrestricted egress (CTL.VPC.SG.EGRESS.001) — the
+  instance can initiate connections to any destination in
+  the VPC, including the database subnet. The second leg
+  detects that the RDS instance's security group accepts
+  broad ingress on the database port
+  (CTL.RDS.SG.BROAD.001) — including from the EC2
+  instance subnet. Together: instance compromise yields
+  database access without restriction. This upgrades the
+  generic abandoned_instance_pivot_path and
+  open_sg_lateral_movement_path chains to a pair-specific
+  EC2→RDS lateral path. Removing either leg breaks the
+  chain: restrict EC2 egress to required destinations only,
+  OR scope the RDS security group to specific application
+  security groups rather than broad CIDRs.
+controls:
+  - CTL.VPC.SG.EGRESS.001
+  - CTL.RDS.SG.BROAD.001
+scope_field: properties.network.vpc_id
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_access
+implicit_dependencies: []

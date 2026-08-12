@@ -1,0 +1,22 @@
+id: eks_workload_blind
+description: >
+  EKS cluster has multiple workload-level monitoring
+  gaps: CrashLoopBackOff, OOMKilled, or PodEvicted
+  count alarms missing. The cluster's workload health
+  signals are unwired; pod-level failures degrade
+  service silently. Combined, these mean memory
+  pressure, application bugs, and capacity issues
+  all surface only via consumer-side impact.
+  Threshold of 2 fires when at least two
+  workload-monitoring gaps coexist.
+controls:
+  - CTL.EKS.ALARM.CRASHLOOP.001
+  - CTL.EKS.ALARM.OOMKILLED.001
+  - CTL.EKS.ALARM.PODEVICTED.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

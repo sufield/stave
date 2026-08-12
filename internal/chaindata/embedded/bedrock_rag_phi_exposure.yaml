@@ -1,0 +1,24 @@
+id: bedrock_rag_phi_exposure
+description: >
+  Bedrock knowledge base indexes an S3 bucket AND that bucket
+  carries the data-classification=phi marker. RAG retrieval
+  through the agent connected to this knowledge base returns
+  PHI to whoever queries the agent. Same compound shape as
+  cognito_unauth_phi_s3 but on the AI-data axis: each side is
+  a fact-recording marker (KB indexes bucket X; bucket X is
+  PHI), neither a violation alone — the dangerous combination
+  is the join on a shared bucket ARN. The Bedrock side stamps
+  target_bucket_arn on the knowledge base; the S3 side's scope
+  is its own ARN (asset.ID), which the resolver returns when
+  the property path is absent on the storage asset.
+controls:
+  - CTL.BEDROCK.KB.MARKER.INDEXES.001
+  - CTL.S3.MARKER.PHI.001
+escalation_threshold: 2
+compound_severity: critical
+scope_field: properties.ai.knowledge_base.target_bucket_arn
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access
+implicit_dependencies: []

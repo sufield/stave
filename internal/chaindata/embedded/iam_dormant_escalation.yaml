@@ -1,0 +1,17 @@
+id: iam_dormant_escalation
+description: >
+  Switchable policy versions with broader permissions AND a principal
+  that can create or switch policy versions. The escalation
+  precondition (permissive dormant versions) AND the escalation
+  capability (CreatePolicyVersion with set-as-default) both exist.
+controls:
+  - CTL.IAM.POLICY.VERSIONS.001
+  - CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001
+  - CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

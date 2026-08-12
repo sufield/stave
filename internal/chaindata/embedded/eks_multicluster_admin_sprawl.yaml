@@ -1,0 +1,22 @@
+id: eks_multicluster_admin_sprawl
+description: >
+  EKS multi-cluster operations sprawl: hub Argo CD
+  has cluster-admin on every spoke, and Velero
+  backup target lacks per-cluster scope so backups
+  are restorable across cluster boundaries.
+  Combined: a single hub-side compromise yields
+  cluster-admin to N spokes plus access to N
+  spokes' backed-up Secrets / state. Per-cluster
+  isolation defeated at both the operational and
+  backup layers. Threshold of 2 fires when both
+  defects coexist.
+controls:
+  - CTL.EKS.ARGOCD.SPOKE.ADMIN.001
+  - CTL.EKS.VELERO.RESTORE.SCOPE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

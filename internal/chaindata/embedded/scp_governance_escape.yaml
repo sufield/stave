@@ -1,0 +1,18 @@
+id: scp_governance_escape
+description: >
+  Account can leave the organization AND either CloudTrail or
+  GuardDuty is unprotected by SCP. The attacker can either escape
+  all organizational governance via LeaveOrganization or disable
+  monitoring within the account. Both paths lead to ungoverned
+  operation where attacker actions go undetected.
+controls:
+  - CTL.IAM.SCP.LEAVEORG.001
+  - CTL.IAM.SCP.CLOUDTRAIL.001
+  - CTL.IAM.SCP.GUARDDUTY.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - scp_governance_configured
+postconditions:
+  - ungoverned_operation
+implicit_dependencies: []

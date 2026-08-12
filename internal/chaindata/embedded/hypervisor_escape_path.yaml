@@ -1,0 +1,18 @@
+id: hypervisor_escape_path
+description: >
+  ESXi host with SSH enabled and lockdown mode disabled combined
+  with unencrypted VMs. An attacker who reaches the management
+  network can SSH to the hypervisor, access VM memory and disk
+  directly, and exfiltrate unencrypted VM data without triggering
+  guest-level detection.
+controls:
+  - CTL.VSPHERE.ESX.SSH.001
+  - CTL.VSPHERE.ESX.LOCKDOWN.001
+  - CTL.VSPHERE.VM.ENCRYPT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

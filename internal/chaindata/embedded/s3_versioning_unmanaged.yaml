@@ -1,0 +1,21 @@
+id: s3_versioning_unmanaged
+description: >
+  S3 bucket has versioning enabled but neither version lifecycle
+  management nor object lock — the worst of both worlds. Versioning
+  without NoncurrentVersionExpiration means unbounded version
+  accumulation (storage cost grows without ceiling). Versioning
+  without Object Lock means any identity with s3:DeleteObjectVersion
+  can permanently delete all versions (versioning provides no
+  protection against a deliberate attacker). Together: the bucket
+  pays the cost of versioning but gets neither the cost control of
+  lifecycle management nor the deletion protection of object lock.
+controls:
+  - CTL.S3.VERSIONING.NOEXPIRY.001
+  - CTL.S3.LOCK.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_access
+postconditions:
+  - data_destruction
+implicit_dependencies: []

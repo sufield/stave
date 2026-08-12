@@ -1,0 +1,27 @@
+id: shadow_ec2_lateral_movement
+description: >
+  Shadow EC2 lateral-movement pivot — a dormant EC2 instance
+  retains an overprivileged instance profile AND bridges two
+  security zones. The instance has been stopped past its
+  decommission threshold (STOPPED.AGED), its IAM instance
+  profile carries permissions beyond what its workload required
+  (PROFILE.OVERBROAD), and its ENIs span environments that should
+  be segmented (NETWORK.DUALHOMED). Three structural defects
+  co-occur on the same instance — the cheapest path into
+  production runs through a forgotten test instance no one is
+  monitoring. An attacker who starts the instance, or who reaches
+  its profile through any other path, inherits broad IAM
+  permissions plus a network position that crosses environment
+  boundaries. Threshold 3 of 3 — all three axes must fire on the
+  same EC2 instance asset.
+controls:
+  - CTL.EC2.INSTANCE.STOPPED.AGED.001
+  - CTL.EC2.PROFILE.OVERBROAD.001
+  - CTL.EC2.NETWORK.DUALHOMED.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - vpc_instance_compromise
+implicit_dependencies: []

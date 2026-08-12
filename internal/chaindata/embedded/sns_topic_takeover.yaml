@@ -1,0 +1,24 @@
+id: sns_topic_takeover
+description: >
+  Broad DeleteTopic plus either broad SetTopicAttributes or
+  policy sprawl. The topic can be deleted or reconfigured by
+  non-admin principals AND either the topic policy is self-
+  modifiable or the policy is unauditable (too many
+  statements). Multiple topic-governance failures compound:
+  the operator cannot review the access surface, the policy
+  can be rewritten by non-admins, and the topic can be
+  destroyed in a single API call (which then ghosts every
+  CloudWatch alarm referencing it). Threshold of 2 fires
+  when DeleteTopic permission coexists with at least one
+  other governance failure.
+controls:
+  - CTL.SNS.POLICY.DELETETOPIC.BROAD.001
+  - CTL.SNS.POLICY.SETTOPICATTRS.BROAD.001
+  - CTL.SNS.POLICY.SPRAWL.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - resource_policy_escalation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

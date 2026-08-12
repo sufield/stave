@@ -1,0 +1,23 @@
+id: s3_backup_durability_failure
+description: >
+  S3 bucket with replication has a durability-defeating composition:
+  the replication destination policy is overprivileged (the source
+  account can delete backup objects or modify the destination policy)
+  AND the destination KMS key does not restrict ScheduleKeyDeletion.
+  Either failure individually degrades backup integrity; together they
+  describe a backup architecture where a compromised source account
+  can destroy both the backup objects and render encrypted backups
+  permanently undecryptable. This is the ransomware completion path
+  identified by Piper (2021): attacker gains source access, destroys
+  source data, then uses the overprivileged replication trust to
+  destroy or encrypt-lock the backup copy.
+controls:
+  - CTL.S3.REPLICATION.DEST.OVERPRIVILEGED.001
+  - CTL.S3.REPLICATION.DEST.KMS.DELETION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - data_access
+postconditions:
+  - data_destruction
+implicit_dependencies: []

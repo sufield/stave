@@ -1,0 +1,25 @@
+id: sagemaker_training_role_overprivileged
+description: >
+  SageMaker training job has broad S3 access on its execution
+  role, unrestricted iam:PassRole, and no network isolation.
+  The training container ingests untrusted code (model
+  frameworks, custom scripts, possibly attacker-staged input
+  data) and runs it with broad data + privilege-escalation
+  reach to anywhere in the account. Even without a
+  compromised dependency, the configuration treats the
+  training job as a developer machine inside the production
+  blast radius. Threshold of 2 because broad data reach +
+  PassRole is enough on its own; broad data reach + no
+  isolation is enough on its own; the third leg sharpens
+  the compound when present.
+controls:
+  - CTL.SAGEMAKER.TRAINING.OVERPERM.S3.001
+  - CTL.SAGEMAKER.TRAINING.OVERPERM.PASSROLE.001
+  - CTL.SAGEMAKER.TRAINING.ISOLATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - container_code_execution
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

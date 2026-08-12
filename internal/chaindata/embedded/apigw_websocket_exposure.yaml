@@ -1,0 +1,30 @@
+id: apigw_websocket_exposure
+description: >
+  WebSocket API has multiple posture failures at once.
+  $connect is unauthenticated (CTL.APIGATEWAY.AUTH.WEBSOCKET.001)
+  — anyone can open a connection. Combined with either an
+  unvalidated $default route
+  (CTL.APIGATEWAY.WEBSOCKET.DEFAULT.UNVALIDATED.001) — every
+  message reaches the backend regardless of shape — or absent
+  connection/message throttling
+  (CTL.APIGATEWAY.WEBSOCKET.THROTTLE.001) — a single client can
+  flood connections or messages without backpressure. Threshold
+  of 2 reflects that one weakness alone is a known design choice
+  (a deliberately public WebSocket API can be intentionally
+  unauthenticated; an API that validates inside Lambda may
+  legitimately leave $default unvalidated at the gateway), but
+  two together describe a WebSocket API that is open AND
+  unprotected — anyone can connect, send anything, and flood
+  the API at will. The chain surfaces "this WebSocket API has
+  no boundaries" as a single posture finding.
+controls:
+  - CTL.APIGATEWAY.AUTH.WEBSOCKET.001
+  - CTL.APIGATEWAY.WEBSOCKET.DEFAULT.UNVALIDATED.001
+  - CTL.APIGATEWAY.WEBSOCKET.THROTTLE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access
+implicit_dependencies: []

@@ -29,6 +29,7 @@ import (
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/app/fieldcov"
 	"github.com/sufield/stave/internal/app/reachability"
+	"github.com/sufield/stave/internal/chaindata"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/capabilities"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -461,16 +462,27 @@ func resolveControls(dir string) ([]policy.ControlDefinition, appcontracts.Contr
 	return controls, nil, nil
 }
 
-// loadChainDefs reads chain definitions from dir. Empty dir or
-// missing dir returns nil with no error — chain detection silently
-// disables when no chains are configured.
+// loadChainDefs reads chain definitions from dir. When the dir does
+// not exist on the filesystem, falls back to the embedded chain
+// catalog so the built-in chains are always available.
 func loadChainDefs(dir string) ([]policy.ChainDefinition, error) {
 	if dir == "" {
-		return nil, nil
+		return loadEmbeddedChains()
 	}
 	chains, err := ctlyaml.LoadChains(dir, capabilities.Builtin())
 	if err != nil {
 		return nil, fmt.Errorf("load chains: %w", err)
+	}
+	if chains == nil {
+		return loadEmbeddedChains()
+	}
+	return chains, nil
+}
+
+func loadEmbeddedChains() ([]policy.ChainDefinition, error) {
+	chains, err := ctlyaml.LoadChainsFS(chaindata.FS, "embedded", capabilities.Builtin())
+	if err != nil {
+		return nil, fmt.Errorf("load embedded chains: %w", err)
 	}
 	return chains, nil
 }

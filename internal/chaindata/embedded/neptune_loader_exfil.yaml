@@ -1,0 +1,21 @@
+id: neptune_loader_exfil
+description: >
+  Neptune's S3 loader role grants overly broad bucket access (a
+  wildcard resource or a bucket outside the data-source
+  allow-list), and the cluster's audit log parameter is off so
+  every loader invocation it records produces no log line. Any
+  graph-query principal can issue `loader` against an arbitrary
+  bucket and the producer side has no engine-level evidence the
+  load happened. The two controls together turn graph-query
+  execute into invisible cross-bucket data movement; either alone
+  is degraded but observable.
+controls:
+  - CTL.NEPTUNE.LOADER.ROLE.WILDCARD.001
+  - CTL.NEPTUNE.LOADER.ROLE.CROSSBUCKET.001
+  - CTL.NEPTUNE.AUDIT.PARAM.OFF.001
+escalation_threshold: 2
+compound_severity: high
+postconditions:
+  - s3_data_access
+  - invisible_data_exfiltration
+implicit_dependencies: []

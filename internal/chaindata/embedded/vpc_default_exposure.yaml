@@ -1,0 +1,20 @@
+id: vpc_default_exposure
+description: >
+  Workloads exist in the default VPC AND either subnets auto-assign
+  public IPs or the default security group is attached to resources.
+  Resources deployed in the default VPC inherit demo-grade defaults —
+  public subnets, `MapPublicIpOnLaunch`, permissive default SG — and
+  become internet-facing without explicit decisions. The chain fires
+  when the "resources in default VPC" condition is joined by another
+  failing default that compounds the exposure.
+controls:
+  - CTL.VPC.DEFAULT.RESOURCES.001
+  - CTL.VPC.SUBNET.AUTOPUBLIC.001
+  - CTL.VPC.SG.DEFAULT.INUSE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

@@ -1,0 +1,24 @@
+id: cloudwatch_false_monitoring
+description: >
+  False-protection alarm conditions: actions disabled
+  on the alarm, the alarm stuck in INSUFFICIENT_DATA
+  for an extended window, or a security alarm that
+  treats missing data as not-breaching. Each of these
+  presents as a healthy, configured alarm in the
+  console — name set, threshold set, actions listed —
+  while delivering zero detection coverage. The OK
+  state is a lie: actions never fire, no metric data
+  arrives, or the alarm cooperates with the data
+  source going silent. Threshold of 1 because any one
+  of these in isolation is already false protection.
+controls:
+  - CTL.CLOUDWATCH.ALARM.DISABLED.001
+  - CTL.CLOUDWATCH.ALARM.INSUFFICIENTDATA.001
+  - CTL.CLOUDWATCH.ALARM.MISSINGDATA.NOTBREACHING.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

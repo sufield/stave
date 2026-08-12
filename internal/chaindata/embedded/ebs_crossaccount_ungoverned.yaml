@@ -1,0 +1,24 @@
+id: ebs_crossaccount_ungoverned
+description: >
+  Cross-account snapshot governance is broken
+  in multiple dimensions: KMS sharing mismatch
+  (snapshot share without matching key share),
+  no organizational SCP preventing public
+  exposure, and excessive recipient lists.
+  Two or more together describe a cross-account
+  posture where access is either unusable (KMS
+  blocks it), unprotected at the org level, or
+  too broadly granted. Threshold of 2 because
+  any single failure is a gap; the compound is
+  a systemic governance failure.
+controls:
+  - CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.NOENCRYPT.001
+  - CTL.EC2.EBS.CROSSACCOUNT.NOSCPRESTRICTION.001
+  - CTL.EC2.EBS.CROSSACCOUNT.SNAPSHOT.BLASTRADIUS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access
+implicit_dependencies: []

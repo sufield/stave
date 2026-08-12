@@ -1,0 +1,25 @@
+id: lambda_public_ddos
+description: >
+  No concurrency limit on a publicly invocable function plus
+  either Function URL without auth or API Gateway without
+  auth. The function is publicly invocable AND has no
+  concurrency cap — an attacker can flood the public
+  endpoint with thousands of concurrent requests and
+  exhaust the account-wide concurrency limit, throttling
+  every other function in the account. Threshold of 2
+  reflects that the public-exposure surface plus the
+  unbounded concurrency cap together create the DDoS path;
+  either alone is mitigatable (public function with limits
+  caps blast radius; private unlimited function is
+  attacker-unreachable).
+controls:
+  - CTL.LAMBDA.CONFIG.CONCURRENCY.NOLIMIT.001
+  - CTL.LAMBDA.URL.AUTH.001
+  - CTL.LAMBDA.TRIGGER.APIGATEWAY.NOAUTH.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

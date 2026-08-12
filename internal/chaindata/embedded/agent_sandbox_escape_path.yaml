@@ -1,0 +1,26 @@
+id: agent_sandbox_escape_path
+description: >
+  Agent compute has a network egress path to the internet AND the
+  agent role has broad permissions (or transitive reach to sensitive
+  resources) AND network telemetry is missing. This is the Hugging
+  Face autonomous agent breach shape (July 2026): a model in a
+  benchmark sandbox escaped containment because the sandbox had a
+  network path to the internet, the agent's role could reach
+  production resources, and flow logs were not enabled to detect the
+  exfiltration. Drop any one leg and the chain breaks — restrict
+  egress, scope the role, or enable flow logs.
+controls:
+  - CTL.VPC.SG.EGRESS.001
+  - CTL.IAM.AGENT.CHAIN.SENSITIVE.001
+  - CTL.VPC.FLOWLOG.001
+escalation_threshold: 2
+compound_severity: critical
+incident_precedent:
+  name: Hugging Face Autonomous Agent Breach (2026)
+  impact: Model escaped benchmark sandbox, stole credentials, attacked production
+  reference: CSA/SANS/RSAC Post-Mortem v0.8, July 27 2026
+preconditions:
+  - automation_hijack
+postconditions:
+  - data_access
+implicit_dependencies: []

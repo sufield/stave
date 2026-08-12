@@ -1,0 +1,42 @@
+id: iam_putrolepolicy_assumerole_escalation
+description: >
+  Cross-service privilege escalation via iam:PutRolePolicy +
+  sts:AssumeRole. A principal has unrestricted iam:PutRolePolicy
+  (PUTROLEPOLICY.001 + NOCONDITION.001) AND can assume a role
+  whose trust policy admits the principal (ASSUMEROLE.001). Together
+  this creates a two-stage escalation: the principal writes an
+  arbitrary inline policy (including `"Action": "*"` on
+  `"Resource": "*"`) onto the assumable role, then assumes it,
+  gaining admin-equivalent permissions across service boundaries.
+  Structurally more dangerous than the AttachRolePolicy chain
+  because PutRolePolicy has no `iam:PolicyARN` condition key —
+  the attacker authors the payload rather than selecting from
+  existing managed policies. Single-resource scanners miss this
+  compound path: an IAM scanner sees PutRolePolicy, an S3 scanner
+  sees a bucket accessible to SupportRole — neither connects the
+  two. Threshold 3: all three controls must fire on the same
+  principal to confirm the two-stage escalation path is open.
+  PutRolePolicy without AssumeRole trust means the principal can
+  arm but not fire the role (dangerous but not self-escalation).
+  AssumeRole trust without PutRolePolicy means the principal uses
+  the role's existing permissions only (not an escalation).
+controls:
+  - CTL.IAM.ESCALATE.PUTROLEPOLICY.001
+  - CTL.IAM.ESCALATE.PUTROLEPOLICY.NOCONDITION.001
+  - CTL.IAM.ESCALATE.ASSUMEROLE.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - iam_credential_theft
+  - data_exfiltration
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.
+incident_precedent:
+  name: Rhino Security Labs IAM Privilege Escalation (2024)
+  impact: Attackers with PutRolePolicy wrote admin inline policies onto assumable roles and accessed data at scale
+  reference: Rhino Security Labs IAM Privilege Escalation (PutRolePolicy + AssumeRole); Bishop Fox IAM Vulnerable privesc12-PutRolePolicy

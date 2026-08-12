@@ -1,0 +1,23 @@
+id: eks_auth_governance_decay
+description: >
+  EKS cluster has multiple authentication governance defects:
+  aws-auth maps non-break-glass roles to system:masters,
+  Access Entries grant cluster-admin policy to non-break-glass
+  principals, and the cluster runs both aws-auth AND Access
+  Entries simultaneously. The combination indicates the
+  cluster's authentication surface is ungoverned —
+  cluster-admin grants accumulate across two source-of-truth
+  systems, neither audit alone is complete, and there's no
+  break-glass discipline. Threshold of 2 fires when at least
+  two governance defects coexist.
+controls:
+  - CTL.EKS.AWSAUTH.MASTERS.BROAD.001
+  - CTL.EKS.ACCESSENTRY.CLUSTERADMIN.BROAD.001
+  - CTL.EKS.AUTH.MIXED.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

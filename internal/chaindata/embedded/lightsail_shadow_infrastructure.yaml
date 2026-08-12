@@ -1,0 +1,27 @@
+id: lightsail_shadow_infrastructure
+description: >
+  Lightsail is active in the account AND the organization lacks
+  preventive/detective controls: no SCP denying lightsail:*, no
+  CloudTrail coverage of Lightsail events, and IAM principals can
+  create shadow credentials. The compound represents total shadow
+  infrastructure exposure — resources exist outside normal governance,
+  cannot be prevented from growing, cannot be detected when used, and
+  can mint persistent credentials invisible to the IAM lifecycle.
+  Any two of the five controls firing together is already a
+  significant gap; three or more is the full shadow-infrastructure
+  crisis.
+controls:
+  - CTL.LIGHTSAIL.SERVICE.ACTIVE.001
+  - CTL.LIGHTSAIL.ACCESS.KEY.001
+  - CTL.ORG.SCP.LIGHTSAIL.DENY.001
+  - CTL.CLOUDTRAIL.LIGHTSAIL.BLIND.001
+  - CTL.IAM.LIGHTSAIL.CREDENTIAL.CREATE.001
+scope: global
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - shadow_infrastructure
+postconditions:
+  - credential_access
+  - data_exfiltration
+implicit_dependencies: []

@@ -1,0 +1,30 @@
+id: ecs_container_invisible
+description: >
+  Container is both unobservable and unmonitored. Either no log
+  driver is configured (CTL.ECS.LOG.001) — stdout and stderr
+  are discarded — or the awslogs log group is a ghost reference
+  (CTL.ECS.TASKDEF.LOG.GHOST.001) — driver is set, group is
+  named, group does not exist, logs are dropped silently.
+  Combined with no health check (CTL.ECS.TASKDEF.HEALTHCHECK.MISSING.001)
+  — ECS has no in-container signal that the container is
+  unhealthy and continues to send traffic to a hung process.
+  Threshold of 2 reflects that one observability or one
+  monitoring gap alone is acceptable defense-in-depth absence;
+  both together describe a container where a compromise leaves
+  no trace AND a hang produces no replacement signal — failures
+  and intrusions are equally invisible.
+controls:
+  - CTL.ECS.LOG.001
+  - CTL.ECS.TASKDEF.LOG.GHOST.001
+  - CTL.ECS.TASKDEF.HEALTHCHECK.MISSING.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

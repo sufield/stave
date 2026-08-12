@@ -1,0 +1,16 @@
+id: github_unprotected_deployment
+description: >
+  No branch protection plus either no status checks or insufficient
+  approvals. Code reaches the default branch and production without
+  automated checks or human review.
+controls:
+  - CTL.GITHUB.REPO.BRANCHPROT.001
+  - CTL.GITHUB.REPO.STATUSCHECKS.001
+  - CTL.GITHUB.REPO.APPROVALS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

@@ -1,0 +1,24 @@
+id: ebs_exfiltration_undetected
+description: >
+  Multiple snapshot exfiltration paths are
+  unmonitored: making snapshots public, sharing
+  cross-account, and creating snapshots of
+  sensitive volumes are all invisible. Two or
+  more together describe a detection plane that
+  cannot see disk-image data leaving the
+  account regardless of the chosen mechanism.
+  Threshold of 2 because any single missing
+  alarm is a gap; the compound is a
+  systemically undetectable exfiltration
+  surface.
+controls:
+  - CTL.EC2.EBS.ALARM.SNAPSHOTPUBLIC.001
+  - CTL.EC2.EBS.ALARM.SNAPSHOTSHARE.001
+  - CTL.EC2.EBS.ALARM.CREATESNAPSHOT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access
+implicit_dependencies: []

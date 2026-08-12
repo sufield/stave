@@ -1,0 +1,24 @@
+id: eventbridge_governance_decay
+description: >
+  EventBridge inventory has multiple governance / lifecycle
+  defects: partner sources on default bus or in long PENDING
+  states, partner sources without consuming rules, dormant
+  custom buses with no rules and no traffic, or buses
+  without classification / owner tags. Co-occurrence indicates
+  the EB inventory has accumulated state without active
+  curation — partner integrations forgotten, buses left
+  empty, governance tags missing. Threshold of 2 fires when
+  at least two governance defects coexist.
+controls:
+  - CTL.EVENTBRIDGE.PARTNER.DEFAULTBUS.001
+  - CTL.EVENTBRIDGE.PARTNER.ORPHAN.001
+  - CTL.EVENTBRIDGE.PARTNER.PENDING.STALE.001
+  - CTL.EVENTBRIDGE.COMPLIANCE.NOTAGS.001
+  - CTL.EVENTBRIDGE.LIFECYCLE.BUS.DORMANT.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

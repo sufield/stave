@@ -1,0 +1,30 @@
+id: r53_dns_infrastructure_ghost
+description: >
+  DNS infrastructure ghost references that affect DNS itself rather
+  than just web content. An NS delegation points to name servers
+  that don't serve the zone (CTL.ROUTE53.DANGLING.NS.001) — the
+  attacker who controls the name servers controls ALL DNS for the
+  delegated subtree, not just web traffic; an alias record points
+  to a deleted resource and fails silently without NXDOMAIN
+  (CTL.ROUTE53.DANGLING.ALIAS.001) — the failure is invisible to
+  NXDOMAIN-based monitoring; or an MX record points to a
+  decommissioned mail server (CTL.ROUTE53.DANGLING.MX.001) — email
+  delivery fails or is intercepted by whoever controls the
+  reclaimed mail endpoint. Threshold of 1 reflects that each
+  independently represents a DNS infrastructure failure with
+  non-obvious symptoms: NS delegation failures affect the entire
+  DNS subtree without a single visible "broken record," alias
+  failures are silent (no NXDOMAIN), and MX failures are reported
+  to senders rather than recipients. These are the ghost references
+  that monitoring tools miss most often.
+controls:
+  - CTL.ROUTE53.DANGLING.NS.001
+  - CTL.ROUTE53.DANGLING.ALIAS.001
+  - CTL.ROUTE53.DANGLING.MX.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

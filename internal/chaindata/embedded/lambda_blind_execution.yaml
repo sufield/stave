@@ -1,0 +1,16 @@
+id: lambda_blind_execution
+description: >
+  A publicly invocable Lambda function has no CloudWatch logging.
+  An attacker can invoke the function unlimited times with no
+  observable signal and no cost ceiling — a Denial of Wallet
+  attack with no audit trail.
+controls:
+  - CTL.LAMBDA.URL.AUTH.001
+  - CTL.LAMBDA.LOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

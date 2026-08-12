@@ -1,0 +1,22 @@
+id: ec2_exposed_instance_path
+description: >
+  EC2 instance has a public EBS snapshot (data exposed to any AWS
+  account), security group allows unrestricted access on high-risk
+  ports (direct attack surface), and IMDSv1 is still enabled
+  (SSRF-to-credential-theft possible). An attacker can discover the
+  instance via internet scanning, exploit a web application
+  vulnerability, use SSRF to query IMDSv1 and steal IAM role
+  credentials, then restore the public EBS snapshot in their own
+  account. All three conditions create a complete attack path from
+  internet discovery to full data exfiltration.
+controls:
+  - CTL.EC2.SNAPSHOT.PUBLIC.001
+  - CTL.EC2.SG.RESTRICTED.PORTS.001
+  - CTL.EC2.IMDSV2.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_ec2
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

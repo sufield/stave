@@ -1,0 +1,27 @@
+id: ddb_exfil_path
+description: >
+  Unrestricted bulk export capability with no item-level audit
+  trail. An IAM policy grants dynamodb:ExportTableToPointInTime
+  without resource restriction (CTL.DYNAMODB.ACCESS.EXPORT.001)
+  — any principal bearing the policy can export any table's full
+  content in a single API call — AND CloudTrail data events are
+  not enabled for the table (CTL.DYNAMODB.AUDIT.DATAEVENTS.001).
+  Threshold of 2 requires both: unrestricted export alone is
+  a high-severity finding because it enables bulk exfiltration;
+  missing data events alone is a high-severity finding because
+  item-level access is unaudited. Together they describe a table
+  where a bulk exfiltration via Export would appear only in
+  CloudTrail management events (ExportTableToPointInTime), not
+  in data events, and only if someone monitors for that specific
+  operation. The combination maximises the likelihood that a
+  bulk export goes undetected.
+controls:
+  - CTL.DYNAMODB.ACCESS.EXPORT.001
+  - CTL.DYNAMODB.AUDIT.DATAEVENTS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - data_in_transit_exposure
+implicit_dependencies: []

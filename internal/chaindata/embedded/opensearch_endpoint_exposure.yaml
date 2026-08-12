@@ -1,0 +1,25 @@
+id: opensearch_endpoint_exposure
+description: >
+  OpenSearch domain has multiple endpoint exposure
+  defects: custom endpoint targets the public path
+  while VPC is available, public endpoint left
+  enabled after VPC migration, VPC endpoint service
+  permits foreign principals, or PrivateLink
+  endpoint policy permits any principal. Each
+  defect alone weakens the network boundary;
+  co-occurrence indicates the domain's network
+  isolation is unowned. Threshold of 2 fires when
+  at least two endpoint-exposure signals coexist
+  on the same domain.
+controls:
+  - CTL.OPENSEARCH.CUSTOM.ENDPOINT.PUBLIC.001
+  - CTL.OPENSEARCH.PUBLIC.AFTER.VPC.001
+  - CTL.OPENSEARCH.VPCE.FOREIGN.PRINCIPAL.001
+  - CTL.OPENSEARCH.PRIVATELINK.PRINCIPAL.WILDCARD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - data_access
+implicit_dependencies: []

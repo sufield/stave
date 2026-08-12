@@ -1,0 +1,26 @@
+id: denial_of_wallet
+description: >
+  Autoscaling-capable infrastructure with no cost ceiling and no
+  rate limiting at the ingress. An attacker sends sustained traffic
+  to an endpoint that triggers autoscaling (ECS tasks, Lambda
+  concurrency, DynamoDB capacity, OpenSearch storage) without
+  hitting a throttle or WAF rate limit. The infrastructure scales
+  to absorb the load — and the bill scales with it. Unlike
+  traditional DDoS which aims for unavailability, denial-of-wallet
+  aims for financial damage through legitimate-looking load that
+  the platform is designed to absorb. Threshold 2 fires when
+  missing rate limiting coexists with at least one unbounded
+  autoscaling path.
+controls:
+  - CTL.APIGATEWAY.THROTTLE.001
+  - CTL.APIGATEWAY.WAF.RATELIMIT.MISSING.001
+  - CTL.LAMBDA.CONCURRENCY.001
+  - CTL.ECS.TASKDEF.NOMEMLIMIT.001
+  - CTL.EKS.NS.NORESOURCEQUOTA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_vpc
+implicit_dependencies: []

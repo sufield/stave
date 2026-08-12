@@ -1,0 +1,19 @@
+id: cloudtrail_org_ungoverned
+description: >
+  Either the trail is not an organization trail or member
+  accounts can stop their trail. Each independently means
+  organizational audit coverage has gaps — either member
+  accounts aren't covered by a centralized trail or they
+  can disable their local coverage. Threshold of 1 fires
+  whenever the org-level audit-coverage surface is
+  incomplete from either angle.
+controls:
+  - CTL.CLOUDTRAIL.ORG.001
+  - CTL.CLOUDTRAIL.ORG.MEMBERCANSTOP.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

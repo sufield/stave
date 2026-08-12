@@ -1,0 +1,23 @@
+id: ebs_snapshot_permission_unmonitored
+description: >
+  Broad ModifySnapshotAttribute access plus
+  either no public alarm or no sharing alarm.
+  Many principals can make snapshots public or
+  share them cross-account AND doing so goes
+  undetected. The capability exists AND the
+  monitoring doesn't. Data exposure via
+  snapshot sharing is both permitted and
+  invisible. Threshold of 2 because the
+  capability without monitoring is the
+  dangerous combination.
+controls:
+  - CTL.EC2.EBS.ACCESS.MODIFYSNAPSHOT.BROAD.001
+  - CTL.EC2.EBS.ALARM.SNAPSHOTPUBLIC.001
+  - CTL.EC2.EBS.ALARM.SNAPSHOTSHARE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access
+implicit_dependencies: []

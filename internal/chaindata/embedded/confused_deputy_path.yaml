@@ -1,0 +1,19 @@
+id: confused_deputy_path
+description: >
+  Cross-account IAM role lacks ExternalId condition on its trust
+  policy, the role has overprivileged permissions, and CloudTrail
+  is not capturing STS AssumeRole events. An attacker who
+  compromises any trusted third-party can assume the victim's
+  role without knowing the account ID, operate with broad
+  permissions, and leave no audit trail in the victim's account.
+controls:
+  - CTL.IAM.TRUST.EXTERNALID.001
+  - CTL.IAM.TRUST.CONFUSEDDEPUTY.001
+  - CTL.CLOUDTRAIL.ENABLED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

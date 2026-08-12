@@ -1,0 +1,24 @@
+id: eks_pod_security_collapsed
+description: >
+  EKS pod has multiple pod-level security defects co-occurring:
+  privileged=true, host namespace sharing (hostNetwork /
+  hostPID / hostIPC), sensitive host path mount, root user, or
+  allowPrivilegeEscalation. Each defect alone is a real
+  privilege-escalation surface; co-occurrence means the pod
+  has effectively no sandbox boundary — pod compromise
+  escalates to node compromise, which escalates to
+  cluster-and-AWS-IAM compromise. Threshold of 2 fires when
+  at least two pod-security defects coexist on the same pod.
+controls:
+  - CTL.EKS.POD.PRIVILEGED.001
+  - CTL.EKS.POD.HOSTACCESS.001
+  - CTL.EKS.POD.HOSTPATH.001
+  - CTL.EKS.POD.RUNASROOT.001
+  - CTL.EKS.POD.PRIVESCALATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - control_plane_code_execution
+implicit_dependencies: []

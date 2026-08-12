@@ -20,6 +20,10 @@ SCHEMA_DST=internal/contracts/schema/embedded
 CONTROL_SRC=internal/controls
 CONTROL_DST=internal/controldata/embedded
 
+# Chain sync (canonical chains → embedded runtime copy)
+CHAIN_SRC=internal/chains
+CHAIN_DST=internal/chaindata/embedded
+
 # Alternatives inventory sync (canonical inventories → embedded runtime copy)
 ALTERNATIVES_SRC=data/alternatives
 ALTERNATIVES_DST=internal/adapters/coverage/embedded
@@ -51,6 +55,7 @@ all: lint test build
 BUILD_CACHE_DIR        := .build-cache
 SCHEMA_HASH_FILE       := $(BUILD_CACHE_DIR)/.sync-schemas-hash
 CONTROL_HASH_FILE      := $(BUILD_CACHE_DIR)/.sync-controls-hash
+CHAIN_HASH_FILE        := $(BUILD_CACHE_DIR)/.sync-chains-hash
 ALTERNATIVES_HASH_FILE := $(BUILD_CACHE_DIR)/.sync-alternatives-hash
 
 ## sync_tree: single source for the three identical embed-copy targets.
@@ -82,15 +87,17 @@ endef
 $(eval $(call sync_tree,sync-schemas,schemas,$(SCHEMA_SRC),$(SCHEMA_DST),$(SCHEMA_HASH_FILE)))
 ## sync-controls: Copy canonical controls into embed directory (hash-gated)
 $(eval $(call sync_tree,sync-controls,controls,$(CONTROL_SRC),$(CONTROL_DST),$(CONTROL_HASH_FILE)))
+## sync-chains: Copy canonical chains into embed directory (hash-gated)
+$(eval $(call sync_tree,sync-chains,chains,$(CHAIN_SRC),$(CHAIN_DST),$(CHAIN_HASH_FILE)))
 ## sync-alternatives: Copy canonical alternative-tool inventories into embed directory (hash-gated)
 $(eval $(call sync_tree,sync-alternatives,alternatives,$(ALTERNATIVES_SRC),$(ALTERNATIVES_DST),$(ALTERNATIVES_HASH_FILE)))
 
 ## build: Build the production binary
-build: sync-schemas sync-controls sync-alternatives
+build: sync-schemas sync-controls sync-chains sync-alternatives
 	$(GOBUILD) $(LDFLAGS) -o $(BINARY) ./cmd/stave
 
 ## build-dev: Build the dev binary with all commands
-build-dev: sync-schemas sync-controls sync-alternatives
+build-dev: sync-schemas sync-controls sync-chains sync-alternatives
 	$(GOBUILD) $(LDFLAGS) -tags stavedev -o stave-dev ./cmd/stave-dev
 
 ## tools: Build development tools (separate from production binary)
@@ -172,7 +179,7 @@ test-pkg:
 	fi
 	@case "$(PKG)" in \
 		*controldata*|*contracts/schema*|*adapters/coverage*) \
-			for h in $(SCHEMA_HASH_FILE) $(CONTROL_HASH_FILE) $(ALTERNATIVES_HASH_FILE); do \
+			for h in $(SCHEMA_HASH_FILE) $(CONTROL_HASH_FILE) $(CHAIN_HASH_FILE) $(ALTERNATIVES_HASH_FILE); do \
 				if [ ! -f "$$h" ]; then \
 					echo "WARNING: $$h missing — embedded data may be stale. Run 'make sync-controls sync-schemas sync-alternatives' first." >&2; \
 					break; \
@@ -1262,7 +1269,7 @@ metrics:
 ## and is too slow to gate every PR. See docs/audits/sync-audit.md for the full
 ## chain map.
 .PHONY: consistency-check
-consistency-check: sync-schemas sync-controls sync-alternatives
+consistency-check: sync-schemas sync-controls sync-chains sync-alternatives
 	@$(GOCMD) run ./internal/tools/gencontroldocs
 	@$(GOCMD) run ./internal/tools/genmethodologycoverage
 	@$(GOCMD) run ./internal/tools/gencommanddocs
@@ -1280,6 +1287,7 @@ consistency-check: sync-schemas sync-controls sync-alternatives
 	@drift=$$(git status --porcelain -- \
 		internal/contracts/schema/embedded \
 		internal/controldata/embedded \
+		internal/chaindata/embedded \
 		internal/adapters/coverage/embedded \
 		docs/controls/reference.md \
 		docs/command-reference.md \

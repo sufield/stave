@@ -1,0 +1,22 @@
+id: cloudtrail_log_compromisable
+description: >
+  Logs in same account as resources plus either broad
+  read access or no delete protection. The audit trail
+  is co-located with the monitored resources AND either
+  too many principals can read the logs or logs can be
+  deleted. Account compromise exposes the audit trail,
+  AND the trail is either readable for stealth recon or
+  deletable for evidence cleanup. Threshold of 2 fires
+  when the same-account locality compounds with another
+  log-protection gap.
+controls:
+  - CTL.CLOUDTRAIL.CENTRAL.SAMEACCOUNT.001
+  - CTL.CLOUDTRAIL.ACCESS.LOGREAD.BROAD.001
+  - CTL.CLOUDTRAIL.S3.NODELETE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

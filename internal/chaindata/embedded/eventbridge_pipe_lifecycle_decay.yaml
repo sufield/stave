@@ -1,0 +1,21 @@
+id: eventbridge_pipe_lifecycle_decay
+description: >
+  EventBridge Pipe is in a stuck or dormant state and has no
+  separate target DLQ — the pipe is non-functional or
+  non-monitored, and target failures (when it eventually runs)
+  have no preservation surface. Combination of CREATE_FAILED /
+  UPDATE_FAILED / long-STOPPED with target-DLQ-missing indicates
+  the pipe is operationally abandoned but still holds resource
+  bindings. Threshold of 2 fires when at least two lifecycle/
+  preservation defects coexist.
+controls:
+  - CTL.EVENTBRIDGE.PIPE.LIFECYCLE.CREATEFAILED.001
+  - CTL.EVENTBRIDGE.PIPE.LIFECYCLE.DORMANT.001
+  - CTL.EVENTBRIDGE.PIPE.TARGET.NODLQ.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

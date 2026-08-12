@@ -1,0 +1,22 @@
+id: opensearch_slowlog_blind
+description: >
+  OpenSearch domain slow-log observability has
+  multiple defects: search slow-log delivery
+  disabled, index slow-log delivery disabled, or
+  slow-log thresholds set high enough that no
+  query crosses them. Each defect alone produces
+  blind spots in performance observability;
+  co-occurrence means the cluster's slow-query
+  signal is unusable. Threshold of 2 fires when
+  at least two slow-log defects coexist.
+controls:
+  - CTL.OPENSEARCH.SLOWLOG.SEARCH.OFF.001
+  - CTL.OPENSEARCH.SLOWLOG.INDEX.OFF.001
+  - CTL.OPENSEARCH.SLOWLOG.THRESHOLD.HIGH.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

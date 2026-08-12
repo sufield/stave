@@ -1,0 +1,20 @@
+id: guardduty_notification_blind
+description: >
+  GuardDuty findings have no notification delivery pipeline.
+  Detection without notification — GuardDuty produces findings
+  but no EventBridge rule forwards them to SNS, Lambda, or a
+  SIEM. Findings sit in the GuardDuty console unseen until
+  someone manually checks. Threshold of 1 because any single
+  break in the notification path means findings go undelivered.
+controls:
+  - CTL.GUARDDUTY.ENABLED.001
+  - CTL.GUARDDUTY.EXPORT.001
+  - CTL.GUARDDUTY.ORG.NODELEGATED.001
+  - CTL.GUARDDUTY.ORG.AUTOENABLE.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - detection_without_response
+implicit_dependencies: []

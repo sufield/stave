@@ -1,0 +1,27 @@
+id: stepfunctions_integration_edges_unsafe
+description: >
+  Step Functions integrates with high-cost
+  AWS services without explicit guards:
+  EMR Serverless without job timeout,
+  SageMaker without MaxRuntimeInSeconds,
+  DynamoDB ConditionalCheckFailed not
+  caught, or Bedrock invocation without
+  rate / quota guard. Each defect is a
+  service-specific cost or correctness
+  trap; co-occurrence indicates the
+  workflow's integration surface was not
+  reviewed for runaway-cost paths.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.EMR.SERVERLESS.NOTIMEOUT.001
+  - CTL.STEPFUNCTIONS.SAGEMAKER.NORUNTIME.001
+  - CTL.STEPFUNCTIONS.DDB.CONDITION.UNCAUGHT.001
+  - CTL.STEPFUNCTIONS.BEDROCK.NOQUOTA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

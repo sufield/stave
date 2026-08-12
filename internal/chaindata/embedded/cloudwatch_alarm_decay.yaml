@@ -1,0 +1,27 @@
+id: cloudwatch_alarm_decay
+description: >
+  Alarms in structural decay: the alarm monitors
+  a decommissioned resource, has been in
+  INSUFFICIENT_DATA for an extended window, or
+  has its actions disabled. Two or more of these
+  together describe an alarm that exists in the
+  console but cannot deliver a signal — the
+  monitored resource is gone, or no data flows
+  in, or actions are suppressed. Threshold of 2
+  because alarm decay typically compounds:
+  resources get deleted without their alarms
+  being cleaned up, then the dead alarms get
+  disabled to silence their INSUFFICIENT_DATA
+  noise rather than removed. The result is an
+  alarm that is irrelevant AND non-functional.
+controls:
+  - CTL.CLOUDWATCH.ALARM.DECOMMISSIONED.001
+  - CTL.CLOUDWATCH.ALARM.INSUFFICIENTDATA.001
+  - CTL.CLOUDWATCH.ALARM.DISABLED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

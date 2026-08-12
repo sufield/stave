@@ -1,0 +1,26 @@
+id: cloudwatch_crossaccount_ungoverned
+description: >
+  Cross-account logging infrastructure is open
+  and ungoverned: the centralized destination
+  accepts subscription streams from any account,
+  no centralized logging is in place at all
+  (despite Organizations being active), or log
+  group resource policies grant cross-account
+  access without organizational boundary
+  verification. Two or more of these together
+  describe an organization's log aggregation as
+  both injectable and either fragmented or
+  ungoverned. Threshold of 2 because the
+  dangerous compound is when openness meets
+  governance failure.
+controls:
+  - CTL.CLOUDWATCH.CROSSACCOUNT.DESTINATION.OPEN.001
+  - CTL.CLOUDWATCH.CROSSACCOUNT.NOCENTRALIZED.001
+  - CTL.CLOUDWATCH.LOGGROUP.POLICY.CROSSACCOUNT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

@@ -1,0 +1,17 @@
+id: msk_streaming_exposure
+description: >
+  Public MSK cluster with no authentication and unencrypted broker
+  traffic. The complete streaming infrastructure is exposed — anyone
+  on the internet can connect, read all topics, inject messages, and
+  intercept inter-broker replication traffic.
+controls:
+  - CTL.MSK.PUBLIC.001
+  - CTL.MSK.AUTH.UNRESTRICTED.001
+  - CTL.MSK.ENCRYPT.TRANSIT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - s3_data_access
+implicit_dependencies: []

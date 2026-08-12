@@ -1,0 +1,16 @@
+id: azure_data_exposure
+description: >
+  Azure SQL publicly accessible with unaudited operations and Key
+  Vault exposed on the public internet. Database is reachable and
+  the encryption keys protecting it are also publicly accessible.
+controls:
+  - CTL.AZURE.SQL.PUBLIC.001
+  - CTL.AZURE.SQL.AUDIT.001
+  - CTL.AZURE.KEYVAULT.NETWORK.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - rds_data_access
+implicit_dependencies: []

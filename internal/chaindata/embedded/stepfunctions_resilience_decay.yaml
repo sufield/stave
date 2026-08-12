@@ -1,0 +1,29 @@
+id: stepfunctions_resilience_decay
+description: >
+  Step Functions has multiple resilience
+  defects: StartExecution name not
+  idempotent (retry duplicates), no DR-region
+  deployment, EB rules / API GW integrations
+  on unversioned ARN (canary bypassed), one
+  state machine targeted by many EB rules
+  (single point of failure), or worker
+  doesn't validate task token (trust-model
+  broken). Each defect alone reduces
+  resilience; co-occurrence indicates the
+  workflow operates as if failure-modes
+  didn't exist. Threshold of 2 fires when at
+  least two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.IDEMPOTENCY.NAME.001
+  - CTL.STEPFUNCTIONS.DR.NOSECONDREGION.001
+  - CTL.STEPFUNCTIONS.EB.UNVERSIONED.ARN.001
+  - CTL.STEPFUNCTIONS.APIGW.UNVERSIONED.ARN.001
+  - CTL.STEPFUNCTIONS.EB.SHARED.MACHINE.001
+  - CTL.STEPFUNCTIONS.WAITFORTOKEN.NOVALIDATE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

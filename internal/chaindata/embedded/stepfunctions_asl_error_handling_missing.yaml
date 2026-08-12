@@ -1,0 +1,23 @@
+id: stepfunctions_asl_error_handling_missing
+description: >
+  Step Functions ASL definition has multiple
+  error-handling defects: Task states without
+  Catch clause, Parallel state without Catch,
+  Map state without Catch, or Choice state
+  without Default. Each defect alone leaves a
+  failure path unhandled; co-occurrence
+  indicates the workflow was authored without
+  defensive error-handling. Threshold of 2
+  fires when at least two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ASL.CATCH.MISSING.001
+  - CTL.STEPFUNCTIONS.ASL.PARALLEL.NOCATCH.001
+  - CTL.STEPFUNCTIONS.ASL.MAP.NOCATCH.001
+  - CTL.STEPFUNCTIONS.ASL.CHOICE.NODEFAULT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

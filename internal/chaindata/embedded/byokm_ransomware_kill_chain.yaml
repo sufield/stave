@@ -1,0 +1,47 @@
+id: byokm_ransomware_kill_chain
+description: >
+  BYOKM ransomware kill chain prerequisites: no SCP prevents
+  creating EXTERNAL-origin KMS keys, importing key material, or
+  deleting key material, AND a KMS key with externally-imported
+  material already exists in the account. An attacker with KMS
+  and EC2 permissions can re-encrypt all data under
+  attacker-controlled material, delete the key material ("rug
+  pull"), and demand ransom for the 256-bit secret. Data is
+  irrecoverable without the attacker's cooperation — unlike
+  standard KMS keys where a court order can compel AWS to reset
+  root credentials, BYOKM key material was never held by AWS.
+  The only recovery path is the attacker's 256-bit secret.
+  Technique documented by Chris Farris (November 2024).
+  Linked incidents: Halcyon Codefinger (Jan 2025, SSE-C
+  ransomware — attacker re-encrypts S3 objects with their own
+  SSE-C key, sets lifecycle delete), Wiz "cloud-native
+  ransomware" analysis (2025, BYOKM + SSE-C as the two
+  irrecoverable encryption vectors in AWS).
+controls:
+  - CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001
+  - CTL.IAM.SCP.KMS.CREATEKEY.EXTERNAL.001
+  - CTL.IAM.SCP.KMS.IMPORTKEY.001
+  - CTL.IAM.SCP.KMS.DELETEKEYMATERIAL.001
+escalation_threshold: 2
+compound_severity: critical
+incident_precedent:
+  name: Halcyon Codefinger (2025)
+  impact: SSE-C ransomware; attacker-controlled encryption renders data irrecoverable
+  reference: Chris Farris BYOKM technique (Nov 2024); Wiz cloud-native ransomware analysis (2025)
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.kms_key_origin
+    fallback: fail_closed
+    diagnostic: >
+      KMS key origin (AWS_KMS vs EXTERNAL) not captured in
+      snapshot. Cannot distinguish AWS-generated keys from BYOKM
+      keys. The CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001 control
+      produces SILENT_RISK findings when this field is missing.
+  - source: observation.scp_policy_parser
+    fallback: fail_closed
+    diagnostic: >
+      SCP policy documents not parsed. Cannot verify whether
+      dangerous KMS actions are organizationally denied.

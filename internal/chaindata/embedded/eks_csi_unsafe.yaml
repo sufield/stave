@@ -1,0 +1,20 @@
+id: eks_csi_unsafe
+description: >
+  EKS CSI driver layer has multiple defects: EBS CSI
+  driver without IRSA, EFS CSI driver without IRSA.
+  Both drivers fall back to node instance profile
+  credentials, which means every pod on the node has
+  effective EBS / EFS permissions via IMDS. Per-driver
+  IAM scope intent collapses; cross-pod credential
+  leakage on shared node profiles. Threshold of 2 fires
+  when both CSI drivers lack IRSA.
+controls:
+  - CTL.EKS.CSI.EBS.NOIRSA.001
+  - CTL.EKS.CSI.EFS.NOIRSA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

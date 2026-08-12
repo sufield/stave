@@ -1,0 +1,23 @@
+id: temporal_ghost_confirmed
+description: >
+  A ghost reference detected by single-snapshot analysis is confirmed
+  by temporal analysis. The resource was previously observed and is
+  now deleted. Both the single-snapshot finding and the temporal
+  finding fire — the temporal finding upgrades confidence from
+  "reference points at something we can't find" to "reference points
+  at something we watched disappear."
+controls:
+  - CTL.GHOST.TEMPORAL.RESOURCE.001
+  - CTL.IAM.POLICY.GHOSTREF.001
+  - CTL.KMS.POLICY.GHOSTREF.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - s3_data_access
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

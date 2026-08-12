@@ -1,0 +1,22 @@
+id: iam_privesc_by_rollback
+description: >
+  IAM privilege escalation via policy version manipulation. A user
+  has iam:CreatePolicyVersion or iam:SetDefaultPolicyVersion — enabling
+  them to either create a new policy version with broader permissions
+  or roll back to a previous version that already has them. This is a
+  single-API-call escalation path documented in Rhino Security's
+  CloudGoat (iam_privesc_by_rollback) and Bishop Fox's IAM Vulnerable.
+  The escalation is latent: the principal has only the version-manipulation
+  permission today, but one API call activates a broader version.
+  Threshold of 1: either create or set-default alone is sufficient.
+controls:
+  - CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001
+  - CTL.IAM.POLICY.VERSIONS.001
+  - CTL.IAM.POLICY.VERSIONS.ACCUMULATION.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

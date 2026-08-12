@@ -1,0 +1,16 @@
+id: s3_encryption_trust
+description: >
+  External-account KMS key plus overly broad key policy. Encryption
+  key controlled by external account AND the key policy grants broad
+  access. Encryption is nominal — the key is neither organizationally
+  controlled nor access-scoped.
+controls:
+  - CTL.S3.ENCRYPT.KMS.OWNERSHIP.001
+  - CTL.S3.ENCRYPT.KMS.POLICY.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - encryption_bypass
+implicit_dependencies: []

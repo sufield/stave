@@ -1,0 +1,26 @@
+id: abandoned_instance_pivot_path
+description: >
+  Abandoned instance pivot shape: a forgotten, unpatched
+  EC2 instance with a public IP is compromised, and the
+  attacker uses its IAM credentials to move laterally.
+  BrowserStack (2014): old prototype machine with
+  Shellshock vulnerability led to IAM user creation and
+  SES abuse. Imperva (2018): unused EC2 instance led to
+  API key theft and public RDS snapshot exfiltration.
+  The compound: long-running instance on stale AMI with
+  public IP and overpermissioned role.
+controls:
+  - CTL.EC2.POLLUTION.LONGRUNNING.PUBLIC.001
+  - CTL.EC2.IMDSV2.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.004
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: observation.iam_access_key_last_used
+    fallback: fail_closed
+    diagnostic: >
+      Cannot determine instance/role staleness.

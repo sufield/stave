@@ -1,0 +1,15 @@
+id: azure_service_principal_risk
+description: >
+  Service principal using client secret (exfiltrable) with approaching
+  expiry. The credential is both insecure and about to break the
+  service — forcing a rushed rotation that may introduce errors.
+controls:
+  - CTL.AZURE.IDENTITY.SP.SECRET.001
+  - CTL.AZURE.IDENTITY.SP.EXPIRY.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

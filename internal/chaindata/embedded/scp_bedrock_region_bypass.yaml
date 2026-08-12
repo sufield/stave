@@ -1,0 +1,22 @@
+id: scp_bedrock_region_bypass
+description: >
+  Region-deny SCP exempts Bedrock invocation AND Bedrock model
+  access is broadly configured. The GRREGIONDENY SCP has Bedrock
+  actions in NotAction, allowing any principal to invoke models in
+  any region. When combined with broad model access (all foundation
+  models enabled), the bypass has real effect — an attacker or
+  misconfigured workload can invoke expensive or capability-rich
+  models in unmonitored regions without any organizational control.
+  The compound breaks when either the SCP NotAction is tightened
+  (Bedrock invocations subject to region restriction) or model
+  access is scoped (only approved models enabled).
+controls:
+  - CTL.ORG.SCP.REGIONDENY.NOTACTION.BEDROCK.001
+  - CTL.BEDROCK.ACCESS.MODELSCOPE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - shadow_infrastructure
+postconditions:
+  - data_access
+implicit_dependencies: []

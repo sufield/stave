@@ -1,0 +1,24 @@
+id: cloudtrail_data_access_blind
+description: >
+  No S3 data events for sensitive buckets plus either no
+  Secrets Manager data events or no S3 bucket-policy
+  change alarm. Data access is unaudited AND either
+  credential access is unaudited or bucket access-
+  control changes are unmonitored. The data access
+  surface is blind: object reads invisible, credential
+  reads invisible, and the API calls that would
+  reconfigure access are unalarmed. Threshold of 2 fires
+  when the bucket-data-events gap compounds with another
+  audit-surface gap.
+controls:
+  - CTL.CLOUDTRAIL.DATAEVENTS.S3.001
+  - CTL.SECRETS.AUDIT.DATAEVENTS.001
+  - CTL.CLOUDTRAIL.ALARM.S3POLICY.001
+  - CTL.CLOUDTRAIL.NETWORK.ACTIVITY.IDENTITYFILTER.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

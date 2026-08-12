@@ -1,0 +1,26 @@
+id: stepfunctions_operational_decay
+description: >
+  Step Functions has multiple operational
+  hygiene defects: deletion protection off
+  on production, break-glass states:* role
+  permanently active, no execution-history
+  auto-archive, zombie Activity not
+  decommissioned, or IaC ownership / on-call
+  tags missing. Each defect alone is a
+  day-2 process gap; co-occurrence indicates
+  the workflow has no documented owner.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.DELETION.PROTECTION.OFF.001
+  - CTL.STEPFUNCTIONS.BREAKGLASS.PERMANENT.001
+  - CTL.STEPFUNCTIONS.HISTORY.NOAUTOARCHIVE.001
+  - CTL.STEPFUNCTIONS.ACTIVITY.ZOMBIE.001
+  - CTL.STEPFUNCTIONS.IAC.OWNERSHIP.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

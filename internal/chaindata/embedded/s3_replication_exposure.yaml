@@ -1,0 +1,17 @@
+id: s3_replication_exposure
+description: >
+  Replication to public destination plus either delete replication
+  enabled or unencrypted replication path. Data replicates to an
+  unsafe destination AND either deletions propagate (no independent
+  backup) or the replication path is unencrypted.
+controls:
+  - CTL.S3.REPLICATION.DEST.PUBLIC.001
+  - CTL.S3.REPLICATION.DEST.DELETE.001
+  - CTL.S3.REPLICATION.003
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - s3_replication_configured
+postconditions:
+  - s3_data_access
+implicit_dependencies: []

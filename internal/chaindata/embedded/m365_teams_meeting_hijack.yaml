@@ -1,0 +1,16 @@
+id: m365_teams_meeting_hijack
+description: >
+  Anonymous users can join plus either dial-in bypasses lobby or
+  anyone can present. Unverified participants enter and present
+  without approval.
+controls:
+  - CTL.M365.TEAMS.ANON.001
+  - CTL.M365.TEAMS.MEETING.DIALIN.001
+  - CTL.M365.TEAMS.MEETING.PRESENTERS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

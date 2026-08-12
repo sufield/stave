@@ -1,0 +1,17 @@
+id: iam_federation_compromise
+description: >
+  SAML certificate not rotated plus either no audience restriction or
+  unscoped role mapping. The SAML trust has a stale certificate AND
+  either assertion replay is possible or any federated user can assume
+  any role.
+controls:
+  - CTL.IAM.FEDERATION.SAML.CERT.001
+  - CTL.IAM.FEDERATION.SAML.AUDIENCE.001
+  - CTL.IAM.FEDERATION.ROLEMAPPING.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

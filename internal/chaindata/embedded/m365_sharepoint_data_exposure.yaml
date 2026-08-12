@@ -1,0 +1,15 @@
+id: m365_sharepoint_data_exposure
+description: >
+  Anonymous sharing links plus either unmanaged device sync or
+  legacy auth. Multiple data leakage paths for SharePoint documents.
+controls:
+  - CTL.M365.SHAREPOINT.SHARING.001
+  - CTL.M365.SHAREPOINT.SYNC.001
+  - CTL.M365.SHAREPOINT.MODERNAUTH.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

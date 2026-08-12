@@ -1,0 +1,24 @@
+id: opensearch_authn_unsafe
+description: >
+  OpenSearch domain has multiple authentication
+  hardening defects: FGAC enabled without internal
+  users, default admin user not removed, master
+  user via password instead of IAM role, or master
+  password not rotated > 90 days. Each defect alone
+  weakens the master-credential boundary;
+  co-occurrence indicates the cluster's identity
+  layer was set up but never tightened. Threshold
+  of 2 fires when at least two authN defects
+  coexist.
+controls:
+  - CTL.OPENSEARCH.FGAC.NOUSERS.001
+  - CTL.OPENSEARCH.DEFAULT.ADMIN.PRESENT.001
+  - CTL.OPENSEARCH.MASTER.PASSWORD.AUTH.001
+  - CTL.OPENSEARCH.MASTER.PASSWORD.AGE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

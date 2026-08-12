@@ -1,0 +1,27 @@
+id: payer_invariant_one_away_path
+description: >
+  Payer account is one misconfiguration away from invariant collapse:
+  management account has workload principals beyond break-glass AND
+  at least one payer boundary SCP is missing (self-modify, Identity
+  Center, or Control Tower protection). Unlike the enforcement path
+  which requires boundary escape, this chain fires when any single
+  payer boundary gap exists — the attacker doesn't need to escape a
+  boundary that was never applied. The management account is exempt
+  from SCPs by AWS design, so these boundaries are the only
+  organizational-level invariant enforcement for the payer. One
+  missing boundary + one compromised principal = full org control.
+  Reference: Chris Farris payer invariants
+  (chrisfarris.com/post/payer-invariants/).
+controls:
+  - CTL.IAM.ORG.MGMT.PRINCIPALS.001
+  - CTL.IAM.BOUNDARY.PAYER.SELFMODIFY.001
+  - CTL.IAM.BOUNDARY.PAYER.IDENTITYCENTER.001
+  - CTL.IAM.BOUNDARY.PAYER.CONTROLTOWER.001
+scope: global
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - org_admin_access
+implicit_dependencies: []

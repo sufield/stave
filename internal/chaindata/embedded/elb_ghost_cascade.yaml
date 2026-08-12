@@ -1,0 +1,30 @@
+id: elb_ghost_cascade
+description: >
+  Two or more ELB ghost references. Multiple load
+  balancer dependencies have been deleted — terminated
+  targets, deleted listener-rule target groups, expired
+  or deleted certificates, ghost WAF web ACLs, ghost
+  access-log S3 buckets, or ghost Lambda targets. One
+  ghost reference is a single missed decommission;
+  multiple ghost references on the same load balancer
+  indicate a systematic failure in the decommissioning
+  pipeline. Threshold of 2 fires when distinct ghost
+  surfaces coexist on the perimeter.
+controls:
+  - CTL.ELB.TARGET.GHOST.001
+  - CTL.ELB.LISTENER.GHOST.001
+  - CTL.ELB.CERT.GHOST.001
+  - CTL.ELB.GHOST.ACCESSLOG.001
+  - CTL.ELB.GHOST.WAF.001
+  - CTL.ELB.GHOST.TARGET.LAMBDA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ungoverned_operation
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

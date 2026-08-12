@@ -1,0 +1,23 @@
+id: ec2_to_s3_lateral
+description: >
+  EC2 instance profile has broad S3 access and the instance
+  has unrestricted egress — a compromised instance can
+  exfiltrate data from S3 buckets without network restriction.
+  The first leg detects the overbroad instance profile
+  (CTL.EC2.PROFILE.OVERBROAD.001). The second leg detects
+  unrestricted security group egress (CTL.VPC.SG.EGRESS.001).
+  Together: instance compromise yields S3 data exfiltration.
+  Removing either leg breaks the chain: scope the instance
+  profile to specific S3 buckets and actions, OR restrict
+  security group egress to required destinations only.
+controls:
+  - CTL.EC2.PROFILE.OVERBROAD.001
+  - CTL.VPC.SG.EGRESS.001
+scope: global
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - credential_access
+postconditions:
+  - data_access
+implicit_dependencies: []

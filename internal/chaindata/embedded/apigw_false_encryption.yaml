@@ -1,0 +1,27 @@
+id: apigw_false_encryption
+description: >
+  Encryption is broken at one or both ends of the request path.
+  Either the API Gateway integration forwards traffic to the
+  backend over plain HTTP
+  (CTL.APIGATEWAY.INTEGRATION.HTTP.PLAINTEXT.001) — encryption
+  at the edge, plaintext on the back half — or the custom domain
+  accepts deprecated TLS versions (TLS 1.0 / 1.1) below the
+  minimum-acceptable security policy
+  (CTL.APIGATEWAY.DOMAIN.TLS.001), allowing protocol downgrade on
+  the front half. Either condition independently means traffic
+  protections that operators believe are end-to-end are not
+  end-to-end. Threshold of 1 reflects that one false-encryption
+  failure on the path is sufficient to undermine the
+  TLS-everywhere story; the chain surfaces "encryption is
+  inconsistent across the path" without requiring both halves to
+  be broken at once.
+controls:
+  - CTL.APIGATEWAY.INTEGRATION.HTTP.PLAINTEXT.001
+  - CTL.APIGATEWAY.DOMAIN.TLS.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_in_transit_exposure
+implicit_dependencies: []

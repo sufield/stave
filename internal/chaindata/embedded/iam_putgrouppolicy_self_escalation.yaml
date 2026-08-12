@@ -1,0 +1,36 @@
+id: iam_putgrouppolicy_self_escalation
+description: >
+  PutGroupPolicy self-escalation via group membership. A user has
+  iam:PutGroupPolicy (PUTGROUPPOLICY.001) AND the Resource covers a
+  group the user belongs to (PUTGROUPPOLICY.NOCONDITION.001). Together
+  this means the principal can write an arbitrary inline policy document
+  onto their own group — including {"Action": "*", "Resource": "*"} —
+  elevating every member of that group to admin with a single API call.
+  Unlike PutUserPolicy (which targets only the attacker), PutGroupPolicy
+  has group-wide blast radius: every member inherits the injected inline
+  policy. Unlike AttachGroupPolicy (limited to existing managed policies),
+  PutGroupPolicy lets the attacker author the payload directly. There is
+  no IAM Condition key that restricts inline policy content, so the
+  Resource restriction on which groups can be targeted is the only defense.
+  Threshold 2: both must fire to confirm the self-escalation path is open.
+  A Resource-scoped PutGroupPolicy (partial case — user can put policies
+  on groups they don't belong to) fires only the capability control, not
+  this chain.
+controls:
+  - CTL.IAM.ESCALATE.PUTGROUPPOLICY.001
+  - CTL.IAM.ESCALATE.PUTGROUPPOLICY.NOCONDITION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.
+incident_precedent:
+  name: Rhino Security Labs IAM Privilege Escalation #4 (2019)
+  impact: PutGroupPolicy on belonging group grants admin to every member via attacker-authored inline policy
+  reference: Bishop Fox IAM Vulnerable privesc11-PutGroupPolicy; Pacu iam__privesc_scan

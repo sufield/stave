@@ -1,0 +1,20 @@
+id: vpc_lateral_movement
+description: >
+  Production and non-production workloads share a network path AND
+  either a bastion has unrestricted internal egress or inter-VPC
+  traffic transits the Transit Gateway without inspection. Multiple
+  lateral-movement substrates exist simultaneously: the
+  environments are not segmented at the network layer, AND either
+  a single compromised jump host reaches everything internally
+  or cross-VPC traffic is uninspected.
+controls:
+  - CTL.VPC.SEGMENT.ENVMIX.001
+  - CTL.VPC.SEGMENT.BASTION.001
+  - CTL.VPC.SEGMENT.EASTWEST.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - vpc_instance_compromise
+implicit_dependencies: []

@@ -1,0 +1,25 @@
+id: cognito_weakauth
+description: >
+  Authentication is brute-forceable in
+  combination: the existing weak-password-
+  policy detection plus the existing MFA-
+  off detection plus the new lockout-absent
+  detection. Each individually is a known
+  weakness; together they describe a pool
+  where credential-stuffing has no
+  meaningful resistance — weak passwords,
+  no second factor, no throttling.
+  Threshold of 2 because the dangerous
+  shape is when at least two layers are
+  missing simultaneously.
+controls:
+  - CTL.COGNITO.PASSWORD.001
+  - CTL.COGNITO.MFA.001
+  - CTL.COGNITO.LOCKOUT.NONE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

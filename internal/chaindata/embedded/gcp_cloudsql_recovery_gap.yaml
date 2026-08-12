@@ -1,0 +1,15 @@
+id: gcp_cloudsql_recovery_gap
+description: >
+  No backups plus either no PITR or no HA. Database has no recovery
+  capability across multiple dimensions simultaneously.
+controls:
+  - CTL.GCP.CLOUDSQL.BACKUP.001
+  - CTL.GCP.CLOUDSQL.PITR.001
+  - CTL.GCP.CLOUDSQL.HA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

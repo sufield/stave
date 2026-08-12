@@ -1,0 +1,17 @@
+id: vpc_exfiltration_path
+description: >
+  Unrestricted egress plus either DNS tunneling possible or no flow
+  logs. Data can leave via any protocol to any destination AND either
+  DNS tunneling is available as a covert channel or the egress traffic
+  is not logged.
+controls:
+  - CTL.VPC.SG.EGRESS.001
+  - CTL.VPC.SG.EGRESS.DNS.001
+  - CTL.VPC.FLOWLOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_ec2
+postconditions:
+  - data_access
+implicit_dependencies: []

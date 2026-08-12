@@ -1,0 +1,24 @@
+id: lambda_dormant_risk
+description: >
+  Dormant function plus either no triggers or unused IAM
+  role. Multiple indicators that the function is abandoned:
+  not invoked AND either has no invocation path or its
+  execution role is unused. The function is a fully
+  configured but abandoned workload with active permissions,
+  active credentials in environment variables, and no
+  monitoring baseline against which a new attacker
+  invocation looks anomalous. Threshold of 2 reflects that
+  one dormancy signal alone is incomplete — a function may
+  be paused for a known-cyclical reason — but two or more
+  together confirm abandonment.
+controls:
+  - CTL.LAMBDA.LIFECYCLE.DORMANT.001
+  - CTL.LAMBDA.LIFECYCLE.NOTRIGGER.001
+  - CTL.IAM.ROLE.UNUSED.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - network_access_lambda
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

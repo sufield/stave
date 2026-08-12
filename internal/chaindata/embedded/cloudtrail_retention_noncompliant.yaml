@@ -1,0 +1,20 @@
+id: cloudtrail_retention_noncompliant
+description: >
+  Either S3 lifecycle or CloudWatch Logs retention is
+  shorter than the applicable compliance retention period.
+  Audit logs are deleted before the required retention
+  window closes on either storage channel. Compliance
+  requires logs to be available for investigation and
+  regulator audit; early deletion means evidence is
+  destroyed. Threshold of 1 fires whenever either
+  storage surface is non-compliant.
+controls:
+  - CTL.CLOUDTRAIL.S3.LIFECYCLE.SHORT.001
+  - CTL.CLOUDTRAIL.CWLOGS.RETENTION.SHORT.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

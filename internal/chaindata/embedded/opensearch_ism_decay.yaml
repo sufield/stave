@@ -1,0 +1,27 @@
+id: opensearch_ism_decay
+description: >
+  OpenSearch domain has multiple ISM (Index State
+  Management) defects: time-series indices
+  without ISM policy, rollover policy / template
+  incomplete, ISM transitions reference
+  unavailable tier (UltraWarm / cold), delete
+  state without snapshot guard, or no failure
+  handling path. Each defect alone breaks
+  index lifecycle management; co-occurrence
+  means index inventory is silently degrading.
+  Threshold of 2 fires when at least two ISM
+  defects coexist.
+controls:
+  - CTL.OPENSEARCH.ISM.MISSING.001
+  - CTL.OPENSEARCH.ROLLOVER.MISSING.001
+  - CTL.OPENSEARCH.ISM.WARM.UNAVAILABLE.001
+  - CTL.OPENSEARCH.ISM.COLD.UNAVAILABLE.001
+  - CTL.OPENSEARCH.ISM.NOSNAPSHOT.DELETE.001
+  - CTL.OPENSEARCH.ISM.NOFAILURE.PATH.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

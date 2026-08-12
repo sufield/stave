@@ -1,0 +1,17 @@
+id: azure_entra_risk_blindspot
+description: >
+  No risk-based policies AND no Conditional Access for privileged
+  roles. Risky sign-ins succeed, compromised users are not forced
+  to remediate, and privileged access has no additional
+  authentication gates.
+controls:
+  - CTL.AZURE.ENTRA.SIGNINRISK.001
+  - CTL.AZURE.ENTRA.USERRISK.001
+  - CTL.AZURE.IDENTITY.CONDITIONAL.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

@@ -1,0 +1,32 @@
+id: eks_to_s3_lateral
+description: >
+  EKS node group has an overbroad IAM role and the VPC
+  allows unrestricted egress to S3 — a compromised pod
+  inheriting the node role can read or write arbitrary S3
+  buckets via the public API. The first leg detects that
+  the EKS node group's IAM role exceeds kubelet-minimum
+  permissions (CTL.EKS.NODEGROUP.ROLE.OVERBROAD.001) —
+  the role grants broad S3 actions (s3:*, s3:GetObject on
+  Resource: *). The second leg detects that the node
+  group's security group permits unrestricted egress
+  (CTL.VPC.SG.EGRESS.001) — pods can reach S3 over the
+  public endpoint without network-level restriction.
+  Together: pod compromise yields unrestricted S3 access
+  across every bucket the overbroad node role permits.
+  Pods without IRSA or Pod Identity inherit the node role
+  via IMDS — the node role becomes the exfiltration
+  credential. Removing either leg breaks the chain: scope
+  the node role to kubelet-minimum and move workload S3
+  access to IRSA, OR restrict egress to a VPC endpoint
+  with a restrictive S3 policy.
+controls:
+  - CTL.EKS.NODEGROUP.ROLE.OVERBROAD.001
+  - CTL.VPC.SG.EGRESS.001
+scope: global
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - credential_access
+postconditions:
+  - data_access
+implicit_dependencies: []

@@ -1,0 +1,22 @@
+id: azure_identity_lifecycle_gap
+description: >
+  Multiple Azure resources have orphaned principal references.
+  The identity decommissioning process is systematically incomplete
+  — deleted principals leave residual access grants across RBAC,
+  Key Vault, and storage. The gap between identity deletion and
+  access cleanup is structural, not incidental.
+controls:
+  - CTL.AZURE.RBAC.GHOST.001
+  - CTL.AZURE.KEYVAULT.GHOST.001
+  - CTL.AZURE.STORAGE.GHOST.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

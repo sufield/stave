@@ -1,0 +1,16 @@
+id: cloudflare_false_https
+description: >
+  SSL mode not strict plus either no HSTS or no HTTPS redirect.
+  False sense of HTTPS security — users see the padlock but the
+  connection is not truly end-to-end encrypted or enforced.
+controls:
+  - CTL.CLOUDFLARE.ZONE.SSL.001
+  - CTL.CLOUDFLARE.ZONE.HSTS.001
+  - CTL.CLOUDFLARE.ZONE.HTTPS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

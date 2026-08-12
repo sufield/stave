@@ -1,0 +1,24 @@
+id: privilege_creep_lateral_movement
+description: >
+  Privilege Creep — data access combined with a forbidden
+  category plus unused-permission accumulation. The role spans
+  structurally incompatible permission categories
+  (CATEGORYMIX — e.g. data_read + secrets_access, data + iam_write)
+  and has retained services that Access Advisor reports as unused
+  for 90+ days (PERMISSIONDRIFT). Permissions were added
+  incrementally for specific tasks and never removed. The role
+  can both access sensitive data and modify who else can access
+  it; the high proportion of unused permissions indicates the
+  accumulation was neglect rather than deliberate design.
+  Threshold of 2 requires both defects to fire on the same role
+  asset.
+controls:
+  - CTL.IAM.ROLE.CATEGORYMIX.001
+  - CTL.IAM.ROLE.PERMISSIONDRIFT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

@@ -1,0 +1,18 @@
+id: crypto_concentration_failure
+description: >
+  High-density KMS key lacks protective controls. A single key
+  encrypts many resources and lacks deletion protection or rotation,
+  creating a cryptographic single point of failure where one
+  misconfiguration can cause widespread data inaccessibility.
+controls:
+  - CTL.KMS.CONCENTRATION.001
+  - CTL.KMS.CONCENTRATION.002
+  - CTL.KMS.ROTATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - rds_data_access
+  - s3_data_access
+implicit_dependencies: []

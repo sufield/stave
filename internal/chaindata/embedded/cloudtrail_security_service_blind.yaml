@@ -1,0 +1,23 @@
+id: cloudtrail_security_service_blind
+description: >
+  No GuardDuty disablement alarm plus either no
+  StopLogging alarm or no Organizations-change alarm.
+  Multiple security-service tampering surfaces are
+  unmonitored. An attacker can disable GuardDuty AND
+  either disable CloudTrail (StopLogging) or move an
+  account out of the organization (LeaveOrganization)
+  without detection — the standard chain of moves used
+  to escape detection before the destructive action.
+  Threshold of 2 fires when at least two of these three
+  monitoring surfaces are missing simultaneously.
+controls:
+  - CTL.CLOUDTRAIL.ALARM.GUARDDUTY.001
+  - CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001
+  - CTL.CLOUDTRAIL.ALARM.ORGCHANGE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

@@ -1,0 +1,25 @@
+id: stepfunctions_role_perms_unscoped
+description: >
+  Step Functions execution role has multiple
+  unscoped-permission defects: lambda:InvokeFunction
+  on Resource:*, dynamodb:* on Resource:*, s3:*
+  on Resource:*, messaging actions (sns, sqs,
+  events) on Resource:*, or sts:AssumeRole on
+  Resource:*. Each defect alone amplifies the
+  workflow's reachable surface; co-occurrence
+  indicates least-privilege design was skipped.
+  Threshold of 2 fires when at least two
+  unscoped-permission defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ROLE.PERM.LAMBDA.WILDCARD.001
+  - CTL.STEPFUNCTIONS.ROLE.PERM.DYNAMODB.WILDCARD.001
+  - CTL.STEPFUNCTIONS.ROLE.PERM.S3.WILDCARD.001
+  - CTL.STEPFUNCTIONS.ROLE.PERM.MESSAGING.WILDCARD.001
+  - CTL.STEPFUNCTIONS.ROLE.PERM.STS.WILDCARD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

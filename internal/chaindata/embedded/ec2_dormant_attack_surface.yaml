@@ -1,0 +1,22 @@
+id: ec2_dormant_attack_surface
+description: >
+  Instance has been stopped beyond the decommission threshold AND
+  either an orphan ENI persists or an orphan key pair persists.
+  The "stopped" state is supposed to be a quiet, low-risk state
+  but it is not isolation: detached resources around the instance
+  continue to occupy IP space, security-group quota, and SSH-key
+  reachability. The combination is the long-tail attack surface
+  that survives every "we cleaned that up months ago" review:
+  resources nobody owns, in subnets the team forgot, behind
+  credentials that were never rotated.
+controls:
+  - CTL.EC2.INSTANCE.STOPPED.AGED.001
+  - CTL.EC2.ENI.ORPHAN.001
+  - CTL.EC2.KEYPAIR.ORPHAN.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - network_access_ec2
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

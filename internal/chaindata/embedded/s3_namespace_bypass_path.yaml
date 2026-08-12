@@ -1,0 +1,32 @@
+id: s3_namespace_bypass_path
+description: >
+  S3 namespace bypass: RCP data perimeter enforces
+  PrincipalOrgID for s3:* actions, but s3express:,
+  s3tables:, and s3vectors: have separate IAM namespaces
+  not covered by the same RCP. An attacker with
+  s3express:CreateSession can access Directory Bucket
+  data even when s3:GetObject is RCP-denied, because
+  the RCP action scope doesn't match. This chain fires
+  when the RCP data perimeter exists for s3: but not
+  for the sub-namespaces.
+controls:
+  - CTL.ORG.RCP.PRINCIPALORGID.001
+  - CTL.S3EXPRESS.POLICY.PUBLIC.001
+  - CTL.S3TABLES.POLICY.PUBLIC.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - data_access
+implicit_dependencies:
+  - source: observation.s3express_buckets
+    fallback: fail_closed
+    diagnostic: >
+      Directory Bucket observations not captured.
+      s3express: namespace is invisible to the catalog.
+  - source: observation.s3tables_buckets
+    fallback: fail_closed
+    diagnostic: >
+      Table Bucket observations not captured.
+      s3tables: namespace is invisible to the catalog.

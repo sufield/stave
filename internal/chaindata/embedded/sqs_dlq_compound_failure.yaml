@@ -1,0 +1,27 @@
+id: sqs_dlq_compound_failure
+description: >
+  Any single DLQ failure path activates this chain — no DLQ
+  depth alarm, ghost DLQ (deleted target), or no DLQ
+  configured at all. Each independently means failed messages
+  are undetectable: either the DLQ exists but isn't monitored,
+  the DLQ was deleted out from under the source queue, or no
+  DLQ was ever configured. Any single path = silent message
+  loss on failure. Threshold of 1 makes this chain the
+  cross-iteration aggregator linking SQS-1's structural
+  failures (ghost DLQ, missing DLQ) with SQS-3's monitoring
+  failure (no DLQ depth alarm).
+controls:
+  - CTL.SQS.ALARM.DLQ.DEPTH.001
+  - CTL.SQS.GHOST.DLQ.001
+  - CTL.SQS.DLQ.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

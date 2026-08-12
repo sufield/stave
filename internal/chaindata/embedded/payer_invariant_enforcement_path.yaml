@@ -1,0 +1,23 @@
+id: payer_invariant_enforcement_path
+description: >
+  Payer account invariant enforcement gap: the management account has
+  workload IAM principals beyond the break-glass minimum AND permission
+  boundary enforcement is structurally weak — principals can create
+  unbounded sub-principals or modify their own boundary. The management
+  account is exempt from all SCPs by AWS design, so permission boundaries
+  are the only invariant enforcement mechanism available. When the
+  management account has workload principals AND boundary enforcement
+  has gaps, the payer invariant surface is exposed with no compensating
+  control. Reference: Chris Farris's payer invariants
+  (chrisfarris.com/post/payer-invariants/).
+controls:
+  - CTL.IAM.ORG.MGMT.PRINCIPALS.001
+  - CTL.IAM.BOUNDARY.MISSING.001
+  - CTL.IAM.BOUNDARY.ESCAPE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - org_admin_access
+implicit_dependencies: []

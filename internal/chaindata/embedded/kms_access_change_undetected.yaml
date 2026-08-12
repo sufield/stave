@@ -1,0 +1,22 @@
+id: kms_access_change_undetected
+description: >
+  No CloudWatch alarm for PutKeyPolicy plus either no alarm for
+  CreateGrant or GrantWithGrant enabled in the policy. Key
+  access can be modified without detection AND either grants
+  can be created silently or grant chains can extend
+  access through delegation. Both the primary access-control
+  mechanism (policy) and the secondary one (grants) are open
+  to silent manipulation. Threshold of 2 fires when at least
+  two of the three access-change governance gaps coexist on
+  the same key.
+controls:
+  - CTL.KMS.ALARM.POLICYCHANGE.001
+  - CTL.KMS.ALARM.CREATEGRANT.001
+  - CTL.KMS.POLICY.GRANTWITHGRANT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - kms_key_compromise
+implicit_dependencies: []

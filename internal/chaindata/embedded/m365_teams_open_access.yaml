@@ -1,0 +1,16 @@
+id: m365_teams_open_access
+description: >
+  Anonymous meeting access plus either unrestricted external domains
+  or external file sharing. Teams fully open — anonymous users join,
+  any external organization communicates or shares files.
+controls:
+  - CTL.M365.TEAMS.ANON.001
+  - CTL.M365.TEAMS.EXTERNAL.DOMAINS.001
+  - CTL.M365.TEAMS.EXTERNAL.FILES.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

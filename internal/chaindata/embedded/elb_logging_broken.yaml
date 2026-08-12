@@ -1,0 +1,24 @@
+id: elb_logging_broken
+description: >
+  Any ELB logging failure — ghost access-log bucket,
+  access-log permission denied, or WAF logging
+  disabled. Each independently means request-level or
+  filtering-level audit data is not recorded. The
+  perimeter has no audit trail. Threshold of 1 fires
+  whenever any one of the three logging surfaces is
+  broken.
+controls:
+  - CTL.ELB.GHOST.ACCESSLOG.001
+  - CTL.ELB.ACCESSLOG.PERMISSION.001
+  - CTL.ELB.WAF.NOLOG.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

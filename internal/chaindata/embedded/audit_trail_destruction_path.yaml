@@ -1,0 +1,16 @@
+id: audit_trail_destruction_path
+description: >
+  Log bucket publicly accessible, without versioning, and without
+  object lock — logs can be enumerated by external actors, deleted
+  by any principal with s3:DeleteObject, and cannot be recovered.
+controls:
+  - CTL.S3.LOG.BUCKET.PUBLIC.001
+  - CTL.S3.LOG.BUCKET.VERSIONING.001
+  - CTL.S3.LOG.BUCKET.LOCK.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

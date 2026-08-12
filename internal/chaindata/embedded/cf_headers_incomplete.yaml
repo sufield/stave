@@ -1,0 +1,27 @@
+id: cf_headers_incomplete
+description: >
+  Multiple response header failures on the CloudFront distribution.
+  Required security headers (HSTS, X-Frame-Options, X-Content-Type-Options,
+  Referrer-Policy) are absent or a headers policy is not attached
+  (CTL.CLOUDFRONT.HEADERS.001) — the browser does not enforce transport
+  security, framing protection, or MIME type enforcement — AND either
+  Content-Security-Policy is missing (CTL.CLOUDFRONT.HEADERS.NOCSP.001),
+  leaving XSS attacks able to load arbitrary scripts, or the backend
+  technology stack is exposed in Server/X-Powered-By headers
+  (CTL.CLOUDFRONT.HEADERS.SERVEREXPOSED.001), enabling targeted
+  reconnaissance. Threshold of 2 reflects that a single header gap
+  is a known posture concern; two together describe a distribution
+  where the response header security story is broken at multiple
+  points — browser security features, XSS containment, and/or
+  technology disclosure each contributes independently.
+controls:
+  - CTL.CLOUDFRONT.HEADERS.001
+  - CTL.CLOUDFRONT.HEADERS.NOCSP.001
+  - CTL.CLOUDFRONT.HEADERS.SERVEREXPOSED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

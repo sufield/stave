@@ -1,0 +1,30 @@
+id: cf_logging_failure
+description: >
+  Any CloudFront logging gap at the internet edge. Access logging is
+  disabled — the distribution has no request-level audit trail
+  (CTL.CLOUDFRONT.LOGGING.001); the access log bucket has no lifecycle
+  policy — logs accumulate with viewer PII beyond retention requirements
+  (CTL.CLOUDFRONT.LOG.BUCKET.NOLIFECYCLE.001); or the log destination
+  bucket has been deleted — logs are silently discarded while the
+  configuration shows logging enabled
+  (CTL.CLOUDFRONT.GHOST.LOGBUCKET.001). Threshold of 1 reflects that
+  any single condition independently means request data at the internet
+  edge is either not captured, not retained appropriately, or silently
+  discarded. CloudFront is the first contact point for every viewer
+  request — logging failures here eliminate the primary forensic
+  record for the application's internet exposure.
+controls:
+  - CTL.CLOUDFRONT.LOGGING.001
+  - CTL.CLOUDFRONT.LOG.BUCKET.NOLIFECYCLE.001
+  - CTL.CLOUDFRONT.GHOST.LOGBUCKET.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

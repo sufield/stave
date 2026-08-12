@@ -1,0 +1,26 @@
+id: opensearch_backup_unsafe
+description: >
+  OpenSearch domain has multiple backup
+  configuration defects: no manual snapshot
+  repo, snapshot retention below compliance
+  window, snapshot key drift from domain key,
+  no cross-region replication, repo role
+  trust missing, no pre-delete snapshot gate.
+  Each defect alone weakens recovery position;
+  co-occurrence indicates backup discipline is
+  unmaintained. Threshold of 2 fires when at
+  least two backup defects coexist.
+controls:
+  - CTL.OPENSEARCH.SNAPSHOT.NOMANUAL.REPO.001
+  - CTL.OPENSEARCH.SNAPSHOT.RETENTION.SHORT.001
+  - CTL.OPENSEARCH.SNAPSHOT.KEY.DRIFT.001
+  - CTL.OPENSEARCH.SNAPSHOT.NOCROSSREGION.001
+  - CTL.OPENSEARCH.SNAPSHOT.REPO.ROLE.TRUST.001
+  - CTL.OPENSEARCH.DELETE.NOSNAPSHOT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

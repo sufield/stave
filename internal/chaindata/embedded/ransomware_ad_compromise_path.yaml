@@ -1,0 +1,18 @@
+id: ransomware_ad_compromise_path
+description: >
+  Service account vulnerable to Kerberoasting combined with NTLM
+  downgrade permitted and no LAPS. Standard ransomware initial
+  access and lateral movement path — an attacker captures service
+  account hashes offline, downgrades authentication to crack them,
+  then moves laterally using shared local admin passwords.
+controls:
+  - CTL.AD.KERBEROAST.001
+  - CTL.AD.NTLM.LEVEL.001
+  - CTL.AD.LAPS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_destruction
+implicit_dependencies: []

@@ -1,0 +1,16 @@
+id: gcp_network_perimeter_gap
+description: >
+  Unrestricted firewall plus missing flow logs or default network.
+  Network perimeter is open and either unmonitored or using
+  insecure defaults.
+controls:
+  - CTL.GCP.COMPUTE.FIREWALL.ALL.001
+  - CTL.GCP.COMPUTE.FLOWLOGS.001
+  - CTL.GCP.COMPUTE.NETWORK.DEFAULT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

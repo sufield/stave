@@ -1,0 +1,19 @@
+id: elb_single_az
+description: >
+  Either the load balancer or the targets are in a
+  single Availability Zone. Each independently means
+  AZ failure causes service outage. If both fire, the
+  entire stack — load balancer ENIs and backend
+  targets — is in one AZ; complete AZ dependency.
+  Threshold of 1 fires whenever any one layer lacks
+  AZ redundancy.
+controls:
+  - CTL.ELB.NETWORK.SINGLEAZ.001
+  - CTL.ELB.TARGET.SINGLEAZ.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

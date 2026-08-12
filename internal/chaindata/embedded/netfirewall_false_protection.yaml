@@ -1,0 +1,17 @@
+id: netfirewall_false_protection
+description: >
+  Network Firewall with no rule groups, default PASS for full packets,
+  and no logging. The firewall is deployed in the VPC but provides
+  zero inspection — all traffic passes through uninspected and
+  unrecorded.
+controls:
+  - CTL.NETFIREWALL.POLICY.RULEGROUP.001
+  - CTL.NETFIREWALL.DEFAULT.FULL.001
+  - CTL.NETFIREWALL.LOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

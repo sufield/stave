@@ -1,0 +1,31 @@
+id: rds_ghost_cascade
+description: >
+  Two or more of the database's infrastructure dependencies have
+  been deleted without updating the database configuration:
+  subnet group references a deleted subnet, parameter group is
+  deleted, event subscription's SNS topic is deleted, or attached
+  security group is deleted. Any single ghost is medium-to-high
+  severity on its own; the combination is a systematic
+  decommissioning failure in the supporting infrastructure. The
+  database keeps running on whatever residual state AWS still
+  resolves, the security review reads green because every
+  component looks valid in isolation, and the failures arrive
+  only at the moment each ghost is actually exercised
+  (failover, parameter change, event delivery, network rule
+  evaluation).
+controls:
+  - CTL.RDS.GHOST.SUBNETGROUP.001
+  - CTL.RDS.GHOST.PARAMGROUP.001
+  - CTL.RDS.GHOST.EVENTSNS.001
+  - CTL.RDS.GHOST.SG.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_rds
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

@@ -1,0 +1,21 @@
+id: elb_abandoned_perimeter
+description: >
+  Dormant load balancer plus either an orphan target
+  group or legacy Classic Load Balancer. Multiple
+  lifecycle indicators: the load balancer is unused
+  AND either its backend is orphaned or it's running
+  on legacy infrastructure. Abandoned perimeter
+  infrastructure with active configuration. Threshold
+  of 2 fires when dormancy compounds with another
+  lifecycle artifact.
+controls:
+  - CTL.ELB.LIFECYCLE.DORMANT.001
+  - CTL.ELB.LIFECYCLE.ORPHAN.TARGETGROUP.001
+  - CTL.ELB.LIFECYCLE.CLB.MIGRATION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

@@ -1,0 +1,18 @@
+id: iam_condition_bypass
+description: >
+  Missing PrincipalOrgID plus either StringLike wildcard matching or
+  NotResource inversion. Multiple condition-level failures that expand
+  access scope beyond intent. The policy grants the right actions on
+  the right resources but lacks conditions that constrain HOW those
+  actions can be used.
+controls:
+  - CTL.IAM.POLICY.CONDITION.ORGID.001
+  - CTL.IAM.POLICY.CONDITION.STRINGLIKE.001
+  - CTL.IAM.POLICY.CONDITION.NOTRESOURCE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - resource_policy_escalation
+implicit_dependencies: []

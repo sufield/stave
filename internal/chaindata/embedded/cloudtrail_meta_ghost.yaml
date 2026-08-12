@@ -1,0 +1,25 @@
+id: cloudtrail_meta_ghost
+description: >
+  Two or more CloudTrail ghost references. Multiple
+  components of the audit infrastructure have been
+  deleted — S3 bucket, CW Logs group, delivery role, or
+  SNS topic. Systematic destruction or decommissioning
+  failure of the audit layer. Threshold of 2 fires when
+  the audit infrastructure has compound damage rather
+  than a single broken reference.
+controls:
+  - CTL.CLOUDTRAIL.GHOST.S3BUCKET.001
+  - CTL.CLOUDTRAIL.GHOST.CWLOGS.001
+  - CTL.CLOUDTRAIL.GHOST.CWROLE.001
+  - CTL.CLOUDTRAIL.GHOST.SNSTOPIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

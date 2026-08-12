@@ -1,0 +1,22 @@
+id: eks_threat_detection_off
+description: >
+  EKS cluster has both GuardDuty EKS Protection
+  (control-plane audit log analysis) and Runtime
+  Monitoring (per-pod system call observation)
+  disabled. Threat detection at both the
+  control-plane and the runtime layer is
+  unwired; documented attack patterns —
+  service-account-token theft, container escapes,
+  crypto miners, reverse shells — go undetected.
+  Threshold of 2 fires when both GuardDuty
+  capabilities are off.
+controls:
+  - CTL.EKS.GUARDDUTY.EKS.PROTECTION.001
+  - CTL.EKS.GUARDDUTY.RUNTIME.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

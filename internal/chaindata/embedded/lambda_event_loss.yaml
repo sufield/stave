@@ -1,0 +1,28 @@
+id: lambda_event_loss
+description: >
+  Any single event-loss path is sufficient: no async DLQ
+  or failure destination, no event source mapping
+  failure destination, or DLQ pointing at a deleted
+  target. Each path independently causes failed events
+  to vanish — silent discard after async retries
+  (DLQ.MISSING), shard blocking and stream-record
+  expiry (ESM.NODLQ), or publish-to-deleted-target
+  (GHOST.DLQ). Threshold of 1 reflects that any one of
+  these alone is already a complete failure for the
+  events that travel that path; compounding doesn't
+  make it worse, the data is already gone.
+controls:
+  - CTL.LAMBDA.DLQ.MISSING.001
+  - CTL.LAMBDA.ESM.NODLQ.001
+  - CTL.LAMBDA.GHOST.DLQ.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - network_access_lambda
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

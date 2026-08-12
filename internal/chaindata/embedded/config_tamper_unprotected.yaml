@@ -1,0 +1,23 @@
+id: config_tamper_unprotected
+description: >
+  Broad StopConfigurationRecorder access plus
+  either no SCP-level Config protection (the
+  catalog's existing CTL.IAM.SCP.CONFIG.001) or
+  broad DeleteConfigRule access. Many
+  principals can stop Config AND either member
+  accounts can stop their own recorders or
+  many principals can delete compliance rules.
+  Config is both stoppable and rule-deletable
+  by too many people; the configuration audit
+  trail can be silenced through multiple paths.
+controls:
+  - CTL.CONFIG.ACCESS.STOPRECORDER.BROAD.001
+  - CTL.IAM.SCP.CONFIG.001
+  - CTL.CONFIG.ACCESS.DELETERULE.BROAD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

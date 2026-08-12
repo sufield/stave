@@ -1,0 +1,23 @@
+id: opensearch_audit_completeness_decay
+description: >
+  OpenSearch audit configuration has multiple
+  completeness defects: categories incomplete (no
+  FAILED_LOGIN), no index name in REQUEST events,
+  no body capture, or security-changes events
+  share retention with operational logs. Each
+  defect alone leaves a gap in audit attribution
+  / scope; co-occurrence indicates audit
+  completeness is unowned. Threshold of 2 fires
+  when at least two completeness defects coexist.
+controls:
+  - CTL.OPENSEARCH.AUDIT.CATEGORIES.INCOMPLETE.001
+  - CTL.OPENSEARCH.AUDIT.NOINDEX.NAME.001
+  - CTL.OPENSEARCH.AUDIT.NOBODY.CAPTURE.001
+  - CTL.OPENSEARCH.AUDIT.SECURITY.CHANGES.SHARED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

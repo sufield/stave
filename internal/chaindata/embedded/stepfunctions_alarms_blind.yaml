@@ -1,0 +1,23 @@
+id: stepfunctions_alarms_blind
+description: >
+  Step Functions state machine has multiple
+  alarm-coverage defects: missing alarms on
+  ExecutionsFailed, ExecutionThrottled,
+  ExecutionTime SLO, or Activity / Lambda
+  schedule time. Each defect alone leaves a
+  failure mode unobserved; co-occurrence
+  means the workflow's runtime health is
+  invisible. Threshold of 2 fires when at
+  least two alarms are missing.
+controls:
+  - CTL.STEPFUNCTIONS.ALARM.EXEC.FAILED.001
+  - CTL.STEPFUNCTIONS.ALARM.EXEC.THROTTLED.001
+  - CTL.STEPFUNCTIONS.ALARM.EXEC.TIME.SLO.001
+  - CTL.STEPFUNCTIONS.ALARM.SCHEDULE.TIME.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

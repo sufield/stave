@@ -1,0 +1,34 @@
+id: r53_multi_dangling
+description: >
+  Two or more dangling DNS records across different resource types,
+  indicating a systematic DNS cleanup failure rather than an isolated
+  oversight. S3 dangling (CTL.ROUTE53.DANGLING.S3.001), CloudFront
+  dangling (CTL.ROUTE53.DANGLING.CLOUDFRONT.001), ELB dangling
+  (CTL.ROUTE53.DANGLING.ELB.001), EIP dangling
+  (CTL.ROUTE53.DANGLING.EIP.001), EC2 dangling
+  (CTL.ROUTE53.DANGLING.EC2.001), API Gateway dangling
+  (CTL.ROUTE53.DANGLING.APIGATEWAY.001), or Elastic Beanstalk
+  dangling (CTL.ROUTE53.DANGLING.BEANSTALK.001). Threshold of 2
+  reflects that a single dangling record is an operational failure;
+  two or more across different resource types describes an
+  organization where DNS cleanup is not part of the decommissioning
+  process. Every resource deletion creates a dangling record. The
+  attacker who finds one dangling record in automated scanning will
+  find all of them — the combination amplifies the attack surface.
+  Multiple dangling records indicate that the DNS hygiene problem
+  is systemic, not incidental.
+controls:
+  - CTL.ROUTE53.DANGLING.S3.001
+  - CTL.ROUTE53.DANGLING.CLOUDFRONT.001
+  - CTL.ROUTE53.DANGLING.ELB.001
+  - CTL.ROUTE53.DANGLING.EIP.001
+  - CTL.ROUTE53.DANGLING.EC2.001
+  - CTL.ROUTE53.DANGLING.APIGATEWAY.001
+  - CTL.ROUTE53.DANGLING.BEANSTALK.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

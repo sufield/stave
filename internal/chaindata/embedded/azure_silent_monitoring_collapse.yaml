@@ -1,0 +1,21 @@
+id: azure_silent_monitoring_collapse
+description: >
+  Alert notifications are broken (ghost action group) AND either
+  Defender security contact is missing or Activity Log is not exported.
+  The monitoring infrastructure appears active but notifications go
+  nowhere and audit data is not preserved.
+controls:
+  - CTL.AZURE.ALERT.GHOST.001
+  - CTL.AZURE.DEFENDER.CONTACT.001
+  - CTL.AZURE.ACTIVITYLOG.EXPORT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

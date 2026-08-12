@@ -1,0 +1,17 @@
+id: azure_identity_compromise
+description: >
+  Multiple Azure identity controls failing — MFA not enforced for
+  privileged users AND no Conditional Access policy AND excessive
+  Owner assignments. The identity perimeter is open at authentication,
+  authorization, and scope layers simultaneously.
+controls:
+  - CTL.AZURE.IDENTITY.MFA.001
+  - CTL.AZURE.RBAC.OWNER.001
+  - CTL.AZURE.IDENTITY.CONDITIONAL.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

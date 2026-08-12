@@ -1,0 +1,20 @@
+id: k8s_host_metadata_escalation_path
+description: >
+  Pod shares host network namespace (hostNetwork=true), retains
+  CAP_NET_RAW capability allowing raw socket creation, and no
+  NetworkPolicy blocks egress to 169.254.169.254. An attacker
+  with code execution in this pod can intercept and spoof cloud
+  instance metadata service responses, injecting SSH keys into
+  the host authorized_keys file and gaining root access. All
+  three conditions must be present for the attack to succeed.
+controls:
+  - CTL.K8S.POD.HOSTNET.001
+  - CTL.K8S.POD.CAPABILITIES.001
+  - CTL.K8S.IMDS.BLOCK.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - k8s_service_account_token
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

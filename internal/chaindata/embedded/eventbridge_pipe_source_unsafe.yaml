@@ -1,0 +1,23 @@
+id: eventbridge_pipe_source_unsafe
+description: >
+  Two or more source-side defects co-occur on the same
+  EventBridge Pipe: source IAM role is wildcard-scoped, no source
+  DLQ is configured, no source FilterCriteria narrows volume,
+  Kafka credentials are in plaintext, or MSK uses non-IAM
+  authentication. Each defect alone is a real issue; co-occurrence
+  indicates the pipe's source-side configuration was not
+  reviewed against AWS least-privilege guidance. Threshold of 2
+  fires when at least two source defects coexist.
+controls:
+  - CTL.EVENTBRIDGE.PIPE.SOURCE.IAM.WILDCARD.001
+  - CTL.EVENTBRIDGE.PIPE.SOURCE.NODLQ.001
+  - CTL.EVENTBRIDGE.PIPE.SOURCE.NOFILTER.001
+  - CTL.EVENTBRIDGE.PIPE.SOURCE.KAFKA.PLAINTEXT.001
+  - CTL.EVENTBRIDGE.PIPE.SOURCE.MSK.NOIAM.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

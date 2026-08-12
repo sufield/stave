@@ -1,0 +1,19 @@
+id: vpc_public_by_default
+description: >
+  Main route table has an IGW default route AND subnets auto-assign
+  public IPs. Every new subnet created without an explicit custom
+  route-table association inherits the main route table's internet
+  route, AND every resource launched in that subnet gets a public IP
+  automatically. New resources become internet-facing without any
+  explicit decision from the deployer. This is the worst subnet-
+  default combination.
+controls:
+  - CTL.VPC.ROUTETABLE.MAIN.PUBLIC.001
+  - CTL.VPC.SUBNET.AUTOPUBLIC.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

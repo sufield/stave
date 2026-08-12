@@ -1,0 +1,28 @@
+id: ebs_backup_nonfunctional
+description: >
+  Any backup-pipeline failure: no DLM policy at
+  all, the policy is disabled, the policy is in
+  ERROR state, or the execution role has been
+  deleted. Each independently means automated
+  EBS backups are not running. Threshold of 1
+  because a single failure mode is sufficient
+  to silently break the backup, and the team
+  typically discovers the gap only during
+  disaster recovery — when the most recent
+  snapshot is far older than expected.
+controls:
+  - CTL.EC2.EBS.DLM.NOPOLICY.001
+  - CTL.EC2.EBS.DLM.DISABLED.001
+  - CTL.EC2.EBS.DLM.ERROR.001
+  - CTL.EC2.EBS.GHOST.DLM.ROLE.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

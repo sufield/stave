@@ -1,0 +1,25 @@
+id: ec2_false_management
+description: >
+  Multiple staleness indicators agree that this instance is
+  effectively unmanaged despite appearing managed: the SSM
+  agent is in `ConnectionLost`, AND either the patch
+  compliance scan has not run in over a week or Inspector
+  findings are sitting open beyond their SLA. The dashboards
+  report the instance as covered by SSM, by Patch Manager,
+  and by Inspector — and behind those reports, no actual
+  management activity is happening on this instance. This
+  is the "everything appears to work" pattern at the
+  management-plane scale: not one stale metric, but a
+  coordinated absence of activity across three independent
+  indicators.
+controls:
+  - CTL.EC2.SSM.AGENT.STALE.001
+  - CTL.EC2.PATCH.SCAN.STALE.001
+  - CTL.EC2.INSPECTOR.FINDINGS.STALE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_ec2
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

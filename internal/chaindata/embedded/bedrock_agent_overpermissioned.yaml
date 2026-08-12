@@ -1,0 +1,23 @@
+id: bedrock_agent_overpermissioned
+description: >
+  Bedrock agent execution role grants broad lambda:InvokeFunction,
+  the agent has no associated guardrail filtering prompts and
+  outputs, and per-agent invocation logging is disabled. An
+  attacker who gains prompt control can invoke arbitrary Lambda
+  functions through the agent with no content filtering and no
+  audit trail. Threshold of 3 because all three legs of the
+  compound — broad reach, no filter, no detection — must stack
+  to make the agent a usable exfiltration / lateral-movement
+  primitive. Drop any one and the attacker has either limited
+  reach, blocked content, or visible activity.
+controls:
+  - CTL.BEDROCK.AGENT.OVERPERM.LAMBDA.001
+  - CTL.BEDROCK.AGENT.GUARDRAIL.001
+  - CTL.BEDROCK.AGENT.LOGGING.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - automation_hijack
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

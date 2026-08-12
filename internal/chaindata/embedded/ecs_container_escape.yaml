@@ -1,0 +1,30 @@
+id: ecs_container_escape
+description: >
+  Any single container-escape vector independently provides a path
+  from inside the container to full host control. Privileged mode
+  (CTL.ECS.PRIV.001) hands the container the entire host kernel.
+  A dangerous host mount (CTL.ECS.TASKDEF.HOSTMOUNT.001) — Docker
+  socket, /proc, /sys, /dev, host root — gives the container
+  direct access to the host control plane or kernel interfaces.
+  Excessive Linux capabilities (CTL.ECS.SECURITY.CAPABILITIES.001)
+  grant kernel-level privileges that aid namespace escape and
+  process tracing across containers. Host network mode
+  (CTL.ECS.NETWORK.001) places the container directly on the
+  host's network stack with access to every host port and the
+  metadata endpoint without hop-limit protection. Threshold of 1
+  reflects that one of these alone enables container-to-host
+  escape; the chain groups them so the reviewer reaches "this
+  container has an escape path" as a single posture finding
+  whichever specific path is taken.
+controls:
+  - CTL.ECS.PRIV.001
+  - CTL.ECS.TASKDEF.HOSTMOUNT.001
+  - CTL.ECS.SECURITY.CAPABILITIES.001
+  - CTL.ECS.NETWORK.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - container_code_execution
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

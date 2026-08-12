@@ -1,0 +1,25 @@
+id: cf_origin_exposure
+description: >
+  Any origin exposure that defeats CloudFront's purpose as a security
+  layer. The S3 origin has no access restriction — the bucket must be
+  public and CloudFront provides no origin protection
+  (CTL.CLOUDFRONT.ORIGIN.NOACCESS.001); the custom origin is directly
+  accessible from the internet, bypassing WAF, geo-restrictions, and
+  signed URL enforcement (CTL.CLOUDFRONT.ORIGIN.BYPASS.001); or the
+  custom origin connection is plaintext — false HTTPS
+  (CTL.CLOUDFRONT.ORIGIN.HTTP.001). Threshold of 1 reflects that any
+  single failure independently defeats CloudFront as a security
+  boundary. A public S3 bucket bypasses CloudFront entirely via the
+  S3 URL. A bypassable custom origin means all CloudFront controls are
+  optional. An HTTP origin means end-to-end encryption doesn't exist.
+controls:
+  - CTL.CLOUDFRONT.ORIGIN.NOACCESS.001
+  - CTL.CLOUDFRONT.ORIGIN.BYPASS.001
+  - CTL.CLOUDFRONT.ORIGIN.HTTP.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_in_transit_exposure
+implicit_dependencies: []

@@ -1,0 +1,23 @@
+id: eks_netpol_isolation_collapsed
+description: >
+  EKS namespace has multiple network-isolation defects:
+  no default-deny ingress, no default-deny egress, ingress
+  policies but no egress (one-way isolation), or
+  NetworkPolicy with namespaceSelector: {} permitting all
+  namespaces. Each defect alone undermines namespace
+  isolation; co-occurrence means the namespace has no
+  meaningful network containment. Threshold of 2 fires when
+  at least two isolation defects coexist within the
+  namespace.
+controls:
+  - CTL.EKS.NETPOL.NODEFAULTDENY.INGRESS.001
+  - CTL.EKS.NETPOL.NODEFAULTDENY.EGRESS.001
+  - CTL.EKS.NETPOL.INGRESSONLY.001
+  - CTL.EKS.NETPOL.NSSELECTOR.WIDE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

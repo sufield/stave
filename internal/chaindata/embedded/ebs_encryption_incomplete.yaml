@@ -1,0 +1,24 @@
+id: ebs_encryption_incomplete
+description: >
+  Volume encryption uses AWS-managed key plus
+  either account default also using AWS-managed
+  key or a snapshot in the catalog that's
+  unencrypted entirely. Encryption exists but is
+  customer-uncontrolled (no key policy, no
+  audit, no revocation) AND either every new
+  volume inherits the same gap or some snapshots
+  have no encryption barrier at all. Threshold
+  of 2 because the dangerous compound is the
+  combination of uncontrolled encryption with a
+  systemic propagation path.
+controls:
+  - CTL.EC2.EBS.ENCRYPT.CMK.001
+  - CTL.EC2.EBS.DEFAULT.ENCRYPT.CMK.001
+  - CTL.EC2.EBS.SNAPSHOT.ENCRYPT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - encryption_bypass
+implicit_dependencies: []

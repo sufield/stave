@@ -1,0 +1,23 @@
+id: iam_shadow_admin_escalation
+description: >
+  Shadow admin escalation path through group membership. An IAM
+  group carries admin-equivalent policies (Action:*/Resource:*)
+  AND the group has zero members (latent — no current users
+  inherit it, but iam:AddUserToGroup is a one-call escalation).
+  Combined with a wildcard trust role or inline NotAction
+  policies, the attack surface compounds: an attacker who gains
+  AddUserToGroup permission adds themselves to the admin group,
+  inheriting full admin immediately. The empty-group + admin-policy
+  combination is the shadow admin factory; the wildcard trust or
+  NotAction policies are the entry points.
+controls:
+  - CTL.IAM.POLICY.ADMIN.002
+  - CTL.IAM.GROUP.EMPTY.001
+  - CTL.IAM.POLICY.SHADOW.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

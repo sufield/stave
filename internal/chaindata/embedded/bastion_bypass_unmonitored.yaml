@@ -1,0 +1,22 @@
+id: bastion_bypass_unmonitored
+description: >
+  Bastion host exists in the VPC but production instances accept
+  SSH from non-bastion sources (internal CIDRs) AND VPC flow logs
+  are absent — SSH connections bypass the bastion with no
+  network-level visibility. The bastion architecture is intended
+  (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but
+  defeated: other instances accept SSH from broad internal CIDRs
+  instead of the bastion's security group reference. Without flow
+  logs, the bypass is invisible to forensics — no record of who
+  connected to what, when, or from where.
+controls:
+  - CTL.EC2.SG.SSH.INTERNAL.CIDR.001
+  - CTL.VPC.SEGMENT.BASTION.001
+  - CTL.VPC.FLOWLOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - vpc_instance_compromise
+implicit_dependencies: []

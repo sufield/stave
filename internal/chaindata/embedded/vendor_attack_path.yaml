@@ -1,0 +1,15 @@
+id: vendor_attack_path
+description: >
+  Third-party vendor integration lacks confused deputy protection AND has
+  broad data access permissions. A compromised or malicious vendor customer
+  can assume your role and access your data with no cryptographic barrier.
+controls:
+  - CTL.IAM.TRUST.CONFUSEDDEPUTY.001
+  - CTL.S3.ACCESS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

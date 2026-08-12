@@ -1,0 +1,21 @@
+id: eks_node_imds_unsafe
+description: >
+  EKS node group's IMDS posture is broken in multiple ways:
+  IMDSv1 permitted (HttpTokens optional), hop limit > 1
+  (containers can reach IMDS), or IMDS disabled while
+  workloads depend on it. The first two together expose
+  pod-side IAM credential extraction; the third silently
+  breaks AWS-API-using workloads. Threshold of 2 fires when
+  at least two IMDS-config defects coexist on the same
+  node group.
+controls:
+  - CTL.EKS.NODEGROUP.IMDSV2.001
+  - CTL.EKS.NODEGROUP.IMDS.HOPLIMIT.001
+  - CTL.EKS.NODEGROUP.IMDS.DISABLED.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

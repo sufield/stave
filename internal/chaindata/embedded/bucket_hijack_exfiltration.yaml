@@ -1,0 +1,22 @@
+id: bucket_hijack_exfiltration
+description: >
+  Data stream destination bucket can be deleted by an identity in the
+  snapshot, and no organizational data perimeter SCP restricts writes
+  to external buckets. An attacker who deletes the bucket and recreates
+  it under their own account captures the data stream without stealing
+  credentials — the classic Unit 42 global namespace hijacking vector.
+controls:
+  - CTL.FIREHOSE.GHOST.S3.001
+  - CTL.S3.REPLICATION.GHOST.DEST.001
+  - CTL.IAM.SCP.DATAPERIMETER.S3.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - s3_delete_bucket_permission
+postconditions:
+  - data_exfiltration_via_hijack
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

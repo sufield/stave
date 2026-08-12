@@ -1,0 +1,16 @@
+id: github_review_bypass
+description: >
+  Stale reviews not dismissed plus either admin bypass or force push.
+  Multiple ways to circumvent the code review process — post-approval
+  injection, admin direct push, or history rewrite.
+controls:
+  - CTL.GITHUB.REPO.STALEREVIEWS.001
+  - CTL.GITHUB.REPO.ADMINENFORCE.001
+  - CTL.GITHUB.REPO.FORCEPUSH.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

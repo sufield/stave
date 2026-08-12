@@ -1,0 +1,20 @@
+id: cloudtrail_tamper_undetected
+description: >
+  Any trail tampering undetected — no alarm for
+  StopLogging, DeleteTrail, or PutEventSelectors. Each
+  independently means the audit trail can be disabled or
+  narrowed without notification. The attacker's first
+  action — disable or narrow logging — goes undetected.
+  Threshold of 1 fires whenever any one of the three
+  tampering surfaces lacks an alarm.
+controls:
+  - CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001
+  - CTL.CLOUDTRAIL.ALARM.DELETETRAIL.001
+  - CTL.CLOUDTRAIL.ALARM.EVENTSELECTOR.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

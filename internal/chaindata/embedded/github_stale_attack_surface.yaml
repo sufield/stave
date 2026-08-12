@@ -1,0 +1,16 @@
+id: github_stale_attack_surface
+description: >
+  Inactive repository plus either no dependency scanning or no
+  secret scanning. Stale repo with unpatched dependencies and
+  undetected committed secrets — unmaintained attack surface.
+controls:
+  - CTL.GITHUB.REPO.INACTIVE.001
+  - CTL.GITHUB.REPO.DEPSCAN.001
+  - CTL.GITHUB.REPO.SECRETSCAN.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

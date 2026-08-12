@@ -1,0 +1,30 @@
+id: lambda_to_rds_lateral
+description: >
+  Lambda function is configured in a VPC and shares network
+  connectivity with an RDS instance that accepts broad
+  security-group ingress — a compromised function can reach
+  the database directly over the VPC network. The first leg
+  detects that the Lambda function's VPC security group
+  permits unrestricted egress (CTL.VPC.SG.EGRESS.001) —
+  the function can initiate connections to any destination
+  in the VPC, including the database subnet. The second leg
+  detects that the RDS instance's security group accepts
+  broad ingress on the database port (CTL.RDS.SG.BROAD.001)
+  — including from the Lambda function's subnet. Together:
+  function compromise yields database access without
+  restriction. This pattern is increasingly common as
+  Lambda+RDS Proxy architectures grow. Removing either leg
+  breaks the chain: restrict Lambda egress to the RDS Proxy
+  endpoint only, OR scope the RDS security group to accept
+  connections only from the Lambda security group.
+controls:
+  - CTL.VPC.SG.EGRESS.001
+  - CTL.RDS.SG.BROAD.001
+scope_field: properties.network.vpc_id
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_access
+implicit_dependencies: []

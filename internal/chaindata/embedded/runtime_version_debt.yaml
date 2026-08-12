@@ -1,0 +1,17 @@
+id: runtime_version_debt
+description: >
+  Deprecated Lambda runtimes and deprecated EKS cluster versions detected
+  simultaneously. Both compute layers are running on unpatched execution
+  environments with known CVEs. This is systemic version currency debt,
+  not an isolated oversight. The organization's update and patching
+  process has failed across multiple independent compute services.
+controls:
+  - CTL.LAMBDA.RUNTIME.001
+  - CTL.EKS.VERSION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

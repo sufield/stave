@@ -1,0 +1,17 @@
+id: ad_golden_ticket_persistence
+description: >
+  Stale KRBTGT enables persistent Golden Ticket forgery. Stale Domain
+  Admin accounts provide cover. No Credential Guard means LSASS is
+  unprotected. Together these create a persistent, undetectable
+  domain compromise path.
+controls:
+  - CTL.AD.KRBTGT.ROTATION.001
+  - CTL.AD.STALE.ADMIN.001
+  - CTL.AD.CRED.GUARD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - k8s_cluster_admin
+implicit_dependencies: []

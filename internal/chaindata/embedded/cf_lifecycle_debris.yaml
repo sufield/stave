@@ -1,0 +1,27 @@
+id: cf_lifecycle_debris
+description: >
+  Multiple CloudFront resources from decommissioned distributions
+  persist unreleased. The distribution is disabled but retains CNAME
+  claims that block domain reuse (CTL.CLOUDFRONT.LIFECYCLE.DISABLED.001)
+  — the domain names cannot be reassigned without re-engaging the
+  decommissioned distribution — AND either an Origin Access Control
+  is orphaned (CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.OAC.001), potentially
+  with stale S3 bucket policy entries, or a cache or response headers
+  policy is unreferenced (CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.POLICY.001),
+  creating false confidence about applied security headers. Threshold
+  of 2 reflects that a single disabled distribution or orphaned
+  resource is a routine cleanup item; two or more together describe
+  a CloudFront decommission that was not fully completed — the
+  distribution is disabled but its dependencies (OACs, policies,
+  CNAME claims) remain in place, creating configuration debt.
+controls:
+  - CTL.CLOUDFRONT.LIFECYCLE.DISABLED.001
+  - CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.OAC.001
+  - CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.POLICY.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - internet_access
+postconditions:
+  - ungoverned_operation
+implicit_dependencies: []

@@ -1,0 +1,32 @@
+id: kms_multiregion_replica_drift
+description: >
+  A multi-region KMS key's primary and replica configurations have
+  drifted: the key policy differs between primary and replica
+  (CTL.KMS.MULTIREGION.POLICY.MISMATCH.001 — a principal that
+  could decrypt in the primary region cannot in the replica or
+  vice versa) AND either no replica exists where one is required
+  (CTL.KMS.MULTIREGION.NOREPLICA.001 — multi-region intent
+  declared but only the primary is provisioned) or the replica is
+  in a non-compliant region (CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001
+  — data-sovereignty violation via the replica). Each leg is a
+  multi-region-key hygiene concern alone; the conjunction
+  describes the canonical replica-drift failure mode: data is
+  encrypted under the primary, the operator believes failover is
+  safe, and at failover time the replica's policy or location
+  produces either access loss (replica policy is stricter) or
+  compliance violation (replica region is non-compliant).
+  Threshold 2 surfaces the genuine drift; threshold 1 would
+  alarm on individual configuration concerns. compound_severity
+  high because multi-region key state IS the durability + DR
+  story; drift breaks both legs.
+controls:
+  - CTL.KMS.MULTIREGION.POLICY.MISMATCH.001
+  - CTL.KMS.MULTIREGION.NOREPLICA.001
+  - CTL.KMS.MULTIREGION.NONCOMPLIANT.REGION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - encryption_bypass
+implicit_dependencies: []

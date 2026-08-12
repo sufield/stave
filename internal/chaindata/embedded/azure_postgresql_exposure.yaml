@@ -1,0 +1,16 @@
+id: azure_postgresql_exposure
+description: >
+  PostgreSQL server with public access plus either no SSL or
+  incomplete logging. Database accessible from the internet with
+  either plaintext connections or incomplete forensic capability.
+controls:
+  - CTL.AZURE.POSTGRESQL.PUBLIC.001
+  - CTL.AZURE.POSTGRESQL.SSL.001
+  - CTL.AZURE.POSTGRESQL.LOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

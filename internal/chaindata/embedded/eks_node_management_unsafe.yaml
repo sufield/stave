@@ -1,0 +1,22 @@
+id: eks_node_management_unsafe
+description: >
+  EKS node group's operational management surface is
+  misconfigured: SSH inbound permitted on worker SG, SSM
+  Session Manager missing (driving operators toward SSH),
+  and / or instance profile shared across tenants. Combined,
+  these defects mean operators have un-audited shell access
+  to nodes and node-role credentials are over-broad. Pod
+  compromise or operator abuse yields cross-tenant impact
+  with no audit trail. Threshold of 2 fires when at least
+  two management defects coexist.
+controls:
+  - CTL.EKS.NODEGROUP.SSH.OPEN.001
+  - CTL.EKS.NODEGROUP.SSM.MISSING.001
+  - CTL.EKS.NODEGROUP.PROFILE.SHARED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

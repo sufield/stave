@@ -1,0 +1,35 @@
+id: dangling_destination_hijack
+description: >
+  Router resource references a bucket name that does not appear in the
+  configuration snapshot. The bucket may have been deleted, moved to a
+  different account, or never created. Any actor who registers the same
+  bucket name captures the data stream. No active exploitation required
+  — the dangling reference is an open invitation.
+controls:
+  - CTL.CLOUDTRAIL.GHOST.S3BUCKET.001
+  - CTL.CONFIG.GHOST.DELIVERY.S3.001
+  - CTL.CLOUDFRONT.GHOST.LOGBUCKET.001
+  - CTL.ELB.GHOST.ACCESSLOG.001
+  - CTL.GUARDDUTY.GHOST.EXPORT.S3.001
+  - CTL.VPC.FLOWLOG.GHOST.S3.001
+  - CTL.FIREHOSE.GHOST.S3.001
+  - CTL.S3.REPLICATION.GHOST.DEST.001
+  - CTL.MACIE.GHOST.EXPORT.S3.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.S3.001
+  - CTL.ATHENA.GHOST.OUTPUT.S3.001
+  - CTL.SAGEMAKER.GHOST.OUTPUT.S3.001
+  - CTL.CODEPIPELINE.GHOST.ARTIFACT.S3.001
+  - CTL.BACKUP.GHOST.VAULT.S3.001
+  - CTL.LAMBDA.GHOST.DEST.S3.001
+  - CTL.DMS.GHOST.TARGET.S3.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - bucket_name_available_for_registration
+postconditions:
+  - data_stream_capture
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

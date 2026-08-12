@@ -1,0 +1,27 @@
+id: iam_unrestricted_group_policy_attachment
+description: >
+  Unrestricted iam:AttachGroupPolicy privilege escalation. A user
+  has iam:AttachGroupPolicy on a belonging group (ATTACHGROUPPOLICY.001)
+  AND the grant lacks an iam:PolicyARN condition (NOCONDITION.001).
+  Together this means the principal can attach any of AWS's 1,000+
+  managed policies — including AdministratorAccess — to a group they
+  belong to, elevating every member of that group with a single API
+  call. Unlike AttachUserPolicy (which targets only the attacker),
+  AttachGroupPolicy has group-wide blast radius: every member inherits
+  the attached policy. Threshold 2: both must fire to confirm the
+  path is unrestricted. A condition-restricted AttachGroupPolicy
+  (partial case) fires only the capability control, not this chain.
+controls:
+  - CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.001
+  - CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.NOCONDITION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.

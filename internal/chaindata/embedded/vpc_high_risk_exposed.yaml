@@ -1,0 +1,17 @@
+id: vpc_high_risk_exposed
+description: >
+  High-risk ports exposed plus either all traffic unrestricted or
+  instances have public IPs. Directly exploitable services (SMB,
+  Redis, Docker, Elasticsearch) reachable from the internet on
+  instances with public addresses.
+controls:
+  - CTL.VPC.SG.HIGHPORTS.001
+  - CTL.VPC.SG.UNRESTRICTED.001
+  - CTL.EC2.PUBLIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

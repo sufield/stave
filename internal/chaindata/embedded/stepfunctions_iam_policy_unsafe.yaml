@@ -1,0 +1,26 @@
+id: stepfunctions_iam_policy_unsafe
+description: >
+  Step Functions state machine has multiple IAM
+  policy defects: StartExecution to wildcard
+  principal, states:* on Resource:*, control-
+  plane actions (Create / Update / Delete
+  StateMachine) on non-admin role,
+  StartExecution on all-machine resource pattern,
+  or broad Stop / Tag actions. Each defect alone
+  amplifies blast radius of a single compromised
+  role; co-occurrence indicates least-privilege
+  discipline broke down. Threshold of 2 fires
+  when at least two policy defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.IAM.STARTEXEC.WILDCARD.001
+  - CTL.STEPFUNCTIONS.IAM.STATES.WILDCARD.001
+  - CTL.STEPFUNCTIONS.IAM.UPDATE.NONADMIN.001
+  - CTL.STEPFUNCTIONS.IAM.STARTEXEC.ALLMACHINE.001
+  - CTL.STEPFUNCTIONS.IAM.OPS.BROAD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

@@ -1,0 +1,17 @@
+id: waf_blind_evasion
+description: >
+  WAF evasion observability is absent and detection layers are also
+  failing. Evasion attempts using encoding or parser confusion succeed
+  without generating any observable signal across any detection layer.
+  The attack is invisible from detection through investigation.
+controls:
+  - CTL.WAF.EVASION.OBSERVE.001
+  - CTL.CLOUDTRAIL.ENABLED.001
+  - CTL.WAF.RULES.OWASP.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_vpc
+implicit_dependencies: []

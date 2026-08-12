@@ -1,0 +1,30 @@
+id: ecs_image_supply_chain
+description: >
+  Supply chain risk compounded by mutability. The image is from
+  outside the organization (CTL.ECS.IMAGE.UNTRUSTED.001) AND
+  either it uses the :latest tag (CTL.ECS.IMAGE.001) — content
+  changes when the upstream rebuilds — or it lacks digest
+  pinning (CTL.ECS.IMAGE.DIGEST.001) — the tag could be
+  redirected to a different image at any time. Threshold of 2
+  reflects that any single one of these is a tolerable miss in
+  isolation: a vendor image at a specific tag, a verified
+  internal image at :latest, an internal image referenced by
+  digest from a trusted source. But two stacked together
+  describe content the organization neither owns nor pins —
+  the operator has accepted both that the image content comes
+  from an external party and that the reference doesn't
+  guarantee what they get on next pull. Same supply-chain
+  composition pattern as EC2.AMI controls combined with
+  Lambda.LAYER controls — sourced + mutable is the dangerous
+  pair.
+controls:
+  - CTL.ECS.IMAGE.UNTRUSTED.001
+  - CTL.ECS.IMAGE.001
+  - CTL.ECS.IMAGE.DIGEST.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - container_code_execution
+implicit_dependencies: []

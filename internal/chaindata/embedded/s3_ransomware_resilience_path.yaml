@@ -1,0 +1,25 @@
+id: s3_ransomware_resilience_path
+description: >
+  S3 data lacks ransomware resilience: buckets have no versioning,
+  no Object Lock, and lifecycle policies that conflict with
+  versioning by expiring noncurrent versions aggressively. An
+  attacker can overwrite or encrypt S3 objects, and without
+  versioning the originals are destroyed. Even with versioning,
+  aggressive lifecycle expiration deletes noncurrent versions,
+  destroying the recovery path. Farris identifies a fundamental
+  AWS limitation: the IAM action to enable and disable versioning
+  is the same (s3:PutBucketVersioning), so no SCP can selectively
+  deny disabling versioning. Object Lock is the compensating
+  control — it prevents modification or deletion of objects
+  regardless of IAM permissions.
+controls:
+  - CTL.S3.VERSION.001
+  - CTL.S3.LOCK.001
+  - CTL.S3.VERSIONING.LIFECYCLE.CONFLICT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_destruction
+implicit_dependencies: []

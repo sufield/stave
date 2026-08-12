@@ -1,0 +1,33 @@
+id: ec2_to_dynamodb_lateral
+description: >
+  EC2 instance has an overbroad instance profile and
+  DynamoDB is accessible without a VPC endpoint policy
+  restriction — a compromised instance can read or write
+  arbitrary DynamoDB tables via the public API. The first
+  leg detects that the EC2 instance profile exceeds
+  required permissions (CTL.EC2.PROFILE.OVERBROAD.001) —
+  the profile grants broad DynamoDB actions or wildcard
+  resource access. The second leg detects that no VPC
+  endpoint enforces a restrictive policy on DynamoDB access
+  (CTL.DYNAMODB.VPC.ENDPOINT.001) — the instance reaches
+  DynamoDB over the public endpoint or an unrestricted VPC
+  endpoint. Together: instance compromise yields
+  unrestricted DynamoDB access across every table the
+  overbroad profile permits. EC2 is the most-used compute
+  service; this IAM-path lateral movement pattern applies
+  to any instance with an attached profile. Removing either
+  leg breaks the chain: scope the instance profile to
+  specific tables and actions, OR enforce a VPC endpoint
+  policy that restricts DynamoDB access to authorized
+  principals.
+controls:
+  - CTL.EC2.PROFILE.OVERBROAD.001
+  - CTL.DYNAMODB.VPC.ENDPOINT.001
+scope: global
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - credential_access
+postconditions:
+  - data_access
+implicit_dependencies: []

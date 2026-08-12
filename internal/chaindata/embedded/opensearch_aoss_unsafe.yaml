@@ -1,0 +1,28 @@
+id: opensearch_aoss_unsafe
+description: >
+  OpenSearch Serverless collection has multiple
+  configuration defects: network policy permits
+  public, encryption uses AWS-owned key,
+  encryption policy not explicitly attached,
+  capacity / lifecycle policy missing, data-
+  access wildcard, or VPC endpoint missing for
+  VPC-only policy. Each defect alone weakens
+  the collection's security posture;
+  co-occurrence indicates the AOSS deployment
+  was set up without policy discipline.
+  Threshold of 2 fires when at least two AOSS
+  defects coexist.
+controls:
+  - CTL.OPENSEARCH.AOSS.NETPOLICY.PUBLIC.001
+  - CTL.OPENSEARCH.AOSS.ENCRYPT.AWS.OWNED.001
+  - CTL.OPENSEARCH.AOSS.ENCRYPT.POLICY.MISSING.001
+  - CTL.OPENSEARCH.AOSS.CAPACITY.MISSING.001
+  - CTL.OPENSEARCH.AOSS.ACCESS.WILDCARD.001
+  - CTL.OPENSEARCH.AOSS.VPCE.MISSING.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access
+implicit_dependencies: []

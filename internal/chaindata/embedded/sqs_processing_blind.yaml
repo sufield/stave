@@ -1,0 +1,21 @@
+id: sqs_processing_blind
+description: >
+  No depth alarm plus either no age alarm or no
+  messages-sent-spike alarm. Multiple queue-health metrics
+  are unmonitored — consumer failure (depth), processing
+  delay (age), and traffic anomalies (sent) are all invisible.
+  Threshold of 2 fires when the queue lacks at least two of
+  the three orthogonal monitoring signals; the operator has
+  no surface to detect "consumers stopped", "consumers fell
+  behind", or "producers spiked" in time to act.
+controls:
+  - CTL.SQS.ALARM.DEPTH.001
+  - CTL.SQS.ALARM.AGE.001
+  - CTL.SQS.ALARM.SENT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - service_disruption
+implicit_dependencies: []

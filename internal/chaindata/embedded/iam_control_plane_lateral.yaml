@@ -1,0 +1,18 @@
+id: iam_control_plane_lateral
+description: >
+  Principal can execute code on compute via the AWS control plane —
+  SSM on EC2, ExecuteCommand in ECS, or user-data injection via
+  ModifyInstanceAttribute. Each independently provides lateral
+  movement without network access. Any one inherits the compute
+  role's permissions.
+controls:
+  - CTL.IAM.ESCALATE.STARTSESSION.001
+  - CTL.IAM.ESCALATE.EXECUTECOMMAND.001
+  - CTL.IAM.ESCALATE.MODIFYINSTANCE.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - control_plane_code_execution
+implicit_dependencies: []

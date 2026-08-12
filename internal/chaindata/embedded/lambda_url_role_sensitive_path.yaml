@@ -1,0 +1,25 @@
+id: lambda_url_role_sensitive_path
+description: >
+  Lambda Function URL with no authentication (CTL.LAMBDA.URL.AUTH.001)
+  plus an execution role with cross-resource reach into sensitive
+  data (CTL.IAM.IDENTITY.BLASTRADIUS.004). The Function URL bypasses
+  API Gateway, VPC, security groups, and NACLs — anyone on the
+  internet invokes the function. The execution role's reach
+  determines the blast radius of every invocation: an attacker who
+  finds the URL can read everything the role can. Threshold of 2
+  because the two conditions independently are well-known posture
+  failures; their co-presence is the exfiltration path.
+controls:
+  - CTL.LAMBDA.URL.AUTH.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.004
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_lambda
+postconditions:
+  - data_access
+implicit_dependencies:
+  - source: observation.sensitivity_classifier
+    fallback: fail_closed
+    diagnostic: >-
+      No sensitivity facts emitted for this account. Blast radius assessment cannot distinguish safe identities from unclassified ones. Finding may be a false negative.

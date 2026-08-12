@@ -1,0 +1,28 @@
+id: ebs_ghost_cascade
+description: >
+  Two or more EBS-layer ghost references: deleted
+  DLM role, DLM tag selector matching nothing,
+  AMI referencing a deleted snapshot, or snapshot
+  shared with a decommissioned account. Multiple
+  storage-layer infrastructure dependencies have
+  been deleted without their dependents being
+  cleaned up. Threshold of 2 because a single
+  ghost is a cleanup miss; multiple ghosts in
+  the storage layer indicate a systemic
+  decommissioning failure.
+controls:
+  - CTL.EC2.EBS.GHOST.DLM.ROLE.001
+  - CTL.EC2.EBS.GHOST.DLM.NOTARGET.001
+  - CTL.EC2.EBS.GHOST.AMI.SNAPSHOT.001
+  - CTL.EC2.EBS.GHOST.SNAPSHOT.ACCOUNT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

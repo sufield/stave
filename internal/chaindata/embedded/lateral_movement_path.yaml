@@ -1,0 +1,19 @@
+id: lateral_movement_path
+description: >
+  East-west over-permissiveness co-occurs with a compromised perimeter.
+  An attacker who breaches the perimeter or reaches any service in the
+  source range has an open lateral movement path to all services granting
+  broad internal access. The flat internal network amplifies the blast
+  radius of any initial compromise.
+controls:
+  - CTL.VPC.SG.EASTWEST.001
+  - CTL.VPC.SG.UNRESTRICTED.001
+  - CTL.VPC.ENV.ISOLATION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_ec2
+  - network_access_vpc
+implicit_dependencies: []

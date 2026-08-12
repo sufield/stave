@@ -1,0 +1,32 @@
+id: iam_privesc_by_attachment
+description: >
+  IAM privilege escalation via policy attachment. A user or role
+  has iam:AttachUserPolicy, iam:AttachRolePolicy, or
+  iam:AttachGroupPolicy permission — enabling them to attach an
+  admin-grade managed policy to any principal they can reach,
+  including themselves. This is a single-API-call escalation path
+  documented in Rhino Security's CloudGoat and Bishop Fox's
+  IAM Vulnerable. The escalation is latent: the principal
+  currently has low privileges, but one API call
+  (AttachUserPolicy) grants full admin. No runtime exploit is
+  required — the configuration alone enables the path.
+  Threshold of 1: AttachUserPolicy alone is sufficient for
+  escalation. The inline-policy member is an amplifier — if the
+  account also has roles with inline policies (shadow permissions),
+  the escalation target surface is broader than managed-policy
+  auditing reveals.
+controls:
+  - CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001
+  - CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001
+  - CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - initial_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.

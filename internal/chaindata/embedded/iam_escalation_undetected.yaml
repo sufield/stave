@@ -1,0 +1,18 @@
+id: iam_escalation_undetected
+description: >
+  No PassRole alarm plus either no trust policy change alarm or no
+  cross-account assumption alarm. The two most important escalation
+  detection points — PassRole and trust modification — are unmonitored.
+  An attacker escalates privileges without triggering any real-time
+  alert.
+controls:
+  - CTL.CLOUDWATCH.MONITOR.PASSROLE.001
+  - CTL.CLOUDWATCH.MONITOR.TRUST.001
+  - CTL.CLOUDWATCH.MONITOR.ASSUMEROLE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

@@ -1,0 +1,24 @@
+id: rds_audit_blind
+description: >
+  Database audit logging is not enabled AND either logs are not
+  exported to CloudWatch OR the instance is on the default
+  parameter group. The data-access audit trail is missing in two
+  reinforcing ways: the database itself is not recording
+  statements (no log_statement, no general_log, no audit plugin),
+  AND either the records that would have been generated are not
+  reaching the centralized logging pipeline, or every parameter
+  is at the AWS default and customizing security parameters
+  requires creating a custom group first. Post-compromise
+  investigation has no record of what data was accessed or
+  modified.
+controls:
+  - CTL.RDS.LOG.001
+  - CTL.RDS.PARAM.LOGEXPORT.001
+  - CTL.RDS.PARAM.GROUP.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - rds_data_access
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

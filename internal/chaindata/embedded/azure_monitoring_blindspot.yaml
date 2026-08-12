@@ -1,0 +1,17 @@
+id: azure_monitoring_blindspot
+description: >
+  Activity Log not preserved AND either Defender disabled or no admin
+  alerts. The audit trail is lost and real-time detection is absent.
+  An attacker operates without generating preserved evidence or
+  real-time notifications.
+controls:
+  - CTL.AZURE.ACTIVITYLOG.EXPORT.001
+  - CTL.AZURE.DEFENDER.ENABLED.001
+  - CTL.AZURE.MONITOR.ALERTS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

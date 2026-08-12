@@ -1,0 +1,26 @@
+id: cognito_client_openredirect
+description: >
+  Open-redirect token theft surface: the app
+  client allows the implicit OAuth flow AND
+  has a wildcard callback URL or a plaintext-
+  HTTP callback URL. Implicit returns the
+  token in the URL fragment; the broad
+  callback list accepts attacker-controlled
+  redirect targets matching the wildcard or
+  on the same plaintext domain. An attacker
+  crafts a phishing authorization URL and
+  receives the token at their controlled
+  origin. Threshold of 2 because the
+  combination of weak flow plus weak callback
+  set is the dangerous shape.
+controls:
+  - CTL.COGNITO.CLIENT.IMPLICITFLOW.001
+  - CTL.COGNITO.CLIENT.WILDCARDCB.001
+  - CTL.COGNITO.CLIENT.HTTPCALLBACK.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

@@ -1,0 +1,28 @@
+id: ransomware_data_destruction_path
+description: >
+  Ransomware data destruction prerequisites across EBS and S3: no
+  snapshot delete protection, no Recycle Bin retention, AND no VPC
+  Block Public Access at account level. An attacker who gains write
+  access can delete EBS snapshots irrecoverably (no Recycle Bin
+  catch), destroy AMIs (no deregistration protection), and the
+  absence of VPC BPA means exfiltration channels remain open for
+  double-extortion. Each control alone is a finding; together they
+  remove every recovery and containment mechanism simultaneously.
+  Distinct from the BYOKM chain (encryption-based ransomware) —
+  this chain covers destruction-based ransomware where the attacker
+  deletes rather than encrypts. Pre-Invent 2024 features (snapshot
+  lock, AMI deregistration protection, Recycle Bin) close these
+  gaps but must all be enabled.
+controls:
+  - CTL.EBS.SNAPSHOT.DELETEPROTECTION.001
+  - CTL.EBS.AMI.DEREGPROTECTION.001
+  - CTL.RECYCLEBIN.EBS.VOLUME.001
+  - CTL.VPC.BPA.ACCOUNT.001
+scope: global
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_destruction
+implicit_dependencies: []

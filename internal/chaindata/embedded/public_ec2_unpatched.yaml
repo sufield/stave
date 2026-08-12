@@ -1,0 +1,16 @@
+id: public_ec2_unpatched
+description: >
+  EC2 instance is publicly reachable from the internet and running on a
+  deprecated or aged AMI. Known OS-level vulnerabilities are directly
+  exploitable without requiring any prior access. Public exposure
+  combined with unpatched operating system.
+controls:
+  - CTL.EC2.AMI.CURRENCY.001
+  - CTL.EC2.PUBLIC.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_ec2
+implicit_dependencies: []

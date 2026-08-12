@@ -1,0 +1,37 @@
+id: cognito_ghost_authflow
+description: >
+  Custom authentication flow is structurally
+  broken: pre-authentication trigger Lambda is
+  deleted plus one or more of the three custom-
+  auth challenge triggers (define, create,
+  verify) is also deleted. Each individually
+  blocks an authentication path; together they
+  describe a custom-auth pipeline that cannot
+  begin or cannot complete. Threshold of 2
+  because partial breakage in custom auth is
+  the dangerous compound — half the flow
+  works and the other half fails mid-
+  authentication.
+controls:
+  - CTL.COGNITO.GHOST.PREAUTH.001
+  - CTL.COGNITO.GHOST.DEFINEAUTH.001
+  - CTL.COGNITO.GHOST.CREATEAUTH.001
+  - CTL.COGNITO.GHOST.VERIFYAUTH.001
+escalation_threshold: 2
+compound_severity: critical
+# Each Cognito ghost-trigger predicate filters on properties.identity.cognito.trigger_type,
+# forcing one logical user pool to surface as N distinct Stave assets (one per
+# trigger). Without scope_field, the chain engine's per-asset.ID grouping would
+# never see >=2 of these controls firing on a single asset.ID. Grouping by the
+# user_pool_id reunites the per-trigger findings into the compound the chain
+# author intended.
+scope_field: properties.identity.cognito.user_pool_id
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

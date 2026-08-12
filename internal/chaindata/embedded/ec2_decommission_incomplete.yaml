@@ -1,0 +1,25 @@
+id: ec2_decommission_incomplete
+description: >
+  Multiple post-termination cleanup gaps coexist: snapshots from a
+  deregistered AMI persist AND either an orphan ENI lingers or an
+  orphan key pair remains. Each artifact alone is plausibly an
+  in-progress cleanup; together they prove that the decommission
+  workflow stopped before completion. Historical fleet state
+  (snapshots), historical network attachments (ENIs), and
+  historical access credentials (key pairs) all survive
+  deregistration. The dangerous property is that AMI deregistration
+  is the step the cleanup runbook documents — operators believe
+  the work is done — while the snapshots, ENIs, and keys remain
+  in inventories that nobody audits at the same cadence as the
+  AMI catalog.
+controls:
+  - CTL.EC2.SNAPSHOT.AMI.DEREGISTERED.001
+  - CTL.EC2.ENI.ORPHAN.001
+  - CTL.EC2.KEYPAIR.ORPHAN.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - network_access_ec2
+postconditions:
+  - invisible_data_exfiltration
+implicit_dependencies: []

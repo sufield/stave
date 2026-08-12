@@ -1,0 +1,16 @@
+id: ecs_privileged_escape
+description: >
+  Container runs privileged with root user and host network mode.
+  Container isolation eliminated at privilege, identity, and network
+  layers simultaneously. A container exploit gives full host access.
+controls:
+  - CTL.ECS.PRIV.001
+  - CTL.ECS.ROOT.001
+  - CTL.ECS.NETWORK.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - container_code_execution
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

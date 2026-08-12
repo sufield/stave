@@ -1,0 +1,20 @@
+id: lambda_concurrency_cascade
+description: >
+  Concurrency throttling cascade across Lambda functions sharing the
+  account's unreserved pool. Identifies critical functions without
+  reserved concurrency, exhaustion candidates that can starve the
+  pool, cascade paths through trigger chains, and feedback loops
+  where throttled retry traffic amplifies the original overload.
+controls:
+  - CTL.LAMBDA.CONCURRENCY.001
+  - CTL.LAMBDA.CONFIG.CONCURRENCY.NOLIMIT.001
+  - CTL.LAMBDA.CONFIG.TIMEOUT.EXCESSIVE.001
+  - CTL.LAMBDA.DLQ.MISSING.001
+  - CTL.LAMBDA.ESM.BISECT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - service_disruption
+postconditions:
+  - service_disruption
+implicit_dependencies: []

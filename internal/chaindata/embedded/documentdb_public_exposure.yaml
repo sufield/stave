@@ -1,0 +1,15 @@
+id: documentdb_public_exposure
+description: >
+  Documentdb cluster with missing encryption and public snapshots.
+  Data is unencrypted at rest and snapshots are accessible to any
+  AWS account.
+controls:
+  - CTL.DOCUMENTDB.ENCRYPT.REST.001
+  - CTL.DOCUMENTDB.SNAPSHOT.PUBLIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - data_access
+postconditions:
+  - database_compromise
+implicit_dependencies: []

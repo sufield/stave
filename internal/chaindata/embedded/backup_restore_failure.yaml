@@ -1,0 +1,32 @@
+id: backup_restore_failure
+description: >
+  Backups exist but restoration will fail. The backup infrastructure
+  looks healthy — plans exist, snapshots are taken, retention is
+  configured — but the restore path is broken by one or more of:
+  KMS key used for encryption is in the same account as the data
+  (ransomware deletes both), DLM policy is in error state or its
+  execution role has been deleted, snapshot is encrypted with the
+  AWS-managed key making cross-account restore impossible, or vault
+  lock is not enabled allowing backup deletion. The backup provides
+  false confidence — the organization believes it has recovery
+  capability but will discover the gap only during an actual
+  incident. Threshold 2 fires when at least two restore-path
+  failures coexist, indicating systemic recovery infrastructure
+  weakness rather than a single misconfiguration.
+controls:
+  - CTL.BACKUP.RECOVERY.ISOLATION.001
+  - CTL.BACKUP.VAULT.LOCK.001
+  - CTL.EC2.EBS.GHOST.DLM.ROLE.001
+  - CTL.EC2.EBS.DLM.ERROR.001
+  - CTL.RDS.SNAPSHOT.AWSKEY.SHARED.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

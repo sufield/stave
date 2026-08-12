@@ -1,0 +1,15 @@
+id: m365_exchange_exfiltration
+description: >
+  Transport forwarding or whitelist active plus incomplete auditing.
+  Admin-level email interception without forensic visibility.
+controls:
+  - CTL.M365.EXCHANGE.TRANSPORT.FORWARD.001
+  - CTL.M365.EXCHANGE.TRANSPORT.WHITELIST.001
+  - CTL.M365.EXCHANGE.AUDIT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

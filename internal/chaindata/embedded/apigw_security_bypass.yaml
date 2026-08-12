@@ -1,0 +1,30 @@
+id: apigw_security_bypass
+description: >
+  Either the default execute-api endpoint is enabled alongside a
+  custom domain, or the custom domain's certificate has been
+  deleted or is imminently expiring. Both conditions allow clients
+  to bypass the security controls layered on top of the custom
+  domain: WAF rules attached to CloudFront/ALB in front of the
+  custom domain, mTLS configured on the custom domain, custom TLS
+  policy (TLS 1.2 minimum), and CloudFront geographic restrictions.
+  When the default endpoint stays enabled, clients address the API
+  directly and never traverse those controls. When the custom
+  domain certificate fails, clients receive TLS errors at the
+  custom domain and may fall back to the default endpoint or be
+  routed there by misconfigured DNS — same bypass, reached by a
+  different path. Threshold of 1 reflects that either condition
+  in isolation defeats the custom-domain layer.
+controls:
+  - CTL.APIGATEWAY.ENDPOINT.DEFAULT.001
+  - CTL.APIGATEWAY.GHOST.CERT.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

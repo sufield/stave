@@ -1,0 +1,20 @@
+id: netfirewall_ineffective
+description: >
+  Network Firewall is not in the traffic path AND either stateful
+  rules are in alert-only mode or logging is disabled. The firewall
+  is deployed and visible in dashboards but provides no effective
+  protection — it either does not see traffic, does not block what
+  it sees, or does not record what it does. Security theater: the
+  control appears active to reviewers while giving attackers
+  uninspected or unrecorded transit.
+controls:
+  - CTL.NETFIREWALL.ROUTING.001
+  - CTL.NETFIREWALL.MODE.001
+  - CTL.NETFIREWALL.LOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

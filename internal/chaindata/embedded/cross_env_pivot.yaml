@@ -1,0 +1,22 @@
+id: cross_env_pivot
+description: >
+  Non-production environment can reach production resources through
+  transitive trust, combined with weak environment isolation controls.
+  A compromised dev credential becomes a production breach when bridge
+  roles exist and zero trust perimeter enforcement is missing.
+controls:
+  - CTL.IAM.CROSS.ENV.001
+  - CTL.IAM.CROSS.ENV.PATH.001
+  - CTL.IAM.ZT.PERIMETER.001
+  - CTL.IAM.TRUST.EXTERNALID.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.

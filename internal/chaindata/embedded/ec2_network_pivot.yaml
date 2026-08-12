@@ -1,0 +1,21 @@
+id: ec2_network_pivot
+description: >
+  Instance is dual-homed across security zones OR has
+  source/destination check disabled while not being a NAT/VPN/
+  appliance. Either condition independently turns the instance
+  into a network pivot point: the dual-homed instance bridges
+  isolated networks at the architectural level, while the
+  source/destination check disabled instance can route, proxy,
+  or man-in-the-middle traffic at the kernel level. A single
+  instance with either capability defeats the per-subnet
+  segmentation the rest of the network controls assume.
+controls:
+  - CTL.EC2.NETWORK.DUALHOMED.001
+  - CTL.EC2.NETWORK.SRCDSTCHECK.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - network_access_ec2
+postconditions:
+  - vpc_instance_compromise
+implicit_dependencies: []

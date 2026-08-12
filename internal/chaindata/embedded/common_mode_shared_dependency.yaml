@@ -1,0 +1,34 @@
+id: common_mode_shared_dependency
+description: >
+  IAM role is a cross-service common mode failure point with wide
+  blast radius. The role is trusted by multiple compute service types
+  (CTL.IAM.ROLE.CROSSSERVICE.001) AND reaches many resources through
+  permission chains (CTL.IAM.IDENTITY.BLASTRADIUS.001) or many
+  sensitive resources (CTL.IAM.IDENTITY.BLASTRADIUS.004). The
+  combination means one credential compromise cascades across
+  heterogeneous workloads with maximum data exposure. A single role
+  shared by Lambda, ECS, and EC2 that reaches 85 sensitive resources
+  is qualitatively different from three separate per-service roles
+  each reaching 10 — the blast radius is not additive, it is the
+  full union. Threshold of 2 fires when the cross-service sharing
+  co-occurs with either blast radius measure, confirming the role
+  is both widely shared and widely privileged.
+controls:
+  - CTL.IAM.ROLE.CROSSSERVICE.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.001
+  - CTL.IAM.IDENTITY.BLASTRADIUS.004
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - aws_root_access
+implicit_dependencies:
+  - source: reasoning.souffle.reachable_resource
+    fallback: cross_validate
+    diagnostic: >-
+      Datalog reachability engine output not available. Assessment uses observation-layer counts only, which may undercount transitive role assumptions.
+  - source: observation.sensitivity_classifier
+    fallback: fail_closed
+    diagnostic: >-
+      No sensitivity facts emitted for this account. Blast radius assessment cannot distinguish safe identities from unclassified ones. Finding may be a false negative.

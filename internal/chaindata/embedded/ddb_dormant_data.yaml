@@ -1,0 +1,27 @@
+id: ddb_dormant_data
+description: >
+  A dormant table with additional data-protection gaps. The
+  table has had no activity in 90+ days
+  (CTL.DYNAMODB.LIFECYCLE.DORMANT.001) — active IAM grants
+  persist on a table nobody monitors — AND either temporal
+  data accumulates without expiration because TTL is disabled
+  (CTL.DYNAMODB.TTL.MISSING.001), or item-level access is
+  unaudited because CloudTrail data events are not enabled
+  (CTL.DYNAMODB.AUDIT.DATAEVENTS.001). Threshold of 2 reflects
+  that dormancy alone is a governance concern; combined with
+  missing TTL, data accumulates without bound in an unmonitored
+  table; combined with missing data events, any access to the
+  dormant table's data is invisible. Either combination
+  describes dormant data that cannot expire automatically or
+  cannot be audited when accessed.
+controls:
+  - CTL.DYNAMODB.LIFECYCLE.DORMANT.001
+  - CTL.DYNAMODB.TTL.MISSING.001
+  - CTL.DYNAMODB.AUDIT.DATAEVENTS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - initial_access
+postconditions:
+  - data_access
+implicit_dependencies: []

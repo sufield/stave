@@ -1,0 +1,35 @@
+id: cognito_ghost_idchain
+description: >
+  Identity exchange chain is broken at multiple
+  links: the identity pool's linked user pool is
+  deleted, plus the SAML identity provider
+  metadata is unreachable or the custom domain
+  is unusable (cert deleted or DNS gone). The
+  identity pool advertises authentication paths
+  that cannot resolve. Threshold of 2 because
+  one broken path may be transient; multiple
+  broken paths describe an identity layer that
+  no application can reliably reach.
+controls:
+  - CTL.COGNITO.GHOST.IDPOOL.001
+  - CTL.COGNITO.GHOST.SAMLMETA.001
+  - CTL.COGNITO.GHOST.DOMAINCERT.001
+  - CTL.COGNITO.GHOST.DOMAINDNS.001
+escalation_threshold: 2
+compound_severity: high
+# IDPOOL fires on aws_cognito_identity_pool while SAMLMETA / DOMAINCERT /
+# DOMAINDNS fire on aws_cognito_user_pool — different asset.IDs even when
+# the identity pool's linked_user_pool_id matches the user pool. Group by
+# user_pool_id so the identity-pool finding (whose property block carries
+# linked_user_pool_id) and the user-pool findings (carrying user_pool_id)
+# bucket together when the chain is semantically over the same logical pool.
+scope_field: properties.identity.cognito.user_pool_id
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

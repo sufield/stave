@@ -1,0 +1,21 @@
+id: kms_grant_ungoverned
+description: >
+  GrantWithGrant delegation chains plus either broad grant operations
+  or excessive grant counts. The grant-based access surface is both
+  expandable (chain delegation lets any grantee reauthorize new
+  grantees) AND already overgrown (grants are either over-permissive
+  or accumulated without cleanup). Key access becomes invisible from
+  the policy and unauditable from the grant list. Threshold of 2
+  fires when two of the three grant-governance gaps coexist on the
+  same key.
+controls:
+  - CTL.KMS.POLICY.GRANTWITHGRANT.001
+  - CTL.KMS.GRANT.BROAD.001
+  - CTL.KMS.GRANT.EXCESSIVE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - kms_key_compromise
+implicit_dependencies: []

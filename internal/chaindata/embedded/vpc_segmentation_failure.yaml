@@ -1,0 +1,19 @@
+id: vpc_segmentation_failure
+description: >
+  Subnet mixes architectural tiers (web, application, data) AND
+  either the default Network ACL is in use or the default
+  security group is attached to resources. There is no tier
+  separation at the subnet boundary AND either the NACL or the
+  SG layer also defaults to permissive — no segmentation at any
+  layer of the stack.
+controls:
+  - CTL.VPC.SEGMENT.TIERING.001
+  - CTL.VPC.NACL.DEFAULT.INUSE.001
+  - CTL.VPC.SG.DEFAULT.INUSE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - vpc_instance_compromise
+implicit_dependencies: []

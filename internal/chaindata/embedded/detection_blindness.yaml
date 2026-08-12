@@ -1,0 +1,19 @@
+id: detection_blindness
+description: >
+  Multiple detection and monitoring controls disabled simultaneously.
+  When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent,
+  every other violation in the account is invisible — the blast radius
+  of any single misconfiguration becomes unbounded because there is no
+  evidence trail.
+controls:
+  - CTL.CLOUDTRAIL.ENABLED.001
+  - CTL.GUARDDUTY.ENABLED.001
+  - CTL.CONFIG.ENABLED.001
+  - CTL.VPC.FLOWLOG.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

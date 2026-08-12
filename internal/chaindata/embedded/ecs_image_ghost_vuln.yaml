@@ -1,0 +1,32 @@
+id: ecs_image_ghost_vuln
+description: >
+  Image infrastructure has multiple failures stacked. The task
+  definition references an image that doesn't exist
+  (CTL.ECS.IMAGE.GHOST.001), AND either the available images
+  in the repository have unresolved CRITICAL/HIGH findings
+  (CTL.ECR.FINDINGS.UNRESOLVED.001) — even if someone fixed the
+  ghost reference they would deploy a vulnerable image — or the
+  image reference uses :latest (CTL.ECS.IMAGE.001) — even if
+  the deletion was a transient mistake the next push to :latest
+  determines what runs. Threshold of 2 reflects that a single
+  failure here is operationally annoying but localised; two
+  together describe a workload whose image story is broken at
+  multiple layers — referenced image gone, available
+  alternatives unsafe or unpredictable. The operator has to
+  decide between deploying nothing and deploying something
+  worse.
+controls:
+  - CTL.ECS.IMAGE.GHOST.001
+  - CTL.ECR.FINDINGS.UNRESOLVED.001
+  - CTL.ECS.IMAGE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - container_code_execution
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

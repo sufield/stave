@@ -1,0 +1,17 @@
+id: persistent_identity_creation
+description: >
+  No SCP restricts IAM user or AWS account creation and no restrictive
+  SCPs limit what newly created accounts can do and admin account
+  proliferation is not monitored. An attacker can create persistent
+  identities without organizational guardrails.
+controls:
+  - CTL.IAM.SCP.CREATEACCOUNT.001
+  - CTL.IAM.SCP.FULLACCESS.001
+  - CTL.IAM.ADMIN.COUNT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

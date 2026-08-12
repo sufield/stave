@@ -1,0 +1,16 @@
+id: cloudflare_edge_bypass
+description: >
+  DNS not proxied plus either no WAF or internal IP exposed. The
+  origin is directly reachable and either unprotected or has its
+  internal IP leaked. Cloudflare's protection stack is bypassable.
+controls:
+  - CTL.CLOUDFLARE.DNS.PROXY.001
+  - CTL.CLOUDFLARE.ZONE.WAF.001
+  - CTL.CLOUDFLARE.DNS.INTERNALIP.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

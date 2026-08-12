@@ -1,0 +1,17 @@
+id: ghost_principal_encryption_bypass
+description: >
+  Ghost principal in a KMS key policy combined with ghost resource
+  reference in an IAM write policy. An attacker can both claim the
+  encryption key access (via key policy ghost) and claim the write
+  target (via IAM policy ghost) — complete data access through two
+  separate ghost references.
+controls:
+  - CTL.KMS.POLICY.GHOSTREF.001
+  - CTL.IAM.POLICY.GHOSTREF.002
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - s3_data_access
+implicit_dependencies: []

@@ -1,0 +1,18 @@
+id: supply_chain_ingress
+description: >
+  CI/CD pipeline has an overprivileged ingress path into production.
+  OIDC federation trust is unscoped or uses wildcard claims, combined
+  with broad permissions on the assumed role. A compromised or
+  malicious pipeline becomes a production-grade credential.
+controls:
+  - CTL.IAM.TRUST.OIDC.001
+  - CTL.IAM.TRUST.OIDC.002
+  - CTL.IAM.TRUST.OIDC.003
+  - CTL.IAM.TRUST.EXTERNALID.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

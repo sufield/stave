@@ -1,0 +1,16 @@
+id: m365_mfa_bypass
+description: >
+  Legacy auth not blocked plus either MFA not universal or device
+  code flow not blocked. Multiple MFA bypass paths — legacy
+  protocols skip MFA, device code phishing captures sessions.
+controls:
+  - CTL.M365.ENTRA.LEGACYAUTH.001
+  - CTL.M365.ENTRA.USERS.MFA.001
+  - CTL.M365.ENTRA.CA.DEVICECODE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

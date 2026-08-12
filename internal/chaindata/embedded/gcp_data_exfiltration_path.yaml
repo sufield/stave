@@ -1,0 +1,16 @@
+id: gcp_data_exfiltration_path
+description: >
+  No VPC Service Controls perimeter plus either BigQuery data access
+  not logged or audit logging incomplete. No exfiltration boundary
+  and no forensic record of data access.
+controls:
+  - CTL.GCP.ACCESSCONTEXT.PERIMETER.001
+  - CTL.GCP.BIGQUERY.LOG.001
+  - CTL.GCP.LOGGING.AUDIT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

@@ -1,0 +1,30 @@
+id: cf_tls_end_to_end
+description: >
+  Multiple TLS failures across the end-to-end chain. Viewer-facing
+  TLS policy allows below TLS 1.2 (CTL.CLOUDFRONT.TLS.001) — the
+  viewer connection can be downgraded to a vulnerable TLS version
+  — AND either origin TLS also allows below TLS 1.2
+  (CTL.CLOUDFRONT.ORIGIN.TLS.VERSION.001), meaning the origin
+  segment has the same weakness, or the TLS certificate is deleted
+  or expired (CTL.CLOUDFRONT.GHOST.CERT.001), meaning the custom
+  domain fails completely. Threshold of 2 reflects that a single
+  TLS weakness is a known posture concern; two together describe
+  an end-to-end encryption posture that is broken at multiple
+  points — weak or negotiable TLS on both the viewer and origin
+  segments, or a complete TLS failure combined with weak protocol
+  negotiation.
+controls:
+  - CTL.CLOUDFRONT.TLS.001
+  - CTL.CLOUDFRONT.ORIGIN.TLS.VERSION.001
+  - CTL.CLOUDFRONT.GHOST.CERT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_in_transit_exposure
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

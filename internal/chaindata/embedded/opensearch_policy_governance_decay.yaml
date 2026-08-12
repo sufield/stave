@@ -1,0 +1,25 @@
+id: opensearch_policy_governance_decay
+description: >
+  OpenSearch domain access policy has multiple
+  semantic / governance defects: wildcard principal
+  with an open (0.0.0.0/0) IP condition that masks
+  it as restricted, StringEquals operator on
+  aws:SourceIp (does not match IP addresses), or
+  IP allowlist that includes dynamic-ISP /
+  cloud-provider netblocks. Each defect alone
+  produces a policy that looks restrictive in
+  review but permits broad access in practice.
+  Co-occurrence indicates the policy review
+  process is broken. Threshold of 2 fires when
+  at least two policy-semantic defects coexist.
+controls:
+  - CTL.OPENSEARCH.POLICY.WILDCARD.OPEN.IP.001
+  - CTL.OPENSEARCH.POLICY.SOURCEIP.STRINGEQUALS.001
+  - CTL.OPENSEARCH.POLICY.IP.DYNAMIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access
+implicit_dependencies: []

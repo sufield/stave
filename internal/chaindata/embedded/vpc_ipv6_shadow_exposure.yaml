@@ -1,0 +1,21 @@
+id: vpc_ipv6_shadow_exposure
+description: >
+  VPC has no egress-only internet gateway AND either a private
+  subnet has an IPv6 ::/0 route to the standard IGW or the
+  security-group IPv6/IPv4 parity is broken. IPv6 is the shadow
+  exposure channel — instances are publicly reachable on IPv6
+  while reviewers see them as private on IPv4. Multiple IPv6-
+  specific gaps compound: there is no NAT-equivalent for IPv6
+  AND either the routing or the security-group layer also fails
+  to enforce the IPv4 intent on IPv6 traffic.
+controls:
+  - CTL.VPC.IPV6.EGRESSONLY.001
+  - CTL.VPC.IPV6.ROUTE.PUBLIC.001
+  - CTL.VPC.SG.IPV6.PARITY.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - vpc_instance_compromise
+implicit_dependencies: []

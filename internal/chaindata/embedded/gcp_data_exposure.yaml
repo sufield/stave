@@ -1,0 +1,16 @@
+id: gcp_data_exposure
+description: >
+  Multiple data services publicly accessible — BigQuery, Cloud
+  Storage, or Cloud SQL. The data layer has multiple open entry
+  points. Systemic public access, not isolated misconfigurations.
+controls:
+  - CTL.GCP.BIGQUERY.PUBLIC.001
+  - CTL.GCP.STORAGE.PUBLIC.001
+  - CTL.GCP.CLOUDSQL.PUBLIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

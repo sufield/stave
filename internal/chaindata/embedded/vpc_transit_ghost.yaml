@@ -1,0 +1,24 @@
+id: vpc_transit_ghost
+description: >
+  Transit Gateway route table has blackhole routes pointing at deleted
+  attachments AND a VPC endpoint policy still references a deleted
+  resource. Network paths reference infrastructure that no longer
+  exists — traffic is silently dropped at the TGW and endpoint access
+  decisions are evaluated against ghost ARNs. Both failures follow the
+  "everything appears to work" pattern: no error surfaces, troubleshooting
+  is slow, and security decisions are made against resources that may be
+  attacker-recreated.
+controls:
+  - CTL.VPC.TGW.BLACKHOLE.001
+  - CTL.VPC.ENDPOINT.GHOST.001
+escalation_threshold: 1
+compound_severity: medium
+preconditions:
+  - network_access_vpc
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

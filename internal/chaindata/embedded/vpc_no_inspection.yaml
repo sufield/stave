@@ -1,0 +1,19 @@
+id: vpc_no_inspection
+description: >
+  VPC has no Network Firewall AND either flow logs are disabled or
+  a security group permits unrestricted egress. There is no network
+  inspection layer AND either no traffic visibility or no egress
+  constraint. Traffic crosses the VPC boundary without being
+  inspected, recorded, or restricted across multiple layers of
+  control.
+controls:
+  - CTL.VPC.NETWORK.FIREWALL.001
+  - CTL.VPC.FLOWLOG.001
+  - CTL.VPC.SG.EGRESS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - invisible_data_exfiltration
+implicit_dependencies: []

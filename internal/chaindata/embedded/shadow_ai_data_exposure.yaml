@@ -1,0 +1,24 @@
+id: shadow_ai_data_exposure
+description: >
+  AI service detected in an unsanctioned account AND the AI service
+  role has access to production data stores. An unauthorized AI
+  workload can process sensitive data without governance controls.
+  Eric Doerr (Tenable): "A misconfigured database was a needle in a
+  haystack until you wire it to an agent, and then a harmless
+  question about the budget quietly returns data the asker should
+  never see." Shadow AI + data access = data breach waiting to
+  happen.
+controls:
+  - CTL.ACCOUNT.AI.UNSANCTIONED.001
+  - CTL.BEDROCK.SHADOW.MODEL.ACCESS.001
+escalation_threshold: 2
+compound_severity: critical
+incident_precedent:
+  name: Eric Doerr (Tenable) AI Data Exposure Pattern
+  impact: Unauthorized AI workloads processing sensitive data without classification or DLP controls
+  reference: RSA Conference 2026 Keynote
+preconditions:
+  - shadow_infrastructure
+postconditions:
+  - data_exfiltration
+implicit_dependencies: []

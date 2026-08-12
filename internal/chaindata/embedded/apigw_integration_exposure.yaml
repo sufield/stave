@@ -1,0 +1,28 @@
+id: apigw_integration_exposure
+description: >
+  The integration layer has multiple weaknesses at once. Lambda
+  invocation is not scoped to a specific API
+  (CTL.APIGATEWAY.INTEGRATION.LAMBDA.SCOPE.001) — any API in the
+  account can invoke the function and bypass the original API's
+  authorizer. Combined with either no VPC Link for a private-
+  looking backend (CTL.APIGATEWAY.INTEGRATION.VPCLINK.MISSING.001)
+  — backend reachable over the public internet despite appearing
+  private — or HTTP plaintext on the backend hop
+  (CTL.APIGATEWAY.INTEGRATION.HTTP.PLAINTEXT.001) — encryption
+  ends at API Gateway. Threshold of 2 reflects that the Lambda
+  scope failure alone is medium severity; pairing it with a
+  network or transport weakness makes the integration's overall
+  attack surface meaningfully worse — both the trust boundary
+  and the network/transport layer are compromised at the same
+  time.
+controls:
+  - CTL.APIGATEWAY.INTEGRATION.LAMBDA.SCOPE.001
+  - CTL.APIGATEWAY.INTEGRATION.VPCLINK.MISSING.001
+  - CTL.APIGATEWAY.INTEGRATION.HTTP.PLAINTEXT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access
+implicit_dependencies: []

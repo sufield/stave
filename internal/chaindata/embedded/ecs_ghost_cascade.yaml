@@ -1,0 +1,32 @@
+id: ecs_ghost_cascade
+description: >
+  Multiple infrastructure dependencies of an ECS task definition
+  have been deleted. The image is gone (CTL.ECS.IMAGE.GHOST.001),
+  the secret is gone (CTL.ECS.SECRET.GHOST.001), the execution
+  role is gone (CTL.ECS.GHOST.EXECROLE.001), or the service's
+  subnet is gone (CTL.ECS.GHOST.SUBNET.001). Threshold of 2
+  reflects that any one ghost reference is a localised failure —
+  the task fails at one specific step on next launch — but two
+  or more describe systematic decommissioning failure: someone
+  tore down infrastructure without checking which task
+  definitions still reference it. The blast radius compounds
+  because each missing dependency surfaces at a different point
+  in the launch sequence (image pull, secret retrieval, role
+  assumption, ENI placement); the failure is harder to attribute
+  to a single root cause when multiple are missing at once.
+controls:
+  - CTL.ECS.IMAGE.GHOST.001
+  - CTL.ECS.SECRET.GHOST.001
+  - CTL.ECS.GHOST.EXECROLE.001
+  - CTL.ECS.GHOST.SUBNET.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

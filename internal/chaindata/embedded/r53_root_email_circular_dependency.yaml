@@ -1,0 +1,24 @@
+id: r53_root_email_circular_dependency
+description: >
+  The account's root email domain has its DNS hosted in the same
+  account (CTL.IAM.ROOT.EMAIL.LOCALZONE.001) and no SCP prevents
+  account closure for domain-tagged accounts
+  (CTL.IAM.SCP.CLOSEACCOUNT.002). If this account is closed,
+  domain suspension on day 5 will destroy the DNS for the root
+  email domain, preventing delivery of AWS closure notification
+  emails. This creates a circular failure: the recovery mechanism
+  (email notification of the 90-day grace period) is destroyed
+  by the event it should warn about. The account owner cannot
+  receive warnings and may miss the recovery window entirely.
+controls:
+  - CTL.IAM.ROOT.EMAIL.LOCALZONE.001
+  - CTL.IAM.SCP.CLOSEACCOUNT.002
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - account_closure
+postconditions:
+  - notification_failure
+  - domain_loss
+  - account_loss
+implicit_dependencies: []

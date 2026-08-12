@@ -1,0 +1,23 @@
+id: sns_confused_deputy
+description: >
+  Any single SNS service-integration confused deputy fires
+  this chain — S3, CloudWatch/EventBridge, or Lambda can
+  publish to the topic without source restriction. Each
+  independently allows message injection from any resource
+  of that service type in any account. SNS fan-out
+  amplifies the impact: one injected message reaches every
+  subscribed SQS queue, Lambda function, and HTTP endpoint.
+  Threshold of 1 fires whenever the topic authorizes a
+  service principal without a corresponding aws:SourceArn
+  or aws:SourceAccount condition.
+controls:
+  - CTL.SNS.POLICY.S3.NOSOURCE.001
+  - CTL.SNS.POLICY.CLOUDWATCH.NOSOURCE.001
+  - CTL.SNS.POLICY.LAMBDA.NOSOURCE.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - resource_policy_escalation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

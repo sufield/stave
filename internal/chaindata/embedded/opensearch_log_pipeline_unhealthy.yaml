@@ -1,0 +1,23 @@
+id: opensearch_log_pipeline_unhealthy
+description: >
+  OpenSearch log delivery pipeline has multiple
+  health defects: audit destination references
+  missing CloudWatch group, cross-account log
+  delivery role lacks required trust, or log
+  group retention shorter than scheduled S3
+  export cadence. Each defect alone produces
+  silent log loss; co-occurrence means the
+  pipeline is broken at multiple points.
+  Threshold of 2 fires when at least two
+  pipeline defects coexist.
+controls:
+  - CTL.OPENSEARCH.AUDIT.LOGGROUP.MISSING.001
+  - CTL.OPENSEARCH.LOG.CROSSACCT.TRUST.MISSING.001
+  - CTL.OPENSEARCH.LOG.RETENTION.BEFORE.EXPORT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

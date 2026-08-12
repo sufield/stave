@@ -1,0 +1,25 @@
+id: eventbridge_schema_governance_weak
+description: >
+  EventBridge schema registry surface is uncurated: the
+  discoverer is indexing a sensitive event bus AND/OR
+  references a bus that has been deleted. Either alone is a
+  governance gap; together they indicate the schema registry
+  has accumulated state without active management — sensitive
+  shapes from live events plus stale entries from deleted
+  buses both surface to anyone with DescribeSchema. Threshold
+  of 2 fires when both schema-discoverer defects coexist on
+  the same account's discoverer inventory.
+controls:
+  - CTL.EVENTBRIDGE.DISCOVERER.SENSITIVE.BUS.001
+  - CTL.EVENTBRIDGE.DISCOVERER.GHOST.BUS.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

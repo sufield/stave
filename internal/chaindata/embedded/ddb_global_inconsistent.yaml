@@ -1,0 +1,27 @@
+id: ddb_global_inconsistent
+description: >
+  Multiple configuration inconsistencies across global table
+  replicas. The table is encrypted inconsistently across regions
+  (CTL.DYNAMODB.GLOBAL.ENCRYPT.MISMATCH.001) — the same data has
+  different key-policy and audit controls in different regions —
+  AND either replicas have inconsistent PITR coverage
+  (CTL.DYNAMODB.GLOBAL.PITR.MISMATCH.001), leaving some regions
+  unrecoverable after corruption, or the table uses the legacy
+  2017 version (CTL.DYNAMODB.GLOBAL.VERSION.001) without
+  transactional write support. Threshold of 2 reflects that a
+  single misconfiguration across replicas is a known posture
+  concern; two together describe a global table where multiple
+  data-protection properties vary by region — protection level,
+  recoverability, and/or replication semantics are not uniform
+  across the replicated data set.
+controls:
+  - CTL.DYNAMODB.GLOBAL.ENCRYPT.MISMATCH.001
+  - CTL.DYNAMODB.GLOBAL.PITR.MISMATCH.001
+  - CTL.DYNAMODB.GLOBAL.VERSION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_access
+postconditions:
+  - data_in_transit_exposure
+implicit_dependencies: []

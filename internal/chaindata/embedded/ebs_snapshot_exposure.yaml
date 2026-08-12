@@ -1,0 +1,22 @@
+id: ebs_snapshot_exposure
+description: >
+  Snapshot data exposure across the existing EBS
+  catalog: unencrypted shared snapshot, cross-
+  account share without organizational scoping,
+  or a public snapshot. Each independently makes
+  the disk image accessible to unauthorized
+  parties — the most common EBS data breach
+  pattern. Threshold of 1 because a single
+  exposure is enough to leak the entire disk
+  contents.
+controls:
+  - CTL.EC2.EBS.SNAPSHOT.UNENCRYPTED.SHARED.001
+  - CTL.EC2.SNAPSHOT.CROSSACCOUNT.001
+  - CTL.EC2.SNAPSHOT.PUBLIC.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_access
+implicit_dependencies: []

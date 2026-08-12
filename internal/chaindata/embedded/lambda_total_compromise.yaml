@@ -1,0 +1,18 @@
+id: lambda_total_compromise
+description: >
+  A publicly invocable Lambda function co-occurs with either an
+  over-privileged execution role or plaintext secrets in environment
+  variables. Unauthenticated internet access to a function that can
+  act with broad AWS permissions or expose credentials directly.
+controls:
+  - CTL.LAMBDA.URL.AUTH.001
+  - CTL.LAMBDA.ROLE.LEASTPRIV.001
+  - CTL.LAMBDA.ENV.SECRETS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ec2_code_execution
+  - secret_store_access
+implicit_dependencies: []

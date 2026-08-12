@@ -1,0 +1,17 @@
+id: redshift_public_exposure
+description: >
+  Publicly accessible Redshift cluster without encryption. Data
+  warehouse is reachable from the internet, data at rest is
+  unencrypted, and SSL is not required. The full exposure pattern
+  for data warehouse compromise.
+controls:
+  - CTL.REDSHIFT.PUBLIC.001
+  - CTL.REDSHIFT.ENCRYPT.REST.001
+  - CTL.REDSHIFT.SSL.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - data_warehouse_compromise
+implicit_dependencies: []

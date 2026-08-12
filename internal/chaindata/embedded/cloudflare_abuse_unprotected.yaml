@@ -1,0 +1,17 @@
+id: cloudflare_abuse_unprotected
+description: >
+  No rate limiting plus either no bot protection or no WAF. The
+  zone has no defense against automated abuse — credential stuffing,
+  scraping, and application-layer attacks are unthrottled,
+  undetected, and unfiltered.
+controls:
+  - CTL.CLOUDFLARE.ZONE.RATELIMIT.001
+  - CTL.CLOUDFLARE.ZONE.BOT.001
+  - CTL.CLOUDFLARE.ZONE.WAF.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

@@ -1,0 +1,20 @@
+id: vpc_database_exposure
+description: >
+  Either a subnet containing database resources has an Internet
+  Gateway route or an RDS instance is configured as publicly
+  accessible. The two controls check different layers — network
+  routing vs the RDS `PubliclyAccessible` flag — but either
+  condition alone creates a direct internet exposure path to the
+  database. Firing on a single failure avoids the database-exposure
+  false negative that would result from requiring both layers to
+  fail simultaneously.
+controls:
+  - CTL.VPC.SUBNET.PRIVATEDB.001
+  - CTL.RDS.PUBLIC.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - database_compromise
+implicit_dependencies: []

@@ -1,0 +1,26 @@
+id: cf_monitoring_blind
+description: >
+  Multiple critical CloudFront metrics are unmonitored. No CloudWatch
+  alarm for 5xx error rate (CTL.CLOUDFRONT.ALARM.5XX.001) — origin
+  failures are undetected; AND either no 4xx alarm
+  (CTL.CLOUDFRONT.ALARM.4XX.001) — reconnaissance and misconfiguration
+  are invisible; or no request count alarm
+  (CTL.CLOUDFRONT.ALARM.REQUESTS.001) — DDoS and scraping traffic
+  anomalies go undetected. Threshold of 2 reflects that missing a
+  single alarm is a known posture gap; missing two or more alarms
+  describes a distribution that is operationally dark — no signal
+  for origin health, attack reconnaissance, or traffic anomalies at
+  the internet edge. 5xxErrorRate is the most critical — it is the
+  first signal of complete service failure and is required for ghost
+  origin detection.
+controls:
+  - CTL.CLOUDFRONT.ALARM.5XX.001
+  - CTL.CLOUDFRONT.ALARM.4XX.001
+  - CTL.CLOUDFRONT.ALARM.REQUESTS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - invisible_data_exfiltration
+implicit_dependencies: []

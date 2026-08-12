@@ -1,0 +1,21 @@
+id: vpc_dns_exfiltration
+description: >
+  VPC has no DNS Firewall AND either DNS egress is unrestricted
+  (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS
+  resolution is unfiltered at the resolver AND either the
+  network permits DNS to arbitrary upstream resolvers or the
+  network traffic is unrecorded. DNS tunneling — encoding
+  exfiltrated data in query names to an attacker-controlled
+  authoritative server — succeeds and leaves no forensic
+  evidence that can be correlated to the originating workload.
+controls:
+  - CTL.VPC.DNSFIREWALL.ENABLED.001
+  - CTL.VPC.SG.EGRESS.DNS.001
+  - CTL.VPC.FLOWLOG.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - invisible_data_exfiltration
+implicit_dependencies: []

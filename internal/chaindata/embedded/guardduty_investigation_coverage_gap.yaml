@@ -1,0 +1,27 @@
+id: guardduty_investigation_coverage_gap
+description: >
+  GuardDuty investigation agent is disabled while one or more
+  protection features are also disabled. The investigation agent
+  correlates and analyzes findings across protection sources —
+  but if protection features (EKS, S3, Runtime Monitoring, Lambda,
+  RDS, Malware) are partially disabled, investigation would analyze
+  an incomplete finding set even if enabled. The compound gap is
+  worse than either alone: no automated correlation AND missing
+  the underlying detections that would feed correlation. Threshold
+  of 2 fires when the investigation gap compounds with any
+  protection feature gap on the same detector.
+controls:
+  - CTL.GUARDDUTY.INVESTIGATION.001
+  - CTL.GUARDDUTY.EKSPROTECTION.001
+  - CTL.GUARDDUTY.S3PROTECTION.001
+  - CTL.GUARDDUTY.RUNTIMEMONITORING.001
+  - CTL.GUARDDUTY.LAMBDAPROTECTION.001
+  - CTL.GUARDDUTY.RDSPROTECTION.001
+  - CTL.GUARDDUTY.MALWARE.PROTECT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - detection_without_response
+implicit_dependencies: []

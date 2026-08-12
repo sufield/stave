@@ -1,0 +1,15 @@
+id: gcp_dns_compromise
+description: >
+  No DNSSEC plus no query logging. DNS responses are forgeable and
+  DNS activity is unmonitored. An attacker can redirect traffic via
+  DNS spoofing with no forensic record.
+controls:
+  - CTL.GCP.DNS.DNSSEC.001
+  - CTL.GCP.DNS.LOG.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

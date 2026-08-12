@@ -1,0 +1,28 @@
+id: gcs_dual_access_ghost_binding
+description: >
+  GCS bucket does not use uniform bucket-level access AND an
+  IAM binding references a deleted member. Without uniform
+  access, both IAM policies and object-level ACLs control
+  access — a dual-path exposure that is harder to audit.
+  A ghost IAM binding (referencing a deleted principal) means
+  the deleted member's identifier can be re-registered by an
+  attacker to inherit the binding's permissions. The
+  combination compounds the risk: the ghost binding grants
+  IAM-level access AND the non-uniform access mode means
+  object ACLs may independently grant additional permissions
+  that survive IAM policy cleanup — the attacker gets both
+  the re-registered IAM path and any legacy object ACLs.
+  Either control alone mitigates: enabling uniform access
+  eliminates the object ACL path; removing the ghost binding
+  closes the re-registration attack.
+controls:
+  - CTL.GCS.UNIFORM.001
+  - CTL.GCP.IAM.GHOST.001
+escalation_threshold: 2
+compound_severity: high
+scope: global
+preconditions:
+  - credential_access
+postconditions:
+  - data_access
+implicit_dependencies: []

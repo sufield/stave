@@ -1,0 +1,18 @@
+id: sagemaker_notebook_exposure
+description: >
+  SageMaker notebook with direct internet access, root privileges,
+  and unencrypted storage. An internet-accessible Jupyter environment
+  with root access provides an attacker with interactive shell,
+  package installation, and IAM credentials. Unencrypted storage
+  exposes cached datasets and model artifacts.
+controls:
+  - CTL.SAGEMAKER.NOTEBOOK.INTERNET.001
+  - CTL.SAGEMAKER.NOTEBOOK.ROOT.001
+  - CTL.SAGEMAKER.NOTEBOOK.ENCRYPT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

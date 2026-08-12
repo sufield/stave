@@ -1,0 +1,21 @@
+id: agentic_soc_exposed_pivot
+description: >
+  Internet-reachable ECS service has a task role with both broad
+  S3 write access and sensitive-action wildcard (covering
+  bedrock:InvokeModel). A compromised service can abuse foundation
+  models (prompt injection, training-data extraction), tamper with
+  artifacts in the shared store, and exfiltrate data — all from a
+  single internet-facing entry point. Threshold of 2 fires when
+  the internet exposure compounds with either the S3 write scope
+  or the sensitive-action wildcard.
+controls:
+  - CTL.ECS.NETWORK.PUBLIC.001
+  - CTL.IAM.S3.WILDCARD.001
+  - CTL.IAM.POLICY.RESOURCE.WILDCARD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

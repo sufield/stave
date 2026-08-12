@@ -1,0 +1,33 @@
+id: ecs_to_dynamodb_lateral
+description: >
+  ECS task has an overbroad execution role and DynamoDB is
+  accessible without a VPC endpoint policy restriction — a
+  compromised task can read or write arbitrary DynamoDB
+  tables via the public API. The first leg detects that the
+  ECS execution role exceeds required permissions
+  (CTL.ECS.EXECROLE.OVERBROAD.001) — the role grants
+  broad DynamoDB actions or wildcard resource access. The
+  second leg detects that no VPC endpoint enforces a
+  restrictive policy on DynamoDB access
+  (CTL.DYNAMODB.VPC.ENDPOINT.001) — the task reaches
+  DynamoDB over the public endpoint with no network-level
+  constraint. Together: task compromise yields unrestricted
+  DynamoDB access across every table the overbroad role
+  permits. ECS microservices commonly use DynamoDB as their
+  primary datastore; this IAM-path lateral movement pattern
+  applies to any task with an overbroad role. Removing
+  either leg breaks the chain: scope the execution role to
+  specific tables and actions, OR enforce a VPC endpoint
+  policy that restricts DynamoDB access to authorized task
+  roles only.
+controls:
+  - CTL.ECS.EXECROLE.OVERBROAD.001
+  - CTL.DYNAMODB.VPC.ENDPOINT.001
+scope: global
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - credential_access
+postconditions:
+  - data_access
+implicit_dependencies: []

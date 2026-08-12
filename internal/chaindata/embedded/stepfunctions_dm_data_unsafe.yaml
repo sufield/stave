@@ -1,0 +1,24 @@
+id: stepfunctions_dm_data_unsafe
+description: >
+  Step Functions Distributed Map has multiple
+  data-handling defects: no ItemBatcher (per-
+  item cost), no ResultWriter (256 KB output
+  truncation), or S3 ItemReader without
+  Prefix (iterates entire bucket). Each
+  defect alone produces silent cost / data /
+  scope issues; co-occurrence indicates the
+  Distributed Map was authored without
+  reading the documented best-practices.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ASL.DM.NO.ITEMBATCHER.001
+  - CTL.STEPFUNCTIONS.ASL.DM.NO.RESULTWRITER.001
+  - CTL.STEPFUNCTIONS.ASL.DM.S3.NOPREFIX.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

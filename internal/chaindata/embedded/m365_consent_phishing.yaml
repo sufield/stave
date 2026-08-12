@@ -1,0 +1,16 @@
+id: m365_consent_phishing
+description: >
+  User consent not restricted plus either overprivileged apps or
+  unrestricted guest invitations. Multiple paths for consent
+  phishing and illicit permission grants.
+controls:
+  - CTL.M365.ENTRA.APP.CONSENT.001
+  - CTL.M365.ENTRA.APP.PRIVILEGED.001
+  - CTL.M365.ENTRA.GUEST.INVITE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

@@ -1,0 +1,24 @@
+id: opensearch_plugin_unsafe
+description: >
+  OpenSearch domain has multiple plugin / script
+  / ML hygiene defects: inline Painless scripts
+  enabled, plugin from untrusted source or
+  unsigned, ML Commons auth / version pin
+  unsafe, or notification webhook over HTTP.
+  Each defect alone introduces an extension
+  attack surface; co-occurrence indicates
+  plugin governance is absent. Threshold of 2
+  fires when at least two plugin defects
+  coexist.
+controls:
+  - CTL.OPENSEARCH.PAINLESS.INLINE.001
+  - CTL.OPENSEARCH.PLUGIN.UNTRUSTED.001
+  - CTL.OPENSEARCH.ML.UNSAFE.001
+  - CTL.OPENSEARCH.NOTIFY.HTTP.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - control_plane_code_execution
+implicit_dependencies: []

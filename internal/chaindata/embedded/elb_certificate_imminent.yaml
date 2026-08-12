@@ -1,0 +1,27 @@
+id: elb_certificate_imminent
+description: >
+  Two or more certificate-management failures on the
+  same listener — ACM auto-renewal failing, certificate
+  not managed by ACM, or ghost certificate (deleted).
+  RENEWAL.FAILING and NOTACM are mutually exclusive on
+  a single asset (one is is_acm_certificate=true, the
+  other false), so threshold of 2 effectively requires
+  one of those two to compound with CERT.GHOST. The
+  chain catches certificate-management posture that
+  has multiple axes of failure rather than a single
+  isolated misconfiguration.
+controls:
+  - CTL.ELB.CERT.RENEWAL.FAILING.001
+  - CTL.ELB.CERT.NOTACM.001
+  - CTL.ELB.CERT.GHOST.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

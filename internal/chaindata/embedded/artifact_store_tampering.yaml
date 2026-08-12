@@ -1,0 +1,21 @@
+id: artifact_store_tampering
+description: >
+  Internet-reachable ECS service has write access to an artifact
+  store (S3 bucket) that has no versioning. Artifacts can be
+  silently overwritten — no previous version is preserved, no
+  recovery is possible, and downstream consumers (read-only
+  services, ML pipelines, audit systems) ingest tampered data
+  without detection. Threshold of 2 fires when the internet
+  exposure plus write access compounds with either the missing
+  versioning or the broad S3 scope.
+controls:
+  - CTL.ECS.NETWORK.PUBLIC.001
+  - CTL.IAM.S3.WILDCARD.001
+  - CTL.S3.VERSION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - s3_data_access
+implicit_dependencies: []

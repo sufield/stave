@@ -1,0 +1,26 @@
+id: elasticache_broad_access_no_audit
+description: >
+  ElastiCache cluster security group allows broad ingress
+  (0.0.0.0/0 on cache ports) AND CloudTrail is not enabled.
+  Broad ingress means any host with network connectivity can
+  reach the cache endpoint. Without CloudTrail, API calls
+  that modify the cluster configuration (ModifyReplicationGroup,
+  CreateSnapshot, DeleteCacheCluster) leave no audit record.
+  The combination is a wide-open cache endpoint with invisible
+  control-plane activity — an attacker can snapshot the cluster
+  for offline data extraction and the API call is never logged.
+  Either control alone mitigates: restricting the security group
+  limits who can reach the endpoint; enabling CloudTrail records
+  configuration changes for detection and forensics.
+controls:
+  - CTL.ELASTICACHE.SG.BROAD.001
+  - CTL.CLOUDTRAIL.ENABLED.001
+escalation_threshold: 2
+compound_severity: high
+scope: global
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_access
+  - audit_trail_destroyed
+implicit_dependencies: []

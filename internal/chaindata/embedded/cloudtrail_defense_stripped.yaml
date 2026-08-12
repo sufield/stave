@@ -1,0 +1,21 @@
+id: cloudtrail_defense_stripped
+description: >
+  Trail stopped plus either no Object Lock or no
+  StopLogging alarm. The trail is actively stopped AND
+  either existing logs can be tampered (no Object Lock)
+  or the trail disablement went undetected (no alarm).
+  The attacker has both stopped the trail AND either can
+  erase evidence or did so without notification.
+  Threshold of 2 fires when the trail-stopped state
+  compounds with a missing protection layer.
+controls:
+  - CTL.CLOUDTRAIL.STOP.DETECT.001
+  - CTL.CLOUDTRAIL.S3.OBJECTLOCK.001
+  - CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

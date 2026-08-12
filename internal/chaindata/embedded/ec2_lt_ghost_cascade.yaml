@@ -1,0 +1,27 @@
+id: ec2_lt_ghost_cascade
+description: >
+  Launch template carries multiple ghost references — the AMI is
+  deregistered AND at least one of security group, subnet,
+  instance profile, or key pair points to a deleted resource.
+  Single ghost references are missed cleanups; multiple
+  simultaneous ghost references on the same launch template
+  indicate a systematic decommissioning failure where several
+  dependents were deleted without updating the template. The
+  template is broken on multiple fronts — launching from it
+  fails or degrades silently across multiple dimensions.
+controls:
+  - CTL.EC2.AMI.GHOST.001
+  - CTL.EC2.LT.GHOST.SG.001
+  - CTL.EC2.LT.GHOST.SUBNET.001
+  - CTL.EC2.LT.GHOST.PROFILE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - ungoverned_operation
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

@@ -1,0 +1,20 @@
+id: unauthenticated_data_path
+description: >
+  Sensitive resource reachable from anonymous with no authentication
+  boundary. A composition of individually-safe resources creates an
+  unauthenticated path to data classified as sensitive — and no
+  WAF, authorizer, or identity layer exists to mitigate. This is
+  the highest-impact exposure composition: public internet to data
+  with zero friction.
+controls:
+  - CTL.EXPOSURE.ANON.001
+  - CTL.EXPOSURE.ANON.003
+  - CTL.APIGATEWAY.AUTH.001
+  - CTL.WAF.RULES.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - s3_data_access
+implicit_dependencies: []

@@ -1,0 +1,16 @@
+id: azure_defender_gap
+description: >
+  Defender disabled or Free tier plus auto-provisioning off or no
+  security contact. Threat detection is either absent, not expanding
+  to new resources, or generating alerts nobody receives.
+controls:
+  - CTL.AZURE.DEFENDER.ENABLED.001
+  - CTL.AZURE.DEFENDER.AUTOPROVISIONING.001
+  - CTL.AZURE.DEFENDER.CONTACT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

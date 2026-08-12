@@ -1,0 +1,24 @@
+id: r53_email_unprotected
+description: >
+  Domain has no SPF or no DMARC — either independently means email
+  from this domain can be spoofed. SPF restricts which servers are
+  authorized to send as the domain: without SPF, any server can send
+  email appearing to come from @[domain] with no mechanism for the
+  receiving server to verify the sender. DMARC tells receiving mail
+  servers what to do when email fails authentication: without DMARC,
+  the receiving server has no policy and defaults to accepting. Both
+  controls are independently necessary — SPF without DMARC means
+  authentication results are advisory; DMARC without SPF means there
+  is nothing to authenticate. Threshold of 1 reflects that each
+  independently enables domain spoofing for phishing with no
+  authentication layer at the receiving server.
+controls:
+  - CTL.ROUTE53.EMAIL.SPF.MISSING.001
+  - CTL.ROUTE53.EMAIL.DMARC.MISSING.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

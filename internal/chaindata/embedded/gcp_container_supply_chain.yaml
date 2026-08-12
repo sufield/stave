@@ -1,0 +1,15 @@
+id: gcp_container_supply_chain
+description: >
+  Container registry publicly accessible AND images not scanned.
+  Supply chain exposed — images downloadable by anyone and not
+  verified for vulnerabilities.
+controls:
+  - CTL.GCP.GCR.PUBLIC.001
+  - CTL.GCP.ARTIFACT.SCAN.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

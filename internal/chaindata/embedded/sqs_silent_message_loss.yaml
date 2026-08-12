@@ -1,0 +1,25 @@
+id: sqs_silent_message_loss
+description: >
+  Any single SQS message-loss path activates this chain — ghost
+  DLQ (deleted target on the redrive policy), missing DLQ (no
+  failure handling at all), or DLQ with no consumer (failed
+  messages accumulate uninvestigated until retention expires).
+  Each independently means failed messages are either silently
+  discarded, retry indefinitely, or accumulate without
+  investigation. Threshold of 1 fires whenever any single
+  silent-loss path is present on a queue.
+controls:
+  - CTL.SQS.GHOST.DLQ.001
+  - CTL.SQS.DLQ.001
+  - CTL.SQS.DLQ.NOCONSUMER.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

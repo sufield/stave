@@ -1,0 +1,20 @@
+id: compute_supply_chain_ghost
+description: >
+  Ghost image reference combined with untrusted registry or tag-only
+  reference. The image is missing AND the replacement path is
+  uncontrolled — an attacker can push a replacement image.
+controls:
+  - CTL.ECS.IMAGE.GHOST.001
+  - CTL.ECS.IMAGE.UNTRUSTED.001
+  - CTL.ECS.IMAGE.DIGEST.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - container_code_execution
+postconditions:
+  - iam_credential_theft
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

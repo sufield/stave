@@ -1,0 +1,24 @@
+id: elb_auth_broken
+description: >
+  Any authentication failure at the ALB —
+  unauthenticated requests allowed, Cognito user pool
+  deleted, or default action forwards without auth.
+  Each independently means some or all requests reach
+  the backend without authentication. Threshold of 1
+  fires whenever the auth posture has any one of the
+  three identified gaps.
+controls:
+  - CTL.ELB.AUTH.UNAUTHENTICATED.ALLOW.001
+  - CTL.ELB.AUTH.COGNITO.GHOST.001
+  - CTL.ELB.LISTENER.DEFAULTFORWARD.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

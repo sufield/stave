@@ -1,0 +1,19 @@
+id: eks_netpol_open
+description: >
+  EKS NetworkPolicy explicitly opens both ingress
+  (0.0.0.0/0) and egress (0.0.0.0/0) — pods covered by
+  the rule have no network restrictions in either
+  direction. The policy exists, satisfies "namespace has
+  NetworkPolicy" audits, but enforces nothing. Threshold
+  of 2 fires when both directions are wide-open on the
+  same policy.
+controls:
+  - CTL.EKS.NETPOL.INGRESS.OPEN.001
+  - CTL.EKS.NETPOL.EGRESS.OPEN.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

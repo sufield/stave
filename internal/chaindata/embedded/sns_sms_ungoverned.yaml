@@ -1,0 +1,20 @@
+id: sns_sms_ungoverned
+description: >
+  No SMS spend alarm AND no published-message anomaly alarm.
+  SMS costs are unmonitored AND publish-volume anomalies are
+  invisible. An attacker exploiting a confused-deputy gap (or
+  a misconfigured caller) can drive high-volume SMS delivery
+  to attacker-chosen destinations and the only signal is the
+  AWS bill at month end. Threshold of 2 fires when SMS-using
+  topics have neither cost monitoring nor traffic anomaly
+  monitoring.
+controls:
+  - CTL.SNS.ALARM.SMSSPEND.001
+  - CTL.SNS.ALARM.PUBLISHED.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

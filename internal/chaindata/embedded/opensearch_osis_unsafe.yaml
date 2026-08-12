@@ -1,0 +1,25 @@
+id: opensearch_osis_unsafe
+description: >
+  OpenSearch Ingestion (OSIS) pipeline has
+  multiple unsafe configuration defects:
+  no VPC configuration, plaintext secrets in
+  config, persistent buffer / DLQ disabled, or
+  unsafe source config (auto-scale=min,
+  cross-account no trust, kafka without TLS).
+  Each defect alone weakens the ingestion
+  pipeline; co-occurrence indicates the
+  pipeline was set up without operational
+  safeguards. Threshold of 2 fires when at
+  least two OSIS defects coexist.
+controls:
+  - CTL.OPENSEARCH.OSIS.NOVPC.001
+  - CTL.OPENSEARCH.OSIS.SECRETS.PLAIN.001
+  - CTL.OPENSEARCH.OSIS.BUFFER.UNSAFE.001
+  - CTL.OPENSEARCH.OSIS.SOURCE.UNSAFE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_in_transit_exposure
+implicit_dependencies: []

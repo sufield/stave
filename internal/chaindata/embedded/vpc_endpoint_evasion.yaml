@@ -1,0 +1,20 @@
+id: vpc_endpoint_evasion
+description: >
+  VPC endpoint with permissive policy enables anonymous S3 access
+  without logging. Models the Varonis "Invisible Footprint"
+  disclosure (April 2026) — anonymous requests via VPC endpoints
+  evade CloudTrail detection. The combination of permissive
+  endpoint policy, unrestricted bucket targets, and missing
+  Network Activity logging creates a completely invisible data
+  access path.
+controls:
+  - CTL.VPC.ENDPOINT.ANON.001
+  - CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001
+  - CTL.CLOUDTRAIL.NETWORK.ACTIVITY.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - vpc_instance_compromise
+postconditions:
+  - invisible_data_exfiltration
+implicit_dependencies: []

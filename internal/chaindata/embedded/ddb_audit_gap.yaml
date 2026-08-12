@@ -1,0 +1,27 @@
+id: ddb_audit_gap
+description: >
+  DynamoDB table has no audit trail and no operational
+  detection. The table is not covered by CloudTrail
+  data events (CTL.DYNAMODB.AUDIT.DATAEVENTS.001) AND
+  has no CloudWatch alarm for throttled requests
+  (CTL.DYNAMODB.ALARM.THROTTLE.001). Threshold of 2
+  reflects that the combination is qualitatively
+  different from either alone: with neither item-level
+  access logging nor capacity exhaustion detection in
+  place, the table has no operational visibility at
+  all. Unauthorized access leaves no record AND
+  capacity issues from that access (a Scan attack, a
+  bulk read of every item) are undetected. The
+  attacker can read or modify items at the limit of
+  what the table will serve, with no audit trail
+  to investigate after the fact.
+controls:
+  - CTL.DYNAMODB.AUDIT.DATAEVENTS.001
+  - CTL.DYNAMODB.ALARM.THROTTLE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_access
+postconditions:
+  - invisible_data_exfiltration
+implicit_dependencies: []

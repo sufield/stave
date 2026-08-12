@@ -1,0 +1,28 @@
+id: r53_domain_spoof_complete
+description: >
+  Complete absence of domain authentication controls: no SPF, no
+  DMARC, and no CAA. Any server can send email appearing to be from
+  @[domain] — SPF is missing so there is no restriction on authorized
+  senders. Receiving servers have no instruction to reject spoofed
+  email — DMARC is missing so there is no policy. Any certificate
+  authority can issue certificates for the domain — CAA is missing
+  so certificate issuance is unrestricted. The domain is fully
+  unprotected against impersonation. An attacker can send phishing
+  email as any address @[domain], obtain a valid TLS certificate for
+  the domain, and serve a convincing impersonation site. Recipients
+  see a valid sender domain and a valid HTTPS certificate with no
+  browser warnings. This chain requires all three controls to be
+  absent — threshold of 3. Any single control reduces the attack
+  surface: SPF restricts senders, DMARC enforces rejection, CAA
+  restricts certificate issuance.
+controls:
+  - CTL.ROUTE53.EMAIL.SPF.MISSING.001
+  - CTL.ROUTE53.EMAIL.DMARC.MISSING.001
+  - CTL.ROUTE53.ZONE.CAA.MISSING.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

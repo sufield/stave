@@ -1,0 +1,25 @@
+id: eventbridge_federation_unsafe
+description: >
+  Hub-and-spoke EventBridge federation has multiple defects:
+  hub bus accepts federated events without sourceAccount
+  validation, federation rule references a deleted spoke bus,
+  or the cross-account bus permission has no aligned target
+  IAM. The federation surface combines confused-deputy risks
+  with ghost-target failures and broken cross-account
+  delivery paths. Threshold of 2 fires when at least two
+  federation defects coexist.
+controls:
+  - CTL.EVENTBRIDGE.FEDERATION.NOSOURCEACCOUNT.001
+  - CTL.EVENTBRIDGE.FEDERATION.GHOST.SPOKE.001
+  - CTL.EVENTBRIDGE.POLICY.IDENTITY.MISMATCH.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - cross_account_injection
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

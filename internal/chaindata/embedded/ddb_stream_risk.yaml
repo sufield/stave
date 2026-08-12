@@ -1,0 +1,26 @@
+id: ddb_stream_risk
+description: >
+  DynamoDB Stream is configured for maximum data exposure AND has
+  no consumer. The stream uses NEW_AND_OLD_IMAGES view type
+  (CTL.DYNAMODB.STREAM.MAXEXPOSURE.001) — every item modification
+  produces a record containing the complete before and after state
+  of the item — AND no Lambda event source mapping or Kinesis
+  consumer is configured (CTL.DYNAMODB.STREAM.NOCONSUMER.001),
+  so 24 hours of complete change history accumulates unprocessed.
+  Threshold of 2 requires both: maximum exposure alone is a
+  configuration concern but may be intentional for CDC pipelines;
+  no consumer alone is an operational concern. Together they
+  describe a stream that retains the highest-fidelity change data
+  for every item in the table — old and new values for every
+  modification — in an unmonitored state for 24 hours, accessible
+  to any principal with stream read permissions.
+controls:
+  - CTL.DYNAMODB.STREAM.MAXEXPOSURE.001
+  - CTL.DYNAMODB.STREAM.NOCONSUMER.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_access
+postconditions:
+  - data_in_transit_exposure
+implicit_dependencies: []

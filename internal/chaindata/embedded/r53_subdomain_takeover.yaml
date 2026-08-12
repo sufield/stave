@@ -1,0 +1,36 @@
+id: r53_subdomain_takeover
+description: >
+  Any reclaimable subdomain takeover vector in DNS. An S3 bucket
+  name is reclaimable after deletion (CTL.ROUTE53.DANGLING.S3.001)
+  — attacker creates same-named bucket and serves content; a
+  CloudFront CNAME is unclaimed after distribution deletion
+  (CTL.ROUTE53.DANGLING.CLOUDFRONT.001) — attacker claims the CNAME
+  on their own distribution; an Elastic Beanstalk CNAME is reclaimable
+  after environment termination (CTL.ROUTE53.DANGLING.BEANSTALK.001)
+  — attacker creates an environment with the same CNAME; a released
+  Elastic IP can be reclaimed via pool cycling
+  (CTL.ROUTE53.DANGLING.EIP.001) — attacker's instance receives the
+  organization's traffic; or an NS delegation points to name servers
+  that don't serve the zone (CTL.ROUTE53.DANGLING.NS.001) — attacker
+  who controls the name servers controls all DNS for the subdomain.
+  Threshold of 1 reflects that each independently enables an attacker
+  to serve content or intercept traffic on the organization's domain.
+  Any single reclaimable dangling record is a complete subdomain
+  takeover vector requiring immediate remediation.
+  Linked incidents: Wiz "dangling DNS" campaign analysis (2025,
+  subdomain takeover used for credential phishing in 3 documented
+  APT campaigns), Can I Take Over XYZ project tracking 40+
+  reclaimable service types across cloud providers.
+controls:
+  - CTL.ROUTE53.DANGLING.S3.001
+  - CTL.ROUTE53.DANGLING.CLOUDFRONT.001
+  - CTL.ROUTE53.DANGLING.BEANSTALK.001
+  - CTL.ROUTE53.DANGLING.EIP.001
+  - CTL.ROUTE53.DANGLING.NS.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

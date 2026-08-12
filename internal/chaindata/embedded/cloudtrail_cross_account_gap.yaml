@@ -1,0 +1,27 @@
+id: cloudtrail_cross_account_gap
+description: >
+  CloudTrail logs are not centralized across accounts. When a trail
+  is not an organization trail (CTL.CLOUDTRAIL.ORG.001), logs stay
+  in the same account they monitor (CTL.CLOUDTRAIL.CENTRAL.SAMEACCOUNT.001),
+  member accounts can stop their own logging
+  (CTL.CLOUDTRAIL.ORG.MEMBERCANSTOP.001), or there is no cross-account
+  S3 replication for resilience (CTL.CLOUDTRAIL.REPLICATION.001), the
+  audit trail is fragmented and destructible. An attacker who
+  compromises a single account can delete or tamper with that
+  account's logs without affecting a central copy — because no
+  central copy exists. Threshold of 2 fires when at least two
+  cross-account aggregation gaps coexist, indicating that log
+  centralization is structurally absent rather than partially
+  configured.
+controls:
+  - CTL.CLOUDTRAIL.ORG.001
+  - CTL.CLOUDTRAIL.CENTRAL.SAMEACCOUNT.001
+  - CTL.CLOUDTRAIL.ORG.MEMBERCANSTOP.001
+  - CTL.CLOUDTRAIL.REPLICATION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

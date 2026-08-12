@@ -1,0 +1,23 @@
+id: gcs_public_bucket_unaudited
+description: >
+  GCS bucket allows public read access AND Cloud Audit Logging
+  is not enabled for all services. With public read, anyone on
+  the internet can download objects from the bucket without
+  authentication. Without audit logging, there is no record of
+  who accessed the data, when, or how much was downloaded. The
+  combination is a publicly accessible data store with zero
+  access forensics — data exfiltration at scale with no
+  evidence trail. Either control alone mitigates: removing
+  public access blocks unauthorized downloads; enabling audit
+  logging records all access for detection and investigation.
+controls:
+  - CTL.GCS.PUBLIC.001
+  - CTL.GCP.LOGGING.AUDIT.001
+escalation_threshold: 2
+compound_severity: critical
+scope: global
+preconditions:
+  - internet_access
+postconditions:
+  - data_exfiltration
+implicit_dependencies: []

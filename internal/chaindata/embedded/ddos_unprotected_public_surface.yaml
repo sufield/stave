@@ -1,0 +1,17 @@
+id: ddos_unprotected_public_surface
+description: >
+  No Shield Advanced subscription and no WAF protection on internet-facing
+  resources. The public attack surface is exposed to both volumetric
+  network-layer DDoS and application-layer attacks with no mitigation
+  at either layer.
+controls:
+  - CTL.SHIELD.ADVANCED.001
+  - CTL.WAF.RULES.001
+  - CTL.WAF.ORIGIN.LOCKDOWN.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - network_access_vpc
+implicit_dependencies: []

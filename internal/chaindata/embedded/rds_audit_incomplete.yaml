@@ -1,0 +1,24 @@
+id: rds_audit_incomplete
+description: >
+  Slow-query log is disabled AND either log retention is below
+  the compliance floor or logs are not exported to CloudWatch.
+  Database logging fails at the producer, the retainer, or the
+  exporter — the audit chain is broken in more than one place.
+  Slow queries (the strongest performance and SQL-injection
+  signal the engine produces) are not being captured at all,
+  AND either the records that are captured age out before the
+  framework window completes or they never reach the
+  centralized logging tier where SIEMs and alarms can act on
+  them. Investigation cannot recover the data that the
+  database produced.
+controls:
+  - CTL.RDS.LOG.SLOWQUERY.001
+  - CTL.RDS.LOG.RETENTION.001
+  - CTL.RDS.PARAM.LOGEXPORT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - rds_data_access
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

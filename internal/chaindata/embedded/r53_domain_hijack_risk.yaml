@@ -1,0 +1,27 @@
+id: r53_domain_hijack_risk
+description: >
+  Either transfer lock disabled (CTL.ROUTE53.TRANSFER.001) or
+  auto-renew disabled (CTL.ROUTE53.DOMAIN.AUTORENEW.001). Each
+  independently risks total domain loss. Transfer lock disabled
+  means an attacker who compromises the registrant email or
+  social-engineers the registrar can transfer the domain to another
+  registrar — gaining complete control of DNS, email, and certificate
+  issuance. Auto-renew disabled means accidental expiration makes
+  the domain available for anyone to register — same outcome via
+  neglect instead of attack. Domain sniping services actively monitor
+  expiring domains. Either path leads to the same result: an attacker
+  controls the domain and everything that depends on it. Threshold
+  of 1 reflects that one domain protection gap is already a complete
+  domain security failure — the domain can be lost through different
+  mechanisms, but the outcome is the same.
+controls:
+  - CTL.ROUTE53.TRANSFER.001
+  - CTL.ROUTE53.DOMAIN.AUTORENEW.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+  - domain_takeover
+implicit_dependencies: []

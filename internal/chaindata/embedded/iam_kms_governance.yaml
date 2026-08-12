@@ -1,0 +1,18 @@
+id: iam_kms_governance
+description: >
+  No KMS separation of duties plus either broad grants or non-expiring
+  imported keys. KMS governance has multiple failures — a principal
+  with both admin and usage permissions combined with excessive grants
+  or persistent key material creates a complete encryption compromise
+  path.
+controls:
+  - CTL.KMS.SEPARATION.001
+  - CTL.KMS.GRANT.BROAD.001
+  - CTL.KMS.IMPORTED.EXPIRY.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - kms_key_compromise
+implicit_dependencies: []

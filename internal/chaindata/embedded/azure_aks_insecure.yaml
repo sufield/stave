@@ -1,0 +1,16 @@
+id: azure_aks_insecure
+description: >
+  AKS cluster with public API server and either no Entra ID RBAC or
+  unsupported Kubernetes version. Control plane exposed and either
+  identity-ungated or unpatched.
+controls:
+  - CTL.AZURE.AKS.PRIVATE.001
+  - CTL.AZURE.AKS.RBAC.001
+  - CTL.AZURE.AKS.VERSION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - k8s_cluster_admin
+implicit_dependencies: []

@@ -1,0 +1,36 @@
+id: eventbridge_silent_drop
+description: >
+  Complete failure-path collapse on an EventBridge rule: a ghost
+  target combined with a ghost or absent DLQ and disabled retries.
+  The rule pattern matches; the target invocation fails because the
+  target was deleted; retries are disabled so the failure is
+  immediate; the DLQ either doesn't exist or its target is also
+  deleted. The event is silently discarded with no preservation
+  surface and no operator visibility. The rule appears active in
+  the console while every event is dropped. Threshold of 2 fires
+  when at least two of the three independent failure-path defects
+  co-occur — confirms the path is broken end-to-end rather than
+  recoverable through any single safety net.
+controls:
+  - CTL.EVENTBRIDGE.TARGET.GHOST.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.KINESIS.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.FIREHOSE.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.ECS.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.BATCH.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.CODEPIPELINE.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.SAGEMAKER.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.LOGGROUP.001
+  - CTL.EVENTBRIDGE.GHOST.TARGET.IAMROLE.001
+  - CTL.EVENTBRIDGE.GHOST.RULE.DLQ.001
+  - CTL.EVENTBRIDGE.RULE.RETRY.NONE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

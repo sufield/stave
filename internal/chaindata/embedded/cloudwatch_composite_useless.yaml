@@ -1,0 +1,27 @@
+id: cloudwatch_composite_useless
+description: >
+  Composite alarm — the catalog's most
+  sophisticated correlated-detection mechanism —
+  is non-functional: it has no actions, references
+  a deleted child alarm, or has its actions
+  disabled. Each independently means the composite
+  detects systemic failure but cannot deliver the
+  signal. Threshold of 1 because composite alarms
+  are designed for high-value correlated detection;
+  any single failure mode is enough to render the
+  detection inert.
+controls:
+  - CTL.CLOUDWATCH.ALARM.COMPOSITE.NOACTION.001
+  - CTL.CLOUDWATCH.GHOST.COMPOSITE.CHILD.001
+  - CTL.CLOUDWATCH.ALARM.DISABLED.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

@@ -1,0 +1,29 @@
+id: kms_ransomware_enablement_path
+description: >
+  KMS ransomware prerequisites are satisfied: no SCP denies
+  kms:ImportKeyMaterial or kms:ScheduleKeyDeletion, and a KMS key
+  is shared across excessive external accounts (increasing blast
+  radius). An attacker with credential access can create a KMS key
+  with EXTERNAL origin, import attacker-controlled key material,
+  re-encrypt data under the attacker-controlled key, schedule
+  deletion of original keys, and hold the organization's data for
+  ransom. The data is irrecoverable without the attacker's key
+  material — AWS cannot help because the key material was never
+  AWS-managed. This chain detects the configuration state that
+  makes this attack possible.
+controls:
+  - CTL.IAM.SCP.KMS.IMPORTKEY.001
+  - CTL.IAM.SCP.KMS.KEYDELETION.001
+  - CTL.KMS.CROSSACCOUNT.BLASTRADIUS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.scp_policy_parser
+    fallback: fail_closed
+    diagnostic: >
+      SCP policy documents not parsed. Cannot determine whether
+      dangerous KMS actions are denied at the organizational level.

@@ -1,0 +1,24 @@
+id: eks_federation_unsafe
+description: >
+  EKS cluster's federation surface has multiple
+  defects: cluster shared via RAM without OrgID,
+  aws-auth maps roles from outside the org, IRSA
+  trust permits cross-account assumption without
+  OrgID, or multiple clusters share the same OIDC
+  issuer URL. Each defect alone permits cross-org
+  or cross-cluster access; co-occurrence indicates
+  the cluster's identity boundary is porous in
+  multiple ways. Threshold of 2 fires when at
+  least two federation defects coexist.
+controls:
+  - CTL.EKS.RAM.EXTERNAL.001
+  - CTL.EKS.AWSAUTH.UNTRUSTED.ACCOUNT.001
+  - CTL.EKS.IRSA.CROSSACCOUNT.001
+  - CTL.EKS.OIDC.SHARED.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

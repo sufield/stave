@@ -1,0 +1,25 @@
+id: rds_aurora_single_point
+description: >
+  Aurora cluster is single-instance AND deletion protection
+  is not enabled at the cluster level. Two failure modes
+  compound. The cluster has no compute-side failover target
+  (a writer failure forces minutes of cluster unavailability
+  while Aurora provisions a fresh instance), AND nothing
+  prevents an accidental or hostile DeleteDBCluster API
+  call from removing the cluster outright. One operator
+  mistake — or one compromised principal with
+  rds:DeleteDBCluster — eliminates the entire database
+  with no warm standby and no deletion guard. Either
+  condition alone is a high-severity availability gap; the
+  combination is "the database is one API call from
+  irrecoverable."
+controls:
+  - CTL.RDS.AURORA.SINGLEINSTANCE.001
+  - CTL.RDS.CLUSTER.DELETION.PROTECT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - network_access_rds
+postconditions:
+  - data_destruction
+implicit_dependencies: []

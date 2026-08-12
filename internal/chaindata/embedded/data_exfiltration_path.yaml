@@ -1,0 +1,19 @@
+id: data_exfiltration_path
+description: >
+  Sensitive data readable by compute with internet egress and weak
+  monitoring. The combination of data access, outbound connectivity,
+  and missing audit trail creates an exfiltration path where a
+  compromised instance can copy sensitive data to an external
+  destination with minimal detection risk.
+controls:
+  - CTL.EXPOSURE.EXFIL.001
+  - CTL.EXPOSURE.EXFIL.002
+  - CTL.VPC.FLOWLOG.001
+  - CTL.CLOUDTRAIL.DATAREAD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - s3_data_access
+implicit_dependencies: []

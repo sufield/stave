@@ -1,0 +1,32 @@
+id: cf_dormant_exposure
+description: >
+  Dormant CloudFront distribution with active risk factors. The
+  distribution has received no requests in 90+ days
+  (CTL.CLOUDFRONT.LIFECYCLE.DORMANT.001) — nobody monitors for
+  anomalous access on an "unused" distribution — AND either the
+  origin references a deleted resource that may be reclaimable by
+  an attacker (CTL.CLOUDFRONT.GHOST.ORIGIN.001), or the distribution
+  has no WAF web ACL (CTL.CLOUDFRONT.WAF.001), meaning any request
+  that reaches it arrives unfiltered at the origin. Threshold of 2
+  requires both the dormancy and a risk factor. A dormant
+  distribution alone is a governance concern; a ghost origin or
+  missing WAF alone is a known finding. Together they describe an
+  abandoned distribution where either an attacker can serve
+  malicious content through the distribution's trusted domain
+  (ghost origin) or the origin receives unfiltered requests
+  from anyone who discovers the dormant URL (no WAF).
+controls:
+  - CTL.CLOUDFRONT.LIFECYCLE.DORMANT.001
+  - CTL.CLOUDFRONT.GHOST.ORIGIN.001
+  - CTL.CLOUDFRONT.WAF.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

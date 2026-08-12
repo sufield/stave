@@ -1,0 +1,29 @@
+id: cf_s3_origin_weak
+description: >
+  S3 origin access protection is absent, legacy, or broken. No OAC or
+  OAI is configured — the bucket must be public and the S3 URL
+  bypasses CloudFront (CTL.CLOUDFRONT.ORIGIN.NOACCESS.001); the origin
+  uses legacy OAI — KMS-encrypted objects are inaccessible and the
+  mechanism is deprecated (CTL.CLOUDFRONT.ORIGIN.OAI.LEGACY.001); or
+  the S3 bucket has been deleted — the bucket name may be reclaimable
+  for content injection (CTL.CLOUDFRONT.GHOST.ORIGIN.001). Threshold
+  of 1 reflects that any single condition independently weakens or
+  breaks the S3 origin relationship: the bucket is public, the access
+  control is incomplete, or the origin is gone. Together they describe
+  the full spectrum of S3 origin security failures — from absent
+  protection to legacy protection to no backend at all.
+controls:
+  - CTL.CLOUDFRONT.ORIGIN.NOACCESS.001
+  - CTL.CLOUDFRONT.ORIGIN.OAI.LEGACY.001
+  - CTL.CLOUDFRONT.GHOST.ORIGIN.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - s3_data_access
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

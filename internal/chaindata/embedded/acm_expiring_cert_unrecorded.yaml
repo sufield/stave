@@ -1,0 +1,25 @@
+id: acm_expiring_cert_unrecorded
+description: >
+  ACM imported certificate is near expiry or already expired
+  AND AWS Config is not recording. ACM does not auto-renew
+  imported certificates — the owner must replace them manually
+  before expiry. Without Config recording, there is no
+  configuration change timeline to detect when the certificate
+  entered the near-expiry window and no Config rule to alert
+  on the approaching deadline. The combination means an
+  expiring certificate with no automated detection — the first
+  signal is a production TLS handshake failure. Either control
+  alone mitigates: replacing the certificate before expiry
+  prevents the outage; enabling Config detects the expiring
+  certificate and can trigger a notification or remediation
+  workflow.
+controls:
+  - CTL.ACM.CERT.EXPIRY.001
+  - CTL.CONFIG.ENABLED.001
+escalation_threshold: 2
+compound_severity: high
+scope: global
+preconditions: []
+postconditions:
+  - service_disruption
+implicit_dependencies: []

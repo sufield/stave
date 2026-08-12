@@ -1,0 +1,23 @@
+id: ebs_ransomware_undetected
+description: >
+  No snapshot deletion alarm plus either broad
+  DeleteSnapshot access or DLM in error state.
+  Backup destruction is unmonitored AND either
+  many principals can delete snapshots or
+  automated backups are already failing. The
+  ransomware preparation path — destroy backups,
+  encrypt data, demand ransom — is both
+  undetected and feasible. Threshold of 2
+  because the dangerous compound is the
+  combination of capability and invisibility.
+controls:
+  - CTL.EC2.EBS.ALARM.DELETESNAPSHOT.001
+  - CTL.EC2.EBS.ACCESS.DELETESNAPSHOT.BROAD.001
+  - CTL.EC2.EBS.DLM.ERROR.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

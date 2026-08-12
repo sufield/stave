@@ -1,0 +1,20 @@
+id: eks_irsa_unsafe
+description: >
+  EKS IRSA role's trust policy is missing both `sub` and
+  `aud` conditions — any authenticated identity from the
+  cluster's OIDC provider can assume the role, regardless of
+  ServiceAccount or token audience. The role's per-workload
+  scope intent collapses entirely: every pod in the cluster
+  AND every consumer minting tokens for non-AWS audiences
+  can assume it. Threshold of 2 fires when both trust-policy
+  defects coexist on the same IRSA role.
+controls:
+  - CTL.EKS.IRSA.SUB.UNSCOPED.001
+  - CTL.EKS.IRSA.AUDIENCE.MISSING.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

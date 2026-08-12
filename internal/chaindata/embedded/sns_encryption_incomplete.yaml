@@ -1,0 +1,22 @@
+id: sns_encryption_incomplete
+description: >
+  No CMK encryption plus either no transport enforcement on
+  the topic or HTTP delivery on a subscription. Messages are
+  either not encrypted at rest with a controlled key AND
+  either publishable over HTTP or delivered over HTTP. The
+  control surface is incomplete — at-rest protection without
+  the matching in-transit protection collapses the
+  encryption story. Threshold of 2 fires when at least two
+  of the three SNS encryption gaps coexist on the same
+  topic / subscription pair.
+controls:
+  - CTL.SNS.ENCRYPT.CMK.001
+  - CTL.SNS.ENCRYPT.TRANSPORT.001
+  - CTL.SNS.SUBSCRIPTION.HTTP.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - data_in_transit_exposure
+postconditions:
+  - encryption_bypass
+implicit_dependencies: []

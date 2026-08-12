@@ -1,0 +1,19 @@
+id: imperva_snapshot_exfiltration_path
+description: >
+  Imperva incident shape (2018): unused EC2 instance
+  compromised leading to API key theft, then RDS snapshot
+  copied or made public for database exfiltration.
+  Combines pollution (abandoned instance) with snapshot
+  exposure (public RDS snapshot). This is the compound of
+  UCTM vectors V1 (credential theft via forgotten
+  resource) and V2 (public resource exposure via snapshot).
+controls:
+  - CTL.EC2.POLLUTION.LONGRUNNING.PUBLIC.001
+  - CTL.RDS.SNAPSHOT.PUBLIC.001
+  - CTL.IAM.CRED.ROTATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - data_access

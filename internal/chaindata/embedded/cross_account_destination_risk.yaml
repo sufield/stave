@@ -1,0 +1,23 @@
+id: cross_account_destination_risk
+description: >
+  Router resource sends data to a bucket in a different account without
+  explicit cross-account authorization. If the destination account is
+  compromised or the bucket is deleted and re-registered, the data
+  stream is captured. Limited to router types where destination account
+  is resolvable from the snapshot (S3 Replication includes explicit
+  Destination.Account).
+controls:
+  - CTL.S3.REPLICATION.GHOST.DEST.001
+  - CTL.S3.REPLICATION.DEST.PUBLIC.001
+  - CTL.IAM.SCP.DATAPERIMETER.S3.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - cross_account_destination_configured
+postconditions:
+  - cross_account_data_exfiltration
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

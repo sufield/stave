@@ -1,0 +1,22 @@
+id: kms_policy_wide_open
+description: >
+  Broad Decrypt access in the key policy combined with either broad
+  administrative actions or admin-and-usage overlap on the same
+  principal. Key access control is weak across multiple dimensions:
+  a wide Decrypt grant lets matching principals read every ciphertext,
+  while either broad admin (CreateKey/Disable/Schedule on too many
+  principals) or no separation of duties (the same principal both
+  manages and uses the key) means there is no second line of defense.
+  Threshold of 2 fires when at least two of the three policy
+  weaknesses appear on the same key.
+controls:
+  - CTL.KMS.POLICY.DECRYPT.BROAD.001
+  - CTL.KMS.POLICY.ADMIN.BROAD.001
+  - CTL.KMS.SEPARATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - kms_key_compromise
+implicit_dependencies: []

@@ -1,0 +1,20 @@
+id: eventbridge_pipe_enrichment_overprivileged
+description: >
+  EventBridge Pipe enrichment Lambda has both wildcard IAM
+  permissions and an excessive timeout. The enrichment runs in
+  the data path between source and target with broad permissions
+  AND extended runtime — an exploit on the function (deserialization
+  bug, dependency vuln, supply-chain compromise) gets the wildcard
+  scope plus enough time to do meaningful lateral work before the
+  timeout. Threshold of 2 fires when both enrichment defects are
+  present on the same pipe.
+controls:
+  - CTL.EVENTBRIDGE.PIPE.ENRICHMENT.IAM.WILDCARD.001
+  - CTL.EVENTBRIDGE.PIPE.ENRICHMENT.NOTIMEOUT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - automation_hijack
+implicit_dependencies: []

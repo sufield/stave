@@ -1,0 +1,24 @@
+id: cognito_unauth_escalation
+description: >
+  Anonymous escalation surface: identity pool
+  guest access enabled plus IAM permissions or
+  Lambda invoke on the unauthenticated role.
+  Each independently turns Cognito into a
+  privilege-escalation primitive — anyone on
+  the internet can call API operations that
+  create roles, attach policies, or invoke
+  Lambdas the function expected to be
+  internal-only. Threshold of 2 because the
+  combination is the dangerous shape:
+  guest-on plus a path to elevated capability.
+controls:
+  - CTL.COGNITO.IDENTITY.GUEST.001
+  - CTL.COGNITO.IDPOOL.UNAUTH.IAM.001
+  - CTL.COGNITO.IDPOOL.UNAUTH.LAMBDA.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

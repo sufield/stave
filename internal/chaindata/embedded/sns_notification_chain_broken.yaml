@@ -1,0 +1,26 @@
+id: sns_notification_chain_broken
+description: >
+  Any single notification-chain ghost activates this chain —
+  CloudWatch alarm references deleted SNS topic, subscription
+  to deleted SQS queue, or subscription to deleted Lambda
+  function. Each independently breaks a notification or
+  processing path. The ALARM ghost is the most critical —
+  it breaks alerting for every service that publishes to
+  that topic. Threshold of 1 fires on any single broken
+  notification path because the operational consequence is
+  immediate: detection works, response does not.
+controls:
+  - CTL.SNS.GHOST.ALARM.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.SQS.001
+  - CTL.SNS.GHOST.SUBSCRIPTION.LAMBDA.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

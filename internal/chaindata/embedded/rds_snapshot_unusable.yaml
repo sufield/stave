@@ -1,0 +1,22 @@
+id: rds_snapshot_unusable
+description: >
+  Either a shared snapshot is encrypted with aws/rds (and
+  therefore cannot be restored in the receiving account) or
+  a cross-region backup copy is unencrypted at the
+  destination. Each condition independently breaks a
+  recovery contract: the cross-account share appears to
+  succeed but the restore fails when attempted (DR rehearsal,
+  audit copy, partner-data delivery), or the cross-region
+  copy lands plaintext where the disaster-recovery decision
+  expected encrypted data. The chain catches "the backup
+  exists but it is either inaccessible or insecure."
+controls:
+  - CTL.RDS.SNAPSHOT.AWSKEY.SHARED.001
+  - CTL.RDS.BACKUP.CROSSREGION.ENCRYPT.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - network_access_rds
+postconditions:
+  - data_destruction
+implicit_dependencies: []

@@ -1,0 +1,25 @@
+id: rds_proxy_insecure
+description: >
+  RDS Proxy backend connection is not TLS-required AND either
+  IAM authentication is not required at the Proxy or the
+  Proxy's security group permits ingress beyond the
+  application tier. The Proxy's three primary defense
+  contributions — backend confidentiality, identity-based
+  authentication, and constrained reachability — fail in
+  combination: the backend hop leaks credentials and query
+  data plaintext AND either applications still hold the
+  database password or the Proxy is reachable from places
+  the architecture did not intend. The Proxy as a security
+  improvement over direct database access has been negated
+  along multiple dimensions simultaneously.
+controls:
+  - CTL.RDS.PROXY.TLS.001
+  - CTL.RDS.PROXY.IAM.001
+  - CTL.RDS.PROXY.EXPOSURE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_rds
+postconditions:
+  - rds_data_access
+implicit_dependencies: []

@@ -1,0 +1,25 @@
+id: config_completely_blind
+description: >
+  Any foundational Config failure: recorder
+  stopped, recorder role deleted, or no
+  delivery channel configured. Each
+  independently means Config is non-functional —
+  the configuration compliance system provides
+  zero value. Threshold of 1 because each
+  member represents complete or near-complete
+  Config failure on its own.
+controls:
+  - CTL.CONFIG.ENABLED.001
+  - CTL.CONFIG.GHOST.RECORDER.ROLE.001
+  - CTL.CONFIG.DELIVERY.NOTCHANNEL.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

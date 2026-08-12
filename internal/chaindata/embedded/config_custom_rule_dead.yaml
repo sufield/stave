@@ -1,0 +1,25 @@
+id: config_custom_rule_dead
+description: >
+  Custom Config rule's Lambda is either deleted
+  or erroring on every evaluation. Either way,
+  the custom compliance check — created because
+  no managed rule covered the requirement — is
+  non-functional. The organization's unique
+  compliance signals are unevaluated. Threshold
+  of 1 because both members represent the same
+  end state for a custom rule that can no
+  longer evaluate.
+controls:
+  - CTL.CONFIG.RULE.GHOST.LAMBDA.001
+  - CTL.CONFIG.RULE.LAMBDA.ERROR.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

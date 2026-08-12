@@ -1,0 +1,32 @@
+id: resource_lifecycle_orphan
+description: >
+  Orphaned or dormant resources accumulate across multiple AWS
+  service boundaries simultaneously. A single orphaned CloudFront
+  policy or dormant Lambda function is a routine cleanup item;
+  orphan signals in three or more service domains indicate systemic
+  lifecycle management failure — decommissions are incomplete,
+  ownership is unclear, and unused resources expand the attack
+  surface while accruing cost. Each listed control detects a
+  service-specific orphan or dormancy signal. The chain fires when
+  at least three of seven service domains show lifecycle decay,
+  distinguishing account-wide neglect from isolated cleanup debt.
+  Services covered: CloudFront (orphaned OAC), API Gateway
+  (orphaned API), Cognito (orphaned identity pool), Lambda
+  (dormant function), DynamoDB (dormant table), VPC (orphaned
+  EIP), CloudWatch (orphaned log group).
+controls:
+  - CTL.CLOUDFRONT.LIFECYCLE.ORPHAN.OAC.001
+  - CTL.APIGATEWAY.ORPHAN.API.001
+  - CTL.COGNITO.ORPHAN.IDPOOL.001
+  - CTL.LAMBDA.LIFECYCLE.DORMANT.001
+  - CTL.DYNAMODB.LIFECYCLE.DORMANT.001
+  - CTL.VPC.EIP.ORPHANED.001
+  - CTL.CLOUDWATCH.LOGGROUP.ORPHAN.001
+escalation_threshold: 3
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - ungoverned_operation
+  - data_destruction
+implicit_dependencies: []

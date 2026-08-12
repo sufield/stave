@@ -1,0 +1,22 @@
+id: opensearch_policy_audit_drift
+description: >
+  OpenSearch domain access policy has multiple
+  audit / governance defects: stale temporary allow
+  rules > 90 days old, policy not managed in IaC
+  (changes go untracked), and Describe / List
+  permissions over-shared (recon-friendly). Each
+  defect alone makes policy state unauditable;
+  co-occurrence indicates the policy review process
+  is broken. Threshold of 2 fires when at least
+  two audit-drift defects coexist.
+controls:
+  - CTL.OPENSEARCH.POLICY.STALE.RULE.001
+  - CTL.OPENSEARCH.POLICY.UNVERSIONED.001
+  - CTL.OPENSEARCH.POLICY.RI.RECON.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

@@ -1,0 +1,19 @@
+id: vpc_nacl_false_confidence
+description: >
+  NACL has deny rules that never evaluate (ordered after a
+  matching allow) OR a custom NACL permits all traffic. Either
+  configuration produces the same outcome: the NACL appears to
+  filter — an auditor reviewing the rule list sees denies, or
+  sees that a custom NACL is attached — while the effective
+  behavior is no filtering. Defense-in-depth documentation
+  records protection that the rules do not provide.
+controls:
+  - CTL.VPC.NACL.RULE.ORDER.001
+  - CTL.VPC.NACL.UNRESTRICTED.001
+escalation_threshold: 1
+compound_severity: medium
+preconditions:
+  - network_access_vpc
+postconditions:
+  - ungoverned_operation
+implicit_dependencies: []

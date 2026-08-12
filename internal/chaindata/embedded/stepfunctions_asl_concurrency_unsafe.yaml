@@ -1,0 +1,25 @@
+id: stepfunctions_asl_concurrency_unsafe
+description: >
+  Step Functions ASL definition has multiple
+  concurrency-control defects: Map state
+  without MaxConcurrency, Map MaxConcurrency:
+  0 (unlimited), inline Map handling input
+  larger than the inline limit, or Distributed
+  Map without ToleratedFailureCount /
+  Percentage. Each defect alone produces an
+  unbounded fan-out or partial-result loss
+  surface; co-occurrence indicates concurrency
+  was unmanaged. Threshold of 2 fires when at
+  least two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ASL.MAP.NOMAXCONCURRENCY.001
+  - CTL.STEPFUNCTIONS.ASL.MAP.MAXCONCURRENCY.ZERO.001
+  - CTL.STEPFUNCTIONS.ASL.MAP.LARGE.NOTDISTRIBUTED.001
+  - CTL.STEPFUNCTIONS.ASL.DM.NO.TOLERANCE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

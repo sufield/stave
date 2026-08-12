@@ -1,0 +1,16 @@
+id: gcp_gke_exposure
+description: >
+  GKE cluster with public API plus legacy ABAC or no Workload
+  Identity. Kubernetes control plane exposed with either coarse
+  authorization or shared node credentials.
+controls:
+  - CTL.GCP.GKE.PRIVATE.001
+  - CTL.GCP.GKE.ABAC.001
+  - CTL.GCP.GKE.WORKLOAD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

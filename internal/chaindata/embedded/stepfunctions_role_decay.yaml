@@ -1,0 +1,26 @@
+id: stepfunctions_role_decay
+description: >
+  Step Functions execution role has multiple
+  hygiene defects: shared across multiple state
+  machines (cross-workflow blast radius), no
+  defense-in-depth condition keys (no
+  contextual gate on stolen credentials), stale
+  permissions for unused services, or attached
+  to an idle (90+ days) state machine. Each
+  defect alone keeps a permission surface
+  larger than necessary; co-occurrence indicates
+  role hygiene is unmaintained. Threshold of 2
+  fires when at least two hygiene defects
+  coexist.
+controls:
+  - CTL.STEPFUNCTIONS.ROLE.SHARED.001
+  - CTL.STEPFUNCTIONS.ROLE.NOCONDITIONS.001
+  - CTL.STEPFUNCTIONS.ROLE.STALE.PERMS.001
+  - CTL.STEPFUNCTIONS.ROLE.IDLE.MACHINE.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

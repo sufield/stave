@@ -1,0 +1,25 @@
+id: shadow_admin_by_accumulation
+description: >
+  Shadow Admin — role accumulated permissions beyond its declared
+  scope. The role retains unused permissions far beyond its
+  operational footprint (PERMISSIONDRIFT), spans permission
+  categories that should never coexist on a single role
+  (CATEGORYMIX), and its actual permissions contradict its
+  declared role-type tag (INTENTMISMATCH). It is a Shadow Admin —
+  not by design but by incremental accumulation over time. No
+  single permission is alarming; the combination is catastrophic.
+  An attacker compromising any principal that can assume this
+  role inherits capabilities the role's name and documentation
+  do not suggest. Threshold of 2 fires when at least two of the
+  three structural defects coexist on the same role asset.
+controls:
+  - CTL.IAM.ROLE.PERMISSIONDRIFT.001
+  - CTL.IAM.ROLE.CATEGORYMIX.001
+  - CTL.IAM.ROLE.INTENTMISMATCH.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

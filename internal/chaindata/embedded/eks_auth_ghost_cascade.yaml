@@ -1,0 +1,29 @@
+id: eks_auth_ghost_cascade
+description: >
+  EKS cluster has multiple authentication-layer ghost
+  references co-occurring: aws-auth ConfigMap maps a deleted
+  IAM role, Access Entry references a deleted principal,
+  IRSA role trust references a non-existent OIDC provider,
+  or Pod Identity association binds a deleted ServiceAccount.
+  Each ghost is a real privilege-escalation surface (any
+  recreation with matching ARN / name inherits the silent
+  grant). Co-occurrence indicates the cluster's authentication
+  inventory has accumulated state without active curation.
+  Threshold of 2 fires when at least two auth-layer ghosts
+  coexist.
+controls:
+  - CTL.EKS.AWSAUTH.GHOST.ROLE.001
+  - CTL.EKS.ACCESSENTRY.GHOST.PRINCIPAL.001
+  - CTL.EKS.IRSA.OIDC.GHOST.001
+  - CTL.EKS.PODIDENTITY.GHOST.SA.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - shadow_admin_access
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

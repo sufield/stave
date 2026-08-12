@@ -1,0 +1,22 @@
+id: eks_storage_unsafe
+description: >
+  EKS StorageClass has multiple defects: encryption not
+  configured (volumes provisioned unencrypted), gp2 marked
+  as default (deprecated, more expensive than gp3), or
+  volumeBindingMode Immediate instead of
+  WaitForFirstConsumer (suboptimal AZ alignment).
+  Co-occurrence indicates the StorageClass was provisioned
+  via copy-paste from older docs without modernization.
+  Threshold of 2 fires when at least two storage defects
+  coexist on the same StorageClass.
+controls:
+  - CTL.EKS.STORAGECLASS.NOTENCRYPTED.001
+  - CTL.EKS.STORAGECLASS.GP2DEFAULT.001
+  - CTL.EKS.STORAGECLASS.NOWAITFORCONSUMER.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

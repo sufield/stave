@@ -202,7 +202,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 	result, err := applycore.Run(ctx, applycore.Inputs{
 		SnapshotsDir:        req.ObservationsDir,
 		ControlsDir:         controlsDir,
-		ChainsDir:           "chains",
+		ChainsDir:           "",
 		IntegrityManifest:   req.IntegrityManifest,
 		IntegrityPublicKey:  req.IntegrityPublicKey,
 		MaxUnsafe:           maxUnsafe,

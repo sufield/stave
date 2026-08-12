@@ -1,0 +1,16 @@
+id: m365_identity_blindspot
+description: >
+  No sign-in risk policy plus either no user risk policy or
+  incomplete CA coverage. Risky sign-ins succeed, compromised
+  users operate without remediation.
+controls:
+  - CTL.M365.ENTRA.SIGNINRISK.001
+  - CTL.M365.ENTRA.USERRISK.001
+  - CTL.M365.ENTRA.CA.COVERAGE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

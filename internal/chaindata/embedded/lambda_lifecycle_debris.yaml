@@ -1,0 +1,29 @@
+id: lambda_lifecycle_debris
+description: >
+  Orphaned log group plus either ghost DLQ or ghost ESM.
+  Multiple artifacts from decommissioned Lambda workloads
+  persist — log groups retain historical events,
+  dead-letter queues reference deleted targets, and event
+  source mappings reference deleted functions. Each is a
+  distinct cleanup-failure surface and the combination
+  signals systematic serverless decommission gaps:
+  whatever process deletes Lambda functions is not deleting
+  the dependent infrastructure, and the residue accumulates
+  across the account. Threshold of 2 reflects that a single
+  orphan can be incidental but two or more in the same
+  scope is a process gap.
+controls:
+  - CTL.LAMBDA.LIFECYCLE.ORPHANLOG.001
+  - CTL.LAMBDA.GHOST.DLQ.001
+  - CTL.LAMBDA.TRIGGER.GHOST.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - network_access_lambda
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

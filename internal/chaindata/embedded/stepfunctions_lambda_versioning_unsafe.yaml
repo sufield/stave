@@ -1,0 +1,22 @@
+id: stepfunctions_lambda_versioning_unsafe
+description: >
+  Step Functions Lambda integration has
+  multiple versioning defects: Resource
+  references $LATEST, Resource has no alias /
+  version pin, or Lambda's resource policy
+  doesn't trust this state machine. Each
+  defect alone breaks safe deployment;
+  co-occurrence indicates the workflow ↔
+  Lambda contract is unmanaged. Threshold of
+  2 fires when at least two defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.LAMBDA.RESOURCE.LATEST.001
+  - CTL.STEPFUNCTIONS.LAMBDA.UNPINNED.001
+  - CTL.STEPFUNCTIONS.LAMBDA.RES.POLICY.MISMATCH.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

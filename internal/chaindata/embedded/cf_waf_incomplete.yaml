@@ -1,0 +1,31 @@
+id: cf_waf_incomplete
+description: >
+  Any WAF failure at the CloudFront edge. No WAF web ACL is associated
+  with the distribution — every request arrives at the origin
+  unfiltered (CTL.CLOUDFRONT.WAF.001); the WAF ACL has been deleted
+  — WAF appears configured but no filtering is active, creating
+  false confidence (CTL.CLOUDFRONT.GHOST.WAF.001); or WAF is
+  associated but has no rate-based rules — HTTP floods, credential
+  stuffing, and scraping proceed unthrottled
+  (CTL.CLOUDFRONT.WAF.RATELIMIT.001). Threshold of 1 reflects that
+  any single condition independently means the distribution lacks
+  complete application-layer protection at the internet edge.
+  No WAF is the most direct failure. Ghost WAF is the most insidious
+  — the configuration shows protection that doesn't exist. No rate
+  rules is the most operational gap — managed rules filter known
+  patterns but don't throttle volume or speed.
+controls:
+  - CTL.CLOUDFRONT.WAF.001
+  - CTL.CLOUDFRONT.GHOST.WAF.001
+  - CTL.CLOUDFRONT.WAF.RATELIMIT.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

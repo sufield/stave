@@ -1,0 +1,27 @@
+id: sqs_policy_ungoverned
+description: >
+  Policy sprawl plus either broad PurgeQueue or ghost
+  sourceArn. The queue policy is unauditable (too many
+  statements) AND either mass deletion is broadly accessible
+  or some statements reference deleted resources. Multiple
+  policy-governance failures compounding on the same queue —
+  the operator cannot review the access surface, cannot trust
+  that current entries are still valid, and may lose all
+  in-flight data through a misissued PurgeQueue. Threshold of
+  2 fires when sprawl coexists with at least one of the
+  destructive or ghost-reference signals.
+controls:
+  - CTL.SQS.POLICY.SPRAWL.001
+  - CTL.SQS.POLICY.PURGE.001
+  - CTL.SQS.GHOST.POLICY.SOURCEARN.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - resource_policy_escalation
+postconditions:
+  - ungoverned_operation
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

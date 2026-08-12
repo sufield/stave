@@ -1,0 +1,21 @@
+id: scp_management_account_bypass
+description: >
+  Organization has SCP guardrails that restrict dangerous actions
+  for member accounts, but the management account is exempt from
+  all SCPs by AWS design AND has workload IAM principals beyond
+  the break-glass minimum. The SCPs create a security perimeter
+  that the management account walks through freely, and the
+  management account has active principals that could be
+  compromised to exploit that exemption.
+controls:
+  - CTL.IAM.SCP.ASSUMEROOT.001
+  - CTL.IAM.SCP.LEAVEORG.001
+  - CTL.IAM.SCP.ROOT.001
+  - CTL.IAM.ORG.MGMT.PRINCIPALS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - scp_governance_configured
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

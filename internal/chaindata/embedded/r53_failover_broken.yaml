@@ -1,0 +1,27 @@
+id: r53_failover_broken
+description: >
+  Any single failure in the failover mechanism independently means
+  the failover path is broken. No health check on a routing policy
+  record (CTL.ROUTE53.HEALTH.MISSING.001) means the routing policy
+  has no health signal — failover never triggers because the primary
+  is always considered healthy. No secondary record
+  (CTL.ROUTE53.FAILOVER.NOSECONDARY.001) means when the primary
+  fails there is nothing to fail over to — NXDOMAIN or continued
+  routing to the unhealthy primary. Secondary without a health check
+  (CTL.ROUTE53.FAILOVER.SECONDARYNOHEALTH.001) means failover may
+  deliver traffic to an unhealthy destination with no signal to the
+  team. Each independently means the failover mechanism is broken:
+  it either cannot detect failure, has nowhere to go, or fails over
+  blindly. Threshold of 1 reflects that one failover gap is already
+  a complete resilience failure — the mechanism exists on paper only.
+controls:
+  - CTL.ROUTE53.HEALTH.MISSING.001
+  - CTL.ROUTE53.FAILOVER.NOSECONDARY.001
+  - CTL.ROUTE53.FAILOVER.SECONDARYNOHEALTH.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - service_disruption
+implicit_dependencies: []

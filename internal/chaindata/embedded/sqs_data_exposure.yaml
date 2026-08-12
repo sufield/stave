@@ -1,0 +1,19 @@
+id: sqs_data_exposure
+description: >
+  Any single SQS data-exposure path fires this chain — broad
+  ReceiveMessage, cross-account access without org boundary,
+  or fully-public queue policy. Each independently lets message
+  content be read by unintended principals. Threshold of 1
+  fires whenever the queue's read surface is wider than the
+  intended consumer set.
+controls:
+  - CTL.SQS.POLICY.RECEIVEMESSAGE.BROAD.001
+  - CTL.SQS.POLICY.CROSSACCOUNT.001
+  - CTL.SQS.POLICY.PUBLIC.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - resource_policy_escalation
+postconditions:
+  - data_access
+implicit_dependencies: []

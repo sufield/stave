@@ -1,0 +1,16 @@
+id: azure_vm_exposure
+description: >
+  VM with public IP and either unrestricted NSG or unencrypted disks.
+  Permanently exposed compute with no network protection or no data
+  protection.
+controls:
+  - CTL.AZURE.VM.PUBLIC.001
+  - CTL.AZURE.VM.ENCRYPT.001
+  - CTL.AZURE.NSG.UNRESTRICTED.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

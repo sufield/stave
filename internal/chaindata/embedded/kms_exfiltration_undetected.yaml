@@ -1,0 +1,21 @@
+id: kms_exfiltration_undetected
+description: >
+  No CloudWatch alarm for high-frequency Decrypt plus either no
+  alarm for Decrypt failures or no alarm for cross-account KMS
+  usage. Bulk decryption activity AND either unauthorized
+  access attempts or cross-account usage are unmonitored. Data
+  exfiltration via KMS — the operation that reads encrypted
+  data — is undetectable. Threshold of 2 fires when at least
+  two of the three exfiltration-detection gaps coexist on the
+  same key.
+controls:
+  - CTL.KMS.ALARM.DECRYPT.VOLUME.001
+  - CTL.KMS.ALARM.DECRYPT.FAILURE.001
+  - CTL.KMS.ALARM.CROSSACCOUNT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - encryption_bypass
+implicit_dependencies: []

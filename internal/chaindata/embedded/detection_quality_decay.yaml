@@ -1,0 +1,28 @@
+id: detection_quality_decay
+description: >
+  Detection quality has degraded across multiple dimensions
+  simultaneously. CloudTrail logs only write operations (read
+  reconnaissance is invisible), VPC Flow Logs use the default
+  format missing critical fields (TCP flags, traffic path,
+  subnet ID), GuardDuty has fewer than 3 detection methods
+  enabled (incomplete threat coverage), and CloudTrail
+  CloudWatch Logs retention is too short (evidence expires
+  before investigation completes). Each degradation alone
+  leaves a gap; three or more together mean the detection
+  system cannot reliably reconstruct an incident timeline —
+  attacker reconnaissance is unlogged, network forensics lack
+  key fields, threat detection has blind spots, and whatever
+  evidence does exist ages out before the team can use it.
+controls:
+  - CTL.CLOUDTRAIL.STATE.MGMT.WRITEONLY.001
+  - CTL.VPC.FLOWLOG.FORMAT.001
+  - CTL.GUARDDUTY.FINDING.CONSISTENCY.001
+  - CTL.CLOUDTRAIL.CWLOGS.RETENTION.SHORT.001
+escalation_threshold: 3
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - detection_without_response
+scope: global
+implicit_dependencies: []

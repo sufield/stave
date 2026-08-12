@@ -1,0 +1,22 @@
+id: eventbridge_scheduler_lifecycle_decay
+description: >
+  EventBridge Scheduler schedule has multiple lifecycle / hygiene
+  defects: long-DISABLED, stale one-time `at()` schedule, or the
+  containing schedule group lacks CMK encryption. Each defect
+  alone is governance-grade; co-occurrence indicates the
+  schedule group is under-curated — stale schedules accumulate,
+  encryption posture isn't enforced, and inventory clutter is
+  growing. Threshold of 2 fires when at least two
+  lifecycle/governance defects coexist within the schedule
+  group's scope.
+controls:
+  - CTL.EVENTBRIDGE.SCHEDULER.PAUSED.STALE.001
+  - CTL.EVENTBRIDGE.SCHEDULER.AT.STALE.001
+  - CTL.EVENTBRIDGE.SCHEDULER.GROUP.NOCMK.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

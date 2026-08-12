@@ -1,0 +1,28 @@
+id: ecs_service_exposed
+description: >
+  ECS service has multiple network-exposure failures stacked.
+  The service runs in a public subnet with public IP
+  assignment (CTL.ECS.NETWORK.PUBLIC.001) — tasks reachable
+  from the internet without an LB in front. Combined with
+  either a task SG that accepts traffic from sources beyond
+  the LB SG (CTL.ECS.SERVICE.SG.LBONLY.001) — even if an LB
+  exists, clients can bypass it — or bridge networking
+  (CTL.ECS.SERVICE.NETWORKMODE.BRIDGE.001) — per-task SG and
+  per-task source-IP attribution unavailable. Threshold of 2
+  reflects that one exposure failure alone is a known
+  posture concern; two together describe a service whose
+  network controls are broken at multiple layers — the LB
+  protections don't apply, the task isn't network-isolated
+  from neighbors, and the internet-facing posture is
+  effectively direct exposure.
+controls:
+  - CTL.ECS.NETWORK.PUBLIC.001
+  - CTL.ECS.SERVICE.SG.LBONLY.001
+  - CTL.ECS.SERVICE.NETWORKMODE.BRIDGE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - container_code_execution
+implicit_dependencies: []

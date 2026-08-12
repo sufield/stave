@@ -1,0 +1,24 @@
+id: vpc_endpoint_filtered_evasion
+description: >
+  VPC endpoint with permissive policy enables data access while
+  CloudTrail network activity logging filters by UserIdentity —
+  creating a targeted blind spot. Sibling of vpc_endpoint_evasion
+  which covers the "no logging" case (CLOUDTRAIL.NETWORK.ACTIVITY.001).
+  This chain covers the subtler "logging enabled but identity-filtered"
+  case: traffic from excluded principals through the permissive
+  endpoint is invisible. An attacker who compromises an excluded
+  identity accesses data via the VPC endpoint without any network
+  activity record — same invisible exfiltration outcome as the
+  original chain, but harder to detect because logging appears
+  to be enabled.
+controls:
+  - CTL.VPC.ENDPOINT.ANON.001
+  - CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001
+  - CTL.CLOUDTRAIL.NETWORK.ACTIVITY.IDENTITYFILTER.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - vpc_instance_compromise
+postconditions:
+  - invisible_data_exfiltration
+implicit_dependencies: []

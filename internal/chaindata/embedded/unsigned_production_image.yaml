@@ -1,0 +1,18 @@
+id: unsigned_production_image
+description: >
+  Container images deployed without signing verification and without
+  vulnerability scanning, into an environment with an over-privileged
+  execution role. A supply chain attack replacing a production image
+  executes with the full task role permissions, with no cryptographic
+  verification and no vulnerability scanning.
+controls:
+  - CTL.ECR.SIGNING.001
+  - CTL.ECR.SCAN.001
+  - CTL.ECS.TASKMETADATA.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - container_code_execution
+implicit_dependencies: []

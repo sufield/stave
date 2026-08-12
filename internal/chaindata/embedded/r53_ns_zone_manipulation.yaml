@@ -1,0 +1,31 @@
+id: r53_ns_zone_manipulation
+description: >
+  Dangling NS delegation allows zone takeover AND DNSSEC is not
+  enabled. An NS record delegating to name servers that do not serve
+  the zone (CTL.ROUTE53.DANGLING.NS.001) allows an attacker who
+  controls those name servers — or who registers the name server
+  domain if it expired — to control ALL DNS record types for the
+  delegated subdomain. The attacker can create A, AAAA, MX, TXT,
+  and CNAME records, issue wildcard TLS certificates via DNS
+  validation, redirect email, and serve arbitrary content. Without
+  DNSSEC (CTL.ROUTE53.DNSSEC.DISABLED.001), this zone manipulation
+  is cryptographically unverifiable by resolvers — no resolver can
+  detect that the zone responses are attacker-controlled rather than
+  legitimate. DNSSEC-signed zones would cause validation failures
+  when the attacker's unsigned responses appear, alerting
+  DNSSEC-validating resolvers. Without DNSSEC, the manipulation is
+  silent and undetectable at the DNS protocol level. This is the
+  highest blast radius DNS finding: complete zone control with no
+  protocol-level detection.
+  Linked incidents: Silent Push "Danglegeddon" (July 2026) identified
+  NS dangling as higher blast radius than 1,000 CNAME danglers.
+controls:
+  - CTL.ROUTE53.DANGLING.NS.001
+  - CTL.ROUTE53.DNSSEC.DISABLED.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

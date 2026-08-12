@@ -1,0 +1,30 @@
+id: apigw_abandoned_api
+description: >
+  An API that nobody is maintaining is still reachable. The API
+  has no custom domain and no recent deployments
+  (CTL.APIGATEWAY.ORPHAN.API.001), and either an authorizer is
+  attached to no routes
+  (CTL.APIGATEWAY.ORPHAN.AUTHORIZER.001) — auth has been
+  detached from the routes that used to require it — or the
+  default execute-api endpoint is enabled
+  (CTL.APIGATEWAY.ENDPOINT.DEFAULT.001), keeping the API
+  invocable from the internet despite being abandoned.
+  Threshold of 2 reflects that an unused API alone is a
+  governance signal, but an unused API combined with detached
+  auth or an open default endpoint is unmaintained AND
+  unauthenticated AND reachable — three properties whose
+  combination describes a forgotten attack surface that nobody is
+  watching. Stale configurations on abandoned APIs accumulate the
+  worst of every category: outdated TLS, untrusted backends,
+  rotated keys, dead authorizers.
+controls:
+  - CTL.APIGATEWAY.ORPHAN.API.001
+  - CTL.APIGATEWAY.ORPHAN.AUTHORIZER.001
+  - CTL.APIGATEWAY.ENDPOINT.DEFAULT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access
+implicit_dependencies: []

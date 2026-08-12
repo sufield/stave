@@ -1,0 +1,22 @@
+id: cloudtrail_defense_bypassable
+description: >
+  Broad StopLogging access plus either no StopLogging
+  alarm or trail already stopped. Many IAM principals
+  CAN stop the trail AND either stopping goes undetected
+  or the trail is already inactive. Multiple layers of
+  audit-trail defense are weak — too many can stop it,
+  stopping may not be detected, and the trail may already
+  be off. Threshold of 2 fires when the broad
+  StopLogging surface compounds with either the
+  detection gap or the stopped state.
+controls:
+  - CTL.CLOUDTRAIL.ACCESS.STOPLOGGING.IAM.001
+  - CTL.CLOUDTRAIL.ALARM.STOPLOGGING.001
+  - CTL.CLOUDTRAIL.STOP.DETECT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

@@ -1,0 +1,16 @@
+id: lambda_shadow_admin
+description: >
+  Execution role has unconstrained iam:PassRole and
+  lambda:UpdateFunctionCode is broadly granted. A developer can inject
+  code to assume any IAM role in the account without touching IAM
+  policies directly.
+controls:
+  - CTL.LAMBDA.PASSROLE.001
+  - CTL.LAMBDA.UPDATECODE.SCOPE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

@@ -1,0 +1,28 @@
+id: apigw_abuse_unmitigated
+description: >
+  The API has no defense-in-depth against high-volume or
+  authenticated abuse. No usage plan attached
+  (CTL.APIGATEWAY.THROTTLE.NOPLAN.001) means no per-consumer rate
+  limit; no stage-level throttle (CTL.APIGATEWAY.THROTTLE.001)
+  means the API shares the account's 10,000-RPS default with
+  every other API; API key as sole authentication
+  (CTL.APIGATEWAY.AUTH.APIKEY.SOLE.001) means any leaked key
+  string grants full API access. Threshold of 2 reflects that
+  any one of these is a posture concern but two together describe
+  an API where a single compromised credential or misbehaving
+  client can saturate capacity, cost, or backend resources with
+  no per-consumer or per-API ceiling to absorb the spike. The
+  chain surfaces "abuse is unmitigated end-to-end" — both
+  identification (who is calling) and rate-limiting (how much they
+  can call) are weak at the same time.
+controls:
+  - CTL.APIGATEWAY.THROTTLE.NOPLAN.001
+  - CTL.APIGATEWAY.THROTTLE.001
+  - CTL.APIGATEWAY.AUTH.APIKEY.SOLE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - ungoverned_operation
+implicit_dependencies: []

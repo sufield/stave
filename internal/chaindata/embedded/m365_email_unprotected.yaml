@@ -1,0 +1,15 @@
+id: m365_email_unprotected
+description: >
+  No anti-phishing plus either no Safe Attachments or no Safe Links.
+  The email threat protection stack is fundamentally incomplete.
+controls:
+  - CTL.M365.DEFENDER.ANTIPHISHING.001
+  - CTL.M365.DEFENDER.SAFEATTACH.001
+  - CTL.M365.DEFENDER.SAFELINKS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

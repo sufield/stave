@@ -1,0 +1,23 @@
+id: elasticache_unauthenticated_unmonitored
+description: >
+  Redis cache has no AUTH token AND the VPC has no flow logs.
+  Without AUTH, any client with network access reads and writes
+  cached data (sessions, credentials, application state).
+  Without flow logs, there is no record of which hosts
+  connected to the cache endpoint. The combination is an
+  unauthenticated data store with zero network forensics —
+  an attacker exfiltrates cached data and the breach leaves
+  no evidence trail. Either control alone mitigates: AUTH
+  blocks unauthorized access; flow logs record connection
+  attempts for post-incident investigation.
+controls:
+  - CTL.ELASTICACHE.AUTH.001
+  - CTL.VPC.FLOWLOG.001
+escalation_threshold: 2
+compound_severity: high
+scope: global
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_access
+implicit_dependencies: []

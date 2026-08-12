@@ -1,0 +1,23 @@
+id: shadow_ai_unmonitored
+description: >
+  AI service detected in an unsanctioned account AND no CloudTrail
+  data events cover the AI service API calls. Shadow AI that is
+  monitored is discoverable through log review. Shadow AI that is
+  unmonitored is invisible — the organization does not know it
+  exists and cannot see what it does. The compound matters: either
+  leg alone is a governance concern, but together they create an
+  AI workload operating in the dark.
+controls:
+  - CTL.ACCOUNT.AI.UNSANCTIONED.001
+  - CTL.CLOUDTRAIL.DATAEVENTS.BEDROCK.001
+escalation_threshold: 2
+compound_severity: critical
+incident_precedent:
+  name: Eric Doerr (Tenable) Shadow AI Discovery Pattern
+  impact: Teams scanning endpoints for AI artifacts nearly always find something they never sanctioned
+  reference: RSA Conference 2026 Keynote
+preconditions:
+  - shadow_infrastructure
+postconditions:
+  - detection_blindness
+implicit_dependencies: []

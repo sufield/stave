@@ -1,0 +1,22 @@
+id: opensearch_cluster_health_blind
+description: >
+  OpenSearch domain has multiple cluster-health
+  observability defects: missing alarms on
+  ClusterStatus.red, ClusterStatus.yellow, Nodes,
+  or Master health. Each defect alone leaves a
+  blind spot; co-occurrence indicates the
+  cluster's health observability is unowned.
+  Threshold of 2 fires when at least two
+  cluster-health alarms are missing.
+controls:
+  - CTL.OPENSEARCH.ALARM.CLUSTER.RED.001
+  - CTL.OPENSEARCH.ALARM.CLUSTER.YELLOW.001
+  - CTL.OPENSEARCH.ALARM.NODES.001
+  - CTL.OPENSEARCH.ALARM.MASTER.HEALTH.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

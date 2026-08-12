@@ -1,0 +1,26 @@
+id: stepfunctions_lambda_timeout_unsafe
+description: >
+  Step Functions Lambda integration has
+  multiple timeout / heartbeat defects:
+  Lambda Timeout > Task TimeoutSeconds
+  (Lambda still bills after Task times out),
+  Lambda callback function doesn't honor
+  HeartbeatSeconds (spurious failures), or
+  waitForCallback without a TimeoutSeconds
+  (permanent stall on worker failure). Each
+  defect alone produces silent waste or
+  stalls; co-occurrence indicates timeout
+  coordination wasn't designed.
+  Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.STEPFUNCTIONS.LAMBDA.TIMEOUT.GT.TASK.001
+  - CTL.STEPFUNCTIONS.LAMBDA.CALLBACK.NOHEARTBEAT.001
+  - CTL.STEPFUNCTIONS.WAITFORCALLBACK.NOTIMEOUT.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

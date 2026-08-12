@@ -1,0 +1,23 @@
+id: kms_crossaccount_risk
+description: >
+  Excessive sharing accounts plus either a decommissioned
+  account in the policy or no protective conditions on cross-
+  account access. The key is shared with many accounts AND
+  either a sharing account no longer exists in the
+  organization or the cross-account grants have no
+  guardrails. The combination means the blast radius is
+  large, the access is unconditioned, and the principal
+  inventory cannot be trusted. Threshold of 2 fires when at
+  least two of the three cross-account governance gaps
+  coexist on the same key.
+controls:
+  - CTL.KMS.CROSSACCOUNT.BLASTRADIUS.001
+  - CTL.KMS.CROSSACCOUNT.DECOMMISSIONED.001
+  - CTL.KMS.POLICY.CROSSACCOUNT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - kms_key_compromise
+implicit_dependencies: []

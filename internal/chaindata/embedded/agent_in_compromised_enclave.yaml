@@ -1,0 +1,27 @@
+id: agent_in_compromised_enclave
+description: >
+  An agentic workload in a declared-isolated VPC has persistence
+  capability (self-deploy) AND the enclave has an uncontrolled egress
+  path (PrivateLink cross-account or default-policy interface endpoint)
+  AND detection delivery is broken. The agent can rewrite itself to
+  maintain access, exfiltrate data through the PrivateLink tunnel, and
+  operate undetected because alerts never reach a responder. scope:global
+  composes findings across asset types (ECS task definitions, VPC
+  endpoints, CloudTrail trails) — the attack path crosses all three.
+controls:
+  - CTL.ECS.TASKROLE.SELFDEPLOY.001
+  - CTL.VPC.ENDPOINT.INTERFACE.CROSSACCOUNT.001
+  - CTL.VPC.ENDPOINT.INTERFACE.DEFAULTPOLICY.001
+  - CTL.CLOUDTRAIL.CWLOGS.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - automation_hijack
+postconditions:
+  - data_exfiltration
+scope: global
+incident_precedent:
+  name: ExploitGym + Hugging Face Agent Breach Composite (2026)
+  impact: Agent escaped isolated evaluation VPC via sanctioned egress path, persisted via self-deploy, operated undetected
+  reference: OpenAI ExploitGym disclosure July 2026; Hugging Face autonomous agent breach July 2026
+implicit_dependencies: []

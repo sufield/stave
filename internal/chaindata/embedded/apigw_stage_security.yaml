@@ -1,0 +1,32 @@
+id: apigw_stage_security
+description: >
+  Any stage configuration failure compromises the stage's posture.
+  Credentials in stage variables
+  (CTL.APIGATEWAY.STAGE.VARS.CREDENTIALS.001) expose secrets to
+  anyone with apigateway:GetStage permission and to API exports.
+  Cross-environment routing (CTL.APIGATEWAY.STAGE.CROSSENV.001)
+  means non-production controls front production data. Ghost
+  variable references (CTL.APIGATEWAY.STAGE.GHOST.VARS.001) point
+  at deleted resources and produce backend errors that hide their
+  configuration cause. Each independently breaks the stage's
+  intended properties — credentials exposed, environment
+  isolation defeated, or configuration drift hidden behind
+  apparent backend failures. Threshold of 1 reflects that one
+  stage-config failure is enough to compromise the stage; the
+  chain surfaces "stage configuration is broken" as a single
+  family-level finding rather than three unrelated ones.
+controls:
+  - CTL.APIGATEWAY.STAGE.VARS.CREDENTIALS.001
+  - CTL.APIGATEWAY.STAGE.CROSSENV.001
+  - CTL.APIGATEWAY.STAGE.GHOST.VARS.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

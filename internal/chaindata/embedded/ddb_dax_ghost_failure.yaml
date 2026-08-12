@@ -1,0 +1,30 @@
+id: ddb_dax_ghost_failure
+description: >
+  Any DAX ghost reference produces a future failure of the
+  cache layer. Deleted service role
+  (CTL.DYNAMODB.GHOST.DAXROLE.001) — progressive failure where
+  cache hits work and misses fail, with the failure rate
+  climbing as items expire. Deleted subnet
+  (CTL.DYNAMODB.GHOST.DAXSUBNET.001) — node replacement fails
+  on the next maintenance event. Deleted security group
+  (CTL.DYNAMODB.GHOST.DAXSG.001) — network rules silently
+  change. Threshold of 1 reflects that each independently
+  causes a failure mode the operator did not configure for;
+  the chain surfaces "this cluster has a deleted dependency"
+  as a single posture finding regardless of which specific
+  dependency is gone.
+controls:
+  - CTL.DYNAMODB.GHOST.DAXROLE.001
+  - CTL.DYNAMODB.GHOST.DAXSUBNET.001
+  - CTL.DYNAMODB.GHOST.DAXSG.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

@@ -1,0 +1,30 @@
+id: apigw_input_unvalidated
+description: >
+  Multiple input-handling failures stacked. The method has no
+  request validator (CTL.APIGATEWAY.VALIDATION.MISSING.001) and
+  either default gateway responses leak failure details to
+  attackers (CTL.APIGATEWAY.RESPONSE.EXPOSURE.001) or no
+  application-layer WAF rules sit in front to filter out known
+  malicious patterns (CTL.WAF.RULES.001). Validation is the
+  cheapest input filter — it runs at the gateway and rejects
+  structurally invalid requests before any backend or WAF
+  evaluation. WAF rules cover patterns the validator can't —
+  known SQLi/XSS payloads. Custom gateway responses prevent the
+  failure-mode reconnaissance that lets attackers iterate against
+  defenses. Threshold of 2 reflects that any single layer alone
+  is a tolerable gap — partial validation, default responses, no
+  WAF — but two stacked together describe an API where the
+  defenses on the request path are missing, the error responses
+  reveal which defenses are missing, and the operator has no
+  observability into how attackers are probing it.
+controls:
+  - CTL.APIGATEWAY.VALIDATION.MISSING.001
+  - CTL.APIGATEWAY.RESPONSE.EXPOSURE.001
+  - CTL.WAF.RULES.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - data_access
+implicit_dependencies: []

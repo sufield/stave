@@ -1,0 +1,30 @@
+id: cf_silent_logging_failure
+description: >
+  CloudFront distribution has silent monitoring and protection gaps.
+  The logging destination bucket has been deleted — access logs are
+  silently discarded while the configuration shows logging enabled
+  (CTL.CLOUDFRONT.GHOST.LOGBUCKET.001); or the WAF web ACL has been
+  deleted — application-layer filtering is inactive while the
+  configuration shows a WAF ACL ARN
+  (CTL.CLOUDFRONT.GHOST.WAF.001). Threshold of 1 reflects that
+  either condition independently creates false confidence in the
+  distribution's security posture: logging appears configured but
+  produces no records, or WAF appears associated but applies no rules.
+  Both are "appears protected, is not" patterns — the ghost creates
+  a misleading picture that suppresses investigation. Together they
+  describe a distribution that is neither monitored (no logs) nor
+  protected (no WAF) while its configuration suggests otherwise.
+controls:
+  - CTL.CLOUDFRONT.GHOST.LOGBUCKET.001
+  - CTL.CLOUDFRONT.GHOST.WAF.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

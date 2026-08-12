@@ -1,0 +1,22 @@
+id: redundancy_single_point
+description: >
+  Single-point-of-failure at the topology level. Individual resources
+  may pass their own AZ redundancy checks, but the dependency graph
+  converges to one Availability Zone — an AZ failure takes down the
+  entire path. Compounds per-resource AZ controls with graph-level
+  analysis of load-balancer target placement, NAT Gateway routing,
+  compute-to-data-tier dependencies, and cross-service choke points.
+controls:
+  - CTL.ELB.TARGET.SINGLEAZ.001
+  - CTL.ELB.NETWORK.SINGLEAZ.001
+  - CTL.VPC.NAT.SINGLEAZ.001
+  - CTL.RDS.MULTIAZ.001
+  - CTL.AUTOSCALING.MULTIAZ.001
+  - CTL.EFS.MULTIAZ.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - az_failure
+postconditions:
+  - service_disruption
+implicit_dependencies: []

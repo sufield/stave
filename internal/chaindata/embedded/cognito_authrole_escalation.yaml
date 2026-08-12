@@ -1,0 +1,26 @@
+id: cognito_authrole_escalation
+description: >
+  The authenticated role has multiple
+  escalation primitives: iam:PassRole AND
+  sts:AssumeRole to admin AND broad
+  permissions or no role mapping. Each
+  individually is a privilege-escalation
+  surface; together they describe a Cognito
+  identity pool where any signed-in user is
+  one or two API calls away from arbitrary
+  privileges. Threshold of 2 because the
+  dangerous compound is when escalation
+  primitives stack with absent
+  least-privilege controls.
+controls:
+  - CTL.COGNITO.IDPOOL.AUTHROLE.PASSROLE.001
+  - CTL.COGNITO.IDPOOL.AUTHROLE.ASSUMEROLE.001
+  - CTL.COGNITO.IDPOOL.AUTHROLE.BROAD.001
+  - CTL.COGNITO.IDPOOL.ROLEMAPPING.NONE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

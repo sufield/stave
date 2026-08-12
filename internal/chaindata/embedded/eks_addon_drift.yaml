@@ -1,0 +1,26 @@
+id: eks_addon_drift
+description: >
+  EKS add-on layer has multiple drift defects: add-on
+  references deleted IRSA role, core add-on installed via
+  both Helm and EKS managed (dual install), or core
+  add-on self-managed when EKS managed available.
+  Co-occurrence indicates the cluster's add-on lifecycle
+  isn't owned by a single discipline; reconcile loops
+  fight, IAM references go stale, and add-on patches
+  lag. Threshold of 2 fires when at least two add-on
+  drift defects coexist.
+controls:
+  - CTL.EKS.ADDON.GHOST.IRSA.001
+  - CTL.EKS.ADDON.HELMDUAL.001
+  - CTL.EKS.ADDON.SELFMANAGED.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies:
+  - source: observation.ghost_reference_resolver
+    fallback: fail_open
+    diagnostic: >-
+      Ghost reference resolution depends on snapshot completeness for the referenced resource type. If the referenced service was not collected, ghost references cannot be detected.

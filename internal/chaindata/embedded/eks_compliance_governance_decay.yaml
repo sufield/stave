@@ -1,0 +1,25 @@
+id: eks_compliance_governance_decay
+description: >
+  EKS cluster has multiple compliance / governance
+  metadata defects: namespaces missing data
+  classification labels (PII / PHI / PCI scoping
+  unknown), namespaces missing cost-allocation
+  labels (chargeback impossible), and audit-log
+  retention shorter than the most permissive
+  regulatory minimum (365 days). Each defect alone
+  blocks a class of compliance reporting;
+  co-occurrence indicates the cluster's governance
+  metadata is unmaintained. Threshold of 2 fires
+  when at least two governance-metadata defects
+  coexist on the same cluster footprint.
+controls:
+  - CTL.EKS.NS.NOCLASSIFICATION.TAG.001
+  - CTL.EKS.NS.NOCOSTALLOC.TAG.001
+  - CTL.EKS.AUDIT.RETENTION.SHORT.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - audit_trail_destroyed
+implicit_dependencies: []

@@ -1,0 +1,23 @@
+id: rds_replica_exposure
+description: >
+  Read replica has security-configuration drift relative to
+  its primary OR is in the same AZ as its primary. Each
+  condition independently undermines the replica's value:
+  configuration drift makes the replica a softer attack
+  target than the primary (same data, weaker controls);
+  same-AZ placement collapses the replica's resilience
+  contribution (an AZ event takes both primary and replica
+  offline simultaneously). Threshold of 1 makes this a
+  fast-firing chain — any single replica defect reflects
+  a flaw in the replica's deployment that should be
+  remediated rather than waited on.
+controls:
+  - CTL.RDS.HA.REPLICA.CONFIG.001
+  - CTL.RDS.HA.REPLICA.SAMEAZ.001
+escalation_threshold: 1
+compound_severity: high
+preconditions:
+  - network_access_rds
+postconditions:
+  - rds_data_access
+implicit_dependencies: []

@@ -1,0 +1,15 @@
+id: gcp_apikey_exposure
+description: >
+  API key unrestricted to APIs AND unrestricted to applications or
+  not rotated. Broadly-scoped key usable from any source.
+controls:
+  - CTL.GCP.IAM.APIKEY.RESTRICT.001
+  - CTL.GCP.IAM.APIKEY.APP.001
+  - CTL.GCP.IAM.APIKEY.ROTATION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

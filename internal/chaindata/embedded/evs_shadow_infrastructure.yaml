@@ -1,0 +1,24 @@
+id: evs_shadow_infrastructure
+description: >
+  EVS (Elastic VMware Service) is active in the account AND the
+  organization lacks preventive/detective controls: no SCP denying
+  evs:*, no CloudTrail coverage of EVS events, and IAM principals can
+  create EVS environments. The compound represents total shadow
+  VMware infrastructure exposure — a full SDDC runs in an AWS-managed
+  account outside customer governance, cannot be prevented from
+  growing, cannot be detected when used, and operates an entire
+  VMware management plane invisible to standard AWS security tooling.
+controls:
+  - CTL.EVS.ENVIRONMENT.ACTIVE.001
+  - CTL.ORG.SCP.EVS.DENY.001
+  - CTL.CLOUDTRAIL.EVS.BLIND.001
+  - CTL.IAM.EVS.CREATE.001
+scope: global
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - shadow_infrastructure
+postconditions:
+  - lateral_movement
+  - detection_evasion
+implicit_dependencies: []

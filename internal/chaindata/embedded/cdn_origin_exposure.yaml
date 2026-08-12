@@ -1,0 +1,19 @@
+id: cdn_origin_exposure
+description: >
+  CloudFront distribution with unprotected S3 origin. The origin
+  has no access control, the bucket's Block Public Access is
+  disabled, and website hosting is enabled with public read.
+  Content is accessible directly via S3, bypassing CloudFront's
+  authentication, WAF, and geo-restrictions. The complete
+  misconfiguration chain for CDN-fronted static websites.
+controls:
+  - CTL.S3.CDN.BYPASS.001
+  - CTL.S3.CONTROLS.001
+  - CTL.S3.WEBSITE.PUBLIC.001
+escalation_threshold: 3
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - cdn_bypass_data_access
+implicit_dependencies: []

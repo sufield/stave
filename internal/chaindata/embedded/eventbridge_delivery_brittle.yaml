@@ -1,0 +1,23 @@
+id: eventbridge_delivery_brittle
+description: >
+  EventBridge rule's failure-handling envelope is brittle: no DLQ
+  configured AND/OR retries disabled (MaximumRetryAttempts=0)
+  AND/OR MaximumEventAge below 60s. Each defect alone is a
+  resilience issue; co-occurrence means there is no preservation
+  surface, no retry headroom, and effectively no retention budget
+  for failed events. Distinct from CTL.EVENTBRIDGE.GHOST.RULE.DLQ
+  (which detects a configured-but-deleted DLQ); this chain catches
+  the never-configured / actively-disabled posture. Threshold of 2
+  fires when at least two delivery-reliability defects coexist.
+controls:
+  - CTL.EVENTBRIDGE.RULE.NODLQ.001
+  - CTL.EVENTBRIDGE.RULE.RETRY.NONE.001
+  - CTL.EVENTBRIDGE.RULE.MAXAGE.SHORT.001
+  - CTL.EVENTBRIDGE.RULE.FANOUT.WIDE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

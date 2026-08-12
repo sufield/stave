@@ -1,0 +1,27 @@
+id: eks_to_memorydb_lateral
+description: >
+  EKS pods share a VPC with a MemoryDB cluster whose security
+  group allows broad ingress on port 6379 — a compromised pod
+  can reach the cluster without additional credential theft or
+  network pivoting. The first leg detects that the EKS node
+  group's security group permits unrestricted egress
+  (CTL.VPC.SG.EGRESS.001) — pods can initiate connections to
+  the MemoryDB subnet. The second leg detects that the MemoryDB
+  cluster's security group accepts broad ingress on the Redis
+  port (CTL.MEMORYDB.SG.BROAD.001) — including from the EKS
+  node subnet. Together: pod compromise yields cluster access
+  without restriction. MemoryDB clusters hold durable Redis
+  data — session state, application caches, real-time feature
+  stores — cluster access enables data theft or poisoning.
+  Removing either leg breaks the chain.
+controls:
+  - CTL.VPC.SG.EGRESS.001
+  - CTL.MEMORYDB.SG.BROAD.001
+scope_field: properties.network.vpc_id
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_access
+implicit_dependencies: []

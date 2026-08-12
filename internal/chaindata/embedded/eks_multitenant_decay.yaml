@@ -1,0 +1,23 @@
+id: eks_multitenant_decay
+description: >
+  EKS namespace has multiple multi-tenant isolation defects:
+  no ResourceQuota (unbounded resource consumption),
+  no LimitRange (unbounded per-pod consumption), houses
+  workloads from multiple tenants, or pods using system
+  PriorityClass to bypass scheduling fairness. Each defect
+  alone breaks per-tenant fairness or isolation;
+  co-occurrence indicates the namespace has no multi-tenant
+  discipline. Threshold of 2 fires when at least two
+  defects coexist.
+controls:
+  - CTL.EKS.NS.NORESOURCEQUOTA.001
+  - CTL.EKS.NS.NOLIMITRANGE.001
+  - CTL.EKS.NS.MULTITENANT.001
+  - CTL.EKS.NS.PRIORITYCLASS.SYSTEM.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - data_destruction
+implicit_dependencies: []

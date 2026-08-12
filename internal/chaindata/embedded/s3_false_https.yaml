@@ -1,0 +1,16 @@
+id: s3_false_https
+description: >
+  CloudFront to S3 origin uses HTTP plus bucket does not enforce
+  in-transit encryption. The CDN origin fetch is unencrypted and the
+  bucket policy does not require HTTPS — both transport paths expose
+  data in transit.
+controls:
+  - CTL.S3.CDN.TRANSPORT.001
+  - CTL.S3.ENCRYPT.002
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - cloudfront_origin_configured
+postconditions:
+  - data_in_transit_exposure
+implicit_dependencies: []

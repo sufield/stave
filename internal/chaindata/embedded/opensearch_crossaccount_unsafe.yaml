@@ -1,0 +1,21 @@
+id: opensearch_crossaccount_unsafe
+description: >
+  OpenSearch domain has cross-account access policy
+  defects: cross-account principal without
+  sts:ExternalId condition (confused-deputy
+  exposure), and cross-account principal granted
+  es:* (full domain control). Each defect alone
+  expands the cross-account blast radius;
+  co-occurrence means any IAM identity in the
+  foreign account becomes domain owner. Threshold
+  of 2 fires when both defects coexist.
+controls:
+  - CTL.OPENSEARCH.POLICY.CROSSACCOUNT.NOEXTERNAL.001
+  - CTL.OPENSEARCH.POLICY.CROSSACCOUNT.WILDCARD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - cross_account_injection
+postconditions:
+  - shadow_admin_access
+implicit_dependencies: []

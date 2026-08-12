@@ -1,0 +1,21 @@
+id: opensearch_capacity_blind
+description: >
+  OpenSearch domain has multiple capacity
+  observability defects: missing alarms on
+  FreeStorageSpace, JVMMemoryPressure, or
+  threadpool saturation. Each defect alone
+  leaves capacity decisions blind; co-occurrence
+  means cluster sizing is undriven by signal.
+  Threshold of 2 fires when at least two
+  capacity alarms are missing.
+controls:
+  - CTL.OPENSEARCH.ALARM.FREESTORAGE.001
+  - CTL.OPENSEARCH.ALARM.JVM.PRESSURE.001
+  - CTL.OPENSEARCH.ALARM.THREADPOOL.001
+escalation_threshold: 2
+compound_severity: medium
+preconditions:
+  - ungoverned_operation
+postconditions:
+  - service_disruption
+implicit_dependencies: []

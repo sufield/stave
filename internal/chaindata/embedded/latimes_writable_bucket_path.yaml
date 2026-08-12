@@ -1,0 +1,17 @@
+id: latimes_writable_bucket_path
+description: >
+  LA Times incident shape (2018): publicly writable S3
+  bucket served by a website. Attacker wrote cryptominer
+  JavaScript to the bucket, which was served to all
+  website visitors. The invariant: no S3 bucket permits
+  public write access. This is a supply chain attack via
+  content injection, not a data exfiltration.
+controls:
+  - CTL.S3.POLICY.WRITE.001
+  - CTL.S3.POLLUTION.PUBLIC.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - supply_chain_compromise

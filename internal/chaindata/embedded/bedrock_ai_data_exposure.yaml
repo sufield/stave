@@ -1,0 +1,18 @@
+id: bedrock_ai_data_exposure
+description: >
+  Bedrock AI platform without invocation logging, PII filtering, or
+  log encryption. User data flows through the AI pipeline unmonitored,
+  unfiltered, and unencrypted — prompts containing sensitive business
+  data are processed without audit trail, PII in responses is not
+  masked, and any logs that do exist are readable in plaintext.
+controls:
+  - CTL.BEDROCK.LOG.INVOCATION.001
+  - CTL.BEDROCK.GUARDRAIL.PII.001
+  - CTL.BEDROCK.LOG.ENCRYPT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - s3_data_access
+postconditions:
+  - data_destruction
+implicit_dependencies: []
