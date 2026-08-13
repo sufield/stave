@@ -172,7 +172,7 @@ Stave doesn't replace your scanner. It finds what your scanner structurally cann
 
 ## Catalog at a glance
 
-- **Built-in controls** across S3, IAM, VPC, EC2, RDS, Lambda, ECS, EKS, CloudTrail, KMS, OpenSearch, SageMaker, Bedrock, Cognito, and more — see [control reference](docs/controls/reference.md).
+- **Built-in controls** across S3, IAM, VPC, EC2, RDS, Lambda, ECS, EKS, CloudTrail, KMS, OpenSearch, SageMaker, Bedrock, Cognito, and more.
 - **Ghost-reference controls** — cross-inventory detection of pointers to deleted resources (IAM → role, agent → Lambda, CNAME → S3 bucket). Single-resource scanners can't see absence.
 - **Compound chain definitions** — multi-step attack paths across identity, data, audit, and recovery surfaces, including AI agent identity (Bedrock + Lambda + S3 PHI, RAG → PHI, notebook → prod role).
 - **Compliance profiles** — HIPAA, CIS AWS v3.0, SOC 2, PCI-DSS v4.0, NIST 800-53, FedRAMP, GDPR, FFIEC, ISO 27001, NIST CSF 2.0.
