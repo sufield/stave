@@ -117,6 +117,9 @@ type Input struct {
 
 // BuildPlaybook assembles a narrative playbook from structured data.
 func BuildPlaybook(input *Input) Playbook {
+	if input == nil {
+		return Playbook{}
+	}
 	f := &input.Finding
 
 	pb := Playbook{

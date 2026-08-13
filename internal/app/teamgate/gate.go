@@ -59,8 +59,12 @@ func Evaluate(in Input) GateResult {
 	var teamFindings []remediation.Finding
 	for i := range in.Findings {
 		f := &in.Findings[i]
-		owner := in.Manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
-		if owner.TeamID == in.TeamID {
+		teamID := string(f.OwnerTeamID)
+		if in.Manifest != nil {
+			owner := in.Manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
+			teamID = owner.TeamID
+		}
+		if teamID == in.TeamID {
 			teamFindings = append(teamFindings, *f)
 		}
 	}

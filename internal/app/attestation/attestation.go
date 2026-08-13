@@ -72,6 +72,11 @@ func PerformAttestation(ctx context.Context, deps WorkflowDeps, req Request) err
 		return fmt.Errorf("target assessment failed: %w", err)
 	}
 
+	evalTime := time.Now()
+	if req.Clock != nil {
+		evalTime = req.Clock.Now()
+	}
+
 	// 3. Compare states
 	comparison, err := Compare(CompareRequest{
 		BaselineFindings:  baseline.report.Findings,
@@ -79,7 +84,7 @@ func PerformAttestation(ctx context.Context, deps WorkflowDeps, req Request) err
 		BaselineSnapshots: baseline.snapshotCount,
 		TargetSnapshots:   target.snapshotCount,
 		SLAThreshold:      req.SLAThreshold,
-		EvalTime:          req.Clock.Now(),
+		EvalTime:          evalTime,
 		Sanitizer:         req.Sanitizer,
 	})
 	if err != nil {

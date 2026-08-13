@@ -4,8 +4,8 @@ package scorecard
 import (
 	"cmp"
 	"slices"
+	"strings"
 
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
@@ -31,17 +31,11 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 	report := &Report{}
 
 	for _, fw := range frameworks {
-		fwKey := policy.ComplianceFramework(fw)
-		// Reduce to one representative finding per (framework, control)
-		// pair so downstream counts are control-level, not finding-
-		// level. Routing the unique slice through FindingSet then
-		// lets us delegate "how many of these are Critical?" to the
-		// domain method instead of branching on the severity here.
 		var perControl remediation.FindingSet
 		bestFinding := make(map[string]remediation.Finding)
 		for i := range findings {
 			f := &findings[i]
-			if _, ok := f.ControlCompliance[fwKey]; !ok {
+			if !hasFrameworkCompliance(f, fw) {
 				continue
 			}
 			cid := string(f.ControlID)
@@ -53,7 +47,7 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 		seen := make(map[string]struct{})
 		for i := range findings {
 			f := &findings[i]
-			if _, ok := f.ControlCompliance[fwKey]; !ok {
+			if !hasFrameworkCompliance(f, fw) {
 				continue
 			}
 			cid := string(f.ControlID)
@@ -106,4 +100,14 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 	})
 
 	return report
+}
+
+func hasFrameworkCompliance(f *remediation.Finding, target string) bool {
+	for fw := range f.ControlCompliance {
+		fwStr := string(fw)
+		if strings.EqualFold(fwStr, target) || strings.EqualFold(strings.ReplaceAll(fwStr, "-", "_"), strings.ReplaceAll(target, "-", "_")) {
+			return true
+		}
+	}
+	return false
 }

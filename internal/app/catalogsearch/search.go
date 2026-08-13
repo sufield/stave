@@ -42,7 +42,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 		if query != "" && !matchesQuery(ctl, query) {
 			continue
 		}
-		if domainFilter != "" && extractDomain(string(ctl.ID)) != domainFilter {
+		if domainFilter != "" && getDomain(ctl) != domainFilter {
 			continue
 		}
 		if f.Severity != "" && !ctl.Severity.Matches(f.Severity) {
@@ -59,7 +59,7 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 			ControlID:   string(ctl.ID),
 			Name:        ctl.Name,
 			Severity:    ctl.Severity.String(),
-			Domain:      extractDomain(string(ctl.ID)),
+			Domain:      getDomain(ctl),
 			AttackStage: string(ctl.AttackStage()),
 			Frameworks:  make([]string, 0, len(ctl.Compliance)),
 		}
@@ -86,6 +86,13 @@ func hasFramework(ctl *policy.ControlDefinition, profileLower string) bool {
 		}
 	}
 	return false
+}
+
+func getDomain(ctl *policy.ControlDefinition) string {
+	if ctl.Domain != "" {
+		return toLower(string(ctl.Domain))
+	}
+	return extractDomain(string(ctl.ID))
 }
 
 func extractDomain(controlID string) string {
