@@ -72,10 +72,11 @@ func PerformAttestation(ctx context.Context, deps WorkflowDeps, req Request) err
 		return fmt.Errorf("target assessment failed: %w", err)
 	}
 
-	evalTime := time.Now()
-	if req.Clock != nil {
-		evalTime = req.Clock.Now()
+	clock := req.Clock
+	if clock == nil {
+		clock = ports.RealClock{}
 	}
+	evalTime := clock.Now()
 
 	// 3. Compare states
 	comparison, err := Compare(CompareRequest{
