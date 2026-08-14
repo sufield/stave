@@ -322,13 +322,13 @@ jobs:
       - name: Verify Go version
         # Positive assertion: setup-go must install exactly the
         # patch release `go.mod`'s toolchain directive specifies
-        # (currently go1.26.5, which patches crypto/tls
+        # (currently go1.26.6, which patches crypto/tls
         # vulnerability). A negative-only check
         # would silently pass on any other patch — including an
         # older vulnerable one — so we assert intent here.
         run: |
           go version
-          go version | grep -q 'go1.26.5'
+          go version | grep -q 'go1.26.6'
       - name: Install govulncheck
         # Run govulncheck directly instead of golang/govulncheck-action
         # so we use the Go installed by the explicit setup-go above
