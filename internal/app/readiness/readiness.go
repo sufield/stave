@@ -6,12 +6,17 @@ import (
 
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/core/outcome"
+	"github.com/sufield/stave/internal/core/ports"
 	validation "github.com/sufield/stave/internal/core/schemaval"
 )
 
 // AssessReadiness runs prerequisite, control-source, and validation checks
 // and returns a readiness report summarizing any issues found.
 func AssessReadiness(in validation.AssessmentContext) (validation.ReadinessAssessment, error) {
+	evalTime := in.CurrentTime
+	if evalTime.IsZero() {
+		evalTime = ports.RealClock{}.Now()
+	}
 	report := validation.NewReadinessAssessment(in.ControlSource, in.ObservationSource)
 	recordPrereqIssues(report, in.PreflightChecks)
 	recordControlSourceIssue(report, in)
@@ -19,7 +24,7 @@ func AssessReadiness(in validation.AssessmentContext) (validation.ReadinessAsses
 		Report:            report,
 		Input:             in,
 		MaxUnsafeDuration: in.SLAThreshold,
-		EvalTime:          in.CurrentTime,
+		EvalTime:          evalTime,
 	}); err != nil {
 		return validation.ReadinessAssessment{}, err
 	}

@@ -12,6 +12,7 @@ package expand
 import (
 	"cmp"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -97,8 +98,17 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 		return nil
 	}
 	dir = filepath.Clean(dir)
-	files, err := filepath.Glob(filepath.Join(dir, "*.json"))
-	if err != nil || len(files) == 0 {
+	var files []string
+	_ = filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !d.IsDir() && strings.HasSuffix(path, ".json") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if len(files) == 0 {
 		return &SnapshotStatus{Missing: append([]string{}, services...)}
 	}
 

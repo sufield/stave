@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -30,18 +31,24 @@ func (e *Engine) Run(ctx context.Context, snapshots []asset.Snapshot, mode Mode,
 		return Result{}, errors.New("no snapshots to search")
 	}
 
+	sorted := make([]asset.Snapshot, len(snapshots))
+	copy(sorted, snapshots)
+	slices.SortFunc(sorted, func(a, b asset.Snapshot) int {
+		return a.CapturedAt.Compare(b.CapturedAt)
+	})
+
 	result := Result{
 		Mode:           mode,
 		ControlID:      controlID,
 		ResourceARN:    resourceARN,
-		SnapshotsTotal: len(snapshots),
+		SnapshotsTotal: len(sorted),
 	}
 
 	switch mode {
 	case ModeBisect:
-		return e.runBisect(ctx, snapshots, result)
+		return e.runBisect(ctx, sorted, result)
 	case ModeScan:
-		return e.runScan(ctx, snapshots, result)
+		return e.runScan(ctx, sorted, result)
 	default:
 		return Result{}, fmt.Errorf("unknown bisect mode: %d", mode)
 	}

@@ -131,6 +131,12 @@ func walkProperties(prefix string, m map[string]any, out map[string]struct{}) {
 		out[path] = struct{}{}
 		if nested, ok := v.(map[string]any); ok {
 			walkProperties(path, nested, out)
+		} else if slice, ok := v.([]any); ok {
+			for _, item := range slice {
+				if itemMap, ok := item.(map[string]any); ok {
+					walkProperties(path, itemMap, out)
+				}
+			}
 		}
 	}
 }
