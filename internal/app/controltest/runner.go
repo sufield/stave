@@ -3,6 +3,7 @@
 package controltest
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -124,7 +125,7 @@ func runCase(ctl *policy.ControlDefinition, tc *policy.ControlTest, eval policy.
 	var unsafe bool
 	var err error
 	if eval == nil {
-		err = fmt.Errorf("evaluator is nil")
+		err = errors.New("evaluator is nil")
 	} else {
 		unsafe, err = eval(ctl, a, nil)
 	}

@@ -2,6 +2,7 @@ package fix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -55,7 +56,7 @@ type EvaluationParams struct {
 // Loop executes the apply-before, apply-after, and verify sequence.
 func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *ArtifactWriter, eb *EnvelopeBuilder) error {
 	if s == nil {
-		return fmt.Errorf("fix: service is nil")
+		return errors.New("fix: service is nil")
 	}
 	// 1. Validate directories
 	if err := ValidateLoopDirs(req); err != nil {
