@@ -11,6 +11,7 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/ports"
 )
 
 // severityBumpThresholdDays is how long past expiry before severity
@@ -43,6 +44,10 @@ type Input struct {
 // Detect scans suppressed findings for expired or invalid exemptions
 // and produces LapsedFinding entries.
 func Detect(in Input) []LapsedFinding {
+	evalTime := in.EvalTime
+	if evalTime.IsZero() {
+		evalTime = ports.RealClock{}.Now()
+	}
 	var lapsed []LapsedFinding
 
 	for i := range in.Findings {
@@ -65,7 +70,7 @@ func Detect(in Input) []LapsedFinding {
 
 		daysSince := 0
 		if !expiry.IsZero() {
-			daysSince = max(0, int(in.EvalTime.Sub(expiry).Hours()/24))
+			daysSince = max(0, int(evalTime.Sub(expiry).Hours()/24))
 		}
 
 		originalSev := f.ControlSeverity

@@ -33,6 +33,9 @@ func toResolvedField[T any](v PolicyValue[T]) ResolvedField {
 // BuildEffectiveConfig assembles the fully resolved configuration with provenance,
 // suitable for `stave config show` output.
 func (e *GovernanceResolver) BuildEffectiveConfig() EffectiveConfig {
+	if e == nil {
+		return EffectiveConfig{}
+	}
 	out := EffectiveConfig{
 		MaxUnsafeDuration: toResolvedField(e.ResolveMaxUnsafeDuration()),
 		CIFailurePolicy:   toResolvedField(e.ResolveCIFailurePolicy()),

@@ -30,6 +30,7 @@ const (
 type findingKey struct {
 	ControlID kernel.ControlID
 	AssetID   asset.ID
+	AssetType kernel.AssetType
 }
 
 // ClassifiedFinding pairs a current finding with its classification.
@@ -205,6 +206,7 @@ func buildTimeline(sorted []*report.Assessment, latest *report.Assessment) map[f
 			k := findingKey{
 				ControlID: a.Findings[i].ControlID,
 				AssetID:   a.Findings[i].AssetID,
+				AssetType: a.Findings[i].AssetType,
 			}
 			ap, exists := timeline[k]
 			if !exists {
@@ -229,7 +231,7 @@ func buildTimeline(sorted []*report.Assessment, latest *report.Assessment) map[f
 func classifyCurrent(in Input, timeline map[findingKey]*appearance, gapCount map[findingKey]int) (newFindings, returnedFindings []ClassifiedFinding, suppressedCount int) {
 	for i := range in.CurrentFindings {
 		f := &in.CurrentFindings[i]
-		k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID}
+		k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID, AssetType: f.AssetType}
 		ap := timeline[k]
 
 		if ap == nil {
@@ -266,6 +268,7 @@ func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]
 		currentKeys[findingKey{
 			ControlID: in.CurrentFindings[i].ControlID,
 			AssetID:   in.CurrentFindings[i].AssetID,
+			AssetType: in.CurrentFindings[i].AssetType,
 		}] = struct{}{}
 	}
 
@@ -274,6 +277,7 @@ func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]
 		k := findingKey{
 			ControlID: latest.Findings[i].ControlID,
 			AssetID:   latest.Findings[i].AssetID,
+			AssetType: latest.Findings[i].AssetType,
 		}
 		if _, ok := currentKeys[k]; ok {
 			continue
@@ -313,6 +317,7 @@ func computeGapCounts(sorted []*report.Assessment) map[findingKey]int {
 			currentKeys[findingKey{
 				ControlID: a.Findings[i].ControlID,
 				AssetID:   a.Findings[i].AssetID,
+				AssetType: a.Findings[i].AssetType,
 			}] = struct{}{}
 		}
 

@@ -115,7 +115,7 @@ func Build(input BuildInput) *Graph {
 		var members []MemberControl
 		for _, cid := range ch.ControlIDs {
 			mc := MemberControl{ControlID: string(cid)}
-			if ctl, ok := input.ControlLookup[string(cid)]; ok && ctl.Remediation != nil {
+			if ctl, ok := input.ControlLookup[string(cid)]; ok && ctl != nil && ctl.Remediation != nil {
 				mc.Remediation = ctl.Remediation.Action
 			}
 			members = append(members, mc)

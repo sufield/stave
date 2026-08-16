@@ -16,6 +16,7 @@ import (
 type findingKey struct {
 	ControlID kernel.ControlID
 	AssetID   asset.ID
+	AssetType kernel.AssetType
 }
 
 // Pattern describes the temporal behavior of a finding.
@@ -34,6 +35,7 @@ const (
 type Candidate struct {
 	ControlID   kernel.ControlID `json:"control_id"`
 	AssetID     asset.ID         `json:"asset_id"`
+	AssetType   kernel.AssetType `json:"asset_type,omitempty"`
 	Severity    string           `json:"severity"`
 	Pattern     Pattern          `json:"pattern"`
 	DwellDays   float64          `json:"dwell_days"`
@@ -138,7 +140,7 @@ func Suggest(in Input) *Result {
 		presentThisRun := make(map[findingKey]struct{})
 		for i := range a.Findings {
 			f := &a.Findings[i]
-			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID}
+			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID, AssetType: f.AssetType}
 			presentThisRun[k] = struct{}{}
 
 			m, exists := meta[k]
@@ -167,7 +169,7 @@ func Suggest(in Input) *Result {
 	for idx, a := range filtered {
 		for i := range a.Findings {
 			f := &a.Findings[i]
-			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID}
+			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID, AssetType: f.AssetType}
 			m := meta[k]
 			m.lastSeen = a.Run.EvalTime
 			m.appearances[idx] = true
@@ -183,6 +185,9 @@ func Suggest(in Input) *Result {
 	for k, m := range meta {
 		// Skip if already exempted.
 		exemptKey := string(k.ControlID) + "@" + string(k.AssetID)
+		if k.AssetType != "" {
+			exemptKey = string(k.ControlID) + "@" + string(k.AssetType) + "@" + string(k.AssetID)
+		}
 		if _, ok := in.ExemptedKeys[exemptKey]; ok {
 			continue
 		}
@@ -204,6 +209,7 @@ func Suggest(in Input) *Result {
 			oscillating = append(oscillating, Candidate{
 				ControlID:   k.ControlID,
 				AssetID:     k.AssetID,
+				AssetType:   k.AssetType,
 				Severity:    m.severity,
 				Pattern:     PatternOscillating,
 				DwellDays:   dwellDays,
@@ -219,6 +225,7 @@ func Suggest(in Input) *Result {
 			chronic = append(chronic, Candidate{
 				ControlID:   k.ControlID,
 				AssetID:     k.AssetID,
+				AssetType:   k.AssetType,
 				Severity:    m.severity,
 				Pattern:     PatternChronic,
 				DwellDays:   dwellDays,
