@@ -2,6 +2,7 @@ package artifacts
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -15,7 +16,7 @@ import (
 // FormatControlOutput writes control rows in the requested format.
 func FormatControlOutput(w io.Writer, cfg catalog.DiscoveryRequest, rows []catalog.PolicyEntry) error {
 	if w == nil {
-		return fmt.Errorf("writer is nil")
+		return errors.New("writer is nil")
 	}
 	rawFormat := strings.TrimSpace(cfg.OutputFormat)
 	var format appcontracts.OutputFormat

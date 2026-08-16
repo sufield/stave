@@ -262,6 +262,10 @@ linters:
           - errcheck
           - noctx
           - unparam
+      - path: _test\.go
+        linters:
+          - staticcheck
+        text: "SA5011"
         # rangeValCopy in tests: 47 issues in engine e2e tests.
         # Deferred — test performance is not a concern.
       - path: _test\.go

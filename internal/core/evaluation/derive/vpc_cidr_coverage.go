@@ -318,8 +318,9 @@ func lastAddr(p netip.Prefix) netip.Addr {
 	}
 	for i := bits; i < 128; i++ {
 		byteIdx := i / 8
-		bitIdx := 7 - (i % 8)
-		raw[byteIdx] |= 1 << uint(bitIdx)
+		if byteIdx < len(raw) {
+			raw[byteIdx] |= 1 << (7 - (i % 8))
+		}
 	}
 	result := netip.AddrFrom16(raw)
 	if addr.Is4() {

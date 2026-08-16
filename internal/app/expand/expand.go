@@ -100,10 +100,7 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 	dir = filepath.Clean(dir)
 	var files []string
 	_ = filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if !d.IsDir() && strings.HasSuffix(path, ".json") {
+		if err == nil && !d.IsDir() && strings.HasSuffix(path, ".json") {
 			files = append(files, path)
 		}
 		return nil

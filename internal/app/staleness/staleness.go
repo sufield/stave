@@ -31,9 +31,9 @@ func Check(snapshots []asset.Snapshot, threshold time.Duration, now time.Time) *
 	}
 
 	mostRecent := snapshots[0].CapturedAt
-	for i := 1; i < len(snapshots); i++ {
-		if snapshots[i].CapturedAt.After(mostRecent) {
-			mostRecent = snapshots[i].CapturedAt
+	for _, snap := range snapshots[1:] {
+		if snap.CapturedAt.After(mostRecent) {
+			mostRecent = snap.CapturedAt
 		}
 	}
 
