@@ -56,14 +56,22 @@ type Route struct {
 	TargetID    string
 }
 
+// TGWAttachment is a Transit Gateway VPC attachment.
+type TGWAttachment struct {
+	AttachmentID     string
+	TransitGatewayID string
+	VPCID            string
+}
+
 // Graph is the network topology extracted from observations.
 type Graph struct {
-	Hosts     map[string]*Host
-	SGRules   map[string][]SGRule // sg_id -> rules
-	Peerings  []VPCPeering
-	Subnets   map[string]*Subnet
-	Routes    map[string][]Route // route_table_id -> routes
-	Firewalls map[string]bool    // firewall endpoint IDs
+	Hosts          map[string]*Host
+	SGRules        map[string][]SGRule // sg_id -> rules
+	Peerings       []VPCPeering
+	Subnets        map[string]*Subnet
+	Routes         map[string][]Route // route_table_id -> routes
+	Firewalls      map[string]bool    // firewall endpoint IDs
+	TGWAttachments []TGWAttachment
 }
 
 // BuildGraph extracts network topology from observation snapshots.
@@ -99,6 +107,10 @@ func BuildGraph(snapshots []asset.Snapshot) *Graph {
 			case GraphTypes.Firewall:
 				if GraphTypes.Firewall != "" {
 					g.extractFirewall(a)
+				}
+			case GraphTypes.TransitGateway:
+				if GraphTypes.TransitGateway != "" {
+					g.extractTGWAttachment(a)
 				}
 			}
 		}
@@ -284,4 +296,35 @@ func (g *Graph) extractFirewall(a *asset.Asset) {
 			}
 		}
 	}
+}
+
+func (g *Graph) extractTGWAttachment(a *asset.Asset) {
+	if tgw, ok := nested(a.Properties, "network", "transit_gateway"); ok {
+		att := TGWAttachment{AttachmentID: string(a.ID)}
+		att.TransitGatewayID, _ = tgw["transit_gateway_id"].(string)
+		att.VPCID, _ = tgw["vpc_id"].(string)
+		g.TGWAttachments = append(g.TGWAttachments, att)
+	}
+}
+
+func (g *Graph) vpcsConnectedViaTGW(vpc1, vpc2 string) bool {
+	tgws := make(map[string][]string)
+	for _, att := range g.TGWAttachments {
+		tgws[att.TransitGatewayID] = append(tgws[att.TransitGatewayID], att.VPCID)
+	}
+	for _, vpcs := range tgws {
+		has1, has2 := false, false
+		for _, v := range vpcs {
+			if v == vpc1 {
+				has1 = true
+			}
+			if v == vpc2 {
+				has2 = true
+			}
+		}
+		if has1 && has2 {
+			return true
+		}
+	}
+	return false
 }

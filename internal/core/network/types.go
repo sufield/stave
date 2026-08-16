@@ -10,4 +10,5 @@ var GraphTypes struct {
 	Subnet            string
 	RouteTable        string
 	Firewall          string
+	TransitGateway    string
 }

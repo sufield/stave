@@ -661,3 +661,90 @@ func firewallBypassedSnapshot() asset.Snapshot {
 		},
 	}
 }
+
+// --- transit gateway tests ---
+
+func TestCanReach_TGW(t *testing.T) {
+	g := &Graph{
+		Hosts: map[string]*Host{
+			"i-src": {ID: "i-src", VPCID: "vpc-a", SubnetID: "subnet-a", SGIDs: []string{"sg-src"}, Tags: map[string]string{}},
+			"i-dst": {ID: "i-dst", VPCID: "vpc-b", SubnetID: "subnet-b", SGIDs: []string{"sg-dst"}, Tags: map[string]string{}},
+		},
+		SGRules: map[string][]SGRule{
+			"sg-dst": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			},
+		},
+		TGWAttachments: []TGWAttachment{
+			{AttachmentID: "tgw-att-1", TransitGatewayID: "tgw-01", VPCID: "vpc-a"},
+			{AttachmentID: "tgw-att-2", TransitGatewayID: "tgw-01", VPCID: "vpc-b"},
+		},
+	}
+	ok, pathType := g.CanReach("i-src", "i-dst", 22)
+	if !ok {
+		t.Fatal("expected reachability via TGW")
+	}
+	if pathType != "cross-vpc" {
+		t.Errorf("expected cross-vpc path type, got %s", pathType)
+	}
+}
+
+// --- transitive-ssh tests ---
+
+func TestProveTransitiveSSH_SAT(t *testing.T) {
+	g := &Graph{
+		Hosts: map[string]*Host{
+			"i-bastion": {ID: "i-bastion", VPCID: "vpc-prod", SubnetID: "subnet-b", SGIDs: []string{"sg-bastion"}, Tags: map[string]string{"stave:role": "bastion", "stave:environment": "production"}},
+			"i-jumpbox": {ID: "i-jumpbox", VPCID: "vpc-prod", SubnetID: "subnet-j", SGIDs: []string{"sg-jump"}, Tags: map[string]string{}},
+			"i-prod-01": {ID: "i-prod-01", VPCID: "vpc-prod", SubnetID: "subnet-p", SGIDs: []string{"sg-prod"}, Tags: map[string]string{"stave:environment": "production"}},
+		},
+		SGRules: map[string][]SGRule{
+			"sg-bastion": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "203.0.113.0/24"},
+			},
+			"sg-jump": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+			},
+			"sg-prod": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-bastion"},
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-jump"},
+			},
+		},
+	}
+
+	result, err := g.ProveTransitiveSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT (transitive SSH via jumpbox), got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample")
+	}
+}
+
+func TestProveTransitiveSSH_UNSAT(t *testing.T) {
+	g := &Graph{
+		Hosts: map[string]*Host{
+			"i-bastion": {ID: "i-bastion", VPCID: "vpc-prod", SubnetID: "subnet-b", SGIDs: []string{"sg-bastion"}, Tags: map[string]string{"stave:role": "bastion"}},
+			"i-prod-01": {ID: "i-prod-01", VPCID: "vpc-prod", SubnetID: "subnet-p", SGIDs: []string{"sg-prod"}, Tags: map[string]string{"stave:environment": "production"}},
+		},
+		SGRules: map[string][]SGRule{
+			"sg-bastion": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "203.0.113.0/24"},
+			},
+			"sg-prod": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-bastion"},
+			},
+		},
+	}
+
+	result, err := g.ProveTransitiveSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "UNSAT" {
+		t.Fatalf("expected UNSAT (only bastion can reach prod), got %s", result.Result)
+	}
+}

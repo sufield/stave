@@ -289,6 +289,90 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 	return result, nil
 }
 
+// ProveTransitiveSSH checks whether any non-bastion host can act as an
+// SSH relay to reach production (2+ hop: internet/host -> relay -> production
+// where relay is not a bastion).
+func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
+	start := time.Now()
+
+	prod := g.ProductionHosts()
+	bastions := g.BastionHosts()
+
+	if len(prod) == 0 {
+		return nil, fmt.Errorf("%w: no hosts tagged stave:environment=production — cannot prove transitive SSH", ErrVacuousProof)
+	}
+
+	bastionIDs := make(map[string]bool, len(bastions))
+	for _, b := range bastions {
+		bastionIDs[b.ID] = true
+	}
+
+	result := &ProofResult{
+		Property:        "transitive-ssh",
+		ProductionHosts: len(prod),
+		BastionHosts:    len(bastions),
+	}
+
+	for _, dst := range prod {
+		for _, relay := range g.allHosts() {
+			if relay.ID == dst.ID || relay.IsProduction() || bastionIDs[relay.ID] {
+				continue
+			}
+			if ok, _ := g.CanReach(relay.ID, dst.ID, port); !ok {
+				continue
+			}
+
+			// Relay can reach prod. Check if relay is reachable from the internet.
+			if ce := g.findExternalBypass(relay, port); ce != nil {
+				ruleSG, ruleSource := g.findRule(relay, dst, port)
+				result.Result = "SAT"
+				result.Interpretation = "Transitive SSH path exists — a non-bastion host reachable from the internet can relay SSH to production."
+				result.Counterexample = &Counterexample{
+					Source:      "0.0.0.0/0 -> " + relay.ID,
+					Destination: dst.ID,
+					Port:        port,
+					PathType:    "transitive",
+					RuleSG:      ruleSG,
+					RuleSource:  ruleSource,
+					Explanation: "Host " + relay.ID + " is SSH-accessible from the internet and can reach production host " + dst.ID + " on port " + strconv.Itoa(port) + ". Two-hop path: internet -> " + relay.ID + " -> " + dst.ID + ".",
+					Remediation: "Remove SSH ingress from 0.0.0.0/0 on " + relay.ID + " or remove its access to production host " + dst.ID + ".",
+				}
+				result.SolveTimeMs = time.Since(start).Milliseconds()
+				return result, nil
+			}
+
+			// Check if any other non-prod, non-bastion host can reach the relay.
+			for _, src := range g.allHosts() {
+				if src.ID == relay.ID || src.ID == dst.ID || src.IsProduction() || bastionIDs[src.ID] {
+					continue
+				}
+				if ok, _ := g.CanReach(src.ID, relay.ID, port); ok {
+					ruleSG, ruleSource := g.findRule(relay, dst, port)
+					result.Result = "SAT"
+					result.Interpretation = "Transitive SSH path exists — a non-bastion host can relay SSH to production via an intermediate host."
+					result.Counterexample = &Counterexample{
+						Source:      src.ID + " -> " + relay.ID,
+						Destination: dst.ID,
+						Port:        port,
+						PathType:    "transitive",
+						RuleSG:      ruleSG,
+						RuleSource:  ruleSource,
+						Explanation: "Host " + src.ID + " can reach " + relay.ID + ", which can reach production host " + dst.ID + " on port " + strconv.Itoa(port) + ". Two-hop path: " + src.ID + " -> " + relay.ID + " -> " + dst.ID + ".",
+						Remediation: "Remove SSH access from " + src.ID + " to " + relay.ID + " or from " + relay.ID + " to production host " + dst.ID + ".",
+					}
+					result.SolveTimeMs = time.Since(start).Milliseconds()
+					return result, nil
+				}
+			}
+		}
+	}
+
+	result.Result = "UNSAT"
+	result.Interpretation = "No transitive SSH paths to production exist — no non-bastion relay can bridge to production."
+	result.SolveTimeMs = time.Since(start).Milliseconds()
+	return result, nil
+}
+
 // ProveFirewallMandatory checks that all private subnets route internet
 // traffic through a Network Firewall endpoint. Returns UNSAT if all
 // egress routes through firewall, SAT if a bypass exists.

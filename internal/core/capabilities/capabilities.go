@@ -32,6 +32,7 @@ var builtinNames = []string{
 	"code_execution",
 	"container_code_execution",
 	"credential_access",
+	"data_classification_exists",
 	"control_plane_code_execution",
 	"cross_account_access",
 	"cross_account_data_exfiltration",
