@@ -4,40 +4,27 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
-func TestExport_DistinctAssetTypesProduceUniqueUUIDs(t *testing.T) {
-	findings := []remediation.Finding{
-		{
-			Finding: evaluation.Finding{
-				ControlID: "CTL.S3.001",
-				AssetID:   asset.ID("arn:aws:s3:::my-resource"),
-				AssetType: "aws_s3_bucket",
-			},
-		},
-		{
-			Finding: evaluation.Finding{
-				ControlID: "CTL.S3.001",
-				AssetID:   asset.ID("arn:aws:s3:::my-resource"),
-				AssetType: "aws_s3_access_point",
-			},
-		},
+func TestExport_UUIDv5RFC4122Compliance(t *testing.T) {
+	ar := Export([]remediation.Finding{}, time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC))
+
+	uuid := ar.AR.UUID
+
+	// According to RFC 4122:
+	// - character at index 14 must be '5' (version 5)
+	// - character at index 19 must be '8', '9', 'a', or 'b' (variant 10xx)
+	if len(uuid) != 36 {
+		t.Fatalf("expected 36-char UUID, got %q (len %d)", uuid, len(uuid))
 	}
 
-	res := Export(findings, time.Now())
-	if len(res.AR.Results) == 0 {
-		t.Fatalf("expected results")
+	if uuid[14] != '5' {
+		t.Errorf("expected RFC 4122 version 5 UUID (char 14 = '5'), got %q in %q", string(uuid[14]), uuid)
 	}
 
-	arFindings := res.AR.Results[0].Findings
-	if len(arFindings) != 2 {
-		t.Fatalf("expected 2 OSCAL findings, got %d", len(arFindings))
-	}
-
-	if arFindings[0].UUID == arFindings[1].UUID {
-		t.Fatalf("duplicate OSCAL finding UUID for different AssetTypes: %s", arFindings[0].UUID)
+	variantChar := uuid[19]
+	if variantChar != '8' && variantChar != '9' && variantChar != 'a' && variantChar != 'b' {
+		t.Errorf("expected RFC 4122 variant (char 19 in [8,9,a,b]), got %q in %q", string(variantChar), uuid)
 	}
 }

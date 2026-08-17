@@ -136,7 +136,7 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 	if lookback > 0 {
 		cutoff = now.Add(-lookback)
 	}
-	type fkey struct{ ctl, ast string }
+	type fkey struct{ ctl, ast, astType string }
 	type mttrWindow struct {
 		sev     string
 		openAt  time.Time
@@ -149,7 +149,7 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 	for _, a := range sorted {
 		currentKeys := make(map[fkey]struct{}, len(a.Findings))
 		for i := range a.Findings {
-			k := fkey{string(a.Findings[i].ControlID), string(a.Findings[i].AssetID)}
+			k := fkey{string(a.Findings[i].ControlID), string(a.Findings[i].AssetID), string(a.Findings[i].AssetType)}
 			currentKeys[k] = struct{}{}
 			if _, exists := open[k]; !exists {
 				open[k] = &mttrWindow{

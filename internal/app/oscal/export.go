@@ -156,6 +156,8 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 // using SHA-256 truncated to UUID format.
 func uuidV5(namespace, name string) string {
 	h := sha256.Sum256([]byte(namespace + ":" + name))
-	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
+	h[6] = (h[6] & 0x0f) | 0x50 // version 5
+	h[8] = (h[8] & 0x3f) | 0x80 // variant rfc4122
+	return fmt.Sprintf("%x-%x-%x-%x-%x",
 		h[0:4], h[4:6], h[6:8], h[8:10], h[10:16])
 }

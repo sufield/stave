@@ -58,7 +58,7 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 			ActivityID: 1,
 			SeverityID: sevID(f.SeverityLabel()),
 			Severity:   strutil.TitleCase(f.SeverityLabel()),
-			StatusID:   2,
+			StatusID:   1,
 			Status:     "New",
 			Finding: OCSFFinding{
 				UID:   uid,

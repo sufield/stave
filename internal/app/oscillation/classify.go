@@ -24,6 +24,7 @@ type Input struct {
 	Assessments     []report.Assessment
 	ControlID       kernel.ControlID
 	AssetID         string
+	AssetType       kernel.AssetType
 	MinOscillations int // minimum state transitions to classify as deploy-time
 }
 
@@ -62,7 +63,7 @@ func Classify(input Input) Classification {
 
 	for i := range assessments {
 		a := &assessments[i]
-		failing := hasFinding(a, input.ControlID, input.AssetID)
+		failing := hasFinding(a, input.ControlID, input.AssetID, input.AssetType)
 
 		if failing {
 			failCount++
@@ -105,12 +106,14 @@ func Classify(input Input) Classification {
 	}
 }
 
-// hasFinding checks if an assessment contains a finding for the given control and asset.
-func hasFinding(a *report.Assessment, ctlID kernel.ControlID, astID string) bool {
+// hasFinding checks if an assessment contains a finding for the given control, asset, and asset type.
+func hasFinding(a *report.Assessment, ctlID kernel.ControlID, astID string, astType kernel.AssetType) bool {
 	for i := range a.Findings {
 		f := &a.Findings[i]
 		if f.ControlID == ctlID && string(f.AssetID) == astID {
-			return true
+			if astType == "" || f.AssetType == astType {
+				return true
+			}
 		}
 	}
 	return false

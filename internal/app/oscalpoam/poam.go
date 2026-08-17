@@ -116,6 +116,8 @@ func Generate(in Input) *POAM {
 
 func deterministicUUID(namespace, value string) string {
 	h := sha256.Sum256([]byte(namespace + ":" + value))
-	hex := hex.EncodeToString(h[:16])
-	return hex[:8] + "-" + hex[8:12] + "-" + hex[12:16] + "-" + hex[16:20] + "-" + hex[20:32]
+	h[6] = (h[6] & 0x0f) | 0x50 // version 5
+	h[8] = (h[8] & 0x3f) | 0x80 // variant rfc4122
+	hexVal := hex.EncodeToString(h[:16])
+	return hexVal[:8] + "-" + hexVal[8:12] + "-" + hexVal[12:16] + "-" + hexVal[16:20] + "-" + hexVal[20:32]
 }

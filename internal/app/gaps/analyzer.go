@@ -87,7 +87,8 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 		var controlsBlocked []kernel.ControlID
 		for _, id := range idx.PathToControls[k.p] {
 			if at, ok := controlAppliesTo[id]; ok {
-				if _, ok2 := at[k.t]; ok2 {
+				_, ok2 := at[k.t]
+				if len(at) == 0 || ok2 {
 					controlsBlocked = append(controlsBlocked, id)
 				}
 			}
