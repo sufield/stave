@@ -1,0 +1,313 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-02-01T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "2d99714b3da04161b0f8ee6ace0380c17bff4149c9141792f655433537719314",
+        "2026-01-11T000000Z.json": "ccd4811efb0e41e8e7843cdac75734667663498c88c76e036431a8052837134c"
+      },
+      "overall": "1321fb07e75f23a61a2b247c27d0e1ad5e04e7c93a3fadefc83cf07a3bd95cf1"
+    },
+    "policy_fingerprint": "6a15dd9fd80d77bd164ae7cd8921bcf1624b0bdc755ffb5101c0b0da78e63312",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001",
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+      "asset_type": "aws_bedrock_prompt",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -576,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:c933d479b1f19d62",
+      "control_id": "CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001",
+      "control_name": "Bedrock Prompt Has Excessive Versions",
+      "control_description": "Bedrock prompt has accumulated more than 20 versions without archival. Excessive versions indicate prompt changes that bypass formal review — each version is a distinct system instruction that shapes model behavior. CSA Top Threats 2026 Issue 05 specifically identifies prompt revisions that bypass change control as a misconfiguration vector.\n",
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+      "asset_type": "aws_bedrock_prompt",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 744,
+        "misconfigurations": [
+          {
+            "property": "governance.bedrock.prompt.version_sprawl",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 744 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "nist_800_53_r5": "CM-3, CM-9",
+        "soc2": "CC8.1"
+      },
+      "control_compliance_ccm_v4": [
+        "CCC-02"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Bedrock prompt has more than 20 versions. Unreviewed prompt changes can alter model behavior without governance oversight.",
+        "action": "Review prompt version history for unauthorized changes. Archive or delete obsolete versions. Establish a change approval process requiring review before publishing new prompt versions.",
+        "example": "{\n  \"governance\": {\n    \"bedrock\": {\n      \"prompt\": {\n        \"version_sprawl\": false,\n        \"version_count\": 5\n      }\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-3258797ce4f699a5",
+        "target": {
+          "asset_id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+          "asset_type": "aws_bedrock_prompt"
+        },
+        "action": "Review prompt version history for unauthorized changes. Archive or delete obsolete versions. Establish a change approval process requiring review before publishing new prompt versions."
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 1440,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 81.36986301369863,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1.5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.084931506849315,
+        "days_blind": 31
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "governance.bedrock.prompt.version_sprawl eq true",
+          "observation_key": "governance.bedrock.prompt.version_sprawl",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+          "type": "aws_bedrock_prompt",
+          "vendor": "aws",
+          "arn": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001",
+          "control_name": "Bedrock Prompt Has Excessive Versions",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "governance.bedrock.prompt.version_sprawl = true",
+              "observation_key": "governance.bedrock.prompt.version_sprawl",
+              "observed_value": true
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "governance.bedrock.prompt.version_sprawl",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set governance.bedrock.prompt.version_sprawl to false"
+          }
+        ],
+        "action": "Review prompt version history for unauthorized changes. Archive or delete obsolete versions. Establish a change approval process requiring review before publishing new prompt versions."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "bedrock"
+      ],
+      "defect": "Bedrock prompt has accumulated excessive versions without review or archival.\n",
+      "infection": "Each prompt version is a distinct system instruction. An attacker or careless operator who publishes a new version can subtly alter model behavior — relaxing safety guardrails, introducing bias, or embedding instruction injection. Without version governance, these changes are invisible to compliance teams.\n",
+      "failure": "Model behavior changes without oversight. Prompt modifications that weaken safety controls or introduce bias go undetected because no review process gates version creation.\n",
+      "delta": [
+        {
+          "property_label": "bedrock prompt version sprawl",
+          "property_path": "governance.bedrock.prompt.version_sprawl",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "0a92e0bc2b6f",
+        "f83649dbfce2",
+        "5c14a7ed1d02",
+        "ce71b74edb0d",
+        "f6a5b7d67626",
+        "2024e6e4ca7f"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:309f12182ff5ddc4",
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+      "shared_keys": [
+        "governance.bedrock.prompt",
+        "governance.bedrock.prompt.version_sprawl"
+      ],
+      "headline_finding_id": "sha256:c933d479b1f19d62",
+      "member_finding_ids": [
+        "sha256:c933d479b1f19d62"
+      ],
+      "consolidated_score": 81.36986301369863,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+      "asset_type": "aws_bedrock_prompt",
+      "fix_plan": {
+        "id": "fix-3258797ce4f699a5",
+        "target": {
+          "asset_id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+          "asset_type": "aws_bedrock_prompt"
+        },
+        "action": "Review prompt version history for unauthorized changes. Archive or delete obsolete versions. Establish a change approval process requiring review before publishing new prompt versions."
+      },
+      "contributing_controls": [
+        "CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001",
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+      "exposure_score": 81.36986301369863,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1.5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.084931506849315,
+        "days_blind": 31
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}

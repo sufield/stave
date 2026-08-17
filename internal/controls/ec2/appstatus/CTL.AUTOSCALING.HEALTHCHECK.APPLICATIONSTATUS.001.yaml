@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.AUTOSCALING.HEALTHCHECK.APPLICATIONSTATUS.001
+name: ASG With Application Status Checks Not Using Application Health Type
+description: >
+  Auto Scaling group has instances with application status checks
+  but the ASG is not configured to use application-level health
+  check type. The application status checks are cosmetic — they
+  report health but the ASG cannot act on them. When an instance
+  fails the application status check, it remains in the ASG
+  serving errors because the ASG only watches EC2 or ELB health.
+  This is the gap between "we monitor it" and "we respond to it."
+  Fires only on ASGs where member instances have application
+  status checks configured.
+domain: resilience
+severity: high
+compliance:
+  nist_800_53_r5: "CP-7"
+  soc2: "A1.2"
+  aws_security_hub: "AutoScaling.1"
+  ccm_v4: ["BCR-08", "SEF-04"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+  - monitoring
+subtractive_category:
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_autoscaling_group
+params:
+  attack_stage: impact
+observation_fields:
+  - compute.kind
+  - compute.application_status_check.instances_have_checks
+  - compute.application_status_check.asg_uses_app_health
+remediation:
+  description: >
+    Auto Scaling group's instances have application status checks
+    but the ASG does not use application health check type.
+    Unhealthy instances are not replaced.
+  action: >
+    Update the ASG to use APPLICATION_STATUS health check type
+    so that application status check failures trigger instance
+    replacement. Set an appropriate health check grace period
+    (300-600s) to allow instances to initialize before health
+    checks begin.
+  example: |
+    {
+      "compute": {
+        "kind": "autoscaling_group",
+        "application_status_check": {
+          "instances_have_checks": true,
+          "asg_uses_app_health": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: autoscaling_group
+    - field: properties.compute.application_status_check.instances_have_checks
+      op: eq
+      value: true
+    - field: properties.compute.application_status_check.asg_uses_app_health
+      op: eq
+      value: false
+defect: >
+  Auto Scaling group has instances with application status checks
+  but is not configured to use application health check type.
+infection: >
+  Application status checks report failures but the ASG ignores
+  them. An instance with a failed application — web server down,
+  Docker daemon stopped, application returning 5xx — remains in
+  the target group. The ASG sees the instance as healthy (EC2
+  hardware OK) and does not launch a replacement. Users continue
+  receiving errors from the unhealthy instance until manual
+  intervention. The monitoring exists but the automated response
+  does not.
+failure: >
+  Cosmetic health monitoring. Application failures are detected
+  but not acted upon — the ASG cannot replace unhealthy instances.
+tests:
+  - name: "ASG with app checks but no app health type fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "asg-no-app-health"
+      asset_type: aws_autoscaling_group
+      vendor: aws
+      properties:
+        compute:
+          kind: autoscaling_group
+          application_status_check:
+            instances_have_checks: true
+            asg_uses_app_health: false
+  - name: "ASG with app checks and app health type passes"
+    verdict: PASS
+    asset:
+      asset_id: "asg-with-app-health"
+      asset_type: aws_autoscaling_group
+      vendor: aws
+      properties:
+        compute:
+          kind: autoscaling_group
+          application_status_check:
+            instances_have_checks: true
+            asg_uses_app_health: true
+  - name: "ASG without app checks does not fire"
+    verdict: PASS
+    asset:
+      asset_id: "asg-no-checks"
+      asset_type: aws_autoscaling_group
+      vendor: aws
+      properties:
+        compute:
+          kind: autoscaling_group
+          application_status_check:
+            instances_have_checks: false
+            asg_uses_app_health: false

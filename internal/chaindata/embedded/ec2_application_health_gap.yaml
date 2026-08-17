@@ -1,0 +1,20 @@
+id: ec2_application_health_gap
+description: >
+  Traffic-serving EC2 instance has no application status check
+  AND its Auto Scaling group is not configured to use application
+  health check type. The instance has no application-layer health
+  monitoring, and even if one were added, the ASG would not act
+  on it. Both the detection and the response are missing. A
+  web server crash, Docker daemon failure, or application error
+  loop goes undetected at the infrastructure layer, and the ASG
+  continues routing traffic to the broken instance.
+controls:
+  - CTL.EC2.APPLICATIONSTATUSCHECK.EXISTS.001
+  - CTL.AUTOSCALING.HEALTHCHECK.APPLICATIONSTATUS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - detection_without_response
+implicit_dependencies: []

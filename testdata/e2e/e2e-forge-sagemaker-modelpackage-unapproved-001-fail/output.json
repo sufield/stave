@@ -1,0 +1,345 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-02-01T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "4582460713f79628f568ae5f70d7461a1b3e3adf8372055ef704f0cdeb6e3862",
+        "2026-01-11T000000Z.json": "c7b658413af51791dbd3a2699a3f2a2c0be71fa7d736609385b68921d8c91e40"
+      },
+      "overall": "36838b8a262a08638d046f86bfc96dc12fcdbd143674f8dbb6cff104fa2b6494"
+    },
+    "policy_fingerprint": "1db17ac96f932231de21ddcde19ecd4b2232450643dbd9f0f792083a16690131",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.SAGEMAKER.MODELPACKAGE.UNAPPROVED.001",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "asset_type": "aws_sagemaker_model_package_group",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -576,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:6278dcfc61e76970",
+      "control_id": "CTL.SAGEMAKER.MODELPACKAGE.UNAPPROVED.001",
+      "control_name": "Model Package Must Be Approved Before Deployment",
+      "control_description": "A SageMaker model package group's latest version must have ModelApprovalStatus set to Approved. Deploying a model that is PendingManualApproval or Rejected bypasses the change-control gate — the model enters production without human review of its training data, evaluation metrics, or intended use.\n",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "asset_type": "aws_sagemaker_model_package_group",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 744,
+        "misconfigurations": [
+          {
+            "property": "governance.sagemaker.model_package.approval_status",
+            "actual_value": "PendingManualApproval",
+            "operator": "ne",
+            "unsafe_value": "Approved"
+          },
+          {
+            "property": "governance.sagemaker.model_package.approval_status",
+            "actual_value": "PendingManualApproval",
+            "operator": "present"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 744 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "CM-3, CM-4, SA-10",
+        "soc2": "CC7.1, CC8.1"
+      },
+      "control_compliance_ccm_v4": [
+        "STA-09"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Model package is not approved. A model without explicit approval may contain untested weights, biased outputs, or tampered artifacts.",
+        "action": "Complete the model approval workflow: review evaluation metrics in the model card, verify training data provenance, then set ModelApprovalStatus to Approved via sagemaker:UpdateModelPackage.",
+        "example": "{\n  \"governance\": {\n    \"sagemaker\": {\n      \"model_package\": {\n        \"approval_status\": \"Approved\"\n      }\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-07dff24714e5e16a",
+        "target": {
+          "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+          "asset_type": "aws_sagemaker_model_package_group"
+        },
+        "action": "Complete the model approval workflow: review evaluation metrics in the model card, verify training data provenance, then set ModelApprovalStatus to Approved via sagemaker:UpdateModelPackage."
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 408,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1.5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.084931506849315,
+        "days_blind": 31
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "governance.sagemaker.model_package.approval_status ne \"Approved\"",
+          "observation_key": "governance.sagemaker.model_package.approval_status",
+          "operator": "ne",
+          "expected_value": "Approved",
+          "observed_value": "PendingManualApproval"
+        },
+        {
+          "predicate_expr": "governance.sagemaker.model_package.approval_status present",
+          "observation_key": "governance.sagemaker.model_package.approval_status",
+          "operator": "present",
+          "observed_value": "PendingManualApproval"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+          "type": "aws_sagemaker_model_package_group",
+          "vendor": "aws",
+          "arn": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.SAGEMAKER.MODELPACKAGE.UNAPPROVED.001",
+          "control_name": "Model Package Must Be Approved Before Deployment",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "governance.sagemaker.model_package.approval_status not equal \"Approved\" (observed: \"PendingManualApproval\")",
+              "observation_key": "governance.sagemaker.model_package.approval_status",
+              "observed_value": "PendingManualApproval"
+            },
+            {
+              "clause": "governance.sagemaker.model_package.approval_status is set (observed: \"PendingManualApproval\")",
+              "observation_key": "governance.sagemaker.model_package.approval_status",
+              "observed_value": "PendingManualApproval"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "governance.sagemaker.model_package.approval_status",
+            "current_value": "PendingManualApproval",
+            "required_value": "Approved",
+            "has_safe_default": false,
+            "description": "Set governance.sagemaker.model_package.approval_status to Approved"
+          },
+          {
+            "path": "governance.sagemaker.model_package.approval_status",
+            "current_value": "PendingManualApproval",
+            "required_value": "absent",
+            "has_safe_default": false,
+            "description": "Remove governance.sagemaker.model_package.approval_status"
+          }
+        ],
+        "action": "Complete the model approval workflow: review evaluation metrics in the model card, verify training data provenance, then set ModelApprovalStatus to Approved via sagemaker:UpdateModelPackage."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "sagemaker",
+        "ai"
+      ],
+      "defect": "Model package latest version is not in Approved status.\n",
+      "infection": "An unapproved model enters the inference pipeline without review. If the model was poisoned during training, contains biased outputs, or was built from unauthorized data, no human gate prevents deployment.\n",
+      "failure": "A compromised or inadequately tested model serves production traffic, producing wrong predictions or leaking training data through model inversion.\n",
+      "delta": [
+        {
+          "property_label": "sagemaker model package approval status",
+          "property_path": "governance.sagemaker.model_package.approval_status",
+          "current_value": "PendingManualApproval",
+          "fix_action": "set to Approved"
+        },
+        {
+          "property_label": "sagemaker model package approval status",
+          "property_path": "governance.sagemaker.model_package.approval_status",
+          "current_value": "PendingManualApproval",
+          "fix_action": "remove this property from the configuration"
+        }
+      ],
+      "contributing_fact_ids": [
+        "e979eaffffa1",
+        "3434f5b9dd21",
+        "b1f8a342761f",
+        "f4de13147dd9",
+        "24d84be46eae",
+        "90686931a533"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:b72c377b1961a4b6",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "shared_keys": [
+        "governance.sagemaker.model_package",
+        "governance.sagemaker.model_package.approval_status"
+      ],
+      "headline_finding_id": "sha256:6278dcfc61e76970",
+      "member_finding_ids": [
+        "sha256:6278dcfc61e76970"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "asset_type": "aws_sagemaker_model_package_group",
+      "fix_plan": {
+        "id": "fix-07dff24714e5e16a",
+        "target": {
+          "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+          "asset_type": "aws_sagemaker_model_package_group"
+        },
+        "action": "Complete the model approval workflow: review evaluation metrics in the model card, verify training data provenance, then set ModelApprovalStatus to Approved via sagemaker:UpdateModelPackage."
+      },
+      "contributing_controls": [
+        "CTL.SAGEMAKER.MODELPACKAGE.UNAPPROVED.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.SAGEMAKER.MODELPACKAGE.UNAPPROVED.001",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1.5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.084931506849315,
+        "days_blind": 31
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}

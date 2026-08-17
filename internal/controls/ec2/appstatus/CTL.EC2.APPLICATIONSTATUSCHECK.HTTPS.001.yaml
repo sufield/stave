@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.APPLICATIONSTATUSCHECK.HTTPS.001
+name: Application Status Check Uses HTTP Instead of HTTPS
+description: >
+  EC2 application status check probes the health endpoint over
+  HTTP instead of HTTPS. Health check traffic over HTTP exposes
+  endpoint paths and response semantics to network observers.
+  An attacker with network visibility can learn which endpoints
+  exist, what constitutes a healthy response, and potentially
+  manipulate health check responses via MITM to keep a
+  compromised instance marked healthy. TLS should be the default
+  for any monitoring probe. Fires only on instances that have an
+  application status check configured.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-8"
+  soc2: "CC6.7"
+  pci_dss_v4.0: "4.2.1"
+  ccm_v4: ["CEK-03", "IVS-03"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+  - encryption-in-transit
+subtractive_category:
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: discovery
+observation_fields:
+  - compute.kind
+  - compute.application_status_check.has_check
+  - compute.application_status_check.uses_https
+remediation:
+  description: >
+    Application status check uses HTTP. Health check traffic is
+    unencrypted and observable.
+  action: >
+    Update the application status check to use HTTPS. Ensure the
+    application's health endpoint supports TLS. If the application
+    terminates TLS at a load balancer, configure the status check
+    to probe the application's local HTTPS listener or accept the
+    HTTP probe as an intentional trade-off and suppress this
+    finding.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "application_status_check": {
+          "has_check": true,
+          "uses_https": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.application_status_check.has_check
+      op: eq
+      value: true
+    - field: properties.compute.application_status_check.uses_https
+      op: eq
+      value: false
+defect: >
+  Application status check probes the health endpoint over HTTP
+  instead of HTTPS.
+infection: >
+  Health check traffic is unencrypted. An attacker with network
+  visibility (compromised host in the same VPC, VPC traffic
+  mirroring, or a misconfigured network tap) can observe the
+  health endpoint path, port, expected response codes, and
+  timing. This information reveals application architecture and
+  can be used to craft more targeted attacks. In a MITM position,
+  the attacker can forge healthy responses to keep a compromised
+  instance in service.
+failure: >
+  Observable health check traffic. Health endpoint paths and
+  response semantics are exposed to network observers.
+tests:
+  - name: "status check using HTTP fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "i-0abc123http"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          application_status_check:
+            has_check: true
+            uses_https: false
+  - name: "status check using HTTPS passes"
+    verdict: PASS
+    asset:
+      asset_id: "i-0def456https"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          application_status_check:
+            has_check: true
+            uses_https: true
+  - name: "no status check does not fire"
+    verdict: PASS
+    asset:
+      asset_id: "i-0ghi789nocheck"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          application_status_check:
+            has_check: false
+            uses_https: false

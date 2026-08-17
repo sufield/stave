@@ -1,0 +1,311 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-02-01T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "27157464c8cea4eb1528c12313cba212ad75d1c8045fcadf92e719f65d7f8643",
+        "2026-01-11T000000Z.json": "7cebdd9b677fff8d245aaa854a46bb609579327148e46bfccc422e3d1a34e5ca"
+      },
+      "overall": "254ce1e6809d7e22e07dc1786c2c2f8e5584b9d90b49800c019ba1d063b27d02"
+    },
+    "policy_fingerprint": "5ad886885078c88b2c9c353709e81f69b8e65c1ac01445ded7efc99b4e574488",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.SAGEMAKER.MODELPACKAGE.NOCREATOR.001",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "asset_type": "aws_sagemaker_model_package_group",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -576,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:2a4cc17adb961a11",
+      "control_id": "CTL.SAGEMAKER.MODELPACKAGE.NOCREATOR.001",
+      "control_name": "Model Package Must Have a Traceable Creator",
+      "control_description": "A SageMaker model package must have a traceable creator identity (UserProfileArn or DomainId in the CreatedBy field). Without creator attribution, there is no audit trail linking the model to the person or pipeline that produced it — incident response cannot determine who trained the model or from what environment.\n",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "asset_type": "aws_sagemaker_model_package_group",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 744,
+        "misconfigurations": [
+          {
+            "property": "governance.sagemaker.model_package.has_creator",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 744 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "low",
+      "control_compliance": {
+        "nist_800_53_r5": "AU-3, CM-5",
+        "soc2": "CC7.1"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Model package has no traceable creator identity.",
+        "action": "Create model packages from SageMaker Studio user profiles or SageMaker Pipelines so the CreatedBy field is automatically populated.",
+        "example": "{\n  \"governance\": {\n    \"sagemaker\": {\n      \"model_package\": {\n        \"has_creator\": true\n      }\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-07dff24714e5e16a",
+        "target": {
+          "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+          "asset_type": "aws_sagemaker_model_package_group"
+        },
+        "action": "Create model packages from SageMaker Studio user profiles or SageMaker Pipelines so the CreatedBy field is automatically populated."
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 4320,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 40.68493150684932,
+      "score_breakdown": {
+        "base_score": 25,
+        "duration_factor": 1.5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.084931506849315,
+        "days_blind": 31
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "governance.sagemaker.model_package.has_creator eq false",
+          "observation_key": "governance.sagemaker.model_package.has_creator",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+          "type": "aws_sagemaker_model_package_group",
+          "vendor": "aws",
+          "arn": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.SAGEMAKER.MODELPACKAGE.NOCREATOR.001",
+          "control_name": "Model Package Must Have a Traceable Creator",
+          "severity": "low",
+          "reasoning": [
+            {
+              "clause": "governance.sagemaker.model_package.has_creator = false",
+              "observation_key": "governance.sagemaker.model_package.has_creator",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "governance.sagemaker.model_package.has_creator",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set governance.sagemaker.model_package.has_creator to true"
+          }
+        ],
+        "action": "Create model packages from SageMaker Studio user profiles or SageMaker Pipelines so the CreatedBy field is automatically populated."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "sagemaker",
+        "ai"
+      ],
+      "defect": "Model package has no traceable creator ARN.\n",
+      "infection": "Without creator attribution, the model's provenance chain is broken. During incident response, there is no way to determine who trained the model, what data was used, or whether the training environment was compromised.\n",
+      "failure": "A poisoned model cannot be traced to its origin, delaying incident response and making it impossible to identify other models from the same compromised source.\n",
+      "delta": [
+        {
+          "property_label": "sagemaker model package has creator",
+          "property_path": "governance.sagemaker.model_package.has_creator",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "e979eaffffa1",
+        "3434f5b9dd21",
+        "b1f8a342761f",
+        "f4de13147dd9",
+        "24d84be46eae",
+        "28d555b9273f"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:166b771cffb4b19c",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "shared_keys": [
+        "governance.sagemaker.model_package",
+        "governance.sagemaker.model_package.has_creator"
+      ],
+      "headline_finding_id": "sha256:2a4cc17adb961a11",
+      "member_finding_ids": [
+        "sha256:2a4cc17adb961a11"
+      ],
+      "consolidated_score": 40.68493150684932,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "asset_type": "aws_sagemaker_model_package_group",
+      "fix_plan": {
+        "id": "fix-07dff24714e5e16a",
+        "target": {
+          "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+          "asset_type": "aws_sagemaker_model_package_group"
+        },
+        "action": "Create model packages from SageMaker Studio user profiles or SageMaker Pipelines so the CreatedBy field is automatically populated."
+      },
+      "contributing_controls": [
+        "CTL.SAGEMAKER.MODELPACKAGE.NOCREATOR.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.SAGEMAKER.MODELPACKAGE.NOCREATOR.001",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "exposure_score": 40.68493150684932,
+      "breakdown": {
+        "base_score": 25,
+        "duration_factor": 1.5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.084931506849315,
+        "days_blind": 31
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}

@@ -1,0 +1,315 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-02-01T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "d8434252e4de00b802b717d88f72123279af098f3670545f05839fccc8aeffcf",
+        "2026-01-11T000000Z.json": "01cf626120baad4c1941df9fbb7ca4c28adecb47c575234349989c9cc5549af8"
+      },
+      "overall": "12381d3572870bc3862434c1480668c4c07934288710aa77e5d4adddad84cac4"
+    },
+    "policy_fingerprint": "f663516039b82a0ff7f50f73ffd78997893ee4413d947b9e9c6572ea9f9fd322",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.SAGEMAKER.DATAQUALITY.NOMONITOR.001",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+      "asset_type": "aws_sagemaker_data_quality_job",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -576,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:ab8cbe178701bfbd",
+      "control_id": "CTL.SAGEMAKER.DATAQUALITY.NOMONITOR.001",
+      "control_name": "SageMaker Endpoint Has No Data Quality Monitor",
+      "control_description": "SageMaker endpoint has no active data quality monitoring schedule. Without monitoring, data distribution drift and data poisoning go undetected — the model continues to serve predictions on inputs that no longer match the training distribution. CSA Top Threats 2026 Issue 05 identifies missing dataset monitoring as a misconfiguration vector.\n",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+      "asset_type": "aws_sagemaker_data_quality_job",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 744,
+        "misconfigurations": [
+          {
+            "property": "governance.sagemaker.data_quality.has_monitoring_schedule",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 744 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "nist_800_53_r5": "SI-4, SI-7",
+        "soc2": "CC7.1, CC7.2"
+      },
+      "control_compliance_ccm_v4": [
+        "DSP-17"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "SageMaker endpoint has no data quality monitoring schedule. Data distribution drift and poisoning go undetected.",
+        "action": "Create a data quality monitoring schedule using sagemaker:CreateMonitoringSchedule with MonitoringType DataQuality. Configure a baseline dataset from training data statistics. Set the schedule interval to match data freshness requirements (hourly for real-time, daily for batch).",
+        "example": "{\n  \"governance\": {\n    \"sagemaker\": {\n      \"data_quality\": {\n        \"has_monitoring_schedule\": true,\n        \"has_baseline\": true\n      }\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-8d15d1eed2b377de",
+        "target": {
+          "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+          "asset_type": "aws_sagemaker_data_quality_job"
+        },
+        "action": "Create a data quality monitoring schedule using sagemaker:CreateMonitoringSchedule with MonitoringType DataQuality. Configure a baseline dataset from training data statistics. Set the schedule interval to match data freshness requirements (hourly for real-time, daily for batch)."
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 408,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 1.5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.084931506849315,
+        "days_blind": 31
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "governance.sagemaker.data_quality.has_monitoring_schedule eq false",
+          "observation_key": "governance.sagemaker.data_quality.has_monitoring_schedule",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+          "type": "aws_sagemaker_data_quality_job",
+          "vendor": "aws",
+          "arn": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.SAGEMAKER.DATAQUALITY.NOMONITOR.001",
+          "control_name": "SageMaker Endpoint Has No Data Quality Monitor",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "governance.sagemaker.data_quality.has_monitoring_schedule = false",
+              "observation_key": "governance.sagemaker.data_quality.has_monitoring_schedule",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "governance.sagemaker.data_quality.has_monitoring_schedule",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set governance.sagemaker.data_quality.has_monitoring_schedule to true"
+          }
+        ],
+        "action": "Create a data quality monitoring schedule using sagemaker:CreateMonitoringSchedule with MonitoringType DataQuality. Configure a baseline dataset from training data statistics. Set the schedule interval to match data freshness requirements (hourly for real-time, daily for batch)."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "sagemaker"
+      ],
+      "defect": "SageMaker endpoint operates without data quality monitoring.\n",
+      "infection": "When input data distribution shifts (naturally or through poisoning), the model's predictions degrade silently. Without a monitor comparing live data against a baseline, there is no signal that the model is operating outside its training distribution — the model continues serving degraded or adversarially influenced predictions.\n",
+      "failure": "Data poisoning or distribution drift goes undetected. Model serves predictions on data it was not trained for, producing unreliable or manipulated outputs.\n",
+      "delta": [
+        {
+          "property_label": "sagemaker data quality has monitoring schedule",
+          "property_path": "governance.sagemaker.data_quality.has_monitoring_schedule",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "b2d75f2d2bf3",
+        "01cd51641898",
+        "2ed91dcf8f01",
+        "e60a519ac852",
+        "333ed5f08039",
+        "64d396f6ec76"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:6181f5b85e08b531",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+      "shared_keys": [
+        "governance.sagemaker.data_quality",
+        "governance.sagemaker.data_quality.has_monitoring_schedule"
+      ],
+      "headline_finding_id": "sha256:ab8cbe178701bfbd",
+      "member_finding_ids": [
+        "sha256:ab8cbe178701bfbd"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+      "asset_type": "aws_sagemaker_data_quality_job",
+      "fix_plan": {
+        "id": "fix-8d15d1eed2b377de",
+        "target": {
+          "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+          "asset_type": "aws_sagemaker_data_quality_job"
+        },
+        "action": "Create a data quality monitoring schedule using sagemaker:CreateMonitoringSchedule with MonitoringType DataQuality. Configure a baseline dataset from training data statistics. Set the schedule interval to match data freshness requirements (hourly for real-time, daily for batch)."
+      },
+      "contributing_controls": [
+        "CTL.SAGEMAKER.DATAQUALITY.NOMONITOR.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.SAGEMAKER.DATAQUALITY.NOMONITOR.001",
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1.5,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.084931506849315,
+        "days_blind": 31
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}

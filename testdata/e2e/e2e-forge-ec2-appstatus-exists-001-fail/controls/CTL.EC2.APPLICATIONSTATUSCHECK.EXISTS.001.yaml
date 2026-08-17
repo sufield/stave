@@ -1,0 +1,130 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.APPLICATIONSTATUSCHECK.EXISTS.001
+name: Traffic-Serving EC2 Instance Has No Application Status Check
+description: >
+  EC2 instance serving traffic has no application status check
+  associated. System and instance status checks verify hardware
+  and OS health but cannot detect application-level failures:
+  web server stopped, Docker daemon down, networking
+  misconfigured, or application returning 5xx errors. Without an
+  application status check, a 90-minute (or longer) detection
+  window is common — the instance appears healthy at the
+  infrastructure layer while silently serving errors. Application
+  status checks (launched 2026-08-10) probe a configured HTTP(S)
+  endpoint and report application health as a first-class EC2
+  status dimension. Fires only on instances tagged
+  serves-traffic=true.
+domain: resilience
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4"
+  soc2: "CC7.2"
+  aws_security_hub: "EC2.8"
+  ccm_v4: ["BCR-08", "SEF-04"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+  - monitoring
+subtractive_category:
+  - S08
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: impact
+observation_fields:
+  - compute.kind
+  - compute.tags.serves-traffic
+  - compute.application_status_check.has_check
+remediation:
+  description: >
+    Traffic-serving EC2 instance has no application status check.
+    Application failures are invisible to EC2 health monitoring.
+  action: >
+    Create an application status check targeting the instance's
+    health endpoint. Use HTTPS on the application's health check
+    port. Configure healthy response codes (typically 200).
+    Associate the check with the instance via tag or direct
+    association. For Auto Scaling groups, also configure the ASG
+    to use application health check type.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "tags": {
+          "serves-traffic": "true"
+        },
+        "application_status_check": {
+          "has_check": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.tags.serves-traffic
+      op: eq
+      value: "true"
+    - field: properties.compute.application_status_check.has_check
+      op: eq
+      value: false
+defect: >
+  Traffic-serving EC2 instance has no application status check
+  configured.
+infection: >
+  The instance can silently serve errors for an extended period.
+  System status checks pass (hardware OK), instance status
+  checks pass (OS OK), but the application is down. Users
+  experience errors, the instance remains in service in any ASG,
+  and no automated alert fires. The 90-minute detection gap from
+  the Corey Quinn newsletter failure story is the optimistic
+  case — without any application monitoring, detection depends on
+  user reports or manual inspection.
+failure: >
+  Undetected application failure. The instance appears healthy at
+  the infrastructure layer while the application is down or
+  serving errors.
+tests:
+  - name: "instance serving traffic without app status check fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "i-0abc123nocheck"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          tags:
+            serves-traffic: "true"
+          application_status_check:
+            has_check: false
+  - name: "instance serving traffic with app status check passes"
+    verdict: PASS
+    asset:
+      asset_id: "i-0def456withcheck"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          tags:
+            serves-traffic: "true"
+          application_status_check:
+            has_check: true
+  - name: "instance not serving traffic without check passes"
+    verdict: PASS
+    asset:
+      asset_id: "i-0ghi789backend"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          application_status_check:
+            has_check: false
