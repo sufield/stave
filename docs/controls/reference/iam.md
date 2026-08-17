@@ -1923,6 +1923,21 @@ IAM users must have access to fewer than 20 resources classified as sensitive (P
 
 ---
 
+### CTL.IAM.IDENTITY.RATIO.001
+
+**Excessive Machine-to-Human Identity Ratio**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-2; owasp_nhi: NHI1; soc2: CC6.1;
+
+IAM role count exceeds 200 times the IAM user count, indicating a high machine-to-human identity ratio. A high ratio signals potential NHI governance gaps: unused service-linked roles, orphaned automation roles, or unconstrained role provisioning. This is a governance indicator, not a security finding — accounts with heavy automation may legitimately have many roles.
+
+**Remediation:** Review IAM roles with IAM Access Analyzer to identify unused roles. Remove orphaned service-linked roles for services no longer in use. Consolidate Lambda execution roles where functions share the same permission boundary.
+
+---
+
 ### CTL.IAM.IDENTITY.ROOTACCOUNT.001
 
 **IAM Users Created in Management Account**

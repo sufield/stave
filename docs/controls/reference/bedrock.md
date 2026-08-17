@@ -742,6 +742,36 @@ Bedrock model invocation logging must be enabled to capture request/response dat
 
 ---
 
+### CTL.BEDROCK.PROMPT.DRAFT.STALE.001
+
+**Bedrock Prompt Has Unpublished Draft Version**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3; soc2: CC8.1;
+
+Bedrock prompt has an unpublished DRAFT variant. A draft version may contain untested or unreviewed changes that could be accidentally promoted to production. Draft versions should be published (after review) or discarded to maintain a clean prompt lifecycle.
+
+**Remediation:** Review the draft variant. If the changes are approved, publish the version. If the changes are abandoned, delete the draft. Establish a workflow that requires draft cleanup within a defined review window.
+
+---
+
+### CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001
+
+**Bedrock Prompt Has Excessive Versions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3, CM-9; soc2: CC8.1;
+
+Bedrock prompt has accumulated more than 20 versions without archival. Excessive versions indicate prompt changes that bypass formal review — each version is a distinct system instruction that shapes model behavior. CSA Top Threats 2026 Issue 05 specifically identifies prompt revisions that bypass change control as a misconfiguration vector.
+
+**Remediation:** Review prompt version history for unauthorized changes. Archive or delete obsolete versions. Establish a change approval process requiring review before publishing new prompt versions.
+
+---
+
 ### CTL.BEDROCK.SHADOW.MODEL.ACCESS.001
 
 **Bedrock Model Access in Account Not Designated for AI Workloads**

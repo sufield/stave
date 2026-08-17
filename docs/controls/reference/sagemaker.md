@@ -5,6 +5,36 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.SAGEMAKER.DATAQUALITY.BASELINE.MISSING.001
+
+**SageMaker Data Quality Monitor Has No Baseline Dataset**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-7; soc2: CC7.1;
+
+SageMaker data quality monitoring schedule exists but has no baseline dataset configured. Without a baseline, the monitor cannot compare live data against expected distributions — it runs but produces no actionable drift signals. The monitor exists for compliance but provides no detection value.
+
+**Remediation:** Run a baseline job using sagemaker:CreateProcessingJob with the training dataset to generate statistical constraints and a baseline. Configure the monitoring schedule's DataQualityBaselineConfig with the baseline job output (constraints and statistics files in S3).
+
+---
+
+### CTL.SAGEMAKER.DATAQUALITY.NOMONITOR.001
+
+**SageMaker Endpoint Has No Data Quality Monitor**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-4, SI-7; soc2: CC7.1, CC7.2;
+
+SageMaker endpoint has no active data quality monitoring schedule. Without monitoring, data distribution drift and data poisoning go undetected — the model continues to serve predictions on inputs that no longer match the training distribution. CSA Top Threats 2026 Issue 05 identifies missing dataset monitoring as a misconfiguration vector.
+
+**Remediation:** Create a data quality monitoring schedule using sagemaker:CreateMonitoringSchedule with MonitoringType DataQuality. Configure a baseline dataset from training data statistics. Set the schedule interval to match data freshness requirements (hourly for real-time, daily for batch).
+
+---
+
 ### CTL.SAGEMAKER.DOMAIN.AUTH.001
 
 **SageMaker Studio Domain Must Use IAM Identity Center Authentication**
@@ -272,6 +302,81 @@ SageMaker model containers must enable network isolation to prevent outbound net
 SageMaker models must define VpcConfig with subnets and security groups so inference containers communicate through a VPC rather than the public internet.
 
 **Remediation:** Define VpcConfig with subnets and security groups.
+
+---
+
+### CTL.SAGEMAKER.MODELPACKAGE.ACCESS.001
+
+**Model Package Group Policy Must Not Allow Broad Access**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AC-3, AC-6; soc2: CC6.1;
+
+A SageMaker model package group resource policy must not allow wildcard principals or broad cross-account access without conditions. An overbroad policy lets unauthorized principals describe and download trained model artifacts — enabling model theft even when the underlying S3 bucket is locked down, because the SageMaker API provides an independent access path to the model weights.
+
+**Remediation:** Restrict the model package group policy to specific accounts and roles. Add aws:PrincipalOrgID or aws:SourceAccount conditions. Remove Principal "*" statements.
+
+---
+
+### CTL.SAGEMAKER.MODELPACKAGE.CARD.DRAFT.001
+
+**Model Card Must Not Remain in Draft Status**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SA-11; soc2: CC7.1;
+
+A SageMaker model card associated with a model package group must not remain in Draft status. A draft card indicates that documentation exists but has not been reviewed or approved — the model is deployed with incomplete governance metadata.
+
+**Remediation:** Complete the model card review process and update the status to Approved via sagemaker:UpdateModelCard.
+
+---
+
+### CTL.SAGEMAKER.MODELPACKAGE.NOCARD.001
+
+**Model Package Group Must Have a Model Card**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SA-11, SA-15; soc2: CC7.1;
+
+A SageMaker model package group must have an associated model card. Model cards document intended use, limitations, evaluation metrics, and ethical considerations. Without a card, there is no structured audit trail for the model's purpose or performance boundaries — reviewers cannot assess whether the model is appropriate for its deployment context.
+
+**Remediation:** Create a model card via sagemaker:CreateModelCard documenting the model's intended use, training data, evaluation metrics, and known limitations.
+
+---
+
+### CTL.SAGEMAKER.MODELPACKAGE.NOCREATOR.001
+
+**Model Package Must Have a Traceable Creator**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AU-3, CM-5; soc2: CC7.1;
+
+A SageMaker model package must have a traceable creator identity (UserProfileArn or DomainId in the CreatedBy field). Without creator attribution, there is no audit trail linking the model to the person or pipeline that produced it — incident response cannot determine who trained the model or from what environment.
+
+**Remediation:** Create model packages from SageMaker Studio user profiles or SageMaker Pipelines so the CreatedBy field is automatically populated.
+
+---
+
+### CTL.SAGEMAKER.MODELPACKAGE.UNAPPROVED.001
+
+**Model Package Must Be Approved Before Deployment**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-3, CM-4, SA-10; soc2: CC7.1, CC8.1;
+
+A SageMaker model package group's latest version must have ModelApprovalStatus set to Approved. Deploying a model that is PendingManualApproval or Rejected bypasses the change-control gate — the model enters production without human review of its training data, evaluation metrics, or intended use.
+
+**Remediation:** Complete the model approval workflow: review evaluation metrics in the model card, verify training data provenance, then set ModelApprovalStatus to Approved via sagemaker:UpdateModelPackage.
 
 ---
 

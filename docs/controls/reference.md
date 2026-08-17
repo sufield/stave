@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3434
-**Pack hash:** `1ada9f4543ce42525be21edc6ff6f532bda9ac272bd5038c8c43eff7196f021e`
+**Total controls:** 3444
+**Pack hash:** `7001e00c6e9941c4fe1f496bba4e1732a1c7a8e6e4a0d7a6c3a2c4f1b6dc5248`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 372 |
-| high | 1475 |
+| high | 1478 |
 | info | 19 |
-| low | 269 |
-| medium | 1299 |
+| low | 272 |
+| medium | 1303 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,10 +29,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 161 |
 | encryption | 125 |
-| exposure | 1500 |
-| governance | 686 |
+| exposure | 1501 |
+| governance | 694 |
 | hygiene | 21 |
-| identity | 676 |
+| identity | 677 |
 | lifecycle | 32 |
 | network | 58 |
 | resilience | 49 |
@@ -61,7 +61,7 @@ GitHub. Pick a service below.
 | [BACKUP](reference/backup.md) | 14 |
 | [BATCH](reference/batch.md) | 5 |
 | [BEANSTALK](reference/beanstalk.md) | 5 |
-| [BEDROCK](reference/bedrock.md) | 51 |
+| [BEDROCK](reference/bedrock.md) | 53 |
 | [CFN](reference/cfn.md) | 1 |
 | [CISCO](reference/cisco.md) | 30 |
 | [CLOUD9](reference/cloud9.md) | 4 |
@@ -111,7 +111,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 21 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 340 |
+| [IAM](reference/iam.md) | 341 |
 | [INSPECTOR](reference/inspector.md) | 4 |
 | [IOT](reference/iot.md) | 4 |
 | [K8S](reference/k8s.md) | 68 |
@@ -148,7 +148,7 @@ GitHub. Pick a service below.
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 5 |
-| [SAGEMAKER](reference/sagemaker.md) | 49 |
+| [SAGEMAKER](reference/sagemaker.md) | 56 |
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
