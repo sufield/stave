@@ -1,0 +1,28 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::123456789:role/github-deploy-immutable",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "sub_claim_scoped": true,
+              "sub_claim_uses_mutable_id": false,
+              "has_wildcard_sub": false,
+              "has_admin_permissions": false,
+              "provider": "github",
+              "subject_pattern": "repo:myorg@12345/my-repo@67890:ref:refs/heads/main"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

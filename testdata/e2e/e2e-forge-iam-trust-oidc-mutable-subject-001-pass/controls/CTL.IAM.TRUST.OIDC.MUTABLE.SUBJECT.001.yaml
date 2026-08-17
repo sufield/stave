@@ -1,0 +1,178 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.OIDC.MUTABLE.SUBJECT.001
+name: OIDC Trust Subject Claim Uses Mutable Name-Based Identifiers
+description: >
+  IAM role trust policy accepts OIDC tokens with a subject claim
+  that uses name-based identifiers (repo:owner/repo-name) without
+  immutable numeric anchors (repo:owner@ID/repo-name@ID). An
+  attacker who renames, recreates, or claims a deleted repository
+  (or project, or pipeline) matching the name in the subject claim
+  can assume this IAM role and access every resource the role
+  permits. GitHub repos created after July 15, 2026 use immutable
+  numeric IDs in the subject claim. GitLab project_path claims are
+  similarly mutable — use project_id with the numeric ID instead.
+  Any OIDC provider using human-readable names without numeric
+  anchors in the subject condition has the same vulnerability class.
+domain: identity
+severity: high
+scope: atomic
+corpus_reference: "github:oidc-immutable-sub-2026"
+compliance:
+  owasp_nhi: "NHI3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["IAM-02", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - supply-chain
+taxonomy:
+  - trust-boundary
+  - identity-perimeter
+  - credential-lifecycle
+subtractive_category:
+  - S05
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: initial_access
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.trust.oidc.has_oidc_trust
+  - identity.trust.oidc.sub_claim_scoped
+  - identity.trust.oidc.sub_claim_uses_mutable_id
+remediation:
+  description: >
+    OIDC trust policy has a subject condition but it uses name-based
+    identifiers vulnerable to identity takeover via rename, recreate,
+    or transfer of the source repository or project.
+  action: >
+    Update the subject condition to use immutable numeric identifiers.
+    For GitHub Actions: change repo:owner/repo-name to
+    repo:owner@<owner_id>/repo-name@<repo_id>. Get the IDs from
+    the GitHub API: GET /repos/{owner}/{repo} returns the numeric id
+    and owner.id fields. For GitLab: change project_path:group/project
+    to project_id:<numeric_id>. For other OIDC providers: use
+    immutable identifiers (project IDs, pipeline GUIDs) instead of
+    names in the subject condition.
+  example: |
+    {
+      "identity": {
+        "trust": {
+          "oidc": {
+            "has_oidc_trust": true,
+            "sub_claim_scoped": true,
+            "sub_claim_uses_mutable_id": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.trust.oidc.has_oidc_trust
+      op: present
+    - field: properties.identity.trust.oidc.has_oidc_trust
+      op: eq
+      value: true
+    - field: properties.identity.trust.oidc.sub_claim_scoped
+      op: present
+    - field: properties.identity.trust.oidc.sub_claim_scoped
+      op: eq
+      value: true
+    - field: properties.identity.trust.oidc.sub_claim_uses_mutable_id
+      op: present
+    - field: properties.identity.trust.oidc.sub_claim_uses_mutable_id
+      op: eq
+      value: true
+defect: >
+  OIDC subject claim uses name-based identifiers without immutable
+  numeric anchors. The subject matches a mutable string that an
+  attacker can claim by renaming or recreating the source entity.
+infection: >
+  An attacker renames their repository (or creates a new one with a
+  matching name after the original is deleted or transferred) to match
+  the name-based subject claim. The OIDC provider issues tokens with
+  the matching subject and the IAM role accepts them. The attacker
+  obtains temporary AWS credentials with all permissions of the role.
+failure: >
+  Attacker assumes the IAM role via OIDC federation using a repository
+  they control. The trust policy cannot distinguish the legitimate
+  repository from the attacker's because the subject condition relies
+  on a mutable name, not an immutable identifier. All resources
+  accessible to the role are compromised.
+tests:
+  - name: "mutable name-based subject fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/github-deploy"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              sub_claim_scoped: true
+              sub_claim_uses_mutable_id: true
+              provider: github
+              subject_pattern: "repo:myorg/my-repo:ref:refs/heads/main"
+  - name: "immutable numeric subject passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/github-deploy-v2"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              sub_claim_scoped: true
+              sub_claim_uses_mutable_id: false
+              provider: github
+              subject_pattern: "repo:myorg@12345/my-repo@67890:ref:refs/heads/main"
+  - name: "unscoped sub does not fire (caught by OIDC.001)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/github-unscoped"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              sub_claim_scoped: false
+              sub_claim_uses_mutable_id: false
+  - name: "non-OIDC role passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/ec2-instance"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+  - name: "gitlab mutable project_path fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:role/gitlab-deploy"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              sub_claim_scoped: true
+              sub_claim_uses_mutable_id: true
+              provider: gitlab
+              subject_pattern: "project_path:mygroup/myproject:ref_type:branch:ref:main"

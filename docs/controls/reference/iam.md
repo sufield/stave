@@ -4966,6 +4966,21 @@ IAM roles that trust OIDC identity providers must include an audience (aud) cond
 
 ---
 
+### CTL.IAM.TRUST.OIDC.MUTABLE.SUBJECT.001
+
+**OIDC Trust Subject Claim Uses Mutable Name-Based Identifiers**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM role trust policy accepts OIDC tokens with a subject claim that uses name-based identifiers (repo:owner/repo-name) without immutable numeric anchors (repo:owner@ID/repo-name@ID). An attacker who renames, recreates, or claims a deleted repository (or project, or pipeline) matching the name in the subject claim can assume this IAM role and access every resource the role permits. GitHub repos created after July 15, 2026 use immutable numeric IDs in the subject claim. GitLab project_path claims are similarly mutable — use project_id with the numeric ID instead. Any OIDC provider using human-readable names without numeric anchors in the subject condition has the same vulnerability class.
+
+**Remediation:** Update the subject condition to use immutable numeric identifiers. For GitHub Actions: change repo:owner/repo-name to repo:owner@<owner_id>/repo-name@<repo_id>. Get the IDs from the GitHub API: GET /repos/{owner}/{repo} returns the numeric id and owner.id fields. For GitLab: change project_path:group/project to project_id:<numeric_id>. For other OIDC providers: use immutable identifiers (project IDs, pipeline GUIDs) instead of names in the subject condition.
+
+---
+
 ### CTL.IAM.TRUST.ORGBOUNDARY.001
 
 **Cross-Account Trust Must Restrict to Organization via PrincipalOrgID**
