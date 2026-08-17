@@ -1,6 +1,6 @@
 # Well-Architected Lens Coverage Scorecard
 
-**Date:** 2026-08-02
+**Date:** 2026-08-17
 **Method:** Automated monthly check — parse WA custom lens JSONs,
 run Stave against committed inverted fixtures, compare violation
 counts against baseline.
@@ -10,12 +10,25 @@ counts against baseline.
 **Invertible (CONFIG + ARCHITECTURAL):** 318
 **Procedural (skipped):** 36
 
-**Stave eval results:** 0 risk signals from 0 unique controls
+**Stave eval results:** 88 risk signals from 121 unique controls
 
 ## Violations by Fixture
 
 | Fixture | Violations | Unique Controls |
 |---|---|---|
+| cognito | 4 | 28 |
+| documentdb | 7 | 9 |
+| dynamodb | 5 | 6 |
+| ecs | 9 | 10 |
+| elasticache | 6 | 9 |
+| emr | 3 | 5 |
+| glue | 3 | 3 |
+| lambda-apigw | 15 | 15 |
+| msk | 5 | 7 |
+| opensearch | 7 | 7 |
+| s3 | 14 | 12 |
+| sagemaker | 3 | 3 |
+| streaming-media | 7 | 7 |
 
 ## Lens Practice Counts
 
@@ -44,4 +57,17 @@ counts against baseline.
 All lenses have fixture coverage.
 
 <!-- BASELINE (machine-readable — do not edit manually)
+cognito: 4
+documentdb: 7
+dynamodb: 5
+ecs: 9
+elasticache: 6
+emr: 3
+glue: 3
+lambda-apigw: 15
+msk: 5
+opensearch: 7
+s3: 14
+sagemaker: 3
+streaming-media: 7
 -->
