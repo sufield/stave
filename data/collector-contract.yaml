@@ -2408,3 +2408,19 @@ contracts:
       Derived from IAM policy analysis.
     consumers:
       - CTL.S3VECTORS.IAM.PUTVECTORS.WILDCARD.001
+
+  # ─── OIDC Trust Policy Mutable Subject Claim ────────────────
+  - field: identity.trust.oidc.sub_claim_uses_mutable_id
+    type: boolean
+    postcondition: >
+      True if the OIDC subject claim condition uses name-based
+      identifiers without immutable numeric anchors. Derived by
+      parsing the trust policy Condition block for StringEquals
+      or StringLike on the sub claim. For GitHub: check whether
+      the value contains @<numeric_id> segments — if not, the
+      identifier is mutable. For GitLab: project_path is mutable,
+      project_id is immutable. For any OIDC provider: alpha/slash
+      identifiers without numeric anchors are mutable.
+    hazop_reference: "OIDC identity takeover via repo rename/recreate"
+    consumers:
+      - CTL.IAM.TRUST.OIDC.MUTABLE.SUBJECT.001

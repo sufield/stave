@@ -1,0 +1,27 @@
+id: oidc_trust_takeover_path
+description: >
+  IAM role has OIDC trust with a mutable subject claim AND the role
+  has broad permissions. An attacker who claims the mutable identity
+  (by renaming or recreating a deleted repository/project) gets
+  privileged access to the AWS account. The mutable trust is the
+  entry vector; the broad role permissions are the blast radius.
+  Distinct from oidc_persistence_path (rogue/unscoped OIDC) and
+  supply_chain_ingress (unscoped + broad): this chain targets the
+  case where the subject IS scoped but uses name-based identifiers
+  that can be taken over.
+controls:
+  - CTL.IAM.TRUST.OIDC.MUTABLE.SUBJECT.001
+  - CTL.IAM.TRUST.OIDC.003
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+  - shadow_admin_access
+implicit_dependencies:
+  - source: observation.iam_oidc_provider_inventory
+    fallback: fail_closed
+    diagnostic: >
+      OIDC provider inventory not captured. Cannot determine
+      whether subject claims use mutable identifiers.

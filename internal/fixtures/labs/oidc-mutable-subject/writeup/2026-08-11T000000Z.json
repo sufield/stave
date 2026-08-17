@@ -1,0 +1,81 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-11T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/github-deploy-mutable",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "sub_claim_scoped": true,
+              "sub_claim_uses_mutable_id": true,
+              "has_wildcard_sub": false,
+              "has_admin_permissions": false,
+              "audience_restricted": true,
+              "provider": "github",
+              "provider_url": "token.actions.githubusercontent.com",
+              "subject_pattern": "repo:myorg/my-repo:ref:refs/heads/main"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/gitlab-deploy-mutable",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "sub_claim_scoped": true,
+              "sub_claim_uses_mutable_id": true,
+              "has_wildcard_sub": false,
+              "has_admin_permissions": false,
+              "audience_restricted": true,
+              "provider": "gitlab",
+              "provider_url": "gitlab.com",
+              "subject_pattern": "project_path:mygroup/myproject:ref_type:branch:ref:main"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/github-deploy-mutable-admin",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "sub_claim_scoped": true,
+              "sub_claim_uses_mutable_id": true,
+              "has_wildcard_sub": false,
+              "has_admin_permissions": true,
+              "audience_restricted": true,
+              "provider": "github",
+              "provider_url": "token.actions.githubusercontent.com",
+              "subject_pattern": "repo:myorg/infra-deploy:ref:refs/heads/main"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
