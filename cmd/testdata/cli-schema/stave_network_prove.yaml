@@ -47,7 +47,7 @@ options:
     - name: property
       default_value: bastion-ssh
       usage: |
-        safety property to verify: bastion-ssh, prod-dev-isolation, database-isolation, firewall-mandatory
+        safety property to verify: bastion-ssh, prod-dev-isolation, database-isolation, firewall-mandatory, transitive-ssh
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
