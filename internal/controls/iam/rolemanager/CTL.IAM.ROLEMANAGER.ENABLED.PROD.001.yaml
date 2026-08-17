@@ -1,0 +1,126 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLEMANAGER.ENABLED.PROD.001
+name: IAM Role Manager Must Not Be Enabled in Production Accounts
+description: >
+  IAM Role Manager auto-provisions execution roles with
+  PowerUserAccess for new Lambda functions when it cannot determine
+  the required permissions from the code. Role Manager is designed
+  for development — AWS documentation explicitly says "disable role
+  manager and refine roles before going live." Leaving Role Manager
+  enabled in a production account means every new Lambda function
+  starts with near-admin permissions automatically. This inverts
+  least privilege: instead of starting with nothing and granting
+  what's needed, every function starts with everything and (maybe)
+  gets scoped later.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.3"
+  pci_dss_v4.0: "7.2.2"
+  fedramp_moderate: "AC-6(1)"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - lambda
+taxonomy:
+  - least-privilege
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_account
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - governance.role_manager.enabled
+  - governance.role_manager.account_environment
+remediation:
+  description: >
+    IAM Role Manager is enabled in a non-development account. New
+    resources receive auto-provisioned roles with PowerUserAccess.
+  action: >
+    Disable Role Manager in production and staging accounts. Refine
+    any existing Role Manager-provisioned roles using IAM Access
+    Analyzer unused access findings to generate scoped policies.
+    Role Manager should only be enabled in development or sandbox
+    accounts.
+  example: |
+    {
+      "governance": {
+        "kind": "iam_account",
+        "role_manager": {
+          "enabled": false
+        }
+      }
+    }
+defect: >
+  IAM Role Manager is enabled in a production account. New Lambda
+  functions automatically receive roles with PowerUserAccess.
+infection: >
+  Role Manager attaches AWSIAMRoleManagerServiceRolePolicy and
+  provisions execution roles with PowerUserAccess when it cannot
+  determine the minimum permissions from function code. In a
+  production account, this means every new Lambda function — including
+  those created by an attacker with lambda:CreateFunction — starts
+  with near-admin access. The "refine later" step is manual and
+  easily forgotten, creating a default-unsafe permission model.
+failure: >
+  Every new Lambda function in the account starts with near-admin
+  permissions. An attacker who can create a function inherits
+  PowerUserAccess automatically.
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: iam_account
+    - field: properties.governance.role_manager.enabled
+      op: eq
+      value: true
+    - field: properties.governance.role_manager.account_environment
+      op: ne
+      value: development
+tests:
+  - name: role manager enabled in production fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:account/settings"
+      asset_type: aws_iam_account
+      vendor: aws
+      properties:
+        governance:
+          kind: iam_account
+          role_manager:
+            enabled: true
+            account_environment: production
+  - name: role manager enabled in development passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:account/settings"
+      asset_type: aws_iam_account
+      vendor: aws
+      properties:
+        governance:
+          kind: iam_account
+          role_manager:
+            enabled: true
+            account_environment: development
+  - name: role manager disabled in production passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::777788889999:account/settings"
+      asset_type: aws_iam_account
+      vendor: aws
+      properties:
+        governance:
+          kind: iam_account
+          role_manager:
+            enabled: false
+            account_environment: production

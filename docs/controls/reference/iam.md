@@ -3417,6 +3417,36 @@ IAM role participates in an assume-role chain deeper than the recommended thresh
 
 ---
 
+### CTL.IAM.ROLEMANAGER.ENABLED.PROD.001
+
+**IAM Role Manager Must Not Be Enabled in Production Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(1); nist_800_53_r5: AC-6(1); owasp_nhi: NHI5; pci_dss_v4.0: 7.2.2; soc2: CC6.3;
+
+IAM Role Manager auto-provisions execution roles with PowerUserAccess for new Lambda functions when it cannot determine the required permissions from the code. Role Manager is designed for development — AWS documentation explicitly says "disable role manager and refine roles before going live." Leaving Role Manager enabled in a production account means every new Lambda function starts with near-admin permissions automatically. This inverts least privilege: instead of starting with nothing and granting what's needed, every function starts with everything and (maybe) gets scoped later.
+
+**Remediation:** Disable Role Manager in production and staging accounts. Refine any existing Role Manager-provisioned roles using IAM Access Analyzer unused access findings to generate scoped policies. Role Manager should only be enabled in development or sandbox accounts.
+
+---
+
+### CTL.IAM.ROLEMANAGER.UNREFINED.001
+
+**Role Manager-Provisioned Role Still Has PowerUserAccess**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-6(1); nist_800_53_r5: AC-6(1), AC-2; owasp_nhi: NHI5; owasp_subtractive: S07; pci_dss_v4.0: 7.2.2; soc2: CC6.3; subtractive_tier: refinement;
+
+IAM role created by Role Manager still has the original PowerUserAccess policy attached after 30+ days. Role Manager auto-provisions execution roles with broad permissions for rapid development — the intended workflow is "start broad, use Access Analyzer to identify actual usage, then scope down." A role that still has PowerUserAccess after a month was never refined: the temporary broad access became permanent. This is credential scope creep — the role was intended to be narrow but the scoping step never happened. Distinct from CTL.IAM.ROLE.FULLACCESS.MANAGED.001 (which detects any *FullAccess policy) because this specifically targets the Role Manager lifecycle failure: auto-provisioned roles that missed the mandatory refinement step.
+
+**Remediation:** Use IAM Access Analyzer unused access findings to generate a scoped policy based on the role's actual usage. Replace PowerUserAccess with the generated policy. If the role is unused, delete it.
+
+---
+
 ### CTL.IAM.ROLESANYWHERE.CRL.001
 
 **IAM Roles Anywhere Trust Anchor Has No CRL Configured**

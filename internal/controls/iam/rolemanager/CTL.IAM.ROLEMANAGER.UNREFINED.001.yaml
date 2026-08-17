@@ -1,0 +1,154 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ROLEMANAGER.UNREFINED.001
+name: Role Manager-Provisioned Role Still Has PowerUserAccess
+description: >
+  IAM role created by Role Manager still has the original
+  PowerUserAccess policy attached after 30+ days. Role Manager
+  auto-provisions execution roles with broad permissions for rapid
+  development — the intended workflow is "start broad, use Access
+  Analyzer to identify actual usage, then scope down." A role that
+  still has PowerUserAccess after a month was never refined: the
+  temporary broad access became permanent. This is credential scope
+  creep — the role was intended to be narrow but the scoping step
+  never happened. Distinct from CTL.IAM.ROLE.FULLACCESS.MANAGED.001
+  (which detects any *FullAccess policy) because this specifically
+  targets the Role Manager lifecycle failure: auto-provisioned
+  roles that missed the mandatory refinement step.
+domain: identity
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-6(1), AC-2"
+  soc2: "CC6.3"
+  pci_dss_v4.0: "7.2.2"
+  fedramp_moderate: "AC-6(1)"
+  ccm_v4: ["IAM-05", "IAM-08"]
+  owasp_subtractive: "S07"
+  subtractive_tier: "refinement"
+scope_tags:
+  - aws
+  - iam
+  - lambda
+taxonomy:
+  - least-privilege
+  - credential-lifecycle
+subtractive_category:
+  - S02
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: privilege_escalation
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.kind
+  - identity.role.created_by_role_manager
+  - identity.role.has_power_user_access
+  - identity.role_age_days
+remediation:
+  description: >
+    IAM role was auto-provisioned by Role Manager and still has
+    PowerUserAccess after 30+ days. The role was never refined
+    to least privilege.
+  action: >
+    Use IAM Access Analyzer unused access findings to generate a
+    scoped policy based on the role's actual usage. Replace
+    PowerUserAccess with the generated policy. If the role is
+    unused, delete it.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "role": {
+          "created_by_role_manager": false,
+          "has_power_user_access": false
+        }
+      }
+    }
+defect: >
+  IAM role created by Role Manager still has PowerUserAccess
+  after 30+ days. The mandatory refinement step never happened.
+infection: >
+  Role Manager tags auto-provisioned roles with a template reference
+  and attaches PowerUserAccess as a starting policy. The intended
+  lifecycle is: create with broad access → observe actual usage via
+  Access Analyzer → replace with scoped policy. When refinement
+  doesn't happen, the role retains near-admin permissions permanently.
+  Every Lambda function using this role has far more access than it
+  needs — the blast radius of a function compromise extends to nearly
+  every service in the account.
+failure: >
+  Permanent near-admin permissions on a role intended to be temporary.
+  Lambda functions using this role have unconstrained blast radius.
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.role.created_by_role_manager
+      op: eq
+      value: true
+    - field: properties.identity.role.has_power_user_access
+      op: eq
+      value: true
+    - field: properties.identity.role_age_days
+      op: gt
+      value: 30
+tests:
+  - name: unrefined role manager role after 30 days fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/rm-lambda-api-handler"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role_age_days: 45
+          role:
+            created_by_role_manager: true
+            has_power_user_access: true
+  - name: refined role manager role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/rm-lambda-api-handler-refined"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role_age_days: 90
+          role:
+            created_by_role_manager: true
+            has_power_user_access: false
+  - name: young role manager role passes (within grace period)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/rm-lambda-new"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role_age_days: 7
+          role:
+            created_by_role_manager: true
+            has_power_user_access: true
+  - name: non-role-manager role with power user passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/manual-broad-role"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          role_age_days: 90
+          role:
+            created_by_role_manager: false
+            has_power_user_access: true
