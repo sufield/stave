@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.MODELPACKAGE.NOCREATOR.001
+name: Model Package Must Have a Traceable Creator
+description: >
+  A SageMaker model package must have a traceable creator identity
+  (UserProfileArn or DomainId in the CreatedBy field). Without
+  creator attribution, there is no audit trail linking the model
+  to the person or pipeline that produced it — incident response
+  cannot determine who trained the model or from what environment.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "AU-3, CM-5"
+  soc2: "CC7.1"
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sagemaker_model_package_group]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Model package has no traceable creator identity.
+  action: >
+    Create model packages from SageMaker Studio user profiles
+    or SageMaker Pipelines so the CreatedBy field is
+    automatically populated.
+  example: |
+    {
+      "governance": {
+        "sagemaker": {
+          "model_package": {
+            "has_creator": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.sagemaker.model_package.has_creator
+      op: eq
+      value: false
+defect: >
+  Model package has no traceable creator ARN.
+infection: >
+  Without creator attribution, the model's provenance chain is
+  broken. During incident response, there is no way to determine
+  who trained the model, what data was used, or whether the
+  training environment was compromised.
+failure: >
+  A poisoned model cannot be traced to its origin, delaying
+  incident response and making it impossible to identify
+  other models from the same compromised source.
+tests:
+  - name: no creator fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/anomaly-detector"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              has_creator: false
+  - name: creator present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/anomaly-detector-tracked"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              has_creator: true

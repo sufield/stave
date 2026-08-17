@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.IDENTITY.RATIO.001
+name: Excessive Machine-to-Human Identity Ratio
+description: >
+  IAM role count exceeds 200 times the IAM user count, indicating
+  a high machine-to-human identity ratio. A high ratio signals
+  potential NHI governance gaps: unused service-linked roles,
+  orphaned automation roles, or unconstrained role provisioning.
+  This is a governance indicator, not a security finding — accounts
+  with heavy automation may legitimately have many roles.
+domain: identity
+severity: low
+compliance:
+  owasp_nhi: "NHI1"
+  nist_800_53_r5: "AC-2"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-02"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - compliance-mapping
+  - credential-lifecycle
+  - resource-sprawl
+subtractive_category:
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_account_summary]
+params:
+  attack_stage: persistence
+observation_fields:
+  - identity.role_count
+  - identity.user_count
+  - identity.nhi_ratio_excessive
+remediation:
+  description: >
+    Account machine-to-human identity ratio exceeds 200:1.
+  action: >
+    Review IAM roles with IAM Access Analyzer to identify unused
+    roles. Remove orphaned service-linked roles for services no
+    longer in use. Consolidate Lambda execution roles where
+    functions share the same permission boundary.
+  example: |
+    {
+      "identity": {
+        "role_count": 50,
+        "user_count": 10,
+        "nhi_ratio_excessive": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.nhi_ratio_excessive
+      op: present
+    - field: properties.identity.nhi_ratio_excessive
+      op: eq
+      value: true
+defect: >
+  IAM role-to-user ratio exceeds 200:1.
+infection: >
+  Each IAM role is a potential credential source via sts:AssumeRole.
+  At extreme ratios, role governance becomes impractical: unused roles
+  accumulate, trust policies go unreviewed, and the blast radius of a
+  single trust policy misconfiguration expands. Service-linked roles
+  created automatically by AWS services add to the count even when
+  the service is no longer used.
+failure: >
+  Non-human identity sprawl without governance. Unused roles persist
+  as dormant credential sources, increasing the attack surface for
+  lateral movement and privilege escalation.
+tests:
+  - name: account with excessive ratio fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:root"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        identity:
+          role_count: 1500
+          user_count: 5
+          nhi_ratio_excessive: true
+  - name: account with normal ratio passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::444455556666:root"
+      asset_type: aws_account_summary
+      vendor: aws
+      properties:
+        identity:
+          role_count: 50
+          user_count: 10
+          nhi_ratio_excessive: false

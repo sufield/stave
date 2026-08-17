@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.DATAQUALITY.NOMONITOR.001
+name: SageMaker Endpoint Has No Data Quality Monitor
+description: >
+  SageMaker endpoint has no active data quality monitoring schedule.
+  Without monitoring, data distribution drift and data poisoning go
+  undetected — the model continues to serve predictions on inputs
+  that no longer match the training distribution. CSA Top Threats
+  2026 Issue 05 identifies missing dataset monitoring as a
+  misconfiguration vector.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-4, SI-7"
+  soc2: "CC7.1, CC7.2"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - compliance-mapping
+  - monitoring
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_data_quality_job
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    SageMaker endpoint has no data quality monitoring schedule.
+    Data distribution drift and poisoning go undetected.
+  action: >
+    Create a data quality monitoring schedule using
+    sagemaker:CreateMonitoringSchedule with MonitoringType
+    DataQuality. Configure a baseline dataset from training
+    data statistics. Set the schedule interval to match data
+    freshness requirements (hourly for real-time, daily for
+    batch).
+  example: |
+    {
+      "governance": {
+        "sagemaker": {
+          "data_quality": {
+            "has_monitoring_schedule": true,
+            "has_baseline": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.sagemaker.data_quality.has_monitoring_schedule
+      op: eq
+      value: false
+observation_fields:
+  - governance.sagemaker.data_quality.has_monitoring_schedule
+defect: >
+  SageMaker endpoint operates without data quality monitoring.
+infection: >
+  When input data distribution shifts (naturally or through
+  poisoning), the model's predictions degrade silently. Without
+  a monitor comparing live data against a baseline, there is no
+  signal that the model is operating outside its training
+  distribution — the model continues serving degraded or
+  adversarially influenced predictions.
+failure: >
+  Data poisoning or distribution drift goes undetected. Model
+  serves predictions on data it was not trained for, producing
+  unreliable or manipulated outputs.
+tests:
+  - name: "endpoint without data quality monitor — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor"
+      asset_type: aws_sagemaker_data_quality_job
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            data_quality:
+              has_monitoring_schedule: false
+              has_baseline: false
+  - name: "endpoint with active data quality monitor — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor"
+      asset_type: aws_sagemaker_data_quality_job
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            data_quality:
+              has_monitoring_schedule: true
+              has_baseline: true

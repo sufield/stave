@@ -1,0 +1,26 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:prompt/onboarding-assistant",
+      "properties": {
+        "governance": {
+          "bedrock": {
+            "prompt": {
+              "has_draft_version": false
+            }
+          }
+        }
+      },
+      "type": "aws_bedrock_prompt",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

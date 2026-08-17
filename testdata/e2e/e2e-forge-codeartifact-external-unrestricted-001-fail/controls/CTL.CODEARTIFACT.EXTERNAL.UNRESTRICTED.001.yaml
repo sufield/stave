@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.CODEARTIFACT.EXTERNAL.UNRESTRICTED.001
+name: CodeArtifact Repository External Connection Without Origin Restrictions
+description: >
+  CodeArtifact repository has an external connection to a public
+  upstream (npmjs, PyPI, Maven Central) but does not enforce package
+  origin restrictions. Without restrictions, any package published
+  to the public upstream is automatically available in the internal
+  registry — the exact vector exploited in dependency confusion and
+  typosquatting attacks.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SA-12, SR-4"
+  soc2: "CC7.2"
+  ccm_v4: ["STA-09"]
+scope_tags:
+  - aws
+  - codeartifact
+taxonomy:
+  - supply-chain
+  - trust-boundary
+subtractive_category:
+  - S05
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_codeartifact_repository]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - governance.codeartifact.has_external_connection
+  - governance.codeartifact.origin_restrictions_enforced
+remediation:
+  description: >
+    Repository has an external connection to a public upstream
+    without package origin restrictions.
+  action: >
+    Configure package origin restrictions to BLOCK upstream publish
+    for all package formats. Use package groups to enforce origin
+    controls at the namespace level.
+  example: |
+    {
+      "governance": {
+        "codeartifact": {
+          "has_external_connection": true,
+          "origin_restrictions_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.codeartifact.has_external_connection
+      op: eq
+      value: true
+    - field: properties.governance.codeartifact.origin_restrictions_enforced
+      op: ne
+      value: true
+defect: >
+  CodeArtifact repository connects to a public upstream without
+  origin restrictions.
+infection: >
+  An attacker publishes a malicious package with the same name as
+  an internal package to the public upstream. Without origin
+  restrictions, the repository resolves the attacker's package
+  from the external connection. Internal builds pull the malicious
+  version — dependency confusion.
+failure: >
+  Supply chain compromise via dependency confusion or typosquatting.
+  Malicious code executes in CI/CD pipelines and production
+  environments.
+tests:
+  - name: external connection without origin restrictions fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:codeartifact:us-east-1:111122223333:repository/my-domain/my-repo"
+      asset_type: aws_codeartifact_repository
+      vendor: aws
+      properties:
+        governance:
+          codeartifact:
+            has_external_connection: true
+            origin_restrictions_enforced: false
+  - name: external connection with origin restrictions passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:codeartifact:us-east-1:111122223333:repository/my-domain/secure-repo"
+      asset_type: aws_codeartifact_repository
+      vendor: aws
+      properties:
+        governance:
+          codeartifact:
+            has_external_connection: true
+            origin_restrictions_enforced: true

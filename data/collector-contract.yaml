@@ -2458,3 +2458,154 @@ contracts:
     hazop_reference: "OIDC identity takeover via repo rename/recreate"
     consumers:
       - CTL.IAM.TRUST.OIDC.MUTABLE.SUBJECT.001
+
+  # ─── IAM Identity Ratio ─────────────────────────────────────
+  - field: identity.nhi_ratio_excessive
+    type: boolean
+    postcondition: >
+      True if the machine-to-human identity ratio (IAM roles /
+      IAM users) exceeds 200:1. Derived from
+      iam:GetAccountSummary SummaryMap.Roles and SummaryMap.Users.
+      Accounts with zero IAM users are excluded (ratio undefined).
+    consumers:
+      - CTL.IAM.IDENTITY.RATIO.001
+
+  # ─── CodeArtifact Supply Chain ──────────────────────────────
+  - field: governance.codeartifact.has_external_connection
+    type: boolean
+    postcondition: >
+      True if the CodeArtifact repository has at least one
+      external connection (public:npmjs, public:pypi, etc.).
+      Derived from codeartifact:DescribeRepository
+      externalConnections array length > 0.
+    consumers:
+      - CTL.CODEARTIFACT.EXTERNAL.UNRESTRICTED.001
+
+  - field: governance.codeartifact.origin_restrictions_enforced
+    type: boolean
+    postcondition: >
+      True if the repository has package origin restrictions
+      that BLOCK upstream publish for all configured package
+      formats. Derived from codeartifact:GetPackageGroupOriginConfiguration.
+      False if no restrictions exist or any format allows
+      upstream publish.
+    consumers:
+      - CTL.CODEARTIFACT.EXTERNAL.UNRESTRICTED.001
+
+  - field: access.codeartifact.policy_allows_public
+    type: boolean
+    postcondition: >
+      True if the repository resource policy contains
+      Principal "*" or Principal AWS "*" without restricting
+      conditions. Derived from
+      codeartifact:GetRepositoryPermissionsPolicy.
+    consumers:
+      - CTL.CODEARTIFACT.POLICY.PUBLIC.001
+
+  - field: access.codeartifact.domain_policy_cross_account_unconditioned
+    type: boolean
+    postcondition: >
+      True if the domain resource policy allows cross-account
+      principals without aws:PrincipalOrgID or specific account
+      conditions. Derived from
+      codeartifact:GetDomainPermissionsPolicy.
+    consumers:
+      - CTL.CODEARTIFACT.DOMAIN.POLICY.CROSSACCOUNT.001
+
+  - field: governance.codeartifact.has_cross_domain_upstream
+    type: boolean
+    postcondition: >
+      True if the repository upstream list includes repositories
+      in a different CodeArtifact domain or AWS account. Derived
+      from codeartifact:DescribeRepository upstreams array.
+    consumers:
+      - CTL.CODEARTIFACT.UPSTREAM.UNVETTED.001
+
+  # ─── Bedrock Prompt Versioning ──────────────────────────────
+  - field: governance.bedrock.prompt.has_draft_version
+    type: boolean
+    postcondition: >
+      True if the Bedrock prompt has an unpublished DRAFT
+      variant. Derived from bedrock:GetPrompt checking for
+      a variant with status DRAFT.
+    consumers:
+      - CTL.BEDROCK.PROMPT.DRAFT.STALE.001
+
+  - field: governance.bedrock.prompt.version_sprawl
+    type: boolean
+    postcondition: >
+      True if the Bedrock prompt has more than 20 versions.
+      Derived from bedrock:ListPromptVersions result count.
+    consumers:
+      - CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001
+
+  # ─── SageMaker Model Package Group ─────────────────────────
+  - field: governance.sagemaker.model_package.approval_status
+    type: string
+    postcondition: >
+      The ModelApprovalStatus of the latest model package version
+      in the group: Approved, Rejected, or
+      PendingManualApproval. Derived from
+      sagemaker:DescribeModelPackage on the latest version.
+    consumers:
+      - CTL.SAGEMAKER.MODELPACKAGE.UNAPPROVED.001
+
+  - field: access.sagemaker.model_package_group.policy_allows_broad_access
+    type: boolean
+    postcondition: >
+      True if the model package group resource policy allows
+      Principal "*", broad cross-account access without
+      conditions, or any principal with sagemaker:Describe*
+      and sagemaker:CreateModel* without scoping. Derived from
+      sagemaker:GetModelPackageGroupPolicy.
+    consumers:
+      - CTL.SAGEMAKER.MODELPACKAGE.ACCESS.001
+
+  - field: governance.sagemaker.model_package.has_model_card
+    type: boolean
+    postcondition: >
+      True if a model card exists for the model package group.
+      Derived from sagemaker:ListModelCards filtered by the
+      model package name. False if no cards exist.
+    consumers:
+      - CTL.SAGEMAKER.MODELPACKAGE.NOCARD.001
+
+  - field: governance.sagemaker.model_package.model_card_status
+    type: string
+    postcondition: >
+      The ModelCardStatus of the model card associated with the
+      group: Draft, PendingReview, Approved, or Archived.
+      Derived from sagemaker:DescribeModelCard. Empty string
+      if no model card exists.
+    consumers:
+      - CTL.SAGEMAKER.MODELPACKAGE.CARD.DRAFT.001
+
+  - field: governance.sagemaker.model_package.has_creator
+    type: boolean
+    postcondition: >
+      True if the latest model package version has a traceable
+      creator ARN (UserProfileArn or DomainId in CreatedBy).
+      Derived from sagemaker:DescribeModelPackage.
+    consumers:
+      - CTL.SAGEMAKER.MODELPACKAGE.NOCREATOR.001
+
+  # ─── SageMaker Data Quality Monitoring ──────────────────────
+  - field: governance.sagemaker.data_quality.has_monitoring_schedule
+    type: boolean
+    postcondition: >
+      True if the SageMaker endpoint has an active data quality
+      monitoring schedule. Derived from
+      sagemaker:ListMonitoringSchedules filtered by endpoint
+      name with MonitoringType DataQuality.
+    consumers:
+      - CTL.SAGEMAKER.DATAQUALITY.NOMONITOR.001
+
+  - field: governance.sagemaker.data_quality.has_baseline
+    type: boolean
+    postcondition: >
+      True if the data quality job definition has a baseline
+      dataset configured (BaseliningJobName or
+      ConstraintsResource is non-empty). Derived from
+      sagemaker:DescribeDataQualityJobDefinition.
+    consumers:
+      - CTL.SAGEMAKER.DATAQUALITY.BASELINE.MISSING.001

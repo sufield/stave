@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001
+name: Bedrock Prompt Has Excessive Versions
+description: >
+  Bedrock prompt has accumulated more than 20 versions without
+  archival. Excessive versions indicate prompt changes that bypass
+  formal review — each version is a distinct system instruction
+  that shapes model behavior. CSA Top Threats 2026 Issue 05
+  specifically identifies prompt revisions that bypass change
+  control as a misconfiguration vector.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "CM-3, CM-9"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-02"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - resource-sprawl
+subtractive_category:
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_prompt
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Bedrock prompt has more than 20 versions. Unreviewed prompt
+    changes can alter model behavior without governance oversight.
+  action: >
+    Review prompt version history for unauthorized changes.
+    Archive or delete obsolete versions. Establish a change
+    approval process requiring review before publishing new
+    prompt versions.
+  example: |
+    {
+      "governance": {
+        "bedrock": {
+          "prompt": {
+            "version_sprawl": false,
+            "version_count": 5
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.bedrock.prompt.version_sprawl
+      op: eq
+      value: true
+observation_fields:
+  - governance.bedrock.prompt.version_sprawl
+  - governance.bedrock.prompt.version_count
+defect: >
+  Bedrock prompt has accumulated excessive versions without review
+  or archival.
+infection: >
+  Each prompt version is a distinct system instruction. An attacker
+  or careless operator who publishes a new version can subtly alter
+  model behavior — relaxing safety guardrails, introducing bias, or
+  embedding instruction injection. Without version governance, these
+  changes are invisible to compliance teams.
+failure: >
+  Model behavior changes without oversight. Prompt modifications
+  that weaken safety controls or introduce bias go undetected
+  because no review process gates version creation.
+tests:
+  - name: "prompt with excessive versions — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1"
+      asset_type: aws_bedrock_prompt
+      vendor: aws
+      properties:
+        governance:
+          bedrock:
+            prompt:
+              version_sprawl: true
+              version_count: 45
+  - name: "prompt with few versions — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1"
+      asset_type: aws_bedrock_prompt
+      vendor: aws
+      properties:
+        governance:
+          bedrock:
+            prompt:
+              version_sprawl: false
+              version_count: 5

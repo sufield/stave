@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.CODEARTIFACT.UPSTREAM.UNVETTED.001
+name: CodeArtifact Repository Has Cross-Domain Upstream
+description: >
+  CodeArtifact repository upstream list includes repositories in
+  a different domain or AWS account. Cross-domain upstreams create
+  transitive trust — a compromise of the upstream repository
+  propagates to all downstream consumers without additional
+  verification.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SA-12, SR-4"
+  soc2: "CC7.2"
+  ccm_v4: ["STA-09"]
+scope_tags:
+  - aws
+  - codeartifact
+taxonomy:
+  - supply-chain
+  - trust-boundary
+subtractive_category:
+  - S05
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_codeartifact_repository]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - governance.codeartifact.has_cross_domain_upstream
+remediation:
+  description: >
+    Repository has upstream dependencies in a different domain
+    or account.
+  action: >
+    Use only same-domain upstream repositories. If cross-domain
+    upstreams are required, document the trust relationship and
+    add origin restrictions to block upstream publish.
+  example: |
+    {
+      "governance": {
+        "codeartifact": {
+          "has_cross_domain_upstream": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.codeartifact.has_cross_domain_upstream
+      op: eq
+      value: true
+defect: >
+  CodeArtifact repository has cross-domain upstream dependencies.
+infection: >
+  Packages resolved from a cross-domain upstream are trusted
+  implicitly. If the upstream domain is compromised or
+  misconfigured, malicious packages flow downstream without
+  additional verification. The trust chain is invisible to
+  consumers of the downstream repository.
+failure: >
+  Supply chain compromise via transitive trust in unvetted
+  upstream repositories.
+tests:
+  - name: cross-domain upstream fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:codeartifact:us-east-1:111122223333:repository/my-domain/my-repo"
+      asset_type: aws_codeartifact_repository
+      vendor: aws
+      properties:
+        governance:
+          codeartifact:
+            has_cross_domain_upstream: true
+  - name: same-domain upstreams only passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:codeartifact:us-east-1:111122223333:repository/my-domain/safe-repo"
+      asset_type: aws_codeartifact_repository
+      vendor: aws
+      properties:
+        governance:
+          codeartifact:
+            has_cross_domain_upstream: false

@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:root",
+      "properties": {
+        "identity": {
+          "role_count": 50,
+          "user_count": 10,
+          "nhi_ratio_excessive": false
+        }
+      },
+      "type": "aws_account_summary",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

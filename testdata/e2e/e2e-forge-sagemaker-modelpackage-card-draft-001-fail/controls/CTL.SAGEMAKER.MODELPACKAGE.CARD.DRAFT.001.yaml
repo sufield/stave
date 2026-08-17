@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.MODELPACKAGE.CARD.DRAFT.001
+name: Model Card Must Not Remain in Draft Status
+description: >
+  A SageMaker model card associated with a model package group
+  must not remain in Draft status. A draft card indicates that
+  documentation exists but has not been reviewed or approved —
+  the model is deployed with incomplete governance metadata.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SA-11"
+  soc2: "CC7.1"
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sagemaker_model_package_group]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Model card is in Draft status — documentation has not been
+    reviewed.
+  action: >
+    Complete the model card review process and update the status
+    to Approved via sagemaker:UpdateModelCard.
+  example: |
+    {
+      "governance": {
+        "sagemaker": {
+          "model_package": {
+            "has_model_card": true,
+            "model_card_status": "Approved"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.sagemaker.model_package.has_model_card
+      op: eq
+      value: true
+    - field: properties.governance.sagemaker.model_package.model_card_status
+      op: eq
+      value: "Draft"
+defect: >
+  Model card exists but remains in Draft status.
+infection: >
+  A draft card signals incomplete review — the documented
+  limitations, biases, and intended use have not been validated
+  by a reviewer. The card may contain placeholder text or
+  inaccurate metrics.
+failure: >
+  Governance reviewers trust a draft card as authoritative,
+  missing critical limitations or biases that would have been
+  caught during review.
+tests:
+  - name: draft model card fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/sentiment-analyzer"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              has_model_card: true
+              model_card_status: "Draft"
+  - name: approved model card passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/sentiment-analyzer-reviewed"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              has_model_card: true
+              model_card_status: "Approved"
+  - name: no model card does not fire (different control)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/sentiment-analyzer-nocard"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              has_model_card: false
+              model_card_status: ""

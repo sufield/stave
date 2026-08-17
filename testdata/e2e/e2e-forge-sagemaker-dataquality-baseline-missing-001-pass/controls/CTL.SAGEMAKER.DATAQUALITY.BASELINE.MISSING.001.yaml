@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.DATAQUALITY.BASELINE.MISSING.001
+name: SageMaker Data Quality Monitor Has No Baseline Dataset
+description: >
+  SageMaker data quality monitoring schedule exists but has no
+  baseline dataset configured. Without a baseline, the monitor
+  cannot compare live data against expected distributions — it
+  runs but produces no actionable drift signals. The monitor
+  exists for compliance but provides no detection value.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7"
+  soc2: "CC7.1"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - sagemaker
+taxonomy:
+  - compliance-mapping
+  - monitoring
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_sagemaker_data_quality_job
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Data quality monitor exists but has no baseline dataset. The
+    monitor cannot detect distribution drift without a reference.
+  action: >
+    Run a baseline job using sagemaker:CreateProcessingJob with
+    the training dataset to generate statistical constraints and
+    a baseline. Configure the monitoring schedule's
+    DataQualityBaselineConfig with the baseline job output
+    (constraints and statistics files in S3).
+  example: |
+    {
+      "governance": {
+        "sagemaker": {
+          "data_quality": {
+            "has_monitoring_schedule": true,
+            "has_baseline": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.sagemaker.data_quality.has_monitoring_schedule
+      op: eq
+      value: true
+    - field: properties.governance.sagemaker.data_quality.has_baseline
+      op: eq
+      value: false
+observation_fields:
+  - governance.sagemaker.data_quality.has_monitoring_schedule
+  - governance.sagemaker.data_quality.has_baseline
+defect: >
+  Data quality monitor has no baseline dataset to compare against.
+infection: >
+  The monitor runs on schedule but has no reference distribution.
+  It cannot compute feature drift, missing values, or schema
+  violations because it has nothing to compare the live data
+  against. This is the monitoring equivalent of a WAF in
+  COUNT-only mode — present but not protecting.
+failure: >
+  Data quality monitoring is cosmetic. Distribution drift and
+  data poisoning are not detected despite the monitor's existence
+  because no baseline comparison occurs.
+tests:
+  - name: "monitor without baseline — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/credit-model-monitor"
+      asset_type: aws_sagemaker_data_quality_job
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            data_quality:
+              has_monitoring_schedule: true
+              has_baseline: false
+  - name: "monitor with baseline — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/credit-model-monitor"
+      asset_type: aws_sagemaker_data_quality_job
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            data_quality:
+              has_monitoring_schedule: true
+              has_baseline: true
+  - name: "no monitor at all — passes (different control catches this)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/legacy-model-monitor"
+      asset_type: aws_sagemaker_data_quality_job
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            data_quality:
+              has_monitoring_schedule: false
+              has_baseline: false

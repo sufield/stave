@@ -1,0 +1,85 @@
+dsl_version: ctrl.v1
+id: CTL.CODEARTIFACT.DOMAIN.POLICY.CROSSACCOUNT.001
+name: CodeArtifact Domain Policy Allows Unconditioned Cross-Account Access
+description: >
+  CodeArtifact domain resource policy allows cross-account
+  principals without aws:PrincipalOrgID or specific account
+  conditions. An unconditioned cross-account domain policy
+  enables confused deputy attacks and unauthorized repository
+  creation within the domain.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-17"]
+scope_tags:
+  - aws
+  - codeartifact
+taxonomy:
+  - identity-perimeter
+  - least-privilege
+  - trust-boundary
+subtractive_category:
+  - S05
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_codeartifact_domain]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - access.codeartifact.domain_policy_cross_account_unconditioned
+remediation:
+  description: >
+    Domain policy allows cross-account access without org or
+    account conditions.
+  action: >
+    Add an aws:PrincipalOrgID condition to cross-account
+    statements in the domain policy, or restrict to specific
+    account IDs.
+  example: |
+    {
+      "access": {
+        "codeartifact": {
+          "domain_policy_cross_account_unconditioned": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.access.codeartifact.domain_policy_cross_account_unconditioned
+      op: eq
+      value: true
+defect: >
+  CodeArtifact domain policy allows unconditioned cross-account
+  access.
+infection: >
+  An external account can create repositories, manage packages,
+  or modify domain settings without being scoped to the
+  organization. A confused deputy attack allows an attacker to
+  use a legitimate service's cross-account access to manipulate
+  the domain.
+failure: >
+  Unauthorized domain manipulation or repository creation via
+  unconditioned cross-account trust.
+tests:
+  - name: unconditioned cross-account domain policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:codeartifact:us-east-1:111122223333:domain/my-domain"
+      asset_type: aws_codeartifact_domain
+      vendor: aws
+      properties:
+        access:
+          codeartifact:
+            domain_policy_cross_account_unconditioned: true
+  - name: org-scoped domain policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:codeartifact:us-east-1:111122223333:domain/secure-domain"
+      asset_type: aws_codeartifact_domain
+      vendor: aws
+      properties:
+        access:
+          codeartifact:
+            domain_policy_cross_account_unconditioned: false

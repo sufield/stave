@@ -1,0 +1,43 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-17T13:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-lab",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:codeartifact:us-east-1:111122223333:repository/vuln-domain/vuln-repo",
+      "type": "aws_codeartifact_repository",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "codeartifact": {
+            "has_external_connection": true,
+            "origin_restrictions_enforced": false,
+            "has_cross_domain_upstream": true
+          }
+        },
+        "access": {
+          "codeartifact": {
+            "policy_allows_public": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:codeartifact:us-east-1:111122223333:domain/vuln-domain",
+      "type": "aws_codeartifact_domain",
+      "vendor": "aws",
+      "properties": {
+        "access": {
+          "codeartifact": {
+            "domain_policy_cross_account_unconditioned": true
+          }
+        }
+      }
+    }
+  ]
+}

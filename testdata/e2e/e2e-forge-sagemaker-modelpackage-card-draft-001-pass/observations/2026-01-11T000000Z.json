@@ -1,0 +1,22 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "type": "aws_sagemaker_model_package_group",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "sagemaker": {
+            "model_package": {
+              "has_model_card": true,
+              "model_card_status": "Approved"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

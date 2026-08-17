@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.CODEARTIFACT.POLICY.PUBLIC.001
+name: CodeArtifact Repository Policy Allows Public Access
+description: >
+  CodeArtifact repository resource policy allows Principal "*" or
+  overly broad access without restrictive conditions. A public
+  repository policy enables unauthorized package reads (information
+  disclosure) or writes (supply chain compromise) from any AWS
+  principal.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, AC-6"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  ccm_v4: ["DSP-17", "IVS-03"]
+scope_tags:
+  - aws
+  - codeartifact
+taxonomy:
+  - identity-perimeter
+  - least-privilege
+  - trust-boundary
+subtractive_category:
+  - S05
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_codeartifact_repository]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - access.codeartifact.policy_allows_public
+remediation:
+  description: >
+    Repository policy grants public access to package operations.
+  action: >
+    Restrict the repository policy to specific account IDs or add
+    an aws:PrincipalOrgID condition. Remove any Principal "*"
+    statements.
+  example: |
+    {
+      "access": {
+        "codeartifact": {
+          "policy_allows_public": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.access.codeartifact.policy_allows_public
+      op: eq
+      value: true
+defect: >
+  CodeArtifact repository policy allows public access.
+infection: >
+  Any AWS principal can read packages from the repository (IP
+  theft, proprietary library exposure) or publish packages to
+  it (supply chain injection). The repository becomes a public
+  attack surface.
+failure: >
+  Unauthorized package access or supply chain compromise via
+  public repository policy.
+tests:
+  - name: public policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:codeartifact:us-east-1:111122223333:repository/my-domain/public-repo"
+      asset_type: aws_codeartifact_repository
+      vendor: aws
+      properties:
+        access:
+          codeartifact:
+            policy_allows_public: true
+  - name: scoped policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:codeartifact:us-east-1:111122223333:repository/my-domain/private-repo"
+      asset_type: aws_codeartifact_repository
+      vendor: aws
+      properties:
+        access:
+          codeartifact:
+            policy_allows_public: false

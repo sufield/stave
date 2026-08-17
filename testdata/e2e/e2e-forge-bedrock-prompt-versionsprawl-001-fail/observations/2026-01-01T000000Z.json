@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+      "properties": {
+        "governance": {
+          "bedrock": {
+            "prompt": {
+              "version_sprawl": true,
+              "version_count": 45
+            }
+          }
+        }
+      },
+      "type": "aws_bedrock_prompt",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-17T13:00:00Z",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-lab",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:root",
+      "type": "aws_account_summary",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "role_count": 50,
+          "user_count": 10,
+          "nhi_ratio_excessive": false
+        }
+      }
+    }
+  ]
+}

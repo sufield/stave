@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-17T13:00:00Z",
+  "source": {"tool": "stave-lab", "version": "1.0.0"},
+  "assets": [
+    {
+      "asset_id": "arn:aws:bedrock:us-east-1:111122223333:prompt/customer-support-v1",
+      "asset_type": "aws_bedrock_prompt",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "bedrock": {
+            "prompt": {
+              "version_sprawl": false,
+              "version_count": 5,
+              "has_draft_version": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

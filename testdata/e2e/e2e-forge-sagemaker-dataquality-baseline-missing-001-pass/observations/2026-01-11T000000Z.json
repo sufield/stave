@@ -1,0 +1,27 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/credit-model-monitor",
+      "properties": {
+        "governance": {
+          "sagemaker": {
+            "data_quality": {
+              "has_monitoring_schedule": true,
+              "has_baseline": true
+            }
+          }
+        }
+      },
+      "type": "aws_sagemaker_data_quality_job",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "source": "deployed"
+}

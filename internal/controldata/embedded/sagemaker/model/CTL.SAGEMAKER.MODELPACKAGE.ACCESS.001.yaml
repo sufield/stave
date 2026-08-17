@@ -1,0 +1,88 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.MODELPACKAGE.ACCESS.001
+name: Model Package Group Policy Must Not Allow Broad Access
+description: >
+  A SageMaker model package group resource policy must not allow
+  wildcard principals or broad cross-account access without
+  conditions. An overbroad policy lets unauthorized principals
+  describe and download trained model artifacts — enabling model
+  theft even when the underlying S3 bucket is locked down, because
+  the SageMaker API provides an independent access path to the
+  model weights.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-10"]
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sagemaker_model_package_group]
+params:
+  attack_stage: credential_access
+remediation:
+  description: >
+    Model package group policy allows overly broad access to
+    model artifacts.
+  action: >
+    Restrict the model package group policy to specific accounts
+    and roles. Add aws:PrincipalOrgID or aws:SourceAccount
+    conditions. Remove Principal "*" statements.
+  example: |
+    {
+      "access": {
+        "sagemaker": {
+          "model_package_group": {
+            "policy_allows_broad_access": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.access.sagemaker.model_package_group.policy_allows_broad_access
+      op: eq
+      value: true
+defect: >
+  Model package group resource policy allows broad or wildcard
+  principal access.
+infection: >
+  Any AWS principal — including cross-account and anonymous
+  callers — can call sagemaker:DescribeModelPackage and
+  sagemaker:CreateModel against this group, retrieving model
+  artifact locations and metadata.
+failure: >
+  Trained model weights are exfiltrated via the SageMaker API,
+  enabling intellectual property theft or model cloning without
+  access to the training pipeline.
+tests:
+  - name: broad access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/nlp-classifier"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        access:
+          sagemaker:
+            model_package_group:
+              policy_allows_broad_access: true
+  - name: scoped access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/nlp-classifier-scoped"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        access:
+          sagemaker:
+            model_package_group:
+              policy_allows_broad_access: false

@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.PROMPT.DRAFT.STALE.001
+name: Bedrock Prompt Has Unpublished Draft Version
+description: >
+  Bedrock prompt has an unpublished DRAFT variant. A draft version
+  may contain untested or unreviewed changes that could be
+  accidentally promoted to production. Draft versions should be
+  published (after review) or discarded to maintain a clean
+  prompt lifecycle.
+domain: governance
+severity: low
+compliance:
+  nist_800_53_r5: "CM-3"
+  soc2: "CC8.1"
+  ccm_v4: ["CCC-02"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - resource-sprawl
+subtractive_category:
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_prompt
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Bedrock prompt has an unpublished draft version. Stale drafts
+    indicate incomplete change processes.
+  action: >
+    Review the draft variant. If the changes are approved, publish
+    the version. If the changes are abandoned, delete the draft.
+    Establish a workflow that requires draft cleanup within a
+    defined review window.
+  example: |
+    {
+      "governance": {
+        "bedrock": {
+          "prompt": {
+            "has_draft_version": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.bedrock.prompt.has_draft_version
+      op: eq
+      value: true
+observation_fields:
+  - governance.bedrock.prompt.has_draft_version
+defect: >
+  Bedrock prompt retains an unpublished draft version.
+infection: >
+  A draft version may contain untested prompt instructions. If
+  accidentally promoted or if the API resolves to the draft
+  variant, the model operates under unreviewed instructions.
+  In multi-tenant environments, a draft could contain
+  instructions that bypass tenant isolation controls.
+failure: >
+  Unreviewed prompt changes reach production. Model behavior
+  diverges from the approved baseline without governance
+  awareness.
+tests:
+  - name: "prompt with draft version — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:prompt/onboarding-assistant"
+      asset_type: aws_bedrock_prompt
+      vendor: aws
+      properties:
+        governance:
+          bedrock:
+            prompt:
+              has_draft_version: true
+  - name: "prompt without draft version — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:prompt/onboarding-assistant"
+      asset_type: aws_bedrock_prompt
+      vendor: aws
+      properties:
+        governance:
+          bedrock:
+            prompt:
+              has_draft_version: false

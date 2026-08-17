@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:codeartifact:us-east-1:111122223333:repository/my-domain/private-repo",
+      "properties": {
+        "access": {
+          "codeartifact": {
+            "policy_allows_public": false
+          }
+        }
+      },
+      "type": "aws_codeartifact_repository",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

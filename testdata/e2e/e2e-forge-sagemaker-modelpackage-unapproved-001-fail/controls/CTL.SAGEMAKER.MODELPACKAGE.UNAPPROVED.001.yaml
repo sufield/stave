@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.MODELPACKAGE.UNAPPROVED.001
+name: Model Package Must Be Approved Before Deployment
+description: >
+  A SageMaker model package group's latest version must have
+  ModelApprovalStatus set to Approved. Deploying a model that is
+  PendingManualApproval or Rejected bypasses the change-control
+  gate — the model enters production without human review of its
+  training data, evaluation metrics, or intended use.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-3, CM-4, SA-10"
+  soc2: "CC7.1, CC8.1"
+  ccm_v4: ["STA-09"]
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sagemaker_model_package_group]
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    Model package is not approved. A model without explicit
+    approval may contain untested weights, biased outputs,
+    or tampered artifacts.
+  action: >
+    Complete the model approval workflow: review evaluation
+    metrics in the model card, verify training data provenance,
+    then set ModelApprovalStatus to Approved via
+    sagemaker:UpdateModelPackage.
+  example: |
+    {
+      "governance": {
+        "sagemaker": {
+          "model_package": {
+            "approval_status": "Approved"
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.sagemaker.model_package.approval_status
+      op: present
+    - field: properties.governance.sagemaker.model_package.approval_status
+      op: ne
+      value: "Approved"
+defect: >
+  Model package latest version is not in Approved status.
+infection: >
+  An unapproved model enters the inference pipeline without
+  review. If the model was poisoned during training, contains
+  biased outputs, or was built from unauthorized data, no
+  human gate prevents deployment.
+failure: >
+  A compromised or inadequately tested model serves production
+  traffic, producing wrong predictions or leaking training data
+  through model inversion.
+tests:
+  - name: pending approval fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              approval_status: "PendingManualApproval"
+  - name: rejected fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector-rejected"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              approval_status: "Rejected"
+  - name: approved passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector-approved"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              approval_status: "Approved"

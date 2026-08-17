@@ -1,0 +1,55 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-17T13:00:00Z",
+  "source": {"tool": "stave-lab", "version": "1.0.0"},
+  "assets": [
+    {
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "asset_type": "aws_sagemaker_model_package_group",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "sagemaker": {
+            "model_package": {
+              "approval_status": "PendingManualApproval",
+              "has_model_card": false,
+              "model_card_status": "",
+              "has_creator": false
+            }
+          }
+        },
+        "access": {
+          "sagemaker": {
+            "model_package_group": {
+              "policy_allows_broad_access": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/recommender",
+      "asset_type": "aws_sagemaker_model_package_group",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "sagemaker": {
+            "model_package": {
+              "approval_status": "Approved",
+              "has_model_card": true,
+              "model_card_status": "Draft",
+              "has_creator": true
+            }
+          }
+        },
+        "access": {
+          "sagemaker": {
+            "model_package_group": {
+              "policy_allows_broad_access": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

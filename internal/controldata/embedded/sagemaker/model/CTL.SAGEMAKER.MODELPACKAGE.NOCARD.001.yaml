@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.SAGEMAKER.MODELPACKAGE.NOCARD.001
+name: Model Package Group Must Have a Model Card
+description: >
+  A SageMaker model package group must have an associated model
+  card. Model cards document intended use, limitations, evaluation
+  metrics, and ethical considerations. Without a card, there is no
+  structured audit trail for the model's purpose or performance
+  boundaries — reviewers cannot assess whether the model is
+  appropriate for its deployment context.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "SA-11, SA-15"
+  soc2: "CC7.1"
+scope_tags:
+  - aws
+  - sagemaker
+  - ai
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_sagemaker_model_package_group]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Model package group has no associated model card.
+  action: >
+    Create a model card via sagemaker:CreateModelCard documenting
+    the model's intended use, training data, evaluation metrics,
+    and known limitations.
+  example: |
+    {
+      "governance": {
+        "sagemaker": {
+          "model_package": {
+            "has_model_card": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.sagemaker.model_package.has_model_card
+      op: eq
+      value: false
+defect: >
+  Model package group has no model card.
+infection: >
+  Without documentation, there is no structured way to assess
+  the model's fitness for purpose, known biases, or performance
+  boundaries. Reviewers rely on tribal knowledge or skip review
+  entirely.
+failure: >
+  A model with undocumented limitations is deployed to a context
+  where those limitations cause harm — biased predictions, poor
+  accuracy on edge cases, or use outside intended scope.
+tests:
+  - name: no model card fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/recommender"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              has_model_card: false
+  - name: model card present passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/recommender-documented"
+      asset_type: aws_sagemaker_model_package_group
+      vendor: aws
+      properties:
+        governance:
+          sagemaker:
+            model_package:
+              has_model_card: true
