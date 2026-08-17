@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYAGENT.ROLE.OVERBROAD.001
+name: Security Agent Service Role Must Follow Least Privilege
+description: >
+  AWS Security Agent service role has admin-level or wildcard
+  permissions. The service role is the IAM role the pentest
+  agent assumes during execution — an overbroad role gives the
+  agent access beyond the pentest target scope. A compromised
+  or misconfigured agent with an overbroad role can read secrets,
+  modify infrastructure, or escalate privileges across the
+  entire account instead of being confined to the designated
+  target resources.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - securityagent
+taxonomy:
+  - compliance-mapping
+  - least-privilege
+subtractive_category:
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_securityagent_job
+params:
+  attack_stage: privilege_escalation
+remediation:
+  description: >
+    Security Agent service role has overbroad permissions. The
+    agent can access resources beyond the pentest target scope.
+  action: >
+    Scope the service role to only the resources and actions
+    required for the specific pentest target. Replace wildcard
+    Resource and Action grants with explicit ARNs and action
+    lists matching the engagement scope.
+  example: |
+    {
+      "configuration": {
+        "service_role": { "is_overbroad": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.configuration.service_role.is_overbroad
+      op: eq
+      value: true
+defect: >
+  Security Agent service role grants admin-level or wildcard
+  permissions beyond the pentest target scope.
+infection: >
+  Teams provision a broad role for convenience during initial
+  setup and never scope it down for production engagements.
+failure: >
+  Agent compromise or misconfiguration allows privilege
+  escalation across the entire account — secrets, infrastructure,
+  and IAM resources are all reachable through the overbroad role.
+tests:
+  - name: "overbroad service role fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "secagent-job-overbroad-001"
+      asset_type: aws_securityagent_job
+      vendor: aws
+      properties:
+        configuration:
+          service_role:
+            is_overbroad: true
+  - name: "scoped service role passes"
+    verdict: PASS
+    asset:
+      asset_id: "secagent-job-scoped-001"
+      asset_type: aws_securityagent_job
+      vendor: aws
+      properties:
+        configuration:
+          service_role:
+            is_overbroad: false

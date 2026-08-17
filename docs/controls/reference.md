@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3448
-**Pack hash:** `08dc8de6b2dd21cd50a085da6c9f958155d0318968f92cf815d0d7871a6f895b`
+**Total controls:** 3454
+**Pack hash:** `22408e04ba4a8795be6bd55628460c0af695cde2dc0aaa44a743180e5072f932`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 372 |
-| high | 1480 |
+| high | 1484 |
 | info | 19 |
 | low | 272 |
-| medium | 1305 |
+| medium | 1307 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,13 +29,13 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 161 |
 | encryption | 125 |
-| exposure | 1504 |
+| exposure | 1507 |
 | governance | 695 |
 | hygiene | 21 |
-| identity | 677 |
+| identity | 678 |
 | lifecycle | 32 |
 | network | 58 |
-| resilience | 49 |
+| resilience | 51 |
 | secrets | 4 |
 | storage | 8 |
 
@@ -56,7 +56,7 @@ GitHub. Pick a service below.
 | [APPSYNC](reference/appsync.md) | 2 |
 | [ATHENA](reference/athena.md) | 5 |
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
-| [AUTOSCALING](reference/autoscaling.md) | 3 |
+| [AUTOSCALING](reference/autoscaling.md) | 4 |
 | [AZURE](reference/azure.md) | 141 |
 | [BACKUP](reference/backup.md) | 14 |
 | [BATCH](reference/batch.md) | 5 |
@@ -88,7 +88,7 @@ GitHub. Pick a service below.
 | [DOCUMENTDB](reference/documentdb.md) | 19 |
 | [DYNAMODB](reference/dynamodb.md) | 39 |
 | [EBS](reference/ebs.md) | 3 |
-| [EC2](reference/ec2.md) | 114 |
+| [EC2](reference/ec2.md) | 116 |
 | [ECR](reference/ecr.md) | 10 |
 | [ECS](reference/ecs.md) | 60 |
 | [EFS](reference/efs.md) | 15 |
@@ -153,6 +153,7 @@ GitHub. Pick a service below.
 | [SECRET](reference/secret.md) | 3 |
 | [SECRETS](reference/secrets.md) | 31 |
 | [SECRETSMANAGER](reference/secretsmanager.md) | 5 |
+| [SECURITYAGENT](reference/securityagent.md) | 3 |
 | [SECURITYHUB](reference/securityhub.md) | 10 |
 | [SECURITYIR](reference/securityir.md) | 2 |
 | [SECURITYLAKE](reference/securitylake.md) | 4 |

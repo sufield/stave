@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYAGENT.VPC.EGRESS.001
+name: Security Agent VPC Must Restrict Egress
+description: >
+  AWS Security Agent runs in a VPC with unrestricted egress.
+  The agent's security group allows outbound traffic to
+  0.0.0.0/0, meaning the agent can reach any external endpoint.
+  A compromised or misconfigured agent with unrestricted egress
+  can exfiltrate data to attacker-controlled infrastructure or
+  establish C2 communication channels. The VPC placement
+  provides no isolation benefit when egress is unrestricted.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-06", "IVS-09"]
+scope_tags:
+  - aws
+  - securityagent
+taxonomy:
+  - network-isolation
+  - network-perimeter
+subtractive_category:
+  - S03
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_securityagent_job
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Security Agent VPC configuration allows unrestricted egress.
+    The agent can reach any external endpoint.
+  action: >
+    Restrict egress security group rules to only the endpoints
+    required for pentest target communication. Remove 0.0.0.0/0
+    outbound rules and replace with specific CIDR blocks or
+    security group references for the target infrastructure.
+  example: |
+    {
+      "network": {
+        "vpc_config": { "has_unrestricted_egress": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.vpc_config.has_unrestricted_egress
+      op: eq
+      value: true
+defect: >
+  Security Agent VPC security group allows outbound traffic to
+  0.0.0.0/0 — no egress restriction.
+infection: >
+  Default security group rules allow all outbound traffic. The
+  agent's VPC placement provides network isolation in appearance
+  only.
+failure: >
+  Compromised agent exfiltrates collected pentest data or
+  establishes reverse shell to attacker infrastructure through
+  the unrestricted egress path.
+tests:
+  - name: "unrestricted egress fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "secagent-job-open-egress-001"
+      asset_type: aws_securityagent_job
+      vendor: aws
+      properties:
+        network:
+          vpc_config:
+            has_unrestricted_egress: true
+  - name: "restricted egress passes"
+    verdict: PASS
+    asset:
+      asset_id: "secagent-job-restricted-egress-001"
+      asset_type: aws_securityagent_job
+      vendor: aws
+      properties:
+        network:
+          vpc_config:
+            has_unrestricted_egress: false

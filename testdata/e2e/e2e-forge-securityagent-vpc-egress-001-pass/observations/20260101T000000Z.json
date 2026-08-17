@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "secagent-job-webapp-pentest",
+      "properties": {
+        "network": {
+          "vpc_config": {
+            "has_unrestricted_egress": false
+          }
+        }
+      },
+      "type": "aws_securityagent_job",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-01T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

@@ -20,6 +20,21 @@ ASGs with load balancers must use ELB health checks.
 
 ---
 
+### CTL.AUTOSCALING.HEALTHCHECK.APPLICATIONSTATUS.001
+
+**ASG With Application Status Checks Not Using Application Health Type**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** aws_security_hub: AutoScaling.1; nist_800_53_r5: CP-7; soc2: A1.2;
+
+Auto Scaling group has instances with application status checks but the ASG is not configured to use application-level health check type. The application status checks are cosmetic — they report health but the ASG cannot act on them. When an instance fails the application status check, it remains in the ASG serving errors because the ASG only watches EC2 or ELB health. This is the gap between "we monitor it" and "we respond to it." Fires only on ASGs where member instances have application status checks configured.
+
+**Remediation:** Update the ASG to use APPLICATION_STATUS health check type so that application status check failures trigger instance replacement. Set an appropriate health check grace period (300-600s) to allow instances to initialize before health checks begin.
+
+---
+
 ### CTL.AUTOSCALING.INCOMPLETE.001
 
 **Complete Data Required for Auto Scaling Assessment**

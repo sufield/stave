@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "id": "secagent-job-webapp-pentest",
+      "properties": {
+        "configuration": {
+          "service_role": {
+            "is_overbroad": false
+          }
+        }
+      },
+      "type": "aws_securityagent_job",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

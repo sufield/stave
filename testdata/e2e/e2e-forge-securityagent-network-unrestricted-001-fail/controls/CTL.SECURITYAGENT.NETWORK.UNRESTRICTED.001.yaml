@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYAGENT.NETWORK.UNRESTRICTED.001
+name: Security Agent Network Traffic Rules Must Restrict Targets
+description: >
+  AWS Security Agent has URL-based network traffic rules that
+  do not restrict targets. The agent either has a wildcard ALLOW
+  pattern or no DENY rules, meaning the URL-based filtering is
+  configured but not restricting. The agent can reach any URL
+  during execution, expanding its blast radius beyond the
+  intended pentest scope. Network traffic rules are the
+  application-layer complement to VPC egress — even with
+  restricted egress, unrestricted URL rules allow the agent to
+  probe any reachable endpoint.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-06"]
+scope_tags:
+  - aws
+  - securityagent
+taxonomy:
+  - network-isolation
+subtractive_category:
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_securityagent_job
+params:
+  attack_stage: exfiltration
+remediation:
+  description: >
+    Security Agent network traffic rules contain a wildcard
+    ALLOW or no DENY rules. The URL-based filtering provides
+    no restriction.
+  action: >
+    Add explicit DENY rules for sensitive internal endpoints.
+    Replace wildcard ALLOW patterns with targeted URL patterns
+    matching only the pentest target scope.
+  example: |
+    {
+      "network": {
+        "traffic_rules": { "has_unrestricted_allow": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.traffic_rules.has_unrestricted_allow
+      op: eq
+      value: true
+defect: >
+  Security Agent network traffic rules allow access to any URL.
+  The application-layer filtering is not restricting.
+infection: >
+  Default traffic rules use a wildcard ALLOW pattern with no
+  DENY rules. The configuration appears complete but provides
+  no filtering.
+failure: >
+  Agent probes endpoints beyond the pentest scope — internal
+  services, metadata endpoints, or external infrastructure
+  become reachable through the unrestricted URL rules.
+tests:
+  - name: "unrestricted allow fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "secagent-job-wildcard-url-001"
+      asset_type: aws_securityagent_job
+      vendor: aws
+      properties:
+        network:
+          traffic_rules:
+            has_unrestricted_allow: true
+  - name: "restricted rules passes"
+    verdict: PASS
+    asset:
+      asset_id: "secagent-job-scoped-url-001"
+      asset_type: aws_securityagent_job
+      vendor: aws
+      properties:
+        network:
+          traffic_rules:
+            has_unrestricted_allow: false

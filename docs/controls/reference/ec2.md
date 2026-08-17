@@ -125,6 +125,36 @@ EC2 instance is running an AMI whose owner account is not in the organization, i
 
 ---
 
+### CTL.EC2.APPLICATIONSTATUSCHECK.EXISTS.001
+
+**Traffic-Serving EC2 Instance Has No Application Status Check**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** aws_security_hub: EC2.8; nist_800_53_r5: SI-4; soc2: CC7.2;
+
+EC2 instance serving traffic has no application status check associated. System and instance status checks verify hardware and OS health but cannot detect application-level failures: web server stopped, Docker daemon down, networking misconfigured, or application returning 5xx errors. Without an application status check, a 90-minute (or longer) detection window is common — the instance appears healthy at the infrastructure layer while silently serving errors. Application status checks (launched 2026-08-10) probe a configured HTTP(S) endpoint and report application health as a first-class EC2 status dimension. Fires only on instances tagged serves-traffic=true.
+
+**Remediation:** Create an application status check targeting the instance's health endpoint. Use HTTPS on the application's health check port. Configure healthy response codes (typically 200). Associate the check with the instance via tag or direct association. For Auto Scaling groups, also configure the ASG to use application health check type.
+
+---
+
+### CTL.EC2.APPLICATIONSTATUSCHECK.HTTPS.001
+
+**Application Status Check Uses HTTP Instead of HTTPS**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-8; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+EC2 application status check probes the health endpoint over HTTP instead of HTTPS. Health check traffic over HTTP exposes endpoint paths and response semantics to network observers. An attacker with network visibility can learn which endpoints exist, what constitutes a healthy response, and potentially manipulate health check responses via MITM to keep a compromised instance marked healthy. TLS should be the default for any monitoring probe. Fires only on instances that have an application status check configured.
+
+**Remediation:** Update the application status check to use HTTPS. Ensure the application's health endpoint supports TLS. If the application terminates TLS at a load balancer, configure the status check to probe the application's local HTTPS listener or accept the HTTP probe as an intentional trade-off and suppress this finding.
+
+---
+
 ### CTL.EC2.ASG.HEALTHCHECK.001
 
 **EC2 Auto Scaling Groups Must Use ELB Health Checks**
