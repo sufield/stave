@@ -23,11 +23,11 @@ jobs:
         run: |
           # Fetch TrackIAM service list (paginated)
           page=1
-          > /tmp/trackiam-services.txt
+          : > /tmp/trackiam-services.txt
           while true; do
-            batch=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-              "https://api.github.com/repos/glassechidna/trackiam/contents/services?per_page=100&page=${page}" | \
-              jq -r '.[].name // empty' 2>/dev/null)
+            response=$(curl -sf -H "Authorization: token $GITHUB_TOKEN" \
+              "https://api.github.com/repos/glassechidna/trackiam/contents/services?per_page=100&page=${page}") || break
+            batch=$(echo "$response" | jq -r '.[].name // empty' 2>/dev/null) || break
             [ -z "$batch" ] && break
             echo "$batch" >> /tmp/trackiam-services.txt
             page=$((page + 1))
