@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3444
-**Pack hash:** `7001e00c6e9941c4fe1f496bba4e1732a1c7a8e6e4a0d7a6c3a2c4f1b6dc5248`
+**Total controls:** 3448
+**Pack hash:** `08dc8de6b2dd21cd50a085da6c9f958155d0318968f92cf815d0d7871a6f895b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 372 |
-| high | 1478 |
+| high | 1480 |
 | info | 19 |
 | low | 272 |
-| medium | 1303 |
+| medium | 1305 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,8 +29,8 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 161 |
 | encryption | 125 |
-| exposure | 1501 |
-| governance | 694 |
+| exposure | 1504 |
+| governance | 695 |
 | hygiene | 21 |
 | identity | 677 |
 | lifecycle | 32 |
@@ -70,6 +70,7 @@ GitHub. Pick a service below.
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
 | [CLOUDTRAIL](reference/cloudtrail.md) | 66 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 68 |
+| [CODEARTIFACT](reference/codeartifact.md) | 4 |
 | [CODEBUILD](reference/codebuild.md) | 13 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
 | [CODEPIPELINE](reference/codepipeline.md) | 6 |

@@ -1,11 +1,14 @@
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-08-17T12:00:00Z",
-  "source": {"tool": "stave-lab", "version": "1.0.0"},
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.lab"
+  },
   "assets": [
     {
-      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
-      "asset_type": "aws_sagemaker_model_package_group",
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/fraud-detector",
+      "type": "aws_sagemaker_model_package_group",
       "vendor": "aws",
       "properties": {
         "governance": {
@@ -28,8 +31,8 @@
       }
     },
     {
-      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/recommender",
-      "asset_type": "aws_sagemaker_model_package_group",
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:model-package-group/recommender",
+      "type": "aws_sagemaker_model_package_group",
       "vendor": "aws",
       "properties": {
         "governance": {

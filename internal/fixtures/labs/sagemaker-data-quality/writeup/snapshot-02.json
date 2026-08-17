@@ -1,11 +1,14 @@
 {
   "schema_version": "obs.v0.1",
   "captured_at": "2026-08-17T13:00:00Z",
-  "source": {"tool": "stave-lab", "version": "1.0.0"},
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.lab"
+  },
   "assets": [
     {
-      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
-      "asset_type": "aws_sagemaker_data_quality_job",
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/fraud-model-monitor",
+      "type": "aws_sagemaker_data_quality_job",
       "vendor": "aws",
       "properties": {
         "governance": {
@@ -19,8 +22,8 @@
       }
     },
     {
-      "asset_id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/credit-model-monitor",
-      "asset_type": "aws_sagemaker_data_quality_job",
+      "id": "arn:aws:sagemaker:us-east-1:111122223333:data-quality-job-definition/credit-model-monitor",
+      "type": "aws_sagemaker_data_quality_job",
       "vendor": "aws",
       "properties": {
         "governance": {
