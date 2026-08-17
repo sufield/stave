@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.ROOT.PRINCIPAL.001
+name: KMS Key Policy Grants Root Principal Full Access
+description: >
+  KMS key policy contains a statement granting the account root
+  principal (arn:aws:iam::ACCOUNT:root) with kms:* or all four
+  usage actions. This is AWS's default key policy — it delegates
+  every KMS permission to IAM policies, meaning any IAM entity
+  with kms:* in their IAM policy gets full key access including
+  Decrypt, ScheduleKeyDeletion, and PutKeyPolicy. Distinct from
+  CTL.KMS.POLICY.001 which catches Principal "*" (any principal
+  in any account). The root principal pattern restricts to the
+  owning account but still grants full control to anyone with
+  matching IAM permissions — no key-policy-level restriction
+  exists. For keys protecting sensitive data, the key policy
+  should name specific roles, not delegate entirely to IAM.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.6.1"
+  fedramp_moderate: "AC-6(1)"
+  ccm_v4: ["CEK-03", "IAM-16"]
+scope_tags:
+  - aws
+  - kms
+taxonomy:
+  - key-management
+  - trust-boundary
+  - least-privilege
+subtractive_category:
+  - S02
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - cryptography.kind
+  - cryptography.policy.has_root_principal_full_access
+remediation:
+  description: >
+    KMS key policy delegates full control to the account root
+    principal. Any IAM entity with kms:* permissions can use,
+    manage, and delete this key.
+  action: >
+    Replace the root principal statement with named IAM roles.
+    Grant kms:Encrypt and kms:Decrypt to the application role,
+    kms:CreateGrant to the service role (with GranteePrincipal
+    constraint), and kms:DescribeKey to the audit role. Remove
+    the root principal statement entirely — IAM policies alone
+    cannot grant KMS access when the key policy does not allow it.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "policy": {
+          "has_root_principal_full_access": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.policy.has_root_principal_full_access
+      op: eq
+      value: true
+defect: >
+  KMS key policy grants the account root principal full kms:*
+  access, delegating all key permissions to IAM policies.
+infection: >
+  Any IAM entity in the account with kms:* or kms:Decrypt in
+  their IAM policy can use this key without key-policy-level
+  restriction. An attacker who compromises any role with broad
+  KMS IAM permissions — a common misconfiguration — can decrypt
+  data, schedule key deletion, or modify the key policy itself
+  to grant persistent access. The key policy provides no
+  defense-in-depth: IAM alone controls who uses the key.
+failure: >
+  Unrestricted key access via IAM delegation. The key policy
+  offers no independent access control — any principal with
+  matching IAM permissions has full key access including
+  destructive operations.
+tests:
+  - name: "key with root principal full access fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/root-full-access"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            has_root_principal_full_access: true
+  - name: "key without root principal full access passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/named-roles-only"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            has_root_principal_full_access: false
+  - name: "key with wildcard principal but no root fires on POLICY.001 not this"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/wildcard-not-root"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            has_wildcard_principal: true
+            has_root_principal_full_access: false

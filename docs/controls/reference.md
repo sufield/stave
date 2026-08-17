@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3431
-**Pack hash:** `1129170228be605539c56c1ff0466e7a667fb3632782bd38c6680efdea98d78d`
+**Total controls:** 3434
+**Pack hash:** `1ada9f4543ce42525be21edc6ff6f532bda9ac272bd5038c8c43eff7196f021e`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 371 |
-| high | 1473 |
+| critical | 372 |
+| high | 1475 |
 | info | 19 |
-| low | 270 |
-| medium | 1298 |
+| low | 269 |
+| medium | 1299 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,8 +29,8 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 161 |
 | encryption | 125 |
-| exposure | 1498 |
-| governance | 685 |
+| exposure | 1500 |
+| governance | 686 |
 | hygiene | 21 |
 | identity | 676 |
 | lifecycle | 32 |
@@ -117,7 +117,7 @@ GitHub. Pick a service below.
 | [K8S](reference/k8s.md) | 68 |
 | [KEYSPACES](reference/keyspaces.md) | 5 |
 | [KINESIS](reference/kinesis.md) | 6 |
-| [KMS](reference/kms.md) | 47 |
+| [KMS](reference/kms.md) | 50 |
 | [LAKEFORMATION](reference/lakeformation.md) | 3 |
 | [LAMBDA](reference/lambda.md) | 93 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |

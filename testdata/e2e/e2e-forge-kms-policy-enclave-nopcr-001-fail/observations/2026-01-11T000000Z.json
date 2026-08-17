@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:kms:us-east-1:111122223333:key/enclave-no-pcr",
+      "type": "aws_kms_key",
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kind": "key",
+          "tags": {
+            "enclave-protected": "true"
+          },
+          "policy": {
+            "enclave_attestation": {
+              "has_pcr_condition": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

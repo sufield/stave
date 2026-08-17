@@ -2,17 +2,23 @@ dsl_version: ctrl.v1
 id: CTL.ACM.CERT.VALIDATION.001
 name: ACM Certificates Must Use DNS Validation
 description: >
-  ACM certificates should use DNS validation, not email validation.
-  Email validation requires manual intervention for each renewal —
-  if the domain contact email is stale, renewal fails silently and
-  the certificate expires. DNS validation enables automatic renewal
-  as long as the CNAME record exists, eliminating human-dependent
-  renewal processes.
+  ACM certificates must use DNS validation, not email validation.
+  Email validation is deprecated — AWS will stop supporting email
+  validation for certificate renewal on September 30, 2027. After
+  that date, ACM will not renew email-validated certificates.
+  When the certificate expires, TLS terminates and the associated
+  service becomes unreachable. This is the ghost archetype: the
+  certificate works today, the renewal mechanism is deprecated,
+  and the failure will be silent — ACM won't renew, the certificate
+  expires, no alert fires because certificate expiration isn't a
+  security finding in most monitoring stacks. Migrate to DNS
+  validation using UpdateCertificateOptions before the deadline.
 domain: exposure
-severity: low
+severity: high
 compliance:
   nist_800_53_r5: "SC-17"
   soc2: "CC6.1"
+  pci_dss_v4.0: "4.2.1"
   ccm_v4: ["CEK-02"]
   scs_c02: "6.2"
 scope_tags: [aws, acm]
@@ -27,14 +33,37 @@ classification: state_assertion
 applicable_asset_types: [aws_acm_certificate]
 params:
   attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: service
+    multiplier: 2.0
+defect: >
+  ACM certificate uses email validation, which is deprecated and
+  will stop functioning on September 30, 2027.
+infection: >
+  Email validation requires manual intervention for each renewal —
+  the domain owner must respond to a validation email. If the
+  contact email is stale, renewal fails silently. After September
+  30, 2027, email validation ceases entirely: ACM will not attempt
+  renewal. The certificate expires on its NotAfter date. Every
+  service using it — ALB listeners, CloudFront distributions, API
+  Gateway custom domains — begins failing TLS handshakes. The
+  failure is total and immediate for clients that enforce certificate
+  validity.
+failure: >
+  TLS termination on certificate expiry. Services become unreachable
+  when the deprecated email validation mechanism stops functioning.
 remediation:
   description: >
-    ACM certificate uses email validation. Renewal depends on
-    human response to validation emails.
+    ACM certificate uses email validation, which is deprecated.
+    Renewal will stop on September 30, 2027.
   action: >
-    Re-request the certificate with DNS validation. Add the CNAME
-    record ACM provides to your DNS zone. This enables automatic
-    renewal without human intervention.
+    Migrate to DNS validation: aws acm update-certificate-options
+    --certificate-arn <arn> --options CertificateTransparencyLoggingPreference=ENABLED.
+    If the certificate cannot be updated in place, re-request with
+    DNS validation, add the CNAME record ACM provides to your DNS
+    zone, and update the resource associations to point to the new
+    certificate ARN.
   example: |
     {
       "certificate": {
@@ -50,3 +79,24 @@ unsafe_predicate:
     - field: properties.certificate.validation_method
       op: eq
       value: EMAIL
+tests:
+  - name: email-validated certificate fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:certificate/email-val"
+      asset_type: aws_acm_certificate
+      vendor: aws
+      properties:
+        certificate:
+          kind: acm_certificate
+          validation_method: EMAIL
+  - name: dns-validated certificate passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:acm:us-east-1:111122223333:certificate/dns-val"
+      asset_type: aws_acm_certificate
+      vendor: aws
+      properties:
+        certificate:
+          kind: acm_certificate
+          validation_method: DNS

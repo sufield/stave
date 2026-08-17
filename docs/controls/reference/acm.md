@@ -99,14 +99,14 @@ SSL/TLS certificates imported into ACM must not be within 30 days of expiry or a
 
 **ACM Certificates Must Use DNS Validation**
 
-- **Severity:** low
+- **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
-- **Compliance:** nist_800_53_r5: SC-17; scs_c02: 6.2; soc2: CC6.1;
+- **Compliance:** nist_800_53_r5: SC-17; pci_dss_v4.0: 4.2.1; scs_c02: 6.2; soc2: CC6.1;
 
-ACM certificates should use DNS validation, not email validation. Email validation requires manual intervention for each renewal — if the domain contact email is stale, renewal fails silently and the certificate expires. DNS validation enables automatic renewal as long as the CNAME record exists, eliminating human-dependent renewal processes.
+ACM certificates must use DNS validation, not email validation. Email validation is deprecated — AWS will stop supporting email validation for certificate renewal on September 30, 2027. After that date, ACM will not renew email-validated certificates. When the certificate expires, TLS terminates and the associated service becomes unreachable. This is the ghost archetype: the certificate works today, the renewal mechanism is deprecated, and the failure will be silent — ACM won't renew, the certificate expires, no alert fires because certificate expiration isn't a security finding in most monitoring stacks. Migrate to DNS validation using UpdateCertificateOptions before the deadline.
 
-**Remediation:** Re-request the certificate with DNS validation. Add the CNAME record ACM provides to your DNS zone. This enables automatic renewal without human intervention.
+**Remediation:** Migrate to DNS validation: aws acm update-certificate-options --certificate-arn <arn> --options CertificateTransparencyLoggingPreference=ENABLED. If the certificate cannot be updated in place, re-request with DNS validation, add the CNAME record ACM provides to your DNS zone, and update the resource associations to point to the new certificate ARN.
 
 ---
 

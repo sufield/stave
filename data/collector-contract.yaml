@@ -2409,6 +2409,40 @@ contracts:
     consumers:
       - CTL.S3VECTORS.IAM.PUTVECTORS.WILDCARD.001
 
+  # ─── KMS Key Policy Gap Fields ───────────────────────────────
+
+  - field: cryptography.policy.has_root_principal_full_access
+    type: boolean
+    postcondition: >
+      True if the KMS key policy contains a statement granting
+      arn:aws:iam::ACCOUNT:root with kms:* or all four usage
+      actions (Encrypt, Decrypt, GenerateDataKey*, ReEncrypt*).
+      This is the AWS default key policy pattern — it delegates
+      all KMS permissions to IAM policies.
+    consumers:
+      - CTL.KMS.POLICY.ROOT.PRINCIPAL.001
+
+  - field: cryptography.policy.enclave_attestation.has_pcr_condition
+    type: boolean
+    postcondition: >
+      True if the KMS key policy includes at least one condition
+      key matching kms:RecipientAttestation:PCR* (PCR0, PCR1,
+      or PCR2). Relevant only for keys tagged
+      enclave-protected=true. Without PCR conditions, any Nitro
+      Enclave or the parent instance can use the key.
+    consumers:
+      - CTL.KMS.POLICY.ENCLAVE.NOPCR.001
+
+  - field: cryptography.deletion_protection.has_scp_deny
+    type: boolean
+    postcondition: >
+      True if an SCP in the organization denies
+      kms:ScheduleKeyDeletion for this key or account. Derived
+      by checking effective SCPs on the account for Deny
+      statements covering kms:ScheduleKeyDeletion.
+    consumers:
+      - CTL.KMS.DELETION.NOPROTECTION.001
+
   # ─── OIDC Trust Policy Mutable Subject Claim ────────────────
   - field: identity.trust.oidc.sub_claim_uses_mutable_id
     type: boolean

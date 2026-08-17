@@ -1,0 +1,146 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.DELETION.NOPROTECTION.001
+name: KMS Key Has No Deletion Protection
+description: >
+  KMS key has neither an SCP denying ScheduleKeyDeletion nor a
+  CloudWatch alarm monitoring for the API call. Two independent
+  deletion protection layers exist: prevention (SCP deny blocks
+  the call entirely) and detection (CloudWatch alarm notifies
+  when the call occurs). A key with neither layer is completely
+  unprotected against deletion — the call succeeds silently,
+  starting the irreversible countdown to permanent key
+  destruction. Distinct from CTL.KMS.ALARM.DELETION.001 (detection
+  only) and CTL.IAM.SCP.KMS.KEYDELETION.001 (prevention only).
+  This control fires when BOTH are absent on the same key.
+domain: governance
+severity: critical
+compliance:
+  nist_800_53_r5: "SC-12(1)"
+  soc2: "A1.1"
+  pci_dss_v4.0: "3.6.1.4"
+  fedramp_moderate: "SC-12(1)"
+  hipaa: "164.312(a)(1)"
+  ccm_v4: ["CEK-03", "CEK-14", "BCR-08"]
+scope_tags:
+  - aws
+  - kms
+taxonomy:
+  - compliance-mapping
+  - key-management
+subtractive_category:
+  - S09
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: resilience
+observation_fields:
+  - cryptography.kind
+  - cryptography.alarms.has_schedule_deletion_alarm
+  - cryptography.deletion_protection.has_scp_deny
+remediation:
+  description: >
+    KMS key has no deletion protection. ScheduleKeyDeletion can
+    be called without prevention or detection.
+  action: >
+    Add at minimum one protection layer. Preferred: SCP deny on
+    ScheduleKeyDeletion at the OU level (prevents the call
+    entirely). Also recommended: CloudWatch alarm on CloudTrail
+    metric filter for ScheduleKeyDeletion (detects attempts even
+    if SCP is temporarily removed). Both layers together provide
+    defense in depth — SCP prevents, alarm detects SCP removal.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "alarms": {
+          "has_schedule_deletion_alarm": true
+        },
+        "deletion_protection": {
+          "has_scp_deny": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.alarms.has_schedule_deletion_alarm
+      op: eq
+      value: false
+    - field: properties.cryptography.deletion_protection.has_scp_deny
+      op: eq
+      value: false
+defect: >
+  KMS key has no SCP denying ScheduleKeyDeletion and no
+  CloudWatch alarm monitoring the API call.
+infection: >
+  Without either protection layer, any principal with
+  kms:ScheduleKeyDeletion permission can initiate key deletion
+  silently. The call succeeds, starting a 7-30 day countdown to
+  permanent destruction. No alarm fires. No SCP blocks. The only
+  signal is a CloudTrail log entry — which requires active log
+  review to discover. An insider or compromised credential can
+  delete the key and the team will not know until dependent
+  services fail, by which time the deletion window may have
+  expired.
+failure: >
+  Silent key deletion. ScheduleKeyDeletion succeeds without
+  prevention or notification, leaving only the deletion waiting
+  period between the API call and permanent data loss.
+tests:
+  - name: "key with no alarm and no SCP deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/no-protection"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_schedule_deletion_alarm: false
+          deletion_protection:
+            has_scp_deny: false
+  - name: "key with alarm but no SCP passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/alarm-only"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_schedule_deletion_alarm: true
+          deletion_protection:
+            has_scp_deny: false
+  - name: "key with SCP but no alarm passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/scp-only"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_schedule_deletion_alarm: false
+          deletion_protection:
+            has_scp_deny: true
+  - name: "key with both protections passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/fully-protected"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          alarms:
+            has_schedule_deletion_alarm: true
+          deletion_protection:
+            has_scp_deny: true

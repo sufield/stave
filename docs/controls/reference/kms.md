@@ -230,6 +230,21 @@ KMS key is scheduled for deletion with the minimum waiting period (7 days). The 
 
 ---
 
+### CTL.KMS.DELETION.NOPROTECTION.001
+
+**KMS Key Has No Deletion Protection**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SC-12(1); hipaa: 164.312(a)(1); nist_800_53_r5: SC-12(1); pci_dss_v4.0: 3.6.1.4; soc2: A1.1;
+
+KMS key has neither an SCP denying ScheduleKeyDeletion nor a CloudWatch alarm monitoring for the API call. Two independent deletion protection layers exist: prevention (SCP deny blocks the call entirely) and detection (CloudWatch alarm notifies when the call occurs). A key with neither layer is completely unprotected against deletion — the call succeeds silently, starting the irreversible countdown to permanent key destruction. Distinct from CTL.KMS.ALARM.DELETION.001 (detection only) and CTL.IAM.SCP.KMS.KEYDELETION.001 (prevention only). This control fires when BOTH are absent on the same key.
+
+**Remediation:** Add at minimum one protection layer. Preferred: SCP deny on ScheduleKeyDeletion at the OU level (prevents the call entirely). Also recommended: CloudWatch alarm on CloudTrail metric filter for ScheduleKeyDeletion (detects attempts even if SCP is temporarily removed). Both layers together provide defense in depth — SCP prevents, alarm detects SCP removal.
+
+---
+
 ### CTL.KMS.ENTROPY.EXTERNAL.ORIGIN.001
 
 **KMS Customer Keys Should Use AWS-Generated Key Material, Not Imported External Material**
@@ -576,6 +591,21 @@ Customer-managed KMS key policy grants kms:Decrypt to a broad principal — the 
 
 ---
 
+### CTL.KMS.POLICY.ENCLAVE.NOPCR.001
+
+**Enclave-Protected KMS Key Missing PCR Attestation Condition**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-12(3); nist_800_53_r5: SC-12(3); pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+KMS key tagged as enclave-protected does not include a kms:RecipientAttestation:PCR condition in its key policy. Nitro Enclaves use PCR values (PCR0=enclave image, PCR1=kernel, PCR2=application) to cryptographically bind KMS operations to a specific enclave binary. Without PCR conditions, the key accepts KMS calls from any enclave or from the parent instance via the vsock proxy — the attestation mechanism provides no protection. Fires only on keys tagged enclave-protected=true. Distinct from CTL.EC2.NITRO.ENCLAVE.001 (checks EC2 enclave enablement) and CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001 (checks network isolation).
+
+**Remediation:** Add a kms:RecipientAttestation:PCR0 condition to the key policy statement that grants kms:Decrypt. Set the value to the SHA-384 hash of the enclave image (from nitro-cli describe-enclaves). For defense in depth, also add PCR1 (kernel) and PCR2 (application). Update the condition value when the enclave image changes — build pipeline should extract PCR values and update the key policy automatically.
+
+---
+
 ### CTL.KMS.POLICY.GHOSTREF.001
 
 **KMS Key Policy Must Not Reference Deleted Principals**
@@ -633,6 +663,21 @@ KMS key policy does not include a kms:EncryptionContext condition on usage state
 KMS key with key_usage=ENCRYPT_DECRYPT has no kms:ViaService condition on its usage statements. Without ViaService, the key is usable directly via the KMS Decrypt/Encrypt APIs — not just through AWS services (S3, RDS, EBS, Secrets Manager). A principal with kms:Decrypt can call KMS Decrypt directly with any ciphertext encrypted by the key, bypassing the calling service's access controls. ViaService restricts key usage to operations performed through specific AWS services (kms:ViaService = s3.us-east-1.amazonaws.com means the key can only be used through S3 in us-east-1). Narrows CTL.KMS.POLICY.CONDITION.001 to the specific case where ViaService is missing, even when other protective conditions (CallerAccount, EncryptionContext) are present. Only applies to ENCRYPT_DECRYPT keys; SIGN_VERIFY and GENERATE_VERIFY_MAC keys do not use ViaService.
 
 **Remediation:** Add kms:ViaService conditions to all usage statements in the key policy. Use service-and-region-qualified values such as "s3.us-east-1.amazonaws.com" or "secretsmanager.us-east-1.amazonaws.com" rather than service-only patterns. ViaService does not apply to keys used for SIGN_VERIFY or GENERATE_VERIFY_MAC; this control only fires on ENCRYPT_DECRYPT keys.
+
+---
+
+### CTL.KMS.POLICY.ROOT.PRINCIPAL.001
+
+**KMS Key Policy Grants Root Principal Full Access**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-6(1); nist_800_53_r5: AC-6(1); pci_dss_v4.0: 3.6.1; soc2: CC6.1;
+
+KMS key policy contains a statement granting the account root principal (arn:aws:iam::ACCOUNT:root) with kms:* or all four usage actions. This is AWS's default key policy — it delegates every KMS permission to IAM policies, meaning any IAM entity with kms:* in their IAM policy gets full key access including Decrypt, ScheduleKeyDeletion, and PutKeyPolicy. Distinct from CTL.KMS.POLICY.001 which catches Principal "*" (any principal in any account). The root principal pattern restricts to the owning account but still grants full control to anyone with matching IAM permissions — no key-policy-level restriction exists. For keys protecting sensitive data, the key policy should name specific roles, not delegate entirely to IAM.
+
+**Remediation:** Replace the root principal statement with named IAM roles. Grant kms:Encrypt and kms:Decrypt to the application role, kms:CreateGrant to the service role (with GranteePrincipal constraint), and kms:DescribeKey to the audit role. Remove the root principal statement entirely — IAM policies alone cannot grant KMS access when the key policy does not allow it.
 
 ---
 

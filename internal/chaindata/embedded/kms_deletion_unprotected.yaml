@@ -1,0 +1,21 @@
+id: kms_deletion_unprotected
+description: >
+  KMS key has no deletion protection (no SCP deny, no alarm)
+  AND is scheduled with the minimum 7-day waiting period.
+  The key is maximally exposed to permanent deletion: no
+  preventive control blocks the call, no detective control
+  notifies when it occurs, and the shortest possible window
+  separates the API call from irreversible key destruction.
+  An attacker or insider who calls ScheduleKeyDeletion gets
+  7 days of silence before all dependent data is permanently
+  lost.
+controls:
+  - CTL.KMS.DELETION.NOPROTECTION.001
+  - CTL.KMS.DELETION.MINWAIT.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - kms_encryption_configured
+postconditions:
+  - data_destruction
+implicit_dependencies: []

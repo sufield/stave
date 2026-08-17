@@ -1,0 +1,138 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.POLICY.ENCLAVE.NOPCR.001
+name: Enclave-Protected KMS Key Missing PCR Attestation Condition
+description: >
+  KMS key tagged as enclave-protected does not include a
+  kms:RecipientAttestation:PCR condition in its key policy.
+  Nitro Enclaves use PCR values (PCR0=enclave image, PCR1=kernel,
+  PCR2=application) to cryptographically bind KMS operations to
+  a specific enclave binary. Without PCR conditions, the key
+  accepts KMS calls from any enclave or from the parent instance
+  via the vsock proxy — the attestation mechanism provides no
+  protection. Fires only on keys tagged enclave-protected=true.
+  Distinct from CTL.EC2.NITRO.ENCLAVE.001 (checks EC2 enclave
+  enablement) and CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001 (checks
+  network isolation).
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-12(3)"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "3.6.1"
+  fedramp_moderate: "SC-12(3)"
+  ccm_v4: ["CEK-03", "CEK-07"]
+scope_tags:
+  - aws
+  - kms
+taxonomy:
+  - key-management
+  - credential-lifecycle
+  - trust-boundary
+subtractive_category:
+  - S02
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_key
+params:
+  attack_stage: credential_access
+observation_fields:
+  - cryptography.kind
+  - cryptography.tags.enclave-protected
+  - cryptography.policy.enclave_attestation.has_pcr_condition
+remediation:
+  description: >
+    KMS key designated for enclave use has no PCR attestation
+    condition. Any enclave or the parent instance can use this key.
+  action: >
+    Add a kms:RecipientAttestation:PCR0 condition to the key
+    policy statement that grants kms:Decrypt. Set the value to
+    the SHA-384 hash of the enclave image (from
+    nitro-cli describe-enclaves). For defense in depth, also add
+    PCR1 (kernel) and PCR2 (application). Update the condition
+    value when the enclave image changes — build pipeline should
+    extract PCR values and update the key policy automatically.
+  example: |
+    {
+      "cryptography": {
+        "kind": "key",
+        "tags": {
+          "enclave-protected": "true"
+        },
+        "policy": {
+          "enclave_attestation": {
+            "has_pcr_condition": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cryptography.kind
+      op: eq
+      value: key
+    - field: properties.cryptography.tags.enclave-protected
+      op: eq
+      value: "true"
+    - field: properties.cryptography.policy.enclave_attestation.has_pcr_condition
+      op: eq
+      value: false
+defect: >
+  KMS key tagged enclave-protected has no
+  kms:RecipientAttestation:PCR condition in its key policy.
+infection: >
+  Without PCR attestation conditions, the KMS key accepts
+  Decrypt and GenerateDataKey calls from any Nitro Enclave
+  running on any instance, not just the intended enclave binary.
+  An attacker who can launch an enclave on any instance in the
+  account — or who compromises the parent instance and proxies
+  through the vsock — can call KMS and decrypt the protected
+  data. The enclave boundary provides isolation, but without
+  attestation conditions the key policy does not verify WHICH
+  enclave is calling.
+failure: >
+  Unauthenticated enclave key access. The key accepts operations
+  from any enclave, defeating the attestation-based isolation
+  that Nitro Enclaves are designed to provide.
+tests:
+  - name: "enclave key without PCR condition fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/enclave-no-pcr"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          tags:
+            enclave-protected: "true"
+          policy:
+            enclave_attestation:
+              has_pcr_condition: false
+  - name: "enclave key with PCR condition passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/enclave-pcr-locked"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          tags:
+            enclave-protected: "true"
+          policy:
+            enclave_attestation:
+              has_pcr_condition: true
+  - name: "non-enclave key without PCR condition passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/regular-key"
+      asset_type: aws_kms_key
+      vendor: aws
+      properties:
+        cryptography:
+          kind: key
+          policy:
+            enclave_attestation:
+              has_pcr_condition: false
