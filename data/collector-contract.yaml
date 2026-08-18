@@ -518,6 +518,20 @@ contracts:
       or aws:SourceAccount conditions that prevent
       confused deputy attacks.
 
+  - field: identity.trust_policy.has_mfa_condition
+    type: boolean
+    postcondition: >
+      True if the IAM role trust policy includes a Condition
+      block requiring aws:MultiFactorAuthPresent. The
+      collector MUST parse the trust policy's Condition for
+      Bool: {"aws:MultiFactorAuthPresent": "true"} — both
+      StringEquals and Bool operators count. BoolIfExists
+      also counts. An inverted condition (MFA=false on Allow)
+      MUST be false (separate control CTL.IAM.SEMANTICS.MFA.INVERTED.001
+      handles that shape).
+    consumers:
+      - CTL.IAM.TRUST.MFA.001
+
   - field: snapshot_before_delete_enforced
     type: boolean
     postcondition: >

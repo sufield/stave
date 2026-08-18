@@ -238,6 +238,7 @@ var pathOverrides = map[string]string{ //nolint:gosec // property labels, not cr
 	"identity.policies.passrole_has_service_condition":             "PassRole iam:PassedToService condition",
 	"identity.trust_policy.has_cross_account_trust":                "cross-account trust",
 	"identity.trust_policy.has_assumption_constraints":             "trust policy session-limiting conditions",
+	"identity.trust_policy.has_mfa_condition":                      "trust policy MFA condition",
 	"monitoring.metric_filters.iam_escalation_events.exists":       "IAM escalation event monitoring",
 	"monitoring.metric_filters.cross_account_assume_role.exists":   "cross-account AssumeRole monitoring",
 	"database.network.has_broad_sg_ingress":                        "database security group broad ingress",

@@ -1,0 +1,135 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.MFA.001
+name: Cross-Account Trust Policy Must Require MFA
+description: >
+  An IAM role with a cross-account trust policy does not include an
+  aws:MultiFactorAuthPresent condition. The trust policy may have
+  other session-limiting constraints (SourceIp, MaxSessionDuration,
+  ExternalId) but none require MFA. A compromised access key in the
+  trusted account can assume the role without a second factor —
+  network or time constraints alone do not substitute for
+  authentication strength. This is the AWS equivalent of Azure
+  Conditional Access scoped to named apps but missing ROPC: the
+  enforcement exists on some paths but not the one the attacker uses.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1550.001
+compliance:
+  owasp_nhi: "NHI4"
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2(1)"
+  pci_dss_v4.0: "8.4.1"
+  fedramp_moderate: "IA-2(1)"
+  hipaa: "164.312(d)"
+  ccm_v4: ["IAM-05", "IAM-14", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - credential-lifecycle
+  - formal-semantics
+  - trust-boundary
+subtractive_category:
+  - S05
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: lateral_movement
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.trust_policy.has_cross_account_trust
+  - identity.trust_policy.has_mfa_condition
+remediation:
+  description: >
+    Cross-account trust policy allows role assumption without MFA.
+    A stolen access key in the trusted account reaches this role
+    without a second factor.
+  action: >
+    Add an aws:MultiFactorAuthPresent condition to the trust policy:
+    "Condition": {"Bool": {"aws:MultiFactorAuthPresent": "true"}}.
+    For CI/CD roles that cannot use MFA (OIDC federation), scope the
+    trust to a specific OIDC subject and keep MaxSessionDuration
+    short — those roles should not have cross-account trust with
+    IAM principals.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "has_cross_account_trust": true,
+          "has_mfa_condition": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.has_cross_account_trust
+      op: present
+    - field: properties.identity.trust_policy.has_cross_account_trust
+      op: eq
+      value: true
+    - field: properties.identity.trust_policy.has_mfa_condition
+      op: ne
+      value: true
+defect: >
+  Cross-account trust policy permits assumption without MFA.
+infection: >
+  An attacker with a compromised access key in the trusted account
+  assumes the role via sts:AssumeRole. No MFA challenge blocks the
+  assumption. The attacker obtains session credentials with the
+  role's full permission set. Other constraints (SourceIp,
+  MaxSessionDuration) limit where and how long the session is usable
+  but do not prevent the initial assumption.
+failure: >
+  Cross-account lateral movement without MFA. Session credentials
+  reach the target account's resources. The only post-hoc signal is
+  the target account's CloudTrail AssumeRole event — no MFA context
+  key is logged because none was required.
+tests:
+  - name: "cross-account trust without MFA fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/CrossAccountDeploy"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            has_cross_account_trust: true
+            has_mfa_condition: false
+  - name: "cross-account trust with MFA passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/SecureCrossAccount"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            has_cross_account_trust: true
+            has_mfa_condition: true
+  - name: "same-account trust without MFA passes (not cross-account)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/InternalRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            has_cross_account_trust: false
+            has_mfa_condition: false

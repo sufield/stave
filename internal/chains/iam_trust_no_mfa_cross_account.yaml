@@ -1,0 +1,21 @@
+id: iam_trust_no_mfa_cross_account
+description: >
+  Cross-account role trust policy lacks MFA AND the trust has no
+  session-limiting constraints at all. Both legs fire on the same
+  role: CTL.IAM.TRUST.MFA.001 detects the missing MFA condition,
+  CTL.IAM.TRUST.SESSION.001 detects the absence of any session
+  constraint (MFA, SourceIp, MaxSessionDuration). Together: the
+  role is assumable cross-account with a bare access key, no MFA,
+  no IP restriction, for up to 12 hours. This is the maximum-
+  exposure variant of the trust MFA gap — not just missing MFA but
+  missing every compensating control.
+controls:
+  - CTL.IAM.TRUST.MFA.001
+  - CTL.IAM.TRUST.SESSION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - cross_account_injection
+implicit_dependencies: []

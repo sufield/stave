@@ -4951,6 +4951,21 @@ IAM SAML and OIDC provider configurations must not reference identity provider e
 
 ---
 
+### CTL.IAM.TRUST.MFA.001
+
+**Cross-Account Trust Policy Must Require MFA**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: IA-2(1); hipaa: 164.312(d); nist_800_53_r5: IA-2(1); owasp_nhi: NHI4; pci_dss_v4.0: 8.4.1; soc2: CC6.1;
+
+An IAM role with a cross-account trust policy does not include an aws:MultiFactorAuthPresent condition. The trust policy may have other session-limiting constraints (SourceIp, MaxSessionDuration, ExternalId) but none require MFA. A compromised access key in the trusted account can assume the role without a second factor — network or time constraints alone do not substitute for authentication strength. This is the AWS equivalent of Azure Conditional Access scoped to named apps but missing ROPC: the enforcement exists on some paths but not the one the attacker uses.
+
+**Remediation:** Add an aws:MultiFactorAuthPresent condition to the trust policy: "Condition": {"Bool": {"aws:MultiFactorAuthPresent": "true"}}. For CI/CD roles that cannot use MFA (OIDC federation), scope the trust to a specific OIDC subject and keep MaxSessionDuration short — those roles should not have cross-account trust with IAM principals.
+
+---
+
 ### CTL.IAM.TRUST.OIDC.001
 
 **OIDC Federation Trust Must Be Scoped to Specific Repository**
