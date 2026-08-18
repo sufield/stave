@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3454
-**Pack hash:** `22408e04ba4a8795be6bd55628460c0af695cde2dc0aaa44a743180e5072f932`
+**Total controls:** 3451
+**Pack hash:** `5b27addac0b40553b13dd7e1f82be127c7a3ca2d85f0a035d8111b569a687f8e`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 372 |
-| high | 1484 |
+| high | 1482 |
 | info | 19 |
 | low | 272 |
-| medium | 1307 |
+| medium | 1306 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,13 +29,13 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 161 |
 | encryption | 125 |
-| exposure | 1507 |
+| exposure | 1506 |
 | governance | 695 |
 | hygiene | 21 |
 | identity | 678 |
 | lifecycle | 32 |
 | network | 58 |
-| resilience | 51 |
+| resilience | 49 |
 | secrets | 4 |
 | storage | 8 |
 
@@ -56,7 +56,7 @@ GitHub. Pick a service below.
 | [APPSYNC](reference/appsync.md) | 2 |
 | [ATHENA](reference/athena.md) | 5 |
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
-| [AUTOSCALING](reference/autoscaling.md) | 4 |
+| [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
 | [BACKUP](reference/backup.md) | 14 |
 | [BATCH](reference/batch.md) | 5 |
@@ -88,7 +88,7 @@ GitHub. Pick a service below.
 | [DOCUMENTDB](reference/documentdb.md) | 19 |
 | [DYNAMODB](reference/dynamodb.md) | 39 |
 | [EBS](reference/ebs.md) | 3 |
-| [EC2](reference/ec2.md) | 116 |
+| [EC2](reference/ec2.md) | 114 |
 | [ECR](reference/ecr.md) | 10 |
 | [ECS](reference/ecs.md) | 60 |
 | [EFS](reference/efs.md) | 15 |

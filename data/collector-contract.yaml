@@ -1693,45 +1693,6 @@ contracts:
     consumers:
       - network-reachability-graph
 
-  # ─── EC2 Application Status Checks ─────────────────────────────
-
-  - field: compute.application_status_check.has_check
-    type: boolean
-    postcondition: >
-      True when the EC2 instance has at least one application
-      status check configured. Application status checks probe
-      a configured HTTP(S) endpoint and report application health
-      as a first-class EC2 status dimension.
-    consumers:
-      - CTL.EC2.APPLICATIONSTATUSCHECK.EXISTS.001
-      - CTL.EC2.APPLICATIONSTATUSCHECK.HTTPS.001
-
-  - field: compute.application_status_check.uses_https
-    type: boolean
-    postcondition: >
-      True when the application status check probes the health
-      endpoint over HTTPS rather than HTTP.
-    consumers:
-      - CTL.EC2.APPLICATIONSTATUSCHECK.HTTPS.001
-
-  - field: compute.application_status_check.instances_have_checks
-    type: boolean
-    postcondition: >
-      True when at least one member instance in the Auto Scaling
-      group has an application status check configured.
-      Applicable to aws_autoscaling_group assets.
-    consumers:
-      - CTL.AUTOSCALING.HEALTHCHECK.APPLICATIONSTATUS.001
-
-  - field: compute.application_status_check.asg_uses_app_health
-    type: boolean
-    postcondition: >
-      True when the Auto Scaling group is configured to use
-      APPLICATION_STATUS health check type. Applicable to
-      aws_autoscaling_group assets.
-    consumers:
-      - CTL.AUTOSCALING.HEALTHCHECK.APPLICATIONSTATUS.001
-
   # ─── IAM Reconnaissance / Victim Selection ──────────────────────
   #
   # Derived by the Stave resolver from the principal's effective
