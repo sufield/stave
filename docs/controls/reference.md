@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3452
-**Pack hash:** `9a9dcae37bb2bd58f64d1c85eb8c39cc1ffacf36d1bb512ef393714445a9bf10`
+**Total controls:** 3453
+**Pack hash:** `e97a0019302ee06b57c586ae10f501504fe05930b04f4191df30a90ccfac020e`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 372 |
-| high | 1483 |
+| high | 1484 |
 | info | 19 |
 | low | 272 |
 | medium | 1306 |
@@ -30,7 +30,7 @@ GitHub. Pick a service below.
 | detection | 161 |
 | encryption | 125 |
 | exposure | 1506 |
-| governance | 695 |
+| governance | 696 |
 | hygiene | 21 |
 | identity | 679 |
 | lifecycle | 32 |
@@ -92,7 +92,7 @@ GitHub. Pick a service below.
 | [ECR](reference/ecr.md) | 10 |
 | [ECS](reference/ecs.md) | 60 |
 | [EFS](reference/efs.md) | 15 |
-| [EKS](reference/eks.md) | 119 |
+| [EKS](reference/eks.md) | 120 |
 | [ELASTICACHE](reference/elasticache.md) | 15 |
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 9 |

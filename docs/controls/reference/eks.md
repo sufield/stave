@@ -98,6 +98,21 @@ EKS managed addons (VPC CNI, CoreDNS, kube-proxy, EBS CSI driver) contain the co
 
 ---
 
+### CTL.EKS.ADMISSION.POLICY.MISSING.001
+
+**EKS Cluster Has No Admission Policy Controller**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: CM-7, SI-4; pci_dss_v4.0: 6.3; soc2: CC6.1, CC8.1;
+
+EKS cluster has no admission policy controller deployed (Kyverno, OPA Gatekeeper, ImagePolicyWebhook, or native ValidatingAdmissionPolicy). Without an admission controller, image provenance, CVE blocking, and pod security policies are advisory — the API server admits any pod that passes PSA. Individual image controls detect unsigned or unscanned images after the fact; this control detects the absence of the enforcement mechanism itself.
+
+**Remediation:** Deploy an admission controller. Options: Kyverno (ClusterPolicy resources), OPA Gatekeeper (ConstraintTemplate + Constraint), or native ValidatingAdmissionPolicy (K8s 1.30+). Configure at minimum: image registry allowlist, image signature verification, CVE severity gate. Verify with kubectl get validatingwebhookconfigurations.
+
+---
+
 ### CTL.EKS.ALARM.API.ERRORS.001
 
 **EKS Cluster Has No Alarm On API Server Error Rate**

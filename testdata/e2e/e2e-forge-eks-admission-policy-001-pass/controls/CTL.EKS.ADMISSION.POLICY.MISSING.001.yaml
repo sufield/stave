@@ -1,0 +1,97 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ADMISSION.POLICY.MISSING.001
+name: EKS Cluster Has No Admission Policy Controller
+description: >
+  EKS cluster has no admission policy controller deployed
+  (Kyverno, OPA Gatekeeper, ImagePolicyWebhook, or native
+  ValidatingAdmissionPolicy). Without an admission
+  controller, image provenance, CVE blocking, and pod
+  security policies are advisory — the API server admits
+  any pod that passes PSA. Individual image controls
+  detect unsigned or unscanned images after the fact;
+  this control detects the absence of the enforcement
+  mechanism itself.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "CM-7, SI-4"
+  soc2: "CC6.1, CC8.1"
+  pci_dss_v4.0: "6.3"
+  ccm_v4: ["TVM-09", "AIS-04"]
+scope_tags:
+  - aws
+  - eks
+taxonomy:
+  - ai-supply-chain
+  - compliance-mapping
+subtractive_category:
+  - S02
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_cluster
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    EKS cluster has no admission policy controller. Pod
+    creation is ungated — any image from any registry is
+    admitted without policy evaluation.
+  action: >
+    Deploy an admission controller. Options: Kyverno
+    (ClusterPolicy resources), OPA Gatekeeper
+    (ConstraintTemplate + Constraint), or native
+    ValidatingAdmissionPolicy (K8s 1.30+). Configure at
+    minimum: image registry allowlist, image signature
+    verification, CVE severity gate. Verify with
+    kubectl get validatingwebhookconfigurations.
+  example: |
+    {
+      "k8s": {
+        "cluster": {
+          "admission_policy_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.cluster.admission_policy_configured
+      op: eq
+      value: false
+defect: >
+  EKS cluster has no admission policy controller deployed.
+infection: >
+  The API server admits pods without policy evaluation.
+  Image provenance controls (signature verification, CVE
+  scanning, registry allowlisting) exist as individual
+  checks but are not enforced at the admission boundary.
+  Developers can deploy arbitrary images; policy
+  compliance depends on team discipline and post-deploy
+  scanning rather than pre-admission gating.
+failure: >
+  No admission controller. Pod creation is ungated.
+  Supply chain attacks succeed because there is no
+  enforcement point between the developer and the
+  cluster.
+tests:
+  - name: cluster without admission policy fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            admission_policy_configured: false
+  - name: cluster with admission policy passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+      asset_type: aws_eks_cluster
+      vendor: aws
+      properties:
+        k8s:
+          cluster:
+            admission_policy_configured: true

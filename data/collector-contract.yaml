@@ -2651,3 +2651,1402 @@ contracts:
       filtering is configured but not restricting.
     consumers:
       - CTL.SECURITYAGENT.NETWORK.UNRESTRICTED.001
+
+  # ─── EKS Cluster ─────────────────────────────────────────────
+
+  - field: container.endpoint.private_access_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster's API server endpoint has private access
+      enabled (endpointPrivateAccess: true). Derived from
+      eks:DescribeCluster resourcesVpcConfig.
+    consumers:
+      - CTL.EKS.ENDPOINT.PRIVATE.001
+
+  - field: container.governance.deletion_protection_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster has deletion protection enabled,
+      preventing accidental or unauthorized cluster removal via
+      the DeleteCluster API. Derived from eks:DescribeCluster
+      configuration.
+    consumers:
+      - CTL.EKS.DELETEPROT.001
+
+  - field: encryption.key_rotation_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the KMS CMK used for EKS secrets envelope encryption
+      has automatic key rotation enabled. Derived from
+      kms:GetKeyRotationStatus on the key ARN referenced in the
+      cluster's encryptionConfig.
+    consumers:
+      - CTL.EKS.SECRETS.ROTATION.001
+
+  - field: encryption.secrets_encrypted
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster has Kubernetes secrets envelope
+      encryption configured with a KMS CMK (encryptionConfig
+      contains a provider with a key ARN and resources include
+      "secrets"). Derived from eks:DescribeCluster encryptionConfig.
+    consumers:
+      - CTL.EKS.SECRETS.ENCRYPT.001
+      - CTL.EKS.SECRETS.ROTATION.001
+
+  - field: endpoint.public_access
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster's API server endpoint has public
+      access enabled (endpointPublicAccess: true). Derived from
+      eks:DescribeCluster resourcesVpcConfig.
+    consumers:
+      - CTL.EKS.PUBLIC.ENDPOINT.001
+
+  - field: endpoint.public_unrestricted
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster's public API endpoint allows access
+      from 0.0.0.0/0 (publicAccessCidrs contains "0.0.0.0/0" or
+      is empty, defaulting to unrestricted). Derived from
+      eks:DescribeCluster resourcesVpcConfig.publicAccessCidrs.
+    consumers:
+      - CTL.EKS.PUBLIC.ENDPOINT.001
+
+  - field: feature_gates.ttl_after_finished_controller
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the cluster has TTLAfterFinished feature gate enabled
+      (Kubernetes 1.23+: GA and always on; earlier versions required
+      explicit feature gate). Used to determine whether completed
+      Job pods are automatically cleaned up, which is a prerequisite
+      for VPC CNI firewall rule cleanup on completed pods.
+    consumers:
+      - CTL.EKS.VPC.CNI.NETPOL.TTL.001
+
+  - field: k8s.cluster.access_entry.has_cluster_admin_policy
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS Access Entry has AmazonEKSClusterAdminPolicy
+      or AmazonEKSAdminPolicy associated. Derived from
+      eks:ListAssociatedAccessPolicies for the access entry.
+    consumers:
+      - CTL.EKS.ACCESSENTRY.CLUSTERADMIN.BROAD.001
+
+  - field: k8s.cluster.access_entry.has_ghost_principal
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS Access Entry's principal ARN (IAM role or
+      user) no longer exists in IAM. Derived by cross-referencing
+      the entry's principalArn against iam:GetRole / iam:GetUser.
+    consumers:
+      - CTL.EKS.ACCESSENTRY.GHOST.PRINCIPAL.001
+
+  - field: k8s.cluster.access_entry.is_break_glass_admin
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS Access Entry's principal matches the
+      organization's documented break-glass admin role pattern
+      (e.g., role name contains "break-glass" or "emergency-access").
+      Used to exempt legitimate break-glass entries from broad
+      cluster-admin findings.
+    consumers:
+      - CTL.EKS.ACCESSENTRY.CLUSTERADMIN.BROAD.001
+
+  - field: k8s.cluster.admission_policy_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster has at least one
+      ValidatingWebhookConfiguration or MutatingWebhookConfiguration
+      from an admission controller (Kyverno, Gatekeeper,
+      ImagePolicyWebhook). Derived from kubectl get
+      validatingwebhookconfigurations.
+    consumers:
+      - CTL.EKS.ADMISSION.POLICY.MISSING.001
+
+  - field: k8s.cluster.alarm_api_errors_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a CloudWatch alarm exists on the EKS cluster's API
+      server error rate (apiserver_request_total scoped to 5xx or
+      persistent 4xx). Derived from cloudwatch:DescribeAlarms
+      filtered by the cluster's metrics namespace.
+    consumers:
+      - CTL.EKS.ALARM.API.ERRORS.001
+
+  - field: k8s.cluster.alarm_crashloop_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a CloudWatch alarm exists on CrashLoopBackOff pod
+      count for the EKS cluster. Derived from
+      cloudwatch:DescribeAlarms filtered by Container Insights
+      metrics for the cluster.
+    consumers:
+      - CTL.EKS.ALARM.CRASHLOOP.001
+
+  - field: k8s.cluster.alarm_etcd_latency_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a CloudWatch alarm exists on etcd_request_duration_seconds
+      p99 latency for the EKS cluster. Derived from
+      cloudwatch:DescribeAlarms filtered by the cluster's enhanced
+      observability metrics.
+    consumers:
+      - CTL.EKS.ALARM.ETCD.LATENCY.001
+
+  - field: k8s.cluster.alarm_kubelet_heartbeat_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a CloudWatch alarm exists on kubelet last-heartbeat-time
+      loss for the EKS cluster, providing advance warning before nodes
+      transition to NotReady. Derived from cloudwatch:DescribeAlarms.
+    consumers:
+      - CTL.EKS.ALARM.KUBELET.HEARTBEAT.001
+
+  - field: k8s.cluster.alarm_node_pressure_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a CloudWatch alarm exists on per-node MemoryPressure,
+      DiskPressure, or PIDPressure conditions for the EKS cluster.
+      Derived from cloudwatch:DescribeAlarms filtered by node
+      condition metrics.
+    consumers:
+      - CTL.EKS.ALARM.NODE.PRESSURE.001
+
+  - field: k8s.cluster.alarm_nodes_notready_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a CloudWatch alarm exists on the count of nodes in
+      NotReady state for the EKS cluster. Derived from
+      cloudwatch:DescribeAlarms filtered by node status metrics.
+    consumers:
+      - CTL.EKS.ALARM.NODES.NOTREADY.001
+
+  - field: k8s.cluster.alarm_oomkilled_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a CloudWatch alarm exists on container terminations
+      with reason=OOMKilled for the EKS cluster. Derived from
+      cloudwatch:DescribeAlarms filtered by Container Insights
+      pod termination metrics.
+    consumers:
+      - CTL.EKS.ALARM.OOMKILLED.001
+
+  - field: k8s.cluster.alarm_pod_evicted_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a CloudWatch alarm exists on pod eviction events
+      for the EKS cluster. Derived from cloudwatch:DescribeAlarms
+      filtered by Container Insights eviction metrics.
+    consumers:
+      - CTL.EKS.ALARM.PODEVICTED.001
+
+  - field: k8s.cluster.aws_auth.groups_include_masters
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the aws-auth ConfigMap mapRoles entry maps an IAM role
+      to the Kubernetes system:masters group, granting full
+      cluster-admin equivalent. Derived from kubectl get configmap
+      aws-auth -n kube-system.
+    consumers:
+      - CTL.EKS.AWSAUTH.MASTERS.BROAD.001
+
+  - field: k8s.cluster.aws_auth.has_ghost_role
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the aws-auth ConfigMap contains a mapRoles entry
+      whose IAM role ARN no longer exists in IAM. Derived by
+      cross-referencing each rolearn in aws-auth against
+      iam:GetRole.
+    consumers:
+      - CTL.EKS.AWSAUTH.GHOST.ROLE.001
+
+  - field: k8s.cluster.aws_auth.is_break_glass_admin
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the aws-auth mapRoles entry's IAM role matches
+      the organization's documented break-glass admin role
+      pattern. Used to exempt legitimate break-glass entries
+      from system:masters overprivilege findings.
+    consumers:
+      - CTL.EKS.AWSAUTH.MASTERS.BROAD.001
+
+  - field: k8s.cluster.aws_auth.role_account_in_org
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the aws-auth mapRoles entry's IAM role ARN belongs
+      to an AWS account that is a member of the same AWS
+      Organization. Derived by extracting the account ID from
+      the role ARN and checking organizations:ListAccounts.
+    consumers:
+      - CTL.EKS.AWSAUTH.UNTRUSTED.ACCOUNT.001
+
+  - field: k8s.cluster.cve_block_admission_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster has an admission policy that rejects
+      pods whose container images carry HIGH or CRITICAL CVEs
+      (via Kyverno verify-images, OPA Gatekeeper constraint, or
+      equivalent). Derived from admission webhook configurations
+      and policy resources.
+    consumers:
+      - CTL.EKS.IMAGE.CVE.BLOCK.001
+
+  - field: k8s.cluster.ecr_findings_in_security_hub
+    type: boolean
+    status: planned
+    postcondition: >
+      True if ECR image scan findings for the cluster's repositories
+      are exported to AWS Security Hub or an equivalent central
+      vulnerability dashboard. Derived from
+      securityhub:GetEnabledStandards and ECR integration status.
+    consumers:
+      - CTL.EKS.ECR.SCAN.EXPORT.001
+
+  - field: k8s.cluster.etcd_kms_multi_region
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the KMS key used for EKS etcd secrets encryption is a
+      multi-region key with replicas in the DR region. Derived from
+      kms:DescribeKey on the cluster's encryptionConfig key ARN,
+      checking MultiRegion and ReplicaKeys.
+    consumers:
+      - CTL.EKS.DR.KMS.SINGLEREGION.001
+
+  - field: k8s.cluster.guardduty_eks_protection_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if GuardDuty EKS Protection is enabled in the cluster's
+      region, consuming control-plane audit logs for threat detection.
+      Derived from guardduty:GetDetector and checking
+      EKS_AUDIT_LOGS feature status.
+    consumers:
+      - CTL.EKS.GUARDDUTY.EKS.PROTECTION.001
+
+  - field: k8s.cluster.guardduty_runtime_monitoring_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if GuardDuty Runtime Monitoring is enabled for EKS in the
+      cluster's region, deploying an agent DaemonSet for per-pod
+      syscall and process-level threat detection. Derived from
+      guardduty:GetDetector checking RUNTIME_MONITORING feature.
+    consumers:
+      - CTL.EKS.GUARDDUTY.RUNTIME.001
+
+  - field: k8s.cluster.image_signature_verification_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster has an admission controller that
+      verifies container image signatures before pod creation
+      (Kyverno verify-images with Cosign, Connaisseur, or OPA
+      Gatekeeper with Cosign). Derived from webhook configurations
+      and policy resources.
+    consumers:
+      - CTL.EKS.IMAGE.NOSIGNATURE.001
+
+  - field: k8s.cluster.is_dr_cluster
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster is designated as a disaster recovery
+      cluster, identified by tag Purpose=DR, a Route 53 failover
+      routing target, or org-specific DR naming convention. Derived
+      from eks:DescribeCluster tags.
+    consumers:
+      - CTL.EKS.DR.KMS.SINGLEREGION.001
+      - CTL.EKS.DR.WARMUP.001
+
+  - field: k8s.cluster.nfw_proxy_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the VPC hosting the EKS cluster routes egress through
+      AWS Network Firewall in proxy mode. Derived from VPC route
+      table analysis and Network Firewall policy configuration.
+    consumers:
+      - CTL.EKS.PROXY.BYPASS.001
+
+  - field: k8s.cluster.oidc_provider_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster has an associated IAM OIDC identity
+      provider configured, enabling IRSA (IAM Roles for Service
+      Accounts). Derived from eks:DescribeCluster identity.oidc
+      cross-referenced with iam:ListOpenIDConnectProviders.
+    consumers:
+      - CTL.EKS.IRSA.ENFORCE.001
+
+  - field: k8s.cluster.proxy_env_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if EKS pods have HTTP_PROXY/HTTPS_PROXY environment
+      variables configured (via admission controller, init container,
+      or node-level injection). Required when the VPC uses Network
+      Firewall in proxy mode. Derived from pod spec environment
+      variable analysis.
+    consumers:
+      - CTL.EKS.PROXY.BYPASS.001
+
+  - field: k8s.cluster.ram_principal_org_id_set
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the RAM resource share for the EKS cluster (or its
+      shared subnets / transit gateway) restricts principals to the
+      AWS Organization via aws:PrincipalOrgID condition. Derived from
+      ram:GetResourceShareAssociations and resource policy analysis.
+    consumers:
+      - CTL.EKS.RAM.EXTERNAL.001
+
+  - field: k8s.cluster.shared_via_ram
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster or its related resources (subnets,
+      transit gateway attachments) are shared with other accounts
+      via AWS Resource Access Manager. Derived from
+      ram:GetResourceShares filtered by the cluster's VPC resources.
+    consumers:
+      - CTL.EKS.RAM.EXTERNAL.001
+
+  - field: k8s.cluster.version_deprecated
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster's Kubernetes version has reached or
+      is approaching end-of-standard-support. Derived from
+      eks:DescribeCluster version compared against the AWS EKS
+      version lifecycle calendar.
+    consumers:
+      - CTL.EKS.CLUSTER.VERSION.001
+      - CTL.EKS.VERSION.001
+
+  - field: logging.all_types_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster has all five control-plane log types
+      enabled (api, audit, authenticator, controllerManager,
+      scheduler). Derived from eks:DescribeCluster logging.clusterLogging
+      checking that all types have enabled=true.
+    consumers:
+      - CTL.EKS.LOGGING.001
+
+  - field: logging.audit_delivering
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster's audit logs are actively being
+      delivered to CloudWatch Logs (log group exists, has recent
+      log events within the last 24 hours). Derived from
+      logs:DescribeLogGroups and logs:FilterLogEvents on the
+      /aws/eks/<cluster>/cluster log group.
+    consumers:
+      - CTL.EKS.CONTROL.PLANE.AUDIT.001
+
+  - field: logging.audit_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster has audit log type enabled in the
+      control-plane logging configuration. Derived from
+      eks:DescribeCluster logging.clusterLogging checking the
+      "audit" type has enabled=true.
+    consumers:
+      - CTL.EKS.CONTROL.PLANE.AUDIT.001
+
+  - field: rbac.has_cluster_admin_sa_binding
+    type: boolean
+    status: planned
+    postcondition: >
+      True if any ClusterRoleBinding in the EKS cluster binds the
+      cluster-admin ClusterRole to a ServiceAccount subject. Derived
+      from kubectl get clusterrolebindings filtering for roleRef
+      name=cluster-admin and subject kind=ServiceAccount.
+    consumers:
+      - CTL.EKS.RBAC.AUDIT.001
+
+  # ─── EKS Add-on ────────────────────────────────────────────
+
+  - field: addons.has_outdated
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS managed add-on's installed version is behind
+      the latest compatible version for the cluster's Kubernetes
+      version. Derived from eks:DescribeAddonVersions comparing
+      the installed version against available versions.
+    consumers:
+      - CTL.EKS.ADDON.VERSION.001
+
+  - field: addons.vpc_cni.enable_network_policy
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the VPC CNI add-on has enableNetworkPolicy=true in
+      its configuration, enabling Kubernetes NetworkPolicy
+      enforcement via the VPC CNI network policy controller.
+      Derived from eks:DescribeAddon configurationValues for
+      the vpc-cni add-on.
+    consumers:
+      - CTL.EKS.NETPOL.ENFORCE.001
+      - CTL.EKS.VPC.CNI.NETPOL.TTL.001
+
+  - field: addons.vpc_cni.pod_completion_firewall_flush
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the VPC CNI add-on has completed-pod firewall rule
+      cleanup configured (nodeAgent.enablePolicyEventLogs or
+      equivalent flush mechanism). Without this, per-IP firewall
+      rules for completed pods persist until the pod object is
+      deleted. Derived from VPC CNI add-on configuration.
+    consumers:
+      - CTL.EKS.VPC.CNI.NETPOL.TTL.001
+
+  - field: k8s.addon.custom_networking_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the VPC CNI add-on has
+      AWS_VPC_K8S_CNI_CUSTOM_NETWORK_CFG=true (custom networking
+      enabled), which assigns pod IPs from secondary subnets via
+      ENIConfig CRDs instead of the primary subnet. Derived from
+      VPC CNI add-on environment variable configuration.
+    consumers:
+      - CTL.EKS.VPC.CNI.CUSTOMNETWORKING.001
+
+  - field: k8s.addon.has_autoscaler
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS add-on (specifically CoreDNS) has an HPA or
+      cluster-proportional-autoscaler configured. Derived from
+      kubectl get hpa checking for targets matching the add-on's
+      deployment.
+    consumers:
+      - CTL.EKS.COREDNS.AUTOSCALE.001
+
+  - field: k8s.addon.has_ghost_irsa_role
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS managed add-on's serviceAccountRoleArn points
+      at an IAM role that has been deleted. Derived by calling
+      iam:GetRole on the add-on's configured IRSA role ARN.
+    consumers:
+      - CTL.EKS.ADDON.GHOST.IRSA.001
+
+  - field: k8s.addon.has_irsa
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS add-on's ServiceAccount has an IRSA annotation
+      (eks.amazonaws.com/role-arn) binding it to a specific IAM role
+      rather than inheriting the node's instance profile. Derived from
+      the add-on's ServiceAccount annotations.
+    consumers:
+      - CTL.EKS.CSI.EBS.NOIRSA.001
+      - CTL.EKS.CSI.EFS.NOIRSA.001
+
+  - field: k8s.addon.is_core_addon
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the add-on is one of the EKS core add-ons (vpc-cni,
+      coredns, kube-proxy) that have managed-add-on equivalents
+      provided by AWS. Derived from matching the add-on name
+      against the known core add-on list.
+    consumers:
+      - CTL.EKS.ADDON.SELFMANAGED.001
+
+  - field: k8s.addon.is_dual_install
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the same component exists as both an EKS managed add-on
+      and a Helm release in the cluster, creating two competing
+      reconcile loops. Derived by cross-referencing eks:ListAddons
+      against helm list output.
+    consumers:
+      - CTL.EKS.ADDON.HELMDUAL.001
+
+  - field: k8s.addon.is_self_managed
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the add-on is installed via Helm, kubectl apply, or
+      manifests rather than via the EKS managed add-ons API. Derived
+      from the absence of the add-on in eks:ListAddons combined with
+      its presence as a Helm release or namespace resource.
+    consumers:
+      - CTL.EKS.ADDON.SELFMANAGED.001
+
+  # ─── EKS Nodegroup ─────────────────────────────────────────
+
+  - field: k8s.nodegroup.bootstrap_pinned
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the self-managed node group's launch template bootstrap
+      script pins content to a specific AMI version or content hash,
+      rather than fetching unpinned content (curl from unversioned
+      URLs, eksctl --latest). Derived from launch template UserData
+      analysis.
+    consumers:
+      - CTL.EKS.NODEGROUP.BOOTSTRAP.UNPINNED.001
+
+  - field: k8s.nodegroup.imds_endpoint_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node group's launch template has
+      MetadataOptions.HttpEndpoint set to "enabled" (IMDS is
+      reachable). False when IMDS is disabled entirely. Derived from
+      ec2:DescribeLaunchTemplateVersions MetadataOptions.
+    consumers:
+      - CTL.EKS.NODEGROUP.IMDS.DISABLED.001
+
+  - field: k8s.nodegroup.imdsv2_required
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node group's launch template enforces IMDSv2
+      (MetadataOptions.HttpTokens: required), blocking the legacy
+      unauthenticated IMDSv1 endpoint. Derived from
+      ec2:DescribeLaunchTemplateVersions MetadataOptions.HttpTokens.
+    consumers:
+      - CTL.EKS.NODEGROUP.IMDSV2.001
+
+  - field: k8s.nodegroup.is_self_managed
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node group is self-managed (Auto Scaling Group
+      with a custom launch template) rather than an EKS managed
+      node group. Derived from the absence of the node group
+      in eks:ListNodegroups for the cluster.
+    consumers:
+      - CTL.EKS.NODEGROUP.BOOTSTRAP.UNPINNED.001
+
+  - field: k8s.nodegroup.role_exceeds_kubelet_minimum
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node group's IAM role has policies beyond
+      kubelet-minimum (ec2:Describe*, ecr:Get*, ecr:BatchGet*,
+      eks:Describe*, logs:Create*, logs:Put*). Derived from IAM
+      policy analysis of the node role ARN.
+    consumers:
+      - CTL.EKS.NODEGROUP.ROLE.OVERBROAD.001
+
+  - field: k8s.nodegroup.ssm_session_manager_configured
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node group's instance profile includes the
+      AmazonSSMManagedInstanceCore policy (or an equivalent policy
+      granting ssm:StartSession and related APIs), enabling SSM
+      Session Manager as an alternative to SSH. Derived from IAM
+      policy analysis of the instance profile.
+    consumers:
+      - CTL.EKS.NODEGROUP.SSM.MISSING.001
+
+  - field: k8s.nodegroup.worker_sg_ssh_open
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the worker node group's security group permits inbound
+      TCP/22 (SSH) from any source (0.0.0.0/0 or broad CIDRs).
+      Derived from ec2:DescribeSecurityGroupRules for the node
+      group's security groups.
+    consumers:
+      - CTL.EKS.NODEGROUP.SSH.OPEN.001
+
+  - field: k8s.nodegroup.workloads_depend_on_imds
+    type: boolean
+    status: planned
+    postcondition: >
+      True if at least one workload scheduled on the node group
+      depends on IMDS for AWS API authentication (no IRSA annotation,
+      no Pod Identity association). Derived from cross-referencing
+      pod ServiceAccount annotations against IRSA/Pod Identity
+      bindings for pods on the node group.
+    consumers:
+      - CTL.EKS.NODEGROUP.IMDS.DISABLED.001
+
+  - field: nodegroup.ami_outdated
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node group's AMI is behind the latest EKS-optimized
+      AMI for its Kubernetes version, missing kernel patches, container
+      runtime updates, or kubelet security fixes. Derived from comparing
+      the launch template AMI ID against ssm:GetParameter for the latest
+      EKS-optimized AMI.
+    consumers:
+      - CTL.EKS.NODEGROUP.AMI.001
+
+  - field: nodegroup.disk_encryption_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node group's launch template specifies EBS encryption
+      for root volumes (BlockDeviceMappings.Ebs.Encrypted: true).
+      Derived from ec2:DescribeLaunchTemplateVersions BlockDeviceMappings.
+    consumers:
+      - CTL.EKS.NODEGROUP.DISK.ENCRYPT.001
+
+  - field: nodegroup.uses_default_sg
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node group uses only the EKS cluster's default security
+      group without a dedicated node group security group. Derived by
+      comparing the node group's security group IDs against the cluster's
+      default cluster security group from eks:DescribeCluster.
+    consumers:
+      - CTL.EKS.NODEGROUP.SG.001
+
+  # ─── EKS Workload ──────────────────────────────────────────
+
+  - field: k8s.workload.has_ghost_image_repo
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the workload's container image references an ECR
+      repository that has been deleted. Derived by extracting the
+      ECR repository URI from the image reference and calling
+      ecr:DescribeRepositories.
+    consumers:
+      - CTL.EKS.WORKLOAD.GHOST.IMAGE.001
+
+  - field: k8s.workload.image_has_digest
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the workload's container image reference includes a
+      SHA256 digest (e.g., @sha256:abc123...) in addition to or
+      instead of a tag. Derived from parsing the image field in
+      the pod spec container definition.
+    consumers:
+      - CTL.EKS.IMAGE.NODIGEST.001
+
+  - field: k8s.workload.image_registry_allowlisted
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the workload's container image is pulled from a
+      registry on the organization's allowlist (private ECR,
+      approved mirrors). False for Docker Hub, Quay, GHCR, gcr.io
+      public, or other non-allowlisted registries. Derived from
+      matching the image registry prefix against the configured
+      allowlist.
+    consumers:
+      - CTL.EKS.IMAGE.PUBLIC.REGISTRY.001
+
+  - field: k8s.workload.image_replicated_to_dr
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the workload's container image exists in an ECR
+      repository that is replicated to the DR region. Derived
+      from ecr:DescribeRegistry replication configuration cross-
+      referenced with the image's source repository.
+    consumers:
+      - CTL.EKS.ECR.REPLICATION.GAP.001
+
+  - field: k8s.workload.in_dr_strategy
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the workload is part of the organization's DR strategy
+      (tagged for DR failover, referenced in DR runbooks, or deployed
+      to a DR-designated cluster). Derived from workload labels and
+      cluster DR designation.
+    consumers:
+      - CTL.EKS.ECR.REPLICATION.GAP.001
+
+  - field: k8s.workload.is_production
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the workload is running in a production environment,
+      determined by namespace labels (env=production, environment=prod),
+      workload labels, or cluster-level environment designation.
+      Derived from namespace and workload metadata.
+    consumers:
+      - CTL.EKS.IMAGE.LATEST.TAG.001
+      - CTL.EKS.IMAGE.NODIGEST.001
+
+  - field: k8s.workload.pulls_from_ecr_public
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the workload's container image is pulled from
+      public.ecr.aws (AWS ECR Public Gallery) directly rather than
+      through a private ECR mirror. Derived from parsing the image
+      reference for the public.ecr.aws prefix.
+    consumers:
+      - CTL.EKS.ECR.PULL.PUBLIC.GALLERY.001
+
+  - field: k8s.workload.uses_latest_tag
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the workload's container image uses the :latest tag
+      or has no tag specified (which defaults to :latest). Derived
+      from parsing the image field in the pod spec.
+    consumers:
+      - CTL.EKS.IMAGE.LATEST.TAG.001
+
+  # ─── EKS Pod Spec ──────────────────────────────────────────
+
+  - field: k8s.pod_spec.allow_privilege_escalation
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod's container has
+      securityContext.allowPrivilegeEscalation set to true or unset
+      (defaulting to true), allowing processes to gain capabilities
+      via setuid binaries. Derived from the pod spec
+      securityContext.
+    consumers:
+      - CTL.EKS.POD.PRIVESCALATION.001
+
+  - field: k8s.pod_spec.automount_service_account_token
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod has automountServiceAccountToken set to true
+      or unset (defaulting to true), causing a ServiceAccount token
+      to be mounted at /var/run/secrets/kubernetes.io/serviceaccount/.
+      Derived from the pod spec and ServiceAccount configuration.
+    consumers:
+      - CTL.EKS.POD.SATOKEN.AUTOMOUNT.001
+
+  - field: k8s.pod_spec.calls_aws_apis
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod is detected to call AWS APIs, determined by
+      observed AWS SDK usage, IRSA-aware base images, AWS-related
+      environment variables (AWS_REGION, AWS_DEFAULT_REGION), or
+      known AWS SDK container images. Derived from pod spec
+      environment variables and image analysis.
+    consumers:
+      - CTL.EKS.POD.NODE.PROFILE.INHERIT.001
+
+  - field: k8s.pod_spec.has_ghost_configmap_ref
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod references a ConfigMap (in envFrom,
+      valueFrom.configMapKeyRef, or volumes.configMap.name) that no
+      longer exists in the namespace. Derived by cross-referencing
+      pod spec ConfigMap references against kubectl get configmaps
+      in the same namespace.
+    consumers:
+      - CTL.EKS.POD.GHOST.CONFIGMAP.001
+
+  - field: k8s.pod_spec.has_ghost_secret_ref
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod references a Kubernetes Secret (in envFrom,
+      valueFrom.secretKeyRef, or volumes.secret.secretName) that no
+      longer exists in the namespace. Derived by cross-referencing
+      pod spec Secret references against kubectl get secrets in the
+      same namespace.
+    consumers:
+      - CTL.EKS.POD.GHOST.SECRET.001
+
+  - field: k8s.pod_spec.has_host_ipc
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod spec has hostIPC: true, sharing the host's IPC
+      namespace with the pod and breaking IPC isolation. Derived from
+      the pod spec hostIPC field.
+    consumers:
+      - CTL.EKS.POD.HOSTACCESS.001
+
+  - field: k8s.pod_spec.has_host_network
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod spec has hostNetwork: true, allowing the pod
+      to observe and bind to host network interfaces including
+      internal cluster traffic and the IMDS endpoint. Derived from
+      the pod spec hostNetwork field.
+    consumers:
+      - CTL.EKS.POD.HOSTACCESS.001
+
+  - field: k8s.pod_spec.has_host_pid
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod spec has hostPID: true, allowing the pod to
+      see and signal all host processes. Derived from the pod spec
+      hostPID field.
+    consumers:
+      - CTL.EKS.POD.HOSTACCESS.001
+
+  - field: k8s.pod_spec.has_irsa_or_pod_identity
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod's ServiceAccount has an IRSA annotation
+      (eks.amazonaws.com/role-arn) or a Pod Identity association,
+      providing dedicated IAM credentials instead of inheriting the
+      node's instance profile. Derived from ServiceAccount
+      annotations and eks:ListPodIdentityAssociations.
+    consumers:
+      - CTL.EKS.POD.NODE.PROFILE.INHERIT.001
+
+  - field: k8s.pod_spec.has_privileged_container
+    type: boolean
+    status: planned
+    postcondition: >
+      True if at least one container in the pod has
+      securityContext.privileged: true, granting effectively root
+      access on the host node with full Linux capabilities and no
+      AppArmor/SELinux enforcement. Derived from the pod spec
+      container security contexts.
+    consumers:
+      - CTL.EKS.POD.PRIVILEGED.001
+
+  - field: k8s.pod_spec.has_sensitive_host_path_mount
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod mounts a hostPath volume targeting a sensitive
+      host filesystem location (/, /etc, /var, /var/run/docker.sock,
+      /proc, /sys, /var/lib/kubelet). Derived from the pod spec
+      volumes and volumeMounts configuration.
+    consumers:
+      - CTL.EKS.POD.HOSTPATH.001
+
+  - field: k8s.pod_spec.is_infrastructure_daemonset
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod belongs to a known infrastructure DaemonSet
+      (aws-node, kube-proxy, ebs-csi-node, efs-csi-node,
+      aws-guardduty-agent, Falco, Datadog, Fluentd/Fluent Bit)
+      that legitimately requires host-level access. Used to exempt
+      infrastructure pods from hostAccess, hostPath, and privileged
+      findings.
+    consumers:
+      - CTL.EKS.POD.HOSTACCESS.001
+      - CTL.EKS.POD.HOSTPATH.001
+      - CTL.EKS.POD.PRIVILEGED.001
+
+  - field: k8s.pod_spec.is_system_namespace
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod runs in a system namespace (kube-system,
+      kube-public, kube-node-lease, or other cluster-system
+      namespaces). Used to scope system-priority-class findings
+      to tenant namespaces only. Derived from the pod's namespace.
+    consumers:
+      - CTL.EKS.NS.PRIORITYCLASS.SYSTEM.001
+
+  - field: k8s.pod_spec.runs_as_root
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod's container runs as root -- explicitly via
+      securityContext.runAsUser: 0 or runAsNonRoot: false, or
+      implicitly because the image's USER directive is unset/0 and
+      the pod does not override. Derived from the pod spec
+      securityContext and container image metadata.
+    consumers:
+      - CTL.EKS.POD.RUNASROOT.001
+
+  - field: k8s.pod_spec.uses_kubernetes_api
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod actually needs to call the Kubernetes API,
+      determined by observed kubernetes client library imports,
+      known controller images, or explicit API calls. Used to
+      distinguish pods that legitimately need automounted SA tokens
+      from those that do not.
+    consumers:
+      - CTL.EKS.POD.SATOKEN.AUTOMOUNT.001
+
+  - field: k8s.pod_spec.uses_system_priority
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pod uses priorityClassName system-cluster-critical
+      or system-node-critical, the highest-priority classes reserved
+      for cluster-system pods. Derived from the pod spec
+      priorityClassName field.
+    consumers:
+      - CTL.EKS.NS.PRIORITYCLASS.SYSTEM.001
+
+  # ─── EKS Namespace ─────────────────────────────────────────
+
+  - field: k8s.namespace.has_classification_label
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the namespace has a data-classification label (or
+      org-equivalent: Confidentiality, Sensitivity, Compliance)
+      enabling automated compliance scoping. Derived from namespace
+      labels.
+    consumers:
+      - CTL.EKS.NS.NOCLASSIFICATION.TAG.001
+
+  - field: k8s.namespace.has_cost_allocation_label
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the namespace has a cost-allocation label (cost-center,
+      team, or owner per org convention) enabling per-namespace cost
+      attribution. Derived from namespace labels.
+    consumers:
+      - CTL.EKS.NS.NOCOSTALLOC.TAG.001
+
+  - field: k8s.namespace.has_default_deny_egress
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the namespace has a NetworkPolicy that selects all pods
+      (podSelector: {}) with empty egress rules, establishing the
+      default-deny-egress baseline. Derived from kubectl get
+      networkpolicies in the namespace.
+    consumers:
+      - CTL.EKS.NETPOL.NODEFAULTDENY.EGRESS.001
+
+  - field: k8s.namespace.has_default_deny_ingress
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the namespace has a NetworkPolicy that selects all pods
+      (podSelector: {}) with empty ingress rules, establishing the
+      default-deny-ingress baseline. Derived from kubectl get
+      networkpolicies in the namespace.
+    consumers:
+      - CTL.EKS.NETPOL.NODEFAULTDENY.INGRESS.001
+
+  - field: k8s.namespace.has_psa_enforce_label
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the namespace has the pod-security.kubernetes.io/enforce
+      label set, activating Pod Security Admission enforcement.
+      Derived from namespace labels.
+    consumers:
+      - CTL.EKS.PSA.MISSING.001
+
+  - field: k8s.namespace.is_production
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the namespace is designated as production, determined by
+      namespace labels (env=production, environment=prod) or org-specific
+      naming convention. Derived from namespace metadata.
+    consumers:
+      - CTL.EKS.PSA.AUDITONLY.001
+      - CTL.EKS.PSA.PRIVILEGED.PROD.001
+
+  - field: k8s.namespace.is_system_namespace
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the namespace is a Kubernetes system namespace
+      (kube-system, kube-public, kube-node-lease) or an EKS-managed
+      namespace. Used to exempt system namespaces from tenant-level
+      compliance controls like cost-allocation labels, classification
+      labels, PSA, default-deny policies, and dormancy checks.
+    consumers:
+      - CTL.EKS.NETPOL.NODEFAULTDENY.EGRESS.001
+      - CTL.EKS.NETPOL.NODEFAULTDENY.INGRESS.001
+      - CTL.EKS.NS.DORMANT.001
+      - CTL.EKS.NS.MULTITENANT.001
+      - CTL.EKS.NS.NOCLASSIFICATION.TAG.001
+      - CTL.EKS.NS.NOCOSTALLOC.TAG.001
+      - CTL.EKS.NS.NOLIMITRANGE.001
+      - CTL.EKS.NS.NORESOURCEQUOTA.001
+      - CTL.EKS.PSA.MISSING.001
+
+  - field: k8s.namespace.psa_audit_only
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the namespace has PSA configured with audit or warn modes
+      but no enforce mode -- non-compliant pods generate audit events
+      but are still admitted. Derived from namespace labels checking
+      for pod-security.kubernetes.io/audit or /warn without a
+      corresponding /enforce label.
+    consumers:
+      - CTL.EKS.PSA.AUDITONLY.001
+
+  # ─── EKS Network Policy ────────────────────────────────────
+
+  - field: k8s.network_policy.egress_allows_world
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the NetworkPolicy has an egress rule with
+      ipBlock.cidr: 0.0.0.0/0, allowing pods covered by the rule
+      to connect to any destination. Derived from the NetworkPolicy
+      spec egress rules.
+    consumers:
+      - CTL.EKS.NETPOL.EGRESS.OPEN.001
+
+  - field: k8s.network_policy.has_ghost_peer
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the NetworkPolicy's ingress or egress peer selectors
+      (podSelector + namespaceSelector) match zero live pods in the
+      cluster. Derived by evaluating the selectors against current
+      pod and namespace labels.
+    consumers:
+      - CTL.EKS.NETPOL.GHOST.PEER.001
+
+  - field: k8s.network_policy.has_wide_namespace_selector
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the NetworkPolicy has an ingress or egress rule with
+      namespaceSelector: {} (empty selector matching every namespace
+      in the cluster). Derived from the NetworkPolicy spec rules.
+    consumers:
+      - CTL.EKS.NETPOL.NSSELECTOR.WIDE.001
+
+  - field: k8s.network_policy.ingress_allows_world
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the NetworkPolicy has an ingress rule with
+      ipBlock.cidr: 0.0.0.0/0, effectively allowing any source IP
+      to reach the covered pods. Derived from the NetworkPolicy
+      spec ingress rules.
+    consumers:
+      - CTL.EKS.NETPOL.INGRESS.OPEN.001
+
+  # ─── EKS Storage / Volumes ─────────────────────────────────
+
+  - field: k8s.storage_class.has_ghost_kms_key
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the StorageClass parameters reference a KMS key
+      (kmsKeyId for EBS CSI, KeyId for FSx) that has been deleted
+      or is in PendingDeletion state. Derived by calling
+      kms:DescribeKey on the key ID in the StorageClass parameters.
+    consumers:
+      - CTL.EKS.STORAGECLASS.GHOST.KMS.001
+
+  - field: k8s.storage_class.is_default
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the StorageClass has the
+      storageclass.kubernetes.io/is-default-class: "true" annotation,
+      making it the default for PVCs that do not specify a
+      storageClassName. Derived from the StorageClass annotations.
+    consumers:
+      - CTL.EKS.STORAGECLASS.GP2DEFAULT.001
+
+  - field: k8s.pvc.has_ghost_storage_class
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the PersistentVolumeClaim's storageClassName references
+      a StorageClass that no longer exists in the cluster. Derived by
+      cross-referencing the PVC's storageClassName against kubectl get
+      storageclasses.
+    consumers:
+      - CTL.EKS.PVC.GHOST.STORAGECLASS.001
+
+  - field: k8s.orphan_volume.is_eks_tagged
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EBS volume carries a kubernetes.io/cluster/<name>
+      tag, indicating it was created by or for an EKS cluster (CSI
+      dynamic provisioning, node root volumes). Derived from
+      ec2:DescribeVolumes Tags.
+    consumers:
+      - CTL.EKS.EBS.ORPHAN.001
+
+  - field: k8s.orphan_volume.is_orphan
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EBS volume is in "available" state (not attached
+      to any instance) and the origin instance has been terminated.
+      Derived from ec2:DescribeVolumes status and attachment history.
+    consumers:
+      - CTL.EKS.EBS.ORPHAN.001
+
+  # ─── EKS IRSA / Federation ─────────────────────────────────
+
+  - field: k8s.irsa.has_ghost_oidc_provider
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IRSA role's trust policy references a federated
+      OIDC provider URL that does not match any IAM identity provider
+      in the account (wrong URL, typo, extra slash, wrong region,
+      missing thumbprint). Derived by cross-referencing the trust
+      policy's Federated principal against
+      iam:ListOpenIDConnectProviders.
+    consumers:
+      - CTL.EKS.IRSA.OIDC.GHOST.001
+
+  - field: k8s.irsa.trust_aud_set
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IRSA role's trust policy includes an aud (audience)
+      condition checking for sts.amazonaws.com. Without it, tokens
+      minted for non-AWS-STS audiences can also assume the role.
+      Derived from the role's trust policy Condition block.
+    consumers:
+      - CTL.EKS.IRSA.AUDIENCE.MISSING.001
+
+  - field: k8s.irsa.trust_is_cross_account
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IRSA role's trust policy permits assumption from
+      an OIDC issuer in a different AWS account (the OIDC provider
+      URL resolves to a different account's EKS cluster). Derived
+      by extracting the account ID from the OIDC issuer URL and
+      comparing against the current account.
+    consumers:
+      - CTL.EKS.IRSA.CROSSACCOUNT.001
+
+  - field: k8s.irsa.trust_oidc_issuer_set
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IRSA role's trust policy specifies the OIDC issuer
+      URL in the Federated principal or Condition block, binding the
+      trust to a specific EKS cluster's identity provider. Derived
+      from the role's trust policy.
+    consumers:
+      - CTL.EKS.IRSA.AUDIENCE.MISSING.001
+      - CTL.EKS.IRSA.SUB.UNSCOPED.001
+
+  - field: k8s.irsa.trust_principal_org_id_set
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IRSA role's trust policy includes an
+      aws:PrincipalOrgID condition, scoping cross-account assumption
+      to principals within the same AWS Organization. Derived from
+      the role's trust policy Condition block.
+    consumers:
+      - CTL.EKS.IRSA.CROSSACCOUNT.001
+
+  - field: k8s.irsa.trust_sub_set
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IRSA role's trust policy includes a sub (subject)
+      condition scoping the trust to a specific Kubernetes
+      ServiceAccount (e.g., system:serviceaccount:namespace:name).
+      Without it, any ServiceAccount in the cluster can assume the
+      role. Derived from the role's trust policy Condition block.
+    consumers:
+      - CTL.EKS.IRSA.SUB.UNSCOPED.001
+
+  # ─── EKS Miscellaneous ─────────────────────────────────────
+
+  - field: k8s.argocd_cluster_secret.spoke_credentials_cluster_admin
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Argo CD cluster secret for a spoke cluster
+      contains credentials with cluster-admin privileges (typically
+      a kubeconfig with system:masters group or cluster-admin
+      ClusterRole binding). Derived from the Argo CD cluster secret
+      config field and its referenced credentials.
+    consumers:
+      - CTL.EKS.ARGOCD.SPOKE.ADMIN.001
+
+  - field: k8s.daemonset.overlaps_fargate_profile
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the DaemonSet's pod selector matches a namespace
+      covered by a Fargate profile. Fargate does not support
+      DaemonSets; pods matching the Fargate selector are silently
+      not scheduled. Derived by cross-referencing DaemonSet
+      selectors against eks:DescribeFargateProfile selectors.
+    consumers:
+      - CTL.EKS.FARGATE.DAEMONSET.001
+
+  - field: k8s.fargate_profile.execution_role_uses_managed_policy_only
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Fargate profile's pod execution role has only
+      AWS-managed policies (AmazonEKSFargatePodExecutionRolePolicy)
+      without additional inline or customer-managed policies that
+      exceed Fargate runtime requirements. Derived from IAM policy
+      analysis of the execution role ARN.
+    consumers:
+      - CTL.EKS.FARGATE.PROFILE.OVERPRIV.001
+
+  - field: k8s.fargate_profile.selector_is_default_or_wildcard
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Fargate profile selector matches the default
+      namespace, all namespaces (*), or has empty label selectors
+      that match every pod. Derived from
+      eks:DescribeFargateProfile selectors.
+    consumers:
+      - CTL.EKS.FARGATE.SELECTOR.WIDE.001
+
+  - field: k8s.hpa.has_ghost_target
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the HorizontalPodAutoscaler's scaleTargetRef points
+      to a Deployment, StatefulSet, or ReplicaSet that no longer
+      exists. Derived by cross-referencing the HPA's scaleTargetRef
+      against live workloads in the same namespace.
+    consumers:
+      - CTL.EKS.HPA.GHOST.TARGET.001
+
+  - field: k8s.ingress.has_ghost_certificate
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Ingress's alb.ingress.kubernetes.io/certificate-arn
+      annotation references an ACM certificate that no longer exists.
+      Derived by calling acm:DescribeCertificate on the certificate
+      ARN in the annotation.
+    consumers:
+      - CTL.EKS.INGRESS.GHOST.CERT.001
+
+  - field: k8s.rbac_binding.has_ghost_role_ref
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the RoleBinding or ClusterRoleBinding's roleRef points
+      at a Role or ClusterRole that no longer exists in the cluster.
+      Derived by cross-referencing the roleRef against kubectl get
+      roles/clusterroles.
+    consumers:
+      - CTL.EKS.RBAC.GHOST.ROLEREF.001
+
+  - field: k8s.rbac_binding.has_ghost_subject
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the RoleBinding or ClusterRoleBinding has a subject
+      (ServiceAccount, User, or Group) that no longer exists.
+      Derived by cross-referencing binding subjects against live
+      ServiceAccounts and IAM principals.
+    consumers:
+      - CTL.EKS.RBAC.GHOST.SUBJECT.001
+
+  - field: k8s.service.has_ghost_sg
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the LoadBalancer Service's
+      service.beta.kubernetes.io/aws-load-balancer-security-groups
+      annotation references one or more security group IDs that no
+      longer exist. Derived by calling
+      ec2:DescribeSecurityGroups on the annotated SG IDs.
+    consumers:
+      - CTL.EKS.SERVICE.GHOST.SG.001
+
+  - field: k8s.velero_backup_target.per_cluster_scope_enforced
+    type: boolean
+    status: planned
+    postcondition: >
+      True if Velero backup storage locations enforce per-cluster
+      scope (separate S3 prefixes or buckets per cluster, with
+      IAM policies preventing cross-cluster restore). Derived from
+      Velero BackupStorageLocation configuration and S3 bucket
+      policy analysis.
+    consumers:
+      - CTL.EKS.VELERO.RESTORE.SCOPE.001
+
+  - field: k8s.node.is_self_managed
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node was provisioned by a self-managed Auto Scaling
+      Group rather than an EKS managed node group. Derived from the
+      absence of the eks.amazonaws.com/nodegroup label on the node
+      object.
+    consumers:
+      - CTL.EKS.NODEGROUP.SELFMANAGED.NOTREADY.001
+
+  - field: k8s.node.ready
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the node's Ready condition is True (kubelet is healthy
+      and capable of running pods). False if NotReady for more than
+      30 minutes. Derived from kubectl get nodes checking the Ready
+      condition status.
+    consumers:
+      - CTL.EKS.NODEGROUP.SELFMANAGED.NOTREADY.001
+
+  - field: k8s.pod_identity.has_ghost_service_account
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS Pod Identity association references a
+      Kubernetes ServiceAccount that no longer exists in the
+      specified namespace. Derived by cross-referencing
+      eks:ListPodIdentityAssociations against kubectl get
+      serviceaccounts in the target namespace.
+    consumers:
+      - CTL.EKS.PODIDENTITY.GHOST.SA.001
+
+  - field: k8s.pod_identity.is_default_namespace
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS Pod Identity association's namespace is
+      "default". Derived from the association's namespace field
+      in eks:DescribePodIdentityAssociation.
+    consumers:
+      - CTL.EKS.PODIDENTITY.DEFAULTNS.001

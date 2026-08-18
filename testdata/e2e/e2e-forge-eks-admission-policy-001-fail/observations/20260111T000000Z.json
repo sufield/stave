@@ -1,0 +1,13 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:eks:us-east-1:123456789012:cluster/prod",
+      "properties": {"k8s": {"cluster": {"admission_policy_configured": false}}},
+      "type": "aws_eks_cluster",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-01-11T00:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}
