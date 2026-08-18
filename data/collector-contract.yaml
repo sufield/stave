@@ -3005,6 +3005,18 @@ contracts:
     consumers:
       - CTL.EKS.IRSA.ENFORCE.001
 
+  - field: k8s.cluster.oidc_url_unique_in_account
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the EKS cluster's OIDC issuer URL is unique within
+      the AWS account (no other cluster shares the same OIDC
+      provider). Derived by cross-referencing
+      eks:DescribeCluster identity.oidc.issuer across all clusters
+      in the account via eks:ListClusters.
+    consumers:
+      - CTL.EKS.OIDC.SHARED.001
+
   - field: k8s.cluster.proxy_env_configured
     type: boolean
     status: planned

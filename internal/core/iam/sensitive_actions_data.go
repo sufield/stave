@@ -513,6 +513,10 @@ var defaultActions = []ActionClassification{
 	{Action: "backup:DeleteRecoveryPoint", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "rbin:DeleteRule", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 	{Action: "rbin:UpdateRule", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "fsx:DeleteSnapshot", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "identitystore:DeleteUser", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "organizations:CreatePolicy", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
+	{Action: "signin:DeleteResourcePermissionStatement", Categories: []ActionRiskCategory{ActionResourceExposure}, Source: "stave"},
 
 	// ================================================================
 	// DISCOVERY (source: "stave")

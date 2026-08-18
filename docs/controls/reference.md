@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3453
-**Pack hash:** `e97a0019302ee06b57c586ae10f501504fe05930b04f4191df30a90ccfac020e`
+**Total controls:** 3454
+**Pack hash:** `1d25794c6b26ee9553c9a6203782a80604bcdec16e181f54b993cfc083d7ff67`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 372 |
-| high | 1484 |
+| high | 1485 |
 | info | 19 |
 | low | 272 |
 | medium | 1306 |
@@ -29,7 +29,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 161 |
 | encryption | 125 |
-| exposure | 1506 |
+| exposure | 1507 |
 | governance | 696 |
 | hygiene | 21 |
 | identity | 679 |
@@ -101,7 +101,7 @@ GitHub. Pick a service below.
 | [EXPOSURE](reference/exposure.md) | 11 |
 | [FIREHOSE](reference/firehose.md) | 4 |
 | [FMS](reference/fms.md) | 4 |
-| [FSX](reference/fsx.md) | 2 |
+| [FSX](reference/fsx.md) | 3 |
 | [GCP](reference/gcp.md) | 72 |
 | [GCS](reference/gcs.md) | 7 |
 | [GHOST](reference/ghost.md) | 2 |

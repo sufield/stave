@@ -35,3 +35,18 @@ Amazon FSx file systems must have at-rest encryption enabled. FSx stores custome
 
 ---
 
+### CTL.FSX.SNAPSHOT.DELETEPROTECTION.001
+
+**FSx File System Backups Must Have Deletion Protection**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: CP-9, SC-28; soc2: CC6.1;
+
+FSx file system does not have backup deletion protection enabled. Without deletion protection, an attacker with fsx:DeleteBackup or fsx:DeleteSnapshot can permanently destroy recovery points. This is the FSx variant of the Codefinger ransomware preparation pattern: delete backups, encrypt or destroy data, demand ransom. AWS Backup vault lock or equivalent immutability mechanisms prevent backup deletion even by principals with administrative access.
+
+**Remediation:** Configure AWS Backup vault lock on the vault storing FSx backups. Set the lock mode to compliance for immutable protection or governance for removable protection. This prevents backup deletion even by principals with fsx:DeleteBackup or fsx:DeleteSnapshot permissions.
+
+---
+

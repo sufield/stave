@@ -1,0 +1,41 @@
+{
+  "assets": [
+    {
+      "id": "arn:aws:fsx:us-east-1:111122223333:file-system/fs-0aaa111122223333a",
+      "properties": {
+        "storage": {
+          "kind": "file_system",
+          "backup": {
+            "backup_configured": true,
+            "deletion_protection_enabled": true
+          },
+          "encryption": {
+            "at_rest_enabled": true
+          }
+        }
+      },
+      "type": "aws_fsx_file_system",
+      "vendor": "aws"
+    },
+    {
+      "id": "arn:aws:fsx:us-east-1:111122223333:file-system/fs-0bbb444455556666b",
+      "properties": {
+        "storage": {
+          "kind": "file_system",
+          "backup": {
+            "backup_configured": true,
+            "deletion_protection_enabled": true
+          },
+          "encryption": {
+            "at_rest_enabled": true
+          }
+        }
+      },
+      "type": "aws_fsx_file_system",
+      "vendor": "aws"
+    }
+  ],
+  "captured_at": "2026-08-17T12:00:00Z",
+  "schema_version": "obs.v0.1",
+  "source": "deployed"
+}

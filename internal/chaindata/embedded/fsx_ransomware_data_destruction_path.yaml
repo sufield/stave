@@ -1,0 +1,24 @@
+id: fsx_ransomware_data_destruction_path
+description: >
+  Ransomware data destruction prerequisites for FSx: no backup
+  deletion protection AND either no backups configured or no
+  encryption at rest. An attacker who gains fsx:DeleteBackup or
+  fsx:DeleteSnapshot can permanently destroy recovery points
+  (no vault lock catch), and the absence of backups or encryption
+  means the file system itself is vulnerable to data loss or
+  exposure. Each control alone is a finding; together they remove
+  every recovery mechanism simultaneously. This is the FSx variant
+  of the EBS ransomware_data_destruction_path chain — the
+  Codefinger pattern applied to FSx file systems.
+controls:
+  - CTL.FSX.SNAPSHOT.DELETEPROTECTION.001
+  - CTL.FSX.BACKUP.CONFIGURED.001
+  - CTL.FSX.ENCRYPT.REST.001
+scope: global
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - data_destruction
+implicit_dependencies: []
