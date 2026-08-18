@@ -1,0 +1,22 @@
+id: codeartifact_supply_chain_ingress
+description: >
+  CodeArtifact repository with unrestricted external connection
+  and public or overbroad repository policy. Upstream packages
+  from public registries (npmjs, PyPI) enter the internal
+  repository without origin restrictions, and the repository
+  policy allows broad access — any principal can publish or
+  consume packages. Together these create a supply chain ingress
+  path: an attacker publishes a malicious package to the public
+  registry, it flows through the external connection into the
+  internal repository, and the overbroad policy allows
+  downstream consumers to pull it without restriction.
+controls:
+  - CTL.CODEARTIFACT.EXTERNAL.UNRESTRICTED.001
+  - CTL.CODEARTIFACT.POLICY.PUBLIC.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []

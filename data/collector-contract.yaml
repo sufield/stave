@@ -4062,3 +4062,143 @@ contracts:
       in eks:DescribePodIdentityAssociation.
     consumers:
       - CTL.EKS.PODIDENTITY.DEFAULTNS.001
+
+  # ─── Bedrock Prompt Governance (CSA 2026 Issue 05) ─────────
+
+  - field: governance.bedrock.prompt.version_sprawl
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Bedrock prompt has accumulated more than 20
+      versions. Derived from bedrock:ListPromptVersions result
+      count > 20.
+    consumers:
+      - CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001
+
+  - field: governance.bedrock.prompt.has_draft_version
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Bedrock prompt has an unpublished DRAFT variant.
+      Derived from bedrock:GetPrompt checking for DRAFT variant
+      existence.
+    consumers:
+      - CTL.BEDROCK.PROMPT.DRAFT.STALE.001
+
+  # ─── SageMaker Model Package Group (CSA 2026 Issues 06, 10) ─
+
+  - field: governance.sagemaker.model_package.has_model_card
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the model package group has an associated model card.
+      Derived from sagemaker:ListModelCards filtered by model
+      package.
+    consumers:
+      - CTL.SAGEMAKER.MODELPACKAGE.NOCARD.001
+      - CTL.SAGEMAKER.MODELPACKAGE.CARD.DRAFT.001
+
+  - field: governance.sagemaker.model_package.has_creator
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the latest model package version has a traceable
+      creator ARN (UserProfileArn or DomainId). Derived from
+      sagemaker:DescribeModelPackage → CreatedBy.
+    consumers:
+      - CTL.SAGEMAKER.MODELPACKAGE.NOCREATOR.001
+
+  - field: access.sagemaker.model_package_group.policy_allows_broad_access
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the model package group resource policy allows
+      Principal "*" or cross-account principals without
+      aws:PrincipalOrgID condition. Derived from
+      sagemaker:GetModelPackageGroupPolicy policy analysis.
+    consumers:
+      - CTL.SAGEMAKER.MODELPACKAGE.ACCESS.001
+
+  # ─── SageMaker Data Quality (CSA 2026 Issue 05) ────────────
+
+  - field: governance.sagemaker.data_quality.has_active_monitor
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the SageMaker endpoint has an active data quality
+      monitoring schedule (MonitoringScheduleStatus = Scheduled).
+      Derived from sagemaker:ListMonitoringSchedules.
+    consumers:
+      - CTL.SAGEMAKER.DATAQUALITY.NOMONITOR.001
+
+  - field: governance.sagemaker.data_quality.has_baseline
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the data quality job definition has a baseline
+      dataset configured. Derived from
+      sagemaker:DescribeDataQualityJobDefinition →
+      DataQualityBaselineConfig.
+    consumers:
+      - CTL.SAGEMAKER.DATAQUALITY.BASELINE.MISSING.001
+
+  # ─── CodeArtifact (CSA 2026 Issues 03, 07) ─────────────────
+
+  - field: access.codeartifact.policy_allows_public
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the CodeArtifact repository resource policy allows
+      Principal "*" or overly broad access without restrictive
+      conditions. Derived from
+      codeartifact:GetRepositoryPermissionsPolicy.
+    consumers:
+      - CTL.CODEARTIFACT.POLICY.PUBLIC.001
+
+  - field: access.codeartifact.domain_cross_account_no_condition
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the CodeArtifact domain policy allows cross-account
+      access without aws:PrincipalOrgID condition. Derived from
+      codeartifact:GetDomainPermissionsPolicy.
+    consumers:
+      - CTL.CODEARTIFACT.DOMAIN.POLICY.CROSSACCOUNT.001
+
+  - field: governance.codeartifact.external_unrestricted
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the CodeArtifact repository has an external
+      connection (public:npmjs, public:pypi) with no package
+      origin restrictions on publish. Derived from
+      codeartifact:DescribeRepository external connections
+      and codeartifact:ListPackageGroups origin config.
+    consumers:
+      - CTL.CODEARTIFACT.EXTERNAL.UNRESTRICTED.001
+
+  - field: governance.codeartifact.upstream_unvetted
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the CodeArtifact repository has upstream
+      repositories that are cross-account or cross-domain.
+      Derived from codeartifact:DescribeRepository upstream
+      list.
+    consumers:
+      - CTL.CODEARTIFACT.UPSTREAM.UNVETTED.001
+
+  # ─── IAM Identity Ratio (CSA 2026 Issue 08) ────────────────
+
+  - field: identity.nhi_ratio_excessive
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the machine-to-human identity ratio exceeds 200:1
+      (IAM role count / IAM user count > 200). Derived from
+      iam:GetAccountSummary → Roles / Users. The 200:1 threshold
+      is per-account (CSA cites 100:1 enterprise-wide; per-account
+      is higher to avoid false positives from service-linked
+      roles).
+    consumers:
+      - CTL.IAM.IDENTITY.RATIO.001

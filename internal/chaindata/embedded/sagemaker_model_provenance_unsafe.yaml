@@ -1,0 +1,21 @@
+id: sagemaker_model_provenance_unsafe
+description: >
+  Unapproved model package with overbroad access policy and no
+  model card. The model enters production without human approval,
+  the access policy allows broad principals to download model
+  artifacts, and no model card documents the model's training
+  data, evaluation metrics, or intended use. Together these
+  remove every governance control on the model lifecycle:
+  provenance is untraceable, access is unscoped, and
+  documentation is absent.
+controls:
+  - CTL.SAGEMAKER.MODELPACKAGE.UNAPPROVED.001
+  - CTL.SAGEMAKER.MODELPACKAGE.ACCESS.001
+  - CTL.SAGEMAKER.MODELPACKAGE.NOCARD.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - s3_data_access
+postconditions:
+  - data_destruction
+implicit_dependencies: []
