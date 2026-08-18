@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.EC2.ALARM.STATUSCHECK.001
+
+**No CloudWatch Alarm for EC2 Instance Status Check Failure**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** iso_27001_2022: A.5.30, A.8.16; nist_800_53_r5: AU-6, IR-4, SI-4; pci_dss_v4.0: 10.6, 12.10; soc2: CC7.1, CC7.2, A1.1;
+
+No CloudWatch alarm watches the StatusCheckFailed metric for EC2 instances. A failed status check indicates either a hardware-level issue (system status) or an OS/network problem (instance status). Without an alarm, instance failures are detected only when downstream services fail, creating a reactive detection gap.
+
+**Remediation:** Create a CloudWatch alarm on the AWS/EC2 StatusCheckFailed metric per instance (or per account aggregate) with threshold >= 1 over a 5-minute period. Wire to the operational paging topic. For automatic recovery, use the EC2 auto-recovery action on the alarm. For more granular detection, alarm on StatusCheckFailed_System (hardware) and StatusCheckFailed_Instance (OS/network) individually.
+
+---
+
 ### CTL.EC2.AMI.BLOCKPUBLIC.001
 
 **AMI Block Public Access Must Be Enabled**

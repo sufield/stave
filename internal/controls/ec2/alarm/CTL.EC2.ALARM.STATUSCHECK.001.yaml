@@ -1,0 +1,128 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.ALARM.STATUSCHECK.001
+name: No CloudWatch Alarm for EC2 Instance Status Check Failure
+description: >
+  No CloudWatch alarm watches the StatusCheckFailed metric
+  for EC2 instances. A failed status check indicates either
+  a hardware-level issue (system status) or an OS/network
+  problem (instance status). Without an alarm, instance
+  failures are detected only when downstream services fail,
+  creating a reactive detection gap.
+domain: audit
+severity: low
+archetype: silent-failure
+compliance:
+  soc2: "CC7.1, CC7.2, A1.1"
+  nist_800_53_r5: "AU-6, IR-4, SI-4"
+  pci_dss_v4.0: "10.6, 12.10"
+  iso_27001_2022: "A.5.30, A.8.16"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+  - monitoring
+subtractive_category:
+  - S08
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_account
+params:
+  attack_stage: detection_evasion
+  blast_radius:
+    type: compute
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - compute.ec2.alarm_instance_status
+  - compute.ec2.has_running_instances
+remediation:
+  description: >
+    No alarm fires when EC2 instance status checks fail.
+  action: >
+    Create a CloudWatch alarm on the AWS/EC2
+    StatusCheckFailed metric per instance (or per account
+    aggregate) with threshold >= 1 over a 5-minute period.
+    Wire to the operational paging topic. For automatic
+    recovery, use the EC2 auto-recovery action on the alarm.
+    For more granular detection, alarm on
+    StatusCheckFailed_System (hardware) and
+    StatusCheckFailed_Instance (OS/network) individually.
+  example: |
+    {
+      "compute": {
+        "kind": "ec2_account",
+        "ec2": {
+          "alarm_instance_status": true,
+          "has_running_instances": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: ec2_account
+    - field: properties.compute.ec2.has_running_instances
+      op: eq
+      value: true
+    - field: properties.compute.ec2.alarm_instance_status
+      op: eq
+      value: false
+defect: >
+  No CloudWatch alarm monitors EC2 instance status check
+  failures.
+infection: >
+  EC2 status checks verify hardware health (system status)
+  and OS/network health (instance status). A failed status
+  check means: the instance may be unreachable, applications
+  running on it are degraded or offline, and recovery
+  requires manual intervention or auto-recovery. Without an
+  alarm, the instance fails silently. Downstream services
+  time out; users report errors before ops is paged. A
+  status-check alarm provides immediate notification so the
+  team can investigate, trigger recovery, or failover before
+  the blast radius widens.
+failure: >
+  Undetected instance failure. EC2 instance has a hardware
+  or OS issue — applications fail without notification.
+tests:
+  - name: no instance-status alarm fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ec2:
+            has_running_instances: true
+            alarm_instance_status: false
+  - name: instance-status alarm passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ec2:
+            has_running_instances: true
+            alarm_instance_status: true
+  - name: no running instances passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:account"
+      asset_type: aws_ec2_account
+      vendor: aws
+      properties:
+        compute:
+          kind: ec2_account
+          ec2:
+            has_running_instances: false
+            alarm_instance_status: false

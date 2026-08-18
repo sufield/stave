@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-18T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.ec2-statuscheck-alarm"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:ec2:us-east-1:111122223333:account",
+      "type": "aws_ec2_account",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "ec2_account",
+          "ec2": {
+            "has_running_instances": false,
+            "alarm_instance_status": false
+          }
+        }
+      }
+    }
+  ]
+}
