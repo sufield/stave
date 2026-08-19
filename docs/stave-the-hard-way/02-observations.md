@@ -74,6 +74,7 @@ unsafe?").
 In production, you capture raw AWS CLI output and transform it:
 
 ```bash
+# doctest:skip — illustrative; raw/ does not exist in fixtures
 stave transform --in raw/
 ```
 

@@ -58,7 +58,8 @@ throughout the tutorial.
 Run both commands. Both succeed:
 
 ```bash
-stave --version && stave doctor
+stave --version
+stave doctor
 ```
 
 Next: [Lab 02 — Observations](02-observations.md)
