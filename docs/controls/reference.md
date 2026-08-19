@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3456
-**Pack hash:** `4af92986f3b9729da158f4d6445cc19a419373ad1727d44d9f68d9e2b02a5772`
+**Total controls:** 3457
+**Pack hash:** `d7f78c730e800c4f6f093ac9c646c58e8f938ed738d1c74c22c82ac7c5c52152`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -16,13 +16,13 @@ GitHub. Pick a service below.
 | critical | 372 |
 | high | 1485 |
 | info | 19 |
-| low | 274 |
+| low | 275 |
 | medium | 1306 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 99 |
+| audit | 100 |
 | availability | 1 |
 | capacity | 3 |
 | compute | 1 |
@@ -88,7 +88,7 @@ GitHub. Pick a service below.
 | [DOCUMENTDB](reference/documentdb.md) | 19 |
 | [DYNAMODB](reference/dynamodb.md) | 39 |
 | [EBS](reference/ebs.md) | 3 |
-| [EC2](reference/ec2.md) | 116 |
+| [EC2](reference/ec2.md) | 117 |
 | [ECR](reference/ecr.md) | 10 |
 | [ECS](reference/ecs.md) | 60 |
 | [EFS](reference/efs.md) | 15 |

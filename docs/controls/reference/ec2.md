@@ -140,6 +140,21 @@ EC2 instance is running an AMI whose owner account is not in the organization, i
 
 ---
 
+### CTL.EC2.APPSTATUSCHECK.CONFIGURED.001
+
+**EC2 Instance Has No Application Status Check**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** nist_800_53_r5: SI-4;
+
+Running EC2 instance does not have an application status check configured. Application status checks provide custom application-level health monitoring beyond the system and instance hardware checks. Without them, application failures are invisible to EC2's native health monitoring — detection depends entirely on external monitoring.
+
+**Remediation:** Configure an application status check on the instance using the EC2 API. The check runs a custom health probe at the application layer and reports status through the standard DescribeInstanceStatus interface, enabling Auto Scaling and other AWS services to react to application-level failures.
+
+---
+
 ### CTL.EC2.ASG.HEALTHCHECK.001
 
 **EC2 Auto Scaling Groups Must Use ELB Health Checks**
