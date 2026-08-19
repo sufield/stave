@@ -1279,6 +1279,25 @@ SSM Patch Manager maintenance window has not executed in more than 30 days. The 
 
 ---
 
+### CTL.EC2.PLACEMENTGROUP.CONFIGURED.001
+
+**EC2 Instance Not in a Placement Group**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** resilience
+- **Compliance:** nist_800_53_r5: CP-7;
+
+Running EC2 instance is not a member of any placement group. Without a placement group, instances have no hardware-failure isolation guarantee — multiple instances of the same workload may share a physical host or rack. A single hardware failure takes them all down simultaneously.
+
+**Remediation:** Create a partition placement group and launch instances into it. Existing instances must be stopped before changing placement group membership. aws ec2 create-placement-group --group-name <name>
+  --strategy partition --partition-count 3
+aws ec2 stop-instances --instance-ids <id> aws ec2 modify-instance-placement --instance-id <id>
+  --group-name <name>
+aws ec2 start-instances --instance-ids <id> Use partition strategy for distributed databases (Cassandra, HDFS, Kafka). Use spread for small critical groups (max 7 per AZ).
+
+---
+
 ### CTL.EC2.POLLUTION.LONGRUNNING.PUBLIC.001
 
 **Long-Running Instance on Stale AMI Has Public IP**

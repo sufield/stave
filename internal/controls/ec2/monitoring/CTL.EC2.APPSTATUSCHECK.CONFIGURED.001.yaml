@@ -1,0 +1,122 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.APPSTATUSCHECK.CONFIGURED.001
+name: EC2 Instance Has No Application Status Check
+description: >
+  Running EC2 instance does not have an application status
+  check configured. Application status checks provide custom
+  application-level health monitoring beyond the system and
+  instance hardware checks. Without them, application failures
+  are invisible to EC2's native health monitoring — detection
+  depends entirely on external monitoring.
+domain: audit
+severity: low
+archetype: silent-failure
+compliance:
+  nist_800_53_r5: "SI-4"
+  ccm_v4: ["LOG-08"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - monitoring
+subtractive_category:
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - monitoring.ec2.application_status_check_configured
+  - compute.state
+remediation:
+  description: >
+    EC2 instance has no application status check. Application
+    failures are not reported through EC2 native health
+    monitoring.
+  action: >
+    Configure an application status check on the instance
+    using the EC2 API. The check runs a custom health probe
+    at the application layer and reports status through the
+    standard DescribeInstanceStatus interface, enabling
+    Auto Scaling and other AWS services to react to
+    application-level failures.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "state": "running"
+      },
+      "monitoring": {
+        "ec2": {
+          "application_status_check_configured": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.state
+      op: eq
+      value: running
+    - field: properties.monitoring.ec2.application_status_check_configured
+      op: eq
+      value: false
+defect: >
+  No application status check configured on EC2 instance.
+infection: >
+  EC2 system and instance status checks detect hardware and
+  OS-level failures but are blind to application health. An
+  application can crash, deadlock, or serve errors while both
+  status checks report healthy. Application status checks
+  close this gap by running a custom health probe that reports
+  through the standard EC2 health interface. Without one,
+  application failures are detected only when downstream
+  services fail or external monitoring catches them —
+  increasing mean time to detection.
+failure: >
+  Undetected application failure. EC2 instance reports healthy
+  at the infrastructure layer while the application is down.
+tests:
+  - name: running instance without app status check fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-0abcdef1234567890"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          state: running
+        monitoring:
+          ec2:
+            application_status_check_configured: false
+  - name: running instance with app status check passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-0abcdef1234567890"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          state: running
+        monitoring:
+          ec2:
+            application_status_check_configured: true
+  - name: terminated instance without app status check passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-0abcdef1234567890"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          state: terminated
+        monitoring:
+          ec2:
+            application_status_check_configured: false

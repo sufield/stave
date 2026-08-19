@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.PLACEMENTGROUP.CONFIGURED.001
+name: EC2 Instance Not in a Placement Group
+description: >
+  Running EC2 instance is not a member of any placement group.
+  Without a placement group, instances have no hardware-failure
+  isolation guarantee — multiple instances of the same workload
+  may share a physical host or rack. A single hardware failure
+  takes them all down simultaneously.
+domain: resilience
+severity: low
+compliance:
+  nist_800_53_r5: "CP-7"
+  ccm_v4: ["BCR-03"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - redundancy
+subtractive_category:
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: impact
+observation_fields:
+  - compute.placement.in_placement_group
+  - compute.state
+remediation:
+  description: >
+    EC2 instance is running without placement group membership.
+    No hardware partition isolation protects against correlated
+    failure.
+  action: >
+    Create a partition placement group and launch instances
+    into it. Existing instances must be stopped before changing
+    placement group membership.
+    aws ec2 create-placement-group --group-name <name>
+      --strategy partition --partition-count 3
+    aws ec2 stop-instances --instance-ids <id>
+    aws ec2 modify-instance-placement --instance-id <id>
+      --group-name <name>
+    aws ec2 start-instances --instance-ids <id>
+    Use partition strategy for distributed databases (Cassandra,
+    HDFS, Kafka). Use spread for small critical groups (max 7
+    per AZ).
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "state": "running",
+        "placement": {
+          "in_placement_group": true,
+          "strategy": "partition"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.state
+      op: eq
+      value: running
+    - field: properties.compute.placement.in_placement_group
+      op: eq
+      value: false
+defect: >
+  EC2 instance runs without placement group membership.
+infection: >
+  Instances without a placement group have no hardware isolation
+  guarantee. AWS may place multiple instances on the same physical
+  host or rack. If that host fails, all co-located instances fail
+  simultaneously. The AWS resilience case study documented this
+  exact failure: 3 Cassandra instances on the same physical node,
+  90-minute outage. Partition placement groups spread instances
+  across distinct hardware partitions, preventing correlated
+  failures.
+failure: >
+  Correlated hardware failure. Multiple instances of the same
+  workload go down simultaneously because they share physical
+  infrastructure.
+tests:
+  - name: running instance without placement group fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-0abcdef1234567890"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          state: running
+          placement:
+            in_placement_group: false
+  - name: running instance in placement group passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-0abcdef1234567890"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          state: running
+          placement:
+            in_placement_group: true
+            strategy: partition
+  - name: terminated instance without placement group passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-0abcdef1234567890"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          state: terminated
+          placement:
+            in_placement_group: false
