@@ -1,0 +1,19 @@
+id: iam_mfa_theater
+description: >
+  MFA theater — role requires MFA but the MFA provides no effective
+  security. The trust policy uses MultiFactorAuthPresent without
+  MultiFactorAuthAge (no time-bound re-authentication) AND the role
+  allows a long MaxSessionDuration. A single TOTP code grants a
+  multi-hour session with no re-authentication. The administrator
+  believes MFA protects the role — it does not. The MFA gate is
+  present but provides no ongoing assurance after session start.
+controls:
+  - CTL.IAM.TRUST.MFA.AUTHAGE.001
+  - CTL.IAM.SESSION.DURATION.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - cross_account_injection
+implicit_dependencies: []

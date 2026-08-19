@@ -4966,6 +4966,21 @@ An IAM role with a cross-account trust policy does not include an aws:MultiFacto
 
 ---
 
+### CTL.IAM.TRUST.MFA.AUTHAGE.001
+
+**Trust Policy MFA Lacks Time-Bound Re-Authentication**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-2(1); owasp_nhi: NHI4; pci_dss_v4.0: 8.4.1; soc2: CC6.1;
+
+An IAM role trust policy requires MFA (aws:MultiFactorAuthPresent) but does not use aws:MultiFactorAuthAge to enforce MFA freshness. MultiFactorAuthPresent is a boolean checked once at session start — it has no time dimension. Once the session is established, the MFA assurance decays over the session lifetime. A 12-hour session from a single TOTP code is indistinguishable from a non-MFA session after minute one. MultiFactorAuthAge checks seconds since the last MFA authentication, enabling re-authentication requirements within a session. Without it, the MFA condition provides no ongoing assurance.
+
+**Remediation:** Add an aws:MultiFactorAuthAge condition to the trust policy. Example: "Condition": {"NumericLessThan": {"aws:MultiFactorAuthAge": "3600"}}. This requires the MFA authentication to have occurred within the last 3600 seconds (1 hour). Combine with a matching MaxSessionDuration for defense in depth.
+
+---
+
 ### CTL.IAM.TRUST.OIDC.001
 
 **OIDC Federation Trust Must Be Scoped to Specific Repository**

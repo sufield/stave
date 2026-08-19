@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.MFA.AUTHAGE.001
+name: Trust Policy MFA Lacks Time-Bound Re-Authentication
+description: >
+  An IAM role trust policy requires MFA (aws:MultiFactorAuthPresent)
+  but does not use aws:MultiFactorAuthAge to enforce MFA freshness.
+  MultiFactorAuthPresent is a boolean checked once at session start —
+  it has no time dimension. Once the session is established, the MFA
+  assurance decays over the session lifetime. A 12-hour session from
+  a single TOTP code is indistinguishable from a non-MFA session
+  after minute one. MultiFactorAuthAge checks seconds since the last
+  MFA authentication, enabling re-authentication requirements within
+  a session. Without it, the MFA condition provides no ongoing
+  assurance.
+domain: identity
+severity: medium
+scope: compound
+corpus_reference: MITRE:T1550.001
+compliance:
+  owasp_nhi: "NHI4"
+  soc2: "CC6.1"
+  nist_800_53_r5: "IA-2(1)"
+  pci_dss_v4.0: "8.4.1"
+  ccm_v4: ["IAM-05", "IAM-14"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - credential-lifecycle
+  - formal-semantics
+  - trust-boundary
+subtractive_category:
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  attack_stage: credential_access
+  base_impact: 6
+observation_fields:
+  - identity.trust_policy.has_mfa_condition
+  - identity.trust_policy.has_multifactor_auth_age
+remediation:
+  description: >
+    Trust policy requires MFA but uses only aws:MultiFactorAuthPresent
+    (boolean). The MFA has no time-bound — a single TOTP code grants
+    a session for the full MaxSessionDuration with no re-authentication.
+  action: >
+    Add an aws:MultiFactorAuthAge condition to the trust policy.
+    Example: "Condition": {"NumericLessThan":
+    {"aws:MultiFactorAuthAge": "3600"}}. This requires the MFA
+    authentication to have occurred within the last 3600 seconds
+    (1 hour). Combine with a matching MaxSessionDuration for
+    defense in depth.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "trust_policy": {
+          "has_mfa_condition": true,
+          "has_multifactor_auth_age": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: role
+    - field: properties.identity.trust_policy.has_mfa_condition
+      op: present
+    - field: properties.identity.trust_policy.has_mfa_condition
+      op: eq
+      value: true
+    - field: properties.identity.trust_policy.has_multifactor_auth_age
+      op: ne
+      value: true
+defect: >
+  Trust policy uses aws:MultiFactorAuthPresent without
+  aws:MultiFactorAuthAge. MFA is a one-time gate with no ongoing
+  validity constraint.
+infection: >
+  A principal assumes this role after a single MFA challenge. The
+  session credentials are valid for the full MaxSessionDuration with
+  no further MFA checks. If the TOTP device is briefly accessed (e.g.
+  shoulder surfing, unlocked phone), the attacker obtains a long-lived
+  session from a single code. The MFA condition in the trust policy
+  provides false assurance — audit reports show "MFA required" but the
+  effective protection window is seconds, not hours.
+failure: >
+  Long-lived session from a single TOTP code. The session is
+  indistinguishable from a non-MFA session after the initial
+  assumption. MFA theater — the gate exists but provides no ongoing
+  security assurance.
+tests:
+  - name: "MFA present without AuthAge fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MfaPresentOnly"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            has_mfa_condition: true
+            has_multifactor_auth_age: false
+  - name: "MFA present with AuthAge passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/MfaWithAuthAge"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            has_mfa_condition: true
+            has_multifactor_auth_age: true
+  - name: "no MFA at all passes (separate control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/NoMfaRole"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          trust_policy:
+            has_mfa_condition: false
+            has_multifactor_auth_age: false

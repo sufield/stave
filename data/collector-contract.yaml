@@ -532,6 +532,19 @@ contracts:
     consumers:
       - CTL.IAM.TRUST.MFA.001
 
+  - field: identity.trust_policy.has_multifactor_auth_age
+    type: boolean
+    postcondition: >
+      True if the IAM role trust policy Condition uses
+      aws:MultiFactorAuthAge with a NumericLessThan or
+      NumericLessThanEquals operator. This enforces MFA
+      freshness — the session must have been MFA-authenticated
+      within a time window. False when the trust policy uses
+      only aws:MultiFactorAuthPresent (boolean, no time bound)
+      or has no MFA condition at all.
+    consumers:
+      - CTL.IAM.TRUST.MFA.AUTHAGE.001
+
   - field: snapshot_before_delete_enforced
     type: boolean
     postcondition: >
