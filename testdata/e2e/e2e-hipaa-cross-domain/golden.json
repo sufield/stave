@@ -2176,6 +2176,15 @@
           "description": "MFA is enforced on the happy-path login AND the recovery flow doesn't require MFA AND the only second factor available is SMS. The MFA enforcement is theatre — an attacker uses the recovery path (email or SMS-driven) to bypass MFA entirely, and even if they faced MFA, SMS alone is defeatable via SIM swap. Threshold of 2 because the dangerous compound is when the recovery escape route stacks with a weak channel.\n"
         },
         {
+          "chain_id": "cognito_ropc_mfa_bypass",
+          "chain_severity": "critical",
+          "missing_control": "CTL.COGNITO.CLIENT.USERPASSWORDAUTH.001",
+          "controls_failing": [
+            "CTL.COGNITO.MFA.001"
+          ],
+          "description": "Cognito app client allows USER_PASSWORD_AUTH (non-interactive credential flow) and the user pool does not enforce MFA for all users. An attacker with valid credentials calls InitiateAuth with AuthFlow=USER_PASSWORD_AUTH — the endpoint accepts the password directly and returns tokens without an MFA challenge. This is the AWS equivalent of the ROPC grant that the Huntress LSHIY campaign used for 78 account takeovers across enterprises with MFA \"enabled\" but scoped to interactive flows.\n"
+        },
+        {
           "chain_id": "cognito_weakauth",
           "chain_severity": "critical",
           "missing_control": "CTL.COGNITO.LOCKOUT.NONE.001",
@@ -4766,6 +4775,16 @@
       "missing_control": "CTL.COGNITO.RECOVERY.NOMFA.001",
       "severity": "high",
       "scope_id": "patient-portal"
+    },
+    {
+      "chain": "cognito_ropc_mfa_bypass",
+      "description": "Cognito app client allows USER_PASSWORD_AUTH (non-interactive credential flow) and the user pool does not enforce MFA for all users. An attacker with valid credentials calls InitiateAuth with AuthFlow=USER_PASSWORD_AUTH — the endpoint accepts the password directly and returns tokens without an MFA challenge. This is the AWS equivalent of the ROPC grant that the Huntress LSHIY campaign used for 78 account takeovers across enterprises with MFA \"enabled\" but scoped to interactive flows.\n",
+      "controls_failing": [
+        "CTL.COGNITO.MFA.001"
+      ],
+      "missing_control": "CTL.COGNITO.CLIENT.USERPASSWORDAUTH.001",
+      "severity": "critical",
+      "scope_id": "__global__"
     },
     {
       "chain": "cognito_weakauth",
