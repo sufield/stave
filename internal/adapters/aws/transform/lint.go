@@ -1,8 +1,9 @@
 package transform
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/itchyny/gojq"
@@ -66,11 +67,11 @@ func LintFilters() ([]FilterIssue, error) {
 		}
 	}
 
-	sort.Slice(issues, func(i, j int) bool {
-		if issues[i].Filter != issues[j].Filter {
-			return issues[i].Filter < issues[j].Filter
+	slices.SortFunc(issues, func(a, b FilterIssue) int {
+		if c := cmp.Compare(a.Filter, b.Filter); c != 0 {
+			return c
 		}
-		return issues[i].Message < issues[j].Message
+		return cmp.Compare(a.Message, b.Message)
 	})
 	return issues, nil
 }

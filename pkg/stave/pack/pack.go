@@ -11,9 +11,9 @@
 package pack
 
 import (
+	"cmp"
 	"path"
 	"slices"
-	"sort"
 	"strings"
 )
 
@@ -95,12 +95,12 @@ func (p Pack) Resolve(catalog []ControlMeta) []string {
 		out = append(out, id)
 	}
 	// Highest severity first, then ID, so Limit keeps the most impactful.
-	sort.Slice(out, func(i, j int) bool {
-		ri, rj := severityRank[strings.ToLower(matched[out[i]])], severityRank[strings.ToLower(matched[out[j]])]
-		if ri != rj {
-			return ri > rj
+	slices.SortFunc(out, func(a, b string) int {
+		ra, rb := severityRank[strings.ToLower(matched[a])], severityRank[strings.ToLower(matched[b])]
+		if c := cmp.Compare(rb, ra); c != 0 {
+			return c
 		}
-		return out[i] < out[j]
+		return cmp.Compare(a, b)
 	})
 	if p.Controls.Limit > 0 && len(out) > p.Controls.Limit {
 		out = out[:p.Controls.Limit]

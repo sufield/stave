@@ -1,8 +1,9 @@
 package plan
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 
 	"github.com/spf13/cobra"
 
@@ -87,15 +88,15 @@ func run(cmd *cobra.Command, o *options) error {
 		total.Info += c.Info
 		total.Total += c.Total
 	}
-	sort.Slice(rows, func(i, j int) bool { return rows[i].Service < rows[j].Service })
+	slices.SortFunc(rows, func(a, b row) int { return cmp.Compare(a.Service, b.Service) })
 
 	order := make([]row, len(rows))
 	copy(order, rows)
-	sort.SliceStable(order, func(i, j int) bool {
-		if order[i].Critical != order[j].Critical {
-			return order[i].Critical > order[j].Critical
+	slices.SortStableFunc(order, func(a, b row) int {
+		if c := cmp.Compare(b.Critical, a.Critical); c != 0 {
+			return c
 		}
-		return order[i].High > order[j].High
+		return cmp.Compare(b.High, a.High)
 	})
 	collectionOrder := make([]string, len(order))
 	for i, r := range order {

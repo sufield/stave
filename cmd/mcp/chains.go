@@ -2,10 +2,11 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"fmt"
 	"html"
-	"sort"
+	"slices"
 	"strings"
 	"text/template"
 
@@ -111,8 +112,8 @@ func renderChains(assessment *stave.Assessment) (string, error) {
 func buildChainsView(a *stave.Assessment) chainsView {
 	chains := make([]stave.ChainFinding, len(a.ChainFindings))
 	copy(chains, a.ChainFindings)
-	sort.SliceStable(chains, func(i, j int) bool {
-		return severityRank(chains[i].Severity) > severityRank(chains[j].Severity)
+	slices.SortStableFunc(chains, func(a, b stave.ChainFinding) int {
+		return cmp.Compare(severityRank(b.Severity), severityRank(a.Severity))
 	})
 
 	var v chainsView

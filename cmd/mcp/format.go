@@ -1,8 +1,9 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/pkg/stave"
@@ -85,15 +86,14 @@ func formatVerify(a *stave.Assessment, score *stave.ScoreResult, detailed bool) 
 func rankBySeverity(findings []stave.Finding) []stave.Finding {
 	out := make([]stave.Finding, len(findings))
 	copy(out, findings)
-	sort.SliceStable(out, func(i, j int) bool {
-		ri, rj := severityRank(out[i].Severity), severityRank(out[j].Severity)
-		if ri != rj {
-			return ri > rj
+	slices.SortStableFunc(out, func(a, b stave.Finding) int {
+		if c := cmp.Compare(severityRank(b.Severity), severityRank(a.Severity)); c != 0 {
+			return c
 		}
-		if out[i].ControlID != out[j].ControlID {
-			return out[i].ControlID < out[j].ControlID
+		if c := cmp.Compare(a.ControlID, b.ControlID); c != 0 {
+			return c
 		}
-		return out[i].AssetID < out[j].AssetID
+		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 	return out
 }

@@ -12,6 +12,7 @@
 package main
 
 import (
+	"cmp"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -19,6 +20,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -233,8 +235,8 @@ func parseLensRepo(repoPath string) ([]lensStats, error) {
 		}
 	}
 
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].DirName < result[j].DirName
+	slices.SortFunc(result, func(a, b lensStats) int {
+		return cmp.Compare(a.DirName, b.DirName)
 	})
 	return result, nil
 }

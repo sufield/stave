@@ -1,12 +1,12 @@
 package apply
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"io"
 	"maps"
 	"slices"
-	"sort"
 	"strings"
 )
 
@@ -118,8 +118,8 @@ func printStage(w io.Writer, label string, fs []stagedFinding) {
 	fmt.Fprintf(w, "%s %d %s (%s)\n", label, t.total, word, t.breakdown())
 	// criticals first within the stage
 	order := map[string]int{"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
-	sort.SliceStable(fs, func(i, j int) bool {
-		return order[strings.ToLower(fs[i].Severity)] < order[strings.ToLower(fs[j].Severity)]
+	slices.SortStableFunc(fs, func(a, b stagedFinding) int {
+		return cmp.Compare(order[strings.ToLower(a.Severity)], order[strings.ToLower(b.Severity)])
 	})
 	for _, f := range fs {
 		fmt.Fprintf(w, "  [%s] %s — %s\n", strings.ToLower(f.Severity), f.ControlID, shortAsset(f.AssetID))

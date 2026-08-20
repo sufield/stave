@@ -1,8 +1,9 @@
 package stave
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/adapters/controls/builtin"
@@ -44,7 +45,7 @@ func CatalogControlSummaries(controlsDir string, useBuiltin bool) ([]ControlSumm
 			out = append(out, ControlSummary{ID: string(controls[i].ID), Severity: controls[i].Severity.String()})
 		}
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	slices.SortFunc(out, func(a, b ControlSummary) int { return cmp.Compare(a.ID, b.ID) })
 	return out, nil
 }
 
@@ -158,7 +159,7 @@ func AutoPlanSummary(packNames, services []string, controlsDir string, useBuilti
 			Medium: c.Medium, Low: c.Low, Info: c.Info, Total: c.Total,
 		})
 	}
-	sort.Slice(result, func(i, j int) bool { return result[i].Service < result[j].Service })
+	slices.SortFunc(result, func(a, b ServiceSeverityCounts) int { return cmp.Compare(a.Service, b.Service) })
 
 	return &AutoPlanResult{Services: svcs, ControlIDs: controlIDs, Counts: result}, nil
 }

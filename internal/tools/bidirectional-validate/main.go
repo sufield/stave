@@ -11,10 +11,11 @@
 package main
 
 import (
+	"cmp"
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -422,8 +423,8 @@ func main() {
 	for u := range byUniversalCount {
 		uIDs = append(uIDs, u)
 	}
-	sort.Slice(uIDs, func(i, j int) bool {
-		return extractNum(uIDs[i]) < extractNum(uIDs[j])
+	slices.SortFunc(uIDs, func(a, b string) int {
+		return cmp.Compare(extractNum(a), extractNum(b))
 	})
 
 	fmt.Println("Per-Universal Coverage")
@@ -446,7 +447,7 @@ func main() {
 	for s, c := range unmappedByService {
 		umSorted = append(umSorted, svcCount{s, c})
 	}
-	sort.Slice(umSorted, func(i, j int) bool { return umSorted[i].count > umSorted[j].count })
+	slices.SortFunc(umSorted, func(a, b svcCount) int { return cmp.Compare(b.count, a.count) })
 
 	fmt.Printf("Unmapped Controls — Top Services (%d total)\n", unmapped)
 	fmt.Println("────────────────────────────────")

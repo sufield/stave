@@ -10,10 +10,10 @@
 package compliancemapping
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"slices"
-	"sort"
 	"strings"
 )
 
@@ -205,14 +205,14 @@ func (m *Mapping) Verify(catalogIDs map[string]bool) IntegrityReport {
 	rep.ReferencedControl = len(distinct)
 	slices.Sort(rep.DuplicateIDs)
 	slices.Sort(rep.PartialNoReason)
-	sort.Slice(rep.DanglingRefs, func(i, j int) bool {
-		if rep.DanglingRefs[i].FrameworkID != rep.DanglingRefs[j].FrameworkID {
-			return rep.DanglingRefs[i].FrameworkID < rep.DanglingRefs[j].FrameworkID
+	slices.SortFunc(rep.DanglingRefs, func(a, b DanglingRef) int {
+		if c := cmp.Compare(a.FrameworkID, b.FrameworkID); c != 0 {
+			return c
 		}
-		return rep.DanglingRefs[i].StaveControl < rep.DanglingRefs[j].StaveControl
+		return cmp.Compare(a.StaveControl, b.StaveControl)
 	})
-	sort.Slice(rep.InvalidConfidence, func(i, j int) bool {
-		return rep.InvalidConfidence[i].FrameworkID < rep.InvalidConfidence[j].FrameworkID
+	slices.SortFunc(rep.InvalidConfidence, func(a, b ConfidenceIssue) int {
+		return cmp.Compare(a.FrameworkID, b.FrameworkID)
 	})
 	return rep
 }
@@ -296,7 +296,9 @@ func (m *Mapping) Evaluate(violated map[string]bool) Report {
 			}
 		}
 	}
-	byID := func(s []ControlResult) { sort.Slice(s, func(i, j int) bool { return s[i].ID < s[j].ID }) }
+	byID := func(s []ControlResult) {
+		slices.SortFunc(s, func(a, b ControlResult) int { return cmp.Compare(a.ID, b.ID) })
+	}
 	byID(rep.Covered)
 	byID(rep.Gaps)
 	byID(rep.OutOfScope)

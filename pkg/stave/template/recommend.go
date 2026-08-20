@@ -1,8 +1,9 @@
 package template
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/google/cel-go/cel"
@@ -44,8 +45,8 @@ func Recommend(templates []Template, summary snapshot.Summary) ([]Recommendation
 		}
 	}
 
-	sort.Slice(results, func(i, j int) bool {
-		return results[i].Template.RecommendWhen.Priority > results[j].Template.RecommendWhen.Priority
+	slices.SortFunc(results, func(a, b Recommendation) int {
+		return cmp.Compare(b.Template.RecommendWhen.Priority, a.Template.RecommendWhen.Priority)
 	})
 
 	return results, nil

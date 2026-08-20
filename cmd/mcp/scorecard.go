@@ -2,10 +2,11 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"fmt"
 	"html"
-	"sort"
+	"slices"
 	"text/template"
 
 	"github.com/sufield/stave/pkg/stave"
@@ -143,8 +144,8 @@ func buildScorecardView(reports []*stave.ComplianceReport) scorecardView {
 		})
 	}
 	// Lowest compliance first — highest remediation priority on top.
-	sort.SliceStable(sv.Compare, func(i, j int) bool {
-		return sv.Compare[i].Pct < sv.Compare[j].Pct
+	slices.SortStableFunc(sv.Compare, func(a, b compareRow) int {
+		return cmp.Compare(a.Pct, b.Pct)
 	})
 	return sv
 }

@@ -14,11 +14,11 @@ package transform
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"maps"
 	"slices"
-	"sort"
 
 	"github.com/itchyny/gojq"
 
@@ -92,11 +92,11 @@ func TransformFiles(files map[string][]byte, opts Options) ([]byte, Stats, error
 	// before enrichments deep-merge their fields on top, otherwise a base
 	// default could overwrite an enrichment (e.g. "group-inline-*.json" sorts
 	// before "iam_groups.json"). base -> self-describing -> enrichment, then name.
-	sort.SliceStable(docs, func(i, j int) bool {
-		if docs[i].category != docs[j].category {
-			return docs[i].category < docs[j].category
+	slices.SortStableFunc(docs, func(a, b pendingDoc) int {
+		if c := cmp.Compare(a.category, b.category); c != 0 {
+			return c
 		}
-		return docs[i].name < docs[j].name
+		return cmp.Compare(a.name, b.name)
 	})
 
 	// Phase 2: run each filter and scrub its output.

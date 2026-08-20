@@ -10,6 +10,7 @@
 package main
 
 import (
+	"cmp"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -17,7 +18,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
+	"slices"
 	"time"
 )
 
@@ -111,8 +112,8 @@ func fetchIndex() ([]indexEntry, error) {
 	if err := json.Unmarshal(data, &index); err != nil {
 		return nil, fmt.Errorf("parse index: %w", err)
 	}
-	sort.Slice(index, func(i, j int) bool {
-		return index[i].Service < index[j].Service
+	slices.SortFunc(index, func(a, b indexEntry) int {
+		return cmp.Compare(a.Service, b.Service)
 	})
 	return index, nil
 }

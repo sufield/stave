@@ -1,13 +1,14 @@
 package universals
 
 import (
+	"cmp"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -155,7 +156,7 @@ func loadFormulas(dir string) ([]formula, error) {
 		out = append(out, formula{id: id, name: name, content: string(data)})
 	}
 
-	sort.Slice(out, func(i, j int) bool { return out[i].id < out[j].id })
+	slices.SortFunc(out, func(a, b formula) int { return cmp.Compare(a.id, b.id) })
 	return out, nil
 }
 

@@ -1,9 +1,10 @@
 package apply
 
 import (
+	"cmp"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/pkg/stave"
@@ -23,11 +24,11 @@ func printAutoPlan(w io.Writer, opts *Options) error {
 
 	order := make([]stave.ServiceSeverityCounts, len(result.Counts))
 	copy(order, result.Counts)
-	sort.SliceStable(order, func(i, j int) bool {
-		if order[i].Critical != order[j].Critical {
-			return order[i].Critical > order[j].Critical
+	slices.SortStableFunc(order, func(a, b stave.ServiceSeverityCounts) int {
+		if c := cmp.Compare(b.Critical, a.Critical); c != 0 {
+			return c
 		}
-		return order[i].High > order[j].High
+		return cmp.Compare(b.High, a.High)
 	})
 
 	var total stave.ServiceSeverityCounts

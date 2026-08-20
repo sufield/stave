@@ -9,13 +9,9 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
+	appconfig "github.com/sufield/stave/internal/app/config"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
-
-// configDefaults provides project-level defaults for loop options.
-type configDefaults interface {
-	MaxUnsafeDuration() string
-}
 
 // loopOptions holds the raw CLI flag values for the fix-loop command.
 type loopOptions struct {
@@ -48,9 +44,7 @@ func (o *loopOptions) Prepare(cmd *cobra.Command) error {
 	return o.normalize()
 }
 
-// resolveConfigDefaults fills flag values from project config when the user
-// did not set them explicitly on the command line.
-func (o *loopOptions) resolveConfigDefaults(defaults configDefaults, flags *pflag.FlagSet) {
+func (o *loopOptions) resolveConfigDefaults(defaults *appconfig.GovernanceResolver, flags *pflag.FlagSet) {
 	if defaults == nil {
 		return
 	}
