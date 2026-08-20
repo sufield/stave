@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.signin-rbp-proof"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:signin::111122223333:configuration/console",
+      "type": "aws_signin_configuration",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "signin": {
+            "console_authorization_enabled": false,
+            "has_resource_permission_statements": false,
+            "has_excluded_principal": false
+          }
+        }
+      }
+    }
+  ]
+}

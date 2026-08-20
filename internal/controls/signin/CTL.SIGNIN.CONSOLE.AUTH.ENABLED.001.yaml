@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.SIGNIN.CONSOLE.AUTH.ENABLED.001
+name: Console Sign-in Authorization Not Enabled
+description: >
+  Console sign-in resource-based policy enforcement is not enabled for
+  this account. Resource permission statements may exist defining
+  network restrictions (source IP, source VPC) for console sign-in,
+  but they have no effect until authorization is enabled. Without
+  enforcement, any IAM principal with valid credentials can sign in
+  to the console from any network — the resource-based policies are
+  decorative. This is the console equivalent of having an SCP that
+  is not attached to any OU.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+taxonomy:
+  - account-governance
+  - identity-perimeter
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_signin_configuration]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - governance.signin.console_authorization_enabled
+remediation:
+  description: >
+    Console sign-in resource-based policy enforcement is not enabled.
+    Network restrictions for console access are not enforced.
+  action: >
+    Enable console authorization enforcement for the account:
+    aws signin put-console-authorization-configuration
+    --target-id <account-id> --region us-east-1. Verify with
+    aws signin get-console-authorization-configuration.
+  example: |
+    {
+      "governance": {
+        "signin": {
+          "console_authorization_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.signin.console_authorization_enabled
+      op: eq
+      value: false
+tests:
+  - name: authorization disabled fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:signin::111122223333:configuration/console"
+      asset_type: aws_signin_configuration
+      vendor: aws
+      properties:
+        governance:
+          signin:
+            console_authorization_enabled: false
+  - name: authorization enabled passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:signin::111122223333:configuration/console"
+      asset_type: aws_signin_configuration
+      vendor: aws
+      properties:
+        governance:
+          signin:
+            console_authorization_enabled: true

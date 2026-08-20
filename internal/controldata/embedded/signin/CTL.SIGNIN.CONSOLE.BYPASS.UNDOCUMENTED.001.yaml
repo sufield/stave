@@ -1,0 +1,91 @@
+dsl_version: ctrl.v1
+id: CTL.SIGNIN.CONSOLE.BYPASS.UNDOCUMENTED.001
+name: Console Sign-in Bypass Exists Without Restrictions
+description: >
+  Console sign-in policy has an excluded principal (bypass ARN) but
+  no resource permission statements define network restrictions. The
+  bypass exists for a restriction that does not exist — someone
+  configured a break-glass identity but never configured the network
+  restrictions that would make the bypass meaningful. This indicates
+  incomplete configuration: either the restrictions were removed after
+  the bypass was set up, or the setup was abandoned mid-way.
+domain: identity
+severity: low
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+taxonomy:
+  - account-governance
+  - identity-perimeter
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_signin_configuration]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - governance.signin.has_excluded_principal
+  - governance.signin.has_resource_permission_statements
+remediation:
+  description: >
+    Console sign-in bypass principal exists but no network restrictions
+    are in effect. The bypass is for a restriction that does not exist.
+  action: >
+    Either create resource permission statements to restrict console
+    sign-in by network (aws signin put-resource-permission-statement),
+    or remove the bypass principal if restrictions are not intended.
+  example: |
+    {
+      "governance": {
+        "signin": {
+          "has_excluded_principal": true,
+          "has_resource_permission_statements": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.signin.has_excluded_principal
+      op: eq
+      value: true
+    - field: properties.governance.signin.has_resource_permission_statements
+      op: eq
+      value: false
+tests:
+  - name: bypass with no statements fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:signin::111122223333:configuration/console"
+      asset_type: aws_signin_configuration
+      vendor: aws
+      properties:
+        governance:
+          signin:
+            has_excluded_principal: true
+            has_resource_permission_statements: false
+  - name: bypass with statements passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:signin::111122223333:configuration/console"
+      asset_type: aws_signin_configuration
+      vendor: aws
+      properties:
+        governance:
+          signin:
+            has_excluded_principal: true
+            has_resource_permission_statements: true
+  - name: no bypass passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:signin::111122223333:configuration/console"
+      asset_type: aws_signin_configuration
+      vendor: aws
+      properties:
+        governance:
+          signin:
+            has_excluded_principal: false
+            has_resource_permission_statements: false

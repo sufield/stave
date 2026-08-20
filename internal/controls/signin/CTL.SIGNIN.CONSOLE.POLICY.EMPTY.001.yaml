@@ -1,0 +1,93 @@
+dsl_version: ctrl.v1
+id: CTL.SIGNIN.CONSOLE.POLICY.EMPTY.001
+name: Console Authorization Enabled With No Network Restrictions
+description: >
+  Console sign-in authorization is enabled but no resource permission
+  statements define network restrictions. The enforcement mechanism is
+  active but restricting nothing — every console sign-in from any
+  network is permitted, identical to having authorization disabled.
+  This is the equivalent of enabling a firewall with an allow-all
+  default rule and no other rules. The security team sees "enforcement
+  enabled" in the console and believes sign-in is restricted, but the
+  restriction set is empty.
+domain: identity
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-10"]
+scope_tags:
+  - aws
+taxonomy:
+  - account-governance
+  - identity-perimeter
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_signin_configuration]
+params:
+  attack_stage: initial_access
+observation_fields:
+  - governance.signin.console_authorization_enabled
+  - governance.signin.has_resource_permission_statements
+remediation:
+  description: >
+    Console authorization is enabled but no resource permission
+    statements restrict network access. Enforcement is a no-op.
+  action: >
+    Create at least one resource permission statement with network
+    conditions: aws signin put-resource-permission-statement
+    --source-ip <CIDR> or --source-vpc <vpc-id>. Verify with
+    aws signin list-resource-permission-statements.
+  example: |
+    {
+      "governance": {
+        "signin": {
+          "console_authorization_enabled": true,
+          "has_resource_permission_statements": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.signin.console_authorization_enabled
+      op: eq
+      value: true
+    - field: properties.governance.signin.has_resource_permission_statements
+      op: eq
+      value: false
+tests:
+  - name: enabled with no statements fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:signin::111122223333:configuration/console"
+      asset_type: aws_signin_configuration
+      vendor: aws
+      properties:
+        governance:
+          signin:
+            console_authorization_enabled: true
+            has_resource_permission_statements: false
+  - name: enabled with statements passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:signin::111122223333:configuration/console"
+      asset_type: aws_signin_configuration
+      vendor: aws
+      properties:
+        governance:
+          signin:
+            console_authorization_enabled: true
+            has_resource_permission_statements: true
+  - name: disabled with no statements passes (control 1 covers this)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:signin::111122223333:configuration/console"
+      asset_type: aws_signin_configuration
+      vendor: aws
+      properties:
+        governance:
+          signin:
+            console_authorization_enabled: false
+            has_resource_permission_statements: false

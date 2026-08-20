@@ -4111,3 +4111,43 @@ contracts:
     consumers:
       - CTL.EC2.APPSTATUSCHECK.CONFIGURED.001
 
+  # ─── Console Sign-in RBP (Aug 2026 feature) ─────────────────
+
+  - field: governance.signin.console_authorization_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if console sign-in resource-based policy enforcement is
+      active for this account. Derived from
+      signin:GetConsoleAuthorizationConfiguration →
+      consoleAuthorizationEnabled. False means the feature is
+      disabled; any resource permission statements have no effect.
+    consumers:
+      - CTL.SIGNIN.CONSOLE.AUTH.ENABLED.001
+      - CTL.SIGNIN.CONSOLE.POLICY.EMPTY.001
+
+  - field: governance.signin.has_resource_permission_statements
+    type: boolean
+    status: planned
+    postcondition: >
+      True if at least one resource permission statement exists
+      defining network restrictions (source IP or source VPC
+      conditions). Derived from
+      signin:ListResourcePermissionStatements returning a non-empty
+      list. False with authorization enabled means enforcement is
+      on but restricting nothing.
+    consumers:
+      - CTL.SIGNIN.CONSOLE.POLICY.EMPTY.001
+      - CTL.SIGNIN.CONSOLE.BYPASS.UNDOCUMENTED.001
+
+  - field: governance.signin.has_excluded_principal
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the generated console sign-in policy contains an
+      excluded principal ARN (ArnNotEquals condition in statements).
+      Derived from signin:GetResourcePolicy → Statement conditions.
+      True indicates a break-glass bypass exists.
+    consumers:
+      - CTL.SIGNIN.CONSOLE.BYPASS.UNDOCUMENTED.001
+
