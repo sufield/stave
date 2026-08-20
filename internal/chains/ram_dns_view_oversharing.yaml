@@ -1,0 +1,23 @@
+id: ram_dns_view_oversharing
+description: >
+  RAM resource share exposes DNS infrastructure to external accounts
+  with broad resource type scope. The share includes principals outside
+  the organization (CTL.RAM.EXTERNAL.001) AND uses unrestricted resource
+  types (CTL.RAM.SCOPE.001). When both conditions hold, external
+  accounts gain access to shared resources — including Route 53
+  Resolver DNS Views, forwarding rules, and query log configs —
+  without type-level restriction. This extends the DNS trust boundary
+  beyond organizational control: external principals can resolve
+  internal hostnames, observe query patterns, or manipulate
+  resolution behavior depending on the shared resource type.
+controls:
+  - CTL.RAM.EXTERNAL.001
+  - CTL.RAM.SCOPE.001
+escalation_threshold: 2
+scope: global
+compound_severity: high
+preconditions:
+  - ram_share_active
+postconditions:
+  - dns_trust_boundary_extended
+implicit_dependencies: []

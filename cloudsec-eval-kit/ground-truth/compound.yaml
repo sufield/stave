@@ -1,0 +1,117 @@
+# CloudSec Eval Kit — Compound Paths
+#
+# 5 multi-resource attack paths that require connecting findings
+# across services. Individual findings are partial credit;
+# identifying the connected path is full credit.
+
+- id: CP-001
+  name: Detection blindness
+  path:
+    - step: entry
+      service: CloudTrail
+      resource: sadcloud-trail
+      finding: Log file validation disabled — tampering undetectable
+      gt_ref: GT-CT-003
+    - step: amplifier
+      service: CloudWatch
+      resource: sadcloud-alarm
+      finding: CloudWatch alarm has no action configured
+      gt_ref: null
+  impact: >
+    An attacker tampers with CloudTrail logs. The alarm that should
+    detect anomalous activity has no action. Detection is broken at
+    two independent layers — neither the log integrity check nor the
+    alerting pipeline will fire.
+  stave_chain: cloudwatch_detection_broken
+  compound_severity: CRITICAL
+
+- id: CP-002
+  name: Public ingress to overbroad role
+  path:
+    - step: entry
+      service: EC2
+      resource: sadcloud-open-sg
+      finding: Security group allows 0.0.0.0/0
+      gt_ref: GT-EC2-004
+    - step: pivot
+      service: EC2
+      resource: sadcloud-public-instance
+      finding: EC2 instance has public IP
+      gt_ref: GT-EC2-001
+    - step: target
+      service: IAM
+      resource: sadcloud-admin-role
+      finding: Instance role has administrator access
+      gt_ref: GT-IAM-009
+  impact: >
+    Internet-reachable instance with an admin-equivalent role. SSRF
+    or RCE on the instance gives the attacker full AWS API access
+    via the instance metadata service.
+  stave_chain: abandoned_instance_pivot_path
+  compound_severity: CRITICAL
+
+- id: CP-003
+  name: KMS key exposure with disabled rotation
+  path:
+    - step: entry
+      service: KMS
+      resource: sadcloud-exposed-key
+      finding: KMS key policy allows external account access
+      gt_ref: GT-KMS-002
+    - step: amplifier
+      service: KMS
+      resource: sadcloud-unrotated-key
+      finding: KMS key rotation disabled
+      gt_ref: GT-KMS-001
+  impact: >
+    External account can use the encryption key, and the key material
+    never rotates. Compromise of the key is permanent — there is no
+    automatic rotation to limit the blast radius.
+  stave_chain: kms_policy_wide_open
+  compound_severity: HIGH
+
+- id: CP-004
+  name: Wildcard trust with shadow admin
+  path:
+    - step: entry
+      service: IAM
+      resource: sadcloud-wildcard-trust-role
+      finding: Role trust policy allows Principal:*
+      gt_ref: GT-IAM-010
+    - step: target
+      service: IAM
+      resource: sadcloud-shadow-admin
+      finding: Inline policy grants hidden admin-equivalent permissions
+      gt_ref: GT-IAM-011
+  impact: >
+    Any AWS account can assume the role. The role has admin-equivalent
+    permissions that do not appear in the IAM console policy summary,
+    making the exposure invisible to standard IAM reviews.
+  stave_chain: null
+  compound_severity: CRITICAL
+
+- id: CP-005
+  name: Open data store with disabled audit trail
+  path:
+    - step: entry
+      service: OpenSearch
+      resource: sadcloud-es-domain
+      finding: Access policy allows open access (Principal:*)
+      gt_ref: GT-OS-002
+    - step: amplifier
+      service: OpenSearch
+      resource: sadcloud-es-domain
+      finding: Domain logging disabled
+      gt_ref: GT-OS-001
+    - step: blind-spot
+      service: CloudTrail
+      resource: sadcloud-trail
+      finding: S3 data events not logged
+      gt_ref: GT-CT-001
+  impact: >
+    Anyone can read and write the OpenSearch domain. No domain-level
+    logs capture the access. CloudTrail data events are disabled, so
+    even API-level access to the underlying data is unrecorded. The
+    breach is invisible.
+  stave_chain: null
+  compound_severity: CRITICAL

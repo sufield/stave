@@ -1,0 +1,73 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.egress-compound-proof"
+  },
+  "assets": [
+    {
+      "id": "tgw-0clean11111111",
+      "type": "aws_transit_gateway",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "transit_gateway",
+          "tgw": {
+            "default_route_table_association": false,
+            "route_table_count": 3
+          }
+        }
+      }
+    },
+    {
+      "id": "fw-0clean22222222",
+      "type": "aws_networkfirewall_firewall",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "firewall_id": "fw-0clean22222222",
+            "in_traffic_path": true,
+            "route_table_references": 4,
+            "endpoint_ids": ["vpce-0clean22222222a"],
+            "routes_configured": true
+          }
+        }
+      }
+    },
+    {
+      "id": "vpc-0clean33333333",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "dns": {
+            "firewall_enabled": true,
+            "firewall_rule_group_count": 2,
+            "vpc_id": "vpc-0clean33333333"
+          },
+          "flow_log": {
+            "enabled": true
+          }
+        }
+      }
+    },
+    {
+      "id": "vpce-0clean44444444",
+      "type": "aws_vpc_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc_endpoint",
+          "vpc_endpoint": {
+            "kind": "Interface",
+            "has_default_full_access_policy": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,301 @@
+# CloudSec Eval Kit — Atomic Ground Truth
+#
+# 30 inarguable misconfigurations across 8 AWS services.
+# Each entry is objectively wrong, detectable from standard AWS APIs,
+# and manually verifiable via the AWS console.
+#
+# Selection criteria:
+#   - Objectively wrong (no threshold judgment)
+#   - Any competent tool should find it
+#   - Fix is unambiguous
+#   - Console-verifiable in ≤3 clicks
+#
+# Source: NCC Group SadCloud (github.com/nccgroup/sadcloud)
+
+# --- S3 ---
+
+- id: GT-S3-001
+  service: S3
+  resource: sadcloud-cleartext-bucket
+  finding: Bucket policy does not enforce TLS (no aws:SecureTransport deny)
+  severity: HIGH
+  stave_control: CTL.S3.ENCRYPT.002
+  verification: "Console → S3 → bucket → Permissions → Bucket Policy → no SecureTransport condition"
+  sadcloud_module: s3
+
+- id: GT-S3-002
+  service: S3
+  resource: sadcloud-unversioned-bucket
+  finding: Bucket versioning disabled
+  severity: MEDIUM
+  stave_control: CTL.S3.VERSION.001
+  verification: "Console → S3 → bucket → Properties → Versioning = Disabled"
+  sadcloud_module: s3
+
+- id: GT-S3-003
+  service: S3
+  resource: sadcloud-nolog-bucket
+  finding: Server access logging disabled
+  severity: MEDIUM
+  stave_control: CTL.S3.LOG.001
+  verification: "Console → S3 → bucket → Properties → Server access logging = Disabled"
+  sadcloud_module: s3
+
+# --- IAM: Password Policy ---
+
+- id: GT-IAM-001
+  service: IAM
+  resource: account-password-policy
+  finding: Password minimum length below 14 characters
+  severity: MEDIUM
+  stave_control: CTL.IAM.PASSWORD.LENGTH.001
+  verification: "Console → IAM → Account settings → Password policy → Minimum length"
+  sadcloud_module: iam
+
+- id: GT-IAM-002
+  service: IAM
+  resource: account-password-policy
+  finding: Password policy does not require lowercase characters
+  severity: MEDIUM
+  stave_control: CTL.IAM.PASSWORD.COMPLEXITY.001
+  verification: "Console → IAM → Account settings → Password policy → Require lowercase"
+  sadcloud_module: iam
+
+- id: GT-IAM-003
+  service: IAM
+  resource: account-password-policy
+  finding: Password policy does not require uppercase characters
+  severity: MEDIUM
+  stave_control: CTL.IAM.PASSWORD.COMPLEXITY.001
+  verification: "Console → IAM → Account settings → Password policy → Require uppercase"
+  sadcloud_module: iam
+
+- id: GT-IAM-004
+  service: IAM
+  resource: account-password-policy
+  finding: Password policy does not require numeric characters
+  severity: MEDIUM
+  stave_control: CTL.IAM.PASSWORD.COMPLEXITY.001
+  verification: "Console → IAM → Account settings → Password policy → Require numbers"
+  sadcloud_module: iam
+
+- id: GT-IAM-005
+  service: IAM
+  resource: account-password-policy
+  finding: Password policy does not require symbols
+  severity: MEDIUM
+  stave_control: CTL.IAM.PASSWORD.COMPLEXITY.001
+  verification: "Console → IAM → Account settings → Password policy → Require symbols"
+  sadcloud_module: iam
+
+- id: GT-IAM-006
+  service: IAM
+  resource: account-password-policy
+  finding: Password reuse prevention not enforced (0 remembered)
+  severity: MEDIUM
+  stave_control: CTL.IAM.PASSWORD.REUSE.001
+  verification: "Console → IAM → Account settings → Password policy → Prevent reuse"
+  sadcloud_module: iam
+
+# --- IAM: Structural ---
+
+- id: GT-IAM-007
+  service: IAM
+  resource: sadcloudInlineUser
+  finding: User has inline policy attached directly
+  severity: MEDIUM
+  stave_control: CTL.IAM.POLICY.INLINE.001
+  verification: "Console → IAM → Users → user → Permissions → Inline policy present"
+  sadcloud_module: iam
+
+- id: GT-IAM-008
+  service: IAM
+  resource: sadcloudInlineGroup
+  finding: Group has inline policy
+  severity: MEDIUM
+  stave_control: CTL.IAM.POLICY.INLINE.003
+  verification: "Console → IAM → Groups → group → Permissions → Inline policy present"
+  sadcloud_module: iam
+
+- id: GT-IAM-009
+  service: IAM
+  resource: sadcloud-admin-role
+  finding: IAM policy grants administrator access (Action:*, Resource:*)
+  severity: CRITICAL
+  stave_control: CTL.IAM.POLICY.ADMIN.002
+  verification: "Console → IAM → Policies → policy → JSON → Effect:Allow, Action:*, Resource:*"
+  sadcloud_module: iam
+
+- id: GT-IAM-010
+  service: IAM
+  resource: sadcloud-wildcard-trust-role
+  finding: Role trust policy allows assume from any AWS principal (Principal:*)
+  severity: CRITICAL
+  stave_control: CTL.IAM.TRUST.WILDCARD.001
+  verification: "Console → IAM → Roles → role → Trust relationships → Principal = *"
+  sadcloud_module: iam
+
+- id: GT-IAM-011
+  service: IAM
+  resource: sadcloud-shadow-admin
+  finding: Inline policy grants shadow admin permissions not visible in policy summary
+  severity: HIGH
+  stave_control: CTL.IAM.POLICY.SHADOW.001
+  verification: "Console → IAM → Users → user → Inline policy → compare JSON vs Policy summary"
+  sadcloud_module: iam
+
+# --- CloudTrail ---
+
+- id: GT-CT-001
+  service: CloudTrail
+  resource: sadcloud-trail
+  finding: S3 data event logging not enabled
+  severity: HIGH
+  stave_control: CTL.CLOUDTRAIL.DATAEVENTS.S3.001
+  verification: "Console → CloudTrail → Trails → trail → Data events → S3 = none"
+  sadcloud_module: cloudtrail
+
+- id: GT-CT-002
+  service: CloudTrail
+  resource: sadcloud-trail
+  finding: Global service events logging disabled
+  severity: HIGH
+  stave_control: CTL.CLOUDTRAIL.CONFIG.GLOBALEVENTS.001
+  verification: "Console → CloudTrail → Trails → trail → General → Include global = No"
+  sadcloud_module: cloudtrail
+
+- id: GT-CT-003
+  service: CloudTrail
+  resource: sadcloud-trail
+  finding: Log file validation disabled (tampering undetectable)
+  severity: HIGH
+  stave_control: CTL.CLOUDTRAIL.LOG.VALIDATION.001
+  verification: "Console → CloudTrail → Trails → trail → General → Log file validation = No"
+  sadcloud_module: cloudtrail
+
+- id: GT-CT-004
+  service: CloudTrail
+  resource: sadcloud-trail
+  finding: Trail is single-region (not multi-region)
+  severity: MEDIUM
+  stave_control: CTL.CLOUDTRAIL.ENABLED.001
+  verification: "Console → CloudTrail → Trails → trail → General → Multi-region = No"
+  sadcloud_module: cloudtrail
+
+# --- KMS ---
+
+- id: GT-KMS-001
+  service: KMS
+  resource: sadcloud-unrotated-key
+  finding: KMS key automatic rotation disabled
+  severity: MEDIUM
+  stave_control: CTL.KMS.ROTATION.001
+  verification: "Console → KMS → Keys → key → Key rotation → Automatic = Disabled"
+  sadcloud_module: kms
+
+- id: GT-KMS-002
+  service: KMS
+  resource: sadcloud-exposed-key
+  finding: KMS key policy allows access from external accounts
+  severity: HIGH
+  stave_control: CTL.KMS.POLICY.001
+  verification: "Console → KMS → Keys → key → Key policy → Principal includes external account"
+  sadcloud_module: kms
+
+# --- EC2 ---
+
+- id: GT-EC2-001
+  service: EC2
+  resource: sadcloud-public-instance
+  finding: EC2 instance has public IP address
+  severity: HIGH
+  stave_control: CTL.EC2.PUBLIC.001
+  verification: "Console → EC2 → Instances → instance → Public IPv4 address present"
+  sadcloud_module: ec2
+
+- id: GT-EC2-002
+  service: EC2
+  resource: sadcloud-public-instance
+  finding: EC2 instance does not require IMDSv2
+  severity: HIGH
+  stave_control: CTL.EC2.IMDSV2.001
+  verification: "Console → EC2 → Instances → instance → Details → IMDSv2 = Optional"
+  sadcloud_module: ec2
+
+- id: GT-EC2-003
+  service: EC2
+  resource: sadcloud-public-instance
+  finding: EC2 user data contains secrets
+  severity: CRITICAL
+  stave_control: CTL.EC2.USERDATA.SECRETS.001
+  verification: "Console → EC2 → Instances → instance → Actions → Instance settings → User data"
+  sadcloud_module: ec2
+
+- id: GT-EC2-004
+  service: EC2
+  resource: sadcloud-open-sg
+  finding: Security group allows all traffic from 0.0.0.0/0
+  severity: CRITICAL
+  stave_control: CTL.EC2.SG.INGRESS.CIDR.001
+  verification: "Console → EC2 → Security Groups → sg → Inbound rules → 0.0.0.0/0 on All traffic"
+  sadcloud_module: ec2
+
+# --- ELBv2 ---
+
+- id: GT-ELB-001
+  service: ELBv2
+  resource: sadcloud-alb
+  finding: ALB access logging disabled
+  severity: MEDIUM
+  stave_control: CTL.ELB.LOG.001
+  verification: "Console → EC2 → Load Balancers → ALB → Attributes → Access logs = Disabled"
+  sadcloud_module: elbv2
+
+- id: GT-ELB-002
+  service: ELBv2
+  resource: sadcloud-alb
+  finding: ALB deletion protection disabled
+  severity: MEDIUM
+  stave_control: CTL.ELB.DELETION.PROTECT.001
+  verification: "Console → EC2 → Load Balancers → ALB → Attributes → Deletion protection = Disabled"
+  sadcloud_module: elbv2
+
+- id: GT-ELB-003
+  service: ELBv2
+  resource: sadcloud-alb
+  finding: ALB uses outdated TLS security policy
+  severity: HIGH
+  stave_control: CTL.ELB.TLS.001
+  verification: "Console → EC2 → Load Balancers → ALB → Listeners → Security policy"
+  sadcloud_module: elbv2
+
+# --- OpenSearch ---
+
+- id: GT-OS-001
+  service: OpenSearch
+  resource: sadcloud-es-domain
+  finding: OpenSearch domain logging disabled
+  severity: MEDIUM
+  stave_control: CTL.OPENSEARCH.LOG.001
+  verification: "Console → OpenSearch → domain → Logs → all disabled"
+  sadcloud_module: elasticsearch
+
+- id: GT-OS-002
+  service: OpenSearch
+  resource: sadcloud-es-domain
+  finding: OpenSearch domain access policy allows open access
+  severity: CRITICAL
+  stave_control: CTL.OPENSEARCH.ACCESS.POLICY.001
+  verification: "Console → OpenSearch → domain → Security → Access policy → Principal:*"
+  sadcloud_module: elasticsearch
+
+# --- Config ---
+
+- id: GT-CFG-001
+  service: Config
+  resource: account-config-recorder
+  finding: Config recorder does not record all resource types
+  severity: HIGH
+  stave_control: CTL.CONFIG.RECORDER.NOTALLRESOURCES.001
+  verification: "Console → Config → Settings → Recording → All resources = No"
+  sadcloud_module: config

@@ -1,0 +1,43 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.dns-view-sharing-proof"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:ram:us-east-1:111122223333:resource-share/rs-dnsview-extonly",
+      "type": "aws_ram_resource_share",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "ram": {
+            "share_name": "dns-view-ext-but-scoped",
+            "has_external_principals": true,
+            "external_accounts": ["999988887777"],
+            "shared_resource_types": [
+              "route53resolver:ResolverRule"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ram:us-east-1:111122223333:resource-share/rs-dnsview-scopedok",
+      "type": "aws_ram_share",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "ram": {
+            "share_name": "dns-view-ext-but-scoped",
+            "overly_broad_resource_types": false,
+            "shared_resource_types": [
+              "route53resolver:ResolverRule"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

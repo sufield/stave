@@ -1,0 +1,23 @@
+id: egress_exfiltration_prevention_gap
+description: >
+  Egress perimeter has gaps across the four standard layers: Transit
+  Gateway routing, Network Firewall inspection, DNS Firewall filtering,
+  and VPC endpoint policy scoping. Any single missing layer creates a
+  viable exfiltration path — data can leave via unsegmented TGW routes,
+  bypass an unrouted Network Firewall, tunnel through unfiltered DNS, or
+  flow through a wide-open endpoint policy. The chain fires when any
+  one layer is absent, because defense-in-depth requires all four to be
+  effective. A single gap is sufficient for an attacker to exfiltrate
+  data without triggering inspection.
+controls:
+  - CTL.VPC.TGW.DEFAULTRT.001
+  - CTL.NETFIREWALL.ROUTING.001
+  - CTL.VPC.DNSFIREWALL.ENABLED.001
+  - CTL.VPC.ENDPOINT.INTERFACE.DEFAULTPOLICY.001
+escalation_threshold: 1
+compound_severity: critical
+preconditions:
+  - network_access_vpc
+postconditions:
+  - data_exfiltration_path
+implicit_dependencies: []
