@@ -1,21 +1,21 @@
 {
   "schema_version": "obs.v0.1",
-  "captured_at": "2026-08-01T12:00:00Z",
+  "captured_at": "2026-08-20T13:00:00Z",
   "source": "deployed",
   "generated_by": {
-    "source_type": "synthetic.signin-rbp-proof"
+    "source_type": "synthetic.signin-rbp"
   },
   "assets": [
     {
-      "id": "arn:aws:signin::111122223333:configuration/console",
+      "id": "444444444444/signin",
       "type": "aws_signin_configuration",
       "vendor": "aws",
       "properties": {
         "governance": {
           "signin": {
-            "console_authorization_enabled": true,
+            "console_authorization_enabled": false,
             "has_resource_permission_statements": false,
-            "has_excluded_principal": true
+            "has_excluded_principal": false
           }
         }
       }

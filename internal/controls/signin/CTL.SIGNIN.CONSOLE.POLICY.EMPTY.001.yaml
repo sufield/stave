@@ -1,15 +1,12 @@
 dsl_version: ctrl.v1
 id: CTL.SIGNIN.CONSOLE.POLICY.EMPTY.001
-name: Console Authorization Enabled With No Network Restrictions
+name: Console Sign-In Policy Must Define Network Restrictions
 description: >
-  Console sign-in authorization is enabled but no resource permission
-  statements define network restrictions. The enforcement mechanism is
-  active but restricting nothing — every console sign-in from any
-  network is permitted, identical to having authorization disabled.
-  This is the equivalent of enabling a firewall with an allow-all
-  default rule and no other rules. The security team sees "enforcement
-  enabled" in the console and believes sign-in is restricted, but the
-  restriction set is empty.
+  When console sign-in authorization is enabled, at least one
+  resource permission statement must define network restrictions
+  (source IP or source VPC conditions). Enforcement with no
+  statements is a no-op — authorization is on but restricting
+  nothing.
 domain: identity
 severity: medium
 compliance:
@@ -18,11 +15,12 @@ compliance:
   ccm_v4: ["IAM-10"]
 scope_tags:
   - aws
+  - signin
 taxonomy:
   - account-governance
   - identity-perimeter
 subtractive_category:
-  - S10
+  - S05
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_signin_configuration]
@@ -34,12 +32,11 @@ observation_fields:
 remediation:
   description: >
     Console authorization is enabled but no resource permission
-    statements restrict network access. Enforcement is a no-op.
+    statements restrict network access.
   action: >
-    Create at least one resource permission statement with network
-    conditions: aws signin put-resource-permission-statement
-    --source-ip <CIDR> or --source-vpc <vpc-id>. Verify with
-    aws signin list-resource-permission-statements.
+    Add at least one resource permission statement via
+    aws signin put-resource-permission-statement with
+    --source-ip and/or --source-vpc parameters.
   example: |
     {
       "governance": {
@@ -57,37 +54,22 @@ unsafe_predicate:
     - field: properties.governance.signin.has_resource_permission_statements
       op: eq
       value: false
+defect: >
+  Console authorization is enforced but no network restriction
+  statements exist.
+infection: >
+  Sign-in enforcement is active but has no rules; any network
+  location is permitted for console access.
+failure: >
+  Console sign-in appears protected (authorization enabled) but
+  has no actual restrictions — security theatre.
 tests:
   - name: enabled with no statements fires
     verdict: VIOLATION
-    asset:
-      asset_id: "arn:aws:signin::111122223333:configuration/console"
-      asset_type: aws_signin_configuration
-      vendor: aws
-      properties:
-        governance:
-          signin:
-            console_authorization_enabled: true
-            has_resource_permission_statements: false
+    asset: { asset_id: "111111111111/signin", asset_type: aws_signin_configuration, vendor: aws, properties: { governance: { signin: { console_authorization_enabled: true, has_resource_permission_statements: false, has_excluded_principal: false } } } }
   - name: enabled with statements passes
     verdict: PASS
-    asset:
-      asset_id: "arn:aws:signin::111122223333:configuration/console"
-      asset_type: aws_signin_configuration
-      vendor: aws
-      properties:
-        governance:
-          signin:
-            console_authorization_enabled: true
-            has_resource_permission_statements: true
-  - name: disabled with no statements passes (control 1 covers this)
+    asset: { asset_id: "222222222222/signin", asset_type: aws_signin_configuration, vendor: aws, properties: { governance: { signin: { console_authorization_enabled: true, has_resource_permission_statements: true, has_excluded_principal: false } } } }
+  - name: disabled with no statements passes (control 1 handles this)
     verdict: PASS
-    asset:
-      asset_id: "arn:aws:signin::111122223333:configuration/console"
-      asset_type: aws_signin_configuration
-      vendor: aws
-      properties:
-        governance:
-          signin:
-            console_authorization_enabled: false
-            has_resource_permission_statements: false
+    asset: { asset_id: "333333333333/signin", asset_type: aws_signin_configuration, vendor: aws, properties: { governance: { signin: { console_authorization_enabled: false, has_resource_permission_statements: false, has_excluded_principal: false } } } }

@@ -1,15 +1,12 @@
 dsl_version: ctrl.v1
 id: CTL.SIGNIN.CONSOLE.AUTH.ENABLED.001
-name: Console Sign-in Authorization Not Enabled
+name: Console Sign-In Authorization Must Be Enabled
 description: >
-  Console sign-in resource-based policy enforcement is not enabled for
-  this account. Resource permission statements may exist defining
-  network restrictions (source IP, source VPC) for console sign-in,
-  but they have no effect until authorization is enabled. Without
-  enforcement, any IAM principal with valid credentials can sign in
-  to the console from any network — the resource-based policies are
-  decorative. This is the console equivalent of having an SCP that
-  is not attached to any OU.
+  Console sign-in resource-based policy (RBP) enforcement must be
+  enabled for the account. When disabled, any resource permission
+  statements defining network restrictions (source IP, source VPC)
+  have no effect — the policies exist but are not enforced, leaving
+  the console sign-in path unrestricted.
 domain: identity
 severity: medium
 compliance:
@@ -18,11 +15,12 @@ compliance:
   ccm_v4: ["IAM-10"]
 scope_tags:
   - aws
+  - signin
 taxonomy:
   - account-governance
   - identity-perimeter
 subtractive_category:
-  - S10
+  - S05
 type: unsafe_state
 classification: state_assertion
 applicable_asset_types: [aws_signin_configuration]
@@ -32,13 +30,12 @@ observation_fields:
   - governance.signin.console_authorization_enabled
 remediation:
   description: >
-    Console sign-in resource-based policy enforcement is not enabled.
-    Network restrictions for console access are not enforced.
+    Console sign-in RBP enforcement is disabled. Any resource
+    permission statements have no effect.
   action: >
-    Enable console authorization enforcement for the account:
+    Enable console authorization via
     aws signin put-console-authorization-configuration
-    --target-id <account-id> --region us-east-1. Verify with
-    aws signin get-console-authorization-configuration.
+    --target-id <account-id> --region us-east-1.
   example: |
     {
       "governance": {
@@ -52,24 +49,19 @@ unsafe_predicate:
     - field: properties.governance.signin.console_authorization_enabled
       op: eq
       value: false
+defect: >
+  Console sign-in RBP enforcement is disabled for the account.
+infection: >
+  An attacker with valid credentials signs in from any network
+  location; IP/VPC restrictions in resource permission statements
+  are silently ignored.
+failure: >
+  Console access is unrestricted despite existing network
+  restriction policies.
 tests:
   - name: authorization disabled fires
     verdict: VIOLATION
-    asset:
-      asset_id: "arn:aws:signin::111122223333:configuration/console"
-      asset_type: aws_signin_configuration
-      vendor: aws
-      properties:
-        governance:
-          signin:
-            console_authorization_enabled: false
+    asset: { asset_id: "111111111111/signin", asset_type: aws_signin_configuration, vendor: aws, properties: { governance: { signin: { console_authorization_enabled: false, has_resource_permission_statements: true, has_excluded_principal: false } } } }
   - name: authorization enabled passes
     verdict: PASS
-    asset:
-      asset_id: "arn:aws:signin::111122223333:configuration/console"
-      asset_type: aws_signin_configuration
-      vendor: aws
-      properties:
-        governance:
-          signin:
-            console_authorization_enabled: true
+    asset: { asset_id: "222222222222/signin", asset_type: aws_signin_configuration, vendor: aws, properties: { governance: { signin: { console_authorization_enabled: true, has_resource_permission_statements: true, has_excluded_principal: false } } } }

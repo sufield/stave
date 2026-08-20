@@ -7,46 +7,46 @@
 
 ### CTL.SIGNIN.CONSOLE.AUTH.ENABLED.001
 
-**Console Sign-in Authorization Not Enabled**
+**Console Sign-In Authorization Must Be Enabled**
 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
 
-Console sign-in resource-based policy enforcement is not enabled for this account. Resource permission statements may exist defining network restrictions (source IP, source VPC) for console sign-in, but they have no effect until authorization is enabled. Without enforcement, any IAM principal with valid credentials can sign in to the console from any network — the resource-based policies are decorative. This is the console equivalent of having an SCP that is not attached to any OU.
+Console sign-in resource-based policy (RBP) enforcement must be enabled for the account. When disabled, any resource permission statements defining network restrictions (source IP, source VPC) have no effect — the policies exist but are not enforced, leaving the console sign-in path unrestricted.
 
-**Remediation:** Enable console authorization enforcement for the account: aws signin put-console-authorization-configuration --target-id <account-id> --region us-east-1. Verify with aws signin get-console-authorization-configuration.
+**Remediation:** Enable console authorization via aws signin put-console-authorization-configuration --target-id <account-id> --region us-east-1.
 
 ---
 
 ### CTL.SIGNIN.CONSOLE.BYPASS.UNDOCUMENTED.001
 
-**Console Sign-in Bypass Exists Without Restrictions**
+**Console Sign-In Bypass Must Have Matching Restrictions**
 
 - **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
 
-Console sign-in policy has an excluded principal (bypass ARN) but no resource permission statements define network restrictions. The bypass exists for a restriction that does not exist — someone configured a break-glass identity but never configured the network restrictions that would make the bypass meaningful. This indicates incomplete configuration: either the restrictions were removed after the bypass was set up, or the setup was abandoned mid-way.
+An excluded principal (bypass ARN) in the console sign-in policy must be paired with at least one resource permission statement that defines actual restrictions. A bypass ARN with no restriction statements indicates incomplete configuration — the bypass exists for a restriction that does not exist.
 
-**Remediation:** Either create resource permission statements to restrict console sign-in by network (aws signin put-resource-permission-statement), or remove the bypass principal if restrictions are not intended.
+**Remediation:** Either add resource permission statements (source IP/VPC restrictions) that the bypass principal is exempt from, or remove the excluded principal if no restrictions are planned.
 
 ---
 
 ### CTL.SIGNIN.CONSOLE.POLICY.EMPTY.001
 
-**Console Authorization Enabled With No Network Restrictions**
+**Console Sign-In Policy Must Define Network Restrictions**
 
 - **Severity:** medium
 - **Type:** unsafe_state
 - **Domain:** identity
 - **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
 
-Console sign-in authorization is enabled but no resource permission statements define network restrictions. The enforcement mechanism is active but restricting nothing — every console sign-in from any network is permitted, identical to having authorization disabled. This is the equivalent of enabling a firewall with an allow-all default rule and no other rules. The security team sees "enforcement enabled" in the console and believes sign-in is restricted, but the restriction set is empty.
+When console sign-in authorization is enabled, at least one resource permission statement must define network restrictions (source IP or source VPC conditions). Enforcement with no statements is a no-op — authorization is on but restricting nothing.
 
-**Remediation:** Create at least one resource permission statement with network conditions: aws signin put-resource-permission-statement --source-ip <CIDR> or --source-vpc <vpc-id>. Verify with aws signin list-resource-permission-statements.
+**Remediation:** Add at least one resource permission statement via aws signin put-resource-permission-statement with --source-ip and/or --source-vpc parameters.
 
 ---
 
