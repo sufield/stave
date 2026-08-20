@@ -667,6 +667,21 @@ Interface VPC endpoint's security group permits inbound traffic from the entire 
 
 ---
 
+### CTL.VPC.ENDPOINT.SIGNIN.POLICY.001
+
+**Console Private Access Endpoint Policy Does Not Restrict Accounts**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4, AC-6; soc2: CC6.1;
+
+Console Private Access VPC endpoint (com.amazonaws.signin) has a policy that does not restrict which AWS accounts are reachable from within the VPC. Without an aws:PrincipalAccount condition in the endpoint policy, any user on the VPC can access the AWS console for any AWS account — the endpoint becomes an unrestricted outbound path to every account's console. This is the outbound complement to sign-in RBPs (CTL.SIGNIN.CONSOLE.AUTH.ENABLED.001) which restrict inbound access by network. Together they form the data perimeter pair for console access: RBP controls which networks can reach the console, Console Private Access controls which accounts are reachable from the network.
+
+**Remediation:** Add an aws:PrincipalAccount condition to the endpoint policy that lists only the organization's AWS account IDs. This restricts console access from the VPC to approved accounts only.
+
+---
+
 ### CTL.VPC.ENV.ISOLATION.001
 
 **Production VPC Must Be Isolated from Non-Production**

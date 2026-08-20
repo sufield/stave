@@ -1,0 +1,129 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.SIGNIN.POLICY.001
+name: Console Private Access Endpoint Policy Does Not Restrict Accounts
+description: >
+  Console Private Access VPC endpoint (com.amazonaws.signin) has a policy
+  that does not restrict which AWS accounts are reachable from within the
+  VPC. Without an aws:PrincipalAccount condition in the endpoint policy,
+  any user on the VPC can access the AWS console for any AWS account —
+  the endpoint becomes an unrestricted outbound path to every account's
+  console. This is the outbound complement to sign-in RBPs
+  (CTL.SIGNIN.CONSOLE.AUTH.ENABLED.001) which restrict inbound access
+  by network. Together they form the data perimeter pair for console
+  access: RBP controls which networks can reach the console, Console
+  Private Access controls which accounts are reachable from the network.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4, AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IVS-03", "DSP-17"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - data-perimeter
+  - identity-perimeter
+subtractive_category:
+  - S03
+  - S05
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.vpc_endpoint.kind
+  - network.vpc_endpoint.service_name
+  - network.vpc_endpoint.policy_restricts_principal_account
+remediation:
+  description: >
+    Console Private Access endpoint policy does not restrict which AWS
+    accounts are reachable. Any user on the VPC can access any account's
+    console through this endpoint.
+  action: >
+    Add an aws:PrincipalAccount condition to the endpoint policy that
+    lists only the organization's AWS account IDs. This restricts
+    console access from the VPC to approved accounts only.
+  example: |
+    {
+      "network": {
+        "kind": "vpc_endpoint",
+        "vpc_endpoint": {
+          "kind": "Interface",
+          "service_name": "com.amazonaws.signin",
+          "policy_restricts_principal_account": true
+        }
+      }
+    }
+# HAZOP 2026-08-20: Uses op: eq value: false (fail-open) intentionally.
+# Missing field = "observation not collected" → no finding, not "policy missing."
+# Fail-closed (op: ne value: true) would fire on every non-signin endpoint
+# where this field is absent. Contract entry mitigates extractor drift.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.kind
+      op: eq
+      value: Interface
+    - field: properties.network.vpc_endpoint.service_name
+      op: eq
+      value: com.amazonaws.signin
+    - field: properties.network.vpc_endpoint.policy_restricts_principal_account
+      op: eq
+      value: false
+defect: >
+  Console Private Access endpoint exists but its policy does not restrict
+  accounts via aws:PrincipalAccount condition.
+infection: >
+  An insider or compromised workstation on the VPC accesses the console
+  for an unauthorized AWS account — personal account, competitor account,
+  or attacker-controlled account — through the unrestricted endpoint.
+failure: >
+  Data exfiltration via console to an unauthorized account, or lateral
+  movement into accounts outside the organization's control.
+tests:
+  - name: "signin endpoint with wildcard policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0abc123signin"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            service_name: com.amazonaws.signin
+            policy_restricts_principal_account: false
+  - name: "signin endpoint with scoped account policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0def456signin"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            service_name: com.amazonaws.signin
+            policy_restricts_principal_account: true
+  - name: "non-signin endpoint with wildcard policy passes (wrong service)"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0ghi789s3"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            service_name: com.amazonaws.s3
+            policy_restricts_principal_account: false

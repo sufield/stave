@@ -1638,6 +1638,29 @@ contracts:
     consumers:
       - CTL.VPC.ENDPOINT.INTERFACE.CROSSACCOUNT.001
 
+  # ─── Console Private Access Endpoint (Aug 2026) ──────
+
+  - field: service_name
+    type: string
+    postcondition: >
+      The AWS service name for this VPC endpoint
+      (e.g., com.amazonaws.signin, com.amazonaws.s3).
+      Source: ec2:DescribeVpcEndpoints → ServiceName.
+    consumers:
+      - CTL.VPC.ENDPOINT.SIGNIN.POLICY.001
+
+  - field: policy_restricts_principal_account
+    type: boolean
+    postcondition: >
+      True if the VPC endpoint policy includes an
+      aws:PrincipalAccount condition that restricts
+      which AWS accounts can be accessed through the
+      endpoint. Derived by inspecting the policy document
+      for Condition blocks containing aws:PrincipalAccount
+      with specific account IDs (not wildcards).
+    consumers:
+      - CTL.VPC.ENDPOINT.SIGNIN.POLICY.001
+
   # ─── Security Group SSH Source Analysis (Jul 2026) ──────
 
   - field: ssh_from_internal_cidr
@@ -4097,6 +4120,30 @@ contracts:
       instance is not in a placement group. Derived from
       ec2:DescribePlacementGroups → Strategy, joined via
       Placement.GroupId from ec2:DescribeInstances.
+
+  # ─── EC2 Instance Status Check Alarm (Aug 2026 audit) ────────
+
+  - field: compute.ec2.alarm_instance_status
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a CloudWatch alarm exists on the AWS/EC2
+      StatusCheckFailed metric for this account's instances.
+      Derived from cloudwatch:DescribeAlarms filtered by
+      MetricName=StatusCheckFailed in the AWS/EC2 namespace.
+    consumers:
+      - CTL.EC2.ALARM.STATUSCHECK.001
+
+  - field: compute.ec2.has_running_instances
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the account has at least one EC2 instance in
+      the running state. Context field — alarm controls are
+      only relevant when instances exist. Derived from
+      ec2:DescribeInstances filtered by instance-state-name=running.
+    consumers:
+      - CTL.EC2.ALARM.STATUSCHECK.001
 
   # ─── EC2 Application Status Check (Aug 2026 feature) ────────
 

@@ -1,0 +1,22 @@
+id: console_data_perimeter_gap
+description: >
+  Neither direction of the console data perimeter is enforced.
+  Sign-in RBP (which networks can reach the console) is disabled
+  or has no restrictions, AND Console Private Access (which accounts
+  are reachable from the network) has no account scoping. The
+  console is open from any network to any account. This is the
+  organizational equivalent of leaving both the front and back
+  doors unlocked — credential theft from any location grants
+  console access to any account.
+controls:
+  - CTL.SIGNIN.CONSOLE.AUTH.ENABLED.001
+  - CTL.SIGNIN.CONSOLE.POLICY.EMPTY.001
+  - CTL.VPC.ENDPOINT.SIGNIN.POLICY.001
+scope: global
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - internet_access
+postconditions:
+  - initial_access
+implicit_dependencies: []

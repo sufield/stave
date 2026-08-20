@@ -1,0 +1,39 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-20T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.console-private-access"
+  },
+  "assets": [
+    {
+      "id": "222222222222/signin",
+      "type": "aws_signin_configuration",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "signin": {
+            "console_authorization_enabled": true,
+            "has_resource_permission_statements": true,
+            "has_excluded_principal": false
+          }
+        }
+      }
+    },
+    {
+      "id": "vpce-0good1signin",
+      "type": "aws_vpc_endpoint",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc_endpoint",
+          "vpc_endpoint": {
+            "kind": "Interface",
+            "service_name": "com.amazonaws.signin",
+            "policy_restricts_principal_account": true
+          }
+        }
+      }
+    }
+  ]
+}

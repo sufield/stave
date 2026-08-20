@@ -44,6 +44,10 @@ remediation:
         }
       }
     }
+# HAZOP 2026-08-20: Uses op: eq value: false (fail-open) intentionally.
+# Missing field = "signin configuration not collected" → no finding.
+# Fail-closed would fire on every account without signin observation.
+# Contract entry for console_authorization_enabled mitigates extractor drift.
 unsafe_predicate:
   all:
     - field: properties.governance.signin.console_authorization_enabled
