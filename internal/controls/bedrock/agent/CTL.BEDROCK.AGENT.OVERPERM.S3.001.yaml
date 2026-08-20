@@ -41,6 +41,10 @@ remediation:
     the specific bucket / prefix combinations the agent's
     action groups and knowledge bases reference. Use
     StringEquals on s3:prefix conditions to narrow further.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

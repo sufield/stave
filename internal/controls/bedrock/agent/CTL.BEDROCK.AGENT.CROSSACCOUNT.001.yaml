@@ -47,6 +47,10 @@ remediation:
     the specific agent ARN. Add aws:SourceAccount and
     aws:SourceArn conditions to the agent's resource policy
     if cross-account access is genuinely required.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

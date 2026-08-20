@@ -43,6 +43,10 @@ remediation:
     list of Lambda function ARNs the agent's actionGroups reference.
     Example: Resource: ["arn:aws:lambda:us-east-1:111122223333:function:order-lookup",
     "arn:aws:lambda:us-east-1:111122223333:function:product-search"].
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

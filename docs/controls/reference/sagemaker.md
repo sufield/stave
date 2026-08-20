@@ -31,7 +31,7 @@ SageMaker data quality monitoring schedule exists but has no baseline dataset co
 
 SageMaker endpoint has no active data quality monitoring schedule. Without monitoring, data distribution drift and data poisoning go undetected — the model continues to serve predictions on inputs that no longer match the training distribution. CSA Top Threats 2026 Issue 05 identifies missing dataset monitoring as a misconfiguration vector.
 
-**Remediation:** Create a data quality monitoring schedule using sagemaker:CreateMonitoringSchedule with MonitoringType DataQuality. Configure a baseline dataset from training data statistics. Set the schedule interval to match data freshness requirements (hourly for real-time, daily for batch).
+**Remediation:** Create a data quality monitoring schedule using sagemaker:CreateMonitoringSchedule with MonitoringType DataQuality. Configure a baseline dataset from training data statistics. Set the schedule interval to match data freshness requirements (hourly for real-time, daily for batch). ⚠️ MAINTENANCE: SageMaker Model Monitor entered maintenance mode July 30, 2026. For new deployments, consider Amazon Bedrock Guardrails, SageMaker Clarify, or third-party monitoring.
 
 ---
 
@@ -136,7 +136,7 @@ SageMaker endpoint configuration must enable network isolation to prevent model 
 
 SageMaker endpoint configuration has no model monitoring schedule attached. Without a monitoring schedule (data quality, model quality, bias drift, or feature attribution), a deployed endpoint can drift, be silently replaced, or serve adversarial inputs without detection. Model monitoring is the equivalent of CloudTrail for ML inference: the audit surface that distinguishes "the model is doing what it promised" from "the model is doing something useful enough for the dashboard to look healthy."
 
-**Remediation:** Attach a monitoring schedule via CreateMonitoringSchedule targeting the endpoint. At minimum, configure a data- quality monitor with a baseline statistics file. For production endpoints serving regulated data, also attach model-quality and bias-drift monitors.
+**Remediation:** Attach a monitoring schedule via CreateMonitoringSchedule targeting the endpoint. At minimum, configure a data- quality monitor with a baseline statistics file. For production endpoints serving regulated data, also attach model-quality and bias-drift monitors. ⚠️ MAINTENANCE: SageMaker Model Monitor entered maintenance mode July 30, 2026. For new deployments, consider Amazon Bedrock Guardrails, SageMaker Clarify, or third-party monitoring.
 
 ---
 

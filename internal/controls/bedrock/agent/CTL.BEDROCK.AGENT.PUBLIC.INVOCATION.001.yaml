@@ -49,6 +49,10 @@ remediation:
     auth_type=AWS_IAM, or a private VPC integration. Remove
     any public Lambda URL or unrestricted API Gateway resource
     that proxies InvokeAgent.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

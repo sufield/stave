@@ -31,6 +31,10 @@ remediation:
   action: >
     Associate a guardrail with the agent via the guardrailConfiguration
     setting in the agent definition.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

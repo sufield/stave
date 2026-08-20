@@ -40,6 +40,10 @@ remediation:
     Review each action group and remove any that are not required
     for the agent's primary purpose. Split agents with many tools
     into specialized agents with fewer, scoped action groups.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

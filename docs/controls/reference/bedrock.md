@@ -91,7 +91,7 @@ A Bedrock model invocation policy uses Effect:Allow where the surrounding contex
 
 Bedrock agent has more than 10 action groups attached. Each action group is a Lambda function or API schema the agent can invoke; sprawled action-group lists expand the agent's blast radius beyond its stated purpose, often because teams stack ad-hoc tool integrations onto a single agent rather than splitting capability into purpose-built agents. Same shape as CTL.SQS.POLICY.SPRAWL and CTL.SECRETS.POLICY.SPRAWL — accumulated permission attachments that hide effective reachability. An attacker who controls the prompt enumerates the larger surface; legitimate operators no longer reason about what the agent can do.
 
-**Remediation:** Split the agent into purpose-built agents (one per customer workflow) so each agent's action-group list stays small and reviewable. Remove inactive or deprecated action groups via DeleteAgentActionGroup.
+**Remediation:** Split the agent into purpose-built agents (one per customer workflow) so each agent's action-group list stays small and reviewable. Remove inactive or deprecated action groups via DeleteAgentActionGroup. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -106,7 +106,7 @@ Bedrock agent has more than 10 action groups attached. Each action group is a La
 
 Bedrock agent's resource-based policy grants InvokeAgent permission to principals outside the owning account. A cross-account invocation grant means any principal in the allowed account can invoke the agent, including compromised roles and automated pipelines. The agent's blast radius is its full tool surface — knowledge bases, action-group Lambdas, and the foundation model's inference cost. Cross-account access should use a dedicated proxy role with SourceAccount / SourceArn conditions rather than a direct resource-policy grant, matching the confused deputy prevention pattern used for S3, Lambda, and SQS cross-account access.
 
-**Remediation:** Remove the cross-account principal from the agent's resource policy. Instead, create a proxy role in the agent's account that the remote account assumes via sts:AssumeRole with ExternalId, and scope that role to bedrock:InvokeAgent on the specific agent ARN. Add aws:SourceAccount and aws:SourceArn conditions to the agent's resource policy if cross-account access is genuinely required.
+**Remediation:** Remove the cross-account principal from the agent's resource policy. Instead, create a proxy role in the agent's account that the remote account assumes via sts:AssumeRole with ExternalId, and scope that role to bedrock:InvokeAgent on the specific agent ARN. Add aws:SourceAccount and aws:SourceArn conditions to the agent's resource policy if cross-account access is genuinely required. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -121,7 +121,7 @@ Bedrock agent's resource-based policy grants InvokeAgent permission to principal
 
 Bedrock agent has at least one action group whose actionGroupExecutor.lambda field references a Lambda function ARN that no longer exists. Same shape as the Cognito ghost-trigger family (CTL.COGNITO.GHOST.PRESIGNUP.001 et al) applied to Bedrock action groups. The agent's tool list advertises a capability it cannot deliver; either the action group should be deleted (because the underlying Lambda is gone) or the Lambda should be restored. Ghost references are the canonical NHI1 (improper offboarding) failure mode: the surrounding configuration retains active references to decommissioned dependencies.
 
-**Remediation:** Either delete the orphan action group via DeleteAgentActionGroup, or restore the missing Lambda function and reattach it. Re-prepare the agent with PrepareAgent after the change.
+**Remediation:** Either delete the orphan action group via DeleteAgentActionGroup, or restore the missing Lambda function and reattach it. Re-prepare the agent with PrepareAgent after the change. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -136,7 +136,7 @@ Bedrock agent has at least one action group whose actionGroupExecutor.lambda fie
 
 Bedrock agents must have a guardrail associated with their sessions. Without guardrails, agent exchanges may expose PII or internal data, accept prompt injections that manipulate tool calls, and produce unsafe or out-of-scope responses. Agents can invoke tools and APIs — an unguarded agent is an unguarded API caller.
 
-**Remediation:** Associate a guardrail with the agent via the guardrailConfiguration setting in the agent definition.
+**Remediation:** Associate a guardrail with the agent via the guardrailConfiguration setting in the agent definition. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -151,7 +151,7 @@ Bedrock agents must have a guardrail associated with their sessions. Without gua
 
 Bedrock agent invocations must be captured by per-agent logging. The account-level CTL.BEDROCK.LOG.INVOCATION.001 control checks the global ModelInvocationLoggingConfiguration; this control flags individual agents that opt out of, or are not covered by, invocation logging — so an operator can see "agent X has no audit trail" without scanning every agent's coverage manually. Without per-agent invocation records, prompt-injection attacks, unauthorized tool calls, and data-exfiltration attempts leave no forensic evidence.
 
-**Remediation:** Enable model invocation logging at the account level (PutModelInvocationLoggingConfiguration) and verify the agent's invocations land in the configured CloudWatch log group or S3 destination. For agents that need logging segregated from the account default, configure a dedicated logging configuration tagged with the agent ID.
+**Remediation:** Enable model invocation logging at the account level (PutModelInvocationLoggingConfiguration) and verify the agent's invocations land in the configured CloudWatch log group or S3 destination. For agents that need logging segregated from the account default, configure a dedicated logging configuration tagged with the agent ID. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -166,7 +166,7 @@ Bedrock agent invocations must be captured by per-agent logging. The account-lev
 
 Bedrock agent execution role grants lambda:InvokeFunction on Resource: * — the agent can invoke any Lambda function in the account, not only the functions registered as action groups. An attacker who gains prompt control can direct the agent to invoke privileged Lambda functions beyond its intended tool set, turning the agent into a proxy for arbitrary Lambda execution. Scope lambda:InvokeFunction to the specific function ARNs registered in the agent's actionGroups.
 
-**Remediation:** Replace Resource: "*" on lambda:InvokeFunction with the explicit list of Lambda function ARNs the agent's actionGroups reference. Example: Resource: ["arn:aws:lambda:us-east-1:111122223333:function:order-lookup", "arn:aws:lambda:us-east-1:111122223333:function:product-search"].
+**Remediation:** Replace Resource: "*" on lambda:InvokeFunction with the explicit list of Lambda function ARNs the agent's actionGroups reference. Example: Resource: ["arn:aws:lambda:us-east-1:111122223333:function:order-lookup", "arn:aws:lambda:us-east-1:111122223333:function:product-search"]. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -181,7 +181,7 @@ Bedrock agent execution role grants lambda:InvokeFunction on Resource: * — the
 
 Bedrock agent execution role grants bedrock:InvokeModel on Resource: * — the agent can invoke any foundation model in the account, ignoring whatever model the agent's foundation_model field declares. An attacker who controls the agent's prompt or tool input can pivot the agent to invoke unintended models (cheaper, less restricted, or with different content policies) and bypass model-allowlist governance. Scope the bedrock:InvokeModel permission to the specific model ARN(s) the agent is configured to use.
 
-**Remediation:** Scope the role's bedrock:InvokeModel permission to the specific foundation model ARN(s) the agent uses. Replace Resource: "*" with explicit model ARNs such as arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0.
+**Remediation:** Scope the role's bedrock:InvokeModel permission to the specific foundation model ARN(s) the agent uses. Replace Resource: "*" with explicit model ARNs such as arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -196,7 +196,7 @@ Bedrock agent execution role grants bedrock:InvokeModel on Resource: * — the a
 
 Bedrock agent execution role grants s3:GetObject (or s3:*) on Resource: * — the agent can read any object in any bucket in the account, not only the buckets that back its action-group API schemas or knowledge-base data sources. An attacker who controls the agent's prompt or tool input can extract data from buckets the agent should never touch (PHI buckets, customer-tenant buckets, audit logs).
 
-**Remediation:** Scope the role's s3:GetObject (and any other S3 actions) to the specific bucket / prefix combinations the agent's action groups and knowledge bases reference. Use StringEquals on s3:prefix conditions to narrow further.
+**Remediation:** Scope the role's s3:GetObject (and any other S3 actions) to the specific bucket / prefix combinations the agent's action groups and knowledge bases reference. Use StringEquals on s3:prefix conditions to narrow further. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -211,7 +211,7 @@ Bedrock agent execution role grants s3:GetObject (or s3:*) on Resource: * — th
 
 Bedrock agent's invocation surface is reachable without authenticated AWS principals — for example, an API Gateway fronting InvokeAgent with no authorizer, a public Lambda URL proxying agent invocation, or a CloudFront distribution that forwards directly to the agent without auth. The agent's blast radius is whatever the agent's execution role can reach (knowledge-base contents, Lambda action groups, invoked models). Letting unauthenticated callers reach InvokeAgent turns the agent's internal data and tool surface into an internet-accessible API. The collector pre-computes the boolean from the agent's downstream invocation paths (API Gateway authorizers, Lambda URL auth_type, public CloudFront distributions pointing at the agent endpoint).
 
-**Remediation:** Front the agent invocation with an authenticated path: either an API Gateway authorizer (Cognito user pool, custom Lambda authorizer, or IAM auth), a Lambda URL with auth_type=AWS_IAM, or a private VPC integration. Remove any public Lambda URL or unrestricted API Gateway resource that proxies InvokeAgent.
+**Remediation:** Front the agent invocation with an authenticated path: either an API Gateway authorizer (Cognito user pool, custom Lambda authorizer, or IAM auth), a Lambda URL with auth_type=AWS_IAM, or a private VPC integration. Remove any public Lambda URL or unrestricted API Gateway resource that proxies InvokeAgent. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -226,7 +226,7 @@ Bedrock agent's invocation surface is reachable without authenticated AWS princi
 
 Bedrock agent's idle session TTL (idleSessionTTLInSeconds) is excessive — sessions persist longer than necessary, leaving partially-consumed agent contexts available to subsequent callers. A long-lived idle session keeps prompt history, tool-call results, and partially-populated working memory available to whoever next attaches to that session ID. The collector pre-computes whether the configured TTL exceeds the recommended threshold (1800 seconds / 30 minutes by default).
 
-**Remediation:** Reduce idleSessionTTLInSeconds on the agent to 1800 (30 minutes) or less. For agents handling sensitive workflows, 600 (10 minutes) is the tighter recommendation. Update via UpdateAgent and re-prepare with PrepareAgent.
+**Remediation:** Reduce idleSessionTTLInSeconds on the agent to 1800 (30 minutes) or less. For agents handling sensitive workflows, 600 (10 minutes) is the tighter recommendation. Update via UpdateAgent and re-prepare with PrepareAgent. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -241,7 +241,7 @@ Bedrock agent's idle session TTL (idleSessionTTLInSeconds) is excessive — sess
 
 Bedrock agent has no infrastructure-as-code management tag (managed_by, terraform, cloudformation, or equivalent). Agents created outside the IaC pipeline are not subject to code review, approval workflows, or drift detection — their permissions may exceed what the security team has approved, and there is no audit trail tying the agent's existence to a reviewed commit. Shadow agents are the canonical AI-surface ungoverned-configuration failure mode: production agents appear through console clicks or scripted CLI calls without going through change-management. The collector pre-computes the managed_by_iac boolean by inspecting the agent's tags against the organisation's IaC tagging convention.
 
-**Remediation:** Either (1) import the agent into your IaC pipeline via terraform import or aws cloudformation import, then tag it with managed_by=terraform / managed_by=cloudformation, or (2) delete the agent if it was created for ad-hoc testing and is no longer in active use. Reject any future untagged agents at the SCP / Service Control Policy level with a Deny statement on bedrock:CreateAgent missing the required tag.
+**Remediation:** Either (1) import the agent into your IaC pipeline via terraform import or aws cloudformation import, then tag it with managed_by=terraform / managed_by=cloudformation, or (2) delete the agent if it was created for ad-hoc testing and is no longer in active use. Reject any future untagged agents at the SCP / Service Control Policy level with a Deny statement on bedrock:CreateAgent missing the required tag. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -256,7 +256,7 @@ Bedrock agent has no infrastructure-as-code management tag (managed_by, terrafor
 
 Bedrock agent has not been invoked within the observation window (default 30 days). A stale agent retains its execution role permissions, its action-group registrations (the Lambdas it can call), and its knowledge-base associations — a dormant attack surface with active credentials. Same shape as CTL.SAGEMAKER.NOTEBOOK.IDLE.001 (idle data-science notebook) and CTL.LIFECYCLE.STAGING.STALE.001 (general stale-resource pattern) applied to Bedrock agents. Distinct from CTL.BEDROCK.AGENT.SESSION.TTL.001 (idle-session TTL too long): SESSION.TTL is per-session timeout configuration; this control flags agents whose entire identity is idle.
 
-**Remediation:** Either delete the agent + its execution role if the workload is truly abandoned, or document the agent's expected idle duration with a reviewed_at tag and a scheduled review date. Reduce blast radius by detaching high-privilege managed policies from the role even while the agent stays.
+**Remediation:** Either delete the agent + its execution role if the workload is truly abandoned, or document the agent's expected idle duration with a reviewed_at tag and a scheduled review date. Reduce blast radius by detaching high-privilege managed policies from the role even while the agent stays. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -271,7 +271,7 @@ Bedrock agent has not been invoked within the observation window (default 30 day
 
 Bedrock agents should have a minimal set of action groups — each action group grants the agent access to an additional Lambda function or API schema. OWASP LLM08 (Excessive Agency) identifies this as a top LLM risk: agents with many tools have a larger attack surface for prompt injection. An attacker who gains prompt control can invoke any tool the agent has access to. Limit action groups to the minimum set required for the agent's purpose.
 
-**Remediation:** Review each action group and remove any that are not required for the agent's primary purpose. Split agents with many tools into specialized agents with fewer, scoped action groups.
+**Remediation:** Review each action group and remove any that are not required for the agent's primary purpose. Split agents with many tools into specialized agents with fewer, scoped action groups. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 
@@ -541,7 +541,7 @@ Bedrock custom model (fine-tuned or imported) does not use a customer-managed KM
 
 Bedrock agent's knowledgeBases list contains at least one knowledge-base ID that no longer exists in the current inventory. RAG queries through this agent will fail or return empty results — and the broken reference is invisible to runtime: the agent silently degrades. Sibling to CTL.BEDROCK.AGENT.GHOST.LAMBDA.001 (which catches the same pattern on actionGroups). Same shape as the Cognito ghost-trigger family (PRESIGNUP, PREAUTH, ...) applied to Bedrock agent KB references. The collector pre-computes the has_ghost_knowledge_base boolean by joining the agent's declared KB IDs against the live knowledge-base inventory.
 
-**Remediation:** Either remove the dead knowledge base from the agent via DisassociateAgentKnowledgeBase, or recreate the knowledge base if it was deleted accidentally. Re-prepare the agent with PrepareAgent after the change.
+**Remediation:** Either remove the dead knowledge base from the agent via DisassociateAgentKnowledgeBase, or recreate the knowledge base if it was deleted accidentally. Re-prepare the agent with PrepareAgent after the change. ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance mode July 30, 2026. New deployments should use Amazon Bedrock AgentCore. Existing Classic agents remain functional but will not receive new features.
 
 ---
 

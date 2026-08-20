@@ -545,6 +545,56 @@ contracts:
     consumers:
       - CTL.IAM.TRUST.MFA.AUTHAGE.001
 
+  # ─── Role Manager + Lambda Role Scope (Aug 2026 WS2) ─────────
+  - field: governance.role_manager.enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if IAM Role Manager is enabled in the account.
+      Role Manager auto-provisions execution roles with
+      PowerUserAccess for new Lambda functions.
+    consumers:
+      - CTL.IAM.ROLEMANAGER.ENABLED.PROD.001
+
+  - field: governance.role_manager.account_environment
+    type: string
+    status: planned
+    postcondition: >
+      Account environment classification: "production",
+      "staging", or "development". Derived from account
+      tags, OU path, or explicit configuration.
+    consumers:
+      - CTL.IAM.ROLEMANAGER.ENABLED.PROD.001
+
+  - field: identity.role.created_by_role_manager
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IAM role was created by Role Manager.
+      Determined by the presence of the Role Manager
+      template tag on the role.
+    consumers:
+      - CTL.IAM.ROLEMANAGER.UNREFINED.001
+
+  - field: identity.role.has_power_user_access
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IAM role has PowerUserAccess or an
+      equivalent broad managed policy attached.
+    consumers:
+      - CTL.IAM.ROLEMANAGER.UNREFINED.001
+
+  - field: identity.role_age_days
+    type: integer
+    status: planned
+    postcondition: >
+      Number of days since the IAM role was created.
+      Used for lifecycle controls that gate on role age
+      (e.g., Role Manager refinement grace period).
+    consumers:
+      - CTL.IAM.ROLEMANAGER.UNREFINED.001
+
   - field: snapshot_before_delete_enforced
     type: boolean
     postcondition: >

@@ -1,0 +1,26 @@
+id: role_manager_cleanup_gap
+description: >
+  IAM Role Manager is enabled in a production account AND at least
+  one Role Manager-provisioned role still has PowerUserAccess after
+  30+ days. The combination means the role factory is running AND
+  its output is not being refined — a systematic least-privilege
+  failure, not a one-off oversight. New Lambda functions continue
+  to receive near-admin roles while existing ones were never scoped
+  down. Threshold of 2 requires both legs: enabled alone is a
+  governance concern; unrefined alone is a single-role problem;
+  together they show a broken refinement lifecycle.
+  ⚠️ MAINTENANCE: SageMaker Role Manager entered maintenance mode
+  July 30, 2026. AWS will not update role templates, making this
+  compound risk permanent — stale templates plus no refinement
+  equals permanent overprivilege.
+controls:
+  - CTL.IAM.ROLEMANAGER.ENABLED.PROD.001
+  - CTL.IAM.ROLEMANAGER.UNREFINED.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - targeted_privilege_escalation
+postconditions:
+  - iam_credential_theft
+scope: global
+implicit_dependencies: []

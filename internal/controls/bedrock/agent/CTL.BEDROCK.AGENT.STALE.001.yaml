@@ -47,6 +47,10 @@ remediation:
     scheduled review date. Reduce blast radius by detaching
     high-privilege managed policies from the role even while
     the agent stays.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

@@ -60,6 +60,10 @@ remediation:
     scoped policy based on the role's actual usage. Replace
     PowerUserAccess with the generated policy. If the role is
     unused, delete it.
+    ⚠️ MAINTENANCE: SageMaker Role Manager entered maintenance mode
+    July 30, 2026. AWS will not update role templates. Existing
+    Role Manager roles should be migrated to manually scoped
+    policies.
   example: |
     {
       "identity": {

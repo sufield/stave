@@ -1,0 +1,41 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-20T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "lab-fixture",
+    "tool": "fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::444455556666:account/settings",
+      "type": "aws_iam_account",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "iam_account",
+          "role_manager": {
+            "enabled": false,
+            "account_environment": "production"
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::444455556666:role/manually-scoped-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "role_age_days": 109,
+          "role": {
+            "created_by_role_manager": false,
+            "has_power_user_access": false
+          }
+        }
+      }
+    }
+  ]
+}

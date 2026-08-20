@@ -45,6 +45,10 @@ remediation:
     group or S3 destination. For agents that need
     logging segregated from the account default, configure a
     dedicated logging configuration tagged with the agent ID.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

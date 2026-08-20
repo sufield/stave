@@ -43,6 +43,10 @@ remediation:
     quality monitor with a baseline statistics file. For
     production endpoints serving regulated data, also
     attach model-quality and bias-drift monitors.
+    ⚠️ MAINTENANCE: SageMaker Model Monitor entered maintenance
+    mode July 30, 2026. For new deployments, consider Amazon
+    Bedrock Guardrails, SageMaker Clarify, or third-party
+    monitoring.
   example: |
     {
       "compute": {

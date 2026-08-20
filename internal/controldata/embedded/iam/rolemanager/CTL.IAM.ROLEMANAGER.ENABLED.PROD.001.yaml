@@ -51,7 +51,12 @@ remediation:
     any existing Role Manager-provisioned roles using IAM Access
     Analyzer unused access findings to generate scoped policies.
     Role Manager should only be enabled in development or sandbox
-    accounts.
+    accounts. For new deployments, use IAM Access Analyzer to
+    generate policies instead of Role Manager.
+    ⚠️ MAINTENANCE: SageMaker Role Manager entered maintenance mode
+    July 30, 2026. AWS will not update role templates. Existing
+    Role Manager roles should be migrated to manually scoped
+    policies.
   example: |
     {
       "governance": {

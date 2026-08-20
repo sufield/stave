@@ -1,0 +1,23 @@
+id: lambda_overprivileged_execution
+description: >
+  Lambda execution role is overprivileged, the role's trust policy
+  allows any Lambda function in the account to assume it, and the
+  role is shared across multiple functions. An attacker who
+  compromises any single function — or creates a new one with
+  lambda:CreateFunction — inherits broad permissions that reach
+  every other function's data. Threshold of 2: any two of the three
+  conditions compound into a meaningful risk. All three together is
+  the worst case — broad permissions, unscoped assumption, shared
+  blast radius.
+controls:
+  - CTL.LAMBDA.ROLE.LEASTPRIV.001
+  - CTL.IAM.ROLE.LAMBDA.SCOPING.001
+  - CTL.LAMBDA.ROLE.SHARED.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - automation_hijack
+postconditions:
+  - iam_credential_theft
+scope: global
+implicit_dependencies: []

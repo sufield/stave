@@ -45,6 +45,10 @@ remediation:
     DeleteAgentActionGroup, or restore the missing Lambda
     function and reattach it. Re-prepare the agent with
     PrepareAgent after the change.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

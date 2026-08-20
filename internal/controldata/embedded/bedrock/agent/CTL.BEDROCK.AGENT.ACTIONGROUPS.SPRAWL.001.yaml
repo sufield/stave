@@ -44,6 +44,10 @@ remediation:
     customer workflow) so each agent's action-group list
     stays small and reviewable. Remove inactive or
     deprecated action groups via DeleteAgentActionGroup.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {

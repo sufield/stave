@@ -42,6 +42,10 @@ remediation:
     minutes) or less. For agents handling sensitive workflows,
     600 (10 minutes) is the tighter recommendation. Update via
     UpdateAgent and re-prepare with PrepareAgent.
+    ⚠️ DEPRECATION: Amazon Bedrock Agents (Classic) entered maintenance
+    mode July 30, 2026. New deployments should use Amazon Bedrock
+    AgentCore. Existing Classic agents remain functional but will not
+    receive new features.
   example: |
     {
       "ai": {
