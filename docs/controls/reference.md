@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3458
-**Pack hash:** `a56e36a0d39ba9ce5a4d0932b824951cbbf7484a19ea330bece2f21a5e31b767`
+**Total controls:** 3461
+**Pack hash:** `a412e659baddba0d4082a0f6d8ee944fc2aec24fa0220cd763b7df45f1f66a2f`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -16,8 +16,8 @@ GitHub. Pick a service below.
 | critical | 372 |
 | high | 1485 |
 | info | 19 |
-| low | 275 |
-| medium | 1307 |
+| low | 276 |
+| medium | 1309 |
 
 | Domain | Count |
 |--------|-------|
@@ -32,7 +32,7 @@ GitHub. Pick a service below.
 | exposure | 1507 |
 | governance | 696 |
 | hygiene | 21 |
-| identity | 680 |
+| identity | 683 |
 | lifecycle | 32 |
 | network | 58 |
 | resilience | 50 |
@@ -161,6 +161,7 @@ GitHub. Pick a service below.
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |
 | [SES](reference/ses.md) | 3 |
 | [SHIELD](reference/shield.md) | 6 |
+| [SIGNIN](reference/signin.md) | 3 |
 | [SNS](reference/sns.md) | 39 |
 | [SQS](reference/sqs.md) | 37 |
 | [SSM](reference/ssm.md) | 13 |
