@@ -426,6 +426,22 @@ Cognito app clients must enable token revocation so revoked refresh tokens and t
 
 ---
 
+### CTL.COGNITO.CLIENT.USERPASSWORDAUTH.001
+
+**Cognito App Client Allows Non-Interactive Password Authentication**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IA-2(1), IA-5; pci_dss_v4.0: 8.3.1; soc2: CC6.1;
+
+Cognito app client has ALLOW_USER_PASSWORD_AUTH in its ExplicitAuthFlows. This flow posts username and password directly to the Cognito token endpoint — no SRP challenge, no interactive step, no MFA prompt. It is the AWS equivalent of the OAuth ROPC (Resource Owner Password Credentials) grant that enabled the Huntress LSHIY campaign: 81M login attempts, 78 account takeovers, all bypassing MFA because the non-interactive flow never presents a challenge.
+AWS marks USER_PASSWORD_AUTH as "not recommended" but does not disable it by default. Any app client with this flow enabled provides an MFA bypass path if the user pool's MfaConfiguration is not ON for all users. Credentials also transit in cleartext to the endpoint (unlike SRP which never sends the password).
+
+**Remediation:** Remove ALLOW_USER_PASSWORD_AUTH from the app client's ExplicitAuthFlows. Use ALLOW_USER_SRP_AUTH instead (SRP never sends the password over the wire). If USER_PASSWORD_AUTH is required for legacy clients, enforce MfaConfiguration ON on the user pool and monitor for credential-stuffing patterns.
+
+---
+
 ### CTL.COGNITO.CLIENT.WILDCARDCB.001
 
 **Cognito App Client Callback URL Uses Wildcard**

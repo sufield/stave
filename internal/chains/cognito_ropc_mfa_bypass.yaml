@@ -1,0 +1,21 @@
+id: cognito_ropc_mfa_bypass
+description: >
+  Cognito app client allows USER_PASSWORD_AUTH (non-interactive
+  credential flow) and the user pool does not enforce MFA for all
+  users. An attacker with valid credentials calls InitiateAuth
+  with AuthFlow=USER_PASSWORD_AUTH — the endpoint accepts the
+  password directly and returns tokens without an MFA challenge.
+  This is the AWS equivalent of the ROPC grant that the Huntress
+  LSHIY campaign used for 78 account takeovers across enterprises
+  with MFA "enabled" but scoped to interactive flows.
+controls:
+  - CTL.COGNITO.CLIENT.USERPASSWORDAUTH.001
+  - CTL.COGNITO.MFA.001
+scope: global
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - internet_access
+postconditions:
+  - iam_credential_theft
+implicit_dependencies: []

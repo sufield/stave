@@ -4198,3 +4198,17 @@ contracts:
     consumers:
       - CTL.SIGNIN.CONSOLE.BYPASS.UNDOCUMENTED.001
 
+  # ─── Cognito App Client Auth Flows (Aug 2026) ───────────────
+
+  - field: identity.cognito.allows_user_password_auth
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the Cognito app client's ExplicitAuthFlows includes
+      ALLOW_USER_PASSWORD_AUTH. This non-interactive flow posts
+      credentials directly to the token endpoint without SRP or
+      MFA prompt. Derived from
+      cognito-idp:DescribeUserPoolClient → ExplicitAuthFlows.
+    consumers:
+      - CTL.COGNITO.CLIENT.USERPASSWORDAUTH.001
+

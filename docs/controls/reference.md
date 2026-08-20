@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3462
-**Pack hash:** `b70ae764bced771a28f538c87be087674c05a469fb3f9526e66a5f5b7e624d0a`
+**Total controls:** 3463
+**Pack hash:** `e4e768305b5d133a597cac864ee51e4a56833167e79499a60b69a6eb6fb56f4b`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 372 |
-| high | 1486 |
+| high | 1487 |
 | info | 19 |
 | low | 276 |
 | medium | 1309 |
@@ -32,7 +32,7 @@ GitHub. Pick a service below.
 | exposure | 1507 |
 | governance | 696 |
 | hygiene | 21 |
-| identity | 683 |
+| identity | 684 |
 | lifecycle | 32 |
 | network | 59 |
 | resilience | 50 |
@@ -74,7 +74,7 @@ GitHub. Pick a service below.
 | [CODEBUILD](reference/codebuild.md) | 13 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
 | [CODEPIPELINE](reference/codepipeline.md) | 6 |
-| [COGNITO](reference/cognito.md) | 113 |
+| [COGNITO](reference/cognito.md) | 114 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [COMPREHEND](reference/comprehend.md) | 1 |
 | [CONFIG](reference/config.md) | 52 |
