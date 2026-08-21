@@ -81,6 +81,10 @@ options:
     - name: eval-time
       usage: |
         Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.
+    - name: exclude-lifecycle
+      default_value: '[]'
+      usage: |
+        Exclude controls with these lifecycle statuses (e.g. eol,sunset)
     - name: exemption-file
       usage: Path to asset exemption list YAML file
     - name: findings-only
