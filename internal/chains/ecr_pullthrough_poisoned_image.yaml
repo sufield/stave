@@ -1,0 +1,25 @@
+id: ecr_pullthrough_poisoned_image
+description: >
+  ECR pull-through cache proxies a public registry without filter
+  rules AND a workload consumes images from the cache without
+  digest pinning AND image scanning is disabled. The image URI
+  looks private (<account>.dkr.ecr.<region>.amazonaws.com/...),
+  so developers trust it — but the content came from Docker Hub
+  unfiltered, cached transparently, and consumed by mutable tag.
+  A poisoned upstream image enters the cache, is not scanned on
+  ingress, and is pulled by tag into production. The supply chain
+  poisoning is invisible at every step: the registry looks private,
+  the scan findings are empty (scanning is off), and the tag can
+  be silently overwritten upstream. Drop any one leg — add filter
+  rules, pin by digest, or enable scanning — and the chain breaks.
+controls:
+  - CTL.ECR.PULLTHROUGH.UNRESTRICTED.001
+  - CTL.EKS.IMAGE.NODIGEST.001
+  - CTL.ECR.SCAN.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - container_code_execution
+postconditions:
+  - ec2_code_execution
+implicit_dependencies: []
