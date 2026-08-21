@@ -55,6 +55,7 @@ type SharedOptions struct {
 	Packs             []string // --pack: scope evaluation to one or more concern packs
 	Services          []string // --services: scope evaluation to controls for these AWS services
 	AllStaged         bool     // --all: evaluate the full catalog, output grouped per service then compound
+	ExcludeLifecycle  []string // --exclude-lifecycle: drop controls with these lifecycle statuses
 
 	// controlsSet / formatSet / obsSet track whether the respective
 	// flag was explicitly set by the user. All three are derived
@@ -73,6 +74,7 @@ func (o *SharedOptions) bindCommon(cmd *cobra.Command, defaultFormat cmdutil.Out
 	f.StringArrayVar(&o.Packs, "pack", nil, "Scope evaluation to a concern pack (repeatable). Example: stave apply --pack entropy -o snapshot/")
 	f.StringSliceVar(&o.Services, "services", nil, "Scope evaluation to controls for these AWS services (comma-separated). Example: stave apply --services iam,s3 -o snapshot/")
 	f.BoolVar(&o.AllStaged, "all", false, "Evaluate the full catalog and print findings grouped per service, then compound, then a summary")
+	f.StringSliceVar(&o.ExcludeLifecycle, "exclude-lifecycle", nil, "Exclude controls with these lifecycle statuses (e.g. eol,sunset)")
 	f.StringVar(&o.MaxUnsafeDuration, "max-unsafe", "", cliflags.WithDynamicDefaultHelp("Maximum allowed unsafe duration"))
 	f.StringVar(&o.EvalTimeRaw, "eval-time", "", "Evaluation reference timestamp (RFC3339). Durations and temporal risk are measured against this time. Defaults to wall clock.")
 	f.StringVar(&o.EvalTimeRaw, "now", "", "Alias for --eval-time")

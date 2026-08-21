@@ -52,6 +52,9 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: sunset
+  successor: "IAM Identity Center"
 unsafe_predicate:
   all:
     - field: properties.identity.kind

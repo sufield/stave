@@ -287,3 +287,85 @@ unsafe_predicate:
 		t.Fatalf("hipaa = %q", ctl.Compliance.Get("hipaa"))
 	}
 }
+
+func TestUnmarshalControlDefinition_Lifecycle(t *testing.T) {
+	data := []byte(`
+dsl_version: ctrl.v1
+id: CTL.TEST.LIFECYCLE
+name: Test lifecycle
+description: Test control
+type: unsafe_state
+lifecycle:
+  status: sunset
+  since: "2026-07-30"
+  successor: AgentCore
+unsafe_predicate:
+  any:
+    - field: "properties.x"
+      op: "eq"
+      value: true
+`)
+	ctl, err := UnmarshalControlDefinition(data)
+	if err != nil {
+		t.Fatalf("UnmarshalControlDefinition: %v", err)
+	}
+	if ctl.Lifecycle.Status != "sunset" {
+		t.Errorf("Status = %q, want sunset", ctl.Lifecycle.Status)
+	}
+	if ctl.Lifecycle.Since != "2026-07-30" {
+		t.Errorf("Since = %q, want 2026-07-30", ctl.Lifecycle.Since)
+	}
+	if ctl.Lifecycle.Successor != "AgentCore" {
+		t.Errorf("Successor = %q, want AgentCore", ctl.Lifecycle.Successor)
+	}
+}
+
+func TestUnmarshalControlDefinition_LifecycleAbsent(t *testing.T) {
+	data := []byte(`
+dsl_version: ctrl.v1
+id: CTL.TEST.NOLC
+name: No lifecycle
+description: Test control
+type: unsafe_state
+unsafe_predicate:
+  any:
+    - field: "properties.x"
+      op: "eq"
+      value: true
+`)
+	ctl, err := UnmarshalControlDefinition(data)
+	if err != nil {
+		t.Fatalf("UnmarshalControlDefinition: %v", err)
+	}
+	if !ctl.Lifecycle.IsZero() {
+		t.Errorf("Lifecycle should be zero, got %+v", ctl.Lifecycle)
+	}
+	if ctl.Lifecycle.EffectiveStatus() != "active" {
+		t.Errorf("EffectiveStatus = %q, want active", ctl.Lifecycle.EffectiveStatus())
+	}
+}
+
+func TestValidateLifecycle_InvalidStatus(t *testing.T) {
+	data := []byte(`
+dsl_version: ctrl.v1
+id: CTL.TEST.BADLC
+name: Bad lifecycle
+description: Test control
+type: unsafe_state
+lifecycle:
+  status: bogus
+unsafe_predicate:
+  any:
+    - field: "properties.x"
+      op: "eq"
+      value: true
+`)
+	ctl, err := UnmarshalControlDefinition(data)
+	if err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	err = validateLifecycle(&ctl)
+	if err == nil {
+		t.Fatal("expected error for invalid lifecycle status")
+	}
+}

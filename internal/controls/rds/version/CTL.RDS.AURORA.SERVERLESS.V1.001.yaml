@@ -41,6 +41,9 @@ remediation:
   action: Migrate the cluster to Aurora Serverless v2 or to provisioned engine mode before the v1 end-of-life deadline.
   example: |
     {"database": {"kind": "rds_cluster", "engine": "aurora-mysql", "cluster": {"is_serverless_v1": false, "serverless_version": "v2"}}}
+lifecycle:
+  status: sunset
+  successor: "Aurora Serverless v2"
 unsafe_predicate:
   all:
     - field: properties.database.kind

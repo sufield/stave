@@ -2,12 +2,12 @@
   "schema_version": "out.v0.1",
   "kind": "ASSESSMENT",
   "run": {
-    "tool_version": "edge",
+    "tool_version": "dev",
     "offline": true,
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "681b0d0c3eeb9d7b309d461470e378675e6302605cbd4cdbf7e097f1f0278b47",
+    "policy_fingerprint": "b8a2c59fc491bf82c0562b52ac36a2996f5e7dd2130477ff20a56fa86bf865db",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -376,24 +376,106 @@
         },
         "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
       },
-      "chain_membership": [
+      "exploitability": "one_away",
+      "near_miss_chains": [
         {
-          "chain_id": "shadow_account_invisible",
-          "chain_severity": "critical",
-          "stage_span": [
-            "detection_evasion"
+          "chain_id": "acm_wildcard_issuance_unaudited",
+          "chain_severity": "high",
+          "missing_control": "CTL.ACM.ACME.WILDCARD.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
           ],
-          "narrative": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n"
+          "description": "ACM ACME endpoint allows wildcard certificate issuance AND CloudTrail is not enabled. A wildcard certificate (*.example.com) covers every subdomain — one compromised private key or one leaked certificate enables impersonation of any service under the domain. With ACME wildcard issuance enabled, any authorized ACME client can request wildcard certificates programmatically. Without CloudTrail, the RequestCertificate and IssueCertificate API calls are not logged — unauthorized wildcard certificate issuance leaves no audit trail. The combination is unrestricted wildcard cert issuance with invisible certificate operations. Either control alone mitigates: disabling wildcard issuance limits certificates to specific subdomains; enabling CloudTrail records all certificate issuance for detection and forensics.\n"
+        },
+        {
+          "chain_id": "cloudformation_template_injection_unaudited",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDFORMATION.TEMPLATE.S3.INJECTION.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "S3 bucket hosting CloudFormation templates allows untrusted write access AND CloudTrail is not enabled. The Pacu cfn__resource_injection module exploits exactly this: an attacker with PutObject on the template bucket injects a malicious resource (IAM role, Lambda function, EC2 instance) into the template. On the next stack update, CloudFormation deploys the injected resource with the stack's service role permissions. Without CloudTrail, the PutObject call to the template bucket AND the UpdateStack API call are both invisible — the supply chain compromise leaves no audit trail. Either control alone mitigates: restricting template bucket write access blocks the injection; enabling CloudTrail records the suspicious PutObject and UpdateStack calls.\n"
+        },
+        {
+          "chain_id": "confused_deputy_path",
+          "chain_severity": "high",
+          "missing_control": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n"
+        },
+        {
+          "chain_id": "confused_deputy_path",
+          "chain_severity": "high",
+          "missing_control": "CTL.IAM.TRUST.EXTERNALID.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CONFIG.ENABLED.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "detection_blindness",
+          "chain_severity": "critical",
+          "missing_control": "CTL.VPC.FLOWLOG.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
+        },
+        {
+          "chain_id": "elasticache_broad_access_no_audit",
+          "chain_severity": "high",
+          "missing_control": "CTL.ELASTICACHE.SG.BROAD.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "ElastiCache cluster security group allows broad ingress (0.0.0.0/0 on cache ports) AND CloudTrail is not enabled. Broad ingress means any host with network connectivity can reach the cache endpoint. Without CloudTrail, API calls that modify the cluster configuration (ModifyReplicationGroup, CreateSnapshot, DeleteCacheCluster) leave no audit record. The combination is a wide-open cache endpoint with invisible control-plane activity — an attacker can snapshot the cluster for offline data extraction and the API call is never logged. Either control alone mitigates: restricting the security group limits who can reach the endpoint; enabling CloudTrail records configuration changes for detection and forensics.\n"
+        },
+        {
+          "chain_id": "waf_blind_evasion",
+          "chain_severity": "critical",
+          "missing_control": "CTL.WAF.EVASION.OBSERVE.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "WAF evasion observability is absent and detection layers are also failing. Evasion attempts using encoding or parser confusion succeed without generating any observable signal across any detection layer. The attack is invisible from detection through investigation.\n"
+        },
+        {
+          "chain_id": "waf_blind_evasion",
+          "chain_severity": "critical",
+          "missing_control": "CTL.WAF.RULES.OWASP.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "WAF evasion observability is absent and detection layers are also failing. Evasion attempts using encoding or parser confusion succeed without generating any observable signal across any detection layer. The attack is invisible from detection through investigation.\n"
         }
       ],
-      "exploitability": "exploitable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 1.5,
+        "chain_bonus": 1,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -546,14 +628,6 @@
             "detection_evasion"
           ],
           "narrative": "Any foundational Config failure: recorder stopped, recorder role deleted, or no delivery channel configured. Each independently means Config is non-functional — the configuration compliance system provides zero value. Threshold of 1 because each member represents complete or near-complete Config failure on its own.\n"
-        },
-        {
-          "chain_id": "shadow_account_invisible",
-          "chain_severity": "critical",
-          "stage_span": [
-            "detection_evasion"
-          ],
-          "narrative": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n"
         }
       ],
       "exploitability": "exploitable",
@@ -563,7 +637,7 @@
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 2,
+        "chain_bonus": 1.5,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -4519,117 +4593,6 @@
       ]
     },
     {
-      "finding_id": "sha256:f6baaa324d559aff",
-      "chain": "shadow_account_invisible",
-      "asset_id": "config-recorder",
-      "scope_id": "__global__",
-      "contributing_assets": [
-        "config-recorder",
-        "main-trail"
-      ],
-      "description": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.ENABLED.001",
-        "CTL.CONFIG.ENABLED.001"
-      ],
-      "missing_safeguards": [
-        "CTL.ORG.TAGPOLICY.ENFORCED.001",
-        "CTL.ORG.MEMBERSHIP.001"
-      ],
-      "compound_score": 100,
-      "severity": "critical",
-      "narrative": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n Failing: CTL.CLOUDTRAIL.ENABLED.001, CTL.CONFIG.ENABLED.001.",
-      "attack_stages": [
-        "detection_evasion"
-      ],
-      "member_evidence": [
-        {
-          "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
-          "asset_id": "main-trail",
-          "misconfigurations": [
-            {
-              "property": "audit_trail.kind",
-              "actual_value": "trail",
-              "operator": "eq",
-              "unsafe_value": "trail"
-            },
-            {
-              "property": "audit_trail.multi_region_enabled",
-              "actual_value": false,
-              "operator": "eq",
-              "unsafe_value": false
-            }
-          ],
-          "reasoning_trace": [
-            {
-              "predicate_expr": "audit_trail.kind eq \"trail\"",
-              "observation_key": "audit_trail.kind",
-              "operator": "eq",
-              "expected_value": "trail",
-              "observed_value": "trail"
-            },
-            {
-              "predicate_expr": "audit_trail.multi_region_enabled eq false",
-              "observation_key": "audit_trail.multi_region_enabled",
-              "operator": "eq",
-              "expected_value": false,
-              "observed_value": false
-            }
-          ],
-          "delta": [
-            {
-              "property_label": "multi region",
-              "property_path": "audit_trail.multi_region_enabled",
-              "current_value": "false",
-              "fix_action": "set to true (enable)"
-            }
-          ]
-        },
-        {
-          "control_id": "CTL.CONFIG.ENABLED.001",
-          "asset_id": "config-recorder",
-          "misconfigurations": [
-            {
-              "property": "compliance.kind",
-              "actual_value": "recorder",
-              "operator": "eq",
-              "unsafe_value": "recorder"
-            },
-            {
-              "property": "compliance.recording_enabled",
-              "actual_value": false,
-              "operator": "eq",
-              "unsafe_value": false
-            }
-          ],
-          "reasoning_trace": [
-            {
-              "predicate_expr": "compliance.kind eq \"recorder\"",
-              "observation_key": "compliance.kind",
-              "operator": "eq",
-              "expected_value": "recorder",
-              "observed_value": "recorder"
-            },
-            {
-              "predicate_expr": "compliance.recording_enabled eq false",
-              "observation_key": "compliance.recording_enabled",
-              "operator": "eq",
-              "expected_value": false,
-              "observed_value": false
-            }
-          ],
-          "delta": [
-            {
-              "property_label": "recording",
-              "property_path": "compliance.recording_enabled",
-              "current_value": "false",
-              "fix_action": "set to true (enable)"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "finding_id": "sha256:21167ba6a18e501d",
       "chain": "vpc_database_exposure",
       "asset_id": "phi-database",
@@ -5881,7 +5844,7 @@
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 1.5,
+        "chain_bonus": 1,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -5897,7 +5860,7 @@
         "duration_factor": 1,
         "blast_multiplier": 2.5,
         "exposure_multiplier": 1,
-        "chain_bonus": 2,
+        "chain_bonus": 1.5,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },

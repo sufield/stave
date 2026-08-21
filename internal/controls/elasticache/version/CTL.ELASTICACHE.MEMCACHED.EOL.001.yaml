@@ -52,6 +52,9 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: eol
+  successor: "Memcached 1.6.x"
 unsafe_predicate:
   all:
     - field: properties.cache.kind

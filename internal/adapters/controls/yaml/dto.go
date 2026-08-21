@@ -76,6 +76,16 @@ type yamlControlDefinition struct {
 	// VerdictOnError controls fallback behavior when the predicate
 	// evaluator is unavailable: safe, fail_closed, or empty (inconclusive).
 	VerdictOnError string `yaml:"verdict_on_error,omitempty"`
+
+	Lifecycle *yamlLifecycle `yaml:"lifecycle,omitempty"`
+}
+
+type yamlLifecycle struct {
+	Status    string `yaml:"status"`
+	Since     string `yaml:"since,omitempty"`
+	Deadline  string `yaml:"deadline,omitempty"`
+	Successor string `yaml:"successor,omitempty"`
+	Reference string `yaml:"reference,omitempty"`
 }
 
 // yamlAlternative is the YAML wire-format for policy.Alternative.

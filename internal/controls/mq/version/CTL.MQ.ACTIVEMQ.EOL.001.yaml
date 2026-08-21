@@ -52,6 +52,9 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: eol
+  successor: "ActiveMQ 5.17.x"
 unsafe_predicate:
   all:
     - field: properties.messaging.kind

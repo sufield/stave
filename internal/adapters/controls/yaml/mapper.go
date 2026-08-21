@@ -60,6 +60,7 @@ func (y yamlControlDefinition) ToDomain() (policy.ControlDefinition, error) {
 		IntentRationale:          strings.TrimSpace(y.IntentRationale),
 		ForbiddenState:           unsafePredicateToDomain(y.ForbiddenState),
 		VerdictOnError:           strings.TrimSpace(y.VerdictOnError),
+		Lifecycle:                lifecycleToDomain(y.Lifecycle),
 	}, nil
 }
 
@@ -299,6 +300,19 @@ func labValidationToDomain(in []yamlLabValidation) []policy.LabValidation {
 		}
 	}
 	return out
+}
+
+func lifecycleToDomain(y *yamlLifecycle) policy.ControlLifecycle {
+	if y == nil {
+		return policy.ControlLifecycle{}
+	}
+	return policy.ControlLifecycle{
+		Status:    policy.LifecycleStatus(y.Status),
+		Since:     y.Since,
+		Deadline:  y.Deadline,
+		Successor: y.Successor,
+		Reference: y.Reference,
+	}
 }
 
 // UnmarshalControlDefinition unmarshals YAML bytes into a domain ControlDefinition.

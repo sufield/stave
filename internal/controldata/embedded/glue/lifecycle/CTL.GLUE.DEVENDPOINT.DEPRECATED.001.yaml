@@ -44,6 +44,9 @@ remediation:
         "deprecated": false
       }
     }
+lifecycle:
+  status: sunset
+  successor: "Glue Interactive Sessions"
 unsafe_predicate:
   all:
     - field: properties.compute.kind

@@ -56,6 +56,9 @@ remediation:
         "is_classic": false
       }
     }
+lifecycle:
+  status: eol
+  successor: "WAFv2"
 unsafe_predicate:
   all:
     - field: properties.waf.kind

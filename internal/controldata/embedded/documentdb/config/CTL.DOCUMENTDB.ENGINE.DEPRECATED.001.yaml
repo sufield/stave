@@ -42,6 +42,8 @@ remediation:
     --apply-immediately`. Coordinate the upgrade window with
     application teams — major-version upgrades can require
     driver updates on the client side.
+lifecycle:
+  status: eol
 unsafe_predicate:
   all:
   - field: properties.database.kind

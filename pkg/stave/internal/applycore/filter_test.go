@@ -29,3 +29,23 @@ func TestFilterControlsByID(t *testing.T) {
 		}
 	}
 }
+
+func TestFilterByLifecycle(t *testing.T) {
+	all := []policy.ControlDefinition{
+		{ID: "CTL.ACTIVE", Lifecycle: policy.ControlLifecycle{}},
+		{ID: "CTL.SUNSET", Lifecycle: policy.ControlLifecycle{Status: policy.LifecycleSunset}},
+		{ID: "CTL.EOL", Lifecycle: policy.ControlLifecycle{Status: policy.LifecycleEOL}},
+		{ID: "CTL.MAINT", Lifecycle: policy.ControlLifecycle{Status: policy.LifecycleMaintenance}},
+	}
+
+	got := filterByLifecycle(all, []string{"eol", "sunset"})
+	if len(got) != 2 {
+		t.Fatalf("got %d controls, want 2", len(got))
+	}
+	if got[0].ID != "CTL.ACTIVE" {
+		t.Errorf("got[0] = %q, want CTL.ACTIVE", got[0].ID)
+	}
+	if got[1].ID != "CTL.MAINT" {
+		t.Errorf("got[1] = %q, want CTL.MAINT", got[1].ID)
+	}
+}

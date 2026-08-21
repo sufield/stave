@@ -57,6 +57,8 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: sunset
 unsafe_predicate:
   all:
     - field: properties.account.kind

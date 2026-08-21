@@ -198,6 +198,9 @@ func (l *ControlLoader) enrichAndPrepare(ctl *policy.ControlDefinition) error {
 	if err := l.resolveAlias(ctl); err != nil {
 		return fmt.Errorf("semantic error: %w", err)
 	}
+	if err := validateLifecycle(ctl); err != nil {
+		return err
+	}
 	if err := validateArchetype(ctl); err != nil {
 		return err
 	}
@@ -302,6 +305,16 @@ func validateScopeCorpus(ctl *policy.ControlDefinition) error {
 			"for the canonical schema",
 		ctl.ID,
 	)
+}
+
+func validateLifecycle(ctl *policy.ControlDefinition) error {
+	if ctl.Lifecycle.IsZero() {
+		return nil
+	}
+	if !ctl.Lifecycle.Status.IsValid() {
+		return fmt.Errorf("control %s: invalid lifecycle status %q (must be active, maintenance, sunset, or eol)", ctl.ID, ctl.Lifecycle.Status)
+	}
+	return nil
 }
 
 // autoClassify runs the taxonomy classifier on controls that have no

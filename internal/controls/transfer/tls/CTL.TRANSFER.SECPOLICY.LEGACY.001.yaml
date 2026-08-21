@@ -54,6 +54,8 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: sunset
 unsafe_predicate:
   all:
     - field: properties.transfer.kind

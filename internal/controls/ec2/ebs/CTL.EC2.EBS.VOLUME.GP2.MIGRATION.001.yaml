@@ -62,6 +62,9 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: sunset
+  successor: "gp3"
 unsafe_predicate:
   all:
     - field: properties.compute.kind

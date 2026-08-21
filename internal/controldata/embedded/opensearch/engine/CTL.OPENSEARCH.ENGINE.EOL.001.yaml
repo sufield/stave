@@ -47,6 +47,8 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: eol
 unsafe_predicate:
   all:
     - field: properties.search_service.kind

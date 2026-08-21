@@ -66,6 +66,8 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: eol
 unsafe_predicate:
   all:
     - field: properties.database.kind

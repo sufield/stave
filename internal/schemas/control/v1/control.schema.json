@@ -194,6 +194,36 @@
           "title": "Forbidden State",
           "description": "High-level logical condition that must NEVER be satisfied (e.g., principal=='*' AND network==public). Distinct from `unsafe_predicate`: the unsafe predicate triggers a finding when matched against an asset; the forbidden_state is an invariant the control declares the system must uphold and surfaces verbatim into SIR.ControlFact.forbidden_state for solver-side invariant checking. Reuses the same predicate shape so authors can express forbidden states with the same vocabulary they already know."
         },
+        "lifecycle": {
+          "type": "object",
+          "title": "Control Lifecycle",
+          "description": "Lifecycle metadata for the resource or feature this control detects. Controls without a lifecycle block default to active.",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["active", "maintenance", "sunset", "eol"],
+              "description": "Where the controlled resource sits in its lifecycle."
+            },
+            "since": {
+              "type": "string",
+              "description": "ISO date when the status took effect (e.g. 2026-07-30)."
+            },
+            "deadline": {
+              "type": "string",
+              "description": "ISO date by which migration should complete."
+            },
+            "successor": {
+              "type": "string",
+              "description": "Name of the replacement resource or feature."
+            },
+            "reference": {
+              "type": "string",
+              "description": "URL to the vendor announcement or deprecation notice."
+            }
+          },
+          "required": ["status"],
+          "additionalProperties": false
+        },
         "version": {
           "type": "string",
           "title": "Control Version",

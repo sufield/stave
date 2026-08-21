@@ -120,6 +120,10 @@ type Inputs struct {
 	// scoped set.
 	ControlIDAllowlist []string
 
+	// ExcludeLifecycle drops controls whose lifecycle.status matches
+	// any of these values before evaluation begins.
+	ExcludeLifecycle []string
+
 	// GraphFindingsDir points to a directory of pre-computed Soufflé .csv
 	// output. When set, graph-based chain findings are ingested and appended
 	// to the report's ChainFindings alongside threshold-based chains.
@@ -215,6 +219,17 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 			ctlRepo = nil
 		}
 		controls = filterControlsByID(controls, in.ControlIDAllowlist)
+	}
+
+	if len(in.ExcludeLifecycle) > 0 {
+		if controls == nil && ctlRepo != nil {
+			controls, err = ctlRepo.LoadControls(ctx, in.ControlsDir)
+			if err != nil {
+				return nil, fmt.Errorf("load controls for lifecycle filter: %w", err)
+			}
+			ctlRepo = nil
+		}
+		controls = filterByLifecycle(controls, in.ExcludeLifecycle)
 	}
 
 	maxUnsafe := in.MaxUnsafe
@@ -408,6 +423,20 @@ func filterControlsByID(controls []policy.ControlDefinition, ids []string) []pol
 	out := make([]policy.ControlDefinition, 0, len(allow))
 	for i := range controls {
 		if allow[string(controls[i].ID)] {
+			out = append(out, controls[i])
+		}
+	}
+	return out
+}
+
+func filterByLifecycle(controls []policy.ControlDefinition, exclude []string) []policy.ControlDefinition {
+	drop := make(map[string]bool, len(exclude))
+	for _, s := range exclude {
+		drop[s] = true
+	}
+	out := make([]policy.ControlDefinition, 0, len(controls))
+	for i := range controls {
+		if !drop[string(controls[i].Lifecycle.EffectiveStatus())] {
 			out = append(out, controls[i])
 		}
 	}

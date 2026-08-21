@@ -60,6 +60,9 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: sunset
+  successor: "ALB"
 unsafe_predicate:
   all:
     - field: properties.network.kind

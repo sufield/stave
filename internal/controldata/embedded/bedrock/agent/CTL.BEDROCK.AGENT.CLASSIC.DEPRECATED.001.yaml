@@ -52,6 +52,10 @@ remediation:
         "runtime": { "is_idle": false }
       }
     }
+lifecycle:
+  status: sunset
+  since: "2026-07-30"
+  successor: "AgentCore"
 unsafe_predicate:
   all:
     - field: properties.ai.kind

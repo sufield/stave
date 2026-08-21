@@ -40,6 +40,8 @@ remediation:
   action: Migrate the instance to a current-generation instance family.
   example: |
     {"compute": {"kind": "instance", "instance": {"instance_type_eol": false}}}
+lifecycle:
+  status: eol
 unsafe_predicate:
   all:
     - field: properties.compute.kind

@@ -112,6 +112,7 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		IndeterminateOnly:  opts.IndeterminateOnly,
 		VerifyKey:          opts.VerifyKey,
 		RequireSigned:      opts.RequireSigned,
+		ExcludeLifecycle:   opts.ExcludeLifecycle,
 	})
 	done()
 

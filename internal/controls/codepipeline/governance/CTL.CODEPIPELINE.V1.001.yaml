@@ -40,6 +40,9 @@ remediation:
         "governance": { "pipeline_type": "V2" }
       }
     }
+lifecycle:
+  status: sunset
+  successor: "CodePipeline V2"
 unsafe_predicate:
   all:
     - field: properties.compute.kind

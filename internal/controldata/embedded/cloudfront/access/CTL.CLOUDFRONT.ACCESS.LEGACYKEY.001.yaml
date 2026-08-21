@@ -60,6 +60,9 @@ remediation:
         }
       }
     }
+lifecycle:
+  status: sunset
+  successor: "Trusted Key Groups"
 unsafe_predicate:
   all:
     - field: properties.cdn.kind

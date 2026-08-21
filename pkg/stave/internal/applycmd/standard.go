@@ -106,6 +106,8 @@ type StandardRequest struct {
 	VerifyKey     string // --verify-key: path to Ed25519 public key PEM
 	RequireSigned bool   // --require-signed: refuse to evaluate unsigned snapshots
 
+	ExcludeLifecycle []string // --exclude-lifecycle: drop controls with these lifecycle statuses
+
 	// AttestationStatus is populated by the facade's pre-evaluation
 	// verification pass when --verify-key is set. Nil when no
 	// verification was requested.
@@ -215,6 +217,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		ContextName:         req.ContextName,
 		ObservationRepo:     obsRepo,
 		ControlIDAllowlist:  req.ControlIDAllowlist,
+		ExcludeLifecycle:    req.ExcludeLifecycle,
 		GraphFindingsDir:    req.GraphFindingsDir,
 	})
 	if err != nil {

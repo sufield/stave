@@ -28,6 +28,9 @@ remediation:
   action: Remediate per control description.
   example: |
     {"m365": {"identity": {"kind": "entra_config", "placeholder": true}}}
+lifecycle:
+  status: sunset
+  successor: "Modern Authentication"
 unsafe_predicate:
   all:
     - field: properties.m365.identity.kind

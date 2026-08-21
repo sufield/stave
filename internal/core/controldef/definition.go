@@ -121,6 +121,8 @@ type ControlDefinition struct {
 	//   empty       — default: inconclusive (returns an error, control skipped)
 	VerdictOnError string
 
+	Lifecycle ControlLifecycle
+
 	// prepared holds pre-calculated values to optimize the evaluation
 	// hot path. Only Prepare() (in this package) writes to it; the
 	// per-attribute accessors below are the read surface for
@@ -716,6 +718,12 @@ func (ctl *ControlDefinition) IsEvaluatable() bool {
 	return slices.Contains(EvaluatableTypes(), ctl.Type)
 }
 
+// IsDeprecated reports whether the control targets a deprecated
+// resource (lifecycle status is sunset or eol).
+func (ctl *ControlDefinition) IsDeprecated() bool {
+	return ctl != nil && ctl.Lifecycle.EffectiveStatus().IsDeprecated()
+}
+
 // ControlMetadata provides a read-only snapshot of core identity and classification.
 type ControlMetadata struct {
 	ID              kernel.ControlID
@@ -735,6 +743,7 @@ type ControlMetadata struct {
 	Archetype       kernel.ArchetypeID
 	Scope           string
 	CorpusReference string
+	Lifecycle       ControlLifecycle
 }
 
 // Fingerprint computes a stable hash of the control's identity and logic
@@ -775,5 +784,6 @@ func (ctl *ControlDefinition) Metadata() ControlMetadata {
 		Archetype:       ctl.Archetype,
 		Scope:           ctl.Scope,
 		CorpusReference: ctl.CorpusReference,
+		Lifecycle:       ctl.Lifecycle,
 	}
 }
