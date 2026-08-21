@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.bedrock-classic-deprecated"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-PROD001",
+      "type": "aws_bedrock_agentcore_runtime",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agentcore_runtime",
+          "runtime": {
+            "is_idle": false
+          }
+        }
+      }
+    }
+  ]
+}

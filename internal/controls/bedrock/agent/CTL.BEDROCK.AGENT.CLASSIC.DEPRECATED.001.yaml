@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENT.CLASSIC.DEPRECATED.001
+name: Bedrock Agent Using Deprecated Classic Platform
+description: >
+  Bedrock agent is running on the Classic agent platform, which
+  entered maintenance mode July 30, 2026. No new security features
+  or non-critical patches will be released for Classic agents.
+  Classic agents accumulate security risk over time as the platform
+  diverges from AgentCore — the actively developed replacement.
+  Same lifecycle pattern as CLB→ALB
+  (CTL.ELB.LIFECYCLE.CLB.MIGRATION.001) and OAI→OAC
+  (CTL.CLOUDFRONT.ORIGIN.OAI.LEGACY.001): the legacy resource
+  still works today but misses ongoing security improvements.
+domain: governance
+severity: medium
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "SI-2, CM-2"
+  soc2: "CC6.1"
+  ccm_v4: ["TVM-04"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - deprecation
+  - credential-lifecycle
+subtractive_category:
+  - S07
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agent
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Bedrock agent is on the deprecated Classic platform
+    (maintenance mode since July 30, 2026).
+  action: >
+    Migrate to Amazon Bedrock AgentCore. Review agent
+    configuration and action groups, recreate the agent
+    using the AgentCore API, update the execution role
+    (AgentCore uses different IAM patterns), test with
+    existing knowledge bases and action groups, update
+    calling applications to use AgentCore API endpoints,
+    and decommission the Classic agent.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": { "is_idle": false }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agent
+defect: >
+  Bedrock agent is on the deprecated Classic platform.
+infection: >
+  Classic agents entered maintenance mode July 30, 2026.
+  No new security features, no non-critical patches. The
+  platform diverges from AgentCore over time — security
+  improvements ship only to AgentCore. Classic agents
+  retain their execution roles, action-group registrations,
+  and knowledge-base associations while running on a
+  frozen platform.
+failure: >
+  Deprecated platform. Bedrock Agent Classic receives no
+  new security features — accumulating risk as AgentCore
+  diverges.
+tests:
+  - name: "Classic agent fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent/CLASSIC001"
+      asset_type: aws_bedrock_agent
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agent
+          agent:
+            is_idle: false
+  - name: "AgentCore runtime passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-PROD001"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            is_idle: false

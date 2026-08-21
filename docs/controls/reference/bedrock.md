@@ -95,6 +95,21 @@ Bedrock agent has more than 10 action groups attached. Each action group is a La
 
 ---
 
+### CTL.BEDROCK.AGENT.CLASSIC.DEPRECATED.001
+
+**Bedrock Agent Using Deprecated Classic Platform**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: SI-2, CM-2; owasp_nhi: NHI5; soc2: CC6.1;
+
+Bedrock agent is running on the Classic agent platform, which entered maintenance mode July 30, 2026. No new security features or non-critical patches will be released for Classic agents. Classic agents accumulate security risk over time as the platform diverges from AgentCore — the actively developed replacement. Same lifecycle pattern as CLB→ALB (CTL.ELB.LIFECYCLE.CLB.MIGRATION.001) and OAI→OAC (CTL.CLOUDFRONT.ORIGIN.OAI.LEGACY.001): the legacy resource still works today but misses ongoing security improvements.
+
+**Remediation:** Migrate to Amazon Bedrock AgentCore. Review agent configuration and action groups, recreate the agent using the AgentCore API, update the execution role (AgentCore uses different IAM patterns), test with existing knowledge bases and action groups, update calling applications to use AgentCore API endpoints, and decommission the Classic agent.
+
+---
+
 ### CTL.BEDROCK.AGENT.CROSSACCOUNT.001
 
 **Bedrock Agent Resource Policy Allows Cross-Account Invocation**
