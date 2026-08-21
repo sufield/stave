@@ -689,6 +689,24 @@
           "description": "Function has broad data access, no VPC network isolation, and no logging. Data can move from private stores to external destinations without network controls and without an audit trail.\n"
         },
         {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ROLE.LAMBDA.SCOPING.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.LAMBDA.ROLE.SHARED.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
           "chain_id": "lambda_role_blast_radius",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.IDENTITY.BLASTRADIUS.001",
@@ -1567,6 +1585,24 @@
             "CTL.LAMBDA.ROLE.LEASTPRIV.001"
           ],
           "description": "Function has broad data access, no VPC network isolation, and no logging. Data can move from private stores to external destinations without network controls and without an audit trail.\n"
+        },
+        {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ROLE.LAMBDA.SCOPING.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.LAMBDA.ROLE.SHARED.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
         },
         {
           "chain_id": "lambda_role_blast_radius",
@@ -2449,6 +2485,24 @@
           "description": "Function has broad data access, no VPC network isolation, and no logging. Data can move from private stores to external destinations without network controls and without an audit trail.\n"
         },
         {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ROLE.LAMBDA.SCOPING.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.LAMBDA.ROLE.SHARED.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
           "chain_id": "lambda_role_blast_radius",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.IDENTITY.BLASTRADIUS.001",
@@ -3327,6 +3381,24 @@
             "CTL.LAMBDA.ROLE.LEASTPRIV.001"
           ],
           "description": "Function has broad data access, no VPC network isolation, and no logging. Data can move from private stores to external destinations without network controls and without an audit trail.\n"
+        },
+        {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ROLE.LAMBDA.SCOPING.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.LAMBDA.ROLE.SHARED.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
         },
         {
           "chain_id": "lambda_role_blast_radius",
@@ -4209,6 +4281,24 @@
           "description": "Function has broad data access, no VPC network isolation, and no logging. Data can move from private stores to external destinations without network controls and without an audit trail.\n"
         },
         {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ROLE.LAMBDA.SCOPING.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.LAMBDA.ROLE.SHARED.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
           "chain_id": "lambda_role_blast_radius",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.IDENTITY.BLASTRADIUS.001",
@@ -5089,6 +5179,24 @@
           "description": "Function has broad data access, no VPC network isolation, and no logging. Data can move from private stores to external destinations without network controls and without an audit trail.\n"
         },
         {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.IAM.ROLE.LAMBDA.SCOPING.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
+          "chain_id": "lambda_overprivileged_execution",
+          "chain_severity": "critical",
+          "missing_control": "CTL.LAMBDA.ROLE.SHARED.001",
+          "controls_failing": [
+            "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+          ],
+          "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n"
+        },
+        {
           "chain_id": "lambda_role_blast_radius",
           "chain_severity": "critical",
           "missing_control": "CTL.IAM.IDENTITY.BLASTRADIUS.001",
@@ -5919,6 +6027,26 @@
       "missing_control": "CTL.LAMBDA.VPC.SENSITIVE.001",
       "severity": "critical",
       "scope_id": "arn:aws:lambda:us-east-1:123456789012:function/cloudFrontExtensionsConso-SingletonLambdaf7d4f7304-ZbLF9YFgQ4eq"
+    },
+    {
+      "chain": "lambda_overprivileged_execution",
+      "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n",
+      "controls_failing": [
+        "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+      ],
+      "missing_control": "CTL.IAM.ROLE.LAMBDA.SCOPING.001",
+      "severity": "critical",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "lambda_overprivileged_execution",
+      "description": "Lambda execution role is overprivileged, the role's trust policy allows any Lambda function in the account to assume it, and the role is shared across multiple functions. An attacker who compromises any single function — or creates a new one with lambda:CreateFunction — inherits broad permissions that reach every other function's data. Threshold of 2: any two of the three conditions compound into a meaningful risk. All three together is the worst case — broad permissions, unscoped assumption, shared blast radius.\n",
+      "controls_failing": [
+        "CTL.LAMBDA.ROLE.LEASTPRIV.001"
+      ],
+      "missing_control": "CTL.LAMBDA.ROLE.SHARED.001",
+      "severity": "critical",
+      "scope_id": "__global__"
     },
     {
       "chain": "lambda_role_blast_radius",
