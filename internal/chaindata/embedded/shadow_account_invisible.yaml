@@ -1,0 +1,23 @@
+id: shadow_account_invisible
+description: >
+  An AWS account where all four governance pillars are absent: no
+  CloudTrail (no API audit trail), no Config recording (no configuration
+  change history), no tag policy enforcement (no resource classification),
+  and not a member of an organization (no SCP guardrails). Any two missing
+  creates a meaningful blind spot. All four missing is a completely
+  ungoverned account where any resource can be created, any action can be
+  taken, and nobody will know.
+controls:
+  - CTL.CLOUDTRAIL.ENABLED.001
+  - CTL.CONFIG.ENABLED.001
+  - CTL.ORG.TAGPOLICY.ENFORCED.001
+  - CTL.ORG.MEMBERSHIP.001
+scope: global
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - shadow_infrastructure
+postconditions:
+  - detection_evasion
+  - lateral_movement
+implicit_dependencies: []

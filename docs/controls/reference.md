@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3463
-**Pack hash:** `e4e768305b5d133a597cac864ee51e4a56833167e79499a60b69a6eb6fb56f4b`
+**Total controls:** 3465
+**Pack hash:** `e28308c64e42349a75ddb16e1ca2a7306ffb72604e37150a42183b1b3f8ca1a3`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 372 |
-| high | 1487 |
+| high | 1488 |
 | info | 19 |
 | low | 276 |
-| medium | 1309 |
+| medium | 1310 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,8 +29,8 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 161 |
 | encryption | 125 |
-| exposure | 1507 |
-| governance | 696 |
+| exposure | 1508 |
+| governance | 697 |
 | hygiene | 21 |
 | identity | 684 |
 | lifecycle | 32 |
@@ -89,7 +89,7 @@ GitHub. Pick a service below.
 | [DYNAMODB](reference/dynamodb.md) | 39 |
 | [EBS](reference/ebs.md) | 3 |
 | [EC2](reference/ec2.md) | 117 |
-| [ECR](reference/ecr.md) | 10 |
+| [ECR](reference/ecr.md) | 12 |
 | [ECS](reference/ecs.md) | 60 |
 | [EFS](reference/efs.md) | 15 |
 | [EKS](reference/eks.md) | 120 |

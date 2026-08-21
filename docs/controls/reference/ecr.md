@@ -139,6 +139,36 @@ ECR repositories must have container image signing verification configured in en
 
 ---
 
+### CTL.ECR.SIGNING.MANAGED.001
+
+**ECR Repository Has No Managed Signing Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** fedramp_moderate: SI-7; hipaa: 164.312(c)(1); nist_800_53_r5: SI-7, SA-10; pci_dss_v4.0: 6.3.2; soc2: CC7.1, CC8.1;
+
+ECR repository does not have AWS Managed Signing configured. Managed Signing automatically signs container images at push time using an AWS Signer signing profile, providing cryptographic proof of origin without requiring CI/CD pipeline changes. Without managed signing, images are pushed unsigned — downstream signature verification (admission controllers, ECR pull policies) has nothing to verify, and the entire image-trust chain is unanchored. GA August 2026.
+
+**Remediation:** Enable ECR Managed Signing on the repository by attaching an AWS Signer signing profile. All subsequent pushes will be automatically signed. Verify with: aws ecr describe-repositories --repository-names <name> and confirm the signingConfiguration is present. Pair with CTL.ECR.SIGNING.001 (enforcement) for end-to-end image trust.
+
+---
+
+### CTL.ECR.SIGNING.REVOKED.001
+
+**ECR Signing Profile Has Been Revoked**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SI-7; nist_800_53_r5: SI-7, SC-12; pci_dss_v4.0: 6.3.2; soc2: CC6.1, CC7.1;
+
+The AWS Signer signing profile attached to this ECR repository has been revoked. Images pushed after revocation carry invalid signatures that downstream verification will reject. This creates a silent deployment failure — CI/CD pushes succeed at the ECR layer but admission controllers or pull-time verification reject the images. Revocation may indicate a key compromise event, an operational error, or a deliberate security action that was not propagated to the ECR configuration.
+
+**Remediation:** Create a new AWS Signer signing profile and update the ECR repository's signing configuration to reference it. If revocation was due to key compromise, audit all images signed with the old profile and re-sign with the new one. Verify: aws signer get-signing-profile --profile-name <name> Status should be "Active", not "Revoked".
+
+---
+
 ### CTL.ECR.TAG.IMMUTABLE.001
 
 **ECR Repositories Must Enforce Image Tag Immutability**

@@ -1,0 +1,119 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.SIGNING.REVOKED.001
+name: ECR Signing Profile Has Been Revoked
+description: >
+  The AWS Signer signing profile attached to this ECR repository
+  has been revoked. Images pushed after revocation carry invalid
+  signatures that downstream verification will reject. This
+  creates a silent deployment failure — CI/CD pushes succeed at
+  the ECR layer but admission controllers or pull-time
+  verification reject the images. Revocation may indicate a
+  key compromise event, an operational error, or a deliberate
+  security action that was not propagated to the ECR
+  configuration.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7, SC-12"
+  fedramp_moderate: "SI-7"
+  pci_dss_v4.0: "6.3.2"
+  soc2: "CC6.1, CC7.1"
+  ccm_v4: ["CCC-04", "CEK-03"]
+scope_tags:
+  - aws
+  - ecr
+taxonomy:
+  - credential-lifecycle
+  - compliance-mapping
+subtractive_category:
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_ecr_repository]
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ECR repository is configured with a revoked signing profile.
+    New image signatures are invalid.
+  action: >
+    Create a new AWS Signer signing profile and update the ECR
+    repository's signing configuration to reference it. If
+    revocation was due to key compromise, audit all images signed
+    with the old profile and re-sign with the new one. Verify:
+    aws signer get-signing-profile --profile-name <name>
+    Status should be "Active", not "Revoked".
+  example: |
+    {
+      "container_registry": {
+        "kind": "repository",
+        "signing": {
+          "managed_signing_enabled": true,
+          "signing_profile_revoked": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.signing.managed_signing_enabled
+      op: eq
+      value: true
+    - field: properties.container_registry.signing.signing_profile_revoked
+      op: eq
+      value: true
+defect: >
+  ECR repository uses a revoked signing profile — new signatures
+  are invalid.
+infection: >
+  Images pushed to this repository are signed with a revoked
+  profile. Downstream signature verification correctly rejects
+  them, but the ECR push succeeds — creating a gap between CI/CD
+  (push succeeds) and deployment (verification rejects). If the
+  revocation was due to key compromise, the old signing key may
+  have been used to sign malicious images.
+failure: >
+  Deployment integrity gap. New images carry invalid signatures;
+  deployments that verify signatures fail silently. If revocation
+  followed key compromise, previously signed images may be
+  untrustworthy.
+tests:
+  - name: repo with revoked signing profile fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecr:us-east-1:111122223333:repository/app-prod"
+      asset_type: aws_ecr_repository
+      vendor: aws
+      properties:
+        container_registry:
+          kind: repository
+          signing:
+            managed_signing_enabled: true
+            signing_profile_arn: "arn:aws:signer:us-east-1:111122223333:/signing-profiles/ecr-revoked"
+            signing_profile_revoked: true
+  - name: repo with active signing profile passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecr:us-east-1:111122223333:repository/app-prod"
+      asset_type: aws_ecr_repository
+      vendor: aws
+      properties:
+        container_registry:
+          kind: repository
+          signing:
+            managed_signing_enabled: true
+            signing_profile_arn: "arn:aws:signer:us-east-1:111122223333:/signing-profiles/ecr-prod"
+            signing_profile_revoked: false
+  - name: repo without managed signing does not fire
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecr:us-east-1:111122223333:repository/app-dev"
+      asset_type: aws_ecr_repository
+      vendor: aws
+      properties:
+        container_registry:
+          kind: repository
+          signing:
+            managed_signing_enabled: false

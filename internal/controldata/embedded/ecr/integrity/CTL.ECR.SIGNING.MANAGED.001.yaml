@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.SIGNING.MANAGED.001
+name: ECR Repository Has No Managed Signing Configured
+description: >
+  ECR repository does not have AWS Managed Signing configured.
+  Managed Signing automatically signs container images at push
+  time using an AWS Signer signing profile, providing
+  cryptographic proof of origin without requiring CI/CD pipeline
+  changes. Without managed signing, images are pushed unsigned —
+  downstream signature verification (admission controllers,
+  ECR pull policies) has nothing to verify, and the entire
+  image-trust chain is unanchored. GA August 2026.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "SI-7, SA-10"
+  fedramp_moderate: "SI-7"
+  pci_dss_v4.0: "6.3.2"
+  soc2: "CC7.1, CC8.1"
+  hipaa: "164.312(c)(1)"
+  ccm_v4: ["AIS-06", "CCC-04", "CCC-07"]
+scope_tags:
+  - aws
+  - ecr
+taxonomy:
+  - ai-supply-chain
+  - compliance-mapping
+subtractive_category:
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_ecr_repository]
+params:
+  attack_stage: persistence
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+remediation:
+  description: >
+    ECR repository does not have managed signing configured.
+    Images are pushed without cryptographic signatures.
+  action: >
+    Enable ECR Managed Signing on the repository by attaching an
+    AWS Signer signing profile. All subsequent pushes will be
+    automatically signed. Verify with:
+    aws ecr describe-repositories --repository-names <name>
+    and confirm the signingConfiguration is present. Pair with
+    CTL.ECR.SIGNING.001 (enforcement) for end-to-end image trust.
+  example: |
+    {
+      "container_registry": {
+        "kind": "repository",
+        "signing": {
+          "managed_signing_enabled": true,
+          "signing_profile_arn": "arn:aws:signer:us-east-1:111122223333:/signing-profiles/ecr-prod"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.signing.managed_signing_enabled
+      op: eq
+      value: false
+defect: >
+  ECR repository has no managed signing configured — images are
+  pushed without cryptographic signatures.
+infection: >
+  Without push-time signing, there is no cryptographic anchor for
+  image provenance. A compromised CI/CD pipeline, registry-side
+  attack, or supply-chain substitution produces unsigned images
+  indistinguishable from legitimate ones. Downstream verification
+  cannot function without signatures to verify.
+failure: >
+  Supply chain integrity gap. No image in this repository carries
+  a cryptographic signature; the image-trust chain is unanchored
+  from the push side.
+tests:
+  - name: repo without managed signing fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecr:us-east-1:111122223333:repository/app-prod"
+      asset_type: aws_ecr_repository
+      vendor: aws
+      properties:
+        container_registry:
+          kind: repository
+          signing:
+            managed_signing_enabled: false
+  - name: repo with managed signing passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecr:us-east-1:111122223333:repository/app-prod"
+      asset_type: aws_ecr_repository
+      vendor: aws
+      properties:
+        container_registry:
+          kind: repository
+          signing:
+            managed_signing_enabled: true
+            signing_profile_arn: "arn:aws:signer:us-east-1:111122223333:/signing-profiles/ecr-prod"

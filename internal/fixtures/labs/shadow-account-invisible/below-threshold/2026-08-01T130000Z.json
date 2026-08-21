@@ -1,0 +1,57 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.shadow-account-invisible"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:cloudtrail:us-east-1:444455556666:trail/mgmt-trail",
+      "type": "aws_cloudtrail_trail",
+      "vendor": "aws",
+      "properties": {
+        "audit_trail": {
+          "kind": "trail",
+          "multi_region_enabled": false
+        }
+      }
+    },
+    {
+      "id": "444455556666:config-recorder",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "recorder",
+          "recording_enabled": true,
+          "all_resource_types": true
+        }
+      }
+    },
+    {
+      "id": "arn:aws:organizations::444455556666:organization/o-governed",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "organization",
+          "org": {
+            "tag_policy_enforced_key_count": 5
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:organizations::444455556666:account/o-governed/444455556666",
+      "type": "aws_account_summary",
+      "vendor": "aws",
+      "properties": {
+        "account": {
+          "kind": "account_summary",
+          "org_is_member": true
+        }
+      }
+    }
+  ]
+}

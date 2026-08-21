@@ -1,0 +1,25 @@
+id: ecr_to_eks_unsigned_path
+description: >
+  Container images flow from ECR to EKS without cryptographic
+  trust at either end. ECR has no managed signing configured
+  (CTL.ECR.SIGNING.MANAGED.001) — images are pushed unsigned.
+  ECR has no pull-time signature enforcement
+  (CTL.ECR.SIGNING.001) — unsigned images are pulled without
+  rejection. EKS has no admission-controller signature
+  verification (CTL.EKS.IMAGE.NOSIGNATURE.001) — pods run
+  any image regardless of provenance. The compound: images
+  enter the registry unsigned, leave the registry unverified,
+  and run on the cluster unchecked. A supply-chain attack
+  at any point in the image-build pipeline yields cluster
+  code execution with zero cryptographic gates.
+controls:
+  - CTL.ECR.SIGNING.MANAGED.001
+  - CTL.ECR.SIGNING.001
+  - CTL.EKS.IMAGE.NOSIGNATURE.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - container_code_execution
+postconditions:
+  - control_plane_code_execution
+implicit_dependencies: []

@@ -1,0 +1,41 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "lab-fixture",
+    "tool": "fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:ecr:us-east-1:111122223333:repository/app-prod",
+      "type": "aws_ecr_repository",
+      "vendor": "aws",
+      "properties": {
+        "container_registry": {
+          "kind": "repository",
+          "signing": {
+            "managed_signing_enabled": true,
+            "signing_profile_arn": "arn:aws:signer:us-east-1:111122223333:/signing-profiles/ecr-revoked",
+            "signing_profile_revoked": true,
+            "enforced": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+      "type": "aws_eks_cluster",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "cluster": {
+            "image_signature_verification_enabled": true,
+            "verifier": "kyverno"
+          }
+        }
+      }
+    }
+  ]
+}

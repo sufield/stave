@@ -4262,3 +4262,40 @@ contracts:
     consumers:
       - CTL.COGNITO.CLIENT.USERPASSWORDAUTH.001
 
+  # ─── ECR Managed Signing (Aug 2026) ───────────────────────────
+
+  - field: container_registry.signing.managed_signing_enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the ECR repository has AWS Managed Signing configured
+      (images are automatically signed at push time via an AWS Signer
+      signing profile). Derived from ecr:DescribeRepositories or
+      ecr:GetRegistrySigningConfiguration. False when no signing
+      profile is attached to the repository.
+    consumers:
+      - CTL.ECR.SIGNING.MANAGED.001
+
+  - field: container_registry.signing.signing_profile_arn
+    type: string
+    status: planned
+    postcondition: >
+      The ARN of the AWS Signer signing profile attached to the ECR
+      repository for managed signing. Null or empty when managed
+      signing is not configured. Derived from
+      ecr:GetRegistrySigningConfiguration → signingProfile.
+    consumers:
+      - CTL.ECR.SIGNING.MANAGED.001
+
+  - field: container_registry.signing.signing_profile_revoked
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the AWS Signer signing profile attached to the ECR
+      repository has been revoked. A revoked profile means images
+      pushed after revocation carry invalid signatures — downstream
+      verification rejects them. Derived from
+      signer:GetSigningProfile → status == "Revoked".
+    consumers:
+      - CTL.ECR.SIGNING.REVOKED.001
+

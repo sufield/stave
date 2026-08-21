@@ -1,0 +1,91 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-20T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "lab-fixture",
+    "tool": "fixture-gen",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:lambda:us-east-1:123456789012:microvm:serverless-vpn",
+      "type": "aws_lambda_microvm",
+      "vendor": "aws",
+      "properties": {
+        "microvm": {
+          "kind": "microvm",
+          "max_duration_seconds": 28800,
+          "idle_policy": {
+            "max_idle_duration_seconds": 28800
+          },
+          "ingress": {
+            "secure": false
+          },
+          "identity": {
+            "has_claims": false
+          },
+          "entropy_reinit_configured": false,
+          "sensitive": true,
+          "audit": {
+            "data_events_enabled": false
+          },
+          "shell_ingress_connector": true,
+          "is_production": true,
+          "execution_role_present": true,
+          "build_role_present": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::123456789012:role/serverless-vpn-exec-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "role": {
+          "kind": "iam_role",
+          "purpose": "execution",
+          "over_privileged": true,
+          "has_lambda_wildcard": true,
+          "is_microvm_admin": false,
+          "workload_type": "service",
+          "microvm_shell_auth": true,
+          "is_break_glass": false,
+          "microvm_authtoken_create": true,
+          "microvm_authtoken_expiry_constrained": false,
+          "microvm_authtoken_expiry_max_minutes": 0,
+          "microvm_authtoken_port_scoped": false,
+          "microvm_authtoken_allows_lifecycle_port": false,
+          "trust_tagsession_present": false,
+          "trust_tagsession_overbroad": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:us-east-1:123456789012:microvm-image:vpn-image-v1",
+      "type": "aws_lambda_microvm_image",
+      "vendor": "aws",
+      "properties": {
+        "microvm_image": {
+          "kind": "microvm_image",
+          "base_image": {
+            "approved": false
+          },
+          "init_secret_access": true
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::serverless-vpn-artifacts-123456789012",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "s3_bucket",
+          "public_access_blocked": false,
+          "versioning_enabled": false
+        }
+      }
+    }
+  ]
+}
