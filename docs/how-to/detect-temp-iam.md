@@ -49,6 +49,7 @@ This is your access exception review list. Every item on it is a role or credent
 Feed a directory of chronological assessment outputs into `stave trend`:
 
 ```bash
+# doctest:skip — requires pre-existing assessments directory with historical assessment outputs
 stave trend --history ./assessments/ --format json
 ```
 
@@ -98,6 +99,7 @@ The compound chain `third_party_exposure_path` fires when a vendor role is dorma
 ## Getting started
 
 ```bash
+# doctest:skip — example assumes user-supplied snapshots and pre-existing assessments directory
 # First run — establish a baseline
 stave apply --observations snapshot.json --format json > assessments/$(date +%Y-%m).json
 
