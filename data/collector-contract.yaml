@@ -4299,3 +4299,40 @@ contracts:
     consumers:
       - CTL.ECR.SIGNING.REVOKED.001
 
+  # ─── ECR Pull-Through Cache (Aug 2026) ─────────────────────────
+
+  - field: container_registry.pull_through_cache.enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the ECR registry has at least one pull-through cache rule
+      configured. Pull-through cache rules proxy requests to an upstream
+      public registry (Docker Hub, Quay, ECR Public Gallery) and cache
+      images locally. Derived from ecr:DescribePullThroughCacheRules.
+    consumers:
+      - CTL.ECR.PULLTHROUGH.UNRESTRICTED.001
+
+  - field: container_registry.pull_through_cache.upstream_registry_url
+    type: string
+    status: planned
+    postcondition: >
+      The upstream registry URL proxied by the pull-through cache rule
+      (e.g., registry-1.docker.io, public.ecr.aws, quay.io). Identifies
+      which public registry is the image source. Null when no pull-through
+      cache rule exists. Derived from ecr:DescribePullThroughCacheRules →
+      upstreamRegistryUrl.
+    consumers:
+      - CTL.ECR.PULLTHROUGH.UNRESTRICTED.001
+
+  - field: container_registry.pull_through_cache.has_filter_rules
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the pull-through cache rule has repository filter rules
+      restricting which upstream repositories are cached. False means all
+      upstream repos are cached indiscriminately — any image in the public
+      registry can enter the private ECR cache. Derived from
+      ecr:DescribePullThroughCacheRules → repositoryFilters.
+    consumers:
+      - CTL.ECR.PULLTHROUGH.UNRESTRICTED.001
+

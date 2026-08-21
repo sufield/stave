@@ -1,0 +1,104 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-27T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.hf-sandbox-escape"
+  },
+  "assets": [
+    {
+      "id": "k8s/benchmark/deployment/eval-agent",
+      "type": "aws_eks_pod_spec",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "pod_spec": {
+            "has_privileged_container": true,
+            "is_infrastructure_daemonset": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:eks:us-east-1:111122223333:cluster/benchmark",
+      "type": "aws_eks_cluster",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "cluster": {
+            "admission_policy_configured": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/benchmark-agent",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "role": {
+            "workload_type": "agent"
+          },
+          "agent_reaches_sensitive": true,
+          "agent_reach_path": "benchmark-agent -> prod-db-role -> prod-secrets (secretsmanager:GetSecretValue)"
+        }
+      }
+    },
+    {
+      "id": "sg-benchmark-001",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": true
+          }
+        }
+      }
+    },
+    {
+      "id": "fw-benchmark-001",
+      "type": "aws_networkfirewall_firewall",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "network_firewall",
+          "firewall": {
+            "firewall_id": "fw-benchmark-001",
+            "tls_inspection_enabled": false,
+            "in_traffic_path": true,
+            "route_table_references": 1,
+            "endpoint_ids": ["vpce-fw-benchmark-001a"],
+            "routes_configured": true
+          }
+        }
+      }
+    },
+    {
+      "id": "vpc-benchmark-001",
+      "type": "aws_vpc",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "vpc",
+          "dns": {
+            "firewall_enabled": false,
+            "firewall_rule_group_count": 0,
+            "firewall_has_managed_lists": false,
+            "resolution_enabled": true,
+            "vpc_id": "vpc-benchmark-001"
+          },
+          "flow_log": {
+            "enabled": false
+          },
+          "vpc": {
+            "has_igw": false,
+            "has_nat_gateway": false
+          }
+        }
+      }
+    }
+  ]
+}

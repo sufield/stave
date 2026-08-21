@@ -109,6 +109,21 @@ ECR repositories must not be publicly accessible. A public ECR repository allows
 
 ---
 
+### CTL.ECR.PULLTHROUGH.UNRESTRICTED.001
+
+**ECR Pull-Through Cache Has No Repository Filter Rules**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SI-7, SA-10; pci_dss_v4.0: 6.3.2; soc2: CC8.1;
+
+ECR pull-through cache proxies a public registry (Docker Hub, Quay, ECR Public Gallery) without repository filter rules. On cache miss, ECR fetches the image from the upstream registry and caches it locally. The cached image URI looks like a private ECR image (<account>.dkr.ecr.<region>.amazonaws.com/...), masking the public origin. Without filter rules, any image in the upstream registry can enter the cache — a poisoned upstream image is served to all subsequent pulls as if it were vetted. This is architecturally identical to the LiteLLM upstream poisoning: a transparent proxy that makes poisoned content look local.
+
+**Remediation:** Add repository filter rules to the pull-through cache configuration to restrict which upstream repositories are cached. Use aws ecr create-pull-through-cache-rule with --upstream-registry-url and repository filters. For production workloads, consider replacing pull-through cache with a curated internal mirror where images are explicitly pulled, scanned, and promoted.
+
+---
+
 ### CTL.ECR.SCAN.001
 
 **Image Scanning Must Be Enabled**

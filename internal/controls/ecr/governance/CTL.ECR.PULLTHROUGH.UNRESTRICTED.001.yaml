@@ -1,0 +1,114 @@
+dsl_version: ctrl.v1
+id: CTL.ECR.PULLTHROUGH.UNRESTRICTED.001
+name: ECR Pull-Through Cache Has No Repository Filter Rules
+description: >
+  ECR pull-through cache proxies a public registry (Docker Hub, Quay,
+  ECR Public Gallery) without repository filter rules. On cache miss,
+  ECR fetches the image from the upstream registry and caches it
+  locally. The cached image URI looks like a private ECR image
+  (<account>.dkr.ecr.<region>.amazonaws.com/...), masking the public
+  origin. Without filter rules, any image in the upstream registry
+  can enter the cache — a poisoned upstream image is served to all
+  subsequent pulls as if it were vetted. This is architecturally
+  identical to the LiteLLM upstream poisoning: a transparent proxy
+  that makes poisoned content look local.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SI-7, SA-10"
+  soc2: "CC8.1"
+  pci_dss_v4.0: "6.3.2"
+  ccm_v4: ["AIS-06", "CCC-04"]
+scope_tags:
+  - aws
+  - ecr
+taxonomy:
+  - compliance-mapping
+  - compute-hardening
+subtractive_category:
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_ecr_repository]
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.0
+observation_fields:
+  - container_registry.kind
+  - container_registry.pull_through_cache.enabled
+  - container_registry.pull_through_cache.has_filter_rules
+remediation:
+  description: >
+    ECR pull-through cache proxies a public registry without
+    repository filter rules. Any upstream image can enter the
+    private registry cache.
+  action: >
+    Add repository filter rules to the pull-through cache
+    configuration to restrict which upstream repositories are
+    cached. Use aws ecr create-pull-through-cache-rule with
+    --upstream-registry-url and repository filters. For
+    production workloads, consider replacing pull-through cache
+    with a curated internal mirror where images are explicitly
+    pulled, scanned, and promoted.
+  example: |
+    {
+      "container_registry": {
+        "kind": "repository",
+        "pull_through_cache": {
+          "enabled": true,
+          "has_filter_rules": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container_registry.kind
+      op: eq
+      value: repository
+    - field: properties.container_registry.pull_through_cache.enabled
+      op: eq
+      value: true
+    - field: properties.container_registry.pull_through_cache.has_filter_rules
+      op: ne
+      value: true
+tests:
+  - name: pull-through cache without filter rules fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecr:us-east-1:111122223333:repository/cache-dockerhub"
+      asset_type: aws_ecr_repository
+      vendor: aws
+      properties:
+        container_registry:
+          kind: repository
+          pull_through_cache:
+            enabled: true
+            upstream_registry_url: "registry-1.docker.io"
+            has_filter_rules: false
+  - name: pull-through cache with filter rules passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecr:us-east-1:111122223333:repository/cache-filtered"
+      asset_type: aws_ecr_repository
+      vendor: aws
+      properties:
+        container_registry:
+          kind: repository
+          pull_through_cache:
+            enabled: true
+            upstream_registry_url: "registry-1.docker.io"
+            has_filter_rules: true
+  - name: no pull-through cache passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecr:us-east-1:111122223333:repository/app-prod"
+      asset_type: aws_ecr_repository
+      vendor: aws
+      properties:
+        container_registry:
+          kind: repository
+          pull_through_cache:
+            enabled: false
