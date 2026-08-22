@@ -62,6 +62,7 @@ remediation:
     }
 lifecycle:
   status: sunset
+  deadline: "2027-06-01"
   successor: "Trusted Key Groups"
 unsafe_predicate:
   all:

@@ -42,6 +42,7 @@ remediation:
     }
 lifecycle:
   status: sunset
+  deadline: "2027-03-31"
   successor: "CodePipeline V2"
 unsafe_predicate:
   all:

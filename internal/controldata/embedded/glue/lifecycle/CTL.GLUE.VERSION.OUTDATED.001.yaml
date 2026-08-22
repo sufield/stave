@@ -49,6 +49,7 @@ remediation:
     }
 lifecycle:
   status: sunset
+  deadline: "2027-06-30"
 unsafe_predicate:
   all:
     - field: properties.compute.kind

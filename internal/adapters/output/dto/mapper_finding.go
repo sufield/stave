@@ -88,6 +88,13 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	dto.SLAOverdueHours = f.SLAOverduePtr()
 	dto.SLAEscalatedSeverity = f.SLAEscalatedSeverityValue().String()
 	dto.SLAPolicySource = f.SLAPolicySourceLabel()
+	if dl, ok := f.LifecycleDeadline(); ok {
+		dto.LifecycleDeadline = dl
+	}
+	if days, ok := f.LifecycleDaysRemaining(); ok {
+		dto.LifecycleDaysRemaining = &days
+	}
+	dto.LifecycleEscalatedSeverity = f.LifecycleEscalatedSeverityValue().String()
 	dto.ExposureScore = f.ExposureScore.Value()
 	dto.ScoreBreakdown = f.ScoreBreakdown
 	if f.HasReasoningTrace() {

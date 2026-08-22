@@ -181,6 +181,21 @@
       "title": "SLA Policy Source",
       "description": "Identifier of the SLA policy file or profile that produced the deadline."
     },
+    "lifecycle_deadline": {
+      "type": "string",
+      "title": "Lifecycle Deadline",
+      "description": "Service deprecation deadline date from the control's lifecycle block (YYYY-MM-DD)."
+    },
+    "lifecycle_days_remaining": {
+      "type": ["integer", "null"],
+      "title": "Lifecycle Days Remaining",
+      "description": "Days until the deprecation deadline, computed at eval time. Negative when past deadline."
+    },
+    "lifecycle_escalated_severity": {
+      "type": "string",
+      "title": "Lifecycle-Escalated Severity",
+      "description": "Severity after lifecycle-deadline-driven escalation as the deprecation date approaches."
+    },
     "reasoning_trace": {
       "type": "array",
       "title": "Reasoning Trace",

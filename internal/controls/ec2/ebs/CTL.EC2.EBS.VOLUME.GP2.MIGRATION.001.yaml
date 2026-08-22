@@ -64,6 +64,7 @@ remediation:
     }
 lifecycle:
   status: sunset
+  deadline: "2028-06-30"
   successor: "gp3"
 unsafe_predicate:
   all:

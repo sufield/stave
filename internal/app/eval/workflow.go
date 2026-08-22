@@ -278,22 +278,17 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 		}
 	}
 
+	// Build a control lookup for annotation passes.
+	ctlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(auditData.Controls))
+	for i := range auditData.Controls {
+		ctlLookup[auditData.Controls[i].ID] = &auditData.Controls[i]
+	}
+
 	// Annotate findings with SLA deadline data.
 	if cfg.SLAConfig != nil {
-		ctlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(auditData.Controls))
-		for i := range auditData.Controls {
-			ctlLookup[auditData.Controls[i].ID] = &auditData.Controls[i]
-		}
 		for i := range report.Findings {
 			ctl := ctlLookup[report.Findings[i].ControlID]
 			if ctl == nil {
-				// Orphan finding: the control ID emitted by the engine
-				// is not in the loaded control catalog. Skip SLA
-				// annotation rather than dereferencing nil — the
-				// finding still surfaces, but without a deadline. Log
-				// so operators can investigate the catalog drift
-				// (typically a finding emitted by a chain definition
-				// referencing a removed control).
 				if w.Logger != nil {
 					w.Logger.Warn("sla annotation skipped: control not in catalog",
 						"control_id", report.Findings[i].ControlID,
@@ -302,6 +297,15 @@ func (w *AuditWorkflow) PerformAssessment(ctx context.Context, cfg AssessmentCon
 				continue
 			}
 			report.Findings[i].AnnotateSLA(ctl, cfg.SLAConfig)
+		}
+	}
+
+	// Annotate findings with lifecycle deadline escalation.
+	evalTime := cfg.Clock.Now()
+	for i := range report.Findings {
+		ctl := ctlLookup[report.Findings[i].ControlID]
+		if ctl != nil {
+			report.Findings[i].AnnotateLifecycleDeadline(ctl, evalTime)
 		}
 	}
 

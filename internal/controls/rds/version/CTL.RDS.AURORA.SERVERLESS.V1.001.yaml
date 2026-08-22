@@ -43,6 +43,7 @@ remediation:
     {"database": {"kind": "rds_cluster", "engine": "aurora-mysql", "cluster": {"is_serverless_v1": false, "serverless_version": "v2"}}}
 lifecycle:
   status: sunset
+  deadline: "2027-03-31"
   successor: "Aurora Serverless v2"
 unsafe_predicate:
   all:

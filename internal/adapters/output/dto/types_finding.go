@@ -36,24 +36,27 @@ type FindingDTO struct {
 	// a finding with no SLA at all omits the key entirely (nil pointer).
 	// A plain bool with omitempty would erase the within-SLA false
 	// signal, collapsing "has SLA, not breached" into "no SLA".
-	SLABreached          *bool                    `json:"sla_breached,omitempty"`
-	SLAOverdueHours      *float64                 `json:"sla_overdue_hours,omitempty"`
-	SLAEscalatedSeverity string                   `json:"sla_escalated_severity,omitempty"`
-	SLAPolicySource      string                   `json:"sla_policy_source,omitempty"`
-	ExposureScore        float64                  `json:"exposure_score,omitempty"`
-	ScoreBreakdown       *findings.ScoreBreakdown `json:"score_breakdown,omitempty"`
-	ReasoningTrace       []MatchedClauseDTO       `json:"reasoning_trace,omitempty"`
-	RemediationContext   *RemediationContextDTO   `json:"remediation_context,omitempty"`
-	Alternatives         []AlternativeDTO         `json:"alternatives,omitempty"`
-	Classification       string                   `json:"classification,omitempty"`
-	ScopeTags            []string                 `json:"scope_tags,omitempty"`
-	Defect               string                   `json:"defect,omitempty"`
-	Infection            string                   `json:"infection,omitempty"`
-	Failure              string                   `json:"failure,omitempty"`
-	Archetype            string                   `json:"archetype,omitempty"`
-	ControlScope         string                   `json:"control_scope,omitempty"`
-	CorpusReference      string                   `json:"corpus_reference,omitempty"`
-	Delta                []DeltaPathDTO           `json:"delta,omitempty"`
+	SLABreached                *bool                    `json:"sla_breached,omitempty"`
+	SLAOverdueHours            *float64                 `json:"sla_overdue_hours,omitempty"`
+	SLAEscalatedSeverity       string                   `json:"sla_escalated_severity,omitempty"`
+	SLAPolicySource            string                   `json:"sla_policy_source,omitempty"`
+	LifecycleDeadline          string                   `json:"lifecycle_deadline,omitempty"`
+	LifecycleDaysRemaining     *int                     `json:"lifecycle_days_remaining,omitempty"`
+	LifecycleEscalatedSeverity string                   `json:"lifecycle_escalated_severity,omitempty"`
+	ExposureScore              float64                  `json:"exposure_score,omitempty"`
+	ScoreBreakdown             *findings.ScoreBreakdown `json:"score_breakdown,omitempty"`
+	ReasoningTrace             []MatchedClauseDTO       `json:"reasoning_trace,omitempty"`
+	RemediationContext         *RemediationContextDTO   `json:"remediation_context,omitempty"`
+	Alternatives               []AlternativeDTO         `json:"alternatives,omitempty"`
+	Classification             string                   `json:"classification,omitempty"`
+	ScopeTags                  []string                 `json:"scope_tags,omitempty"`
+	Defect                     string                   `json:"defect,omitempty"`
+	Infection                  string                   `json:"infection,omitempty"`
+	Failure                    string                   `json:"failure,omitempty"`
+	Archetype                  string                   `json:"archetype,omitempty"`
+	ControlScope               string                   `json:"control_scope,omitempty"`
+	CorpusReference            string                   `json:"corpus_reference,omitempty"`
+	Delta                      []DeltaPathDTO           `json:"delta,omitempty"`
 	// ContributingFactIDs links a CEL finding to the SIR fact_ids
 	// that describe the same asset. Each id matches the `fact_id`
 	// emitted by `stave export-sir --format jsonl` and the

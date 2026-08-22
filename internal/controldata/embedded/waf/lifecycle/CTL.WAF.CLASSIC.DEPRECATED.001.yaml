@@ -58,6 +58,7 @@ remediation:
     }
 lifecycle:
   status: eol
+  deadline: "2027-09-30"
   successor: "WAFv2"
 unsafe_predicate:
   all:

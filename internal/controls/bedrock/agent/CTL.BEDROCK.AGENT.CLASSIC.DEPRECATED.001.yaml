@@ -55,6 +55,7 @@ remediation:
 lifecycle:
   status: sunset
   since: "2026-07-30"
+  deadline: "2027-01-31"
   successor: "AgentCore"
 unsafe_predicate:
   all:

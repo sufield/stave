@@ -46,6 +46,7 @@ remediation:
     }
 lifecycle:
   status: sunset
+  deadline: "2027-03-31"
   successor: "Glue Interactive Sessions"
 unsafe_predicate:
   all:

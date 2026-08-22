@@ -141,6 +141,20 @@ type Finding struct {
 	// deadline. Empty when no escalation applied.
 	SLAEscalatedSeverity Severity
 
+	// LifecycleDeadline is the service deprecation date from the
+	// control's lifecycle block (e.g. "2027-01-31"). Empty when
+	// the control has no lifecycle deadline.
+	LifecycleDeadline string
+
+	// LifecycleDaysRemaining is the days until the deprecation
+	// deadline, computed at eval time. Nil when no deadline.
+	LifecycleDaysRemaining *int
+
+	// LifecycleEscalatedSeverity carries the post-escalation
+	// severity when the finding's control is approaching its
+	// deprecation deadline. Empty when no escalation applied.
+	LifecycleEscalatedSeverity Severity
+
 	// FirstUnsafeAt is the snapshot timestamp at which the engine
 	// first observed this asset in an unsafe state. Zero-valued
 	// when the engine hasn't computed lifecycle data (typically

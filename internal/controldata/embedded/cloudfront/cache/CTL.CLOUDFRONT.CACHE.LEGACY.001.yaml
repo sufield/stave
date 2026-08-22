@@ -64,6 +64,7 @@ remediation:
     }
 lifecycle:
   status: sunset
+  deadline: "2027-06-01"
   successor: "Cache Policies"
 unsafe_predicate:
   all:

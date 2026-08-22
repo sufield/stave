@@ -62,6 +62,7 @@ remediation:
     }
 lifecycle:
   status: sunset
+  deadline: "2027-12-31"
   successor: "ALB"
 unsafe_predicate:
   all:

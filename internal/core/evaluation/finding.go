@@ -122,6 +122,13 @@ type Finding struct {
 	slaEscalatedSeverity policy.Severity
 	slaPolicySource      kernel.SLAPolicySource
 
+	// Lifecycle deadline fields — populated when a control has a
+	// sunset/eol deadline. Private: only AnnotateLifecycleDeadline
+	// mutates them.
+	lifecycleDeadline          string
+	lifecycleDaysRemaining     *int
+	lifecycleEscalatedSeverity policy.Severity
+
 	// Owner routing — populated when a team manifest is loaded.
 	OwnerTeamID     kernel.TeamID `json:"owner_team_id,omitempty"`
 	OwnerTeamName   string        `json:"owner_team_name,omitempty"`
@@ -184,6 +191,10 @@ type findingShadow struct {
 	SLAOverdueHours      *float64               `json:"sla_overdue_hours,omitempty"`
 	SLAEscalatedSeverity policy.Severity        `json:"sla_escalated_severity,omitempty"`
 	SLAPolicySource      kernel.SLAPolicySource `json:"sla_policy_source,omitempty"`
+
+	LifecycleDeadline          string          `json:"lifecycle_deadline,omitempty"`
+	LifecycleDaysRemaining     *int            `json:"lifecycle_days_remaining,omitempty"`
+	LifecycleEscalatedSeverity policy.Severity `json:"lifecycle_escalated_severity,omitempty"`
 }
 
 type findingAlias Finding
@@ -200,6 +211,10 @@ func (f *Finding) MarshalJSON() ([]byte, error) {
 		SLAOverdueHours:      f.slaOverdueHours,
 		SLAEscalatedSeverity: f.slaEscalatedSeverity,
 		SLAPolicySource:      f.slaPolicySource,
+
+		LifecycleDeadline:          f.lifecycleDeadline,
+		LifecycleDaysRemaining:     f.lifecycleDaysRemaining,
+		LifecycleEscalatedSeverity: f.lifecycleEscalatedSeverity,
 	})
 }
 
@@ -215,6 +230,9 @@ func (f *Finding) UnmarshalJSON(data []byte) error {
 	f.slaOverdueHours = shadow.SLAOverdueHours
 	f.slaEscalatedSeverity = shadow.SLAEscalatedSeverity
 	f.slaPolicySource = shadow.SLAPolicySource
+	f.lifecycleDeadline = shadow.LifecycleDeadline
+	f.lifecycleDaysRemaining = shadow.LifecycleDaysRemaining
+	f.lifecycleEscalatedSeverity = shadow.LifecycleEscalatedSeverity
 	return nil
 }
 
