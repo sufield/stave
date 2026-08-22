@@ -30,8 +30,6 @@ dependencies:
         last_audited: "538351997"
       - path: docs/explanation/exploitability.md
         last_audited: "538351997"
-      - path: docs/reference/finding-schema.md
-        last_audited: "538351997"
     auto_regen: false
 
   - sources: ["internal/appeval/workflow.go"]
@@ -45,9 +43,7 @@ dependencies:
   - sources: ["internal/adapters/output/**/*.go"]
     docs:
       - path: docs/reference/output-formats.md
-        last_audited: "538351997"
-      - path: docs/reference/finding-schema.md
-        last_audited: "538351997"
+        last_audited: "b607466324"
     auto_regen: false
 
   - sources: ["internal/platform/providers/aws/organizations/scp.go",

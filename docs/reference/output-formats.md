@@ -2,13 +2,13 @@
 
 Stave supports multiple output formats for different use cases.
 
-## JSON (Default for `apply`)
+## JSON
 
 ```bash
 stave apply --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations --format json
 ```
 
-Structured output following the `out.v0.1` schema. Machine-readable, suitable for piping to `jq` or ingestion by other tools. Results go to stdout; errors and logs go to stderr.
+Structured output following the `out.v0.1` schema. Machine-readable, suitable for piping to `jq` or ingestion by other tools. Results go to stdout; errors and logs go to stderr. Text is the default format; pass `--format json` explicitly.
 
 ```bash
 # Count violations
@@ -28,6 +28,14 @@ stave apply --controls testdata/e2e/e2e-01-violation/controls --observations tes
 ```
 
 Human-readable output for terminal use. Includes color when the terminal supports it (respects `NO_COLOR` environment variable).
+
+## SARIF
+
+```bash
+stave apply --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations --format sarif
+```
+
+SARIF v2.1.0 output for integration with GitHub Code Scanning, VS Code SARIF Viewer, and other SARIF-compatible tools. Supports `--baseline` for baseline state comparison.
 
 ## Quiet Mode
 
@@ -107,9 +115,12 @@ Stave can generate enforcement artifacts from evaluation results:
 | Code | Meaning |
 |------|---------|
 | 0 | Success (no violations, or command completed) |
+| 1 | Security-audit gating (findings exceed `--fail-on` threshold) |
 | 2 | Invalid input (bad flags, malformed files) |
-| 3 | Violations found (findings exceed threshold) |
+| 3 | Violations found |
 | 4 | Internal error |
+| 5 | Indeterminate (no violations but data gaps exist) |
+| 6 | Attestation failed (tampered or unsigned when required) |
 | 130 | Interrupted (SIGINT) |
 
 Exit 3 is a success — it means the tool found what it was looking for.

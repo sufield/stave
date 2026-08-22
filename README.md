@@ -43,7 +43,54 @@ bash examples/demo-ai-security/run.sh
 
 ## Snapshots
 
-[REPLACE THIS WITH NEW INSTRUCTIONS HERE]
+Stave evaluates local JSON snapshots, not live APIs. Capture once,
+evaluate anywhere — offline, deterministic, auditable.
+
+The contract and evaluation are always deterministic. The collection
+method is your choice based on your risk posture:
+
+| Profile | Capture path | LLM involved? |
+|---|---|---|
+| Risk-averse / regulated | Bundled collector or pre-built jq filters | No |
+| Pragmatic / local LLMs | LLM maps raw JSON to the contract, then deterministic eval | Local LLM only |
+| Stave contributors | LLM writes jq filters, team reviews, filters ship in repo | Development tool |
+
+### Quick Start
+
+**1. Capture raw AWS data and transform it:**
+
+```bash
+bash scripts/aws-snapshot.sh ./my-snapshot
+```
+
+This runs read-only AWS CLI calls (`Get*`, `List*`, `Describe*`),
+saves raw JSON to `my-snapshot/raw/`, then calls `stave transform`
+to produce `obs.v0.1` observations in `my-snapshot/observations/`.
+Requires AWS CLI, jq, and `SecurityAudit` credentials.
+[Full IAM policy details →](docs/trust/collector-policy.md)
+
+**2. Evaluate:**
+
+```bash
+stave apply --observations ./my-snapshot/observations/
+```
+
+**3. Read your findings.**
+
+> **What services are supported?** `stave transform --coverage`
+> lists the AWS API shapes with embedded filters.
+>
+> **What fields does a service need?** `stave contract show --asset-type aws_iam_role`
+> shows every property path the catalog reads.
+>
+> **Why snapshots?** Evaluation never calls AWS APIs. Your security
+> data stays local. You can capture from one machine, evaluate on
+> another, and diff across time.
+> [How the snapshot model works →](docs/explanation/snapshot-model.md)
+>
+> **All capture methods:** Bundled script, Steampipe, AWS CLI + jq,
+> LLM-assisted mapping, or any tool that produces `obs.v0.1` JSON.
+> [Import methods →](docs/getting-started/import-snapshots.md)
 
 ### Onboarding skills (`internal/_skills/`)
 
