@@ -2639,6 +2639,18 @@ contracts:
     consumers:
       - CTL.BEDROCK.PROMPT.VERSIONSPRAWL.001
 
+  - field: governance.bedrock.prompt.version_count
+    type: integer
+    postcondition: >
+      Number of published versions of the Bedrock prompt.
+      Derived from bedrock:ListPromptVersions result count.
+
+  - field: governance.bedrock.prompt.default_variant
+    type: string
+    postcondition: >
+      Name of the active default variant for the Bedrock
+      prompt. Derived from bedrock:GetPrompt defaultVariant.
+
   # ─── SageMaker Model Package Group ─────────────────────────
   - field: governance.sagemaker.model_package.approval_status
     type: string
@@ -2660,6 +2672,41 @@ contracts:
       sagemaker:GetModelPackageGroupPolicy.
     consumers:
       - CTL.SAGEMAKER.MODELPACKAGE.ACCESS.001
+
+  - field: access.sagemaker.model_package_group.cross_account_principals
+    type: list
+    postcondition: >
+      List of cross-account principal ARNs extracted from
+      the model package group resource policy. Derived from
+      sagemaker:GetModelPackageGroupPolicy principal analysis.
+
+  - field: governance.sagemaker.model_package.certify_for_marketplace
+    type: boolean
+    postcondition: >
+      True if the latest model package version is certified
+      for AWS Marketplace. Derived from
+      sagemaker:DescribeModelPackage CertifyForMarketplace.
+
+  - field: governance.sagemaker.model_package.model_package_version
+    type: integer
+    postcondition: >
+      Version number of the latest model package in the group.
+      Derived from sagemaker:DescribeModelPackage
+      ModelPackageVersion.
+
+  - field: governance.sagemaker.model_package.created_by
+    type: string
+    postcondition: >
+      ARN of the creator of the latest model package version
+      (UserProfileArn or DomainId). Derived from
+      sagemaker:DescribeModelPackage CreatedBy.
+
+  - field: governance.sagemaker.model_package.approval_description
+    type: string
+    postcondition: >
+      Approval justification text for the latest model package
+      version. Derived from sagemaker:DescribeModelPackage
+      ApprovalDescription. Empty if no justification provided.
 
   - field: governance.sagemaker.model_package.has_model_card
     type: boolean
@@ -2709,6 +2756,29 @@ contracts:
       sagemaker:DescribeDataQualityJobDefinition.
     consumers:
       - CTL.SAGEMAKER.DATAQUALITY.BASELINE.MISSING.001
+
+  - field: governance.sagemaker.data_quality.monitoring_schedule_status
+    type: string
+    postcondition: >
+      Status of the data quality monitoring schedule: Pending,
+      Failed, Scheduled, or Stopped. Derived from
+      sagemaker:ListMonitoringSchedules MonitoringScheduleStatus.
+
+  - field: governance.sagemaker.data_quality.baseline_dataset_arn
+    type: string
+    postcondition: >
+      ARN or S3 URI of the baseline dataset used for drift
+      comparison. Derived from
+      sagemaker:DescribeDataQualityJobDefinition
+      BaseliningJobName.
+
+  - field: governance.sagemaker.data_quality.constraints_resource
+    type: string
+    postcondition: >
+      S3 URI of the statistical constraints file used for
+      data quality drift detection. Derived from
+      sagemaker:DescribeDataQualityJobDefinition
+      ConstraintsResource.
 
   # ─── Security Agent Configuration ──────────────────────────
 
