@@ -40,6 +40,7 @@ The finding is gone. The path was erased. If the finding persists, the remediati
 ### 4. Trend
 
 ```bash
+# doctest:skip — requires assessments/ directory with historical runs
 stave trend --history ./assessments/ --format json
 ```
 
@@ -73,6 +74,7 @@ Erasure doesn't replace monitoring. It reduces monitoring's workload to the path
 ## Quick start
 
 ```bash
+# doctest:skip — illustrative workflow, requires real snapshot + assessments/
 # Month 1 — baseline
 stave apply --observations snapshot.json --format json > assessments/2026-07.json
 
