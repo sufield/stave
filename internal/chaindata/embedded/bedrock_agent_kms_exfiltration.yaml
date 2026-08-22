@@ -1,0 +1,24 @@
+id: bedrock_agent_kms_exfiltration
+description: >
+  Bedrock agent has an overprivileged execution role with broad S3
+  access AND a customer-managed KMS key grants Decrypt to overly
+  broad principals AND model invocation logging is disabled. The
+  agent can read any S3 object in the account, the KMS key policy
+  does not restrict who can decrypt the data those objects contain,
+  and there is no audit trail of what the agent invoked or accessed.
+  This is a complete unmonitored data exfiltration path: access
+  (overprivileged role) + capability (broad KMS Decrypt) +
+  invisibility (no invocation logging). Drop any one leg — scope
+  the agent role, restrict Decrypt to specific consumers, or enable
+  invocation logging — and the compound breaks.
+controls:
+  - CTL.BEDROCK.AGENT.OVERPERM.S3.001
+  - CTL.KMS.POLICY.DECRYPT.BROAD.001
+  - CTL.BEDROCK.LOG.INVOCATION.001
+escalation_threshold: 2
+compound_severity: critical
+preconditions:
+  - automation_hijack
+postconditions:
+  - data_exfiltration
+implicit_dependencies: []

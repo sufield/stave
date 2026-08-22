@@ -1,0 +1,51 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.bedrock-agent-kms-exfil"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:agent/AGENT01",
+      "type": "aws_bedrock_agent",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_agent",
+          "agent": {
+            "s3_access_scope_broad": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:kms:us-east-1:111122223333:key/mrk-data-key",
+      "type": "aws_kms_key",
+      "vendor": "aws",
+      "properties": {
+        "cryptography": {
+          "kind": "key",
+          "is_aws_managed": false,
+          "policy": {
+            "decrypt_broadly_granted": true,
+            "decrypt_principals": ["arn:aws:iam::111122223333:root"]
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:bedrock:us-east-1:111122223333:logging-config",
+      "type": "aws_bedrock_logging_config",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "bedrock_logging_config",
+          "logging": {
+            "invocation_logging_enabled": true
+          }
+        }
+      }
+    }
+  ]
+}
