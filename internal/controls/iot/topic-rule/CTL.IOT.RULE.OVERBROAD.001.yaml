@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.IOT.RULE.OVERBROAD.001
+name: IoT Topic Rule Role Has Wildcard Resource
+description: >
+  The IAM role attached to an IoT topic rule uses Resource "*".
+  Topic rules process device messages and route them to AWS
+  services (S3, Kinesis, Lambda, DynamoDB). A wildcard resource
+  on the rule's role means every matched message can trigger
+  actions against any resource in the account — a message-driven
+  privilege escalation path from the MQTT broker to the data plane.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iot
+taxonomy:
+  - least-privilege
+  - identity-perimeter
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iot_topic_rule]
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - iot.kind
+  - iot.topic_rule.role_has_wildcard_resource
+remediation:
+  description: >
+    Topic rule IAM role uses Resource "*".
+  action: >
+    Scope the rule's role to the specific destination resources
+    (S3 bucket ARNs, Kinesis stream ARNs, Lambda function ARNs)
+    that this rule routes messages to.
+  example: |
+    {
+      "iot": {
+        "kind": "topic_rule",
+        "topic_rule": {
+          "role_has_wildcard_resource": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.iot.kind
+      op: eq
+      value: topic_rule
+    - field: properties.iot.topic_rule.role_has_wildcard_resource
+      op: eq
+      value: true
+tests:
+  - name: wildcard resource topic rule fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:123456789012:rule/ingest-telemetry"
+      asset_type: aws_iot_topic_rule
+      vendor: aws
+      properties:
+        iot:
+          kind: topic_rule
+          topic_rule:
+            rule_name: ingest-telemetry
+            role_has_wildcard_resource: true
+  - name: scoped topic rule passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:123456789012:rule/ingest-telemetry"
+      asset_type: aws_iot_topic_rule
+      vendor: aws
+      properties:
+        iot:
+          kind: topic_rule
+          topic_rule:
+            rule_name: ingest-telemetry
+            role_has_wildcard_resource: false

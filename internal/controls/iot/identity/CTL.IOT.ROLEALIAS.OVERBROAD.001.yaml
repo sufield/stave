@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.IOT.ROLEALIAS.OVERBROAD.001
+name: IoT Role Alias Backing Role Has Wildcard Resource
+description: >
+  The IAM role backing an IoT role alias uses Resource "*" in its
+  policy. Every device certificate mapped through this alias
+  inherits those permissions via the IoT credential provider.
+  A wildcard resource turns a single compromised X.509 certificate
+  into broad AWS access — the credential provider issues STS
+  tokens scoped to the role, not the device identity.
+domain: identity
+severity: critical
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1, CC6.3"
+scope_tags:
+  - aws
+  - iot
+taxonomy:
+  - least-privilege
+  - identity-perimeter
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iot_role_alias]
+params:
+  attack_stage: privilege_escalation
+observation_fields:
+  - iot.kind
+  - iot.role_alias.backing_role_has_wildcard_resource
+remediation:
+  description: >
+    Role alias backing role uses Resource "*".
+  action: >
+    Scope the backing role's policy to specific resource ARNs.
+    IoT device roles should access only the S3 prefixes, DynamoDB
+    tables, or Kinesis streams that the device class needs.
+  example: |
+    {
+      "iot": {
+        "kind": "role_alias",
+        "role_alias": {
+          "backing_role_has_wildcard_resource": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.iot.kind
+      op: eq
+      value: role_alias
+    - field: properties.iot.role_alias.backing_role_has_wildcard_resource
+      op: eq
+      value: true
+tests:
+  - name: wildcard resource backing role fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:123456789012:rolealias/sensor-data-alias"
+      asset_type: aws_iot_role_alias
+      vendor: aws
+      properties:
+        iot:
+          kind: role_alias
+          role_alias:
+            alias_name: sensor-data-alias
+            backing_role_has_wildcard_resource: true
+  - name: scoped backing role passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:123456789012:rolealias/sensor-data-alias"
+      asset_type: aws_iot_role_alias
+      vendor: aws
+      properties:
+        iot:
+          kind: role_alias
+          role_alias:
+            alias_name: sensor-data-alias
+            backing_role_has_wildcard_resource: false

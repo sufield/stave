@@ -65,3 +65,63 @@ IoT policy uses Action "iot:*" granting all IoT operations: iot:Connect, iot:Pub
 
 ---
 
+### CTL.IOT.ROLEALIAS.DURATION.001
+
+**IoT Role Alias Credential Duration Exceeds Recommended Maximum**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-12; soc2: CC6.1;
+
+IoT role alias issues temporary credentials via the IoT credential provider (X.509 → STS). Credential duration above the recommended maximum extends the blast radius of a compromised device certificate: stolen credentials remain valid longer, and detection windows shrink relative to the credential lifetime.
+
+**Remediation:** Reduce CredentialDurationSeconds to at most 900 seconds (15 minutes). Short-lived credentials limit the blast radius of certificate compromise.
+
+---
+
+### CTL.IOT.ROLEALIAS.OVERBROAD.001
+
+**IoT Role Alias Backing Role Has Wildcard Resource**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1, CC6.3;
+
+The IAM role backing an IoT role alias uses Resource "*" in its policy. Every device certificate mapped through this alias inherits those permissions via the IoT credential provider. A wildcard resource turns a single compromised X.509 certificate into broad AWS access — the credential provider issues STS tokens scoped to the role, not the device identity.
+
+**Remediation:** Scope the backing role's policy to specific resource ARNs. IoT device roles should access only the S3 prefixes, DynamoDB tables, or Kinesis streams that the device class needs.
+
+---
+
+### CTL.IOT.RULE.NOERRORACTION.001
+
+**IoT Topic Rule Has No Error Action**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** nist_800_53_r5: AU-6; soc2: CC7.2;
+
+IoT topic rule has no error action configured. When a rule's primary action fails (destination unreachable, throttled, role permission denied), messages are silently dropped. Without an error action routing failures to a dead-letter queue or CloudWatch log group, failed deliveries are invisible — a detection gap for both operational failures and security-relevant events.
+
+**Remediation:** Add an error action that routes failed messages to an SQS dead-letter queue or CloudWatch Logs log group.
+
+---
+
+### CTL.IOT.RULE.OVERBROAD.001
+
+**IoT Topic Rule Role Has Wildcard Resource**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+The IAM role attached to an IoT topic rule uses Resource "*". Topic rules process device messages and route them to AWS services (S3, Kinesis, Lambda, DynamoDB). A wildcard resource on the rule's role means every matched message can trigger actions against any resource in the account — a message-driven privilege escalation path from the MQTT broker to the data plane.
+
+**Remediation:** Scope the rule's role to the specific destination resources (S3 bucket ARNs, Kinesis stream ARNs, Lambda function ARNs) that this rule routes messages to.
+
+---
+

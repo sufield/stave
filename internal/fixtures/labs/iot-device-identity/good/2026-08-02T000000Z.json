@@ -1,0 +1,45 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-02T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:iot:us-east-1:123456789012:rolealias/sensor-data-alias",
+      "type": "aws_iot_role_alias",
+      "vendor": "aws",
+      "properties": {
+        "iot": {
+          "kind": "role_alias",
+          "role_alias": {
+            "alias_name": "sensor-data-alias",
+            "role_arn": "arn:aws:iam::123456789012:role/iot-sensor-scoped-role",
+            "credential_duration_seconds": 900,
+            "max_recommended_duration_seconds": 900,
+            "backing_role_has_admin": false,
+            "backing_role_has_wildcard_resource": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iot:us-east-1:123456789012:rule/ingest-telemetry",
+      "type": "aws_iot_topic_rule",
+      "vendor": "aws",
+      "properties": {
+        "iot": {
+          "kind": "topic_rule",
+          "topic_rule": {
+            "rule_name": "ingest-telemetry",
+            "sql": "SELECT * FROM 'sensor/temperature'",
+            "enabled": true,
+            "role_arn": "arn:aws:iam::123456789012:role/iot-rule-scoped-role",
+            "role_has_wildcard_resource": false,
+            "destination_count": 1,
+            "has_error_action": true,
+            "sql_uses_wildcard_topic": false
+          }
+        }
+      }
+    }
+  ]
+}

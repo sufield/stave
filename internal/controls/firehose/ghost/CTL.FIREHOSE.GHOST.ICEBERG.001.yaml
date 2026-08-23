@@ -1,0 +1,102 @@
+dsl_version: ctrl.v1
+id: CTL.FIREHOSE.GHOST.ICEBERG.001
+name: Firehose Delivery Stream Iceberg Destination Catalog Deleted
+description: >
+  Amazon Data Firehose delivery stream is configured to deliver
+  records to an Iceberg table via S3 Tables, but the target
+  catalog (table bucket) has been deleted. Firehose buffers
+  records and retries, but delivery fails silently. If the
+  table bucket name is re-registered under a different account,
+  Firehose may resume delivery to attacker-controlled storage —
+  the same hijacking vector as CTL.FIREHOSE.GHOST.S3.001 but
+  through the Iceberg destination path. This path is invisible
+  to the S3-only ghost detection because the destination ARN
+  uses the s3tables: namespace, not s3:.
+domain: exposure
+severity: critical
+archetype: ghost-reference
+scope: compound
+compliance:
+  soc2: "CC6.1, CC7.1"
+  nist_800_53_r5: "AU-2, AU-9, SC-8"
+scope_tags:
+  - aws
+  - firehose
+taxonomy:
+  - trust-decay
+  - data-protection
+subtractive_category:
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_kinesis_firehose_delivery_stream]
+params:
+  attack_stage: exfiltration
+  blast_radius:
+    type: data
+    scope: service
+    multiplier: 3.0
+remediation:
+  description: >
+    Firehose delivery stream Iceberg destination catalog has been
+    deleted. Records are buffered but cannot be delivered — and
+    the dangling table bucket name is a hijacking target.
+  action: >
+    Recreate the S3 Tables table bucket with the original name,
+    or update the delivery stream to point to an existing catalog.
+    Investigate whether the table bucket was re-registered during
+    the gap period.
+  example: |
+    {
+      "streaming": {
+        "kind": "delivery_stream",
+        "firehose": {
+          "destination_type": "IcebergDestination",
+          "iceberg": {
+            "catalog_exists": true,
+            "has_ghost_iceberg_destination": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.streaming.kind
+      op: eq
+      value: delivery_stream
+    - field: properties.streaming.firehose.iceberg.has_ghost_iceberg_destination
+      op: eq
+      value: true
+tests:
+  - name: delivery to deleted Iceberg catalog fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:123456789012:deliverystream/iot-iceberg-stream"
+      asset_type: aws_kinesis_firehose_delivery_stream
+      vendor: aws
+      properties:
+        streaming:
+          kind: delivery_stream
+          firehose:
+            delivery_stream_name: iot-iceberg-stream
+            destination_type: IcebergDestination
+            iceberg:
+              catalog_arn: "arn:aws:s3tables:us-east-1:123456789012:bucket/analytics-tables"
+              catalog_exists: false
+              has_ghost_iceberg_destination: true
+  - name: delivery to live Iceberg catalog passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:firehose:us-east-1:123456789012:deliverystream/iot-iceberg-stream"
+      asset_type: aws_kinesis_firehose_delivery_stream
+      vendor: aws
+      properties:
+        streaming:
+          kind: delivery_stream
+          firehose:
+            delivery_stream_name: iot-iceberg-stream
+            destination_type: IcebergDestination
+            iceberg:
+              catalog_arn: "arn:aws:s3tables:us-east-1:123456789012:bucket/analytics-tables"
+              catalog_exists: true
+              has_ghost_iceberg_destination: false

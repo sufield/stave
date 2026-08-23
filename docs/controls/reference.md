@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3467
-**Pack hash:** `a4481b9fc0da12d76397e305660e6ebc42671c1c4c8ddd9fcc16846faacfbcdd`
+**Total controls:** 3472
+**Pack hash:** `ecf0c9b12d7003a5e7ed4036da76d0835875ada4f6be6496e4890368bd64efbd`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 372 |
-| high | 1488 |
+| critical | 374 |
+| high | 1490 |
 | info | 19 |
 | low | 276 |
-| medium | 1312 |
+| medium | 1313 |
 
 | Domain | Count |
 |--------|-------|
@@ -27,12 +27,12 @@ GitHub. Pick a service below.
 | capacity | 3 |
 | compute | 1 |
 | config | 2 |
-| detection | 161 |
+| detection | 162 |
 | encryption | 125 |
-| exposure | 1509 |
+| exposure | 1510 |
 | governance | 698 |
 | hygiene | 21 |
-| identity | 684 |
+| identity | 687 |
 | lifecycle | 32 |
 | network | 59 |
 | resilience | 50 |
@@ -99,7 +99,7 @@ GitHub. Pick a service below.
 | [EVENTBRIDGE](reference/eventbridge.md) | 97 |
 | [EVS](reference/evs.md) | 1 |
 | [EXPOSURE](reference/exposure.md) | 11 |
-| [FIREHOSE](reference/firehose.md) | 4 |
+| [FIREHOSE](reference/firehose.md) | 5 |
 | [FMS](reference/fms.md) | 4 |
 | [FSX](reference/fsx.md) | 3 |
 | [GCP](reference/gcp.md) | 72 |
@@ -114,7 +114,7 @@ GitHub. Pick a service below.
 | [GUARDRAIL](reference/guardrail.md) | 1 |
 | [IAM](reference/iam.md) | 343 |
 | [INSPECTOR](reference/inspector.md) | 4 |
-| [IOT](reference/iot.md) | 4 |
+| [IOT](reference/iot.md) | 8 |
 | [K8S](reference/k8s.md) | 68 |
 | [KEYSPACES](reference/keyspaces.md) | 5 |
 | [KINESIS](reference/kinesis.md) | 6 |

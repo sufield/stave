@@ -1,0 +1,80 @@
+dsl_version: ctrl.v1
+id: CTL.IOT.ROLEALIAS.DURATION.001
+name: IoT Role Alias Credential Duration Exceeds Recommended Maximum
+description: >
+  IoT role alias issues temporary credentials via the IoT
+  credential provider (X.509 → STS). Credential duration above
+  the recommended maximum extends the blast radius of a
+  compromised device certificate: stolen credentials remain
+  valid longer, and detection windows shrink relative to the
+  credential lifetime.
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "AC-12"
+  soc2: "CC6.1"
+scope_tags:
+  - aws
+  - iot
+taxonomy:
+  - credential-lifecycle
+  - least-privilege
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iot_role_alias]
+params:
+  attack_stage: credential_access
+observation_fields:
+  - iot.kind
+  - iot.role_alias.credential_duration_seconds
+remediation:
+  description: >
+    Role alias credential duration exceeds the recommended maximum.
+  action: >
+    Reduce CredentialDurationSeconds to at most 900 seconds (15
+    minutes). Short-lived credentials limit the blast radius of
+    certificate compromise.
+  example: |
+    {
+      "iot": {
+        "kind": "role_alias",
+        "role_alias": {
+          "credential_duration_seconds": 900
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.iot.kind
+      op: eq
+      value: role_alias
+    - field: properties.iot.role_alias.credential_duration_seconds
+      op: gt
+      value: 900
+tests:
+  - name: excessive duration fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:123456789012:rolealias/sensor-data-alias"
+      asset_type: aws_iot_role_alias
+      vendor: aws
+      properties:
+        iot:
+          kind: role_alias
+          role_alias:
+            alias_name: sensor-data-alias
+            credential_duration_seconds: 3600
+            max_recommended_duration_seconds: 900
+  - name: duration within recommended passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iot:us-east-1:123456789012:rolealias/sensor-data-alias"
+      asset_type: aws_iot_role_alias
+      vendor: aws
+      properties:
+        iot:
+          kind: role_alias
+          role_alias:
+            alias_name: sensor-data-alias
+            credential_duration_seconds: 900
+            max_recommended_duration_seconds: 900

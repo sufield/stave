@@ -20,6 +20,21 @@ Kinesis Data Firehose delivery streams must have server-side encryption enabled.
 
 ---
 
+### CTL.FIREHOSE.GHOST.ICEBERG.001
+
+**Firehose Delivery Stream Iceberg Destination Catalog Deleted**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2, AU-9, SC-8; soc2: CC6.1, CC7.1;
+
+Amazon Data Firehose delivery stream is configured to deliver records to an Iceberg table via S3 Tables, but the target catalog (table bucket) has been deleted. Firehose buffers records and retries, but delivery fails silently. If the table bucket name is re-registered under a different account, Firehose may resume delivery to attacker-controlled storage — the same hijacking vector as CTL.FIREHOSE.GHOST.S3.001 but through the Iceberg destination path. This path is invisible to the S3-only ghost detection because the destination ARN uses the s3tables: namespace, not s3:.
+
+**Remediation:** Recreate the S3 Tables table bucket with the original name, or update the delivery stream to point to an existing catalog. Investigate whether the table bucket was re-registered during the gap period.
+
+---
+
 ### CTL.FIREHOSE.GHOST.S3.001
 
 **Firehose Delivery Stream S3 Destination Bucket Deleted**

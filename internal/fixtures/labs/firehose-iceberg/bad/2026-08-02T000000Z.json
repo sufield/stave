@@ -1,0 +1,29 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-02T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:firehose:us-east-1:123456789012:deliverystream/iot-iceberg-stream",
+      "type": "aws_kinesis_firehose_delivery_stream",
+      "vendor": "aws",
+      "properties": {
+        "streaming": {
+          "kind": "delivery_stream",
+          "firehose": {
+            "delivery_stream_name": "iot-iceberg-stream",
+            "destination_type": "IcebergDestination",
+            "iceberg": {
+              "catalog_arn": "arn:aws:s3tables:us-east-1:123456789012:bucket/analytics-tables",
+              "catalog_exists": false,
+              "has_ghost_iceberg_destination": true,
+              "namespace": "sensor_data",
+              "table_name": "telemetry"
+            },
+            "has_ghost_s3_destination": false
+          }
+        }
+      }
+    }
+  ]
+}
