@@ -47,7 +47,7 @@ func TestClassify_DistinctAssetTypesWithSameIDDoNotCollide(t *testing.T) {
 	in := Input{
 		Assessments:     assessments,
 		ControlID:       kernel.ControlID("CTL.S3.001"),
-		AssetID:         "shared-id",
+		AssetID:         asset.ID("shared-id"),
 		AssetType:       kernel.AssetType("aws_s3_bucket"),
 		MinOscillations: 2,
 	}

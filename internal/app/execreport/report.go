@@ -39,10 +39,22 @@ const (
 	TrajectoryRegressing Trajectory = "REGRESSING"
 )
 
+// PostureBand represents the posture classification category.
+type PostureBand string
+
+const (
+	BandCritical  PostureBand = "CRITICAL"
+	BandPoor      PostureBand = "POOR"
+	BandFair      PostureBand = "FAIR"
+	BandGood      PostureBand = "GOOD"
+	BandStrong    PostureBand = "STRONG"
+	BandExcellent PostureBand = "EXCELLENT"
+)
+
 // PostureSection holds posture score data.
 type PostureSection struct {
 	Score           float64            `json:"score"`
-	Band            string             `json:"band"`
+	Band            PostureBand        `json:"band"`
 	BandDescription string             `json:"band_description"`
 	Delta30d        float64            `json:"delta_30d"`
 	Trajectory      Trajectory         `json:"trajectory"`
@@ -171,21 +183,21 @@ type AttentionItem struct {
 	Action  string `json:"action,omitempty"`
 }
 
-// Band classifies a posture score into a named band.
-func Band(score float64) (name, description string) {
+// Band classifies a posture score into a PostureBand and description.
+func Band(score float64) (name PostureBand, description string) {
 	switch {
 	case score < 40:
-		return "CRITICAL", "Immediate executive escalation required"
+		return BandCritical, "Immediate executive escalation required"
 	case score < 60:
-		return "POOR", "Significant risk, remediation plan required"
+		return BandPoor, "Significant risk, remediation plan required"
 	case score < 70:
-		return "FAIR", "Moderate risk, active improvement needed"
+		return BandFair, "Moderate risk, active improvement needed"
 	case score < 85:
-		return "GOOD", "Manageable risk, SLA compliance is key"
+		return BandGood, "Manageable risk, SLA compliance is key"
 	case score < 95:
-		return "STRONG", "Strong posture, maintain vigilance"
+		return BandStrong, "Strong posture, maintain vigilance"
 	default:
-		return "EXCELLENT", "Exemplary posture"
+		return BandExcellent, "Exemplary posture"
 	}
 }
 

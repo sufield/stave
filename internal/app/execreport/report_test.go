@@ -9,20 +9,20 @@ import (
 func TestBand_Boundaries(t *testing.T) {
 	tests := []struct {
 		score float64
-		band  string
+		band  PostureBand
 	}{
-		{0, "CRITICAL"},
-		{39.9, "CRITICAL"},
-		{40, "POOR"},
-		{59.9, "POOR"},
-		{60, "FAIR"},
-		{69.9, "FAIR"},
-		{70, "GOOD"},
-		{84.9, "GOOD"},
-		{85, "STRONG"},
-		{94.9, "STRONG"},
-		{95, "EXCELLENT"},
-		{100, "EXCELLENT"},
+		{0, BandCritical},
+		{39.9, BandCritical},
+		{40, BandPoor},
+		{59.9, BandPoor},
+		{60, BandFair},
+		{69.9, BandFair},
+		{70, BandGood},
+		{84.9, BandGood},
+		{85, BandStrong},
+		{94.9, BandStrong},
+		{95, BandExcellent},
+		{100, BandExcellent},
 	}
 	for _, tt := range tests {
 		name, _ := Band(tt.score)

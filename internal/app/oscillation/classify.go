@@ -5,25 +5,36 @@ package oscillation
 import (
 	"slices"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
 
+// Pattern classifies violation behavior over time.
+type Pattern string
+
+const (
+	PatternDeployTime Pattern = "deploy-time"
+	PatternRandom     Pattern = "random"
+	PatternChronic    Pattern = "chronic"
+	PatternSeasonal   Pattern = "seasonal"
+)
+
 // Classification describes the oscillation pattern for a control-asset pair.
 type Classification struct {
-	ControlID   string  `json:"control_id"`
-	AssetID     string  `json:"asset_id"`
-	Pattern     string  `json:"pattern"` // "deploy-time", "random", "chronic", "seasonal"
-	Confidence  float64 `json:"confidence"`
-	FailureRate float64 `json:"failure_rate"`
-	Cycles      int     `json:"cycles"`
+	ControlID   kernel.ControlID `json:"control_id"`
+	AssetID     asset.ID         `json:"asset_id"`
+	Pattern     Pattern          `json:"pattern"`
+	Confidence  float64          `json:"confidence"`
+	FailureRate float64          `json:"failure_rate"`
+	Cycles      int              `json:"cycles"`
 }
 
 // Input configures the oscillation classifier.
 type Input struct {
 	Assessments     []report.Assessment
 	ControlID       kernel.ControlID
-	AssetID         string
+	AssetID         asset.ID
 	AssetType       kernel.AssetType
 	MinOscillations int // minimum state transitions to classify as deploy-time
 }
@@ -39,17 +50,18 @@ type Input struct {
 func Classify(input Input) Classification {
 	if len(input.Assessments) == 0 {
 		return Classification{
-			ControlID: string(input.ControlID),
+			ControlID: input.ControlID,
 			AssetID:   input.AssetID,
-			Pattern:   "random",
+			Pattern:   PatternRandom,
 		}
 	}
 
 	minOsc := input.MinOscillations
 	if minOsc <= 0 {
-		minOsc = 3
+		minOsc = 2
 	}
 
+	// Copy & sort assessments chronologically.
 	assessments := make([]report.Assessment, len(input.Assessments))
 	copy(assessments, input.Assessments)
 	slices.SortFunc(assessments, func(a, b report.Assessment) int {
@@ -58,12 +70,12 @@ func Classify(input Input) Classification {
 
 	totalAssessments := len(assessments)
 	failCount := 0
-	var prevFailing *bool
 	cycles := 0
+	var prevFailing *bool
 
 	for i := range assessments {
 		a := &assessments[i]
-		failing := hasFinding(a, input.ControlID, input.AssetID, input.AssetType)
+		failing := hasFinding(a, input.ControlID, string(input.AssetID), input.AssetType)
 
 		if failing {
 			failCount++
@@ -81,15 +93,15 @@ func Classify(input Input) Classification {
 		failureRate = float64(failCount) / float64(totalAssessments)
 	}
 
-	pattern := "random"
+	pattern := PatternRandom
 	confidence := 0.5
 
 	switch {
 	case failureRate > 0.8:
-		pattern = "chronic"
+		pattern = PatternChronic
 		confidence = failureRate
 	case cycles >= minOsc:
-		pattern = "deploy-time"
+		pattern = PatternDeployTime
 		confidence = float64(cycles) / float64(totalAssessments)
 		if confidence > 1 {
 			confidence = 1
@@ -97,7 +109,7 @@ func Classify(input Input) Classification {
 	}
 
 	return Classification{
-		ControlID:   string(input.ControlID),
+		ControlID:   input.ControlID,
 		AssetID:     input.AssetID,
 		Pattern:     pattern,
 		Confidence:  confidence,

@@ -31,7 +31,7 @@ func TestClassify_UnsortedInputSortsChronologically(t *testing.T) {
 	c := Classify(Input{
 		Assessments:     unsorted,
 		ControlID:       "CTL.S3.001",
-		AssetID:         ast,
+		AssetID:         asset.ID(ast),
 		MinOscillations: 3,
 	})
 

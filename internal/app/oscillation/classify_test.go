@@ -44,12 +44,12 @@ func TestClassify_ChronicAtHighFailureRate(t *testing.T) {
 	result := Classify(Input{
 		Assessments:     assessments,
 		ControlID:       "ctl-1",
-		AssetID:         "asset-a",
+		AssetID:         asset.ID("asset-a"),
 		MinOscillations: 3,
 	})
 
-	if result.Pattern != "chronic" {
-		t.Errorf("expected pattern 'chronic', got %q", result.Pattern)
+	if result.Pattern != PatternChronic {
+		t.Errorf("expected pattern %q, got %q", PatternChronic, result.Pattern)
 	}
 	if result.FailureRate != 0.9 {
 		t.Errorf("expected failure rate 0.9, got %v", result.FailureRate)
@@ -75,12 +75,12 @@ func TestClassify_DeployTimeDetected(t *testing.T) {
 	result := Classify(Input{
 		Assessments:     assessments,
 		ControlID:       "ctl-1",
-		AssetID:         "asset-a",
+		AssetID:         asset.ID("asset-a"),
 		MinOscillations: 3,
 	})
 
-	if result.Pattern != "deploy-time" {
-		t.Errorf("expected pattern 'deploy-time', got %q", result.Pattern)
+	if result.Pattern != PatternDeployTime {
+		t.Errorf("expected pattern %q, got %q", PatternDeployTime, result.Pattern)
 	}
 	// 7 transitions in 8 assessments -> cycles=7
 	if result.Cycles < 3 {

@@ -49,11 +49,11 @@ evaluate anywhere — offline, deterministic, auditable.
 The contract and evaluation are always deterministic. The collection
 method is your choice based on your risk posture:
 
-| Profile | Capture path | LLM involved? |
-|---|---|---|
-| Risk-averse / regulated | Bundled collector or pre-built jq filters | No |
-| Pragmatic / local LLMs | LLM maps raw JSON to the contract, then deterministic eval | Local LLM only |
-| Stave contributors | LLM writes jq filters, team reviews, filters ship in repo | Development tool |
+| Profile | Capture path | LLM involved? | Details |
+|---|---|---|---|
+| Risk-averse / regulated | Bundled collector or pre-built jq filters | No | [Capture guide](docs/transform/capture.md) |
+| Pragmatic / local LLMs | LLM maps raw JSON to the contract, then deterministic eval | Local LLM only | [Extractor prompt](docs/extractor-prompt.md) |
+| Stave contributors | LLM writes jq filters, team reviews, filters ship in repo | Development tool | [Import methods](docs/getting-started/import-snapshots.md) |
 
 ### Quick Start
 

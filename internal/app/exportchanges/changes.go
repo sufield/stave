@@ -6,23 +6,25 @@ package exportchanges
 import (
 	"strings"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Change represents a single property change needed for remediation.
 type Change struct {
-	ControlID      string  `json:"control_id"`
-	AssetID        string  `json:"asset_id"`
-	AssetType      string  `json:"asset_type"`
-	Severity       string  `json:"severity"`
-	Confidence     float64 `json:"confidence"`
-	PropertyPath   string  `json:"property_path"`
-	CurrentValue   any     `json:"current_value"`
-	RequiredValue  any     `json:"required_value"`
-	HasSafeDefault bool    `json:"has_safe_default"`
-	Vendor         string  `json:"vendor"`
-	Service        string  `json:"service"`
-	ResourceID     string  `json:"resource_id"`
+	ControlID      kernel.ControlID `json:"control_id"`
+	AssetID        asset.ID         `json:"asset_id"`
+	AssetType      kernel.AssetType `json:"asset_type"`
+	Severity       string           `json:"severity"`
+	Confidence     float64          `json:"confidence"`
+	PropertyPath   string           `json:"property_path"`
+	CurrentValue   any              `json:"current_value"`
+	RequiredValue  any              `json:"required_value"`
+	HasSafeDefault bool             `json:"has_safe_default"`
+	Vendor         string           `json:"vendor"`
+	Service        string           `json:"service"`
+	ResourceID     string           `json:"resource_id"`
 }
 
 // Report holds the exported changes.
@@ -53,9 +55,9 @@ func Export(in Input) *Report {
 			vendor, service, resourceID := parseAssetID(string(f.AssetID))
 
 			report.Changes = append(report.Changes, Change{
-				ControlID:      string(f.ControlID),
-				AssetID:        string(f.AssetID),
-				AssetType:      string(f.AssetType),
+				ControlID:      f.ControlID,
+				AssetID:        f.AssetID,
+				AssetType:      f.AssetType,
 				Severity:       f.SeverityLabel(),
 				Confidence:     confidence,
 				PropertyPath:   pc.PropertyPath,
