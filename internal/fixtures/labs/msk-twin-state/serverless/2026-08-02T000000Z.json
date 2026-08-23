@@ -1,0 +1,23 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-02T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:kafka:us-east-1:123456789012:cluster/iot-serverless/abc123",
+      "type": "aws_msk_cluster",
+      "vendor": "aws",
+      "properties": {
+        "streaming": {
+          "kind": "msk_serverless_cluster",
+          "auth": {
+            "iam_enabled": true
+          },
+          "logging": {
+            "enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

@@ -22,6 +22,8 @@ func WriteTable(w io.Writer, r *Report) {
 		r.Summary.SilentRisk, pct(r.Summary.SilentRisk, r.Summary.Total))
 	fmt.Fprintf(w, "  No assets:       %d controls  (%.1f%%)\n",
 		r.Summary.NoAssets, pct(r.Summary.NoAssets, r.Summary.Total))
+	fmt.Fprintf(w, "  Not applicable:  %d controls  (%.1f%%)\n",
+		r.Summary.NotApplicable, pct(r.Summary.NotApplicable, r.Summary.Total))
 	fmt.Fprintln(w)
 
 	if len(r.SilentRisk) > 0 {

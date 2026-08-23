@@ -1,0 +1,57 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-02T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:kafka:us-east-1:123456789012:cluster/prod-events/def456",
+      "type": "aws_msk_cluster",
+      "vendor": "aws",
+      "properties": {
+        "streaming": {
+          "kind": "msk_cluster",
+          "auth": {
+            "mtls_enabled": false,
+            "unauthenticated_access": true,
+            "iam_enabled": false
+          },
+          "access": {
+            "publicly_accessible": true
+          },
+          "encryption": {
+            "in_transit_all_tls": false,
+            "uses_cmk": false
+          },
+          "config": {
+            "version_current": false
+          },
+          "logging": {
+            "enabled": false
+          },
+          "monitoring": {
+            "enhanced_enabled": false
+          },
+          "durability": {
+            "replication_factor_adequate": false
+          },
+          "msk": {
+            "has_replication": true,
+            "replication_encrypt_consistent": false
+          }
+        },
+        "storage": {
+          "kind": "msk_cluster",
+          "encryption": {
+            "kms_key_origin": "AWS_MANAGED"
+          },
+          "backup": {
+            "retention_configured": false
+          },
+          "credentials": {
+            "sasl_uses_secrets_manager": false
+          }
+        }
+      }
+    }
+  ]
+}

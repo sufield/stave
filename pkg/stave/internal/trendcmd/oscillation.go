@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/app/oscillation"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
@@ -64,7 +65,7 @@ func ClassifyOscillation(ctx context.Context, cfg OscillationConfig) ([]byte, []
 		c := oscillation.Classify(oscillation.Input{
 			Assessments:     vals,
 			ControlID:       kernel.ControlID(k.ctl),
-			AssetID:         k.ast,
+			AssetID:         asset.ID(k.ast),
 			MinOscillations: cfg.MinOscillations,
 		})
 		if c.Pattern != "" {
@@ -106,7 +107,7 @@ func writeOscillationTable(w io.Writer, results []oscillation.Classification) {
 	for i := range results {
 		r := &results[i]
 		fmt.Fprintf(w, "%-14s %-30s %-30s %5.0f%% %5d %.2f\n",
-			r.Pattern, truncate(r.ControlID, 30), truncate(r.AssetID, 30),
+			r.Pattern, truncate(string(r.ControlID), 30), truncate(string(r.AssetID), 30),
 			r.FailureRate*100, r.Cycles, r.Confidence)
 	}
 }

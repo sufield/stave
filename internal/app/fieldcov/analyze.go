@@ -27,6 +27,10 @@ const (
 	SilentRisk Classification = "SILENT_RISK"
 	// NoAssets means no assets of the required type exist in the snapshot.
 	NoAssets Classification = "NO_ASSETS"
+	// NotApplicable means assets exist but a kind-gate discriminator
+	// excludes them — e.g. a provisioned-only MSK control against a
+	// serverless observation.
+	NotApplicable Classification = "NOT_APPLICABLE"
 )
 
 // ControlResult holds the coverage analysis for a single control.
@@ -69,11 +73,12 @@ type Report struct {
 
 // Summary holds aggregate counts.
 type Summary struct {
-	Total      int `json:"total"`
-	Evaluable  int `json:"evaluable"`
-	Incomplete int `json:"incomplete"`
-	SilentRisk int `json:"silent_risk"`
-	NoAssets   int `json:"no_assets"`
+	Total         int `json:"total"`
+	Evaluable     int `json:"evaluable"`
+	Incomplete    int `json:"incomplete"`
+	SilentRisk    int `json:"silent_risk"`
+	NoAssets      int `json:"no_assets"`
+	NotApplicable int `json:"not_applicable"`
 }
 
 // AnalyzeInput holds the data needed for coverage analysis.
@@ -89,11 +94,12 @@ func Analyze(input AnalyzeInput) *Report {
 	// Build a set of all property paths present across all assets.
 	presentFields := collectPresentFields(input.Snapshots)
 	presentAssetTypes := collectPresentAssetTypes(input.Snapshots)
+	discriminatorValues := collectDiscriminatorValues(input.Snapshots)
 
 	var results []ControlResult
 	for i := range input.Controls {
 		ctl := &input.Controls[i]
-		result := classifyControl(ctl, presentFields, presentAssetTypes)
+		result := classifyControl(ctl, presentFields, presentAssetTypes, discriminatorValues)
 		results = append(results, result)
 	}
 
@@ -124,6 +130,39 @@ func collectPresentAssetTypes(snapshots []asset.Snapshot) map[string]struct{} {
 	return types
 }
 
+// collectDiscriminatorValues walks all assets and collects the string
+// values of properties.<domain>.kind fields. The returned map is keyed
+// by the full field path (e.g. "properties.streaming.kind") and maps to
+// the set of observed values (e.g. {"msk_cluster", "msk_serverless_cluster"}).
+func collectDiscriminatorValues(snapshots []asset.Snapshot) map[string]sets.Set[string] {
+	values := make(map[string]sets.Set[string])
+	for _, snap := range snapshots {
+		for _, a := range snap.Assets {
+			if a.Properties == nil {
+				continue
+			}
+			for domain, v := range a.Properties {
+				domainMap, ok := v.(map[string]any)
+				if !ok {
+					continue
+				}
+				kind, ok := domainMap["kind"].(string)
+				if !ok {
+					continue
+				}
+				path := "properties." + domain + ".kind"
+				s, ok := values[path]
+				if !ok {
+					s = sets.New[string]()
+					values[path] = s
+				}
+				s.Add(kind)
+			}
+		}
+	}
+	return values
+}
+
 // walkProperties recursively walks a nested map and collects all leaf paths.
 func walkProperties(prefix string, m map[string]any, out map[string]struct{}) {
 	for k, v := range m {
@@ -142,7 +181,7 @@ func walkProperties(prefix string, m map[string]any, out map[string]struct{}) {
 }
 
 // classifyControl determines coverage classification for a single control.
-func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]struct{}, presentAssetTypes map[string]struct{}) ControlResult {
+func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]struct{}, presentAssetTypes map[string]struct{}, discriminatorValues map[string]sets.Set[string]) ControlResult {
 	result := ControlResult{
 		ControlID:  string(ctl.ID),
 		Severity:   ctl.Severity.String(),
@@ -160,6 +199,20 @@ func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]str
 		if !hasAsset {
 			result.Classification = NoAssets
 			result.AssetType = string(ctl.ApplicableAssetTypes[0])
+			return result
+		}
+	}
+
+	// A kind-gate in a top-level "all" block (e.g. streaming.kind == msk_cluster)
+	// means the control only applies to assets with that specific subtype.
+	// If no observed discriminator value matches the gate, this control
+	// cannot fire — classify as NotApplicable. This covers both cases:
+	// the field is present with a different value (serverless vs provisioned)
+	// and the field is entirely absent (no asset populates that domain).
+	if gate := findKindGate(&ctl.UnsafePredicate); gate != nil {
+		observed := discriminatorValues[gate.field]
+		if observed == nil || !observed.Contains(gate.value) {
+			result.Classification = NotApplicable
 			return result
 		}
 	}
@@ -353,6 +406,37 @@ func collectNestedMapRefs(parentPath string, m map[string]any, refs []fieldRef) 
 	return append(refs, fieldRef{path: path, silentRisk: silentRisk})
 }
 
+type kindGate struct {
+	field string // e.g. "properties.streaming.kind"
+	value string // e.g. "msk_cluster"
+}
+
+// findKindGate looks for a top-level "all" clause that gates on a
+// properties.<domain>.kind field with op eq. Returns nil if no such
+// clause exists.
+func findKindGate(pred *policy.UnsafePredicate) *kindGate {
+	for i := range pred.All {
+		rule := &pred.All[i]
+		if rule.Op != predicate.OpEq || rule.Field.IsZero() {
+			continue
+		}
+		path := rule.Field.String()
+		if !strings.HasPrefix(path, "properties.") || !strings.HasSuffix(path, ".kind") {
+			continue
+		}
+		// Must be exactly properties.<domain>.kind (3 segments).
+		if strings.Count(path, ".") != 2 {
+			continue
+		}
+		val, ok := rule.Value.Raw().(string)
+		if !ok || val == "" {
+			continue
+		}
+		return &kindGate{field: path, value: val}
+	}
+	return nil
+}
+
 func isCrossFieldOp(op predicate.Operator) bool {
 	switch op {
 	case predicate.OpNotSubsetOfField, predicate.OpNeqField,
@@ -408,6 +492,8 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 			silentRisk = append(silentRisk, *r)
 		case NoAssets:
 			report.Summary.NoAssets++
+		case NotApplicable:
+			report.Summary.NotApplicable++
 		}
 		report.Summary.Total++
 
