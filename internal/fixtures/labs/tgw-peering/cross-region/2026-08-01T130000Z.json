@@ -1,0 +1,27 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.tgw-peering"
+  },
+  "assets": [
+    {
+      "id": "tgw-attach-peer001",
+      "type": "aws_transit_gateway_peering_attachment",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "tgw": {
+            "peering": {
+              "is_cross_region": true,
+              "requester_region": "us-east-1",
+              "accepter_region": "eu-west-1",
+              "state": "available"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

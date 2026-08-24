@@ -1,0 +1,21 @@
+id: tgw_unauthorized_network_path
+description: >
+  Transit Gateway auto-accepts attachments AND RAM shares TGW to
+  external or overly broad accounts AND flow logs are disabled.
+  Any account in the RAM share can silently attach its VPC to the
+  TGW and route traffic to all other attached VPCs without approval.
+  The attachment is not logged. This is distinct from
+  vpc_tgw_segmentation_failure (which covers flat routing between
+  already-authorized VPCs); this chain covers unauthorized VPCs
+  joining the network fabric.
+controls:
+  - CTL.VPC.TGW.AUTOACCEPT.001
+  - CTL.RAM.EXTERNAL.001
+  - CTL.VPC.TGW.FLOWLOGS.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - network_access_vpc
+postconditions:
+  - network_access_ec2
+implicit_dependencies: []

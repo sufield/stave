@@ -60,11 +60,11 @@ func TestGenerate_PriorityMapping(t *testing.T) {
 		t.Fatalf("expected 4 tickets, got %d", len(tickets))
 	}
 
-	expected := map[string]string{
-		"critical": "P1",
-		"high":     "P2",
-		"medium":   "P3",
-		"low":      "P4",
+	expected := map[string]Priority{
+		"critical": PriorityP1,
+		"high":     PriorityP2,
+		"medium":   PriorityP3,
+		"low":      PriorityP4,
 	}
 
 	for _, ticket := range tickets {

@@ -1,0 +1,67 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.IPAM.POOL.UNRESTRICTED.001
+name: IPAM Pool Has No Allocation Restrictions
+description: >
+  IPAM pool has no allocation resource tags restricting which
+  accounts or OUs can allocate CIDRs from it. Any account in the
+  organization can request CIDRs from this pool. In a multi-OU
+  architecture (prod/dev/shared-services), an unrestricted pool
+  allows dev accounts to allocate from prod's CIDR range — creating
+  IP conflicts that route production traffic through development
+  infrastructure via the Transit Gateway hub.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7, AC-4"
+  soc2: "CC6.1, CC6.6"
+  ccm_v4: ["IVS-03", "IVS-09"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-isolation
+subtractive_category:
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ipam_pool
+params:
+  attack_stage: lateral_movement
+observation_fields:
+  - network.ipam.pool.scope_type
+  - network.ipam.pool.allocation_resource_tags
+  - network.ipam.pool.auto_import
+remediation:
+  description: >
+    IPAM pool allows any account to allocate CIDRs. No allocation
+    resource tags restrict pool usage to specific OUs or accounts.
+  action: >
+    Add allocation resource tags to the IPAM pool restricting which
+    resources (by tag) can allocate CIDRs. Use OU-specific tags or
+    account-level tags to enforce CIDR domain boundaries. For
+    example, tag the pool with Environment=prod and set
+    AllocationResourceTags to match only resources tagged
+    Environment=prod.
+  example: |
+    {
+      "network": {
+        "ipam": {
+          "pool": {
+            "allocation_resource_tags": {
+              "Environment": "prod"
+            }
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.ipam.pool.scope_type
+      op: present
+    - any:
+        - field: properties.network.ipam.pool.allocation_resource_tags
+          op: missing
+        - field: properties.network.ipam.pool.allocation_resource_tags
+          op: eq
+          value: {}

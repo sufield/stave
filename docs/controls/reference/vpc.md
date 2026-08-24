@@ -846,6 +846,21 @@ VPC safety cannot be assessed when flow logging status is missing from the snaps
 
 ---
 
+### CTL.VPC.IPAM.POOL.UNRESTRICTED.001
+
+**IPAM Pool Has No Allocation Restrictions**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7, AC-4; soc2: CC6.1, CC6.6;
+
+IPAM pool has no allocation resource tags restricting which accounts or OUs can allocate CIDRs from it. Any account in the organization can request CIDRs from this pool. In a multi-OU architecture (prod/dev/shared-services), an unrestricted pool allows dev accounts to allocate from prod's CIDR range — creating IP conflicts that route production traffic through development infrastructure via the Transit Gateway hub.
+
+**Remediation:** Add allocation resource tags to the IPAM pool restricting which resources (by tag) can allocate CIDRs. Use OU-specific tags or account-level tags to enforce CIDR domain boundaries. For example, tag the pool with Environment=prod and set AllocationResourceTags to match only resources tagged Environment=prod.
+
+---
+
 ### CTL.VPC.IPV6.EGRESSONLY.001
 
 **IPv6 VPC Without Egress-Only Internet Gateway**
@@ -1668,6 +1683,21 @@ All Transit Gateway VPC attachments are associated with the default route table.
 Transit Gateway flow logs are not enabled. Cross-VPC traffic transiting through the TGW is not recorded. The TGW is the central hub for inter-VPC traffic — if flow logs are enabled on individual VPCs but not on the TGW itself, lateral-movement traffic between VPCs is invisible. Per-VPC flow logs capture traffic that enters and exits a VPC, but they do not show the TGW-internal routing decisions or traffic that traverses multiple VPCs via the TGW. Flow logs at the hub are required for forensics, anomaly detection, and incident response on cross-VPC flows.
 
 **Remediation:** Enable flow logs on the Transit Gateway, sending records to a CloudWatch Logs group or S3 bucket in a logging-dedicated account. Retain logs per your incident response and compliance requirements (typically 1 year minimum). Correlate TGW flow logs with VPC flow logs to trace cross-VPC traffic end to end.
+
+---
+
+### CTL.VPC.TGW.PEERING.CROSSREGION.NOENCRYPT.001
+
+**Cross-Region TGW Peering Without Verified Encryption**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** fedramp_moderate: SC-8; hipaa: 164.312(e)(1); nist_800_53_r5: SC-8, SC-13; pci_dss_v4.0: 4.2.1; soc2: CC6.7;
+
+Transit Gateway peering attachment crosses AWS Regions. Cross-region TGW peering carries traffic across the AWS backbone network between regions. While AWS encrypts backbone traffic at the physical layer, cross-region peering paths should be accounted for in data classification and compliance posture. Regulated workloads traversing this path may require application-layer encryption beyond the default transport encryption.
+
+**Remediation:** Verify that workloads traversing this cross-region peering path implement application-layer encryption (TLS, IPsec) appropriate for the data classification. Document the cross-region path in your network architecture and data flow diagrams. If the peering is no longer needed, remove the attachment to eliminate the cross-region transit path.
 
 ---
 

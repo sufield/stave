@@ -4406,3 +4406,106 @@ contracts:
     consumers:
       - CTL.ECR.PULLTHROUGH.UNRESTRICTED.001
 
+  # ─── IPAM Pool (Aug 2026) ─────────────────────────────────────
+
+  - field: network.ipam.pool.scope_type
+    type: string
+    status: planned
+    postcondition: >
+      The IPAM pool scope type: "public" or "private". Derived from
+      ec2:DescribeIpamPools → IpamScopeType. Private pools allocate
+      RFC 1918 / RFC 6598 CIDRs for internal use; public pools manage
+      internet-routable CIDRs.
+    consumers:
+      - CTL.VPC.IPAM.POOL.UNRESTRICTED.001
+
+  - field: network.ipam.pool.auto_import
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the IPAM pool auto-imports CIDRs from resources in the
+      pool's scope. Derived from ec2:DescribeIpamPools → AutoImport.
+      When enabled, new VPCs and subnets in scope are automatically
+      tracked without explicit allocation.
+    consumers:
+      - CTL.VPC.IPAM.POOL.UNRESTRICTED.001
+
+  - field: network.ipam.pool.publicly_advertisable
+    type: boolean
+    status: planned
+    postcondition: >
+      True if CIDRs allocated from this pool can be advertised to the
+      internet via BYOIP. Derived from ec2:DescribeIpamPools →
+      PubliclyAdvertisable.
+    consumers: []
+
+  - field: network.ipam.pool.allocation_resource_tags
+    type: object
+    status: planned
+    postcondition: >
+      The AllocationResourceTags map restricting which resources (by
+      tag key-value) can allocate CIDRs from this pool. Empty or null
+      means any resource can allocate — the pool is unrestricted.
+      Derived from ec2:DescribeIpamPools → AllocationResourceTags.
+    consumers:
+      - CTL.VPC.IPAM.POOL.UNRESTRICTED.001
+
+  - field: network.ipam.pool.source_pool_id
+    type: string
+    status: planned
+    postcondition: >
+      The parent pool ID for nested (child) pools. Null for top-level
+      pools. Derived from ec2:DescribeIpamPools → SourceIpamPoolId.
+    consumers: []
+
+  - field: network.ipam.pool.locale
+    type: string
+    status: planned
+    postcondition: >
+      The AWS Region this pool provisions CIDRs for. "None" for global
+      pools. Derived from ec2:DescribeIpamPools → Locale.
+    consumers: []
+
+  # ─── TGW Peering Attachment (Aug 2026) ─────────────────────────
+
+  - field: network.tgw.peering.is_cross_region
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the TGW peering attachment connects Transit Gateways in
+      different AWS Regions. Derived by comparing requester and accepter
+      region from ec2:DescribeTransitGatewayPeeringAttachments. Same-
+      region peering is false.
+    consumers:
+      - CTL.VPC.TGW.PEERING.CROSSREGION.NOENCRYPT.001
+
+  - field: network.tgw.peering.requester_region
+    type: string
+    status: planned
+    postcondition: >
+      The AWS Region of the requester Transit Gateway. Derived from
+      ec2:DescribeTransitGatewayPeeringAttachments →
+      RequesterTgwInfo.Region.
+    consumers:
+      - CTL.VPC.TGW.PEERING.CROSSREGION.NOENCRYPT.001
+
+  - field: network.tgw.peering.accepter_region
+    type: string
+    status: planned
+    postcondition: >
+      The AWS Region of the accepter Transit Gateway. Derived from
+      ec2:DescribeTransitGatewayPeeringAttachments →
+      AccepterTgwInfo.Region.
+    consumers:
+      - CTL.VPC.TGW.PEERING.CROSSREGION.NOENCRYPT.001
+
+  - field: network.tgw.peering.state
+    type: string
+    status: planned
+    postcondition: >
+      The state of the TGW peering attachment (available, pending,
+      deleting, deleted, failed, etc.). Derived from
+      ec2:DescribeTransitGatewayPeeringAttachments → State.
+    consumers:
+      - CTL.VPC.TGW.PEERING.CROSSREGION.NOENCRYPT.001
+

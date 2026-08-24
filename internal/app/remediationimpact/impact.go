@@ -26,10 +26,10 @@ type ClosedFinding struct {
 
 // DeactivatedChain is a chain active in before but inactive in after.
 type DeactivatedChain struct {
-	ChainID          string `json:"chain_id"`
-	PreviousSeverity string `json:"previous_severity"`
-	AssetID          string `json:"asset_id,omitempty"`
-	ScopeID          string `json:"scope_id,omitempty"`
+	ChainID          kernel.ChainID `json:"chain_id"`
+	PreviousSeverity string         `json:"previous_severity"`
+	AssetID          asset.ID       `json:"asset_id,omitempty"`
+	ScopeID          string         `json:"scope_id,omitempty"`
 }
 
 // EfficiencyVerdict classifies the remediation outcome.
@@ -130,17 +130,17 @@ func Analyze(in Input) (*Report, error) {
 	var deactivated []DeactivatedChain
 	for k, sev := range beforeSev {
 		deactivated = append(deactivated, DeactivatedChain{
-			ChainID:          string(k.chainID),
+			ChainID:          k.chainID,
 			PreviousSeverity: sev,
-			AssetID:          string(k.assetID),
+			AssetID:          k.assetID,
 			ScopeID:          k.scopeID,
 		})
 	}
 	slices.SortFunc(deactivated, func(a, b DeactivatedChain) int {
-		if n := cmp.Compare(a.ChainID, b.ChainID); n != 0 {
+		if n := cmp.Compare(string(a.ChainID), string(b.ChainID)); n != 0 {
 			return n
 		}
-		if n := cmp.Compare(a.AssetID, b.AssetID); n != 0 {
+		if n := cmp.Compare(string(a.AssetID), string(b.AssetID)); n != 0 {
 			return n
 		}
 		return cmp.Compare(a.ScopeID, b.ScopeID)

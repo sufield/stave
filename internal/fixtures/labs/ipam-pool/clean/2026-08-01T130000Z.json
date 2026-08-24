@@ -1,0 +1,32 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.ipam-pool"
+  },
+  "assets": [
+    {
+      "id": "ipam-pool-clean001",
+      "type": "aws_ipam_pool",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "ipam": {
+            "pool": {
+              "scope_type": "private",
+              "locale": "us-east-1",
+              "auto_import": false,
+              "publicly_advertisable": false,
+              "allocation_resource_tags": {
+                "Environment": "prod",
+                "OU": "ou-prod-12345"
+              },
+              "source_pool_id": "ipam-pool-parent001"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

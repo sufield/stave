@@ -124,7 +124,7 @@ func TestAnalyze_ChainDeactivationDetected(t *testing.T) {
 	}
 	// Map iteration is non-deterministic; check both expected
 	// chain IDs are present without asserting order.
-	seen := map[string]string{}
+	seen := map[kernel.ChainID]string{}
 	for _, d := range r.ChainsDeactivated {
 		seen[d.ChainID] = d.PreviousSeverity
 	}

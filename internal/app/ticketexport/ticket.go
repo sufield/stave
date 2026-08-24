@@ -7,23 +7,35 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
+)
+
+// Priority represents the ticketing priority classification.
+type Priority string
+
+const (
+	PriorityP1 Priority = "P1"
+	PriorityP2 Priority = "P2"
+	PriorityP3 Priority = "P3"
+	PriorityP4 Priority = "P4"
 )
 
 // Ticket is the canonical ticketing schema for a finding.
 type Ticket struct {
-	TicketID    string   `json:"ticket_id"`
-	Title       string   `json:"title"`
-	Severity    string   `json:"severity"`
-	Priority    string   `json:"priority"`
-	DueDate     string   `json:"due_date,omitempty"`
-	Description string   `json:"description"`
-	Labels      []string `json:"labels"`
-	AssetID     string   `json:"asset_id"`
-	ControlID   string   `json:"control_id"`
-	Team        string   `json:"team,omitempty"`
-	Status      string   `json:"status"`
-	DwellDays   float64  `json:"dwell_days"`
+	TicketID    string           `json:"ticket_id"`
+	Title       string           `json:"title"`
+	Severity    string           `json:"severity"`
+	Priority    Priority         `json:"priority"`
+	DueDate     string           `json:"due_date,omitempty"`
+	Description string           `json:"description"`
+	Labels      []string         `json:"labels"`
+	AssetID     asset.ID         `json:"asset_id"`
+	ControlID   kernel.ControlID `json:"control_id"`
+	Team        string           `json:"team,omitempty"`
+	Status      string           `json:"status"`
+	DwellDays   float64          `json:"dwell_days"`
 }
 
 // Generate creates tickets from findings with stable IDs and priority mapping.
@@ -48,18 +60,16 @@ func StableTicketID(controlID, assetID string, assetType ...string) string {
 }
 
 // SeverityToPriority maps severity levels to priority codes.
-func SeverityToPriority(severity string) string {
+func SeverityToPriority(severity string) Priority {
 	switch severity {
 	case "critical":
-		return "P1"
+		return PriorityP1
 	case "high":
-		return "P2"
+		return PriorityP2
 	case "medium":
-		return "P3"
-	case "low":
-		return "P4"
+		return PriorityP3
 	default:
-		return "P4"
+		return PriorityP4
 	}
 }
 
@@ -89,8 +99,8 @@ func fromFinding(f *remediation.Finding) Ticket {
 		Priority:    SeverityToPriority(sev),
 		Description: desc,
 		Labels:      labels,
-		AssetID:     astID,
-		ControlID:   ctlID,
+		AssetID:     f.AssetID,
+		ControlID:   f.ControlID,
 		Team:        team,
 		Status:      "open",
 		DwellDays:   dwellDays,

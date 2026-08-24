@@ -36,7 +36,7 @@ type Candidate struct {
 	ControlID   kernel.ControlID `json:"control_id"`
 	AssetID     asset.ID         `json:"asset_id"`
 	AssetType   kernel.AssetType `json:"asset_type,omitempty"`
-	Severity    string           `json:"severity"`
+	Severity    policy.Severity  `json:"severity"`
 	Pattern     Pattern          `json:"pattern"`
 	DwellDays   float64          `json:"dwell_days"`
 	Cycles      int              `json:"cycles,omitempty"`
@@ -127,7 +127,7 @@ func Suggest(in Input) *Result {
 	type findingMeta struct {
 		controlID   kernel.ControlID
 		assetID     asset.ID
-		severity    string
+		severity    policy.Severity
 		ownerTeamID string
 		firstSeen   time.Time
 		lastSeen    time.Time
@@ -148,7 +148,7 @@ func Suggest(in Input) *Result {
 				m = &findingMeta{
 					controlID:   f.ControlID,
 					assetID:     f.AssetID,
-					severity:    f.SeverityLabel(),
+					severity:    f.ControlSeverity,
 					ownerTeamID: f.OwnerKey(),
 					firstSeen:   a.Run.EvalTime,
 					appearances: make([]bool, assessmentCount),
@@ -238,10 +238,8 @@ func Suggest(in Input) *Result {
 	// Sort by severity (critical first) then by dwell time (longest first).
 	sortCandidates := func(s []Candidate) {
 		slices.SortFunc(s, func(a, b Candidate) int {
-			oa := policy.SeverityOrderOf(a.Severity)
-			ob := policy.SeverityOrderOf(b.Severity)
-			if oa != ob {
-				return oa - ob
+			if a.Severity != b.Severity {
+				return cmp.Compare(b.Severity, a.Severity)
 			}
 			if a.DwellDays != b.DwellDays {
 				if a.DwellDays > b.DwellDays {
