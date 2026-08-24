@@ -1,13 +1,13 @@
 # Well-Architected Lens Coverage Scorecard
 
-**Date:** 2026-08-17
+**Date:** 2026-08-24
 **Method:** Automated monthly check — parse WA custom lens JSONs,
 run Stave against committed inverted fixtures, compare violation
 counts against baseline.
 
-**Lenses with Security pillar:** 17
-**Total Security best practices:** 354
-**Invertible (CONFIG + ARCHITECTURAL):** 318
+**Lenses with Security pillar:** 18
+**Total Security best practices:** 360
+**Invertible (CONFIG + ARCHITECTURAL):** 324
 **Procedural (skipped):** 36
 
 **Stave eval results:** 88 risk signals from 121 unique controls
@@ -39,6 +39,7 @@ counts against baseline.
 | Amazon-MSK-Lens | 27 | 23 | 4 | msk |
 | Amazon-S3-Lens | 52 | 43 | 9 | s3 |
 | ApiGwLambda | 19 | 14 | 5 | lambda-apigw |
+| Athena-SQL-Lens | 6 | 6 | 0 | — |
 | DocumentDB | 18 | 17 | 1 | documentdb |
 | DynamoDB | 34 | 28 | 6 | dynamodb |
 | EMR-spark-lens | 14 | 13 | 1 | emr |
@@ -54,7 +55,7 @@ counts against baseline.
 
 ## Lenses Without Fixtures
 
-All lenses have fixture coverage.
+- **Athena-SQL-Lens** (6 invertible practices) — needs fixture generation
 
 <!-- BASELINE (machine-readable — do not edit manually)
 cognito: 4
