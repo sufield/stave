@@ -14,11 +14,11 @@ import (
 
 // Result is the outcome of running all tests in a control.
 type Result struct {
-	ControlID string       `json:"control_id"`
-	TestCount int          `json:"test_count"`
-	Passed    int          `json:"passed"`
-	Failed    int          `json:"failed"`
-	Cases     []CaseResult `json:"cases"`
+	ControlID kernel.ControlID `json:"control_id"`
+	TestCount int              `json:"test_count"`
+	Passed    int              `json:"passed"`
+	Failed    int              `json:"failed"`
+	Cases     []CaseResult     `json:"cases"`
 }
 
 // CaseResult is the outcome of a single test case.
@@ -87,7 +87,7 @@ func Run(input RunInput) ([]Result, Summary) {
 
 func runControl(ctl *policy.ControlDefinition, eval policy.PredicateEval) Result {
 	result := Result{
-		ControlID: string(ctl.ID),
+		ControlID: ctl.ID,
 		TestCount: len(ctl.Tests),
 	}
 

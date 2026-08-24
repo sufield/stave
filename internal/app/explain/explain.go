@@ -48,7 +48,7 @@ func analyze(ctl *policy.ControlDefinition) contracts.ExplainResult {
 	fields, rules := walkPredicate(ctl.UnsafePredicate, ctl.Params)
 	slices.Sort(fields)
 	return contracts.ExplainResult{
-		ControlID:          ctl.ID.String(),
+		ControlID:          ctl.ID,
 		Name:               ctl.Name,
 		Description:        ctl.Description,
 		Type:               ctl.Type.String(),

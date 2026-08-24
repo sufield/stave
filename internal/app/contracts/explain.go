@@ -1,16 +1,19 @@
 package contracts
 
-import "github.com/sufield/stave/internal/core/predicate"
+import (
+	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/predicate"
+)
 
 // ExplainResult holds the structured output of an explain analysis.
 type ExplainResult struct {
-	ControlID          string        `json:"control_id"`
-	Name               string        `json:"name"`
-	Description        string        `json:"description"`
-	Type               string        `json:"type"`
-	MatchedFields      []string      `json:"matched_fields"`
-	Rules              []ExplainRule `json:"rules"`
-	MinimalObservation any           `json:"minimal_observation"`
+	ControlID          kernel.ControlID `json:"control_id"`
+	Name               string           `json:"name"`
+	Description        string           `json:"description"`
+	Type               string           `json:"type"`
+	MatchedFields      []string         `json:"matched_fields"`
+	Rules              []ExplainRule    `json:"rules"`
+	MinimalObservation any              `json:"minimal_observation"`
 }
 
 // ExplainRule describes a single predicate rule.

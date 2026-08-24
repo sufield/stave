@@ -3,8 +3,8 @@
 package catalogquality
 
 import (
+	"cmp"
 	"slices"
-	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -18,8 +18,8 @@ type FieldStat struct {
 
 // BlindSpot identifies an asset type with observed resources but zero controls.
 type BlindSpot struct {
-	AssetType  string `json:"asset_type"`
-	AssetCount int    `json:"asset_count"`
+	AssetType  kernel.AssetType `json:"asset_type"`
+	AssetCount int              `json:"asset_count"`
 }
 
 // Report summarizes catalog quality across all controls.
@@ -108,13 +108,13 @@ func Analyze(input Input) Report {
 	for at, count := range input.AssetTypes {
 		if _, isCovered := coveredTypes[at]; !isCovered {
 			blindSpots = append(blindSpots, BlindSpot{
-				AssetType:  string(at),
+				AssetType:  at,
 				AssetCount: count,
 			})
 		}
 	}
 	slices.SortFunc(blindSpots, func(a, b BlindSpot) int {
-		return strings.Compare(a.AssetType, b.AssetType)
+		return cmp.Compare(a.AssetType, b.AssetType)
 	})
 
 	// MITRE stage gaps.

@@ -96,7 +96,7 @@ func Test_RedGate_SingleFileFilter(t *testing.T) {
 			summary.ControlsTested, summary)
 	}
 	for _, r := range results {
-		if !strings.Contains(r.ControlID, "NOREFERRER") {
+		if !strings.Contains(string(r.ControlID), "NOREFERRER") {
 			t.Fatalf("single-file mode tested an unrequested control %q (summary=%+v)",
 				r.ControlID, summary)
 		}
