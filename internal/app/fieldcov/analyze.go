@@ -11,6 +11,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 	"github.com/sufield/stave/internal/util/sets"
 )
@@ -35,20 +36,20 @@ const (
 
 // ControlResult holds the coverage analysis for a single control.
 type ControlResult struct {
-	ControlID      string         `json:"control_id"`
-	Severity       string         `json:"severity"`
-	Classification Classification `json:"classification"`
-	MissingFields  []string       `json:"missing_fields,omitempty"`
-	AssetType      string         `json:"asset_type,omitempty"`
-	Frameworks     []string       `json:"compliance_frameworks,omitempty"`
-	Risk           string         `json:"risk,omitempty"`
+	ControlID      kernel.ControlID `json:"control_id"`
+	Severity       string           `json:"severity"`
+	Classification Classification   `json:"classification"`
+	MissingFields  []string         `json:"missing_fields,omitempty"`
+	AssetType      kernel.AssetType `json:"asset_type,omitempty"`
+	Frameworks     []string         `json:"compliance_frameworks,omitempty"`
+	Risk           string           `json:"risk,omitempty"`
 }
 
 // ShoppingItem is a missing field grouped by asset type.
 type ShoppingItem struct {
-	Field       string   `json:"field"`
-	RequiredBy  []string `json:"required_by"`
-	MaxSeverity string   `json:"max_severity"`
+	Field       string             `json:"field"`
+	RequiredBy  []kernel.ControlID `json:"required_by"`
+	MaxSeverity string             `json:"max_severity"`
 }
 
 // FrameworkCoverage holds coverage stats for a compliance framework.
@@ -183,7 +184,7 @@ func walkProperties(prefix string, m map[string]any, out map[string]struct{}) {
 // classifyControl determines coverage classification for a single control.
 func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]struct{}, presentAssetTypes map[string]struct{}, discriminatorValues map[string]sets.Set[string]) ControlResult {
 	result := ControlResult{
-		ControlID:  string(ctl.ID),
+		ControlID:  ctl.ID,
 		Severity:   ctl.Severity.String(),
 		Frameworks: extractFrameworks(ctl),
 	}
@@ -198,7 +199,7 @@ func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]str
 		}
 		if !hasAsset {
 			result.Classification = NoAssets
-			result.AssetType = string(ctl.ApplicableAssetTypes[0])
+			result.AssetType = ctl.ApplicableAssetTypes[0]
 			return result
 		}
 	}
@@ -542,7 +543,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	report.IncompleteResults = incomplete
 
 	// Build shopping list grouped by asset type — use first field prefix.
-	fieldToControls := make(map[string][]string)
+	fieldToControls := make(map[string][]kernel.ControlID)
 	fieldToSeverity := make(map[string]string)
 	combined := make([]ControlResult, 0, len(silentRisk)+len(incomplete))
 	combined = append(combined, silentRisk...)
@@ -558,10 +559,10 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	}
 
 	// Prefer control-declared asset types over the heuristic.
-	controlAssetType := make(map[string]string, len(input.Controls))
+	controlAssetType := make(map[kernel.ControlID]kernel.AssetType, len(input.Controls))
 	for i := range input.Controls {
 		if len(input.Controls[i].ApplicableAssetTypes) > 0 {
-			controlAssetType[string(input.Controls[i].ID)] = string(input.Controls[i].ApplicableAssetTypes[0])
+			controlAssetType[input.Controls[i].ID] = input.Controls[i].ApplicableAssetTypes[0]
 		}
 	}
 
@@ -569,7 +570,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 		assetType := ""
 		for _, ctlID := range ctls {
 			if at, ok := controlAssetType[ctlID]; ok {
-				assetType = at
+				assetType = string(at)
 				break
 			}
 		}

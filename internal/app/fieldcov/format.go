@@ -5,6 +5,8 @@ import (
 	"io"
 	"slices"
 	"strings"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // WriteTable writes the coverage report in human-readable table format.
@@ -70,7 +72,7 @@ func WriteTable(w io.Writer, r *Report) {
 			fmt.Fprintf(w, "\n  Asset type: %s\n", at)
 			for _, item := range r.ShoppingList[at] {
 				fmt.Fprintf(w, "    + %-40s (%s — %s)\n",
-					item.Field, strings.Join(item.RequiredBy, ", "), strings.ToUpper(item.MaxSeverity))
+					item.Field, strings.Join(controlIDStrings(item.RequiredBy), ", "), strings.ToUpper(item.MaxSeverity))
 			}
 		}
 		fmt.Fprintln(w)
@@ -112,6 +114,14 @@ func shortFrameworks(fws []string) []string {
 		out[i] = shortFramework(fw)
 	}
 	return out
+}
+
+func controlIDStrings(ids []kernel.ControlID) []string {
+	s := make([]string, len(ids))
+	for i, id := range ids {
+		s[i] = string(id)
+	}
+	return s
 }
 
 func shortFramework(fw string) string {
