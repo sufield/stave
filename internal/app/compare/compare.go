@@ -10,6 +10,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Result holds the gap analysis output.
@@ -44,11 +45,11 @@ type AdoptionReadiness struct {
 
 // CompareItem is a finding in the gap analysis.
 type CompareItem struct {
-	ControlID  string   `json:"control_id"`
-	Severity   string   `json:"severity"`
-	DwellHours float64  `json:"dwell_hours,omitempty"`
-	Baseline   []string `json:"satisfies_baseline,omitempty"`
-	Target     []string `json:"satisfies_target,omitempty"`
+	ControlID  kernel.ControlID `json:"control_id"`
+	Severity   policy.Severity  `json:"severity"`
+	DwellHours float64          `json:"dwell_hours,omitempty"`
+	Baseline   []string         `json:"satisfies_baseline,omitempty"`
+	Target     []string         `json:"satisfies_target,omitempty"`
 }
 
 // Roadmap describes the upgrade phases.
@@ -113,12 +114,11 @@ func Analyze(input Input) *Result {
 	// from framework metadata — approximate from what we can see.
 
 	var shared, targetOnly, baselineOnly []CompareItem
-	sevOrder := policy.SeverityOrderOf
 
 	for cid, c := range controlMap {
 		item := CompareItem{
-			ControlID:  cid,
-			Severity:   c.finding.SeverityLabel(),
+			ControlID:  kernel.ControlID(cid),
+			Severity:   c.finding.ControlSeverity,
 			DwellHours: c.finding.DwellHours(),
 		}
 		if c.inBaseline {
@@ -141,12 +141,10 @@ func Analyze(input Input) *Result {
 	// Sort: shared by severity, target-only by severity.
 	sortBySeverity := func(items []CompareItem) {
 		slices.SortFunc(items, func(a, b CompareItem) int {
-			sa := sevOrder(a.Severity)
-			sb := sevOrder(b.Severity)
-			if sa != sb {
-				return cmp.Compare(sa, sb)
+			if a.Severity != b.Severity {
+				return cmp.Compare(b.Severity, a.Severity)
 			}
-			return cmp.Compare(a.ControlID, b.ControlID)
+			return cmp.Compare(string(a.ControlID), string(b.ControlID))
 		})
 	}
 	sortBySeverity(shared)
@@ -170,10 +168,10 @@ func Analyze(input Input) *Result {
 	// Roadmap.
 	var phase1IDs, phase2IDs []string
 	for _, s := range shared {
-		phase1IDs = append(phase1IDs, s.ControlID)
+		phase1IDs = append(phase1IDs, string(s.ControlID))
 	}
 	for _, s := range targetOnly {
-		phase2IDs = append(phase2IDs, s.ControlID)
+		phase2IDs = append(phase2IDs, string(s.ControlID))
 	}
 
 	// Leadership summary.

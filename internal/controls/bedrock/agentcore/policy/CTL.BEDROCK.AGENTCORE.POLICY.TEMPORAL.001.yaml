@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.POLICY.TEMPORAL.001
+name: AgentCore Policy Must Include Dogwood Temporal Constraints
+description: >
+  AgentCore Policy must include Dogwood temporal constraints, not
+  just static Cedar rules. Static Cedar policies authorize single
+  requests. Agents compose sequences — approval before action,
+  rate limits, ordering constraints. Without temporal constraints,
+  an agent governed by Cedar-only policy can rapid-fire destructive
+  actions within a single session. Dogwood extends Cedar with
+  count_within, sum_within, and sequence operators that reason
+  over action histories.
+  Schema gap: this control is inert until a collector populates the
+  properties.ai.runtime.policy_has_temporal field. See
+  docs-internal/schema-gaps/agentcore-policy.md.
+domain: governance
+severity: medium
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - ai-guardrails
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    AgentCore Policy uses static Cedar rules without Dogwood
+    temporal constraints. The agent has no rate limits or
+    sequence controls on tool invocations.
+  action: >
+    Upgrade the policy to Dogwood format and add temporal
+    constraints for tools that modify state. Use count_within
+    for rate limiting, sum_within for cost capping, and
+    sequence operators for approval workflows.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": { "policy_has_temporal": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.runtime.policy_attached
+      op: eq
+      value: true
+    - field: properties.ai.runtime.policy_has_temporal
+      op: eq
+      value: false
+observation_fields:
+  - ai.kind
+  - ai.runtime.policy_attached
+  - ai.runtime.policy_has_temporal
+defect: >
+  AgentCore Policy lacks Dogwood temporal constraints.
+infection: >
+  The agent can rapid-fire destructive operations within a
+  single session. Static Cedar rules authorize individual
+  requests but cannot constrain sequences or rates.
+failure: >
+  No rate limits or sequence controls. A prompt injection
+  can invoke data deletion or privilege changes at machine
+  speed within one session.
+tests:
+  - name: "Cedar-only policy — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-CEDAR"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            policy_attached: true
+            policy_has_temporal: false
+  - name: "Dogwood policy with temporal — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-DOGWOOD"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            policy_attached: true
+            policy_has_temporal: true

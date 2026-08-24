@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.POLICY.RATELIMIT.001
+name: AgentCore Policy Must Include Rate Limits for Mutation Tools
+description: >
+  AgentCore Policy must include Dogwood rate-limiting temporal
+  constraints for tools that modify state. Dogwood's count_within
+  and sum_within operators prevent an agent from rapid-firing
+  destructive operations. Without rate limits, a prompt injection
+  in a single session can invoke data deletion or privilege changes
+  at machine speed. Rate limits are the temporal equivalent of
+  least-privilege: limit not just what the agent can do, but how
+  fast it can do it.
+  Schema gap: this control is inert until a collector populates the
+  properties.ai.runtime.policy_has_rate_limit field. See
+  docs-internal/schema-gaps/agentcore-policy.md.
+domain: governance
+severity: medium
+compliance:
+  owasp_nhi: "NHI5"
+  owasp_llm: "LLM08"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - ai-guardrails
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: impact
+remediation:
+  description: >
+    AgentCore Policy has no rate-limiting temporal constraints.
+    Mutation tools can be invoked without frequency bounds.
+  action: >
+    Add Dogwood count_within or sum_within constraints for each
+    mutation tool. Set bounds appropriate to the tool's blast
+    radius: lower limits for data-deletion and privilege-change
+    tools, higher for read-only tools.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": { "policy_has_rate_limit": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.runtime.policy_attached
+      op: eq
+      value: true
+    - field: properties.ai.runtime.policy_has_rate_limit
+      op: eq
+      value: false
+observation_fields:
+  - ai.kind
+  - ai.runtime.policy_attached
+  - ai.runtime.policy_has_rate_limit
+defect: >
+  AgentCore Policy has no rate limits on mutation tools.
+infection: >
+  The agent can invoke state-mutating tools at machine speed
+  within a single session. No frequency bound constrains
+  destructive operations.
+failure: >
+  Unbounded mutation rate. A prompt injection can rapid-fire
+  data deletion or privilege changes before detection
+  responds.
+tests:
+  - name: "policy without rate limits — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-NORATE"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            policy_attached: true
+            policy_has_rate_limit: false
+  - name: "policy with rate limits — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-RATELIMIT"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            policy_attached: true
+            policy_has_rate_limit: true

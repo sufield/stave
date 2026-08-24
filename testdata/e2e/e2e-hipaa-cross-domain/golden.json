@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "681b0d0c3eeb9d7b309d461470e378675e6302605cbd4cdbf7e097f1f0278b47",
+    "policy_fingerprint": "a016b0d9920ea5d4df781347c9aef44c81b80cf1d1ba1f69460a8c033c856ca2",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -5082,6 +5082,16 @@
       "missing_control": "CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001",
       "severity": "high",
       "scope_id": "vpc-prod-001"
+    },
+    {
+      "chain": "management_account_root_key",
+      "description": "Root access key active on the Organizations management account. The management account is exempt from all SCPs by AWS design, so root credentials on the management account have unrestricted organizational control (create/delete accounts, modify SCPs, access billing). No compensating SCP can limit the blast radius.\n",
+      "controls_failing": [
+        "CTL.IAM.ROOT.ACCESSKEY.001"
+      ],
+      "missing_control": "CTL.IAM.ORG.MGMT.PRINCIPALS.001",
+      "severity": "critical",
+      "scope_id": "__global__"
     },
     {
       "chain": "rds_audit_blind",

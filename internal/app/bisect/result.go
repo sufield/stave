@@ -43,7 +43,7 @@ type ViolationWindow struct {
 type Result struct {
 	Mode           Mode                       `json:"mode"`
 	ControlID      kernel.ControlID           `json:"control_id"`
-	ResourceARN    string                     `json:"resource_arn,omitempty"`
+	ResourceARN    asset.ID                   `json:"resource_arn,omitempty"`
 	SnapshotsTotal int                        `json:"snapshots_total"`
 	AssessmentsRun int                        `json:"assessments_run"`
 	Windows        []ViolationWindow          `json:"windows,omitempty"`

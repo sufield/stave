@@ -25,7 +25,7 @@ func WriteTable(w io.Writer, r *Result) {
 		fmt.Fprintln(w, sep)
 		for _, item := range r.SharedViolations {
 			fmt.Fprintf(w, "  %-30s %-8s  %s + %s\n",
-				item.ControlID, strings.ToUpper(item.Severity), r.Baseline.Profile, r.Target.Profile)
+				item.ControlID, item.Severity.String(), r.Baseline.Profile, r.Target.Profile)
 		}
 		fmt.Fprintln(w)
 	}
@@ -37,7 +37,7 @@ func WriteTable(w io.Writer, r *Result) {
 		fmt.Fprintln(w, sep)
 		for _, item := range r.TargetOnly {
 			cites := strings.Join(item.Target, ", ")
-			fmt.Fprintf(w, "  %-30s %-8s  %s\n", item.ControlID, strings.ToUpper(item.Severity), cites)
+			fmt.Fprintf(w, "  %-30s %-8s  %s\n", item.ControlID, item.Severity.String(), cites)
 		}
 		fmt.Fprintln(w)
 	}
@@ -65,7 +65,7 @@ func WriteMarkdown(w io.Writer, r *Result) {
 		fmt.Fprintln(w, "|---------|----------|------|------|")
 		for _, item := range r.SharedViolations {
 			fmt.Fprintf(w, "| %s | %s | %s | %s |\n",
-				item.ControlID, strings.ToUpper(item.Severity),
+				item.ControlID, item.Severity.String(),
 				strings.Join(item.Baseline, ", "), strings.Join(item.Target, ", "))
 		}
 		fmt.Fprintln(w)
@@ -77,7 +77,7 @@ func WriteMarkdown(w io.Writer, r *Result) {
 		fmt.Fprintln(w, "|---------|----------|----------------|")
 		for _, item := range r.TargetOnly {
 			fmt.Fprintf(w, "| %s | %s | %s |\n",
-				item.ControlID, strings.ToUpper(item.Severity), strings.Join(item.Target, ", "))
+				item.ControlID, item.Severity.String(), strings.Join(item.Target, ", "))
 		}
 		fmt.Fprintln(w)
 	}

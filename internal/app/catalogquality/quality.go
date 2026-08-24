@@ -28,7 +28,7 @@ type Report struct {
 	Completeness  map[string]FieldStat `json:"completeness"`
 	OverallPct    float64              `json:"overall_pct"`
 	BlindSpots    []BlindSpot          `json:"blind_spots"`
-	MITREGaps     []string             `json:"mitre_gaps"`
+	MITREGaps     []kernel.AttackStage `json:"mitre_gaps"`
 }
 
 // Input configures the quality analysis.
@@ -122,10 +122,10 @@ func Analyze(input Input) Report {
 		"initial_access", "credential_access", "persistence",
 		"exfiltration", "detection_evasion", "resilience",
 	}
-	var mitreGaps []string
+	var mitreGaps []kernel.AttackStage
 	for _, stage := range allStages {
 		if _, isSeen := stagesSeen[stage]; !isSeen {
-			mitreGaps = append(mitreGaps, string(stage))
+			mitreGaps = append(mitreGaps, stage)
 		}
 	}
 

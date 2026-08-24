@@ -1,0 +1,26 @@
+id: agent_policy_coverage_gap
+description: >
+  AgentCore Policy exists but does not cover all the agent's
+  tools, AND the agent has broad tool access. The policy creates
+  the illusion of governance while leaving exploit paths open
+  through ungoverned tools. Same pattern as MFA scoped to named
+  apps while ROPC bypasses it. The broad tool access leg
+  (CTL.BEDROCK.AGENT.TOOLACCESS.BROAD.001) means the uncovered
+  tools include high-value targets — not just a single narrow
+  utility. Both legs must fire: coverage gap alone is a
+  misconfiguration; coverage gap plus broad tools is an exploit
+  path.
+  Schema gap: inert until a collector populates
+  properties.ai.runtime.policy_tool_coverage. See
+  docs-internal/schema-gaps/agentcore-policy.md.
+controls:
+  - CTL.BEDROCK.AGENTCORE.POLICY.COVERAGE.001
+  - CTL.BEDROCK.AGENT.TOOLACCESS.BROAD.001
+escalation_threshold: 2
+compound_severity: high
+scope: global
+preconditions:
+  - automation_hijack
+postconditions:
+  - ungoverned_operation
+implicit_dependencies: []

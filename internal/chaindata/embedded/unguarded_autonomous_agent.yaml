@@ -1,0 +1,30 @@
+id: unguarded_autonomous_agent
+description: >
+  Autonomous agent with broad tool access, no AgentCore Policy,
+  and an overbroad execution role. The agent has many tools
+  (CTL.BEDROCK.AGENT.TOOLACCESS.BROAD.001), no Cedar/Dogwood
+  policy governing tool invocations
+  (CTL.BEDROCK.AGENTCORE.POLICY.001), and its execution role
+  grants permissions beyond what the tools require
+  (CTL.BEDROCK.AGENTCORE.OVERPERM.001). All three legs stack:
+  broad tool surface provides the attack surface, no policy
+  removes the authorization boundary, and the overbroad role
+  ensures the ungoverned tools can reach resources they
+  shouldn't. A prompt injection in this configuration can invoke
+  any tool and reach any resource the role covers — no rate
+  limits, no approval workflow, no forbid rules.
+  Schema gap: inert until a collector populates
+  properties.ai.runtime.policy_attached. See
+  docs-internal/schema-gaps/agentcore-policy.md.
+controls:
+  - CTL.BEDROCK.AGENT.TOOLACCESS.BROAD.001
+  - CTL.BEDROCK.AGENTCORE.POLICY.001
+  - CTL.BEDROCK.AGENTCORE.OVERPERM.001
+escalation_threshold: 3
+compound_severity: critical
+scope: global
+preconditions:
+  - automation_hijack
+postconditions:
+  - ungoverned_operation
+implicit_dependencies: []

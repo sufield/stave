@@ -1,0 +1,98 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.POLICY.001
+name: AgentCore Runtime Must Have AgentCore Policy Attached
+description: >
+  AgentCore runtime must have a Cedar or Dogwood policy attached
+  via AgentCore Policy. Without a policy, the agent can invoke any
+  tool without authorization constraints. Guardrails check what the
+  LLM says (content safety); AgentCore Policy checks what the agent
+  does (tool-call authorization). Both should be present. An agent
+  with guardrails but no AgentCore Policy has content safety but no
+  tool governance — a prompt injection that avoids content filters
+  can invoke any tool the agent has access to, at any rate.
+  Schema gap: this control is inert until a collector populates the
+  properties.ai.runtime.policy_attached field. See
+  docs-internal/schema-gaps/agentcore-policy.md.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04", "IAM-05"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - ai-guardrails
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    AgentCore runtime does not have an AgentCore Policy
+    (Cedar/Dogwood) attached. The agent's tool calls are
+    ungoverned.
+  action: >
+    Attach a Cedar or Dogwood policy to the AgentCore runtime
+    via the AgentCore Policy configuration. Define permit and
+    forbid rules scoped to each tool the agent can invoke.
+    Prefer Dogwood policies for agents with state-mutating tools
+    so temporal constraints (rate limits, approval workflows)
+    are enforceable.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": { "policy_attached": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.runtime.policy_attached
+      op: eq
+      value: false
+observation_fields:
+  - ai.kind
+  - ai.runtime.policy_attached
+defect: >
+  AgentCore runtime has no AgentCore Policy attached.
+infection: >
+  Without a policy, the agent can invoke any tool without
+  authorization constraints. Prompt injection that avoids
+  content filters can invoke any tool the agent has access to.
+failure: >
+  Ungoverned agent tool calls. No rate limits, no approval
+  requirements, no forbid rules on destructive operations.
+tests:
+  - name: "runtime without policy — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-NOPOLICY"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            policy_attached: false
+  - name: "runtime with policy — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-GOVERNED"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            policy_attached: true

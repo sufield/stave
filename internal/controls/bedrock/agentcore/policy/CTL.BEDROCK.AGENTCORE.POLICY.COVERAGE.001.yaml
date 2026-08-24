@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.POLICY.COVERAGE.001
+name: AgentCore Policy Must Cover All Agent Tools
+description: >
+  AgentCore Policy must cover every tool the agent has access to.
+  A policy that covers 3 of 8 tools leaves 5 ungoverned — same
+  pattern as MFA scoped to named apps while ROPC bypasses it, or
+  an SCP that covers 4 of 6 regions. Partial governance creates
+  the illusion of control while leaving exploit paths open. The
+  collector pre-computes coverage as the ratio of policy-governed
+  tools to total registered tools.
+  Schema gap: this control is inert until a collector populates the
+  properties.ai.runtime.policy_tool_coverage field. See
+  docs-internal/schema-gaps/agentcore-policy.md.
+domain: governance
+severity: high
+compliance:
+  owasp_nhi: "NHI5"
+  owasp_llm: "LLM08"
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - ai-guardrails
+  - least-privilege
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: execution
+remediation:
+  description: >
+    AgentCore Policy does not cover all tools the agent has
+    access to. Some tools are governed, others are ungoverned.
+  action: >
+    Review the agent's registered tools and extend the
+    AgentCore Policy to include permit/forbid rules for every
+    tool. Use Dogwood temporal constraints for tools that
+    modify state. Audit tool coverage after any action-group
+    change.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "runtime": { "policy_tool_coverage": 1.0 }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.runtime.policy_attached
+      op: eq
+      value: true
+    - field: properties.ai.runtime.policy_tool_coverage
+      op: lt
+      value: 1.0
+observation_fields:
+  - ai.kind
+  - ai.runtime.policy_attached
+  - ai.runtime.policy_tool_coverage
+defect: >
+  AgentCore Policy does not cover all agent tools.
+infection: >
+  Uncovered tools are invocable without authorization constraints.
+  An attacker who gains prompt control can target the ungoverned
+  tools specifically, bypassing the policy entirely.
+failure: >
+  Partial governance. Policy exists but leaves exploit paths
+  open through ungoverned tools.
+tests:
+  - name: "policy covers 60% of tools — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-PARTIAL"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            policy_attached: true
+            policy_tool_coverage: 0.6
+  - name: "policy covers all tools — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-FULL"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            policy_attached: true
+            policy_tool_coverage: 1.0
+  - name: "no policy attached — passes (different control)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-NONE"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          runtime:
+            policy_attached: false
+            policy_tool_coverage: 0.0

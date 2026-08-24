@@ -1,0 +1,31 @@
+id: temporal_bypass_agent
+description: >
+  Agent governed by static Cedar policy without Dogwood temporal
+  constraints, with broad tool access, and no rate limits on
+  mutation tools. The Cedar policy authorizes individual requests
+  but cannot constrain sequences or rates. The broad tool access
+  (CTL.BEDROCK.AGENT.TOOLACCESS.BROAD.001) means the agent
+  reaches many tools including state-mutating ones. The absence
+  of rate limits (CTL.BEDROCK.AGENTCORE.POLICY.RATELIMIT.001)
+  means destructive operations can be invoked at machine speed.
+  All three legs stack: the temporal gap removes the sequence
+  barrier, broad tools provide the attack surface, and missing
+  rate limits remove the frequency barrier. A prompt injection
+  can rapid-fire deletion or privilege changes within a single
+  session.
+  Schema gap: inert until a collector populates
+  properties.ai.runtime.policy_has_temporal and
+  properties.ai.runtime.policy_has_rate_limit. See
+  docs-internal/schema-gaps/agentcore-policy.md.
+controls:
+  - CTL.BEDROCK.AGENTCORE.POLICY.TEMPORAL.001
+  - CTL.BEDROCK.AGENT.TOOLACCESS.BROAD.001
+  - CTL.BEDROCK.AGENTCORE.POLICY.RATELIMIT.001
+escalation_threshold: 3
+compound_severity: high
+scope: global
+preconditions:
+  - automation_hijack
+postconditions:
+  - ungoverned_operation
+implicit_dependencies: []
