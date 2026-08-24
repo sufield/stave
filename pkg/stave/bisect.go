@@ -105,7 +105,7 @@ func BisectControl(ctx context.Context, in BisectInput) (BisectOutput, error) {
 	)
 
 	eng := &appbisect.Engine{Evaluate: evaluator}
-	result, err := eng.Run(ctx, snapshots, mode, string(targetID), in.ResourceARN)
+	result, err := eng.Run(ctx, snapshots, mode, targetID, in.ResourceARN)
 	if err != nil {
 		return BisectOutput{}, fmt.Errorf("run bisect engine: %w", err)
 	}

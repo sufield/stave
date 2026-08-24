@@ -9,6 +9,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/diff"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // PropertyChange records a change to a single property.
@@ -22,16 +23,16 @@ type PropertyChange struct {
 
 // NewAsset records an asset present in after but not before.
 type NewAsset struct {
-	AssetID   asset.ID       `json:"asset_id"`
-	AssetType string         `json:"asset_type"`
-	Props     map[string]any `json:"properties,omitempty"`
+	AssetID   asset.ID         `json:"asset_id"`
+	AssetType kernel.AssetType `json:"asset_type"`
+	Props     map[string]any   `json:"properties,omitempty"`
 }
 
 // RemovedAsset records an asset present in before but not after.
 type RemovedAsset struct {
-	AssetID         asset.ID `json:"asset_id"`
-	AssetType       string   `json:"asset_type"`
-	MayBeOutOfScope bool     `json:"may_be_out_of_scope,omitempty"`
+	AssetID         asset.ID         `json:"asset_id"`
+	AssetType       kernel.AssetType `json:"asset_type"`
+	MayBeOutOfScope bool             `json:"may_be_out_of_scope,omitempty"`
 }
 
 // ScopeWarning signals that the before/after snapshots were produced
@@ -102,7 +103,7 @@ func Diff(before, after asset.Snapshot) *DiffResult {
 		if !inBefore && inAfter {
 			result.NewAssets = append(result.NewAssets, NewAsset{
 				AssetID:   aAsset.ID,
-				AssetType: string(aAsset.Type),
+				AssetType: aAsset.Type,
 				Props:     aAsset.Properties,
 			})
 			continue
@@ -111,7 +112,7 @@ func Diff(before, after asset.Snapshot) *DiffResult {
 		if inBefore && !inAfter {
 			result.RemovedAssets = append(result.RemovedAssets, RemovedAsset{
 				AssetID:         bAsset.ID,
-				AssetType:       string(bAsset.Type),
+				AssetType:       bAsset.Type,
 				MayBeOutOfScope: scopeChanged,
 			})
 			continue

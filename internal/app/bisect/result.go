@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Mode selects the search strategy.
@@ -41,7 +42,7 @@ type ViolationWindow struct {
 // Result holds the output of a bisect or scan operation.
 type Result struct {
 	Mode           Mode                       `json:"mode"`
-	ControlID      string                     `json:"control_id"`
+	ControlID      kernel.ControlID           `json:"control_id"`
 	ResourceARN    string                     `json:"resource_arn,omitempty"`
 	SnapshotsTotal int                        `json:"snapshots_total"`
 	AssessmentsRun int                        `json:"assessments_run"`
