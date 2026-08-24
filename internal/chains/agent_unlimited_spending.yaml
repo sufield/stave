@@ -1,0 +1,27 @@
+id: agent_unlimited_spending
+description: >
+  Agent can transact autonomously with no spending cap, no governance
+  policy, and an overbroad execution role. Prompt injection in a
+  single session can drain funds AND access infrastructure resources.
+  Financial and infrastructure exposure compound: the missing spending
+  limit (PAYMENT.NOLIMIT.001) removes the financial fence, the missing
+  governance policy (POLICY.001) removes tool-call authorization, and
+  the overbroad role (OVERPERM.001) ensures the ungoverned agent
+  reaches resources beyond its intended scope.
+  Schema gap: inert until collectors populate payment and policy
+  observation fields. See docs-internal/schema-gaps/agentcore-policy.md.
+metadata:
+  schema_blocked: true
+  schema_gap_ref: docs-internal/schema-gaps/agentcore-policy.md
+controls:
+  - CTL.BEDROCK.AGENTCORE.PAYMENT.NOLIMIT.001
+  - CTL.BEDROCK.AGENTCORE.OVERPERM.001
+  - CTL.BEDROCK.AGENTCORE.POLICY.001
+escalation_threshold: 3
+compound_severity: critical
+scope: global
+preconditions:
+  - automation_hijack
+postconditions:
+  - ungoverned_operation
+implicit_dependencies: []

@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.PAYMENT.EXPIRY.001
+name: AgentCore Payment Session Must Have Expiry Configured
+description: >
+  AgentCore payment session must have an expiry time configured.
+  A payment session without expiry allows indefinite autonomous
+  spending within one session. Combined with retry behavior, this
+  creates a window where repeated small transactions accumulate
+  without a time bound. Session expiry is the temporal fence that
+  forces re-authorization.
+  Schema gap: this control is inert until a collector populates the
+  properties.ai.payment.payment_session_expiry_seconds field. See
+  docs-internal/schema-gaps/agentcore-policy.md.
+domain: governance
+severity: high
+compliance:
+  nist_800_53_r5: "AC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-04"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - ai-guardrails
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: execution
+lifecycle:
+  status: schema_blocked
+observation_fields:
+  - ai.kind
+  - ai.payment.payment_session_expiry_seconds
+remediation:
+  description: >
+    AgentCore payment session has no expiry configured. The session
+    can remain active indefinitely, allowing unbounded autonomous
+    spending over time.
+  action: >
+    Configure a session expiry on the AgentCore Payment Manager.
+    Set the expiry to the shortest duration that supports the
+    agent's workflow — typically minutes for interactive agents,
+    hours for batch processing agents.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "payment": { "payment_session_expiry_seconds": 3600 }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.payment.payment_session_expiry_seconds
+      op: eq
+      value: 0
+defect: >
+  AgentCore payment session has no expiry configured.
+infection: >
+  Payment session remains active indefinitely. Repeated small
+  transactions accumulate without a time bound, and retry bugs
+  can run unchecked across an unbounded window.
+failure: >
+  Indefinite autonomous spending window. Financial loss from
+  accumulated transactions in a session that never expires.
+tests:
+  - name: "payment session without expiry — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-NOEXPIRY"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          payment:
+            payment_session_expiry_seconds: 0
+  - name: "payment session with expiry — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-EXPIRY"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          payment:
+            payment_session_expiry_seconds: 3600

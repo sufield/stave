@@ -440,6 +440,81 @@ AgentCore runtime execution role grants overly broad permissions — the role ca
 
 ---
 
+### CTL.BEDROCK.AGENTCORE.POLICY.001
+
+**AgentCore Runtime Must Have AgentCore Policy Attached**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; owasp_nhi: NHI5; soc2: CC6.1;
+
+AgentCore runtime must have a Cedar or Dogwood policy attached via AgentCore Policy. Without a policy, the agent can invoke any tool without authorization constraints. Guardrails check what the LLM says (content safety); AgentCore Policy checks what the agent does (tool-call authorization). Both should be present. An agent with guardrails but no AgentCore Policy has content safety but no tool governance — a prompt injection that avoids content filters can invoke any tool the agent has access to, at any rate. Schema gap: this control is inert until a collector populates the properties.ai.runtime.policy_attached field. See docs-internal/schema-gaps/agentcore-policy.md.
+
+**Remediation:** Attach a Cedar or Dogwood policy to the AgentCore runtime via the AgentCore Policy configuration. Define permit and forbid rules scoped to each tool the agent can invoke. Prefer Dogwood policies for agents with state-mutating tools so temporal constraints (rate limits, approval workflows) are enforceable.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.POLICY.COVERAGE.001
+
+**AgentCore Policy Must Cover All Agent Tools**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; owasp_llm: LLM08; owasp_nhi: NHI5; soc2: CC6.1;
+
+AgentCore Policy must cover every tool the agent has access to. A policy that covers 3 of 8 tools leaves 5 ungoverned — same pattern as MFA scoped to named apps while ROPC bypasses it, or an SCP that covers 4 of 6 regions. Partial governance creates the illusion of control while leaving exploit paths open. The collector pre-computes coverage as the ratio of policy-governed tools to total registered tools. Schema gap: this control is inert until a collector populates the properties.ai.runtime.policy_tool_coverage field. See docs-internal/schema-gaps/agentcore-policy.md.
+
+**Remediation:** Review the agent's registered tools and extend the AgentCore Policy to include permit/forbid rules for every tool. Use Dogwood temporal constraints for tools that modify state. Audit tool coverage after any action-group change.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.POLICY.DENY.001
+
+**AgentCore Policy Must Include Explicit Forbid Rules**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; owasp_nhi: NHI5; soc2: CC6.1;
+
+AgentCore Policy must include explicit forbid rules. Cedar/Dogwood use deny-by-default — a request with no matching permit is denied. But a policy with only permit rules and no explicit forbid is permissive by omission: it relies on the absence of a permit to deny, which is fragile under policy drift. A new permit added by another team member silently widens the allowed set. Explicit forbid rules create a hard boundary that survives permit additions. Schema gap: this control is inert until a collector populates the properties.ai.runtime.policy_has_forbid field. See docs-internal/schema-gaps/agentcore-policy.md.
+
+**Remediation:** Add explicit forbid rules for destructive operations (data deletion, privilege changes, cross-account actions) and sensitive data access. Forbid rules in Cedar/Dogwood override permits, creating hard boundaries that survive permit drift.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.POLICY.RATELIMIT.001
+
+**AgentCore Policy Must Include Rate Limits for Mutation Tools**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; owasp_llm: LLM08; owasp_nhi: NHI5; soc2: CC6.1;
+
+AgentCore Policy must include Dogwood rate-limiting temporal constraints for tools that modify state. Dogwood's count_within and sum_within operators prevent an agent from rapid-firing destructive operations. Without rate limits, a prompt injection in a single session can invoke data deletion or privilege changes at machine speed. Rate limits are the temporal equivalent of least-privilege: limit not just what the agent can do, but how fast it can do it. Schema gap: this control is inert until a collector populates the properties.ai.runtime.policy_has_rate_limit field. See docs-internal/schema-gaps/agentcore-policy.md.
+
+**Remediation:** Add Dogwood count_within or sum_within constraints for each mutation tool. Set bounds appropriate to the tool's blast radius: lower limits for data-deletion and privilege-change tools, higher for read-only tools.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.POLICY.TEMPORAL.001
+
+**AgentCore Policy Must Include Dogwood Temporal Constraints**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; owasp_nhi: NHI5; soc2: CC6.1;
+
+AgentCore Policy must include Dogwood temporal constraints, not just static Cedar rules. Static Cedar policies authorize single requests. Agents compose sequences — approval before action, rate limits, ordering constraints. Without temporal constraints, an agent governed by Cedar-only policy can rapid-fire destructive actions within a single session. Dogwood extends Cedar with count_within, sum_within, and sequence operators that reason over action histories. Schema gap: this control is inert until a collector populates the properties.ai.runtime.policy_has_temporal field. See docs-internal/schema-gaps/agentcore-policy.md.
+
+**Remediation:** Upgrade the policy to Dogwood format and add temporal constraints for tools that modify state. Use count_within for rate limiting, sum_within for cost capping, and sequence operators for approval workflows.
+
+---
+
 ### CTL.BEDROCK.AGENTCORE.SESSION.001
 
 **AgentCore Runtime Session Lifetime Must Be Bounded**

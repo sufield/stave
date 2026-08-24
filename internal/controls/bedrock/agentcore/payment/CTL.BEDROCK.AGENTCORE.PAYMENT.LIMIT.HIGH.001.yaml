@@ -1,0 +1,94 @@
+dsl_version: ctrl.v1
+id: CTL.BEDROCK.AGENTCORE.PAYMENT.LIMIT.HIGH.001
+name: AgentCore Payment Session Spending Cap Must Not Be Excessive
+description: >
+  AgentCore payment session spending cap must not exceed the
+  organization's configured threshold. A cap that exists but is set
+  unreasonably high defeats the purpose of the guardrail. For x402
+  microtransaction agents, typical per-session spending is cents to
+  single-digit dollars; a cap in the hundreds or thousands indicates
+  misconfiguration. The threshold is parameterized — organizations
+  should set it based on their transaction patterns.
+  Schema gap: this control is inert until a collector populates the
+  properties.ai.payment.payment_session_max_spend field. See
+  docs-internal/schema-gaps/agentcore-policy.md.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-6(1)"
+  soc2: "CC6.1"
+  ccm_v4: ["GRC-01"]
+scope_tags:
+  - aws
+  - bedrock
+taxonomy:
+  - compliance-mapping
+  - ai-guardrails
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: parameterized_check
+applicable_asset_types:
+  - aws_bedrock_agentcore_runtime
+params:
+  attack_stage: execution
+lifecycle:
+  status: schema_blocked
+observation_fields:
+  - ai.kind
+  - ai.payment.payment_session_max_spend
+remediation:
+  description: >
+    AgentCore payment session spending cap exceeds the configured
+    threshold.
+  action: >
+    Lower the maximum spend amount per payment session to match
+    the agent's intended transaction pattern. Review recent
+    transaction history to determine an appropriate cap.
+  example: |
+    {
+      "ai": {
+        "kind": "bedrock_agentcore_runtime",
+        "payment": { "payment_session_max_spend": 10.0 }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: bedrock_agentcore_runtime
+    - field: properties.ai.payment.payment_session_max_spend
+      op: gt
+      value: 1000
+defect: >
+  AgentCore payment session spending cap is set excessively high.
+infection: >
+  The spending cap exists but does not meaningfully constrain
+  autonomous transactions. A prompt injection can still cause
+  significant financial loss within the cap.
+failure: >
+  Ineffective spending guardrail. Financial exposure from a
+  single compromised session exceeds acceptable limits.
+tests:
+  - name: "spending cap above threshold — fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-HIGHCAP"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          payment:
+            payment_session_max_spend: 5000.0
+  - name: "spending cap within threshold — passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:bedrock:us-east-1:111122223333:agent-runtime/rt-LOWCAP"
+      asset_type: aws_bedrock_agentcore_runtime
+      vendor: aws
+      properties:
+        ai:
+          kind: bedrock_agentcore_runtime
+          payment:
+            payment_session_max_spend: 10.0
