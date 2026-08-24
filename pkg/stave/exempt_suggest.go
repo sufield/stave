@@ -95,7 +95,7 @@ func exemptWriteSuggestTable(w io.Writer, r *exemptionsuggest.Result) error {
 			c := &r.Oscillating[i]
 			fmt.Fprintf(w, "  %-30s  %-8s  %s\n",
 				c.ControlID,
-				strings.ToUpper(c.Severity),
+				strings.ToUpper(c.Severity.String()),
 				c.AssetID)
 			fmt.Fprintf(w, "    Cycles: %d in %d days\n", c.Cycles, r.WindowDays)
 			if c.HasOwner() {
@@ -116,7 +116,7 @@ func exemptWriteSuggestTable(w io.Writer, r *exemptionsuggest.Result) error {
 			}
 			fmt.Fprintf(w, "  %-30s  %-8s  open %dd%s\n",
 				c.ControlID,
-				strings.ToUpper(c.Severity),
+				strings.ToUpper(c.Severity.String()),
 				int(c.DwellDays),
 				team)
 			fmt.Fprintf(w, "    Command: %s\n", c.ExemptCmd)
