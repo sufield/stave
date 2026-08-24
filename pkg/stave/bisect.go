@@ -31,7 +31,7 @@ type BisectInput struct {
 	Mode        string
 	Format      string
 	EvalTime    string
-	ResourceARN string
+	ResourceARN asset.ID
 	Logger      *slog.Logger
 }
 

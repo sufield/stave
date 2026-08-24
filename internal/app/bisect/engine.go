@@ -253,7 +253,7 @@ func findSnapshotAt(snapshots []asset.Snapshot, t time.Time) *asset.Snapshot {
 func MakeEvaluator(
 	assess func(snapshots []asset.Snapshot) (evaluation.ComplianceReport, error),
 	controlID kernel.ControlID,
-	resourceARN string,
+	resourceARN asset.ID,
 ) Evaluator {
 	return func(ctx context.Context, snap asset.Snapshot) (bool, error) {
 		if err := ctx.Err(); err != nil {
@@ -267,13 +267,13 @@ func MakeEvaluator(
 	}
 }
 
-func hasViolation(report *evaluation.ComplianceReport, controlID kernel.ControlID, resourceARN string) bool {
+func hasViolation(report *evaluation.ComplianceReport, controlID kernel.ControlID, resourceARN asset.ID) bool {
 	for i := range report.Findings {
 		f := &report.Findings[i]
 		if f.ControlID != controlID {
 			continue
 		}
-		if resourceARN != "" && f.AssetID.String() != resourceARN {
+		if resourceARN != "" && f.AssetID != resourceARN {
 			continue
 		}
 		return true

@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/cmdctx"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/pkg/stave"
 )
@@ -82,7 +83,7 @@ Exit Codes:
 				Mode:        opts.Mode,
 				Format:      opts.Format,
 				EvalTime:    opts.EvalTime,
-				ResourceARN: opts.ResourceARN,
+				ResourceARN: asset.ID(opts.ResourceARN),
 				Logger:      cmdctx.LoggerFromCmd(cmd),
 			})
 			if err != nil {
