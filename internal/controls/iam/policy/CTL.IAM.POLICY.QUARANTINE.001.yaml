@@ -1,0 +1,90 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.QUARANTINE.001
+name: AWSCompromisedKeyQuarantine Must Not Be Attached
+description: >
+  No IAM user should have the AWSCompromisedKeyQuarantine managed
+  policy attached. AWS automatically attaches this policy when it
+  detects an IAM access key exposed in a public repository (via
+  partnership with Truffle Security, GitHub secret scanning, and
+  others). The policy denies most API actions while the compromised
+  key remains active. Its presence on a principal at snapshot time
+  means: (1) a credential was publicly exposed, (2) AWS's automated
+  incident response fired, and (3) remediation has not completed —
+  the key has not been rotated and the quarantine policy has not been
+  removed.
+  Source: AWS Security Digest #275 — Truffle Security 768-key
+  research (long-lived IAM access keys in public repositories).
+domain: identity
+severity: high
+compliance:
+  nist_800_53_r5: "IR-6"
+  soc2: "CC7.3"
+  ccm_v4: ["SEF-03", "IAM-02"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - credential-lifecycle
+subtractive_category:
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+params:
+  attack_stage: credential_access
+observation_fields:
+  - identity.kind
+  - identity.policies.has_quarantine_policy
+remediation:
+  description: >
+    IAM user has the AWSCompromisedKeyQuarantine managed policy
+    attached, indicating a credential was publicly exposed and
+    automated quarantine is active.
+  action: >
+    Rotate the compromised access key immediately, then remove the
+    quarantine policy after confirming no unauthorized usage:
+    aws iam create-access-key --user-name <user>
+    aws iam update-access-key --status Inactive --access-key-id <old-key>
+    aws iam delete-access-key --access-key-id <old-key>
+    aws iam detach-user-policy --user-name <user> --policy-arn arn:aws:iam::aws:policy/AWSCompromisedKeyQuarantine
+  example: |
+    {
+      "identity": {
+        "kind": "user",
+        "policies": {
+          "has_quarantine_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: user
+    - field: properties.identity.policies.has_quarantine_policy
+      op: eq
+      value: true
+tests:
+  - name: "user with quarantine policy fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::123456789012:user/compromised-developer"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policies:
+            has_quarantine_policy: true
+  - name: "user without quarantine policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::123456789012:user/clean-developer"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          policies:
+            has_quarantine_policy: false

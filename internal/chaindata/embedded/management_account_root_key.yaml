@@ -1,0 +1,18 @@
+id: management_account_root_key
+description: >
+  Root access key active on the Organizations management account. The
+  management account is exempt from all SCPs by AWS design, so root
+  credentials on the management account have unrestricted organizational
+  control (create/delete accounts, modify SCPs, access billing). No
+  compensating SCP can limit the blast radius.
+controls:
+  - CTL.IAM.ROOT.ACCESSKEY.001
+  - CTL.IAM.ORG.MGMT.PRINCIPALS.001
+escalation_threshold: 2
+compound_severity: critical
+scope: global
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - ungoverned_operation
+implicit_dependencies: []

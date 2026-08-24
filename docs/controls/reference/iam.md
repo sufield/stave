@@ -2903,6 +2903,21 @@ IAM policies granting iam:PassRole must include an iam:PassedToService condition
 
 ---
 
+### CTL.IAM.POLICY.QUARANTINE.001
+
+**AWSCompromisedKeyQuarantine Must Not Be Attached**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: IR-6; soc2: CC7.3;
+
+No IAM user should have the AWSCompromisedKeyQuarantine managed policy attached. AWS automatically attaches this policy when it detects an IAM access key exposed in a public repository (via partnership with Truffle Security, GitHub secret scanning, and others). The policy denies most API actions while the compromised key remains active. Its presence on a principal at snapshot time means: (1) a credential was publicly exposed, (2) AWS's automated incident response fired, and (3) remediation has not completed — the key has not been rotated and the quarantine policy has not been removed. Source: AWS Security Digest #275 — Truffle Security 768-key research (long-lived IAM access keys in public repositories).
+
+**Remediation:** Rotate the compromised access key immediately, then remove the quarantine policy after confirming no unauthorized usage: aws iam create-access-key --user-name <user> aws iam update-access-key --status Inactive --access-key-id <old-key> aws iam delete-access-key --access-key-id <old-key> aws iam detach-user-policy --user-name <user> --policy-arn arn:aws:iam::aws:policy/AWSCompromisedKeyQuarantine
+
+---
+
 ### CTL.IAM.POLICY.READONLYACCESS.001
 
 **ReadOnlyAccess Managed Policy Grants Excessive Read Scope**

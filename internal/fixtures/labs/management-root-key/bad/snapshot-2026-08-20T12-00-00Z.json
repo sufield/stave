@@ -1,0 +1,33 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-20T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "111111111111/root",
+      "type": "aws_iam_account",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "account",
+          "root": {
+            "has_access_keys": true
+          }
+        }
+      }
+    },
+    {
+      "id": "o-mgmt111/mgmt",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "organization",
+          "management_account": {
+            "has_workload_principals": true
+          }
+        }
+      }
+    }
+  ]
+}

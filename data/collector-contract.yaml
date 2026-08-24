@@ -637,6 +637,20 @@ contracts:
     consumers:
       - CTL.IAM.ROLE.DANGEROUS.MANAGED.001
 
+  - field: has_quarantine_policy
+    type: boolean
+    null_semantics: not_evaluated
+    status: planned
+    postcondition: >
+      True if the AWSCompromisedKeyQuarantine managed policy
+      (arn:aws:iam::aws:policy/AWSCompromisedKeyQuarantine)
+      is attached to the IAM principal. AWS attaches this policy
+      automatically when it detects an access key exposed in a
+      public repository. Its presence indicates an active
+      credential compromise incident with incomplete remediation.
+    consumers:
+      - CTL.IAM.POLICY.QUARANTINE.001
+
   - field: public_invoke_has_source_condition
     type: boolean
     null_semantics: not_evaluated
