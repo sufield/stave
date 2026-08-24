@@ -31,8 +31,6 @@ applicable_asset_types:
   - aws_bedrock_agentcore_runtime
 params:
   attack_stage: execution
-lifecycle:
-  status: schema_blocked
 observation_fields:
   - ai.kind
   - ai.payment.payment_session_expiry_seconds

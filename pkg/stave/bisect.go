@@ -31,7 +31,7 @@ type BisectInput struct {
 	Mode        string
 	Format      string
 	EvalTime    string
-	ResourceARN asset.ID
+	ResourceARN string
 	Logger      *slog.Logger
 }
 
@@ -101,11 +101,11 @@ func BisectControl(ctx context.Context, in BisectInput) (BisectOutput, error) {
 			return a.Assess(ctx, snaps)
 		},
 		targetID,
-		in.ResourceARN,
+		asset.ID(in.ResourceARN),
 	)
 
 	eng := &appbisect.Engine{Evaluate: evaluator}
-	result, err := eng.Run(ctx, snapshots, mode, targetID, in.ResourceARN)
+	result, err := eng.Run(ctx, snapshots, mode, targetID, asset.ID(in.ResourceARN))
 	if err != nil {
 		return BisectOutput{}, fmt.Errorf("run bisect engine: %w", err)
 	}

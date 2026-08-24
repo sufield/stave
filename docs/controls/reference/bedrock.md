@@ -440,6 +440,51 @@ AgentCore runtime execution role grants overly broad permissions — the role ca
 
 ---
 
+### CTL.BEDROCK.AGENTCORE.PAYMENT.EXPIRY.001
+
+**AgentCore Payment Session Must Have Expiry Configured**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-12; soc2: CC6.1;
+
+AgentCore payment session must have an expiry time configured. A payment session without expiry allows indefinite autonomous spending within one session. Combined with retry behavior, this creates a window where repeated small transactions accumulate without a time bound. Session expiry is the temporal fence that forces re-authorization. Schema gap: this control is inert until a collector populates the properties.ai.payment.payment_session_expiry_seconds field. See docs-internal/schema-gaps/agentcore-policy.md.
+
+**Remediation:** Configure a session expiry on the AgentCore Payment Manager. Set the expiry to the shortest duration that supports the agent's workflow — typically minutes for interactive agents, hours for batch processing agents.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.PAYMENT.LIMIT.HIGH.001
+
+**AgentCore Payment Session Spending Cap Must Not Be Excessive**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.1;
+
+AgentCore payment session spending cap must not exceed the organization's configured threshold. A cap that exists but is set unreasonably high defeats the purpose of the guardrail. For x402 microtransaction agents, typical per-session spending is cents to single-digit dollars; a cap in the hundreds or thousands indicates misconfiguration. The threshold is parameterized — organizations should set it based on their transaction patterns. Schema gap: this control is inert until a collector populates the properties.ai.payment.payment_session_max_spend field. See docs-internal/schema-gaps/agentcore-policy.md.
+
+**Remediation:** Lower the maximum spend amount per payment session to match the agent's intended transaction pattern. Review recent transaction history to determine an appropriate cap.
+
+---
+
+### CTL.BEDROCK.AGENTCORE.PAYMENT.NOLIMIT.001
+
+**AgentCore Payment Session Must Have Spending Limits**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-6(1); soc2: CC6.1;
+
+AgentCore payment manager must configure session spending limits. Without a spending cap, a prompt injection or agent misinterpretation in a single session can drain funds at machine speed. The AgentCore Payments blog explicitly notes agents "can misinterpret a response as authorization to spend or repeat a payment because of an unexpected retry." The spending limit is the deterministic check at the infrastructure layer that prevents this. Schema gap: this control is inert until a collector populates the properties.ai.payment.payment_session_has_limits field. See docs-internal/schema-gaps/agentcore-policy.md.
+
+**Remediation:** Configure a maximum spend amount per payment session via the AgentCore Payment Manager configuration. Set the cap to the lowest value that supports the agent's intended transaction pattern. For x402 microtransaction agents, typical caps are single-digit dollars per session.
+
+---
+
 ### CTL.BEDROCK.AGENTCORE.POLICY.001
 
 **AgentCore Runtime Must Have AgentCore Policy Attached**
