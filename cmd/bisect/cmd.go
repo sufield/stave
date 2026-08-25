@@ -78,7 +78,7 @@ Exit Codes:
 			out, err := stave.BisectControl(compose.CommandContext(cmd), stave.BisectInput{
 				ControlsDir: opts.ControlsDir,
 				ObsDir:      opts.ObsDir,
-				ControlID:   opts.ControlID,
+				ControlID:   stave.ControlID(opts.ControlID),
 				Mode:        opts.Mode,
 				Format:      opts.Format,
 				EvalTime:    opts.EvalTime,

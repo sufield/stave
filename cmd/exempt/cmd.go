@@ -85,7 +85,7 @@ Exit Codes:
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if err := stave.AddAcknowledgment(opts.File, stave.AcknowledgmentInput{
-				ControlID:     opts.ControlID,
+				ControlID:     stave.ControlID(opts.ControlID),
 				AssetID:       opts.AssetID,
 				Reason:        opts.Reason,
 				Approver:      opts.Approver,
@@ -147,7 +147,7 @@ Exit Codes:
 		SilenceErrors: true,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return stave.AddException(opts.File, stave.ExceptionInput{ //nolint:wrapcheck // facade already wrapped; preserve exit 4.
-				ControlID: opts.ControlID,
+				ControlID: stave.ControlID(opts.ControlID),
 				AssetID:   opts.AssetID,
 				Expires:   opts.Expires,
 				Reason:    opts.Reason,

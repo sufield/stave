@@ -15,7 +15,7 @@ import (
 // AcknowledgmentInput parameterizes [AddAcknowledgment]. Compensating is a
 // comma-separated list of compensating control IDs (split internally).
 type AcknowledgmentInput struct {
-	ControlID     string
+	ControlID     ControlID
 	AssetID       string
 	Reason        string
 	Approver      string
@@ -26,7 +26,7 @@ type AcknowledgmentInput struct {
 
 // ExceptionInput parameterizes [AddException].
 type ExceptionInput struct {
-	ControlID string
+	ControlID ControlID
 	AssetID   string
 	Expires   string
 	Reason    string
@@ -217,11 +217,11 @@ func ValidateAcceptances(file string) (*ExemptValidationResult, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load acceptance file: %w", err)
 	}
-	knownIDs := make(map[string]struct{})
+	knownIDs := make(map[ControlID]struct{})
 	store := ctlbuiltin.NewControlStore(controldata.FS, ".", ctlbuiltin.WithAliasResolver(predicate.ResolverFunc()))
 	if controls, loadErr := store.All(); loadErr == nil {
 		for i := range controls {
-			knownIDs[string(controls[i].ID)] = struct{}{}
+			knownIDs[controls[i].ID] = struct{}{}
 		}
 	}
 	return &ExemptValidationResult{

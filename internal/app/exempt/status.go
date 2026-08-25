@@ -2,6 +2,8 @@ package exempt
 
 import (
 	"time"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // StatusReport holds the exemption health report.
@@ -19,7 +21,7 @@ type StatusReport struct {
 
 // ExpiryItem describes an expiring or expired exemption.
 type ExpiryItem struct {
-	ControlID     string `json:"control_id"`
+	ControlID     kernel.ControlID `json:"control_id"`
 	AssetID       string `json:"asset_id"`
 	ExpiryDate    string `json:"expiry_date"`
 	DaysRemaining int    `json:"days_remaining"`
@@ -28,7 +30,7 @@ type ExpiryItem struct {
 
 // ResolvedItem describes an exemption where the finding no longer exists.
 type ResolvedItem struct {
-	ControlID      string `json:"control_id"`
+	ControlID      kernel.ControlID `json:"control_id"`
 	AssetID        string `json:"asset_id"`
 	GrantedDate    string `json:"granted_date"`
 	Recommendation string `json:"recommendation"`
@@ -81,7 +83,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 			}
 		}
 
-		key := ack.ControlID + "@" + ack.AssetID
+		key := string(ack.ControlID) + "@" + ack.AssetID
 		_, active := activeFindings[key]
 		if activeFindings != nil && !active {
 			report.Resolved++

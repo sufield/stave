@@ -151,7 +151,7 @@ func exemptCollectKeys(acceptanceFile string) map[string]struct{} {
 				continue
 			}
 		}
-		keys[exc.ControlID+"@"+exc.AssetID] = struct{}{}
+		keys[string(exc.ControlID)+"@"+exc.AssetID] = struct{}{}
 	}
 	return keys
 }

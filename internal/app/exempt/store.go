@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"time"
 
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
@@ -37,7 +38,7 @@ const (
 // is consumable by stave apply --acknowledgment-file without modification.
 type AcknowledgmentEntry struct {
 	ID                   string       `yaml:"id" json:"id"`
-	ControlID            string       `yaml:"control_id" json:"control_id"`
+	ControlID            kernel.ControlID `yaml:"control_id" json:"control_id"`
 	AssetID              string       `yaml:"asset_id" json:"asset_id"`
 	Reason               string       `yaml:"rationale" json:"rationale"`
 	Approver             string       `yaml:"acknowledged_by" json:"acknowledged_by"`
@@ -156,7 +157,7 @@ func (a *AcknowledgmentEntry) ExportStatus() string {
 
 // ExceptionEntry is an operational suppression.
 type ExceptionEntry struct {
-	ControlID  string `yaml:"control_id" json:"control_id"`
+	ControlID  kernel.ControlID `yaml:"control_id" json:"control_id"`
 	AssetID    string `yaml:"asset_id" json:"asset_id"`
 	ExpiryDate string `yaml:"expiry_date,omitempty" json:"expiry_date,omitempty"`
 	Reason     string `yaml:"reason" json:"reason"`
@@ -239,7 +240,7 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 		return fmt.Errorf("expiry_date %s is in the past", entry.ExpiryDate)
 	}
 
-	entry.ID = entry.ControlID + "@" + entry.AssetID
+	entry.ID = string(entry.ControlID) + "@" + entry.AssetID
 	// time.Parse(RFC3339, ...) above already rejected anything shorter
 	// than the 20-char minimum (`YYYY-MM-DDTHH:MM:SSZ`), so the first
 	// 10 chars are guaranteed to be the date.
@@ -355,7 +356,7 @@ func (f *AcceptanceFile) Remove(id, timestamp string) error {
 
 // ValidateWithCatalog checks all entries including compensating control IDs
 // against the provided set of known control IDs.
-func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[string]struct{}) []string {
+func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[kernel.ControlID]struct{}) []string {
 	errs := f.Validate()
 	if len(knownIDs) == 0 {
 		return errs
@@ -368,7 +369,7 @@ func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[string]struct{}) []str
 			}
 		}
 		for _, cc := range a.CompensatingControls {
-			if _, ok := knownIDs[cc]; !ok {
+			if _, ok := knownIDs[kernel.ControlID(cc)]; !ok {
 				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: compensating control %q not found in catalog", i, cc))
 			}
 		}

@@ -42,7 +42,7 @@ Exit codes:
 				return &ui.UserError{Err: fmt.Errorf("--format must be text | json (got %q)", opts.Format)}
 			}
 			out, err := stave.RenderCatalogInspect(cmd.Context(), stave.CatalogInspectOptions{
-				ControlID:   args[0],
+				ControlID:   stave.ControlID(args[0]),
 				ControlsDir: opts.ControlsDir,
 				ChainsDir:   opts.ChainsDir,
 				Format:      opts.Format,

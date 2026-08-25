@@ -14,7 +14,7 @@ import (
 
 // CatalogInspectOptions parameterizes [RenderCatalogInspect].
 type CatalogInspectOptions struct {
-	ControlID   string
+	ControlID   ControlID
 	ControlsDir string
 	ChainsDir   string
 	Format      string // "json" or "text"/""
@@ -60,7 +60,7 @@ func RenderCatalogInspect(ctx context.Context, opts CatalogInspectOptions) ([]by
 
 	var found *policy.ControlDefinition
 	for i := range controls {
-		if strings.EqualFold(string(controls[i].ID), opts.ControlID) {
+		if strings.EqualFold(string(controls[i].ID), string(opts.ControlID)) {
 			found = &controls[i]
 			break
 		}

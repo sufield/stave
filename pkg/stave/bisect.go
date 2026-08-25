@@ -15,7 +15,6 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/engine"
-	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/platform/crypto"
 	"github.com/sufield/stave/internal/platform/fsutil"
@@ -27,7 +26,7 @@ import (
 type BisectInput struct {
 	ControlsDir string
 	ObsDir      string
-	ControlID   string
+	ControlID   ControlID
 	Mode        string
 	Format      string
 	EvalTime    string
@@ -62,7 +61,7 @@ func BisectControl(ctx context.Context, in BisectInput) (BisectOutput, error) {
 		return BisectOutput{}, err
 	}
 
-	targetID := kernel.ControlID(in.ControlID)
+	targetID := in.ControlID
 	target, found := appbisect.FindControl(controls, targetID)
 	if !found {
 		return BisectOutput{}, fmt.Errorf("control %s not found in %s", targetID, controlsDir)
