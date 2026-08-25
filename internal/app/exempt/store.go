@@ -37,18 +37,18 @@ const (
 // YAML tags match controldef.AcknowledgmentRule so the produced file
 // is consumable by stave apply --acknowledgment-file without modification.
 type AcknowledgmentEntry struct {
-	ID                   string       `yaml:"id" json:"id"`
+	ID                   string           `yaml:"id" json:"id"`
 	ControlID            kernel.ControlID `yaml:"control_id" json:"control_id"`
-	AssetID              string       `yaml:"asset_id" json:"asset_id"`
-	Reason               string       `yaml:"rationale" json:"rationale"`
-	Approver             string       `yaml:"acknowledged_by" json:"acknowledged_by"`
-	AcknowledgedDate     string       `yaml:"acknowledged_date" json:"acknowledged_date"`
-	ExpiryDate           string       `yaml:"expiry_date" json:"expiry_date"`
-	ReviewBy             string       `yaml:"review_by,omitempty" json:"review_by,omitempty"`
-	ReviewCadence        string       `yaml:"review_cadence,omitempty" json:"review_cadence,omitempty"`
-	CompensatingControls []string     `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
-	Status               string       `yaml:"status" json:"status"`
-	AuditTrail           []AuditEvent `yaml:"audit_trail" json:"audit_trail"`
+	AssetID              string           `yaml:"asset_id" json:"asset_id"`
+	Reason               string           `yaml:"rationale" json:"rationale"`
+	Approver             string           `yaml:"acknowledged_by" json:"acknowledged_by"`
+	AcknowledgedDate     string           `yaml:"acknowledged_date" json:"acknowledged_date"`
+	ExpiryDate           string           `yaml:"expiry_date" json:"expiry_date"`
+	ReviewBy             string           `yaml:"review_by,omitempty" json:"review_by,omitempty"`
+	ReviewCadence        string           `yaml:"review_cadence,omitempty" json:"review_cadence,omitempty"`
+	CompensatingControls []string         `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
+	Status               string           `yaml:"status" json:"status"`
+	AuditTrail           []AuditEvent     `yaml:"audit_trail" json:"audit_trail"`
 }
 
 // IsActive reports whether the entry's status is the canonical
@@ -158,9 +158,9 @@ func (a *AcknowledgmentEntry) ExportStatus() string {
 // ExceptionEntry is an operational suppression.
 type ExceptionEntry struct {
 	ControlID  kernel.ControlID `yaml:"control_id" json:"control_id"`
-	AssetID    string `yaml:"asset_id" json:"asset_id"`
-	ExpiryDate string `yaml:"expiry_date,omitempty" json:"expiry_date,omitempty"`
-	Reason     string `yaml:"reason" json:"reason"`
+	AssetID    string           `yaml:"asset_id" json:"asset_id"`
+	ExpiryDate string           `yaml:"expiry_date,omitempty" json:"expiry_date,omitempty"`
+	Reason     string           `yaml:"reason" json:"reason"`
 }
 
 // ExemptionEntry is a scope exclusion.

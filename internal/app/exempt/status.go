@@ -22,18 +22,18 @@ type StatusReport struct {
 // ExpiryItem describes an expiring or expired exemption.
 type ExpiryItem struct {
 	ControlID     kernel.ControlID `json:"control_id"`
-	AssetID       string `json:"asset_id"`
-	ExpiryDate    string `json:"expiry_date"`
-	DaysRemaining int    `json:"days_remaining"`
-	Reason        string `json:"reason"`
+	AssetID       string           `json:"asset_id"`
+	ExpiryDate    string           `json:"expiry_date"`
+	DaysRemaining int              `json:"days_remaining"`
+	Reason        string           `json:"reason"`
 }
 
 // ResolvedItem describes an exemption where the finding no longer exists.
 type ResolvedItem struct {
 	ControlID      kernel.ControlID `json:"control_id"`
-	AssetID        string `json:"asset_id"`
-	GrantedDate    string `json:"granted_date"`
-	Recommendation string `json:"recommendation"`
+	AssetID        string           `json:"asset_id"`
+	GrantedDate    string           `json:"granted_date"`
+	Recommendation string           `json:"recommendation"`
 }
 
 // ComputeStatus analyzes exemption health.

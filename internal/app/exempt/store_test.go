@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestAddAcknowledgment_RequiredFields(t *testing.T) {
@@ -255,7 +257,7 @@ func TestValidateWithCatalog_UnknownCompensating(t *testing.T) {
 		},
 	}
 
-	knownIDs := map[string]struct{}{"CTL.KNOWN.001": {}}
+	knownIDs := map[kernel.ControlID]struct{}{"CTL.KNOWN.001": {}}
 	errs := f.ValidateWithCatalog(knownIDs)
 
 	found := false
@@ -284,7 +286,7 @@ func TestValidateWithCatalog_AllKnown(t *testing.T) {
 		},
 	}
 
-	knownIDs := map[string]struct{}{"CTL.A": {}, "CTL.B": {}}
+	knownIDs := map[kernel.ControlID]struct{}{"CTL.A": {}, "CTL.B": {}}
 	errs := f.ValidateWithCatalog(knownIDs)
 	if len(errs) != 0 {
 		t.Errorf("expected no errors, got: %v", errs)

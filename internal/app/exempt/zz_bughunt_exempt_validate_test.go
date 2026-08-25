@@ -3,6 +3,8 @@ package exempt
 import (
 	"strings"
 	"testing"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestBugHunt_ValidateWithCatalog_UnknownPrimaryControlID(t *testing.T) {
@@ -28,7 +30,7 @@ func TestBugHunt_ValidateWithCatalog_UnknownPrimaryControlID(t *testing.T) {
 		},
 	}
 
-	knownIDs := map[string]struct{}{
+	knownIDs := map[kernel.ControlID]struct{}{
 		"CTL.KNOWN.001": {},
 	}
 
