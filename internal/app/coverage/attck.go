@@ -14,46 +14,49 @@ import (
 
 // AllTactics is the complete ATT&CK enterprise tactic list.
 var AllTactics = []TacticDef{
-	{ID: "TA0001", Name: "Initial Access", StaveID: string(kernel.AttackStageInitialAccess)},
-	{ID: "TA0002", Name: "Execution", StaveID: string(kernel.AttackStageExecution)},
-	{ID: "TA0003", Name: "Persistence", StaveID: string(kernel.AttackStagePersistence)},
-	{ID: "TA0004", Name: "Privilege Escalation", StaveID: string(kernel.AttackStagePrivilegeEscalation)},
-	{ID: "TA0005", Name: "Defense Evasion", StaveID: string(kernel.AttackStageDetectionEvasion)},
-	{ID: "TA0006", Name: "Credential Access", StaveID: string(kernel.AttackStageCredentialAccess)},
-	{ID: "TA0007", Name: "Discovery", StaveID: string(kernel.AttackStageDiscovery)},
-	{ID: "TA0008", Name: "Lateral Movement", StaveID: string(kernel.AttackStageLateralMovement)},
-	{ID: "TA0009", Name: "Collection", StaveID: string(kernel.AttackStageCollection)},
-	{ID: "TA0010", Name: "Exfiltration", StaveID: string(kernel.AttackStageExfiltration)},
-	{ID: "TA0040", Name: "Impact", StaveID: string(kernel.AttackStageImpact)},
+	{ID: "TA0001", Name: "Initial Access", StaveID: kernel.AttackStageInitialAccess},
+	{ID: "TA0002", Name: "Execution", StaveID: kernel.AttackStageExecution},
+	{ID: "TA0003", Name: "Persistence", StaveID: kernel.AttackStagePersistence},
+	{ID: "TA0004", Name: "Privilege Escalation", StaveID: kernel.AttackStagePrivilegeEscalation},
+	{ID: "TA0005", Name: "Defense Evasion", StaveID: kernel.AttackStageDetectionEvasion},
+	{ID: "TA0006", Name: "Credential Access", StaveID: kernel.AttackStageCredentialAccess},
+	{ID: "TA0007", Name: "Discovery", StaveID: kernel.AttackStageDiscovery},
+	{ID: "TA0008", Name: "Lateral Movement", StaveID: kernel.AttackStageLateralMovement},
+	{ID: "TA0009", Name: "Collection", StaveID: kernel.AttackStageCollection},
+	{ID: "TA0010", Name: "Exfiltration", StaveID: kernel.AttackStageExfiltration},
+	{ID: "TA0040", Name: "Impact", StaveID: kernel.AttackStageImpact},
 }
 
-// TacticDef maps ATT&CK tactic ID to name and Stave string.
+// TacticDef maps ATT&CK tactic ID to name and Stave AttackStage.
 type TacticDef struct {
 	ID      string
 	Name    string
-	StaveID string
+	StaveID kernel.AttackStage
 }
+
+// TacticStatus classifies the coverage level of a tactic.
+type TacticStatus string
 
 // Tactic-coverage status vocabulary. Centralised here so producers
 // (the Build pipeline) and consumers (execreport, exporters) cannot
 // drift on the literal strings — a future rename or addition is one
 // edit. Values are the on-the-wire JSON strings.
 const (
-	StatusCovered    = "covered"
-	StatusThin       = "thin"
-	StatusNoCoverage = "no_coverage"
+	StatusCovered    TacticStatus = "covered"
+	StatusThin       TacticStatus = "thin"
+	StatusNoCoverage TacticStatus = "no_coverage"
 )
 
 // TacticCoverage holds coverage data for a single tactic.
 type TacticCoverage struct {
-	TacticID        string   `json:"tactic_id"`
-	TacticName      string   `json:"tactic_name"`
-	ControlCount    int      `json:"control_count"`
-	Controls        []string `json:"controls"`
-	PassingCount    *int     `json:"passing_count"`    // nil when no assessment overlay
-	FailingCount    *int     `json:"failing_count"`    // nil when no assessment overlay
-	CoveragePercent *float64 `json:"coverage_percent"` // nil when no controls
-	Status          string   `json:"status"`           // covered | thin | no_coverage
+	TacticID        string             `json:"tactic_id"`
+	TacticName      string             `json:"tactic_name"`
+	ControlCount    int                `json:"control_count"`
+	Controls        []kernel.ControlID `json:"controls"`
+	PassingCount    *int               `json:"passing_count"`    // nil when no assessment overlay
+	FailingCount    *int               `json:"failing_count"`    // nil when no assessment overlay
+	CoveragePercent *float64           `json:"coverage_percent"` // nil when no controls
+	Status          TacticStatus       `json:"status"`           // covered | thin | no_coverage
 }
 
 // IsCovered reports whether this tactic has at least the "thin"
@@ -73,7 +76,7 @@ func (tc *TacticCoverage) DisplayStatus() string {
 	if tc == nil {
 		return ""
 	}
-	return strings.ToUpper(tc.Status)
+	return strings.ToUpper(string(tc.Status))
 }
 
 // IsGap reports whether this tactic is a coverage gap — either no
@@ -100,7 +103,7 @@ func (tc *TacticCoverage) StatusLabel() string {
 	if tc.Status == StatusNoCoverage {
 		return "not_covered"
 	}
-	return tc.Status
+	return string(tc.Status)
 }
 
 // StaveOnlyTactic is for Stave-specific tactics not in ATT&CK.
@@ -148,7 +151,7 @@ func Build(input BuildInput) *CoverageReport {
 	}
 
 	// Group controls by attack stage.
-	byStage := make(map[string][]string) // stave_stage → []controlID
+	byStage := make(map[kernel.AttackStage][]kernel.ControlID) // stave_stage → []controlID
 	var unannotated []string
 	for i := range input.Controls {
 		ctl := &input.Controls[i]
@@ -157,7 +160,7 @@ func Build(input BuildInput) *CoverageReport {
 			unannotated = append(unannotated, string(ctl.ID))
 			continue
 		}
-		byStage[string(stage)] = append(byStage[string(stage)], string(ctl.ID))
+		byStage[stage] = append(byStage[stage], ctl.ID)
 	}
 
 	// Group findings by control ID for posture overlay.
@@ -203,7 +206,7 @@ func Build(input BuildInput) *CoverageReport {
 			passing := 0
 			failing := 0
 			for _, cid := range ctls {
-				if _, ok := failingControls[kernel.ControlID(cid)]; ok {
+				if _, ok := failingControls[cid]; ok {
 					failing++
 				} else {
 					passing++
@@ -224,7 +227,7 @@ func Build(input BuildInput) *CoverageReport {
 
 	// Stave-only tactics (resilience).
 	var staveOnly []StaveOnlyTactic
-	if ctls := byStage["resilience"]; len(ctls) > 0 {
+	if ctls := byStage[kernel.AttackStageResilience]; len(ctls) > 0 {
 		so := StaveOnlyTactic{
 			TacticID:     "x_stave_resilience",
 			TacticName:   "Resilience",
@@ -234,7 +237,7 @@ func Build(input BuildInput) *CoverageReport {
 			passing := 0
 			failing := 0
 			for _, cid := range ctls {
-				if _, ok := failingControls[kernel.ControlID(cid)]; ok {
+				if _, ok := failingControls[cid]; ok {
 					failing++
 				} else {
 					passing++
@@ -314,7 +317,7 @@ func NavigatorLayer(report *CoverageReport) map[string]any {
 func staveToNavigatorTactic(tacticID string) string {
 	for _, td := range AllTactics {
 		if td.ID == tacticID {
-			return attack.ToATTCKTacticID(kernel.AttackStage(td.StaveID)) // returns same ID but validates
+			return attack.ToATTCKTacticID(td.StaveID) // returns same ID but validates
 		}
 	}
 	return ""

@@ -2,7 +2,11 @@
 // score and SLA projections.
 package forecast
 
-import "fmt"
+import (
+	"fmt"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
+)
 
 // Result holds forecast output.
 type Result struct {
@@ -27,23 +31,26 @@ type ProjectedState struct {
 	ScoreSlope   float64 `json:"score_slope_per_day"`
 }
 
+// SLAStatus classifies the SLA projection status.
+type SLAStatus string
+
 // SLAProjection status vocabulary. Centralised here so producers
 // (Compute) and consumers (cmd/trend/forecast renderer) cannot drift
 // on the literal strings — adding a new tier or renaming one is
 // one edit.
 const (
-	StatusOnTrack   = "ON_TRACK"
-	StatusAtRisk    = "AT_RISK"
-	StatusBreaching = "BREACHING"
+	StatusOnTrack   SLAStatus = "ON_TRACK"
+	StatusAtRisk    SLAStatus = "AT_RISK"
+	StatusBreaching SLAStatus = "BREACHING"
 )
 
 // SLAProjection holds SLA forecast per severity.
 type SLAProjection struct {
-	Severity      string  `json:"severity"`
-	CurrentMTTR   float64 `json:"current_mttr_hours"`
-	ProjectedMTTR float64 `json:"projected_mttr_hours"`
-	Deadline      float64 `json:"sla_deadline_hours"`
-	Status        string  `json:"status"` // see Status* constants above
+	Severity      policy.Severity `json:"severity"`
+	CurrentMTTR   float64         `json:"current_mttr_hours"`
+	ProjectedMTTR float64         `json:"projected_mttr_hours"`
+	Deadline      float64         `json:"sla_deadline_hours"`
+	Status        SLAStatus       `json:"status"` // see Status* constants above
 }
 
 // IsOnTrack reports whether the projection has the SLA-met status.
@@ -147,8 +154,10 @@ func Compute(input Input) (*Result, error) {
 			status = StatusAtRisk
 		}
 
+		sevVal, _ := policy.ParseSeverity(sev)
+
 		result.SLAProj = append(result.SLAProj, SLAProjection{
-			Severity:      sev,
+			Severity:      sevVal,
 			CurrentMTTR:   currentMTTR,
 			ProjectedMTTR: projectedMTTR,
 			Deadline:      deadline,

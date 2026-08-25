@@ -13,18 +13,18 @@ import (
 
 // Delta describes the difference between two catalog versions.
 type Delta struct {
-	CatalogBefore   int              `json:"catalog_before_count"`
-	CatalogAfter    int              `json:"catalog_after_count"`
-	NewControls     []string         `json:"new_controls"`
-	RemovedControls []string         `json:"removed_controls"`
-	SeverityChanges []SeverityChange `json:"severity_changes,omitempty"`
+	CatalogBefore   int                `json:"catalog_before_count"`
+	CatalogAfter    int                `json:"catalog_after_count"`
+	NewControls     []kernel.ControlID `json:"new_controls"`
+	RemovedControls []kernel.ControlID `json:"removed_controls"`
+	SeverityChanges []SeverityChange   `json:"severity_changes,omitempty"`
 }
 
 // SeverityChange records a control whose severity changed.
 type SeverityChange struct {
-	ControlID string `json:"control_id"`
-	Before    string `json:"before"`
-	After     string `json:"after"`
+	ControlID kernel.ControlID `json:"control_id"`
+	Before    policy.Severity  `json:"before"`
+	After     policy.Severity  `json:"after"`
 }
 
 // Compute produces a Delta from two sets of control definitions.
@@ -38,20 +38,20 @@ func Compute(before, after []policy.ControlDefinition) *Delta {
 		afterMap[after[i].ID] = &after[i]
 	}
 
-	var newControls, removedControls []string
+	var newControls, removedControls []kernel.ControlID
 	var sevChanges []SeverityChange
 
 	// New controls: in after, not in before.
 	for id := range afterMap {
 		if _, ok := beforeMap[id]; !ok {
-			newControls = append(newControls, string(id))
+			newControls = append(newControls, id)
 		}
 	}
 
 	// Removed controls: in before, not in after.
 	for id := range beforeMap {
 		if _, ok := afterMap[id]; !ok {
-			removedControls = append(removedControls, string(id))
+			removedControls = append(removedControls, id)
 		}
 	}
 
@@ -60,9 +60,9 @@ func Compute(before, after []policy.ControlDefinition) *Delta {
 		if ctlA, ok := afterMap[id]; ok {
 			if ctlB.Severity != ctlA.Severity {
 				sevChanges = append(sevChanges, SeverityChange{
-					ControlID: string(id),
-					Before:    ctlB.Severity.String(),
-					After:     ctlA.Severity.String(),
+					ControlID: id,
+					Before:    ctlB.Severity,
+					After:     ctlA.Severity,
 				})
 			}
 		}
@@ -71,7 +71,7 @@ func Compute(before, after []policy.ControlDefinition) *Delta {
 	slices.Sort(newControls)
 	slices.Sort(removedControls)
 	slices.SortFunc(sevChanges, func(a, b SeverityChange) int {
-		return cmp.Compare(a.ControlID, b.ControlID)
+		return cmp.Compare(string(a.ControlID), string(b.ControlID))
 	})
 
 	return &Delta{
@@ -94,19 +94,19 @@ func FormatTable(d *Delta) string {
 	if len(d.NewControls) > 0 {
 		b.WriteString("\nNEW CONTROLS\n")
 		for _, c := range d.NewControls {
-			b.WriteString("  + " + c + "\n")
+			b.WriteString("  + " + string(c) + "\n")
 		}
 	}
 	if len(d.RemovedControls) > 0 {
 		b.WriteString("\nREMOVED CONTROLS\n")
 		for _, c := range d.RemovedControls {
-			b.WriteString("  - " + c + "\n")
+			b.WriteString("  - " + string(c) + "\n")
 		}
 	}
 	if len(d.SeverityChanges) > 0 {
 		b.WriteString("\nSEVERITY CHANGES\n")
 		for _, sc := range d.SeverityChanges {
-			b.WriteString("  " + sc.ControlID + ": " + sc.Before + " → " + sc.After + "\n")
+			b.WriteString("  " + string(sc.ControlID) + ": " + sc.Before.String() + " → " + sc.After.String() + "\n")
 		}
 	}
 	return b.String()
