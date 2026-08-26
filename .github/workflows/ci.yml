@@ -377,21 +377,20 @@ jobs:
           path: licenses.csv
 
   e2e:
-    name: E2E
+    name: E2E (shard ${{ matrix.shard }})
     # PRs use the sharded `test` job + `test-fast` for the fast path.
-    # The full e2e suite (~5800 fixtures serialised at -parallel 1,
-    # 45–60m wall-clock) runs on push to main and the nightly cron.
-    # Mirrors the `race` job's gating — both are slow signals that
-    # would otherwise dominate PR feedback latency.
+    # The full e2e suite (~2800 cases serialised at -parallel 1)
+    # runs on push to main and the nightly cron. Sharded across 4
+    # runners via E2E_SHARD / E2E_SHARD_COUNT env vars — each
+    # runner handles ~700 cases serially (~14m vs ~55m unsharded).
     if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     needs: goldens
-    # Job-level timeout sits 10m above the go test -timeout so a
-    # genuine package-level deadline-exceeded surfaces as a Go
-    # panic-with-stack (and per-case heartbeat logs) rather than a
-    # generic GitHub-Actions "job killed at the time limit" with
-    # no test output.
-    timeout-minutes: 70
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -411,24 +410,10 @@ jobs:
         if: needs.goldens.result == 'skipped'
         run: make sync-schemas sync-controls sync-alternatives
       - name: Build and run E2E tests
-        # -v so a stuck case surfaces its own name in the log
-        # instead of the package timing out silently. Cases are
-        # serialised inside the suite (see e2e/e2e_test.go) and
-        # -parallel 1 is the belt-and-braces override at the
-        # command level — enforces the no-concurrency contract
-        # even if a future test forgets the convention.
-        #
-        # -timeout 60m: raised from 45m. With ~5800 fixtures
-        # serialised, the prior 45m budget left no headroom for a
-        # transient slow runner. The job-level timeout-minutes
-        # (above) is 70m so the Go runtime fires its own deadline
-        # first and prints the stack instead of the runner killing
-        # the job blind.
-        #
-        # No -race: the e2e suite drives the compiled stave binary
-        # as a black box, so race detection on the test process
-        # itself adds no signal and would 2–10× the runtime.
-        run: make build && go test -v -parallel 1 -count=1 -timeout 60m -run E2E ./e2e/
+        env:
+          E2E_SHARD: ${{ matrix.shard }}
+          E2E_SHARD_COUNT: "4"
+        run: make build && go test -v -parallel 1 -count=1 -timeout 20m -run E2E ./e2e/
 
   release-check:
     name: GoReleaser config check

@@ -12,6 +12,11 @@ GOMOD=$(GOCMD) mod
 GOLINT_LOCAL=$(shell $(GOCMD) env GOPATH)/bin/golangci-lint
 GOLINT=$(if $(wildcard $(GOLINT_LOCAL)),$(GOLINT_LOCAL),golangci-lint)
 
+# Adaptive parallelism: leave 2 cores for the OS/IDE, minimum 2
+NPROC := $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
+TEST_P := $(shell expr $(NPROC) - 2 2>/dev/null || echo 2)
+TEST_P := $(shell [ $(TEST_P) -lt 2 ] && echo 2 || echo $(TEST_P))
+
 # Schema sync (contracts source → embedded runtime copy)
 SCHEMA_SRC=internal/schemas
 SCHEMA_DST=internal/contracts/schema/embedded
@@ -150,7 +155,7 @@ mcp-test: sync-schemas sync-controls sync-alternatives
 ## per-test latency rather than CPU work. Race-enabled binaries do extra
 ## bookkeeping per goroutine but the I/O wait dominates.
 test: sync-schemas sync-controls sync-alternatives
-	$(GOTEST) -tags 'stavedev integration' -race -v -timeout 30m -parallel 16 ./...
+	$(GOTEST) -tags 'stavedev integration' -race -v -p $(TEST_P) -timeout 30m -parallel 16 ./...
 
 ## test-fast: Sub-minute dev feedback loop.
 ##

@@ -58,10 +58,21 @@ func TestE2E(t *testing.T) {
 		t.Fatalf("read e2e directory: %v", err)
 	}
 
+	shard, shardCount := e2eShardConfig()
+	if shardCount > 0 {
+		t.Logf("shard %d of %d", shard, shardCount)
+	}
+
+	caseIndex := 0
 	for _, entry := range entries {
 		if !entry.IsDir() {
 			continue
 		}
+		if shardCount > 0 && caseIndex%shardCount != shard {
+			caseIndex++
+			continue
+		}
+		caseIndex++
 		name := entry.Name()
 		t.Run(name, func(t *testing.T) {
 			// Heartbeat logs frame each subtest so a CI timeout points
@@ -608,4 +619,18 @@ func countJSONArrayPath(t *testing.T, data []byte, key string) int {
 		return 0
 	}
 	return len(arr)
+}
+
+func e2eShardConfig() (shard, count int) {
+	s := os.Getenv("E2E_SHARD")
+	c := os.Getenv("E2E_SHARD_COUNT")
+	if s == "" || c == "" {
+		return 0, 0
+	}
+	shard, _ = strconv.Atoi(s)
+	count, _ = strconv.Atoi(c)
+	if count <= 0 || shard < 0 || shard >= count {
+		return 0, 0
+	}
+	return shard, count
 }

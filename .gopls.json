@@ -1,0 +1,8 @@
+{
+  "build.directoryFilters": [
+    "-testdata",
+    "-internal/controldata/embedded",
+    "-internal/contracts/schema/embedded",
+    "-internal/adapters/coverage/embedded"
+  ]
+}
