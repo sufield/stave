@@ -4451,7 +4451,7 @@ contracts:
       True if CIDRs allocated from this pool can be advertised to the
       internet via BYOIP. Derived from ec2:DescribeIpamPools →
       PubliclyAdvertisable.
-    consumers: []
+    consumers: [] # Reserved for CTL.VPC.IPAM.POOL.BYOIP.001 — not yet authored
 
   - field: network.ipam.pool.allocation_resource_tags
     type: object
