@@ -10,6 +10,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // ControlLoaderFunc loads all controls from a root directory.
@@ -18,13 +19,13 @@ type ControlLoaderFunc func(rootDir string) ([]policy.ControlDefinition, error)
 // Gap describes a tool prerequisite not fully covered by
 // chains and controls.
 type Gap struct {
-	Tool       string   `json:"tool"`
-	Capability string   `json:"capability"`
-	FieldPath  string   `json:"field_path"`
-	HasChain   bool     `json:"has_chain"`
-	HasControl bool     `json:"has_control"`
-	ChainIDs   []string `json:"chain_ids,omitempty"`
-	ControlIDs []string `json:"control_ids,omitempty"`
+	Tool       string             `json:"tool"`
+	Capability string             `json:"capability"`
+	FieldPath  string             `json:"field_path"`
+	HasChain   bool               `json:"has_chain"`
+	HasControl bool               `json:"has_control"`
+	ChainIDs   []kernel.ChainID   `json:"chain_ids,omitempty"`
+	ControlIDs []kernel.ControlID `json:"control_ids,omitempty"`
 }
 
 // CoverageResult holds the output of a three-way join.
@@ -111,11 +112,11 @@ func loadChains(dir string) ([]policy.ChainDefinition, error) {
 
 // buildCapabilityIndex maps capability tokens to the chain IDs whose
 // postconditions include them.
-func buildCapabilityIndex(chains []policy.ChainDefinition) map[string][]string {
-	idx := make(map[string][]string)
+func buildCapabilityIndex(chains []policy.ChainDefinition) map[string][]kernel.ChainID {
+	idx := make(map[string][]kernel.ChainID)
 	for i := range chains {
 		for _, post := range chains[i].Postconditions {
-			idx[post] = append(idx[post], string(chains[i].ID))
+			idx[post] = append(idx[post], chains[i].ID)
 		}
 	}
 	return idx
@@ -123,14 +124,14 @@ func buildCapabilityIndex(chains []policy.ChainDefinition) map[string][]string {
 
 // buildFieldIndex maps property paths to the control IDs whose
 // predicates reference them.
-func buildFieldIndex(controls []policy.ControlDefinition) map[string][]string {
-	idx := make(map[string][]string)
+func buildFieldIndex(controls []policy.ControlDefinition) map[string][]kernel.ControlID {
+	idx := make(map[string][]kernel.ControlID)
 	for i := range controls {
 		if controls[i].UnsafePredicate.IsEmpty() {
 			continue
 		}
 		for _, path := range extractFieldPaths(controls[i].UnsafePredicate) {
-			idx[path] = append(idx[path], string(controls[i].ID))
+			idx[path] = append(idx[path], controls[i].ID)
 		}
 	}
 	return idx

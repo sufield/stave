@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -24,9 +25,9 @@ type Prediction struct {
 
 // Accelerator describes a sprint-sized intervention that moves the date.
 type Accelerator struct {
-	Description string   `json:"description"`
-	ControlIDs  []string `json:"control_ids"`
-	DaysSaved   int      `json:"days_saved"`
+	Description string             `json:"description"`
+	ControlIDs  []kernel.ControlID `json:"control_ids"`
+	DaysSaved   int                `json:"days_saved"`
 }
 
 // Input configures the prediction.
@@ -108,9 +109,9 @@ func Predict(in Input) *Prediction {
 	criticals := findBySeverity(latest.Findings, "critical")
 	if len(criticals) > 0 {
 		limit := min(len(criticals), 4)
-		ids := make([]string, limit)
+		ids := make([]kernel.ControlID, limit)
 		for i := range limit {
-			ids[i] = string(criticals[i].ControlID)
+			ids[i] = criticals[i].ControlID
 		}
 		saved := int(float64(limit) * avgMTTRDays)
 		accelerators = append(accelerators, Accelerator{

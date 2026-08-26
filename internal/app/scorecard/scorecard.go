@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // FrameworkScore holds readiness data for one framework.
@@ -32,25 +33,25 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 
 	for _, fw := range frameworks {
 		var perControl remediation.FindingSet
-		bestFinding := make(map[string]remediation.Finding)
+		bestFinding := make(map[kernel.ControlID]remediation.Finding)
 		for i := range findings {
 			f := &findings[i]
 			if !hasFrameworkCompliance(f, fw) {
 				continue
 			}
-			cid := string(f.ControlID)
+			cid := f.ControlID
 			existing, ok := bestFinding[cid]
 			if !ok || f.ControlSeverity > existing.ControlSeverity {
 				bestFinding[cid] = *f
 			}
 		}
-		seen := make(map[string]struct{})
+		seen := make(map[kernel.ControlID]struct{})
 		for i := range findings {
 			f := &findings[i]
 			if !hasFrameworkCompliance(f, fw) {
 				continue
 			}
-			cid := string(f.ControlID)
+			cid := f.ControlID
 			if _, ok := seen[cid]; ok {
 				continue
 			}
