@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
 	"gopkg.in/yaml.v3"
@@ -29,18 +30,20 @@ type ChecklistFile struct {
 
 // ChecklistItem is one item in the external checklist.
 type ChecklistItem struct {
-	ID          string `yaml:"id"          json:"id"`
-	Service     string `yaml:"service"     json:"service"`
-	Description string `yaml:"description" json:"description"`
-	Reference   string `yaml:"reference"   json:"reference"`
+	ID            string   `yaml:"id"             json:"id"`
+	Service       string   `yaml:"service"        json:"service"`
+	Description   string   `yaml:"description"    json:"description"`
+	Reference     string   `yaml:"reference"      json:"reference"`
+	PredicatePath []string `yaml:"predicate_path" json:"predicate_path,omitempty"`
 }
 
 type catalogGapsReport struct {
-	Total     int              `json:"total"`
-	Covered   int              `json:"covered"`
-	Uncovered int              `json:"uncovered"`
-	Ambiguous int              `json:"ambiguous"`
-	Items     []catalogGapItem `json:"items"`
+	Total      int              `json:"total"`
+	Covered    int              `json:"covered"`
+	Uncovered  int              `json:"uncovered"`
+	Ambiguous  int              `json:"ambiguous"`
+	Candidates int              `json:"candidates"`
+	Items      []catalogGapItem `json:"items"`
 }
 
 type catalogGapItem struct {
@@ -57,6 +60,7 @@ type gapControlEntry struct {
 	service string
 	name    string
 	desc    string
+	paths   []string // predicate field paths (properties.X.Y)
 }
 
 // RenderCatalogGaps loads an external checklist and compares it against
@@ -92,11 +96,12 @@ func RenderCatalogGaps(ctx context.Context, opts CatalogGapsOptions) ([]byte, er
 			service: svc,
 			name:    strings.ToLower(controls[i].Name),
 			desc:    strings.ToLower(controls[i].Description),
+			paths:   predicateFieldPaths(&controls[i].UnsafePredicate),
 		})
 	}
 
 	items := make([]catalogGapItem, 0, len(checklist.Checks))
-	var covered, uncovered, ambiguous int
+	var covered, uncovered, ambiguous, candidates int
 	for _, check := range checklist.Checks {
 		item := catalogGapItem{
 			CheckID:     check.ID,
@@ -114,6 +119,8 @@ func RenderCatalogGaps(ctx context.Context, opts CatalogGapsOptions) ([]byte, er
 			covered++
 		case "ambiguous":
 			ambiguous++
+		case "candidate":
+			candidates++
 		default:
 			uncovered++
 		}
@@ -121,11 +128,12 @@ func RenderCatalogGaps(ctx context.Context, opts CatalogGapsOptions) ([]byte, er
 	}
 
 	report := catalogGapsReport{
-		Total:     len(checklist.Checks),
-		Covered:   covered,
-		Uncovered: uncovered,
-		Ambiguous: ambiguous,
-		Items:     items,
+		Total:      len(checklist.Checks),
+		Covered:    covered,
+		Uncovered:  uncovered,
+		Ambiguous:  ambiguous,
+		Candidates: candidates,
+		Items:      items,
 	}
 
 	var buf bytes.Buffer
@@ -152,6 +160,26 @@ func matchControl(check ChecklistItem, controls []gapControlEntry, strict bool) 
 		return "", "uncovered"
 	}
 
+	// Path-based deterministic matching when checklist item has predicate_path.
+	if len(check.PredicatePath) > 0 {
+		var matches []string
+		for _, c := range controls {
+			if matchesAnyPath(c.paths, check.PredicatePath) {
+				matches = append(matches, c.id)
+			}
+		}
+		slices.SortFunc(matches, func(a, b string) int { return cmp.Compare(a, b) })
+		switch len(matches) {
+		case 0:
+			return "", "uncovered"
+		case 1:
+			return matches[0], "covered"
+		default:
+			return matches[0], "covered"
+		}
+	}
+
+	// Fuzzy fallback for items without predicate_path — results are candidates only.
 	var matches []string
 	for _, c := range controls {
 		if checkSvc != "" && c.service != checkSvc {
@@ -167,10 +195,38 @@ func matchControl(check ChecklistItem, controls []gapControlEntry, strict bool) 
 	case 0:
 		return "", "uncovered"
 	case 1:
-		return matches[0], "covered"
+		return matches[0], "candidate"
 	default:
-		return matches[0], "ambiguous"
+		return matches[0], "candidate"
 	}
+}
+
+func matchesAnyPath(controlPaths, wantPaths []string) bool {
+	for _, want := range wantPaths {
+		if slices.Contains(controlPaths, strings.TrimSpace(want)) {
+			return true
+		}
+	}
+	return false
+}
+
+func predicateFieldPaths(p *controldef.UnsafePredicate) []string {
+	if p == nil {
+		return nil
+	}
+	seen := map[string]struct{}{}
+	p.Walk(func(r controldef.PredicateRule) {
+		s := r.Field.String()
+		if s != "" {
+			seen[s] = struct{}{}
+		}
+	})
+	paths := make([]string, 0, len(seen))
+	for p := range seen {
+		paths = append(paths, p)
+	}
+	slices.Sort(paths)
+	return paths
 }
 
 var gapStopWords = map[string]bool{
@@ -212,6 +268,9 @@ func keywordOverlap(a, b string) int {
 func renderCatalogGapsText(buf *bytes.Buffer, r catalogGapsReport) {
 	fmt.Fprintf(buf, "Catalog Gap Analysis: %d checks — %d covered, %d uncovered",
 		r.Total, r.Covered, r.Uncovered)
+	if r.Candidates > 0 {
+		fmt.Fprintf(buf, ", %d candidates", r.Candidates)
+	}
 	if r.Ambiguous > 0 {
 		fmt.Fprintf(buf, ", %d ambiguous", r.Ambiguous)
 	}
@@ -226,6 +285,8 @@ func renderCatalogGapsText(buf *bytes.Buffer, r catalogGapsReport) {
 		switch item.Status {
 		case "covered":
 			marker = "OK"
+		case "candidate":
+			marker = "~ "
 		case "ambiguous":
 			marker = "? "
 		case "uncovered":

@@ -14,26 +14,25 @@ func TestBugHunt_MatchControl_PunctuationFalseNegative(t *testing.T) {
 		},
 	}
 
-	// Case 1: Without period - should match (overlap: ensure, bucket, encryption = 3)
+	// Case 1: Without period - should match as candidate (fuzzy: overlap >= 3)
 	checkWithout := ChecklistItem{
 		ID:          "CHK.S3.001",
 		Service:     "s3",
 		Description: "Ensure s3 bucket has encryption",
 	}
 	id1, status1 := matchControl(checkWithout, controls, false)
-	if status1 != "covered" || id1 != "CTL.S3.ENCRYPT.001" {
-		t.Fatalf("expected check without period to match: got status=%q, id=%q", status1, id1)
+	if status1 != "candidate" || id1 != "CTL.S3.ENCRYPT.001" {
+		t.Fatalf("expected fuzzy match as candidate: got status=%q, id=%q", status1, id1)
 	}
 
-	// Case 2: With period - under buggy code, "encryption." doesn't match "encryption",
-	// so overlap is only 2 (ensure, bucket), failing to meet the threshold of 3.
+	// Case 2: With period - punctuation must not prevent fuzzy match
 	checkWith := ChecklistItem{
 		ID:          "CHK.S3.002",
 		Service:     "s3",
 		Description: "Ensure s3 bucket has encryption.",
 	}
 	id2, status2 := matchControl(checkWith, controls, false)
-	if status2 != "covered" || id2 != "CTL.S3.ENCRYPT.001" {
-		t.Errorf("expected check with period to match: got status=%q, id=%q (punctuation caused false negative)", status2, id2)
+	if status2 != "candidate" || id2 != "CTL.S3.ENCRYPT.001" {
+		t.Errorf("expected fuzzy match as candidate with period: got status=%q, id=%q", status2, id2)
 	}
 }
