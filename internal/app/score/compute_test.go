@@ -253,13 +253,13 @@ func TestCompute_GeneratedAtAndSnapshotID(t *testing.T) {
 func TestRubricBands(t *testing.T) {
 	tests := []struct {
 		score float64
-		band  string
+		band  RubricBand
 	}{
-		{95, "strong"},
-		{82, "adequate"},
-		{68, "needs_attention"},
-		{45, "at_risk"},
-		{20, "critical"},
+		{95, BandStrong},
+		{82, BandAdequate},
+		{68, BandNeedsAttention},
+		{45, BandAtRisk},
+		{20, BandCritical},
 	}
 	for _, tt := range tests {
 		band, _ := rubric(tt.score)

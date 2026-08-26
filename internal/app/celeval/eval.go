@@ -6,14 +6,15 @@ import (
 	"errors"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // AssetResult holds the evaluation result for one asset.
 type AssetResult struct {
-	AssetID   string `json:"asset_id"`
-	AssetType string `json:"asset_type"`
-	Result    bool   `json:"result"`
-	Error     string `json:"error,omitempty"`
+	AssetID   asset.ID         `json:"asset_id"`
+	AssetType kernel.AssetType `json:"asset_type"`
+	Result    bool             `json:"result"`
+	Error     string           `json:"error,omitempty"`
 }
 
 // EvalResult holds the full evaluation output.
@@ -34,7 +35,7 @@ type PredicateEvaluator interface {
 type Input struct {
 	Expression string
 	Assets     []asset.Asset
-	AssetType  string // filter to this type if non-empty
+	AssetType  kernel.AssetType // filter to this type if non-empty
 	Evaluator  PredicateEvaluator
 }
 
@@ -48,7 +49,7 @@ func Eval(in Input) (*EvalResult, error) {
 
 	for i := range in.Assets {
 		a := &in.Assets[i]
-		if in.AssetType != "" && !a.IsType(in.AssetType) {
+		if in.AssetType != "" && !a.IsType(string(in.AssetType)) {
 			continue
 		}
 
@@ -56,8 +57,8 @@ func Eval(in Input) (*EvalResult, error) {
 		val, err := in.Evaluator.EvalBool(in.Expression, props)
 
 		ar := AssetResult{
-			AssetID:   string(a.ID),
-			AssetType: string(a.Type),
+			AssetID:   a.ID,
+			AssetType: a.Type,
 			Result:    val,
 		}
 		if err != nil {

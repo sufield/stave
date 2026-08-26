@@ -11,9 +11,9 @@ import (
 
 // LintResult holds chain lint output.
 type LintResult struct {
-	ChainID  string   `json:"chain_id"`
-	Errors   []string `json:"errors,omitempty"`
-	Warnings []string `json:"warnings,omitempty"`
+	ChainID  kernel.ChainID `json:"chain_id"`
+	Errors   []string       `json:"errors,omitempty"`
+	Warnings []string       `json:"warnings,omitempty"`
 }
 
 // LintChain validates a chain definition against the control catalog
@@ -22,7 +22,7 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]st
 	if chain == nil {
 		return LintResult{Errors: []string{"chain definition is nil"}}
 	}
-	result := LintResult{ChainID: string(chain.ID)}
+	result := LintResult{ChainID: chain.ID}
 
 	if chain.ID == "" {
 		result.Errors = append(result.Errors, "missing required field: id")
@@ -115,7 +115,7 @@ func LintChainRaw(raw []byte, chain *policy.ChainDefinition, controlIDs map[kern
 // FormatLint produces human-readable lint output.
 func FormatLint(r LintResult) string {
 	var b strings.Builder
-	b.WriteString(r.ChainID)
+	b.WriteString(string(r.ChainID))
 	b.WriteByte('\n')
 	for _, e := range r.Errors {
 		b.WriteString("  ERROR   ")

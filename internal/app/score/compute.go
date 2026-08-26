@@ -176,13 +176,24 @@ type TrendPoint struct {
 	Score     float64   `json:"score"`
 }
 
+// RubricBand classifies the posture score into five qualitative bands.
+type RubricBand string
+
+const (
+	BandStrong         RubricBand = "strong"
+	BandAdequate       RubricBand = "adequate"
+	BandNeedsAttention RubricBand = "needs_attention"
+	BandAtRisk         RubricBand = "at_risk"
+	BandCritical       RubricBand = "critical"
+)
+
 // Result is the complete posture score output.
 type Result struct {
 	GeneratedAt time.Time         `json:"generated_at"`
 	SnapshotID  string            `json:"snapshot_id,omitempty"`
 	Score       float64           `json:"score"`
 	ScoreInt    int               `json:"score_int"`
-	RubricBand  string            `json:"rubric_band"`
+	RubricBand  RubricBand        `json:"rubric_band"`
 	RubricDesc  string            `json:"rubric_description"`
 	Severity    SeverityComponent `json:"severity"`
 	SLA         SLAComponent      `json:"sla"`
@@ -303,13 +314,13 @@ func (r Result) TrendDirection() (direction string, netChange float64) {
 // Centralised so consumers stop switching on the raw string.
 func (r Result) RubricBandNumeric() int {
 	switch r.RubricBand {
-	case "strong":
+	case BandStrong:
 		return 4
-	case "adequate":
+	case BandAdequate:
 		return 3
-	case "needs_attention":
+	case BandNeedsAttention:
 		return 2
-	case "at_risk":
+	case BandAtRisk:
 		return 1
 	default:
 		return 0
@@ -659,17 +670,17 @@ func computeCoverageScore(input Input) float64 {
 	return 1.0
 }
 
-func rubric(score float64) (string, string) {
+func rubric(score float64) (RubricBand, string) {
 	switch {
 	case score >= 90:
-		return "strong", "No critical findings failing. No SLA breaches. No active compound chains."
+		return BandStrong, "No critical findings failing. No SLA breaches. No active compound chains."
 	case score >= 75:
-		return "adequate", "No critical SLA breaches. Fewer than 2 active chains."
+		return BandAdequate, "No critical SLA breaches. Fewer than 2 active chains."
 	case score >= 60:
-		return "needs_attention", "Critical findings present or SLA breach rate > 10%."
+		return BandNeedsAttention, "Critical findings present or SLA breach rate > 10%."
 	case score >= 40:
-		return "at_risk", "Multiple critical findings breaching SLA. Active compound chains."
+		return BandAtRisk, "Multiple critical findings breaching SLA. Active compound chains."
 	default:
-		return "critical", "Widespread critical SLA breaches. Immediate remediation required."
+		return BandCritical, "Widespread critical SLA breaches. Immediate remediation required."
 	}
 }

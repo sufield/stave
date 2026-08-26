@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -17,20 +18,20 @@ import (
 // Playbook is the complete narrative output for a single finding.
 type Playbook struct {
 	FindingID   string            `json:"finding_id"`
-	ControlID   string            `json:"control_id"`
-	AssetID     string            `json:"asset_id"`
-	Severity    string            `json:"severity"`
+	ControlID   kernel.ControlID  `json:"control_id"`
+	AssetID     asset.ID          `json:"asset_id"`
+	Severity    policy.Severity   `json:"severity"`
 	ControlName string            `json:"control_name"`
 	Narrative   NarrativeSections `json:"narrative"`
 }
 
 // NarrativeSections holds the five narrative sections.
 type NarrativeSections struct {
-	WhyThisMatters string        `json:"why_this_matters,omitempty"`
-	AttackStage    string        `json:"attack_stage,omitempty"`
-	CurrentState   []StateEntry  `json:"current_state,omitempty"`
-	Steps          []Step        `json:"steps"`
-	ChainContext   *ChainContext `json:"chain_context,omitempty"`
+	WhyThisMatters string             `json:"why_this_matters,omitempty"`
+	AttackStage    kernel.AttackStage `json:"attack_stage,omitempty"`
+	CurrentState   []StateEntry       `json:"current_state,omitempty"`
+	Steps          []Step             `json:"steps"`
+	ChainContext   *ChainContext      `json:"chain_context,omitempty"`
 }
 
 // StateEntry shows a single observed property vs required.
@@ -53,25 +54,28 @@ type Step struct {
 
 // ChainContext describes the compound chain membership.
 type ChainContext struct {
-	ChainID           string        `json:"chain_id"`
-	ChainActive       bool          `json:"chain_active"`
-	MemberControls    []ChainMember `json:"member_controls"`
-	ChainNarrative    string        `json:"chain_narrative"`
-	DeactivationOrder []string      `json:"deactivation_order,omitempty"`
+	ChainID           kernel.ChainID     `json:"chain_id"`
+	ChainActive       bool               `json:"chain_active"`
+	MemberControls    []ChainMember      `json:"member_controls"`
+	ChainNarrative    string             `json:"chain_narrative"`
+	DeactivationOrder []kernel.ControlID `json:"deactivation_order,omitempty"`
 }
+
+// MemberStatus classifies the status of a chain member control.
+type MemberStatus string
 
 // ChainMember status vocabulary. Centralised here so producers and
 // consumers can't drift on the literal strings.
 const (
-	StatusThisFinding = "this_finding"
-	StatusAlsoFailing = "also_failing"
-	StatusPassing     = "passing"
+	StatusThisFinding MemberStatus = "this_finding"
+	StatusAlsoFailing MemberStatus = "also_failing"
+	StatusPassing     MemberStatus = "passing"
 )
 
 // ChainMember is a single control in a chain.
 type ChainMember struct {
-	ControlID string `json:"control_id"`
-	Status    string `json:"status"` // see Status* constants above
+	ControlID kernel.ControlID `json:"control_id"`
+	Status    MemberStatus     `json:"status"` // see Status* constants above
 }
 
 // IsPassing reports whether this chain member is currently in the
@@ -124,9 +128,9 @@ func BuildPlaybook(input *Input) Playbook {
 
 	pb := Playbook{
 		FindingID:   string(f.FindingID),
-		ControlID:   string(f.ControlID),
-		AssetID:     string(f.AssetID),
-		Severity:    f.SeverityLabel(),
+		ControlID:   f.ControlID,
+		AssetID:     f.AssetID,
+		Severity:    f.ControlSeverity,
 		ControlName: f.ControlName,
 	}
 
@@ -135,7 +139,7 @@ func BuildPlaybook(input *Input) Playbook {
 
 	// Attack stage.
 	if input.Control != nil {
-		pb.Narrative.AttackStage = string(input.Control.AttackStage())
+		pb.Narrative.AttackStage = input.Control.AttackStage()
 	}
 
 	// Section 3: Current state from changes.
@@ -296,12 +300,12 @@ func buildChainContext(f *remediation.Finding, chainDefs []policy.ChainDefinitio
 		return nil
 	}
 
-	primaryID := f.PrimaryChainID()
+	primaryID := kernel.ChainID(f.PrimaryChainID())
 
 	// Find the chain definition.
 	var chainDef *policy.ChainDefinition
 	for i := range chainDefs {
-		if string(chainDefs[i].ID) == primaryID {
+		if chainDefs[i].ID == primaryID {
 			chainDef = &chainDefs[i]
 			break
 		}
@@ -314,23 +318,23 @@ func buildChainContext(f *remediation.Finding, chainDefs []policy.ChainDefinitio
 	}
 
 	// Build member control status.
-	failingIDs := make(map[string]struct{}, len(allFindings))
+	failingIDs := make(map[kernel.ControlID]struct{}, len(allFindings))
 	for i := range allFindings {
 		if allFindings[i].AssetID == f.AssetID {
-			failingIDs[string(allFindings[i].ControlID)] = struct{}{}
+			failingIDs[allFindings[i].ControlID] = struct{}{}
 		}
 	}
 
 	if chainDef != nil {
 		for _, ctlID := range chainDef.ControlIDs {
 			status := StatusPassing
-			if string(ctlID) == string(f.ControlID) {
+			if ctlID == f.ControlID {
 				status = StatusThisFinding
-			} else if _, ok := failingIDs[string(ctlID)]; ok {
+			} else if _, ok := failingIDs[ctlID]; ok {
 				status = StatusAlsoFailing
 			}
 			ctx.MemberControls = append(ctx.MemberControls, ChainMember{
-				ControlID: string(ctlID),
+				ControlID: ctlID,
 				Status:    status,
 			})
 		}
@@ -345,22 +349,20 @@ func buildChainContext(f *remediation.Finding, chainDefs []policy.ChainDefinitio
 // chainDeactivationOrder sorts control IDs by the recommended
 // remediation order: restore detection first, then crypto, then
 // remove exposure. Based on attack stage conventions.
-func chainDeactivationOrder(controlIDs []kernel.ControlID) []string {
-	order := make([]string, len(controlIDs))
-	for i, id := range controlIDs {
-		order[i] = string(id)
-	}
-	slices.SortFunc(order, func(a, b string) int {
+func chainDeactivationOrder(controlIDs []kernel.ControlID) []kernel.ControlID {
+	order := make([]kernel.ControlID, len(controlIDs))
+	copy(order, controlIDs)
+	slices.SortFunc(order, func(a, b kernel.ControlID) int {
 		if n := stageOrder(a) - stageOrder(b); n != 0 {
 			return n
 		}
-		return cmp.Compare(a, b)
+		return cmp.Compare(string(a), string(b))
 	})
 	return order
 }
 
-func stageOrder(controlID string) int {
-	id := strings.ToUpper(controlID)
+func stageOrder(controlID kernel.ControlID) int {
+	id := strings.ToUpper(string(controlID))
 	switch {
 	case strings.Contains(id, "TRAIL") || strings.Contains(id, "LOG") || strings.Contains(id, "AUDIT"):
 		return 0 // detection first

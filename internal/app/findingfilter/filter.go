@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
@@ -48,7 +49,7 @@ type ClassifiedFinding struct {
 type ResolvedFinding struct {
 	ControlID kernel.ControlID `json:"control_id"`
 	AssetID   asset.ID         `json:"asset_id"`
-	Severity  string           `json:"severity"`
+	Severity  policy.Severity  `json:"severity"`
 	DwellDays float64          `json:"dwell_days,omitempty"`
 }
 
@@ -60,7 +61,7 @@ func (r *ResolvedFinding) SeverityLabel() string {
 	if r == nil {
 		return ""
 	}
-	return r.Severity
+	return r.Severity.String()
 }
 
 // Result holds the classified findings after filtering.
@@ -287,7 +288,7 @@ func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]
 		resolved = append(resolved, ResolvedFinding{
 			ControlID: k.ControlID,
 			AssetID:   k.AssetID,
-			Severity:  latest.Findings[i].SeverityLabel(),
+			Severity:  latest.Findings[i].ControlSeverity,
 			DwellDays: dwell,
 		})
 	}
