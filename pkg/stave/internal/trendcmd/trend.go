@@ -122,7 +122,7 @@ func TrendReport(ctx context.Context, cfg TrendConfig) (output []byte, warnings 
 		Projection:      projection,
 		SLATrend:        slaTrend,
 		PostureScore:    &scoreResult.Score,
-		PostureRubric:   scoreResult.RubricBand,
+		PostureRubric:   string(scoreResult.RubricBand),
 	}
 
 	if rep.Summary.FirstViolationRate > 0 {

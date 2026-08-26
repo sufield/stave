@@ -18,7 +18,7 @@ func writeTable(w io.Writer, r stave.ScoreResult) {
 	}
 	fmt.Fprintln(w)
 
-	fmt.Fprintf(w, "SCORE:  %.1f / 100   %s\n", r.Score, strings.ToUpper(r.RubricBand))
+	fmt.Fprintf(w, "SCORE:  %.1f / 100   %s\n", r.Score, strings.ToUpper(string(r.RubricBand)))
 	fmt.Fprintln(w, strings.Repeat("\u2500", 64))
 
 	fmt.Fprintln(w, "\nSCORE DECOMPOSITION")
@@ -40,7 +40,7 @@ func writeTable(w io.Writer, r stave.ScoreResult) {
 		}
 	}
 
-	fmt.Fprintf(w, "\nRUBRIC:  %.1f = %s\n", r.Score, strings.ToUpper(r.RubricBand))
+	fmt.Fprintf(w, "\nRUBRIC:  %.1f = %s\n", r.Score, strings.ToUpper(string(r.RubricBand)))
 	fmt.Fprintf(w, "  %s\n", r.RubricDesc)
 
 	// Trend section.

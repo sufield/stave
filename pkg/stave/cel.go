@@ -10,6 +10,7 @@ import (
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	"github.com/sufield/stave/internal/app/celeval"
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
@@ -126,7 +127,7 @@ func EvalCEL(data []byte, expression, assetType, format string) (CELResult, erro
 	result, err := celeval.Eval(celeval.Input{
 		Expression: expression,
 		Assets:     assets,
-		AssetType:  assetType,
+		AssetType:  kernel.AssetType(assetType),
 		Evaluator:  &celBridge{},
 	})
 	if err != nil {
