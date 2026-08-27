@@ -172,7 +172,7 @@ func TestWriteDOT_ValidOutput(t *testing.T) {
 		ChainNodes: []ChainNode{
 			{
 				ChainID:        "chain_a",
-				Severity:       "high",
+				Severity:       policy.SeverityHigh,
 				Status:         "active",
 				Preconditions:  []string{"internet_access"},
 				Postconditions: []string{"iam_credential_theft"},
@@ -210,8 +210,8 @@ func TestWriteDOT_ValidOutput(t *testing.T) {
 func TestWriteCSVEdges(t *testing.T) {
 	graph := &Graph{
 		ChainNodes: []ChainNode{
-			{ChainID: "chain_a", Severity: "high"},
-			{ChainID: "chain_b", Severity: "critical"},
+			{ChainID: "chain_a", Severity: policy.SeverityHigh},
+			{ChainID: "chain_b", Severity: policy.SeverityCritical},
 		},
 		Edges: []Edge{
 			{

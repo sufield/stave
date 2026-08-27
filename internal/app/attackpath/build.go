@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -32,9 +33,9 @@ type Capability struct {
 
 // ChainNode represents a chain in the graph.
 type ChainNode struct {
-	ChainID         string           `json:"chain_id"`
+	ChainID         kernel.ChainID   `json:"chain_id"`
 	Name            string           `json:"name"`
-	Severity        string           `json:"severity"`
+	Severity        policy.Severity  `json:"severity"`
 	Status          string           `json:"status"`
 	Preconditions   []string         `json:"preconditions"`
 	Postconditions  []string         `json:"postconditions"`
@@ -51,24 +52,24 @@ type ToolAnnotation struct {
 
 // MemberControl is a control within a chain node.
 type MemberControl struct {
-	ControlID   string `json:"control_id"`
-	Remediation string `json:"remediation"`
+	ControlID   kernel.ControlID `json:"control_id"`
+	Remediation string           `json:"remediation"`
 }
 
 // Edge connects two chains via a shared capability.
 type Edge struct {
-	FromChain     string `json:"from_chain"`
-	ToChain       string `json:"to_chain"`
-	ViaCapability string `json:"via_capability"`
-	Description   string `json:"description"`
+	FromChain     kernel.ChainID `json:"from_chain"`
+	ToChain       kernel.ChainID `json:"to_chain"`
+	ViaCapability string         `json:"via_capability"`
+	Description   string         `json:"description"`
 }
 
 // AssetRef describes an asset touched by active chains.
 type AssetRef struct {
-	AssetID             string   `json:"asset_id"`
-	AssetType           string   `json:"asset_type"`
-	Classification      string   `json:"classification"`
-	ActiveChainFindings []string `json:"active_chain_findings"`
+	AssetID        asset.ID         `json:"asset_id"`
+	AssetType      kernel.AssetType `json:"asset_type"`
+	Classification string           `json:"classification"`
+	ActiveChains   []kernel.ChainID `json:"active_chains"`
 }
 
 // ActiveFinding is a minimal representation of an active compound finding.
@@ -114,7 +115,7 @@ func Build(input BuildInput) *Graph {
 
 		var members []MemberControl
 		for _, cid := range ch.ControlIDs {
-			mc := MemberControl{ControlID: string(cid)}
+			mc := MemberControl{ControlID: cid}
 			if ctl, ok := input.ControlLookup[string(cid)]; ok && ctl != nil && ctl.Remediation != nil {
 				mc.Remediation = ctl.Remediation.Action
 			}
@@ -122,9 +123,9 @@ func Build(input BuildInput) *Graph {
 		}
 
 		node := ChainNode{
-			ChainID:        string(ch.ID),
+			ChainID:        ch.ID,
 			Name:           strings.ReplaceAll(string(ch.ID), "_", " "),
-			Severity:       ch.CompoundSeverity.String(),
+			Severity:       ch.CompoundSeverity,
 			Status:         status,
 			Preconditions:  ch.Preconditions,
 			Postconditions: ch.Postconditions,
@@ -171,8 +172,8 @@ func Build(input BuildInput) *Graph {
 				for _, pre := range b.Preconditions {
 					if post == pre {
 						edges = append(edges, Edge{
-							FromChain:     string(a.ID),
-							ToChain:       string(b.ID),
+							FromChain:     a.ID,
+							ToChain:       b.ID,
 							ViaCapability: post,
 							Description:   capLabel(post) + " enables " + strings.ReplaceAll(string(b.ID), "_", " "),
 						})
@@ -184,8 +185,8 @@ func Build(input BuildInput) *Graph {
 
 	slices.SortFunc(edges, func(a, b Edge) int {
 		return cmp.Or(
-			cmp.Compare(a.FromChain, b.FromChain),
-			cmp.Compare(a.ToChain, b.ToChain),
+			cmp.Compare(string(a.FromChain), string(b.FromChain)),
+			cmp.Compare(string(a.ToChain), string(b.ToChain)),
 			cmp.Compare(a.ViaCapability, b.ViaCapability),
 		)
 	})

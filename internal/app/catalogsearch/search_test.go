@@ -37,7 +37,7 @@ func TestSearch_SeverityFilter(t *testing.T) {
 		ctl("CTL.B.001", "High control", policy.SeverityHigh),
 	}
 
-	results := Search(controls, Filter{Severity: "critical"})
+	results := Search(controls, Filter{Severity: policy.SeverityCritical})
 
 	if len(results) != 1 {
 		t.Fatalf("results = %d, want 1", len(results))

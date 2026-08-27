@@ -20,9 +20,9 @@ type AuditCapabilities struct {
 
 // RiskReasoning describes the compound risk scoring capabilities.
 type RiskReasoning struct {
-	Enabled      bool     `json:"enabled"`
-	AttackStages []string `json:"attack_stages"`
-	ScoringModel string   `json:"scoring_model"`
+	Enabled      bool                 `json:"enabled"`
+	AttackStages []kernel.AttackStage `json:"attack_stages"`
+	ScoringModel string               `json:"scoring_model"`
 }
 
 // PolicyPack describes a curated collection of pre-defined security controls.

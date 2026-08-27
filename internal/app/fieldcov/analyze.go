@@ -37,7 +37,7 @@ const (
 // ControlResult holds the coverage analysis for a single control.
 type ControlResult struct {
 	ControlID      kernel.ControlID `json:"control_id"`
-	Severity       string           `json:"severity"`
+	Severity       policy.Severity  `json:"severity"`
 	Classification Classification   `json:"classification"`
 	MissingFields  []string         `json:"missing_fields,omitempty"`
 	AssetType      kernel.AssetType `json:"asset_type,omitempty"`
@@ -49,7 +49,7 @@ type ControlResult struct {
 type ShoppingItem struct {
 	Field       string             `json:"field"`
 	RequiredBy  []kernel.ControlID `json:"required_by"`
-	MaxSeverity string             `json:"max_severity"`
+	MaxSeverity policy.Severity    `json:"max_severity"`
 }
 
 // FrameworkCoverage holds coverage stats for a compliance framework.
@@ -185,7 +185,7 @@ func walkProperties(prefix string, m map[string]any, out map[string]struct{}) {
 func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]struct{}, presentAssetTypes map[string]struct{}, discriminatorValues map[string]sets.Set[string]) ControlResult {
 	result := ControlResult{
 		ControlID:  ctl.ID,
-		Severity:   ctl.Severity.String(),
+		Severity:   ctl.Severity,
 		Frameworks: extractFrameworks(ctl),
 	}
 
@@ -527,13 +527,13 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	// Sort by severity (critical first) and ControlID as tie-breaker.
 	sevOrder := policy.SeverityOrderOf
 	slices.SortFunc(silentRisk, func(a, b ControlResult) int {
-		if sa, sb := sevOrder(a.Severity), sevOrder(b.Severity); sa != sb {
+		if sa, sb := sevOrder(a.Severity.String()), sevOrder(b.Severity.String()); sa != sb {
 			return cmp.Compare(sa, sb)
 		}
 		return cmp.Compare(a.ControlID, b.ControlID)
 	})
 	slices.SortFunc(incomplete, func(a, b ControlResult) int {
-		if sa, sb := sevOrder(a.Severity), sevOrder(b.Severity); sa != sb {
+		if sa, sb := sevOrder(a.Severity.String()), sevOrder(b.Severity.String()); sa != sb {
 			return cmp.Compare(sa, sb)
 		}
 		return cmp.Compare(a.ControlID, b.ControlID)
@@ -544,7 +544,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 
 	// Build shopping list grouped by asset type — use first field prefix.
 	fieldToControls := make(map[string][]kernel.ControlID)
-	fieldToSeverity := make(map[string]string)
+	fieldToSeverity := make(map[string]policy.Severity)
 	combined := make([]ControlResult, 0, len(silentRisk)+len(incomplete))
 	combined = append(combined, silentRisk...)
 	combined = append(combined, incomplete...)
@@ -552,7 +552,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 		r := &combined[i]
 		for _, f := range r.MissingFields {
 			fieldToControls[f] = append(fieldToControls[f], r.ControlID)
-			if sevOrder(r.Severity) < sevOrder(fieldToSeverity[f]) || fieldToSeverity[f] == "" {
+			if current, ok := fieldToSeverity[f]; !ok || sevOrder(r.Severity.String()) < sevOrder(current.String()) {
 				fieldToSeverity[f] = r.Severity
 			}
 		}
@@ -588,7 +588,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	for at := range report.ShoppingList {
 		items := report.ShoppingList[at]
 		slices.SortFunc(items, func(a, b ShoppingItem) int {
-			if sa, sb := sevOrder(a.MaxSeverity), sevOrder(b.MaxSeverity); sa != sb {
+			if sa, sb := sevOrder(a.MaxSeverity.String()), sevOrder(b.MaxSeverity.String()); sa != sb {
 				return cmp.Compare(sa, sb)
 			}
 			return cmp.Compare(a.Field, b.Field)

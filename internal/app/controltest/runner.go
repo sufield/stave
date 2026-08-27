@@ -21,14 +21,23 @@ type Result struct {
 	Cases     []CaseResult     `json:"cases"`
 }
 
+// Verdict classifies the test case verdict.
+type Verdict string
+
+const (
+	VerdictPass         Verdict = "PASS"
+	VerdictViolation    Verdict = "VIOLATION"
+	VerdictInconclusive Verdict = "INCONCLUSIVE"
+)
+
 // CaseResult is the outcome of a single test case.
 type CaseResult struct {
-	Name            string `json:"name"`
-	ExpectedVerdict string `json:"expected_verdict"`
-	ActualVerdict   string `json:"actual_verdict"`
-	Passed          bool   `json:"passed"`
-	Diagnosis       string `json:"diagnosis,omitempty"`
-	Hint            string `json:"hint,omitempty"`
+	Name            string  `json:"name"`
+	ExpectedVerdict Verdict `json:"expected_verdict"`
+	ActualVerdict   Verdict `json:"actual_verdict"`
+	Passed          bool    `json:"passed"`
+	Diagnosis       string  `json:"diagnosis,omitempty"`
+	Hint            string  `json:"hint,omitempty"`
 }
 
 // IsPassing reports whether the case matched its expected verdict.
@@ -107,7 +116,7 @@ func runControl(ctl *policy.ControlDefinition, eval policy.PredicateEval) Result
 func runCase(ctl *policy.ControlDefinition, tc *policy.ControlTest, eval policy.PredicateEval) CaseResult {
 	cr := CaseResult{
 		Name:            tc.Name,
-		ExpectedVerdict: strings.ToUpper(strings.TrimSpace(tc.Verdict)),
+		ExpectedVerdict: Verdict(strings.ToUpper(strings.TrimSpace(tc.Verdict))),
 	}
 
 	// Build asset from test case.
@@ -130,18 +139,18 @@ func runCase(ctl *policy.ControlDefinition, tc *policy.ControlTest, eval policy.
 		unsafe, err = eval(ctl, a, nil)
 	}
 
-	var actualVerdict string
+	var actualVerdict Verdict
 	switch {
 	case err != nil:
-		actualVerdict = "INCONCLUSIVE"
+		actualVerdict = VerdictInconclusive
 	case unsafe:
-		actualVerdict = "VIOLATION"
+		actualVerdict = VerdictViolation
 	default:
-		actualVerdict = "PASS"
+		actualVerdict = VerdictPass
 	}
 
 	cr.ActualVerdict = actualVerdict
-	cr.Passed = strings.EqualFold(cr.ExpectedVerdict, actualVerdict)
+	cr.Passed = cr.ExpectedVerdict == actualVerdict
 
 	if !cr.Passed {
 		cr.Diagnosis, cr.Hint = diagnose(cr.ExpectedVerdict, actualVerdict, err)
@@ -150,22 +159,22 @@ func runCase(ctl *policy.ControlDefinition, tc *policy.ControlTest, eval policy.
 	return cr
 }
 
-func diagnose(expected, actual string, evalErr error) (string, string) {
+func diagnose(expected, actual Verdict, evalErr error) (string, string) {
 	switch {
-	case expected == "PASS" && actual == "VIOLATION":
+	case expected == VerdictPass && actual == VerdictViolation:
 		return "predicate_logic_error", "Predicate evaluated to unsafe — check property values match expected safe state"
-	case expected == "VIOLATION" && actual == "PASS":
+	case expected == VerdictViolation && actual == VerdictPass:
 		return "predicate_logic_error", "Predicate evaluated to safe — check if comparison operators are inverted"
-	case expected == "INCONCLUSIVE" && actual == "PASS":
+	case expected == VerdictInconclusive && actual == VerdictPass:
 		return "silent_risk", "Missing field produced PASS instead of INCONCLUSIVE — add has() guard to predicate"
-	case expected == "INCONCLUSIVE" && actual == "VIOLATION":
+	case expected == VerdictInconclusive && actual == VerdictViolation:
 		return "unexpected_violation", "Missing field produced VIOLATION — check isMissing behavior"
-	case expected == "PASS" && actual == "INCONCLUSIVE":
+	case expected == VerdictPass && actual == VerdictInconclusive:
 		if evalErr != nil {
 			return "missing_property", fmt.Sprintf("CEL error: %v — add missing field to test asset properties", evalErr)
 		}
 		return "missing_property", "Required field missing from test asset — add it to properties"
-	case expected == "VIOLATION" && actual == "INCONCLUSIVE":
+	case expected == VerdictViolation && actual == VerdictInconclusive:
 		return "missing_property", "Field missing prevented violation detection — add field to test asset"
 	default:
 		return "unknown", ""

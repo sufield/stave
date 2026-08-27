@@ -38,7 +38,7 @@ func WriteTable(w io.Writer, r *Report) {
 			cr := &r.SilentRisk[i]
 			for _, f := range cr.MissingFields {
 				fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n",
-					cr.ControlID, f, strings.ToUpper(cr.Severity), strings.Join(shortFrameworks(cr.Frameworks), " "))
+					cr.ControlID, f, strings.ToUpper(cr.Severity.String()), strings.Join(shortFrameworks(cr.Frameworks), " "))
 			}
 		}
 		fmt.Fprintln(w)
@@ -54,7 +54,7 @@ func WriteTable(w io.Writer, r *Report) {
 			cr := &r.IncompleteResults[i]
 			for _, f := range cr.MissingFields {
 				fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n",
-					cr.ControlID, f, strings.ToUpper(cr.Severity), strings.Join(shortFrameworks(cr.Frameworks), " "))
+					cr.ControlID, f, strings.ToUpper(cr.Severity.String()), strings.Join(shortFrameworks(cr.Frameworks), " "))
 			}
 		}
 		fmt.Fprintln(w)
@@ -72,7 +72,7 @@ func WriteTable(w io.Writer, r *Report) {
 			fmt.Fprintf(w, "\n  Asset type: %s\n", at)
 			for _, item := range r.ShoppingList[at] {
 				fmt.Fprintf(w, "    + %-40s (%s — %s)\n",
-					item.Field, strings.Join(controlIDStrings(item.RequiredBy), ", "), strings.ToUpper(item.MaxSeverity))
+					item.Field, strings.Join(controlIDStrings(item.RequiredBy), ", "), strings.ToUpper(item.MaxSeverity.String()))
 			}
 		}
 		fmt.Fprintln(w)

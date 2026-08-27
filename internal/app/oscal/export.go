@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // AssessmentResults is the top-level OSCAL document.
@@ -57,9 +59,9 @@ type ARFinding struct {
 
 // ARTarget describes what was evaluated.
 type ARTarget struct {
-	Type     string   `json:"type"`
-	TargetID string   `json:"target-id"`
-	Status   ARStatus `json:"status"`
+	Type     string           `json:"type"`
+	TargetID kernel.ControlID `json:"target-id"`
+	Status   ARStatus         `json:"status"`
 }
 
 // ARStatus holds the finding status.
@@ -82,9 +84,9 @@ type ARObservation struct {
 
 // ARSubject identifies the observed component.
 type ARSubject struct {
-	Type        string `json:"type"`
-	SubjectUUID string `json:"subject-uuid"`
-	Title       string `json:"title"`
+	Type        kernel.AssetType `json:"type"`
+	SubjectUUID asset.ID         `json:"subject-uuid"`
+	Title       string           `json:"title"`
 }
 
 // Export converts Stave findings to OSCAL Assessment Results.
@@ -112,7 +114,7 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 			Description: f.ControlName,
 			Target: ARTarget{
 				Type:     "objective-id",
-				TargetID: string(f.ControlID),
+				TargetID: f.ControlID,
 				Status:   ARStatus{State: state},
 			},
 			RelatedObs: []RelObs{{ObservationUUID: obsUUID}},
@@ -123,8 +125,8 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 			Description: "Asset: " + string(f.AssetID),
 			Methods:     []string{"EXAMINE"},
 			Subjects: []ARSubject{{
-				Type:        "component",
-				SubjectUUID: uuidV5("component", string(f.AssetID)),
+				Type:        kernel.AssetType("component"),
+				SubjectUUID: asset.ID(uuidV5("component", string(f.AssetID))),
 				Title:       string(f.AssetID),
 			}},
 		})

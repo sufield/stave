@@ -7,25 +7,26 @@ import (
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/util/strutil"
 )
 
 // SearchResult holds one matching control.
 type SearchResult struct {
-	ControlID   string   `json:"control_id"`
-	Name        string   `json:"name"`
-	Severity    string   `json:"severity"`
-	Domain      string   `json:"domain"`
-	Frameworks  []string `json:"frameworks,omitempty"`
-	AttackStage string   `json:"attack_stage,omitempty"`
+	ControlID   kernel.ControlID   `json:"control_id"`
+	Name        string             `json:"name"`
+	Severity    policy.Severity    `json:"severity"`
+	Domain      string             `json:"domain"`
+	Frameworks  []string           `json:"frameworks,omitempty"`
+	AttackStage kernel.AttackStage `json:"attack_stage,omitempty"`
 }
 
 // Filter constrains the search.
 type Filter struct {
 	Query       string
 	Domain      string
-	Severity    string
-	AttackStage string
+	Severity    policy.Severity
+	AttackStage kernel.AttackStage
 	Profile     string
 }
 
@@ -45,10 +46,10 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 		if domainFilter != "" && getDomain(ctl) != domainFilter {
 			continue
 		}
-		if f.Severity != "" && !ctl.Severity.Matches(f.Severity) {
+		if f.Severity != 0 && !ctl.Severity.Matches(f.Severity.String()) {
 			continue
 		}
-		if f.AttackStage != "" && !strings.EqualFold(string(ctl.AttackStage()), f.AttackStage) {
+		if f.AttackStage != "" && !strings.EqualFold(string(ctl.AttackStage()), string(f.AttackStage)) {
 			continue
 		}
 		if profileFilter != "" && !hasFramework(ctl, profileFilter) {
@@ -56,11 +57,11 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 		}
 
 		sr := SearchResult{
-			ControlID:   string(ctl.ID),
+			ControlID:   ctl.ID,
 			Name:        ctl.Name,
-			Severity:    ctl.Severity.String(),
+			Severity:    ctl.Severity,
 			Domain:      getDomain(ctl),
-			AttackStage: string(ctl.AttackStage()),
+			AttackStage: ctl.AttackStage(),
 			Frameworks:  make([]string, 0, len(ctl.Compliance)),
 		}
 		for fw := range ctl.Compliance {

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
@@ -39,13 +40,13 @@ func (m *Manifest) HierarchyByID(id string) *HierarchyGroup {
 
 // Team defines a team identity and its resource ownership.
 type Team struct {
-	ID               string   `yaml:"id"              json:"id"`
-	DisplayName      string   `yaml:"display_name"    json:"display_name"`
-	Contact          string   `yaml:"contact"         json:"contact,omitempty"`
-	ResourcePatterns []string `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
-	ControlOwnership []string `yaml:"control_ownership" json:"control_ownership,omitempty"`
-	IsDefault        bool     `yaml:"is_default"      json:"is_default,omitempty"`
-	Routing          Routing  `yaml:"routing"         json:"routing"`
+	ID               string             `yaml:"id"              json:"id"`
+	DisplayName      string             `yaml:"display_name"    json:"display_name"`
+	Contact          string             `yaml:"contact"         json:"contact,omitempty"`
+	ResourcePatterns []string           `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
+	ControlOwnership []kernel.ControlID `yaml:"control_ownership" json:"control_ownership,omitempty"`
+	IsDefault        bool               `yaml:"is_default"      json:"is_default,omitempty"`
+	Routing          Routing            `yaml:"routing"         json:"routing"`
 }
 
 // Routing holds alert destination configuration.
@@ -125,7 +126,7 @@ func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN, controlID s
 	// 4. Control ID ownership match.
 	for i := range m.Teams {
 		for _, pattern := range m.Teams[i].ControlOwnership {
-			if globMatch(pattern, controlID) {
+			if globMatch(string(pattern), controlID) {
 				return OwnerResult{
 					TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
 					Contact: m.Teams[i].Contact, ResolutionPath: "control_ownership",

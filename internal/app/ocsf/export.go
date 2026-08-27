@@ -5,7 +5,9 @@ package ocsf
 import (
 	"strings"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/util/strutil"
 )
 
@@ -32,15 +34,15 @@ type OCSFFinding struct {
 
 // OCSFCompliance holds compliance context.
 type OCSFCompliance struct {
-	Requirements []string `json:"requirements,omitempty"`
-	Control      string   `json:"control"`
-	Status       string   `json:"status"`
+	Requirements []string         `json:"requirements,omitempty"`
+	Control      kernel.ControlID `json:"control"`
+	Status       string           `json:"status"`
 }
 
 // OCSFResource describes the affected resource.
 type OCSFResource struct {
-	UID  string `json:"uid"`
-	Type string `json:"type"`
+	UID  asset.ID         `json:"uid"`
+	Type kernel.AssetType `json:"type"`
 }
 
 // Export converts Stave findings to OCSF Compliance Finding events.
@@ -66,11 +68,11 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 			},
 			Compliance: OCSFCompliance{
 				Requirements: ccmRequirements(f.ControlCCMV4),
-				Control:      string(f.ControlID),
+				Control:      f.ControlID,
 				Status:       "FAILED",
 			},
 			Resources: []OCSFResource{
-				{UID: string(f.AssetID), Type: string(f.AssetType)},
+				{UID: f.AssetID, Type: f.AssetType},
 			},
 		})
 	}

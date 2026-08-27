@@ -3,6 +3,7 @@ package exempt
 import (
 	"time"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -22,7 +23,7 @@ type StatusReport struct {
 // ExpiryItem describes an expiring or expired exemption.
 type ExpiryItem struct {
 	ControlID     kernel.ControlID `json:"control_id"`
-	AssetID       string           `json:"asset_id"`
+	AssetID       asset.ID         `json:"asset_id"`
 	ExpiryDate    string           `json:"expiry_date"`
 	DaysRemaining int              `json:"days_remaining"`
 	Reason        string           `json:"reason"`
@@ -31,7 +32,7 @@ type ExpiryItem struct {
 // ResolvedItem describes an exemption where the finding no longer exists.
 type ResolvedItem struct {
 	ControlID      kernel.ControlID `json:"control_id"`
-	AssetID        string           `json:"asset_id"`
+	AssetID        asset.ID         `json:"asset_id"`
 	GrantedDate    string           `json:"granted_date"`
 	Recommendation string           `json:"recommendation"`
 }
@@ -56,7 +57,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 				report.AlreadyExpired++
 				report.ExpiredItems = append(report.ExpiredItems, ExpiryItem{
 					ControlID:     ack.ControlID,
-					AssetID:       ack.AssetID,
+					AssetID:       asset.ID(ack.AssetID),
 					ExpiryDate:    ack.ExpiryDate,
 					DaysRemaining: daysRemaining,
 					Reason:        ack.Reason,
@@ -66,7 +67,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 				report.ExpiringDays60++
 				report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
 					ControlID:     ack.ControlID,
-					AssetID:       ack.AssetID,
+					AssetID:       asset.ID(ack.AssetID),
 					ExpiryDate:    ack.ExpiryDate,
 					DaysRemaining: daysRemaining,
 					Reason:        ack.Reason,
@@ -75,7 +76,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 				report.ExpiringDays60++
 				report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
 					ControlID:     ack.ControlID,
-					AssetID:       ack.AssetID,
+					AssetID:       asset.ID(ack.AssetID),
 					ExpiryDate:    ack.ExpiryDate,
 					DaysRemaining: daysRemaining,
 					Reason:        ack.Reason,
@@ -89,7 +90,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 			report.Resolved++
 			report.ResolvedItems = append(report.ResolvedItems, ResolvedItem{
 				ControlID:      ack.ControlID,
-				AssetID:        ack.AssetID,
+				AssetID:        asset.ID(ack.AssetID),
 				GrantedDate:    ack.AcknowledgedDate,
 				Recommendation: "revoke exemption — finding no longer active",
 			})

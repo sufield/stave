@@ -1,6 +1,7 @@
 package capabilities
 
 import (
+	"cmp"
 	"io/fs"
 	"log/slog"
 	"slices"
@@ -176,7 +177,7 @@ type controlParams struct {
 // failing the manifest derivation: callers consume the returned
 // list as a presentation-layer hint, not a foundational
 // invariant.
-func deriveAttackStages() []string {
+func deriveAttackStages() []kernel.AttackStage {
 	seen := make(map[string]struct{})
 	if walkErr := fs.WalkDir(controldata.FS, "embedded", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -201,10 +202,12 @@ func deriveAttackStages() []string {
 		slog.Debug("capabilities: embed.FS walk failed (corrupted build artifact?)",
 			"error", walkErr)
 	}
-	stages := make([]string, 0, len(seen))
+	stages := make([]kernel.AttackStage, 0, len(seen))
 	for s := range seen {
-		stages = append(stages, s)
+		stages = append(stages, kernel.AttackStage(s))
 	}
-	slices.Sort(stages)
+	slices.SortFunc(stages, func(a, b kernel.AttackStage) int {
+		return cmp.Compare(string(a), string(b))
+	})
 	return stages
 }

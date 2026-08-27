@@ -97,7 +97,7 @@ func writeMarkdownTo(w io.Writer, r *Report) {
 				sla = "BREACHED"
 			}
 			fmt.Fprintf(w, "| %d | %s | %s | %.0fh | %s |\n",
-				f.Rank, f.ControlID, strings.ToUpper(f.Severity), f.DwellHours, sla)
+				f.Rank, f.ControlID, strings.ToUpper(f.Severity.String()), f.DwellHours, sla)
 		}
 		fmt.Fprintln(w)
 	}
@@ -107,11 +107,15 @@ func writeMarkdownTo(w io.Writer, r *Report) {
 		fmt.Fprintln(w, "## Active Compound Chains")
 		fmt.Fprintln(w)
 		for _, c := range r.Chains.Active {
-			fmt.Fprintf(w, "### %s (%s)\n\n", c.ChainID, strings.ToUpper(c.Severity))
+			fmt.Fprintf(w, "### %s (%s)\n\n", c.ChainID, strings.ToUpper(c.Severity.String()))
 			if c.Narrative != "" {
 				fmt.Fprintf(w, "%s\n\n", c.Narrative)
 			}
-			fmt.Fprintf(w, "Members: %s\n\n", strings.Join(c.Members, ", "))
+			memberStrs := make([]string, len(c.Members))
+			for i, m := range c.Members {
+				memberStrs[i] = string(m)
+			}
+			fmt.Fprintf(w, "Members: %s\n\n", strings.Join(memberStrs, ", "))
 		}
 	}
 

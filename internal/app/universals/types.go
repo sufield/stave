@@ -1,10 +1,20 @@
 package universals
 
+// Verdict classifies the universal formula evaluation verdict.
+type Verdict string
+
+const (
+	VerdictHolds    Verdict = "unsat"
+	VerdictViolated Verdict = "sat"
+	VerdictUnknown  Verdict = "unknown"
+	VerdictError    Verdict = "error"
+)
+
 // Result is the outcome of evaluating one universal formula via Z3.
 type Result struct {
 	ID          string      `json:"id"`
 	Name        string      `json:"name"`
-	Verdict     string      `json:"verdict"`
+	Verdict     Verdict     `json:"verdict"`
 	Holds       bool        `json:"holds"`
 	Grounded    int         `json:"grounded"`
 	Vacuous     bool        `json:"vacuous,omitempty"`

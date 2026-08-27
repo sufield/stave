@@ -188,7 +188,7 @@ func evaluateOne(f formula, assets []asset, gm *GroundingMap, solve Solver) Resu
 	start := time.Now()
 	verdict, _ := solve(combined)
 	r.SolveTimeMs = time.Since(start).Milliseconds()
-	r.Verdict = verdict
+	r.Verdict = Verdict(verdict)
 
 	switch verdict {
 	case "unsat":

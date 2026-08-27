@@ -8,7 +8,9 @@ import (
 	"encoding/hex"
 	"time"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // POAM is the top-level OSCAL POA&M document.
@@ -39,14 +41,14 @@ type POAMItem struct {
 
 // RelatedCtl maps a finding to its control.
 type RelatedCtl struct {
-	ControlID string `json:"control-id"`
+	ControlID kernel.ControlID `json:"control-id"`
 }
 
 // Subject maps a finding to its asset.
 type Subject struct {
-	SubjectUUID string `json:"subject-uuid"`
-	Type        string `json:"type"`
-	Title       string `json:"title"`
+	SubjectUUID asset.ID         `json:"subject-uuid"`
+	Type        kernel.AssetType `json:"type"`
+	Title       string           `json:"title"`
 }
 
 // POAMRisk captures the risk status.
@@ -85,12 +87,12 @@ func Generate(in Input) *POAM {
 			Title:       string(f.ControlID) + " on " + string(f.AssetID),
 			Description: f.ControlName,
 			RelatedControls: []RelatedCtl{
-				{ControlID: string(f.ControlID)},
+				{ControlID: f.ControlID},
 			},
 			Subjects: []Subject{
 				{
-					SubjectUUID: deterministicUUID("subject", string(f.AssetID)),
-					Type:        "inventory-item",
+					SubjectUUID: asset.ID(deterministicUUID("subject", string(f.AssetID))),
+					Type:        kernel.AssetType("inventory-item"),
 					Title:       string(f.AssetID),
 				},
 			},

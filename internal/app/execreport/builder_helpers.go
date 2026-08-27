@@ -113,9 +113,9 @@ func buildTopFindings(a *corereport.Assessment, n int) []TopFinding {
 		f := &a.Findings[item.idx]
 		tf := TopFinding{
 			Rank:        rank + 1,
-			ControlID:   string(f.ControlID),
-			Severity:    f.SeverityLabel(),
-			AssetID:     string(f.AssetID),
+			ControlID:   f.ControlID,
+			Severity:    f.ControlSeverity,
+			AssetID:     f.AssetID,
 			DwellHours:  f.DwellHours(),
 			SLABreached: f.IsAnyBreach(),
 		}
@@ -132,14 +132,10 @@ func buildChainsSection(a *corereport.Assessment) ChainsSection {
 	var active []ActiveChain
 	for i := range a.ChainFindings {
 		cf := &a.ChainFindings[i]
-		var members []string
-		for _, cid := range cf.ControlsFailing {
-			members = append(members, string(cid))
-		}
 		active = append(active, ActiveChain{
-			ChainID:   string(cf.ChainID),
-			Severity:  cf.Severity.String(),
-			Members:   members,
+			ChainID:   cf.ChainID,
+			Severity:  cf.Severity,
+			Members:   cf.ControlsFailing,
 			Narrative: cf.Narrative,
 		})
 	}

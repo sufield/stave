@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestBand_Boundaries(t *testing.T) {
@@ -104,7 +107,7 @@ func TestWriteMarkdown_ContainsAllSections(t *testing.T) {
 		},
 		FindingsSummary: FindingsSummary{Total: 10, Critical: 2},
 		TopFindings: []TopFinding{
-			{Rank: 1, ControlID: "CTL.A.001", Severity: "critical", DwellHours: 48},
+			{Rank: 1, ControlID: kernel.ControlID("CTL.A.001"), Severity: policy.SeverityCritical, DwellHours: 48},
 		},
 		AttackCoverage: AttackCoverageSection{
 			TacticsCovered: 11, TacticsTotal: 11, CoveragePct: 100,

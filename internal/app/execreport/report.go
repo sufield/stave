@@ -5,6 +5,10 @@ package execreport
 import (
 	"fmt"
 	"strings"
+
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // Report is the top-level executive report structure.
@@ -89,16 +93,16 @@ type SLASev struct {
 
 // TopFinding is a ranked finding for the report.
 type TopFinding struct {
-	Rank              int      `json:"rank"`
-	ControlID         string   `json:"control_id"`
-	Severity          string   `json:"severity"`
-	AssetID           string   `json:"asset_id,omitempty"`
-	Team              string   `json:"team,omitempty"`
-	DwellHours        float64  `json:"dwell_hours"`
-	SLABurnRate       float64  `json:"sla_burn_rate,omitempty"`
-	SLABreached       bool     `json:"sla_breached,omitempty"`
-	RemediationAction string   `json:"remediation_action,omitempty"`
-	Frameworks        []string `json:"compliance_frameworks,omitempty"`
+	Rank              int              `json:"rank"`
+	ControlID         kernel.ControlID `json:"control_id"`
+	Severity          policy.Severity  `json:"severity"`
+	AssetID           asset.ID         `json:"asset_id,omitempty"`
+	Team              string           `json:"team,omitempty"`
+	DwellHours        float64          `json:"dwell_hours"`
+	SLABurnRate       float64          `json:"sla_burn_rate,omitempty"`
+	SLABreached       bool             `json:"sla_breached,omitempty"`
+	RemediationAction string           `json:"remediation_action,omitempty"`
+	Frameworks        []string         `json:"compliance_frameworks,omitempty"`
 }
 
 // IsAnyBreach reports whether the underlying finding has breached
@@ -117,10 +121,10 @@ type ChainsSection struct {
 
 // ActiveChain is an active compound chain.
 type ActiveChain struct {
-	ChainID   string   `json:"chain_id"`
-	Severity  string   `json:"severity"`
-	Members   []string `json:"member_findings"`
-	Narrative string   `json:"narrative,omitempty"`
+	ChainID   kernel.ChainID     `json:"chain_id"`
+	Severity  policy.Severity    `json:"severity"`
+	Members   []kernel.ControlID `json:"member_findings"`
+	Narrative string             `json:"narrative,omitempty"`
 }
 
 // AttackCoverageSection holds ATT&CK data.

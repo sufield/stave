@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // WriteDOT writes the graph in Graphviz DOT format.
@@ -27,11 +30,11 @@ func WriteDOT(w io.Writer, g *Graph) error {
 		sev := ""
 		for i := range g.ChainNodes {
 			if g.ChainNodes[i].ChainID == edge.FromChain {
-				sev = strings.ToUpper(g.ChainNodes[i].Severity)
+				sev = g.ChainNodes[i].Severity.String()
 				break
 			}
 		}
-		label := dotLabel(edge.FromChain) + `\n[` + sev + `]`
+		label := dotLabel(string(edge.FromChain)) + `\n[` + sev + `]`
 
 		// Edge goes from precondition capabilities to postcondition capabilities
 		// through the chain. For DOT simplicity, use via_capability as the link.
@@ -54,7 +57,7 @@ func WriteDOT(w io.Writer, g *Graph) error {
 func WriteCSVEdges(w io.Writer, g *Graph) error {
 	fmt.Fprintln(w, "from_chain,to_chain,via_capability,from_severity,to_severity")
 
-	sevMap := make(map[string]string, len(g.ChainNodes))
+	sevMap := make(map[kernel.ChainID]policy.Severity, len(g.ChainNodes))
 	for i := range g.ChainNodes {
 		sevMap[g.ChainNodes[i].ChainID] = g.ChainNodes[i].Severity
 	}
@@ -62,7 +65,7 @@ func WriteCSVEdges(w io.Writer, g *Graph) error {
 	for _, edge := range g.Edges {
 		fmt.Fprintf(w, "%s,%s,%s,%s,%s\n",
 			edge.FromChain, edge.ToChain, edge.ViaCapability,
-			sevMap[edge.FromChain], sevMap[edge.ToChain])
+			sevMap[edge.FromChain].String(), sevMap[edge.ToChain].String())
 	}
 	return nil
 }

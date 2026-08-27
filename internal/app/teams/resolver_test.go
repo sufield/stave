@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func testManifest() *Manifest {
@@ -14,7 +16,7 @@ func testManifest() *Manifest {
 			{ID: "payments", DisplayName: "Payments Team", Contact: "pay@example.com",
 				ResourcePatterns: []string{"arn:aws:s3:::payments-*"}},
 			{ID: "data", DisplayName: "Data Team", Contact: "data@example.com",
-				ControlOwnership: []string{"CTL.IAM.NEP.*"}},
+				ControlOwnership: []kernel.ControlID{"CTL.IAM.NEP.*"}},
 			{ID: "platform", DisplayName: "Platform Team", IsDefault: true},
 		},
 	}
