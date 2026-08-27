@@ -249,11 +249,20 @@ Exit Codes:
 				return fmt.Errorf("load built-in controls: %w", err)
 			}
 
+			var sevFilter policy.Severity
+			if severity != "" {
+				var err2 error
+				sevFilter, err2 = policy.ParseSeverity(severity)
+				if err2 != nil {
+					return &ui.UserError{Err: fmt.Errorf("invalid severity %q: %w", severity, err2)}
+				}
+			}
+
 			results := catalogsearch.Search(controls, catalogsearch.Filter{
 				Query:       query,
 				Domain:      domain,
-				Severity:    severity,
-				AttackStage: attackStage,
+				Severity:    sevFilter,
+				AttackStage: kernel.AttackStage(attackStage),
 			})
 
 			renderer, err := NewControlsRenderer(format)

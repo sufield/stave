@@ -7,6 +7,7 @@ import (
 
 	"github.com/sufield/stave/internal/app/catalogquality"
 	"github.com/sufield/stave/internal/app/catalogsearch"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func TestNewControlsRenderer_KnownFormats(t *testing.T) {
@@ -43,7 +44,7 @@ func TestNewControlsRenderer_UnknownFormatErrors(t *testing.T) {
 
 func TestControlsRenderers_NonEmptyOutput(t *testing.T) {
 	results := []catalogsearch.SearchResult{
-		{ControlID: "CTL.S3.PUBLIC.001", Severity: "high", Name: "Public bucket"},
+		{ControlID: "CTL.S3.PUBLIC.001", Severity: policy.SeverityHigh, Name: "Public bucket"},
 	}
 	cases := []struct {
 		name     string

@@ -110,9 +110,9 @@ func writeCSVReport(buf *bytes.Buffer, report *er.Report) error {
 		f := &report.TopFindings[i]
 		if err := w.Write([]string{
 			strconv.Itoa(f.Rank),
-			f.ControlID,
-			f.Severity,
-			f.AssetID,
+			string(f.ControlID),
+			f.Severity.String(),
+			string(f.AssetID),
 			fmt.Sprintf("%.1f", f.DwellHours),
 			f.RemediationAction,
 		}); err != nil {

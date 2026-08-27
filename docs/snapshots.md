@@ -1,4 +1,4 @@
-# Snapshot Model — Origin and Design Rationale
+# Snapshot Model 
 
 ## The Problem
 
@@ -15,12 +15,9 @@ Cloud security tools query live APIs. This creates four problems:
 
 ## The Constraint
 
-> The constraint is 'the machine running the assessment has no network
-> path to the cloud API.'"
-
 Stave was designed for classified networks, regulated healthcare
 environments, and financial institutions with strict network
-segmentation. These are real deployment contexts, not edge cases.
+segmentation.
 
 ## The Design Decision
 
@@ -34,10 +31,10 @@ This is the snapshot model. Every other property derives from it:
 **Determinism.** Same files + same `--eval-time` → byte-identical
 output. The verdict is evidence, not a claim.
 
-**Time travel.** Snapshots committed to git are a complete
+**Time travel.** Snapshots committed to git are 
 configuration history. `stave apply` against a 90-day-old
 snapshot produces the exact assessment it would have produced
-90 days ago. No other CSPM tool can do this.
+90 days ago. 
 
 **Evidence archives.** Snapshots are immutable artifacts that can
 be signed, bundled, and submitted to auditors. The assessment
@@ -49,7 +46,7 @@ mechanism the organization already uses.
 
 ## The Trade-Off
 
-Snapshots are point-in-time observations, not continuous streams.
+Snapshots are point-in-time observations.
 A daily snapshot does not capture a misconfiguration that existed
 for 2 hours between snapshots.
 
@@ -59,9 +56,7 @@ determinism, evidence archives, no credential management.
 ## Why Attestation
 
 The snapshot-as-evidence model requires an answer to "was this
-snapshot tampered with after collection?" Without it, the
-determinism guarantee is meaningless — an attacker who modifies
-the snapshot gets a clean verdict.
+snapshot tampered with after collection?"
 
 Two integrity layers exist because they protect different things:
 
@@ -76,18 +71,17 @@ attestation verifies content even if the file is re-packaged,
 split, or bundled. Coupling them would force every consumer to
 understand both concerns.
 
-## Why a Time-Series, Not a Single Snapshot
+## Why a Time-Series
 
 A single snapshot answers "is this safe right now?" A directory
-of snapshots answers "how long has this been unsafe?" — which is
-what compliance and risk scoring need.
+of snapshots answers "how long has this been unsafe?" 
 
 The engine tracks per-asset state transitions via
 `ExposureLifecycle`. Each unsafe span is an `ExposureWindow`.
 This enables duration-based detection, drift detection, and SLA
 escalation.
 
-Key semantic rules and why they exist:
+Semantic rules and why they exist:
 
 - **Absence is not evidence of safety.** An asset missing from a
   snapshot stays in its previous state. Without this, a
@@ -102,32 +96,12 @@ Key semantic rules and why they exist:
 
 ## Why Separate Collection from Evaluation
 
-Collection is the hard, environment-specific part — different IAM
+Collection is the hard, environment-specific part such as different IAM
 roles, different networks, different providers. Evaluation is the
 deterministic part.
 
 Coupling them would force Stave to solve credential management,
-network access, and provider versioning — the exact problems the
+network access, and provider versioning. The same problems the
 snapshot model was designed to avoid. Separating them lets each
 side evolve independently.
 
-> "We don't write integrations. We publish contracts — `obs.v0.1`
-> for observations, `ctrl.v1` for controls, deterministic JSON for
-> output — and anything that emits or consumes them composes for
-> free."
-
-## Why Properties Are Untyped
-
-`Asset.Properties` is `map[string]any`. Controls navigate it via
-dot-path field references. This means any provider, any service,
-any configuration shape fits in the same schema without schema
-versioning per service.
-
-The cost: CEL is type-strict at eval time. `bool(true)` and
-`string("true")` produce different results. The collector
-contract's type validation catches this at the collection
-boundary, before it reaches the evaluator.
-
-The alternative — typed structs per AWS service — would couple
-the schema to AWS's API versioning and make cross-provider
-evaluation impossible.

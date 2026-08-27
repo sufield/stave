@@ -565,7 +565,7 @@ func detectSilentRisks(controls []policy.ControlDefinition, snapshots []asset.Sn
 		sr := &report.SilentRisk[i]
 		out = append(out, SilentRiskControl{
 			ControlID:     string(sr.ControlID),
-			Severity:      sr.Severity,
+			Severity:      sr.Severity.String(),
 			MissingFields: sr.MissingFields,
 		})
 	}
