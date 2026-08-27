@@ -1,0 +1,50 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.kms-cmk-distinction"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:inspector2:us-east-1:111122223333:account-aws-key",
+      "type": "aws_inspector2_account",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "inspector2_account",
+          "inspector": {
+            "encryption": {
+              "uses_cmk": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:inspector2:us-east-1:111122223333:account-cmk",
+      "type": "aws_inspector2_account",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "inspector2_account",
+          "inspector": {
+            "encryption": {
+              "uses_cmk": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:inspector2:us-east-1:111122223333:account-no-key-info",
+      "type": "aws_inspector2_account",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "inspector2_account"
+        }
+      }
+    }
+  ]
+}

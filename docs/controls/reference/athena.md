@@ -50,6 +50,21 @@ Athena workgroups must encrypt query results at rest. Unencrypted query results 
 
 ---
 
+### CTL.ATHENA.ENCRYPT.CMK.001
+
+**Athena Workgroup Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+Athena workgroup query results are encrypted but not with a customer-managed KMS key. The AWS-managed key provides at-rest encryption but no key-policy control, no audit visibility against an account-owned key, and no ability to revoke access by disabling the key. If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Update the workgroup to use a customer-managed KMS key for query result encryption (aws athena update-work-group --work-group <name> --configuration-updates ResultConfiguration={EncryptionConfiguration={EncryptionOption=SSE_KMS,KmsKey=arn:aws:kms:...}}).
+
+---
+
 ### CTL.ATHENA.GHOST.OUTPUT.S3.001
 
 **Athena Query Results S3 Bucket Deleted**

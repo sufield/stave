@@ -1,0 +1,104 @@
+dsl_version: ctrl.v1
+id: CTL.SECURITYLAKE.ENCRYPT.CMK.001
+name: Security Lake Not Encrypted with Customer-Managed KMS Key
+description: >
+  Security Lake data lake is enabled but does not use a
+  customer-managed KMS key. The AWS-managed key provides at-rest
+  encryption but no key-policy control and no ability to revoke
+  access by disabling the key. If the uses_cmk field is absent the
+  control is not-evaluable and does not fire.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - securitylake
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_securitylake_data_lake
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - logging.kind
+  - logging.security_lake.enabled
+  - logging.security_lake.encryption.uses_cmk
+remediation:
+  description: >
+    Security Lake data lake encryption is not backed by a
+    customer-managed KMS key.
+  action: >
+    Update the data lake encryption configuration with a
+    customer-managed KMS key (aws securitylake
+    update-data-lake --configurations
+    encryptionConfiguration={kmsKeyId=arn:aws:kms:...:key/...}).
+  example: |
+    {
+      "logging": {
+        "kind": "security_lake",
+        "security_lake": {
+          "enabled": true,
+          "encryption": {
+            "uses_cmk": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.logging.kind
+      op: eq
+      value: security_lake
+    - field: properties.logging.security_lake.enabled
+      op: eq
+      value: true
+    - field: properties.logging.security_lake.encryption.uses_cmk
+      op: eq
+      value: false
+tests:
+  - name: data lake with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake/default"
+      asset_type: aws_securitylake_data_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: security_lake
+          security_lake:
+            enabled: true
+            encryption:
+              uses_cmk: false
+  - name: data lake with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake/default"
+      asset_type: aws_securitylake_data_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: security_lake
+          security_lake:
+            enabled: true
+            encryption:
+              uses_cmk: true
+  - name: data lake with absent uses_cmk passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:securitylake:us-east-1:111122223333:data-lake/default"
+      asset_type: aws_securitylake_data_lake
+      vendor: aws
+      properties:
+        logging:
+          kind: security_lake
+          security_lake:
+            enabled: true

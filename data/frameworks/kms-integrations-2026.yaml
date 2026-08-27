@@ -1,0 +1,644 @@
+# AWS KMS Integrated Services — Encryption Coverage Audit 2026
+# Source: AWS KMS features page, "List of integrated services"
+# Retrieved: 2026-08-27 (page updated 2026-08-20)
+# 117 services: 111 cmk, 5 managed-only, 1 keystore
+#
+# Format: stave catalog gaps compatible
+standard: "AWS KMS Integrated Services 2026"
+
+checks:
+
+  # ─── Analytics and Data (18) ───────────────────────────────
+
+  - id: KMS-ANALYTICS-01
+    service: ATHENA
+    description: "Athena encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.database.encryption.uses_cmk
+
+  - id: KMS-ANALYTICS-02
+    service: FIREHOSE
+    description: "Data Firehose encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-03
+    service: DATAZONE
+    description: "DataZone encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-04
+    service: EMR
+    description: "EMR encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.compute.encryption.uses_cmk
+
+  - id: KMS-ANALYTICS-05
+    service: EMR
+    description: "EMR Serverless encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.compute.encryption.uses_cmk
+
+  - id: KMS-ANALYTICS-06
+    service: KINESIS
+    description: "Kinesis Data Streams encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-07
+    service: KINESIS_VIDEO
+    description: "Kinesis Video Streams encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-08
+    service: FLINK
+    description: "Managed Service for Apache Flink encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-09
+    service: MSK
+    description: "MSK encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-10
+    service: OPENSEARCH
+    description: "OpenSearch encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-11
+    service: OPENSEARCH
+    description: "OpenSearch Serverless encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-12
+    service: QUICKSIGHT
+    description: "QuickSight encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-13
+    service: REDSHIFT
+    description: "Redshift encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-14
+    service: REDSHIFT
+    description: "Redshift Serverless encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-15
+    service: CLEANROOMS
+    description: "Clean Rooms encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-16
+    service: DATA_EXCHANGE
+    description: "Data Exchange encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-17
+    service: ENTITY_RESOLUTION
+    description: "Entity Resolution encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-ANALYTICS-18
+    service: GLUE
+    description: "Glue encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  # ─── Compute and Containers (8) ────────────────────────────
+
+  - id: KMS-COMPUTE-01
+    service: EC2
+    description: "EC2 Image Builder encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-COMPUTE-02
+    service: ECS
+    description: "ECS encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-COMPUTE-03
+    service: ECR
+    description: "ECR encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-COMPUTE-04
+    service: EKS
+    description: "EKS encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-COMPUTE-05
+    service: LIGHTSAIL
+    description: "Lightsail encryption at rest uses AWS-managed key (no customer key option)"
+    reference: "AWS KMS integrations 2026-08-20"
+    tags: [managed-only]
+
+  - id: KMS-COMPUTE-06
+    service: APPRUNNER
+    description: "App Runner encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.compute.encryption.uses_cmk
+
+  - id: KMS-COMPUTE-07
+    service: ECS
+    description: "Fargate encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-COMPUTE-08
+    service: LAMBDA
+    description: "Lambda encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  # ─── Databases and Storage (17) ────────────────────────────
+
+  - id: KMS-DB-01
+    service: RDS
+    description: "Aurora encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-02
+    service: DOCUMENTDB
+    description: "DocumentDB encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-03
+    service: DYNAMODB
+    description: "DynamoDB encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-04
+    service: DAX
+    description: "DAX encryption at rest uses AWS-managed key (no customer key option)"
+    reference: "AWS KMS integrations 2026-08-20"
+    tags: [managed-only]
+
+  - id: KMS-DB-05
+    service: EBS
+    description: "EBS encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-06
+    service: EFS
+    description: "EFS encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-07
+    service: DRS
+    description: "Elastic Disaster Recovery encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-08
+    service: ELASTICACHE
+    description: "ElastiCache encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-09
+    service: FSX
+    description: "File Cache encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.storage.encryption.uses_cmk
+
+  - id: KMS-DB-10
+    service: FSX
+    description: "FSx encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.storage.encryption.uses_cmk
+
+  - id: KMS-DB-11
+    service: KEYSPACES
+    description: "Keyspaces encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-12
+    service: MEMORYDB
+    description: "MemoryDB encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.storage.encryption.uses_cmk
+
+  - id: KMS-DB-13
+    service: NEPTUNE
+    description: "Neptune encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-14
+    service: RDS
+    description: "RDS encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-15
+    service: S3
+    description: "S3 encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-16
+    service: TIMESTREAM
+    description: "Timestream encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DB-17
+    service: STORAGE_GATEWAY
+    description: "Storage Gateway encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  # ─── AI and ML (22) ────────────────────────────────────────
+
+  - id: KMS-AI-01
+    service: BEDROCK
+    description: "Bedrock encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-02
+    service: CODEGURU
+    description: "CodeGuru encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-03
+    service: COMPREHEND
+    description: "Comprehend encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-04
+    service: DEVOPS_GURU
+    description: "DevOps Guru encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-05
+    service: FORECAST
+    description: "Forecast encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-06
+    service: FRAUD_DETECTOR
+    description: "Fraud Detector encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-07
+    service: KENDRA
+    description: "Kendra encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-08
+    service: LEX
+    description: "Lex encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-09
+    service: LOOKOUT
+    description: "Lookout encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-10
+    service: MONITRON
+    description: "Monitron encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-11
+    service: PERSONALIZE
+    description: "Personalize encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-12
+    service: Q_BUSINESS
+    description: "Q Business encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-13
+    service: Q_DEVELOPER
+    description: "Q Developer encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-14
+    service: REKOGNITION
+    description: "Rekognition encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-15
+    service: SAGEMAKER
+    description: "SageMaker encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-16
+    service: SAGEMAKER
+    description: "SageMaker AI encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-17
+    service: TEXTRACT
+    description: "Textract encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-18
+    service: TRANSCRIBE
+    description: "Transcribe encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-19
+    service: TRANSLATE
+    description: "Translate encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-20
+    service: HEALTHLAKE
+    description: "HealthLake encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-21
+    service: HEALTHOMICS
+    description: "HealthOmics encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-AI-22
+    service: HEALTHSCRIBE
+    description: "HealthScribe encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  # ─── Developer Tools and Operations (15) ───────────────────
+
+  - id: KMS-DEVOPS-01
+    service: CLOUDWATCH
+    description: "CloudWatch encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DEVOPS-02
+    service: GRAFANA
+    description: "Managed Grafana encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.observability.encryption.uses_cmk
+
+  - id: KMS-DEVOPS-03
+    service: PROMETHEUS
+    description: "Managed Service for Prometheus encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DEVOPS-04
+    service: CLOUD9
+    description: "Cloud9 encryption at rest uses AWS-managed key (no customer key option)"
+    reference: "AWS KMS integrations 2026-08-20"
+    tags: [managed-only]
+
+  - id: KMS-DEVOPS-05
+    service: CLOUDTRAIL
+    description: "CloudTrail encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DEVOPS-06
+    service: CODEARTIFACT
+    description: "CodeArtifact encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.storage.encryption.uses_cmk
+
+  - id: KMS-DEVOPS-07
+    service: CODEBUILD
+    description: "CodeBuild encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DEVOPS-08
+    service: CODECOMMIT
+    description: "CodeCommit encryption at rest uses AWS-managed key (no customer key option)"
+    reference: "AWS KMS integrations 2026-08-20"
+    tags: [managed-only]
+
+  - id: KMS-DEVOPS-09
+    service: CODEPIPELINE
+    description: "CodePipeline encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DEVOPS-10
+    service: COMPUTE_OPTIMIZER
+    description: "Compute Optimizer encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DEVOPS-11
+    service: CONFIG
+    description: "Config encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.compliance.config.delivery_s3_kms_cmk
+
+  - id: KMS-DEVOPS-12
+    service: CONTROL_TOWER
+    description: "Control Tower encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DEVOPS-13
+    service: LICENSE_MANAGER
+    description: "License Manager encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DEVOPS-14
+    service: SSM
+    description: "Systems Manager encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-DEVOPS-15
+    service: XRAY
+    description: "X-Ray encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  # ─── Networking and Security (15) ──────────────────────────
+
+  - id: KMS-NETSEC-01
+    service: GUARDDUTY
+    description: "GuardDuty encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-02
+    service: INSPECTOR
+    description: "Inspector encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.governance.inspector.encryption.uses_cmk
+
+  - id: KMS-NETSEC-03
+    service: LOCATION
+    description: "Location Service encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-04
+    service: ROUTE53
+    description: "Route 53 encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-05
+    service: SECURITYLAKE
+    description: "Security Lake encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-06
+    service: VERIFIEDPERMISSIONS
+    description: "Verified Permissions encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-07
+    service: AUDITMANAGER
+    description: "Audit Manager encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-08
+    service: BACKUP
+    description: "Backup encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-09
+    service: ACM
+    description: "Certificate Manager encryption at rest uses AWS-managed key (no customer key option)"
+    reference: "AWS KMS integrations 2026-08-20"
+    tags: [managed-only]
+
+  - id: KMS-NETSEC-10
+    service: KMS
+    description: "CloudHSM encryption at rest via CloudHSM key store"
+    reference: "AWS KMS integrations 2026-08-20"
+    tags: [keystore]
+
+  - id: KMS-NETSEC-11
+    service: AD
+    description: "Directory Service encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-12
+    service: IAM
+    description: "IAM Identity Center encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-13
+    service: NETFIREWALL
+    description: "Network Firewall encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-14
+    service: SECRETSMANAGER
+    description: "Secrets Manager encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-NETSEC-15
+    service: VERIFIEDACCESS
+    description: "Verified Access encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  # ─── Application Integration and Business (12) ─────────────
+
+  - id: KMS-APP-01
+    service: APPFLOW
+    description: "AppFlow encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-02
+    service: CHIME
+    description: "Chime SDK encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-03
+    service: CONNECT
+    description: "Connect encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-04
+    service: EVENTBRIDGE
+    description: "EventBridge encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-05
+    service: MANAGED_BLOCKCHAIN
+    description: "Managed Blockchain encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-06
+    service: MQ
+    description: "MQ encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.storage.encryption.uses_cmk
+
+  - id: KMS-APP-07
+    service: SES
+    description: "SES encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-08
+    service: SNS
+    description: "SNS encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-09
+    service: SQS
+    description: "SQS encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-10
+    service: APPFABRIC
+    description: "AppFabric encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-11
+    service: STEPFUNCTIONS
+    description: "Step Functions encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-APP-12
+    service: SUPPLY_CHAIN
+    description: "Supply Chain encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  # ─── IoT, Media and Specialized (10) ───────────────────────
+
+  - id: KMS-IOT-01
+    service: WORKSPACES
+    description: "WorkSpaces encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.compute.encryption.uses_cmk
+
+  - id: KMS-IOT-02
+    service: DMS
+    description: "Database Migration Service encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.storage.encryption.uses_cmk
+
+  - id: KMS-IOT-03
+    service: MEDIACONVERT
+    description: "Elemental MediaConvert encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-IOT-04
+    service: GROUND_STATION
+    description: "Ground Station encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-IOT-05
+    service: IOT
+    description: "IoT Core encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-IOT-06
+    service: IOT
+    description: "IoT Device Defender encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-IOT-07
+    service: IOT
+    description: "IoT Device Management encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-IOT-08
+    service: IOT
+    description: "IoT SiteWise encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-IOT-09
+    service: MAINFRAME
+    description: "Mainframe Modernization encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"
+
+  - id: KMS-IOT-10
+    service: SNOW
+    description: "Snow Family encryption at rest uses customer-managed KMS key"
+    reference: "AWS KMS integrations 2026-08-20"

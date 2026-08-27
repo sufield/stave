@@ -20,6 +20,21 @@ FSx file system does not have automatic backups or AWS Backup configured. Withou
 
 ---
 
+### CTL.FSX.ENCRYPT.CMK.001
+
+**FSx File System Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+FSx file system has encryption at rest enabled but does not use a customer-managed KMS key. Covers FSx for Lustre, Windows File Server, ONTAP, OpenZFS, and File Cache (same asset type). If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Create a new FSx file system with a customer-managed KMS key (encryption must be set at creation time and cannot be changed). Migrate data from the existing file system to the new one.
+
+---
+
 ### CTL.FSX.ENCRYPT.REST.001
 
 **FSx File System Must Have At-Rest Encryption Enabled**

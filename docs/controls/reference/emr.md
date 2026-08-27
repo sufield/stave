@@ -20,6 +20,21 @@ EMR clusters must have a security configuration enabling encryption at rest (EMR
 
 ---
 
+### CTL.EMR.ENCRYPT.CMK.001
+
+**EMR Cluster Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+EMR cluster has a security configuration set but does not use a customer-managed KMS key for encryption. The AWS-managed key provides at-rest encryption but no key-policy control and no ability to revoke access by disabling the key. Covers both EMR and EMR Serverless (same asset type). If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Create a security configuration with a customer-managed KMS key for at-rest encryption and attach it to the cluster.
+
+---
+
 ### CTL.EMR.IMDS.V1.001
 
 **EMR Cluster Must Enforce IMDSv2**

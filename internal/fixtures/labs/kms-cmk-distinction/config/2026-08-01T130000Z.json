@@ -1,0 +1,46 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.kms-cmk-distinction"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:config:us-east-1:111122223333:recorder/default-aws-key",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_recorder",
+          "config": {
+            "delivery_s3_kms_cmk": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:111122223333:recorder/default-cmk",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_recorder",
+          "config": {
+            "delivery_s3_kms_cmk": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:config:us-east-1:111122223333:recorder/default-no-key-info",
+      "type": "aws_config_recorder",
+      "vendor": "aws",
+      "properties": {
+        "compliance": {
+          "kind": "config_recorder"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.kms-cmk-distinction"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:mq:us-east-1:111122223333:broker:my-awskey-broker:abc123",
+      "type": "aws_mq_broker",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "mq_broker",
+          "encryption": {
+            "at_rest_enabled": true,
+            "uses_cmk": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:mq:us-east-1:111122223333:broker:my-cmk-broker:abc123",
+      "type": "aws_mq_broker",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "mq_broker",
+          "encryption": {
+            "at_rest_enabled": true,
+            "uses_cmk": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:mq:us-east-1:111122223333:broker:my-nokey-broker:abc123",
+      "type": "aws_mq_broker",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "mq_broker",
+          "encryption": {
+            "at_rest_enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

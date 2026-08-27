@@ -2286,6 +2286,99 @@ contracts:
     consumers:
       - CTL.FSX.ENCRYPT.REST.001
 
+  # ─── CMK Distinction Fields ────────────────────────────────
+
+  - field: storage.encryption.uses_cmk
+    type: boolean
+    status: active
+    postcondition: >
+      True if storage encryption uses a customer-managed KMS key.
+      False if using an AWS-managed key (alias/aws/*). Absent when
+      the collector cannot determine the key type. Applies to FSx,
+      MemoryDB, DMS, MQ, and CodeArtifact domain asset types.
+    consumers:
+      - CTL.FSX.ENCRYPT.CMK.001
+      - CTL.MEMORYDB.ENCRYPT.CMK.001
+      - CTL.DMS.ENCRYPT.CMK.001
+      - CTL.MQ.ENCRYPT.CMK.001
+      - CTL.CODEARTIFACT.ENCRYPT.CMK.001
+
+  - field: compute.encryption.uses_cmk
+    type: boolean
+    status: active
+    postcondition: >
+      True if compute encryption uses a customer-managed KMS key.
+      False if using an AWS-managed key. Absent when the collector
+      cannot determine the key type. Applies to EMR, WorkSpaces,
+      and App Runner asset types.
+    consumers:
+      - CTL.EMR.ENCRYPT.CMK.001
+      - CTL.WORKSPACES.ENCRYPT.CMK.001
+      - CTL.APPRUNNER.ENCRYPT.CMK.001
+
+  - field: database.encryption.uses_cmk
+    type: boolean
+    status: active
+    postcondition: >
+      True if database/query-result encryption uses a customer-managed
+      KMS key. False if using an AWS-managed key. Absent when the
+      collector cannot determine the key type. Applies to Athena
+      workgroup asset types.
+    consumers:
+      - CTL.ATHENA.ENCRYPT.CMK.001
+
+  - field: observability.encryption.uses_cmk
+    type: boolean
+    status: active
+    postcondition: >
+      True if observability service encryption uses a customer-managed
+      KMS key. False if using an AWS-managed key. Absent when the
+      collector cannot determine the key type. Applies to Managed
+      Grafana workspace asset types.
+    consumers:
+      - CTL.GRAFANA.ENCRYPT.CMK.001
+
+  - field: compliance.config.delivery_s3_kms_cmk
+    type: boolean
+    status: active
+    postcondition: >
+      True if the Config delivery channel encrypts S3 snapshots with
+      a customer-managed KMS key. False if using the AWS-managed key
+      or no KMS key is set. Absent when the collector cannot determine
+      the key type.
+    consumers:
+      - CTL.CONFIG.DELIVERY.ENCRYPT.CMK.001
+
+  - field: logging.security_lake.encryption.uses_cmk
+    type: boolean
+    status: active
+    postcondition: >
+      True if Security Lake data lake encryption uses a customer-managed
+      KMS key. False if using an AWS-managed key. Absent when the
+      collector cannot determine the key type.
+    consumers:
+      - CTL.SECURITYLAKE.ENCRYPT.CMK.001
+
+  - field: iot.encryption.uses_cmk
+    type: boolean
+    status: active
+    postcondition: >
+      True if IoT Core account-level encryption uses a customer-managed
+      KMS key. False if using the AWS service key. Absent when the
+      collector cannot determine the key type.
+    consumers:
+      - CTL.IOT.ENCRYPT.CMK.001
+
+  - field: governance.inspector.encryption.uses_cmk
+    type: boolean
+    status: active
+    postcondition: >
+      True if Inspector account-level encryption uses a customer-managed
+      KMS key. False if using an AWS-managed key. Absent when the
+      collector cannot determine the key type.
+    consumers:
+      - CTL.INSPECTOR.ENCRYPT.CMK.001
+
   # ─── Transfer Family Server Encryption ───────────────────────
 
   - field: transfer.encryption.at_rest_enabled

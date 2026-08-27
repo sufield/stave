@@ -1,0 +1,46 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.kms-cmk-distinction"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iot:us-east-1:111122223333:account-aws-key",
+      "type": "aws_iot_account",
+      "vendor": "aws",
+      "properties": {
+        "iot": {
+          "kind": "iot_account",
+          "encryption": {
+            "uses_cmk": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iot:us-east-1:111122223333:account-cmk",
+      "type": "aws_iot_account",
+      "vendor": "aws",
+      "properties": {
+        "iot": {
+          "kind": "iot_account",
+          "encryption": {
+            "uses_cmk": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iot:us-east-1:111122223333:account-no-key-info",
+      "type": "aws_iot_account",
+      "vendor": "aws",
+      "properties": {
+        "iot": {
+          "kind": "iot_account"
+        }
+      }
+    }
+  ]
+}

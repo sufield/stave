@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.GRAFANA.ENCRYPT.CMK.001
+name: Managed Grafana Workspace Not Encrypted with Customer-Managed KMS Key
+description: >
+  Managed Grafana workspace has encryption at rest enabled but does
+  not use a customer-managed KMS key. The AWS-managed key provides
+  at-rest encryption but no key-policy control and no ability to
+  revoke access by disabling the key. If the uses_cmk field is
+  absent the control is not-evaluable and does not fire.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - grafana
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_grafana_workspace
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - observability.kind
+  - observability.encryption.at_rest_enabled
+  - observability.encryption.uses_cmk
+remediation:
+  description: >
+    Managed Grafana workspace encryption is not backed by a
+    customer-managed KMS key.
+  action: >
+    Create a new Grafana workspace with a customer-managed KMS key
+    (aws grafana create-workspace --kms-key-id
+    arn:aws:kms:...:key/...). Migrate dashboards and data sources
+    to the new workspace.
+  example: |
+    {
+      "observability": {
+        "kind": "grafana_workspace",
+        "encryption": {
+          "at_rest_enabled": true,
+          "uses_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.observability.kind
+      op: eq
+      value: grafana_workspace
+    - field: properties.observability.encryption.at_rest_enabled
+      op: eq
+      value: true
+    - field: properties.observability.encryption.uses_cmk
+      op: eq
+      value: false
+tests:
+  - name: workspace with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:grafana:us-east-1:111122223333:/workspaces/g-abc123"
+      asset_type: aws_grafana_workspace
+      vendor: aws
+      properties:
+        observability:
+          kind: grafana_workspace
+          encryption:
+            at_rest_enabled: true
+            uses_cmk: false
+  - name: workspace with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:grafana:us-east-1:111122223333:/workspaces/g-abc123"
+      asset_type: aws_grafana_workspace
+      vendor: aws
+      properties:
+        observability:
+          kind: grafana_workspace
+          encryption:
+            at_rest_enabled: true
+            uses_cmk: true
+  - name: workspace with absent uses_cmk passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:grafana:us-east-1:111122223333:/workspaces/g-abc123"
+      asset_type: aws_grafana_workspace
+      vendor: aws
+      properties:
+        observability:
+          kind: grafana_workspace
+          encryption:
+            at_rest_enabled: true

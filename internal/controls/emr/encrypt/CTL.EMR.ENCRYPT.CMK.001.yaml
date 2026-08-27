@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.EMR.ENCRYPT.CMK.001
+name: EMR Cluster Not Encrypted with Customer-Managed KMS Key
+description: >
+  EMR cluster has a security configuration set but does not use a
+  customer-managed KMS key for encryption. The AWS-managed key
+  provides at-rest encryption but no key-policy control and no
+  ability to revoke access by disabling the key. Covers both EMR
+  and EMR Serverless (same asset type). If the uses_cmk field is
+  absent the control is not-evaluable and does not fire.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - emr
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_emr_cluster
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - compute.kind
+  - compute.encryption.security_configuration_set
+  - compute.encryption.uses_cmk
+remediation:
+  description: >
+    EMR cluster encryption is not backed by a customer-managed
+    KMS key.
+  action: >
+    Create a security configuration with a customer-managed KMS key
+    for at-rest encryption and attach it to the cluster.
+  example: |
+    {
+      "compute": {
+        "kind": "emr_cluster",
+        "encryption": {
+          "security_configuration_set": true,
+          "uses_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: emr_cluster
+    - field: properties.compute.encryption.security_configuration_set
+      op: eq
+      value: true
+    - field: properties.compute.encryption.uses_cmk
+      op: eq
+      value: false
+tests:
+  - name: cluster with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:elasticmapreduce:us-east-1:111122223333:cluster/j-ABC123"
+      asset_type: aws_emr_cluster
+      vendor: aws
+      properties:
+        compute:
+          kind: emr_cluster
+          encryption:
+            security_configuration_set: true
+            uses_cmk: false
+  - name: cluster with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticmapreduce:us-east-1:111122223333:cluster/j-ABC123"
+      asset_type: aws_emr_cluster
+      vendor: aws
+      properties:
+        compute:
+          kind: emr_cluster
+          encryption:
+            security_configuration_set: true
+            uses_cmk: true
+  - name: cluster with absent uses_cmk passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:elasticmapreduce:us-east-1:111122223333:cluster/j-ABC123"
+      asset_type: aws_emr_cluster
+      vendor: aws
+      properties:
+        compute:
+          kind: emr_cluster
+          encryption:
+            security_configuration_set: true

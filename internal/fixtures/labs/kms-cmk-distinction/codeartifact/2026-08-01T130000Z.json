@@ -1,0 +1,51 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.kms-cmk-distinction"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:codeartifact:us-east-1:111122223333:domain/my-domain-aws-key",
+      "type": "aws_codeartifact_domain",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "codeartifact_domain",
+          "encryption": {
+            "at_rest_enabled": true,
+            "uses_cmk": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:codeartifact:us-east-1:111122223333:domain/my-domain-cmk",
+      "type": "aws_codeartifact_domain",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "codeartifact_domain",
+          "encryption": {
+            "at_rest_enabled": true,
+            "uses_cmk": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:codeartifact:us-east-1:111122223333:domain/my-domain-no-key-info",
+      "type": "aws_codeartifact_domain",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "codeartifact_domain",
+          "encryption": {
+            "at_rest_enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

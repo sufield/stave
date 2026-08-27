@@ -1,0 +1,55 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.kms-cmk-distinction"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:securitylake:us-east-1:111122223333:data-lake/default-aws-key",
+      "type": "aws_securitylake_data_lake",
+      "vendor": "aws",
+      "properties": {
+        "logging": {
+          "kind": "security_lake",
+          "security_lake": {
+            "enabled": true,
+            "encryption": {
+              "uses_cmk": false
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:securitylake:us-east-1:111122223333:data-lake/default-cmk",
+      "type": "aws_securitylake_data_lake",
+      "vendor": "aws",
+      "properties": {
+        "logging": {
+          "kind": "security_lake",
+          "security_lake": {
+            "enabled": true,
+            "encryption": {
+              "uses_cmk": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:securitylake:us-east-1:111122223333:data-lake/default-no-key-info",
+      "type": "aws_securitylake_data_lake",
+      "vendor": "aws",
+      "properties": {
+        "logging": {
+          "kind": "security_lake",
+          "security_lake": {
+            "enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

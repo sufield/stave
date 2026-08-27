@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3484
-**Pack hash:** `403573572de8585509649ce255cee7fda1b724f89d577ce97d628043fea5e2f4`
+**Total controls:** 3491
+**Pack hash:** `539322bf5ac6891da3fbaf5f0ffcafdbe4382d98525c74d67b6a5a90cf3f32e8`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -17,7 +17,7 @@ GitHub. Pick a service below.
 | high | 1495 |
 | info | 19 |
 | low | 277 |
-| medium | 1318 |
+| medium | 1325 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,7 +29,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 162 |
 | encryption | 125 |
-| exposure | 1511 |
+| exposure | 1518 |
 | governance | 706 |
 | hygiene | 21 |
 | identity | 689 |
@@ -54,7 +54,7 @@ GitHub. Pick a service below.
 | [APPRUNNER](reference/apprunner.md) | 5 |
 | [APPSTREAM](reference/appstream.md) | 3 |
 | [APPSYNC](reference/appsync.md) | 2 |
-| [ATHENA](reference/athena.md) | 5 |
+| [ATHENA](reference/athena.md) | 6 |
 | [AUDITMANAGER](reference/auditmanager.md) | 1 |
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
@@ -83,7 +83,7 @@ GitHub. Pick a service below.
 | [DAX](reference/dax.md) | 3 |
 | [DETECTIVE](reference/detective.md) | 2 |
 | [DIRECTORYSERVICE](reference/directoryservice.md) | 2 |
-| [DMS](reference/dms.md) | 9 |
+| [DMS](reference/dms.md) | 10 |
 | [DNS](reference/dns.md) | 3 |
 | [DOCUMENTDB](reference/documentdb.md) | 19 |
 | [DYNAMODB](reference/dynamodb.md) | 39 |
@@ -95,13 +95,13 @@ GitHub. Pick a service below.
 | [EKS](reference/eks.md) | 120 |
 | [ELASTICACHE](reference/elasticache.md) | 15 |
 | [ELB](reference/elb.md) | 80 |
-| [EMR](reference/emr.md) | 9 |
+| [EMR](reference/emr.md) | 10 |
 | [EVENTBRIDGE](reference/eventbridge.md) | 97 |
 | [EVS](reference/evs.md) | 1 |
 | [EXPOSURE](reference/exposure.md) | 11 |
 | [FIREHOSE](reference/firehose.md) | 5 |
 | [FMS](reference/fms.md) | 4 |
-| [FSX](reference/fsx.md) | 3 |
+| [FSX](reference/fsx.md) | 4 |
 | [GCP](reference/gcp.md) | 72 |
 | [GCS](reference/gcs.md) | 7 |
 | [GHOST](reference/ghost.md) | 2 |
@@ -126,10 +126,10 @@ GitHub. Pick a service below.
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 5 |
 | [MEDIASTORE](reference/mediastore.md) | 2 |
-| [MEMORYDB](reference/memorydb.md) | 5 |
+| [MEMORYDB](reference/memorydb.md) | 6 |
 | [META](reference/meta.md) | 1 |
 | [MODEL](reference/model.md) | 2 |
-| [MQ](reference/mq.md) | 7 |
+| [MQ](reference/mq.md) | 8 |
 | [MSK](reference/msk.md) | 14 |
 | [MWAA](reference/mwaa.md) | 4 |
 | [NEPTUNE](reference/neptune.md) | 21 |
@@ -176,4 +176,4 @@ GitHub. Pick a service below.
 | [VPCLATTICE](reference/vpclattice.md) | 5 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 23 |
-| [WORKSPACES](reference/workspaces.md) | 1 |
+| [WORKSPACES](reference/workspaces.md) | 2 |

@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.DMS.ENCRYPT.CMK.001
+name: DMS Replication Instance Not Encrypted with Customer-Managed KMS Key
+description: >
+  DMS replication instance has encryption at rest enabled but does
+  not use a customer-managed KMS key. The AWS-managed key provides
+  at-rest encryption but no key-policy control and no ability to
+  revoke access by disabling the key. If the uses_cmk field is
+  absent the control is not-evaluable and does not fire.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - dms
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_dms_replication_instance
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
+  - storage.encryption.uses_cmk
+remediation:
+  description: >
+    DMS replication instance encryption is not backed by a
+    customer-managed KMS key.
+  action: >
+    Create a new replication instance with a customer-managed KMS
+    key (aws dms create-replication-instance --kms-key-id
+    arn:aws:kms:...:key/...). Migrate tasks from the existing
+    instance.
+  example: |
+    {
+      "storage": {
+        "kind": "dms_replication",
+        "encryption": {
+          "at_rest_enabled": true,
+          "uses_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: dms_replication
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: true
+    - field: properties.storage.encryption.uses_cmk
+      op: eq
+      value: false
+tests:
+  - name: instance with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:dms:us-east-1:111122223333:rep:ABC123"
+      asset_type: aws_dms_replication_instance
+      vendor: aws
+      properties:
+        storage:
+          kind: dms_replication
+          encryption:
+            at_rest_enabled: true
+            uses_cmk: false
+  - name: instance with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dms:us-east-1:111122223333:rep:ABC123"
+      asset_type: aws_dms_replication_instance
+      vendor: aws
+      properties:
+        storage:
+          kind: dms_replication
+          encryption:
+            at_rest_enabled: true
+            uses_cmk: true
+  - name: instance with absent uses_cmk passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:dms:us-east-1:111122223333:rep:ABC123"
+      asset_type: aws_dms_replication_instance
+      vendor: aws
+      properties:
+        storage:
+          kind: dms_replication
+          encryption:
+            at_rest_enabled: true

@@ -1,0 +1,51 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.kms-cmk-distinction"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:apprunner:us-east-1:111122223333:service/my-service/aws-managed-001",
+      "type": "aws_apprunner_service",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "apprunner_service",
+          "encryption": {
+            "at_rest_enabled": true,
+            "uses_cmk": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:apprunner:us-east-1:111122223333:service/my-service/cmk-secured-002",
+      "type": "aws_apprunner_service",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "apprunner_service",
+          "encryption": {
+            "at_rest_enabled": true,
+            "uses_cmk": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:apprunner:us-east-1:111122223333:service/my-service/unknown-key-003",
+      "type": "aws_apprunner_service",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "apprunner_service",
+          "encryption": {
+            "at_rest_enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

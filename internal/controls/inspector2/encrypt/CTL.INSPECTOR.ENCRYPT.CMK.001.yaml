@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.INSPECTOR.ENCRYPT.CMK.001
+name: Inspector Not Encrypted with Customer-Managed KMS Key
+description: >
+  Inspector account-level encryption uses an AWS-managed key instead
+  of a customer-managed KMS key. The AWS-managed key provides
+  at-rest encryption but no key-policy control and no ability to
+  revoke access by disabling the key. If the uses_cmk field is
+  absent the control is not-evaluable and does not fire.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - inspector
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_inspector2_account
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - governance.kind
+  - governance.inspector.encryption.uses_cmk
+remediation:
+  description: >
+    Inspector account encryption is not backed by a customer-managed
+    KMS key.
+  action: >
+    Update Inspector encryption key with a customer-managed KMS key
+    (aws inspector2 update-encryption-key --kms-key-id
+    arn:aws:kms:...:key/... --resource-type AWS_EC2_INSTANCE
+    --scan-type NETWORK).
+  example: |
+    {
+      "governance": {
+        "kind": "inspector2_account",
+        "inspector": {
+          "encryption": {
+            "uses_cmk": true
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: inspector2_account
+    - field: properties.governance.inspector.encryption.uses_cmk
+      op: eq
+      value: false
+tests:
+  - name: account with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:inspector2:us-east-1:111122223333:account"
+      asset_type: aws_inspector2_account
+      vendor: aws
+      properties:
+        governance:
+          kind: inspector2_account
+          inspector:
+            encryption:
+              uses_cmk: false
+  - name: account with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:inspector2:us-east-1:111122223333:account"
+      asset_type: aws_inspector2_account
+      vendor: aws
+      properties:
+        governance:
+          kind: inspector2_account
+          inspector:
+            encryption:
+              uses_cmk: true
+  - name: account with absent uses_cmk passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:inspector2:us-east-1:111122223333:account"
+      asset_type: aws_inspector2_account
+      vendor: aws
+      properties:
+        governance:
+          kind: inspector2_account

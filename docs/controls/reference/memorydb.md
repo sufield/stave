@@ -35,6 +35,21 @@ MemoryDB cluster does not have snapshot (backup) configured. MemoryDB is a durab
 
 ---
 
+### CTL.MEMORYDB.ENCRYPT.CMK.001
+
+**MemoryDB Cluster Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+MemoryDB cluster has encryption at rest enabled but does not use a customer-managed KMS key. The AWS-managed key provides at-rest encryption but no key-policy control and no ability to revoke access by disabling the key. If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Create a new MemoryDB cluster with a customer-managed KMS key (encryption settings are immutable after creation). Migrate data from the existing cluster.
+
+---
+
 ### CTL.MEMORYDB.ENCRYPT.REST.001
 
 **MemoryDB Cluster Must Be Encrypted at Rest**

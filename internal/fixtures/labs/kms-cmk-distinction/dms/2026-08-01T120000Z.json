@@ -1,0 +1,51 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.kms-cmk-distinction"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:dms:us-east-1:111122223333:rep:AWSKEY",
+      "type": "aws_dms_replication_instance",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "dms_replication",
+          "encryption": {
+            "at_rest_enabled": true,
+            "uses_cmk": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:dms:us-east-1:111122223333:rep:CMK",
+      "type": "aws_dms_replication_instance",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "dms_replication",
+          "encryption": {
+            "at_rest_enabled": true,
+            "uses_cmk": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:dms:us-east-1:111122223333:rep:NOKEY",
+      "type": "aws_dms_replication_instance",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "dms_replication",
+          "encryption": {
+            "at_rest_enabled": true
+          }
+        }
+      }
+    }
+  ]
+}

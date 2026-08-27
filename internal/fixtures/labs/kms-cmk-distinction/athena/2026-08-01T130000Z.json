@@ -1,0 +1,51 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.kms-cmk-distinction"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:athena:us-east-1:111122223333:workgroup/primary-aws-key",
+      "type": "aws_athena_workgroup",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "athena_workgroup",
+          "encryption": {
+            "results_encrypted": true,
+            "uses_cmk": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:athena:us-east-1:111122223333:workgroup/primary-cmk",
+      "type": "aws_athena_workgroup",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "athena_workgroup",
+          "encryption": {
+            "results_encrypted": true,
+            "uses_cmk": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:athena:us-east-1:111122223333:workgroup/primary-no-key-info",
+      "type": "aws_athena_workgroup",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "athena_workgroup",
+          "encryption": {
+            "results_encrypted": true
+          }
+        }
+      }
+    }
+  ]
+}

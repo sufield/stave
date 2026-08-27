@@ -35,6 +35,21 @@ Amazon MQ broker does not have automatic backup configured. Broker data (message
 
 ---
 
+### CTL.MQ.ENCRYPT.CMK.001
+
+**MQ Broker Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+Amazon MQ broker has encryption at rest enabled but does not use a customer-managed KMS key. The AWS-managed key provides at-rest encryption but no key-policy control and no ability to revoke access by disabling the key. If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Create a new broker with a customer-managed KMS key (aws mq create-broker --encryption-options KmsKeyId=arn:aws:kms:...:key/...). Migrate broker configuration and queues.
+
+---
+
 ### CTL.MQ.ENCRYPT.REST.001
 
 **Amazon MQ Broker Storage Must Be Encrypted at Rest**

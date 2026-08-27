@@ -1,0 +1,101 @@
+dsl_version: ctrl.v1
+id: CTL.ATHENA.ENCRYPT.CMK.001
+name: Athena Workgroup Not Encrypted with Customer-Managed KMS Key
+description: >
+  Athena workgroup query results are encrypted but not with a
+  customer-managed KMS key. The AWS-managed key provides at-rest
+  encryption but no key-policy control, no audit visibility against
+  an account-owned key, and no ability to revoke access by disabling
+  the key. If the uses_cmk field is absent the control is
+  not-evaluable and does not fire.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - athena
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_athena_workgroup
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - database.kind
+  - database.encryption.results_encrypted
+  - database.encryption.uses_cmk
+remediation:
+  description: >
+    Athena workgroup encryption is not backed by a customer-managed
+    KMS key.
+  action: >
+    Update the workgroup to use a customer-managed KMS key for query
+    result encryption (aws athena update-work-group --work-group
+    <name> --configuration-updates
+    ResultConfiguration={EncryptionConfiguration={EncryptionOption=SSE_KMS,KmsKey=arn:aws:kms:...}}).
+  example: |
+    {
+      "database": {
+        "kind": "athena_workgroup",
+        "encryption": {
+          "results_encrypted": true,
+          "uses_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.database.kind
+      op: eq
+      value: athena_workgroup
+    - field: properties.database.encryption.results_encrypted
+      op: eq
+      value: true
+    - field: properties.database.encryption.uses_cmk
+      op: eq
+      value: false
+tests:
+  - name: workgroup with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/primary"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        database:
+          kind: athena_workgroup
+          encryption:
+            results_encrypted: true
+            uses_cmk: false
+  - name: workgroup with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/primary"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        database:
+          kind: athena_workgroup
+          encryption:
+            results_encrypted: true
+            uses_cmk: true
+  - name: workgroup with absent uses_cmk passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:athena:us-east-1:111122223333:workgroup/primary"
+      asset_type: aws_athena_workgroup
+      vendor: aws
+      properties:
+        database:
+          kind: athena_workgroup
+          encryption:
+            results_encrypted: true

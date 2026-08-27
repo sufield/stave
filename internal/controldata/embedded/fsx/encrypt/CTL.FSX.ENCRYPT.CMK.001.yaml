@@ -1,0 +1,99 @@
+dsl_version: ctrl.v1
+id: CTL.FSX.ENCRYPT.CMK.001
+name: FSx File System Not Encrypted with Customer-Managed KMS Key
+description: >
+  FSx file system has encryption at rest enabled but does not use
+  a customer-managed KMS key. Covers FSx for Lustre, Windows File
+  Server, ONTAP, OpenZFS, and File Cache (same asset type). If the
+  uses_cmk field is absent the control is not-evaluable and does
+  not fire.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - fsx
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_fsx_filesystem
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
+  - storage.encryption.uses_cmk
+remediation:
+  description: >
+    FSx file system encryption is not backed by a customer-managed
+    KMS key.
+  action: >
+    Create a new FSx file system with a customer-managed KMS key
+    (encryption must be set at creation time and cannot be changed).
+    Migrate data from the existing file system to the new one.
+  example: |
+    {
+      "storage": {
+        "kind": "fsx_filesystem",
+        "encryption": {
+          "at_rest_enabled": true,
+          "uses_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: fsx_filesystem
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: true
+    - field: properties.storage.encryption.uses_cmk
+      op: eq
+      value: false
+tests:
+  - name: filesystem with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:fsx:us-east-1:111122223333:file-system/fs-abc123"
+      asset_type: aws_fsx_filesystem
+      vendor: aws
+      properties:
+        storage:
+          kind: fsx_filesystem
+          encryption:
+            at_rest_enabled: true
+            uses_cmk: false
+  - name: filesystem with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:fsx:us-east-1:111122223333:file-system/fs-abc123"
+      asset_type: aws_fsx_filesystem
+      vendor: aws
+      properties:
+        storage:
+          kind: fsx_filesystem
+          encryption:
+            at_rest_enabled: true
+            uses_cmk: true
+  - name: filesystem with absent uses_cmk passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:fsx:us-east-1:111122223333:file-system/fs-abc123"
+      asset_type: aws_fsx_filesystem
+      vendor: aws
+      properties:
+        storage:
+          kind: fsx_filesystem
+          encryption:
+            at_rest_enabled: true

@@ -1,0 +1,100 @@
+dsl_version: ctrl.v1
+id: CTL.APPRUNNER.ENCRYPT.CMK.001
+name: App Runner Service Not Encrypted with Customer-Managed KMS Key
+description: >
+  App Runner service has encryption at rest enabled but does not use
+  a customer-managed KMS key. The AWS-managed key provides at-rest
+  encryption but no key-policy control and no ability to revoke
+  access by disabling the key. If the uses_cmk field is absent the
+  control is not-evaluable and does not fire.
+domain: exposure
+severity: medium
+compliance:
+  soc2: "CC6.1, CC6.7"
+  nist_800_53_r5: "SC-12, SC-13, SC-28"
+  pci_dss_v4.0: "3.5"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - apprunner
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_apprunner_service
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - compute.kind
+  - compute.encryption.at_rest_enabled
+  - compute.encryption.uses_cmk
+remediation:
+  description: >
+    App Runner service encryption is not backed by a customer-managed
+    KMS key.
+  action: >
+    Create a new App Runner service with a customer-managed KMS key
+    in EncryptionConfiguration (aws apprunner create-service
+    --encryption-configuration KmsKey=arn:aws:kms:...:key/...).
+    Migrate traffic to the new service.
+  example: |
+    {
+      "compute": {
+        "kind": "apprunner_service",
+        "encryption": {
+          "at_rest_enabled": true,
+          "uses_cmk": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: apprunner_service
+    - field: properties.compute.encryption.at_rest_enabled
+      op: eq
+      value: true
+    - field: properties.compute.encryption.uses_cmk
+      op: eq
+      value: false
+tests:
+  - name: service with AWS-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:apprunner:us-east-1:111122223333:service/my-service/abc123"
+      asset_type: aws_apprunner_service
+      vendor: aws
+      properties:
+        compute:
+          kind: apprunner_service
+          encryption:
+            at_rest_enabled: true
+            uses_cmk: false
+  - name: service with CMK passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:apprunner:us-east-1:111122223333:service/my-service/abc123"
+      asset_type: aws_apprunner_service
+      vendor: aws
+      properties:
+        compute:
+          kind: apprunner_service
+          encryption:
+            at_rest_enabled: true
+            uses_cmk: true
+  - name: service with absent uses_cmk passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:apprunner:us-east-1:111122223333:service/my-service/abc123"
+      asset_type: aws_apprunner_service
+      vendor: aws
+      properties:
+        compute:
+          kind: apprunner_service
+          encryption:
+            at_rest_enabled: true
