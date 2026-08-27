@@ -184,7 +184,7 @@ func writeTicketsExportCSV(w io.Writer, tickets []ticketexport.Ticket) (err erro
 		if err = cw.Write([]string{
 			t.TicketID,
 			t.Title,
-			t.Severity,
+			t.Severity.String(),
 			string(t.Priority),
 			t.Status,
 			string(t.ControlID),
