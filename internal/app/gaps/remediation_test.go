@@ -13,7 +13,7 @@ func TestClassifyRemediation_TaggableProperty(t *testing.T) {
 		"aws_s3_bucket",
 		true,
 	)
-	if r.Type != "tag" {
+	if r.Type != RemediationTag {
 		t.Errorf("Type: got %q, want tag", r.Type)
 	}
 	if !r.FixableByAgent {
@@ -37,7 +37,7 @@ func TestClassifyRemediation_APIProperty(t *testing.T) {
 	}
 	for _, p := range cases {
 		r := classifyRemediation(p, "aws_iam_role", false)
-		if r.Type != "api" {
+		if r.Type != RemediationAPI {
 			t.Errorf("%s: Type got %q, want api", p, r.Type)
 		}
 		if r.FixableByAgent {
@@ -59,7 +59,7 @@ func TestClassifyRemediation_CollectorAnalysis(t *testing.T) {
 	}
 	for _, p := range cases {
 		r := classifyRemediation(p, "aws_iam_role", false)
-		if r.Type != "collector" {
+		if r.Type != RemediationCollector {
 			t.Errorf("%s: Type got %q, want collector", p, r.Type)
 		}
 		if r.FixableByAgent {
@@ -80,7 +80,7 @@ func TestClassifyRemediation_DerivedFallback(t *testing.T) {
 		"aws_s3_bucket",
 		false,
 	)
-	if r.Type != "derived" {
+	if r.Type != RemediationDerived {
 		t.Errorf("Type: got %q, want derived", r.Type)
 	}
 	if !r.FixableByAgent {

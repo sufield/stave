@@ -65,3 +65,18 @@ Amazon Inspector 2 must be enabled for vulnerability scanning of EC2, ECR, and L
 
 ---
 
+### CTL.INSPECTOR.ENCRYPT.CMK.001
+
+**Inspector Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+Inspector account-level encryption uses an AWS-managed key instead of a customer-managed KMS key. The AWS-managed key provides at-rest encryption but no key-policy control and no ability to revoke access by disabling the key. If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Update Inspector encryption key with a customer-managed KMS key (aws inspector2 update-encryption-key --kms-key-id arn:aws:kms:...:key/... --resource-type AWS_EC2_INSTANCE --scan-type NETWORK).
+
+---
+

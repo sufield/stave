@@ -76,7 +76,7 @@ func TestAnalyze_AssetMissingTaggedProperty(t *testing.T) {
 	if !g.IsIntentProperty {
 		t.Error("data_classification path should be tagged intent")
 	}
-	if g.Remediation.Type != "tag" {
+	if g.Remediation.Type != RemediationTag {
 		t.Errorf("expected tag remediation, got %s", g.Remediation.Type)
 	}
 }

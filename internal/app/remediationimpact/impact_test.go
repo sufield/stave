@@ -126,7 +126,7 @@ func TestAnalyze_ChainDeactivationDetected(t *testing.T) {
 	// chain IDs are present without asserting order.
 	seen := map[kernel.ChainID]string{}
 	for _, d := range r.ChainsDeactivated {
-		seen[d.ChainID] = d.PreviousSeverity
+		seen[d.ChainID] = d.PreviousSeverity.String()
 	}
 	if seen["chain.capital-one"] != "critical" {
 		t.Errorf("chain.capital-one severity = %q, want critical", seen["chain.capital-one"])

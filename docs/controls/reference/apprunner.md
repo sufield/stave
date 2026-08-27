@@ -20,6 +20,21 @@ App Runner service exposes a public HTTPS endpoint without requiring authenticat
 
 ---
 
+### CTL.APPRUNNER.ENCRYPT.CMK.001
+
+**App Runner Service Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+App Runner service has encryption at rest enabled but does not use a customer-managed KMS key. The AWS-managed key provides at-rest encryption but no key-policy control and no ability to revoke access by disabling the key. If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Create a new App Runner service with a customer-managed KMS key in EncryptionConfiguration (aws apprunner create-service --encryption-configuration KmsKey=arn:aws:kms:...:key/...). Migrate traffic to the new service.
+
+---
+
 ### CTL.APPRUNNER.LOG.APPLICATION.001
 
 **App Runner Service Must Have Application Logging Enabled**

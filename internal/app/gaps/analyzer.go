@@ -236,13 +236,13 @@ func buildSummary(gaps []FieldGap, indet int, topN int) Summary {
 	for i := range gaps {
 		r := gaps[i].Remediation
 		switch r.Type {
-		case "tag":
+		case RemediationTag:
 			s.TagGaps++
-		case "api":
+		case RemediationAPI:
 			s.ApiGaps++
-		case "derived":
+		case RemediationDerived:
 			s.DerivedGaps++
-		case "collector":
+		case RemediationCollector:
 			s.CollectorGaps++
 		default:
 			// classifyRemediation only emits one of the four known
@@ -271,7 +271,7 @@ func buildSummary(gaps []FieldGap, indet int, topN int) Summary {
 			for _, c := range gaps[i].ChainsBlocked {
 				top[c] = struct{}{}
 			}
-			if gaps[i].Remediation.Type == "tag" {
+			if gaps[i].Remediation.Type == RemediationTag {
 				tagN++
 			}
 		}

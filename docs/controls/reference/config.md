@@ -200,6 +200,21 @@ AWS Config conformance pack is deployed but no CloudWatch alarm watches its comp
 
 ---
 
+### CTL.CONFIG.DELIVERY.ENCRYPT.CMK.001
+
+**Config Delivery Channel Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+AWS Config delivery channel delivers configuration snapshots to S3 without a customer-managed KMS key. The delivery channel's s3KmsKeyArn is unset or uses the AWS-managed key. Without CMK encryption, configuration snapshots containing IAM policies, security group rules, and encryption keys are encrypted with a key the customer cannot audit, rotate, or revoke. If the delivery_s3_kms_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Update the delivery channel to specify a customer-managed KMS key (aws configservice put-delivery-channel --delivery-channel s3KmsKeyArn=arn:aws:kms:...:key/...).
+
+---
+
 ### CTL.CONFIG.DELIVERY.FAILURES.UNMONITORED.001
 
 **Config Delivery Failures Not Monitored**

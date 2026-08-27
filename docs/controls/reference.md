@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3491
-**Pack hash:** `539322bf5ac6891da3fbaf5f0ffcafdbe4382d98525c74d67b6a5a90cf3f32e8`
+**Total controls:** 3498
+**Pack hash:** `828d32c33eba14b2947137024f0bb651ef0b6dfaca01f6b92622216870c3c210`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -17,7 +17,7 @@ GitHub. Pick a service below.
 | high | 1495 |
 | info | 19 |
 | low | 277 |
-| medium | 1325 |
+| medium | 1332 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,7 +29,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 162 |
 | encryption | 125 |
-| exposure | 1518 |
+| exposure | 1525 |
 | governance | 706 |
 | hygiene | 21 |
 | identity | 689 |
@@ -51,7 +51,7 @@ GitHub. Pick a service below.
 | [AMPLIFY](reference/amplify.md) | 2 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
 | [APIGW2](reference/apigw2.md) | 2 |
-| [APPRUNNER](reference/apprunner.md) | 5 |
+| [APPRUNNER](reference/apprunner.md) | 6 |
 | [APPSTREAM](reference/appstream.md) | 3 |
 | [APPSYNC](reference/appsync.md) | 2 |
 | [ATHENA](reference/athena.md) | 6 |
@@ -70,14 +70,14 @@ GitHub. Pick a service below.
 | [CLOUDFRONT](reference/cloudfront.md) | 72 |
 | [CLOUDTRAIL](reference/cloudtrail.md) | 66 |
 | [CLOUDWATCH](reference/cloudwatch.md) | 68 |
-| [CODEARTIFACT](reference/codeartifact.md) | 4 |
+| [CODEARTIFACT](reference/codeartifact.md) | 5 |
 | [CODEBUILD](reference/codebuild.md) | 13 |
 | [CODECOMMIT](reference/codecommit.md) | 2 |
 | [CODEPIPELINE](reference/codepipeline.md) | 6 |
 | [COGNITO](reference/cognito.md) | 114 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
 | [COMPREHEND](reference/comprehend.md) | 1 |
-| [CONFIG](reference/config.md) | 52 |
+| [CONFIG](reference/config.md) | 53 |
 | [DATACLASS](reference/dataclass.md) | 5 |
 | [DATASYNC](reference/datasync.md) | 2 |
 | [DAX](reference/dax.md) | 3 |
@@ -109,12 +109,12 @@ GitHub. Pick a service below.
 | [GLACIER](reference/glacier.md) | 3 |
 | [GLOBALACCELERATOR](reference/globalaccelerator.md) | 2 |
 | [GLUE](reference/glue.md) | 19 |
-| [GRAFANA](reference/grafana.md) | 1 |
+| [GRAFANA](reference/grafana.md) | 2 |
 | [GUARDDUTY](reference/guardduty.md) | 21 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
 | [IAM](reference/iam.md) | 345 |
-| [INSPECTOR](reference/inspector.md) | 4 |
-| [IOT](reference/iot.md) | 8 |
+| [INSPECTOR](reference/inspector.md) | 5 |
+| [IOT](reference/iot.md) | 9 |
 | [K8S](reference/k8s.md) | 68 |
 | [KEYSPACES](reference/keyspaces.md) | 5 |
 | [KINESIS](reference/kinesis.md) | 6 |
@@ -156,7 +156,7 @@ GitHub. Pick a service below.
 | [SECURITYAGENT](reference/securityagent.md) | 3 |
 | [SECURITYHUB](reference/securityhub.md) | 10 |
 | [SECURITYIR](reference/securityir.md) | 2 |
-| [SECURITYLAKE](reference/securitylake.md) | 4 |
+| [SECURITYLAKE](reference/securitylake.md) | 5 |
 | [SERVERLESSREPO](reference/serverlessrepo.md) | 1 |
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |
 | [SES](reference/ses.md) | 3 |

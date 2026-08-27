@@ -43,7 +43,7 @@ import (
 func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remediation {
 	if _, key, found := strings.Cut(path, ".tags."); found {
 		return Remediation{
-			Type:           "tag",
+			Type:           RemediationTag,
 			FixableByAgent: true,
 			Guidance:       "Add this tag to the resource via the cloud provider's tag-resource API.",
 			Command:        tagCommand(at, key),
@@ -59,7 +59,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 	// the agent loop cannot synthesise the result.
 	if matchesAnySegment(rel, "permission_drift", "access_advisor", "unused_service", "unused_service_ratio") {
 		return Remediation{
-			Type:           "api",
+			Type:           RemediationAPI,
 			FixableByAgent: false,
 			Guidance:       "Requires a secondary cloud API call (Access Advisor / service-last-accessed) not exposed by the standard inventory. Collector must call the API and stamp the result.",
 			Command:        fmt.Sprintf("Collector must compute %s from iam:GenerateServiceLastAccessedDetails (or equivalent); see docs/extractor-*.md.", rel),
@@ -76,7 +76,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 		strings.Contains(rel, ".intent_match.") ||
 		strings.Contains(rel, ".delegation.") {
 		return Remediation{
-			Type:           "collector",
+			Type:           RemediationCollector,
 			FixableByAgent: false,
 			Guidance:       "Requires a collector-side analysis (cross-inventory or relational walk). The collector code must grow to cover it.",
 			Command:        fmt.Sprintf("Collector must compute %s; see docs/extractor-*.md for the property-derivation guide.", rel),
@@ -89,7 +89,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 	// Steampipe → Stave mapping can add the field.
 	_ = isIntent // reserved: future "intent" remediation may surface a taxonomy doc reference.
 	return Remediation{
-		Type:           "derived",
+		Type:           RemediationDerived,
 		FixableByAgent: true,
 		Guidance:       "Add this property to the Steampipe → Stave mapping; the source row likely carries the value.",
 		Command:        fmt.Sprintf("Add %s to the field map for %s in contracts/steampipe/%s.yaml; see docs/extractor-prompt.md.", rel, at, at),

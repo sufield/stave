@@ -20,6 +20,21 @@ IoT Core MQTT/HTTP endpoint does not require device authentication. Without mutu
 
 ---
 
+### CTL.IOT.ENCRYPT.CMK.001
+
+**IoT Core Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+IoT Core account-level encryption uses an AWS-managed key instead of a customer-managed KMS key. The AWS-managed key provides at-rest encryption but no key-policy control and no ability to revoke access by disabling the key. If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Update IoT Core encryption configuration with a customer-managed KMS key (aws iot update-encryption-configuration --encryption-type CUSTOMER_MANAGED_KEY --kms-key-arn arn:aws:kms:...:key/...).
+
+---
+
 ### CTL.IOT.LOG.AUDIT.001
 
 **IoT Core Must Have Audit Logging Enabled**

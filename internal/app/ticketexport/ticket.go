@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -26,7 +27,7 @@ const (
 type Ticket struct {
 	TicketID    string           `json:"ticket_id"`
 	Title       string           `json:"title"`
-	Severity    string           `json:"severity"`
+	Severity    policy.Severity  `json:"severity"`
 	Priority    Priority         `json:"priority"`
 	DueDate     string           `json:"due_date,omitempty"`
 	Description string           `json:"description"`
@@ -95,7 +96,7 @@ func fromFinding(f *remediation.Finding) Ticket {
 	return Ticket{
 		TicketID:    StableTicketID(ctlID, astID, astType),
 		Title:       fmt.Sprintf("[%s] %s - %s", sev, f.ControlName, astID),
-		Severity:    sev,
+		Severity:    f.ControlSeverity,
 		Priority:    SeverityToPriority(sev),
 		Description: desc,
 		Labels:      labels,

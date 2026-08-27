@@ -68,12 +68,22 @@ type FieldGap struct {
 // escalate to the human operator (false). The Type field stays the
 // authoritative classification — FixableByAgent is its derived
 // boolean projection.
+// RemediationType classifies the remediation action category.
+type RemediationType string
+
+const (
+	RemediationTag       RemediationType = "tag"
+	RemediationAPI       RemediationType = "api"
+	RemediationDerived   RemediationType = "derived"
+	RemediationCollector RemediationType = "collector"
+)
+
 type Remediation struct {
-	Type           string `json:"type"`
-	FixableByAgent bool   `json:"fixable_by_agent"`
-	Guidance       string `json:"guidance,omitempty"`
-	Command        string `json:"command,omitempty"`
-	Effort         string `json:"effort"`
+	Type           RemediationType `json:"type"`
+	FixableByAgent bool            `json:"fixable_by_agent"`
+	Guidance       string          `json:"guidance,omitempty"`
+	Command        string          `json:"command,omitempty"`
+	Effort         string          `json:"effort"`
 }
 
 // Summary aggregates counts and a "quick wins" estimate so the

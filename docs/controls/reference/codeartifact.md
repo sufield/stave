@@ -20,6 +20,21 @@ CodeArtifact domain resource policy allows cross-account principals without aws:
 
 ---
 
+### CTL.CODEARTIFACT.ENCRYPT.CMK.001
+
+**CodeArtifact Domain Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+CodeArtifact domain has encryption at rest enabled but does not use a customer-managed KMS key. The AWS-managed key provides at-rest encryption but no key-policy control and no ability to revoke access by disabling the key. If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Create a new CodeArtifact domain with a customer-managed KMS key (aws codeartifact create-domain --domain my-domain --encryption-key arn:aws:kms:...:key/...). Migrate repositories to the new domain.
+
+---
+
 ### CTL.CODEARTIFACT.EXTERNAL.UNRESTRICTED.001
 
 **CodeArtifact Repository External Connection Without Origin Restrictions**

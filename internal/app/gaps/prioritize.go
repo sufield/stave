@@ -18,10 +18,10 @@ func Prioritize(gaps []FieldGap) {
 		}
 		// 2. Tag gaps before collector gaps (lower effort).
 		if a.Remediation.Type != b.Remediation.Type {
-			if a.Remediation.Type == "tag" {
+			if a.Remediation.Type == RemediationTag {
 				return -1
 			}
-			if b.Remediation.Type == "tag" {
+			if b.Remediation.Type == RemediationTag {
 				return 1
 			}
 			if a.Remediation.Type < b.Remediation.Type {

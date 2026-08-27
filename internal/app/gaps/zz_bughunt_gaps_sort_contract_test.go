@@ -9,12 +9,12 @@ func TestBugHunt_Prioritize_StrictWeakOrdering(t *testing.T) {
 	a := FieldGap{
 		IsIntentProperty: true,
 	}
-	a.Remediation.Type = "collector"
+	a.Remediation.Type = RemediationCollector
 
 	b := FieldGap{
 		IsIntentProperty: true,
 	}
-	b.Remediation.Type = "agent"
+	b.Remediation.Type = RemediationType("agent")
 
 	// We pass a slice of [a, b] to a sorting wrapper that calls the comparator.
 	// Since we want to check the comparator logic directly, we can run it.

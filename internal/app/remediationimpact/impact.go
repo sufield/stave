@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
@@ -20,16 +21,16 @@ type findingKey struct {
 type ClosedFinding struct {
 	ControlID kernel.ControlID `json:"control_id"`
 	AssetID   asset.ID         `json:"asset_id"`
-	Severity  string           `json:"severity"`
+	Severity  policy.Severity  `json:"severity"`
 	DwellDays float64          `json:"dwell_days,omitempty"`
 }
 
 // DeactivatedChain is a chain active in before but inactive in after.
 type DeactivatedChain struct {
-	ChainID          kernel.ChainID `json:"chain_id"`
-	PreviousSeverity string         `json:"previous_severity"`
-	AssetID          asset.ID       `json:"asset_id,omitempty"`
-	ScopeID          string         `json:"scope_id,omitempty"`
+	ChainID          kernel.ChainID  `json:"chain_id"`
+	PreviousSeverity policy.Severity `json:"previous_severity"`
+	AssetID          asset.ID        `json:"asset_id,omitempty"`
+	ScopeID          string          `json:"scope_id,omitempty"`
 }
 
 // EfficiencyVerdict classifies the remediation outcome.
@@ -93,7 +94,7 @@ func Analyze(in Input) (*Report, error) {
 			closed = append(closed, ClosedFinding{
 				ControlID: k.ControlID,
 				AssetID:   k.AssetID,
-				Severity:  f.SeverityLabel(),
+				Severity:  f.ControlSeverity,
 				DwellDays: f.DwellDays(),
 			})
 		}
@@ -116,11 +117,11 @@ func Analyze(in Input) (*Report, error) {
 		assetID asset.ID
 		scopeID string
 	}
-	beforeSev := make(map[chainKey]string, len(in.Before.ChainFindings))
+	beforeSev := make(map[chainKey]policy.Severity, len(in.Before.ChainFindings))
 	for i := range in.Before.ChainFindings {
 		c := &in.Before.ChainFindings[i]
 		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: c.ScopeID}
-		beforeSev[k] = c.Severity.String()
+		beforeSev[k] = c.Severity
 	}
 	for i := range in.After.ChainFindings {
 		c := &in.After.ChainFindings[i]

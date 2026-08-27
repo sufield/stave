@@ -470,6 +470,8 @@ checks:
     service: SECURITYLAKE
     description: "Security Lake encryption at rest uses customer-managed KMS key"
     reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.logging.security_lake.encryption.uses_cmk
 
   - id: KMS-NETSEC-06
     service: VERIFIEDPERMISSIONS
@@ -617,21 +619,29 @@ checks:
     service: IOT
     description: "IoT Core encryption at rest uses customer-managed KMS key"
     reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.iot.encryption.uses_cmk
 
   - id: KMS-IOT-06
     service: IOT
     description: "IoT Device Defender encryption at rest uses customer-managed KMS key"
     reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.iot.encryption.uses_cmk
 
   - id: KMS-IOT-07
     service: IOT
     description: "IoT Device Management encryption at rest uses customer-managed KMS key"
     reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.iot.encryption.uses_cmk
 
   - id: KMS-IOT-08
     service: IOT
     description: "IoT SiteWise encryption at rest uses customer-managed KMS key"
     reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.iot.encryption.uses_cmk
 
   - id: KMS-IOT-09
     service: MAINFRAME

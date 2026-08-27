@@ -68,7 +68,7 @@ func TestGenerate_PriorityMapping(t *testing.T) {
 	}
 
 	for _, ticket := range tickets {
-		wantPriority := expected[ticket.Severity]
+		wantPriority := expected[ticket.Severity.String()]
 		if ticket.Priority != wantPriority {
 			t.Errorf("severity %q: got priority %q, want %q",
 				ticket.Severity, ticket.Priority, wantPriority)

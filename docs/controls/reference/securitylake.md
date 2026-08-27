@@ -35,6 +35,21 @@ Amazon Security Lake is not enabled. Security Lake centralizes security data fro
 
 ---
 
+### CTL.SECURITYLAKE.ENCRYPT.CMK.001
+
+**Security Lake Not Encrypted with Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-12, SC-13, SC-28; pci_dss_v4.0: 3.5; soc2: CC6.1, CC6.7;
+
+Security Lake data lake is enabled but does not use a customer-managed KMS key. The AWS-managed key provides at-rest encryption but no key-policy control and no ability to revoke access by disabling the key. If the uses_cmk field is absent the control is not-evaluable and does not fire.
+
+**Remediation:** Update the data lake encryption configuration with a customer-managed KMS key (aws securitylake update-data-lake --configurations encryptionConfiguration={kmsKeyId=arn:aws:kms:...:key/...}).
+
+---
+
 ### CTL.SECURITYLAKE.ORG.NODELEGATED.001
 
 **Security Lake Has No Delegated Administrator**
