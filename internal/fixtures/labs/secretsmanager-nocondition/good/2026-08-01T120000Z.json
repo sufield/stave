@@ -1,0 +1,36 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.secretsmanager-nocondition"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/scoped-secrets",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "policies": {
+            "secretsmanager_getsecretvalue_broad_nocondition": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:user/abac-user",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "secretsmanager_getsecretvalue_broad_nocondition": false
+          }
+        }
+      }
+    }
+  ]
+}
