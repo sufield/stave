@@ -4320,6 +4320,21 @@ Service Control Policies must deny cloudtrail:StopLogging, cloudtrail:DeleteTrai
 
 ---
 
+### CTL.IAM.SECRETSMANAGER.GETSECRETVALUE.NOCONDITION.001
+
+**Broad secretsmanager:GetSecretValue Grant Without Condition**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); soc2: CC6.3;
+
+An identity policy grants secretsmanager:GetSecretValue on a broad Resource (wildcard or account-wide secret ARN pattern) with no Condition element. The re:Inforce 2019 fundamentals talk identifies ABAC tag-match conditions as the primary control for scoping secret access — without a Condition, the grant spans every secret in the account. This control fires only when the grant is via an explicit Action match (secretsmanager:GetSecretValue or a prefix wildcard like secretsmanager:Get* that covers it); grants via secretsmanager:* are covered by the service-wide wildcard controls (RF-IAM-07 family) and excluded here to avoid double-fire. NotAction/NotResource inversions are covered by CTL.IAM.POLICY.CONDITION.NOTRESOURCE.001 and are out of scope.
+
+**Remediation:** Add an ABAC Condition to the policy statement restricting GetSecretValue to secrets tagged for the principal's project or team. Example: "Condition": {"StringEquals": {"secretsmanager:ResourceTag/project": "${aws:PrincipalTag/project}"}}. Alternatively, scope the Resource to specific secret ARNs.
+
+---
+
 ### CTL.IAM.SEMANTICS.ACTION.RESOURCE.MISMATCH.001
 
 **Action-Resource Service Mismatch in Policy Statement**

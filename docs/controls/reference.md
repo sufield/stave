@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3483
-**Pack hash:** `cfd339fec099846abbfb55abc466cc7b51613b79c21f214373ea2560477fe931`
+**Total controls:** 3484
+**Pack hash:** `403573572de8585509649ce255cee7fda1b724f89d577ce97d628043fea5e2f4`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,7 +14,7 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 375 |
-| high | 1494 |
+| high | 1495 |
 | info | 19 |
 | low | 277 |
 | medium | 1318 |
@@ -32,7 +32,7 @@ GitHub. Pick a service below.
 | exposure | 1511 |
 | governance | 706 |
 | hygiene | 21 |
-| identity | 688 |
+| identity | 689 |
 | lifecycle | 32 |
 | network | 59 |
 | resilience | 50 |
@@ -112,7 +112,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 1 |
 | [GUARDDUTY](reference/guardduty.md) | 21 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 344 |
+| [IAM](reference/iam.md) | 345 |
 | [INSPECTOR](reference/inspector.md) | 4 |
 | [IOT](reference/iot.md) | 8 |
 | [K8S](reference/k8s.md) | 68 |
