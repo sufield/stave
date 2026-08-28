@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -16,7 +17,7 @@ type Change struct {
 	ControlID      kernel.ControlID `json:"control_id"`
 	AssetID        asset.ID         `json:"asset_id"`
 	AssetType      kernel.AssetType `json:"asset_type"`
-	Severity       string           `json:"severity"`
+	Severity       policy.Severity  `json:"severity"`
 	Confidence     float64          `json:"confidence"`
 	PropertyPath   string           `json:"property_path"`
 	CurrentValue   any              `json:"current_value"`
@@ -58,7 +59,7 @@ func Export(in Input) *Report {
 				ControlID:      f.ControlID,
 				AssetID:        f.AssetID,
 				AssetType:      f.AssetType,
-				Severity:       f.SeverityLabel(),
+				Severity:       f.ControlSeverity,
 				Confidence:     confidence,
 				PropertyPath:   pc.PropertyPath,
 				CurrentValue:   pc.CurrentValue,

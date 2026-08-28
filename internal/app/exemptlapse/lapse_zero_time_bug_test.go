@@ -37,7 +37,7 @@ func TestDetect_ZeroEvalTimeDefaultedToNowForSeverityBump(t *testing.T) {
 	}
 
 	// Because it expired 60 days ago (> severityBumpThresholdDays), severity must be bumped from MEDIUM to HIGH
-	if lapsed[0].Severity != policy.SeverityHigh.BucketName() {
-		t.Errorf("expected bumped severity %q when EvalTime is zero, got %q", policy.SeverityHigh.BucketName(), lapsed[0].Severity)
+	if lapsed[0].Severity != policy.SeverityHigh {
+		t.Errorf("expected bumped severity %v when EvalTime is zero, got %v", policy.SeverityHigh, lapsed[0].Severity)
 	}
 }

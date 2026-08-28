@@ -1,0 +1,77 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-28T10:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:s3:::raw-wildcard-bucket-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "access": {
+            "has_wildcard_principal": true,
+            "wildcard_principal_self_delegation_only": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::selfacct-deleg-bucket-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "access": {
+            "has_wildcard_principal": true,
+            "wildcard_principal_self_delegation_only": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::foreignacct-deleg-bucket-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "access": {
+            "has_wildcard_principal": true,
+            "wildcard_principal_self_delegation_only": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::selfacct-arn-deleg-bucket-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "access": {
+            "has_wildcard_principal": true,
+            "wildcard_principal_self_delegation_only": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::mixedacct-deleg-bucket-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "access": {
+            "has_wildcard_principal": true,
+            "wildcard_principal_self_delegation_only": false
+          }
+        }
+      }
+    }
+  ]
+}

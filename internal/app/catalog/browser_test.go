@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 type stubProvider struct {
@@ -85,13 +86,13 @@ func TestOrderEntries(t *testing.T) {
 			var got string
 			switch tt.sortBy {
 			case "id":
-				got = rows[0].ID
+				got = string(rows[0].ID)
 			case "name":
 				got = rows[0].Name
 			case "domain":
 				got = rows[0].Domain
 			case "risk":
-				got = rows[0].Risk
+				got = rows[0].Risk.String()
 			}
 			if got != tt.wantFirst {
 				t.Errorf("first row %s = %q, want %q", tt.sortBy, got, tt.wantFirst)
@@ -168,10 +169,10 @@ func TestSelectFields(t *testing.T) {
 
 func TestGetAttribute(t *testing.T) {
 	row := PolicyEntry{
-		ID:     "CTL.001",
+		ID:     kernel.ControlID("CTL.001"),
 		Name:   "Test",
 		Type:   "unsafe_state",
-		Risk:   "critical",
+		Risk:   policy.SeverityCritical,
 		Domain: "storage",
 	}
 

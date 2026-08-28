@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // DiscoveryRequest defines the parameters for searching the policy catalog.
@@ -24,11 +25,11 @@ type DiscoveryRequest struct {
 
 // PolicyEntry represents a high-level summary of a security control for catalog display.
 type PolicyEntry struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Risk   string `json:"risk,omitempty"`
-	Domain string `json:"domain,omitempty"`
+	ID     kernel.ControlID `json:"id"`
+	Name   string           `json:"name"`
+	Type   string           `json:"type"`
+	Risk   policy.Severity  `json:"risk,omitempty"`
+	Domain string           `json:"domain,omitempty"`
 }
 
 // CatalogBrowser orchestrates the discovery and presentation of security controls.
@@ -55,10 +56,10 @@ func SummarizePolicies(controls []policy.ControlDefinition) []PolicyEntry {
 	for i := range controls {
 		c := &controls[i]
 		entries = append(entries, PolicyEntry{
-			ID:     c.ID.String(),
+			ID:     c.ID,
 			Name:   c.Name,
 			Type:   c.Type.String(),
-			Risk:   c.Severity.String(),
+			Risk:   c.Severity,
 			Domain: string(c.Domain),
 		})
 	}
@@ -69,7 +70,7 @@ func SummarizePolicies(controls []policy.ControlDefinition) []PolicyEntry {
 func OrderEntries(entries []PolicyEntry, orderBy string) error {
 	trimmed := strings.TrimSpace(orderBy)
 	if strings.EqualFold(trimmed, "id") {
-		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.ID, b.ID) })
+		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(string(a.ID), string(b.ID)) })
 	} else if strings.EqualFold(trimmed, "name") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Name, b.Name) })
 	} else if strings.EqualFold(trimmed, "type") {
@@ -87,8 +88,8 @@ func OrderEntries(entries []PolicyEntry, orderBy string) error {
 	return nil
 }
 
-func severityRank(s string) int {
-	switch strings.ToLower(s) {
+func severityRank(s policy.Severity) int {
+	switch strings.ToLower(s.String()) {
 	case "critical":
 		return 5
 	case "high":
@@ -143,13 +144,13 @@ func SelectFields(raw string) ([]string, error) {
 func GetAttribute(entry PolicyEntry, field string) string {
 	switch field {
 	case "id":
-		return entry.ID
+		return string(entry.ID)
 	case "name":
 		return entry.Name
 	case "type":
 		return entry.Type
 	case "risk":
-		return entry.Risk
+		return entry.Risk.String()
 	case "domain":
 		return entry.Domain
 	default:

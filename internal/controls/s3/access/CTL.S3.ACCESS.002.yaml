@@ -8,7 +8,9 @@ description: >
   unless a restricting Condition (aws:PrincipalOrgID, aws:SourceVpc,
   aws:SourceIp with a fixed CIDR, aws:SourceArn, etc.) narrows it.
   Without such a Condition, the policy is a public-access grant
-  regardless of which specific S3 actions are allowed.
+  regardless of which specific S3 actions are allowed. Self-account
+  S3 Access Point delegation (StringEquals on s3:DataAccessPointAccount
+  or s3:DataAccessPointArn referencing the owning account) is exempt.
 domain: exposure
 exposure:
   type: wildcard_principal
@@ -77,3 +79,55 @@ unsafe_predicate:
     - field: properties.storage.access.has_wildcard_principal
       op: eq
       value: true
+    - field: properties.storage.access.wildcard_principal_self_delegation_only
+      op: eq
+      value: false
+tests:
+  - name: raw wildcard without delegation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::raw-wildcard-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_wildcard_principal: true
+            wildcard_principal_self_delegation_only: false
+  - name: self-account delegation exempt passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::delegation-exempt-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_wildcard_principal: true
+            wildcard_principal_self_delegation_only: true
+  - name: no wildcard passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:::clean-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_wildcard_principal: false
+            wildcard_principal_self_delegation_only: false
+  - name: foreign account delegation fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:::foreign-delegation-bucket"
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          access:
+            has_wildcard_principal: true
+            wildcard_principal_self_delegation_only: false

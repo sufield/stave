@@ -25,8 +25,8 @@ type LapsedFinding struct {
 	FindingType        string           `json:"finding_type"`
 	ControlID          kernel.ControlID `json:"control_id"`
 	AssetID            asset.ID         `json:"asset_id"`
-	Severity           string           `json:"severity"`
-	OriginalSeverity   string           `json:"original_severity"`
+	Severity           policy.Severity  `json:"severity"`
+	OriginalSeverity   policy.Severity  `json:"original_severity"`
 	ExemptionID        string           `json:"exemption_id"`
 	GrantedAt          string           `json:"exemption_granted_at"`
 	ExpiredAt          string           `json:"exemption_expired_at"`
@@ -99,8 +99,8 @@ func Detect(in Input) []LapsedFinding {
 			FindingType:        "EXEMPTION_LAPSED",
 			ControlID:          f.ControlID,
 			AssetID:            f.AssetID,
-			Severity:           effectiveSev.BucketName(),
-			OriginalSeverity:   originalSev.BucketName(),
+			Severity:           effectiveSev,
+			OriginalSeverity:   originalSev,
 			ExemptionID:        exemptionID,
 			GrantedAt:          f.Suppression.AcknowledgedDate,
 			ExpiredAt:          f.Suppression.ExpiryDate,

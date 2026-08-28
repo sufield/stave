@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3513
-**Pack hash:** `33583a91bd1acda11631c452fdd6478ae65b2e48d2070bac0a2d977caab28e65`
+**Total controls:** 3517
+**Pack hash:** `af89fd9ffb7653e7f069bc63d7a1901e08595f93f1d2911364fd3616c454978d`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,10 +13,10 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 375 |
-| high | 1494 |
+| critical | 376 |
+| high | 1496 |
 | info | 19 |
-| low | 278 |
+| low | 279 |
 | medium | 1347 |
 
 | Domain | Count |
@@ -29,8 +29,8 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 162 |
 | encryption | 137 |
-| exposure | 1525 |
-| governance | 710 |
+| exposure | 1528 |
+| governance | 711 |
 | hygiene | 21 |
 | identity | 689 |
 | lifecycle | 32 |
@@ -148,7 +148,7 @@ GitHub. Pick a service below.
 | [REDSHIFT](reference/redshift.md) | 27 |
 | [REKOGNITION](reference/rekognition.md) | 3 |
 | [ROUTE53](reference/route53.md) | 54 |
-| [S3](reference/s3.md) | 149 |
+| [S3](reference/s3.md) | 153 |
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 5 |

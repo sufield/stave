@@ -35,11 +35,11 @@ func TestBugHunt_Lapse_SeverityInfoBumped(t *testing.T) {
 		t.Fatalf("lapsed = %d, want 1", len(result))
 	}
 
-	if result[0].OriginalSeverity != "info" {
-		t.Errorf("original severity = %s, want info", result[0].OriginalSeverity)
+	if result[0].OriginalSeverity != policy.SeverityInfo {
+		t.Errorf("original severity = %v, want info", result[0].OriginalSeverity)
 	}
 
-	if result[0].Severity != "low" {
-		t.Errorf("severity = %s, want low (bumped from info)", result[0].Severity)
+	if result[0].Severity != policy.SeverityLow {
+		t.Errorf("severity = %v, want low (bumped from info)", result[0].Severity)
 	}
 }

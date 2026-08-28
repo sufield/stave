@@ -23,10 +23,10 @@ func TestBugHunt_OrderEntries_SeverityRiskSort(t *testing.T) {
 	}
 
 	// We expect descending order by severity rank: critical -> high -> medium -> low -> info
-	expectedOrder := []string{"critical", "high", "medium", "low", "info"}
+	expectedOrder := []policy.Severity{policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium, policy.SeverityLow, policy.SeverityInfo}
 	for i, expected := range expectedOrder {
 		if entries[i].Risk != expected {
-			t.Errorf("At index %d: expected risk %q, got %q", i, expected, entries[i].Risk)
+			t.Errorf("At index %d: expected risk %v, got %v", i, expected, entries[i].Risk)
 		}
 	}
 }

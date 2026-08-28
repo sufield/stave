@@ -1,0 +1,127 @@
+dsl_version: ctrl.v1
+id: CTL.S3.MRAP.POLICY.OAC.FOREIGNACCOUNT.001
+name: MRAP CloudFront Condition References Foreign Account
+description: >
+  The Multi-Region Access Point policy grants the CloudFront
+  service principal with an aws:SourceArn condition, but the
+  distribution ARN's account differs from the MRAP-owning
+  account. This creates a cross-account read path dressed as
+  a service grant — an external CloudFront distribution can
+  read the MRAP's data through a legitimate-looking OAC
+  configuration. The evidence names both accounts.
+domain: exposure
+exposure:
+  type: confused_deputy
+  principal_scope: authenticated
+severity: high
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-16", "IVS-03"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - identity-perimeter
+  - confused-deputy
+subtractive_category:
+  - S03
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_multi_region_access_point
+params:
+  attack_stage: initial_access
+remediation:
+  description: >
+    MRAP policy condition references a CloudFront distribution
+    in a different account.
+  action: >
+    Update the aws:SourceArn condition value to reference a
+    CloudFront distribution in the same account as the MRAP.
+    If cross-account access is intentional, document the trust
+    relationship and add aws:SourceAccount as a secondary
+    condition. Remove the grant if the cross-account path is
+    unintentional.
+  example: |
+    {
+      "storage": {
+        "mrap": {
+          "kind": "multi_region_access_point",
+          "policy": {
+            "cloudfront_service_grant": {
+              "present": true,
+              "condition_enforced": true,
+              "source_arn_foreign_account": false
+            }
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.mrap.kind
+      op: eq
+      value: multi_region_access_point
+    - field: properties.storage.mrap.policy.cloudfront_service_grant.present
+      op: eq
+      value: true
+    - field: properties.storage.mrap.policy.cloudfront_service_grant.condition_enforced
+      op: eq
+      value: true
+    - field: properties.storage.mrap.policy.cloudfront_service_grant.source_arn_foreign_account
+      op: eq
+      value: true
+tests:
+  - name: foreign account in condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3::111122223333:accesspoint/mymrap.mrap"
+      asset_type: aws_s3_multi_region_access_point
+      vendor: aws
+      properties:
+        storage:
+          mrap:
+            kind: multi_region_access_point
+            policy:
+              cloudfront_service_grant:
+                present: true
+                condition_enforced: true
+                source_arn_foreign_account: true
+              has_broad_non_service_grant: false
+              has_migration_residue: false
+  - name: same account in condition passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3::111122223333:accesspoint/mymrap.mrap"
+      asset_type: aws_s3_multi_region_access_point
+      vendor: aws
+      properties:
+        storage:
+          mrap:
+            kind: multi_region_access_point
+            policy:
+              cloudfront_service_grant:
+                present: true
+                condition_enforced: true
+                source_arn_foreign_account: false
+              has_broad_non_service_grant: false
+              has_migration_residue: false
+  - name: no condition does not fire (control 1 domain)
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3::111122223333:accesspoint/mymrap.mrap"
+      asset_type: aws_s3_multi_region_access_point
+      vendor: aws
+      properties:
+        storage:
+          mrap:
+            kind: multi_region_access_point
+            policy:
+              cloudfront_service_grant:
+                present: true
+                condition_enforced: false
+                source_arn_foreign_account: false
+              has_broad_non_service_grant: false
+              has_migration_residue: false

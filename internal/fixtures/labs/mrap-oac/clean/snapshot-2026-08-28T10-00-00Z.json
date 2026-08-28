@@ -1,0 +1,28 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-28T10:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:s3::111122223333:accesspoint/goodmrap.mrap",
+      "type": "aws_s3_multi_region_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "mrap": {
+            "kind": "multi_region_access_point",
+            "policy": {
+              "cloudfront_service_grant": {
+                "present": true,
+                "condition_enforced": true,
+                "source_arn_foreign_account": false
+              },
+              "has_broad_non_service_grant": false,
+              "has_migration_residue": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

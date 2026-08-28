@@ -4684,3 +4684,73 @@ contracts:
     consumers:
       - CTL.XRAY.ENCRYPT.CMK.001
 
+  # ─── S3 Multi-Region Access Point (Aug 2026) ───────────────
+  # Asset type: aws_s3_multi_region_access_point
+  # Source: s3control:GetMultiRegionAccessPoint, GetMultiRegionAccessPointPolicy,
+  #         GetMultiRegionAccessPointPolicyStatus
+  # Control-plane region: us-west-2
+
+  - field: storage.mrap.policy.cloudfront_service_grant.present
+    type: boolean
+    status: planned
+    postcondition: >
+      True if any statement in the MRAP resource policy grants
+      Principal {"Service": "cloudfront.amazonaws.com"} with Effect Allow.
+    consumers:
+      - CTL.S3.MRAP.POLICY.OAC.NOCONDITION.001
+      - CTL.S3.MRAP.POLICY.OAC.FOREIGNACCOUNT.001
+
+  - field: storage.mrap.policy.cloudfront_service_grant.condition_enforced
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the CloudFront service-principal Allow statement includes
+      a Condition with aws:SourceArn (StringEquals or ArnEquals).
+    consumers:
+      - CTL.S3.MRAP.POLICY.OAC.NOCONDITION.001
+      - CTL.S3.MRAP.POLICY.OAC.FOREIGNACCOUNT.001
+
+  - field: storage.mrap.policy.cloudfront_service_grant.source_arn_foreign_account
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the aws:SourceArn condition value contains an AWS account ID
+      that differs from the MRAP-owning account.
+    consumers:
+      - CTL.S3.MRAP.POLICY.OAC.FOREIGNACCOUNT.001
+
+  - field: storage.mrap.policy.has_broad_non_service_grant
+    type: boolean
+    status: planned
+    postcondition: >
+      True if any Allow statement whose Principal is NOT a service principal
+      grants access without a restricting Condition.
+    consumers:
+      - CTL.S3.MRAP.POLICY.BROADGRANT.001
+
+  - field: storage.mrap.policy.has_migration_residue
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the same MRAP policy contains BOTH a CloudFront service-principal
+      Allow AND a non-service-principal IAM role/user Allow over overlapping actions.
+    consumers:
+      - CTL.S3.MRAP.POLICY.MIGRATION.RESIDUE.001
+
+  # ─── S3 Bucket Delegation Exemption (Aug 2026) ───────────────
+  # Applies to: aws_s3_bucket
+  # Extends: storage.access.has_wildcard_principal
+
+  - field: storage.access.wildcard_principal_self_delegation_only
+    type: boolean
+    status: planned
+    postcondition: >
+      True if every Principal-"*" Allow statement in the bucket policy
+      is conditioned with StringEquals on s3:DataAccessPointAccount
+      (value = owning account) or s3:DataAccessPointArn (value's account
+      portion = owning account). False if any wildcard statement lacks
+      this condition, uses a non-StringEquals operator, or references a
+      foreign account. Only meaningful when has_wildcard_principal is true.
+    consumers:
+      - CTL.S3.ACCESS.002
+
