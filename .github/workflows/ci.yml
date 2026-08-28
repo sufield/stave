@@ -463,5 +463,9 @@ jobs:
           cache: true
       - name: Run consistency check
         run: make consistency-check
+      - name: Validate checklists
+        run: make validate-checklists
+      - name: Validate embed completeness
+        run: make validate-embed
       - name: Check-compare baseline (local resolver)
         run: make check-compare-baseline

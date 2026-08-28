@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability
+.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability validate-checklists validate-embed
 # Binary name
 BINARY=stave
 
@@ -874,6 +874,15 @@ prove-universals:
 ## validate-bidirectional: Run Direction 2 of Adam's architecture — controls validate formulas
 validate-bidirectional:
 	@$(GOCMD) run ./internal/tools/bidirectional-validate $(ARGS)
+
+## validate-checklists: Verify structural and partition invariants on data/frameworks/*.yaml
+validate-checklists:
+	@$(GOCMD) run ./internal/tools/validate-checklists $(ARGS)
+
+## validate-embed: Verify disk controls == compiled controls (catches b9c722e embed gaps)
+validate-embed:
+	@$(MAKE) build >&2
+	@$(GOCMD) run ./internal/tools/validate-embed
 
 ## validate-reachability: Check that every fixture observation is evaluated by at least one typed control
 validate-reachability:
