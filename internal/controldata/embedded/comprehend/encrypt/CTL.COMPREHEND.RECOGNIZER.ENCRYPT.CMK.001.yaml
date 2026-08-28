@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.COMPREHEND.RECOGNIZER.ENCRYPT.CMK.001
+name: Comprehend Entity Recognizer Must Use Customer-Managed KMS Key
+description: >
+  Comprehend custom entity recognizer does not use a customer-
+  managed KMS key. Recognizers store trained model artifacts
+  encoding domain-specific entity patterns from potentially
+  sensitive training data. Without a customer-managed key,
+  VolumeKmsKeyId and ModelKmsKeyId use AWS-managed encryption.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - comprehend
+  - ai
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_comprehend_entity_recognizer
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Comprehend entity recognizer uses AWS-managed encryption.
+  action: >
+    Create a new entity recognizer with VolumeKmsKeyId and
+    ModelKmsKeyId set to a customer-managed KMS key. Existing
+    recognizers cannot be re-encrypted in place.
+  example: |
+    {
+      "ai": {
+        "kind": "comprehend_entity_recognizer",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: comprehend_entity_recognizer
+    - field: properties.ai.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:comprehend:us-east-1:111122223333:entity-recognizer/prod-recognizer"
+      asset_type: aws_comprehend_entity_recognizer
+      vendor: aws
+      properties:
+        ai:
+          kind: comprehend_entity_recognizer
+          encryption:
+            uses_customer_kms: false
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:comprehend:us-east-1:111122223333:entity-recognizer/prod-recognizer"
+      asset_type: aws_comprehend_entity_recognizer
+      vendor: aws
+      properties:
+        ai:
+          kind: comprehend_entity_recognizer
+          encryption:
+            uses_customer_kms: true

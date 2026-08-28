@@ -1,0 +1,74 @@
+dsl_version: ctrl.v1
+id: CTL.AUDITMANAGER.ENCRYPT.CMK.001
+name: Audit Manager Must Use Customer-Managed KMS Key
+description: >
+  Audit Manager account settings do not specify a customer-managed
+  KMS key. Audit Manager stores assessment evidence, control
+  evaluations, and compliance reports. Without a customer-managed
+  key, all assessment data uses AWS-managed encryption with no
+  customer-controlled key policy or usage audit trail.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - auditmanager
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_auditmanager_settings
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Audit Manager uses AWS-managed encryption.
+  action: >
+    Update Audit Manager settings with a customer-managed KMS key
+    via UpdateSettings. The kmsKey field accepts a KMS key ARN.
+  example: |
+    {
+      "governance": {
+        "kind": "auditmanager_settings",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: auditmanager_settings
+    - field: properties.governance.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:auditmanager:us-east-1:111122223333:settings"
+      asset_type: aws_auditmanager_settings
+      vendor: aws
+      properties:
+        governance:
+          kind: auditmanager_settings
+          encryption:
+            uses_customer_kms: false
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:auditmanager:us-east-1:111122223333:settings"
+      asset_type: aws_auditmanager_settings
+      vendor: aws
+      properties:
+        governance:
+          kind: auditmanager_settings
+          encryption:
+            uses_customer_kms: true

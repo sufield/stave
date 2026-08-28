@@ -1,0 +1,163 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-27T10:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:comprehend:us-east-1:111122223333:flywheel/prod-flywheel",
+      "type": "aws_comprehend_flywheel",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "comprehend_flywheel",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:comprehend:us-east-1:111122223333:document-classifier/prod-classifier",
+      "type": "aws_comprehend_document_classifier",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "comprehend_document_classifier",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:comprehend:us-east-1:111122223333:entity-recognizer/prod-recognizer",
+      "type": "aws_comprehend_entity_recognizer",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "comprehend_entity_recognizer",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:rekognition:us-east-1:111122223333:streamprocessor/prod-stream",
+      "type": "aws_rekognition_stream_processor",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "rekognition_stream_processor",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:rekognition:us-east-1:111122223333:project/custom-labels/version/v1/1234567890",
+      "type": "aws_rekognition_project_version",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "rekognition_project_version",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:textract:us-east-1:111122223333:adapter/prod-adapter/version/1",
+      "type": "aws_textract_adapter_version",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "textract_adapter_version",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:auditmanager:us-east-1:111122223333:settings",
+      "type": "aws_auditmanager_settings",
+      "vendor": "aws",
+      "properties": {
+        "governance": {
+          "kind": "auditmanager_settings",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ses:us-east-1:111122223333:receipt-rule-set/default:archive-rule",
+      "type": "aws_ses_receipt_rule",
+      "vendor": "aws",
+      "properties": {
+        "email": {
+          "kind": "ses_receipt_rule",
+          "encryption": {
+            "s3_action_uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:kendra:us-east-1:111122223333:index/prod-index",
+      "type": "aws_kendra_index",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "kendra_index",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:qbusiness:us-east-1:111122223333:application/prod-app",
+      "type": "aws_qbusiness_application",
+      "vendor": "aws",
+      "properties": {
+        "ai": {
+          "kind": "qbusiness_application",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:appflow:us-east-1:111122223333:flow/crm-sync",
+      "type": "aws_appflow_flow",
+      "vendor": "aws",
+      "properties": {
+        "integration": {
+          "kind": "appflow_flow",
+          "encryption": {
+            "uses_customer_kms": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:xray:us-east-1:111122223333:encryption-config",
+      "type": "aws_xray_encryption_config",
+      "vendor": "aws",
+      "properties": {
+        "observability": {
+          "kind": "xray_encryption_config",
+          "encryption": {
+            "type_is_kms": false
+          }
+        }
+      }
+    }
+  ]
+}

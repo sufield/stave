@@ -1,0 +1,79 @@
+dsl_version: ctrl.v1
+id: CTL.COMPREHEND.FLYWHEEL.ENCRYPT.CMK.001
+name: Comprehend Flywheel Must Use Customer-Managed KMS Key
+description: >
+  Comprehend flywheel does not use a customer-managed KMS key.
+  Flywheels orchestrate continuous training and manage data lakes,
+  model artifacts, and training volumes. Without a customer-managed
+  key, all three encryption surfaces (DataLakeKmsKeyId,
+  ModelKmsKeyId, VolumeKmsKeyId) use AWS-managed encryption with
+  no customer-controlled key policy, rotation schedule, or
+  CloudTrail key-usage audit trail.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - comprehend
+  - ai
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_comprehend_flywheel
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Comprehend flywheel uses AWS-managed encryption.
+  action: >
+    Create a new flywheel with DataSecurityConfig specifying
+    DataLakeKmsKeyId, ModelKmsKeyId, and VolumeKmsKeyId pointing
+    to a customer-managed KMS key. Existing flywheels cannot be
+    re-encrypted in place.
+  example: |
+    {
+      "ai": {
+        "kind": "comprehend_flywheel",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: comprehend_flywheel
+    - field: properties.ai.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:comprehend:us-east-1:111122223333:flywheel/prod-flywheel"
+      asset_type: aws_comprehend_flywheel
+      vendor: aws
+      properties:
+        ai:
+          kind: comprehend_flywheel
+          encryption:
+            uses_customer_kms: false
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:comprehend:us-east-1:111122223333:flywheel/prod-flywheel"
+      asset_type: aws_comprehend_flywheel
+      vendor: aws
+      properties:
+        ai:
+          kind: comprehend_flywheel
+          encryption:
+            uses_customer_kms: true

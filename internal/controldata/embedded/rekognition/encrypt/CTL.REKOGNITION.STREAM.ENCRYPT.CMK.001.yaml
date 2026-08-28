@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.REKOGNITION.STREAM.ENCRYPT.CMK.001
+name: Rekognition Stream Processor Must Use Customer-Managed KMS Key
+description: >
+  Rekognition stream processor does not use a customer-managed KMS
+  key. Stream processors analyze real-time video feeds for face
+  detection and recognition. Without a customer-managed key, the
+  processor's KmsKeyId defaults to AWS-managed encryption with no
+  customer-controlled key policy or revocation capability.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - rekognition
+  - ai
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_rekognition_stream_processor
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Rekognition stream processor uses AWS-managed encryption.
+  action: >
+    Create a new stream processor with KmsKeyId set to a customer-
+    managed KMS key. Existing stream processors cannot be
+    re-encrypted in place.
+  example: |
+    {
+      "ai": {
+        "kind": "rekognition_stream_processor",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: rekognition_stream_processor
+    - field: properties.ai.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rekognition:us-east-1:111122223333:streamprocessor/prod-stream"
+      asset_type: aws_rekognition_stream_processor
+      vendor: aws
+      properties:
+        ai:
+          kind: rekognition_stream_processor
+          encryption:
+            uses_customer_kms: false
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rekognition:us-east-1:111122223333:streamprocessor/prod-stream"
+      asset_type: aws_rekognition_stream_processor
+      vendor: aws
+      properties:
+        ai:
+          kind: rekognition_stream_processor
+          encryption:
+            uses_customer_kms: true

@@ -1,0 +1,78 @@
+dsl_version: ctrl.v1
+id: CTL.COMPREHEND.CLASSIFIER.ENCRYPT.CMK.001
+name: Comprehend Document Classifier Must Use Customer-Managed KMS Key
+description: >
+  Comprehend custom document classifier does not use a customer-
+  managed KMS key. Classifiers store trained model artifacts and
+  output data that may encode patterns from sensitive training
+  documents. Without a customer-managed key, the model artifact
+  (ModelKmsKeyId), training volume (VolumeKmsKeyId), and output
+  (OutputDataConfig.KmsKeyId) use AWS-managed encryption.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - comprehend
+  - ai
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_comprehend_document_classifier
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Comprehend document classifier uses AWS-managed encryption.
+  action: >
+    Create a new document classifier with ModelKmsKeyId,
+    VolumeKmsKeyId, and OutputDataConfig.KmsKeyId set to a
+    customer-managed KMS key. Existing classifiers cannot be
+    re-encrypted in place.
+  example: |
+    {
+      "ai": {
+        "kind": "comprehend_document_classifier",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: comprehend_document_classifier
+    - field: properties.ai.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:comprehend:us-east-1:111122223333:document-classifier/prod-classifier"
+      asset_type: aws_comprehend_document_classifier
+      vendor: aws
+      properties:
+        ai:
+          kind: comprehend_document_classifier
+          encryption:
+            uses_customer_kms: false
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:comprehend:us-east-1:111122223333:document-classifier/prod-classifier"
+      asset_type: aws_comprehend_document_classifier
+      vendor: aws
+      properties:
+        ai:
+          kind: comprehend_document_classifier
+          encryption:
+            uses_customer_kms: true

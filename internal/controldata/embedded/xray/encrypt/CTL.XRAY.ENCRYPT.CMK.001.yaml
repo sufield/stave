@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.XRAY.ENCRYPT.CMK.001
+name: X-Ray Must Use Customer-Managed KMS Key
+description: >
+  X-Ray account encryption configuration does not use a customer-
+  managed KMS key. X-Ray stores distributed traces containing
+  request metadata, latency data, and potentially sensitive
+  headers and annotations. Without Type set to KMS with a
+  customer KeyId, traces use default encryption (Type NONE or
+  AWS-managed).
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - xray
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_xray_encryption_config
+params:
+  attack_stage: exfiltration
+remediation:
+  description: X-Ray uses default or AWS-managed encryption.
+  action: >
+    Set X-Ray encryption to KMS with a customer-managed key via
+    PutEncryptionConfig (Type=KMS, KeyId=arn:aws:kms:...).
+  example: |
+    {
+      "observability": {
+        "kind": "xray_encryption_config",
+        "encryption": { "type_is_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.observability.kind
+      op: eq
+      value: xray_encryption_config
+    - field: properties.observability.encryption.type_is_kms
+      op: eq
+      value: false
+tests:
+  - name: type none fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:xray:us-east-1:111122223333:encryption-config"
+      asset_type: aws_xray_encryption_config
+      vendor: aws
+      properties:
+        observability:
+          kind: xray_encryption_config
+          encryption:
+            type_is_kms: false
+  - name: type kms passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:xray:us-east-1:111122223333:encryption-config"
+      asset_type: aws_xray_encryption_config
+      vendor: aws
+      properties:
+        observability:
+          kind: xray_encryption_config
+          encryption:
+            type_is_kms: true

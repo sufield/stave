@@ -1,0 +1,77 @@
+dsl_version: ctrl.v1
+id: CTL.KENDRA.INDEX.ENCRYPT.CMK.001
+name: Kendra Index Must Use Customer-Managed KMS Key
+description: >
+  Kendra index does not use a customer-managed KMS key. Kendra
+  indexes store enterprise document content, metadata, and search
+  indices. Without a customer-managed key, the index's
+  ServerSideEncryptionConfiguration uses AWS-managed encryption
+  with no customer-controlled key policy or CloudTrail key-usage
+  logging.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - kendra
+  - ai
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kendra_index
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Kendra index uses AWS-managed encryption.
+  action: >
+    Create a new Kendra index with
+    ServerSideEncryptionConfiguration.KmsKeyId set to a customer-
+    managed KMS key. Existing indexes cannot be re-encrypted.
+  example: |
+    {
+      "ai": {
+        "kind": "kendra_index",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: kendra_index
+    - field: properties.ai.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kendra:us-east-1:111122223333:index/prod-index"
+      asset_type: aws_kendra_index
+      vendor: aws
+      properties:
+        ai:
+          kind: kendra_index
+          encryption:
+            uses_customer_kms: false
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kendra:us-east-1:111122223333:index/prod-index"
+      asset_type: aws_kendra_index
+      vendor: aws
+      properties:
+        ai:
+          kind: kendra_index
+          encryption:
+            uses_customer_kms: true

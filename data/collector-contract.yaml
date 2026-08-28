@@ -4616,3 +4616,71 @@ contracts:
     consumers:
       - CTL.VPC.TGW.PEERING.CROSSREGION.NOENCRYPT.001
 
+  # ─── KMS-CLOSURE C2: CMK encryption booleans ────────────────
+  #
+  # New asset types from KMS coverage gap closure. Each field
+  # records whether the resource uses a customer-managed KMS key.
+  # Evidence: botocore service-2.json Describe/Get output shapes.
+
+  - field: ai.encryption.uses_customer_kms
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the AI/ML resource uses a customer-managed KMS
+      key for encryption. Applies to Comprehend (flywheel,
+      document classifier, entity recognizer), Rekognition
+      (stream processor, project version), Textract (adapter
+      version), Kendra (index), Q Business (application).
+      False if using AWS-managed default encryption.
+    consumers:
+      - CTL.COMPREHEND.FLYWHEEL.ENCRYPT.CMK.001
+      - CTL.COMPREHEND.CLASSIFIER.ENCRYPT.CMK.001
+      - CTL.COMPREHEND.RECOGNIZER.ENCRYPT.CMK.001
+      - CTL.REKOGNITION.STREAM.ENCRYPT.CMK.001
+      - CTL.REKOGNITION.PROJECT.ENCRYPT.CMK.001
+      - CTL.TEXTRACT.ADAPTER.ENCRYPT.CMK.001
+      - CTL.KENDRA.INDEX.ENCRYPT.CMK.001
+      - CTL.QBUSINESS.APP.ENCRYPT.CMK.001
+
+  - field: governance.encryption.uses_customer_kms
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the governance service singleton uses a customer-
+      managed KMS key. Applies to Audit Manager account settings
+      (kmsKey from GetSettings).
+    consumers:
+      - CTL.AUDITMANAGER.ENCRYPT.CMK.001
+
+  - field: email.encryption.s3_action_uses_customer_kms
+    type: boolean
+    status: planned
+    postcondition: >
+      True if all S3 delivery actions in the SES receipt rule
+      use a customer-managed KMS key (KmsKeyArn present and
+      non-empty). False if any S3Action omits KmsKeyArn.
+      Evidence: SES v1 DescribeReceiptRule →
+      Rule.Actions[].S3Action.KmsKeyArn.
+    consumers:
+      - CTL.SES.RECEIPT.ENCRYPT.CMK.001
+
+  - field: integration.encryption.uses_customer_kms
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the integration flow uses a customer-managed KMS
+      key. Applies to AppFlow flows (kmsArn from DescribeFlow).
+    consumers:
+      - CTL.APPFLOW.FLOW.ENCRYPT.CMK.001
+
+  - field: observability.encryption.type_is_kms
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the observability service uses KMS encryption
+      (Type == KMS with a customer KeyId). Applies to X-Ray
+      account encryption config (GetEncryptionConfig → Type,
+      KeyId).
+    consumers:
+      - CTL.XRAY.ENCRYPT.CMK.001
+

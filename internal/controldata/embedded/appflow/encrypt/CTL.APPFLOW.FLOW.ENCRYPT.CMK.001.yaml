@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.APPFLOW.FLOW.ENCRYPT.CMK.001
+name: AppFlow Flow Must Use Customer-Managed KMS Key
+description: >
+  AppFlow flow does not use a customer-managed KMS key. Flows
+  transfer data between SaaS applications and AWS services,
+  processing potentially sensitive business data (CRM records,
+  financial transactions, HR data). Without a customer-managed
+  key, the flow's kmsArn defaults to AWS-managed encryption.
+  Connector profiles have no KMS field — encryption is flow-level.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - appflow
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_appflow_flow
+params:
+  attack_stage: exfiltration
+remediation:
+  description: AppFlow flow uses AWS-managed encryption.
+  action: >
+    Update the flow with a customer-managed KMS key via
+    UpdateFlow, setting the kmsArn parameter.
+  example: |
+    {
+      "integration": {
+        "kind": "appflow_flow",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.integration.kind
+      op: eq
+      value: appflow_flow
+    - field: properties.integration.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:appflow:us-east-1:111122223333:flow/crm-sync"
+      asset_type: aws_appflow_flow
+      vendor: aws
+      properties:
+        integration:
+          kind: appflow_flow
+          encryption:
+            uses_customer_kms: false
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:appflow:us-east-1:111122223333:flow/crm-sync"
+      asset_type: aws_appflow_flow
+      vendor: aws
+      properties:
+        integration:
+          kind: appflow_flow
+          encryption:
+            uses_customer_kms: true

@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.SES.RECEIPT.ENCRYPT.CMK.001
+name: SES Receipt Rule S3 Delivery Must Use Customer-Managed KMS Key
+description: >
+  SES receipt rule delivers incoming email to S3 without a customer-
+  managed KMS key. Receipt rules with S3Actions that omit KmsKeyArn
+  store email content using the bucket's default encryption, which
+  may be AWS-managed. Incoming email often contains sensitive data
+  (attachments, credentials, PII) that requires customer-controlled
+  encryption for compliance and key-revocation capability.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - ses
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ses_receipt_rule
+params:
+  attack_stage: exfiltration
+remediation:
+  description: SES receipt rule S3 delivery uses AWS-managed encryption.
+  action: >
+    Update the receipt rule's S3Action to include KmsKeyArn pointing
+    to a customer-managed KMS key. Update via UpdateReceiptRule.
+  example: |
+    {
+      "email": {
+        "kind": "ses_receipt_rule",
+        "encryption": { "s3_action_uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.email.kind
+      op: eq
+      value: ses_receipt_rule
+    - field: properties.email.encryption.s3_action_uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: no kms key on s3 action fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ses:us-east-1:111122223333:receipt-rule-set/default:archive-rule"
+      asset_type: aws_ses_receipt_rule
+      vendor: aws
+      properties:
+        email:
+          kind: ses_receipt_rule
+          encryption:
+            s3_action_uses_customer_kms: false
+  - name: customer kms key on s3 action passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ses:us-east-1:111122223333:receipt-rule-set/default:archive-rule"
+      asset_type: aws_ses_receipt_rule
+      vendor: aws
+      properties:
+        email:
+          kind: ses_receipt_rule
+          encryption:
+            s3_action_uses_customer_kms: true

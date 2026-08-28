@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.REKOGNITION.PROJECT.ENCRYPT.CMK.001
+name: Rekognition Custom Labels Project Version Must Use Customer-Managed KMS Key
+description: >
+  Rekognition Custom Labels project version does not use a customer-
+  managed KMS key. Project versions contain trained model artifacts
+  that encode visual patterns from proprietary training images.
+  Without a customer-managed key, the model artifact encryption
+  defaults to AWS-managed with no customer key-policy control.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - rekognition
+  - ai
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_rekognition_project_version
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Rekognition project version uses AWS-managed encryption.
+  action: >
+    Create a new project version with KmsKeyId set to a customer-
+    managed KMS key via CreateProjectVersion. Existing versions
+    cannot be re-encrypted.
+  example: |
+    {
+      "ai": {
+        "kind": "rekognition_project_version",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: rekognition_project_version
+    - field: properties.ai.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:rekognition:us-east-1:111122223333:project/custom-labels/version/v1/1234567890"
+      asset_type: aws_rekognition_project_version
+      vendor: aws
+      properties:
+        ai:
+          kind: rekognition_project_version
+          encryption:
+            uses_customer_kms: false
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:rekognition:us-east-1:111122223333:project/custom-labels/version/v1/1234567890"
+      asset_type: aws_rekognition_project_version
+      vendor: aws
+      properties:
+        ai:
+          kind: rekognition_project_version
+          encryption:
+            uses_customer_kms: true

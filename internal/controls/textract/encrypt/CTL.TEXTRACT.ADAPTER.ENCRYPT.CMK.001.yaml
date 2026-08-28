@@ -1,0 +1,75 @@
+dsl_version: ctrl.v1
+id: CTL.TEXTRACT.ADAPTER.ENCRYPT.CMK.001
+name: Textract Adapter Version Must Use Customer-Managed KMS Key
+description: >
+  Textract adapter version does not use a customer-managed KMS key.
+  Adapter versions contain trained extraction models customized with
+  domain-specific document samples. Without a customer-managed key,
+  the adapter version's KMSKeyId defaults to AWS-managed encryption.
+domain: encryption
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.7"
+  hipaa: "164.312(a)(2)(iv)"
+  ccm_v4: ["CEK-03"]
+scope_tags:
+  - aws
+  - textract
+  - ai
+taxonomy:
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S07
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_textract_adapter_version
+params:
+  attack_stage: exfiltration
+remediation:
+  description: Textract adapter version uses AWS-managed encryption.
+  action: >
+    Create a new adapter version with KMSKeyId set to a customer-
+    managed KMS key. Existing adapter versions cannot be
+    re-encrypted.
+  example: |
+    {
+      "ai": {
+        "kind": "textract_adapter_version",
+        "encryption": { "uses_customer_kms": true }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.ai.kind
+      op: eq
+      value: textract_adapter_version
+    - field: properties.ai.encryption.uses_customer_kms
+      op: eq
+      value: false
+tests:
+  - name: aws-managed key fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:textract:us-east-1:111122223333:adapter/prod-adapter/version/1"
+      asset_type: aws_textract_adapter_version
+      vendor: aws
+      properties:
+        ai:
+          kind: textract_adapter_version
+          encryption:
+            uses_customer_kms: false
+  - name: customer-managed key passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:textract:us-east-1:111122223333:adapter/prod-adapter/version/1"
+      asset_type: aws_textract_adapter_version
+      vendor: aws
+      properties:
+        ai:
+          kind: textract_adapter_version
+          encryption:
+            uses_customer_kms: true
