@@ -5,6 +5,21 @@
 >
 > Back to the [control reference index](../reference.md).
 
+### CTL.TEXTRACT.ADAPTER.ENCRYPT.CMK.001
+
+**Textract Adapter Version Must Use Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; soc2: CC6.7;
+
+Textract adapter version does not use a customer-managed KMS key. Adapter versions contain trained extraction models customized with domain-specific document samples. Without a customer-managed key, the adapter version's KMSKeyId defaults to AWS-managed encryption.
+
+**Remediation:** Create a new adapter version with KMSKeyId set to a customer- managed KMS key. Existing adapter versions cannot be re-encrypted.
+
+---
+
 ### CTL.TEXTRACT.SHADOW.USAGE.001
 
 **Textract Usage in Account Not Designated for AI Workloads**

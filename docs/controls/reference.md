@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3501
-**Pack hash:** `05834c5e8ab83550a52aa899014650315feb21a2cbf580c510c2f2a58e25c670`
+**Total controls:** 3513
+**Pack hash:** `33583a91bd1acda11631c452fdd6478ae65b2e48d2070bac0a2d977caab28e65`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -17,7 +17,7 @@ GitHub. Pick a service below.
 | high | 1494 |
 | info | 19 |
 | low | 278 |
-| medium | 1335 |
+| medium | 1347 |
 
 | Domain | Count |
 |--------|-------|
@@ -28,7 +28,7 @@ GitHub. Pick a service below.
 | compute | 1 |
 | config | 2 |
 | detection | 162 |
-| encryption | 125 |
+| encryption | 137 |
 | exposure | 1525 |
 | governance | 710 |
 | hygiene | 21 |
@@ -51,11 +51,12 @@ GitHub. Pick a service below.
 | [AMPLIFY](reference/amplify.md) | 2 |
 | [APIGATEWAY](reference/apigateway.md) | 105 |
 | [APIGW2](reference/apigw2.md) | 2 |
+| [APPFLOW](reference/appflow.md) | 1 |
 | [APPRUNNER](reference/apprunner.md) | 6 |
 | [APPSTREAM](reference/appstream.md) | 3 |
 | [APPSYNC](reference/appsync.md) | 2 |
 | [ATHENA](reference/athena.md) | 6 |
-| [AUDITMANAGER](reference/auditmanager.md) | 1 |
+| [AUDITMANAGER](reference/auditmanager.md) | 2 |
 | [AUTOSCALING](reference/autoscaling.md) | 3 |
 | [AZURE](reference/azure.md) | 141 |
 | [BACKUP](reference/backup.md) | 14 |
@@ -76,7 +77,7 @@ GitHub. Pick a service below.
 | [CODEPIPELINE](reference/codepipeline.md) | 6 |
 | [COGNITO](reference/cognito.md) | 114 |
 | [COMPLIANCE](reference/compliance.md) | 1 |
-| [COMPREHEND](reference/comprehend.md) | 1 |
+| [COMPREHEND](reference/comprehend.md) | 4 |
 | [CONFIG](reference/config.md) | 53 |
 | [DATACLASS](reference/dataclass.md) | 5 |
 | [DATASYNC](reference/datasync.md) | 2 |
@@ -116,6 +117,7 @@ GitHub. Pick a service below.
 | [INSPECTOR](reference/inspector.md) | 5 |
 | [IOT](reference/iot.md) | 9 |
 | [K8S](reference/k8s.md) | 68 |
+| [KENDRA](reference/kendra.md) | 1 |
 | [KEYSPACES](reference/keyspaces.md) | 5 |
 | [KINESIS](reference/kinesis.md) | 6 |
 | [KMS](reference/kms.md) | 50 |
@@ -137,13 +139,14 @@ GitHub. Pick a service below.
 | [NLB](reference/nlb.md) | 2 |
 | [OPENSEARCH](reference/opensearch.md) | 133 |
 | [ORG](reference/org.md) | 65 |
+| [QBUSINESS](reference/qbusiness.md) | 1 |
 | [QLDB](reference/qldb.md) | 3 |
 | [QUICKSIGHT](reference/quicksight.md) | 2 |
 | [RAM](reference/ram.md) | 3 |
 | [RDS](reference/rds.md) | 74 |
 | [RECYCLEBIN](reference/recyclebin.md) | 2 |
 | [REDSHIFT](reference/redshift.md) | 27 |
-| [REKOGNITION](reference/rekognition.md) | 1 |
+| [REKOGNITION](reference/rekognition.md) | 3 |
 | [ROUTE53](reference/route53.md) | 54 |
 | [S3](reference/s3.md) | 149 |
 | [S3EXPRESS](reference/s3express.md) | 6 |
@@ -159,7 +162,7 @@ GitHub. Pick a service below.
 | [SECURITYLAKE](reference/securitylake.md) | 5 |
 | [SERVERLESSREPO](reference/serverlessrepo.md) | 1 |
 | [SERVICECATALOG](reference/servicecatalog.md) | 1 |
-| [SES](reference/ses.md) | 3 |
+| [SES](reference/ses.md) | 4 |
 | [SHIELD](reference/shield.md) | 6 |
 | [SIGNIN](reference/signin.md) | 3 |
 | [SNS](reference/sns.md) | 39 |
@@ -167,7 +170,7 @@ GitHub. Pick a service below.
 | [SSM](reference/ssm.md) | 13 |
 | [STEPFUNCTIONS](reference/stepfunctions.md) | 113 |
 | [TAGS](reference/tags.md) | 1 |
-| [TEXTRACT](reference/textract.md) | 1 |
+| [TEXTRACT](reference/textract.md) | 2 |
 | [TIMESTREAM](reference/timestream.md) | 4 |
 | [TRANSFER](reference/transfer.md) | 4 |
 | [VERIFIEDACCESS](reference/verifiedaccess.md) | 5 |
@@ -177,3 +180,4 @@ GitHub. Pick a service below.
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 23 |
 | [WORKSPACES](reference/workspaces.md) | 2 |
+| [XRAY](reference/xray.md) | 1 |

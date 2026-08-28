@@ -50,3 +50,18 @@ SES verified identities should be organization-owned domains, not personal or co
 
 ---
 
+### CTL.SES.RECEIPT.ENCRYPT.CMK.001
+
+**SES Receipt Rule S3 Delivery Must Use Customer-Managed KMS Key**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** encryption
+- **Compliance:** hipaa: 164.312(a)(2)(iv); nist_800_53_r5: SC-28; soc2: CC6.7;
+
+SES receipt rule delivers incoming email to S3 without a customer- managed KMS key. Receipt rules with S3Actions that omit KmsKeyArn store email content using the bucket's default encryption, which may be AWS-managed. Incoming email often contains sensitive data (attachments, credentials, PII) that requires customer-controlled encryption for compliance and key-revocation capability.
+
+**Remediation:** Update the receipt rule's S3Action to include KmsKeyArn pointing to a customer-managed KMS key. Update via UpdateReceiptRule.
+
+---
+
