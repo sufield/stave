@@ -582,3 +582,149 @@ func TestAnnotateDependencies_NoDeps(t *testing.T) {
 		t.Errorf("chain with no deps should produce no diagnostics, got %v", got[0].DependencyDiagnostics)
 	}
 }
+
+func accountResolver(props map[asset.ID]string) ScopeResolver {
+	return func(id asset.ID, path string) (string, bool) {
+		if path == "account_id" {
+			v, ok := props[id]
+			return v, ok && v != ""
+		}
+		return "", false
+	}
+}
+
+func TestDetectChains_AccountScope_SameAccount(t *testing.T) {
+	chain := []policy.ChainDefinition{{
+		ID:                  "blind_region",
+		ControlIDs:          []kernel.ControlID{"CTL.SCP", "CTL.GD"},
+		Scope:               policy.ScopeAccount,
+		EscalationThreshold: 2,
+		CompoundSeverity:    policy.SeverityHigh,
+	}}
+	lookup := map[kernel.ControlID]*policy.ControlDefinition{
+		"CTL.SCP": {Params: policy.NewParams(map[string]any{})},
+		"CTL.GD":  {Params: policy.NewParams(map[string]any{})},
+	}
+	failures := []FailingControl{
+		{ControlID: "CTL.SCP", AssetID: "org-1"},
+		{ControlID: "CTL.GD", AssetID: "gd-1"},
+	}
+	resolver := accountResolver(map[asset.ID]string{
+		"org-1": "111122223333",
+		"gd-1":  "111122223333",
+	})
+	findings := DetectChains(failures, chain, lookup, resolver)
+	if len(findings) != 1 {
+		t.Fatalf("expected 1 finding (same account), got %d", len(findings))
+	}
+	if findings[0].ScopeID != "111122223333" {
+		t.Errorf("ScopeID = %q, want 111122223333", findings[0].ScopeID)
+	}
+	if len(findings[0].ContributingAssets) != 2 {
+		t.Errorf("ContributingAssets = %d, want 2", len(findings[0].ContributingAssets))
+	}
+}
+
+func TestDetectChains_AccountScope_SplitAccounts(t *testing.T) {
+	chain := []policy.ChainDefinition{{
+		ID:                  "blind_region",
+		ControlIDs:          []kernel.ControlID{"CTL.SCP", "CTL.GD"},
+		Scope:               policy.ScopeAccount,
+		EscalationThreshold: 2,
+		CompoundSeverity:    policy.SeverityHigh,
+	}}
+	lookup := map[kernel.ControlID]*policy.ControlDefinition{
+		"CTL.SCP": {Params: policy.NewParams(map[string]any{})},
+		"CTL.GD":  {Params: policy.NewParams(map[string]any{})},
+	}
+	failures := []FailingControl{
+		{ControlID: "CTL.SCP", AssetID: "org-1"},
+		{ControlID: "CTL.GD", AssetID: "gd-1"},
+	}
+	resolver := accountResolver(map[asset.ID]string{
+		"org-1": "111122223333",
+		"gd-1":  "999988887777",
+	})
+	findings := DetectChains(failures, chain, lookup, resolver)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings (conditions split across accounts), got %d", len(findings))
+	}
+}
+
+func TestDetectChains_AccountScope_MissingAccountID(t *testing.T) {
+	chain := []policy.ChainDefinition{{
+		ID:                  "blind_region",
+		ControlIDs:          []kernel.ControlID{"CTL.SCP", "CTL.GD"},
+		Scope:               policy.ScopeAccount,
+		EscalationThreshold: 2,
+		CompoundSeverity:    policy.SeverityHigh,
+	}}
+	lookup := map[kernel.ControlID]*policy.ControlDefinition{
+		"CTL.SCP": {Params: policy.NewParams(map[string]any{})},
+		"CTL.GD":  {Params: policy.NewParams(map[string]any{})},
+	}
+	failures := []FailingControl{
+		{ControlID: "CTL.SCP", AssetID: "org-1"},
+		{ControlID: "CTL.GD", AssetID: "gd-1"},
+	}
+	resolver := accountResolver(map[asset.ID]string{
+		"org-1": "111122223333",
+		// gd-1 has no account_id
+	})
+	findings := DetectChains(failures, chain, lookup, resolver)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings (missing account_id on one asset), got %d", len(findings))
+	}
+}
+
+func TestDetectNearMisses_AccountScope_MissingAccountID(t *testing.T) {
+	chain := []policy.ChainDefinition{{
+		ID:                  "blind_region",
+		ControlIDs:          []kernel.ControlID{"CTL.SCP", "CTL.GD"},
+		Scope:               policy.ScopeAccount,
+		EscalationThreshold: 2,
+		CompoundSeverity:    policy.SeverityHigh,
+	}}
+	failures := []FailingControl{
+		{ControlID: "CTL.SCP", AssetID: "org-1"},
+		{ControlID: "CTL.GD", AssetID: "gd-1"},
+	}
+	resolver := accountResolver(map[asset.ID]string{
+		"org-1": "111122223333",
+		// gd-1 has no account_id — drops out
+	})
+	nearMisses := DetectNearMisses(failures, chain, resolver)
+	// org-1 is alone in the "111122223333" bucket: 1 of 2 = near-miss
+	found := false
+	for _, nm := range nearMisses {
+		if nm.ChainID == "blind_region" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected near-miss for blind_region (1 of 2 in account bucket), got none")
+	}
+}
+
+func TestDetectChains_AccountScope_NilResolver(t *testing.T) {
+	chain := []policy.ChainDefinition{{
+		ID:                  "blind_region",
+		ControlIDs:          []kernel.ControlID{"CTL.SCP", "CTL.GD"},
+		Scope:               policy.ScopeAccount,
+		EscalationThreshold: 2,
+		CompoundSeverity:    policy.SeverityHigh,
+	}}
+	lookup := map[kernel.ControlID]*policy.ControlDefinition{
+		"CTL.SCP": {Params: policy.NewParams(map[string]any{})},
+		"CTL.GD":  {Params: policy.NewParams(map[string]any{})},
+	}
+	failures := []FailingControl{
+		{ControlID: "CTL.SCP", AssetID: "org-1"},
+		{ControlID: "CTL.GD", AssetID: "gd-1"},
+	}
+	findings := DetectChains(failures, chain, lookup, nil)
+	if len(findings) != 0 {
+		t.Errorf("expected 0 findings (nil resolver, account scope → nothing evaluable), got %d", len(findings))
+	}
+}

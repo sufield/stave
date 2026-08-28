@@ -1,0 +1,38 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-20T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:organizations::111122223333:organization/o-abc123",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "account_id": "111122223333",
+        "organization": {
+          "kind": "scp_policy_set",
+          "region_restriction": {
+            "has_scp": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:guardduty:af-south-1:111122223333:detector/0",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "enabled": false,
+          "region_coverage": {
+            "all_regions_enabled": false
+          }
+        },
+        "guardduty": {
+          "enabled_all_active_regions": false
+        }
+      }
+    }
+  ]
+}
