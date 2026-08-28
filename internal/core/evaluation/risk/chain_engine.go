@@ -86,6 +86,10 @@ func DetectChains(
 		}
 		for _, ci := range chainIdxs {
 			chain := &chains[ci]
+			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
+			if scope == "" {
+				continue // not evaluable (e.g. account-scoped chain, no account_id)
+			}
 			b := buckets[ci]
 			if b == nil {
 				b = &chainBuckets{
@@ -95,7 +99,6 @@ func DetectChains(
 				}
 				buckets[ci] = b
 			}
-			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
 			if b.byScope[scope] == nil {
 				b.byScope[scope] = make(map[kernel.ControlID]struct{})
 				b.assetsByScope[scope] = make(map[asset.ID]struct{})
@@ -225,7 +228,7 @@ func emitChainFinding(
 	// every chain golden in the repo. Emit only when scope_field
 	// actually drove grouping.
 	_, isResolved := b.resolvedByScope[scope]
-	if isResolved && (chain.ScopeField != "" || chain.Scope.IsGlobal()) {
+	if isResolved && (chain.ScopeField != "" || chain.Scope.IsGlobal() || chain.Scope.IsAccount()) {
 		finding.ScopeID = scope
 		finding.ScopeField = chain.ScopeField
 		finding.ContributingAssets = contributing
@@ -241,9 +244,21 @@ func emitChainFinding(
 // asset.ID is used and resolved=false. The asset.ID fallback also
 // applies when the resolver is nil — defensive for tests and any caller
 // that has no asset properties at hand.
+//
+// scope: account returns ("", false) when the asset has no account_id —
+// a not-evaluable signal. Callers must skip entries where key is "".
 func groupingKey(chain *policy.ChainDefinition, assetID asset.ID, resolver ScopeResolver) (string, bool) {
 	if chain.Scope.IsGlobal() {
 		return "__global__", true
+	}
+	if chain.Scope.IsAccount() {
+		if resolver == nil {
+			return "", false
+		}
+		if v, ok := resolver(assetID, "account_id"); ok && v != "" {
+			return v, true
+		}
+		return "", false
 	}
 	if chain.ScopeField == "" || resolver == nil {
 		return string(assetID), false
@@ -365,6 +380,10 @@ func DetectNearMisses(
 		f := &failures[j]
 		for _, ci := range controlToChains[f.ControlID] {
 			chain := &chains[ci]
+			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
+			if scope == "" {
+				continue // not evaluable (e.g. account-scoped chain, no account_id)
+			}
 			b := buckets[ci]
 			if b == nil {
 				b = &chainBuckets{
@@ -374,7 +393,6 @@ func DetectNearMisses(
 				}
 				buckets[ci] = b
 			}
-			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
 			if b.byScope[scope] == nil {
 				b.byScope[scope] = make(map[kernel.ControlID]struct{})
 				b.assetsByScope[scope] = make(map[asset.ID]struct{})

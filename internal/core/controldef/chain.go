@@ -82,10 +82,18 @@ const (
 	// ScopeGlobal puts all failures in one bucket, enabling
 	// cross-asset-type chains.
 	ScopeGlobal ChainScope = "global"
+
+	// ScopeAccount groups by account_id, enabling cross-asset-type
+	// chains that must fire within a single account. Observations
+	// without account_id are not evaluable and never join any group.
+	ScopeAccount ChainScope = "account"
 )
 
 // IsGlobal reports whether the chain uses global (cross-asset) grouping.
 func (s ChainScope) IsGlobal() bool { return s == ScopeGlobal }
+
+// IsAccount reports whether the chain uses account-level grouping.
+func (s ChainScope) IsAccount() bool { return s == ScopeAccount }
 
 // ChainComplexity classifies how difficult a chain is to exploit.
 type ChainComplexity string
@@ -231,8 +239,8 @@ func (c *ChainDefinition) Validate() error {
 		return fmt.Errorf("chain %s: escalation_threshold (%d) > control count (%d)",
 			c.ID, c.EscalationThreshold, len(c.ControlIDs))
 	}
-	if c.Scope != "" && c.Scope != ScopeAsset && c.Scope != ScopeGlobal {
-		return fmt.Errorf("chain %s: invalid scope %q (must be \"asset\" or \"global\")", c.ID, c.Scope)
+	if c.Scope != "" && c.Scope != ScopeAsset && c.Scope != ScopeGlobal && c.Scope != ScopeAccount {
+		return fmt.Errorf("chain %s: invalid scope %q (must be \"asset\", \"global\", or \"account\")", c.ID, c.Scope)
 	}
 	return nil
 }

@@ -168,7 +168,8 @@ func TestAccess002_TruePositive_WildcardPolicy(t *testing.T) {
 	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("wildcard-bucket", map[string]any{
-		"has_wildcard_principal": true,
+		"has_wildcard_principal":                  true,
+		"wildcard_principal_self_delegation_only": false,
 	})
 
 	result := ev.Evaluate(accessSnapshot(bucket))
@@ -563,11 +564,12 @@ func TestAccess_MultipleViolations_SameBucket(t *testing.T) {
 	t.Parallel()
 	ev := accessEvaluator(t)
 	bucket := accessBucket("nightmare-bucket", map[string]any{
-		"external_account_ids":   []any{"999888777666"},
-		"has_wildcard_principal": true,
-		"has_external_write":     true,
-		"authenticated_read":     true,
-		"authenticated_write":    true,
+		"external_account_ids":                    []any{"999888777666"},
+		"has_wildcard_principal":                  true,
+		"wildcard_principal_self_delegation_only": false,
+		"has_external_write":                      true,
+		"authenticated_read":                      true,
+		"authenticated_write":                     true,
 	})
 
 	result := ev.Evaluate(accessSnapshot(bucket))

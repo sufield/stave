@@ -7,6 +7,8 @@ import (
 	"slices"
 	"time"
 
+	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
@@ -137,9 +139,13 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 	if lookback > 0 {
 		cutoff = now.Add(-lookback)
 	}
-	type fkey struct{ ctl, ast, astType string }
+	type fkey struct {
+		ctl     kernel.ControlID
+		ast     asset.ID
+		astType kernel.AssetType
+	}
 	type mttrWindow struct {
-		sev     string
+		sev     policy.Severity
 		openAt  time.Time
 		closeAt time.Time
 	}
@@ -150,11 +156,11 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 	for _, a := range sorted {
 		currentKeys := make(map[fkey]struct{}, len(a.Findings))
 		for i := range a.Findings {
-			k := fkey{string(a.Findings[i].ControlID), string(a.Findings[i].AssetID), string(a.Findings[i].AssetType)}
+			k := fkey{a.Findings[i].ControlID, a.Findings[i].AssetID, a.Findings[i].AssetType}
 			currentKeys[k] = struct{}{}
 			if _, exists := open[k]; !exists {
 				open[k] = &mttrWindow{
-					sev:    a.Findings[i].SeverityLabel(),
+					sev:    a.Findings[i].ControlSeverity,
 					openAt: a.Run.EvalTime,
 				}
 			}
@@ -178,10 +184,11 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 	bySeV := make(map[string]*agg)
 	for _, w := range closed {
 		days := w.closeAt.Sub(w.openAt).Hours() / 24
-		a, ok := bySeV[w.sev]
+		sLabel := w.sev.BucketName()
+		a, ok := bySeV[sLabel]
 		if !ok {
 			a = &agg{}
-			bySeV[w.sev] = a
+			bySeV[sLabel] = a
 		}
 		a.totalDays += days
 		a.count++

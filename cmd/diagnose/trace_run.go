@@ -88,7 +88,7 @@ Exit Codes:
 			result, err := tracer.Trace(&apptrace.TraceRequest{
 				Control:    control,
 				Snapshot:   snapshot,
-				TargetID:   strings.TrimSpace(assetID),
+				TargetID:   asset.ID(strings.TrimSpace(assetID)),
 				SourcePath: cleanObsPath,
 			})
 			if err != nil {

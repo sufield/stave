@@ -17,7 +17,7 @@ import (
 type TraceRequest struct {
 	Control    policy.ControlDefinition
 	Snapshot   *asset.Snapshot
-	TargetID   string
+	TargetID   asset.ID
 	SourcePath string
 }
 
@@ -43,7 +43,7 @@ func (t *PolicyTracer) Trace(req *TraceRequest) (evaluation.TraceRenderer, error
 	if t == nil || t.Tracer == nil {
 		return nil, ErrTracerNotWired
 	}
-	resource, err := LocateResource(req.Snapshot, asset.ID(req.TargetID), req.SourcePath)
+	resource, err := LocateResource(req.Snapshot, req.TargetID, req.SourcePath)
 	if err != nil {
 		return nil, err
 	}

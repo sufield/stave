@@ -45,7 +45,7 @@ func TestPolicyTracer_Trace_Text(t *testing.T) {
 	result, err := tracer.Trace(&TraceRequest{
 		Control:    testControl(),
 		Snapshot:   testSnapshot(),
-		TargetID:   "aws:s3:::test-bucket",
+		TargetID:   asset.ID("aws:s3:::test-bucket"),
 		SourcePath: "test.json",
 	})
 	if err != nil {
@@ -65,7 +65,7 @@ func TestPolicyTracer_Trace_JSON(t *testing.T) {
 	result, err := tracer.Trace(&TraceRequest{
 		Control:    testControl(),
 		Snapshot:   testSnapshot(),
-		TargetID:   "aws:s3:::test-bucket",
+		TargetID:   asset.ID("aws:s3:::test-bucket"),
 		SourcePath: "test.json",
 	})
 	if err != nil {
@@ -85,7 +85,7 @@ func TestPolicyTracer_Trace_ReturnsResult(t *testing.T) {
 	result, err := tracer.Trace(&TraceRequest{
 		Control:    testControl(),
 		Snapshot:   testSnapshot(),
-		TargetID:   "aws:s3:::test-bucket",
+		TargetID:   asset.ID("aws:s3:::test-bucket"),
 		SourcePath: "test.json",
 	})
 	if err != nil {

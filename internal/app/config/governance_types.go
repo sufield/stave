@@ -127,7 +127,7 @@ type WorkspacePolicy struct {
 	OwnerTagKey              string             `yaml:"owner_tag_key"                governance:"include"`
 	BudgetPeriod             string             `yaml:"budget_period"                governance:"include"`
 	BudgetFailBurnRate       float64            `yaml:"budget_fail_on_burn_rate"     governance:"include"`
-	BudgetFailSeverity       []string           `yaml:"budget_fail_severity"`
+	BudgetFailSeverity       []policy.Severity  `yaml:"budget_fail_severity"`
 }
 
 // Validate runs the same field-level validators that
