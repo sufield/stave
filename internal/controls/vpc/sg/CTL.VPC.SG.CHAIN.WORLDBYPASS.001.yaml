@@ -1,0 +1,129 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.SG.CHAIN.WORLDBYPASS.001
+name: Chained Security Group Must Not Also Admit World CIDR
+description: >
+  A security group admits ingress from both a security-group-reference
+  source and a world CIDR (0.0.0.0/0 or ::/0) on any port. The
+  SG-reference marks it as a chained internal tier — an application
+  or database SG that receives traffic from an upstream SG (load
+  balancer, bastion, application). The world CIDR bypasses the chain
+  entirely: any internet source reaches the resource directly,
+  rendering the tiered architecture decorative. This is the specific
+  failure mode described in re:Inforce 2019 (~38:40–39:42): a tiered
+  SG topology where app and db SGs contain no world CIDRs. An SG
+  that chains by reference and simultaneously opens to the world is
+  worse than an SG that is simply world-open — the SG-reference
+  creates an appearance of segmentation that does not exist.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  hipaa: "164.312(e)(1)"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
+subtractive_category:
+  - S03
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_security_group
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.security_group.has_chain_world_bypass
+  - network.security_group.has_sg_reference_ingress
+  - network.security_group.has_world_cidr_ingress
+remediation:
+  description: >
+    Security group chains by SG-reference but also admits 0.0.0.0/0
+    or ::/0 ingress. The tiered architecture is bypassed.
+  action: >
+    Remove the world CIDR (0.0.0.0/0 and ::/0) ingress rules from
+    this security group. A chained SG should receive traffic only
+    from the upstream SG references that define the tier relationship.
+    If the resource genuinely needs internet ingress, it belongs in a
+    public-facing tier with its own SG, not in a chained internal
+    tier.
+  example: |
+    {
+      "network": {
+        "kind": "security_group",
+        "security_group": {
+          "has_chain_world_bypass": false,
+          "has_sg_reference_ingress": true,
+          "has_world_cidr_ingress": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: security_group
+    - field: properties.network.security_group.has_chain_world_bypass
+      op: eq
+      value: true
+tests:
+  - name: SG with both SG-ref and world CIDR fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "sg-chain-bypass-fires"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_sg_reference_ingress: true
+            has_world_cidr_ingress: true
+            has_chain_world_bypass: true
+  - name: SG with world CIDR only (no chain) passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-world-only-no-ref"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_sg_reference_ingress: false
+            has_world_cidr_ingress: true
+            has_chain_world_bypass: false
+  - name: SG with SG-ref only (no world) passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-ref-only-no-world"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_sg_reference_ingress: true
+            has_world_cidr_ingress: false
+            has_chain_world_bypass: false
+  - name: SG with SG-ref plus private CIDR passes
+    verdict: PASS
+    asset:
+      asset_id: "sg-ref-plus-private-cidr"
+      asset_type: aws_ec2_security_group
+      vendor: aws
+      properties:
+        network:
+          kind: security_group
+          security_group:
+            has_sg_reference_ingress: true
+            has_world_cidr_ingress: false
+            has_chain_world_bypass: false

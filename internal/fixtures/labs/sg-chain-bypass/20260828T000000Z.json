@@ -1,0 +1,70 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-28T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.sg-chain-bypass-proof"
+  },
+  "assets": [
+    {
+      "id": "sg-chain-bypass-fires",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "has_sg_reference_ingress": true,
+            "has_world_cidr_ingress": true,
+            "has_chain_world_bypass": true
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-world-only-no-ref",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "has_sg_reference_ingress": false,
+            "has_world_cidr_ingress": true,
+            "has_chain_world_bypass": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-ref-only-no-world",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "has_sg_reference_ingress": true,
+            "has_world_cidr_ingress": false,
+            "has_chain_world_bypass": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-ref-plus-private-cidr",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "has_sg_reference_ingress": true,
+            "has_world_cidr_ingress": false,
+            "has_chain_world_bypass": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1296,6 +1296,21 @@ Web-facing resources (load balancers, web servers), application logic (app serve
 
 ---
 
+### CTL.VPC.SG.CHAIN.WORLDBYPASS.001
+
+**Chained Security Group Must Not Also Admit World CIDR**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; hipaa: 164.312(e)(1); nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+A security group admits ingress from both a security-group-reference source and a world CIDR (0.0.0.0/0 or ::/0) on any port. The SG-reference marks it as a chained internal tier — an application or database SG that receives traffic from an upstream SG (load balancer, bastion, application). The world CIDR bypasses the chain entirely: any internet source reaches the resource directly, rendering the tiered architecture decorative. This is the specific failure mode described in re:Inforce 2019 (~38:40–39:42): a tiered SG topology where app and db SGs contain no world CIDRs. An SG that chains by reference and simultaneously opens to the world is worse than an SG that is simply world-open — the SG-reference creates an appearance of segmentation that does not exist.
+
+**Remediation:** Remove the world CIDR (0.0.0.0/0 and ::/0) ingress rules from this security group. A chained SG should receive traffic only from the upstream SG references that define the tier relationship. If the resource genuinely needs internet ingress, it belongs in a public-facing tier with its own SG, not in a chained internal tier.
+
+---
+
 ### CTL.VPC.SG.CIDR.BROAD.001
 
 **Security Group Rule Uses Overly Broad CIDR**

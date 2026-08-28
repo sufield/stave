@@ -13,36 +13,43 @@ checks:
     service: IAM
     description: "No root account access keys exist"
     reference: "re:Inforce 2019 ~19:14"
+    verdict: COVERED
 
   - id: RF-IAM-02
     service: IAM
     description: "Root is not used as an operating principal (root last-used stale)"
     reference: "re:Inforce 2019 ~19:14"
+    verdict: COVERED
 
   - id: RF-IAM-03
     service: IAM
     description: "Long-term credentials minimized: IAM user access keys flagged, aged keys forbidden"
     reference: "re:Inforce 2019 ~04:11–06:25"
+    verdict: COVERED
 
   - id: RF-IAM-04
     service: IAM
     description: "Human access arrives via federation (IdP or Identity Center present; console-password users flagged)"
     reference: "re:Inforce 2019 ~04:45–05:16, ~23:04"
+    verdict: COVERED
 
   - id: RF-IAM-05
     service: IAM
     description: "Compute assumes roles: EC2 instances carry instance profiles (no role-less instances)"
     reference: "re:Inforce 2019 ~05:16–06:25"
+    verdict: COVERED
 
   - id: RF-IAM-06
     service: IAM
     description: "No customer policy grants Action:* on Resource:*"
     reference: "re:Inforce 2019 ~10:22"
+    verdict: COVERED
 
   - id: RF-IAM-07
     service: IAM
     description: "No service-wide wildcard action bound to Resource:* (actions and resource ARNs scoped)"
     reference: "re:Inforce 2019 ~10:51–13:27"
+    verdict: COVERED
 
   - id: RF-IAM-08
     service: IAM
@@ -50,31 +57,37 @@ checks:
     reference: "re:Inforce 2019 ~13:27–15:01"
     predicate_path:
       - properties.identity.policies.secretsmanager_getsecretvalue_broad_nocondition
+    verdict: COVERED
 
   - id: RF-IAM-09
     service: IAM
     description: "Cross-account resource-based policies enumerate only intended external accounts; no wildcard principal"
     reference: "re:Inforce 2019 ~16:04–20:05"
+    verdict: COVERED
 
   - id: RF-IAM-10
     service: IAM
     description: "Role trust policies scoped: no wildcard principal; external-account trust surfaced"
     reference: "re:Inforce 2019 ~20:32–22:04"
+    verdict: COVERED
 
   - id: RF-IAM-11
     service: IAM
     description: "Organizations management account runs no workloads"
     reference: "re:Inforce 2019 ~22:38–23:04"
+    verdict: COVERED
 
   - id: RF-IAM-12
     service: IAM
     description: "SCPs exist beyond the default and encode org invariants (e.g., region deny)"
     reference: "re:Inforce 2019 ~24:12–25:15"
+    verdict: COVERED
 
   - id: RF-IAM-13
     service: IAM
     description: "Granted-but-unused service access trimmed (service last-accessed data drives narrowing)"
     reference: "re:Inforce 2019 ~24:42–25:15"
+    verdict: COVERED
 
   # ─── KMS / Data at Rest (3) ────────────────────────────────
 
@@ -82,16 +95,19 @@ checks:
     service: S3
     description: "S3 buckets have default encryption enabled"
     reference: "re:Inforce 2019 ~27:20–28:22"
+    verdict: COVERED
 
   - id: RF-KMS-02
     service: S3
     description: "Sensitive-data workloads use a customer-managed key (SSE-KMS/CMK), not only service-managed defaults"
     reference: "re:Inforce 2019 ~28:22–29:19"
+    verdict: COVERED
 
   - id: RF-KMS-03
     service: KMS
     description: "CMK key policies are not overly permissive: no wildcard principal, no unintended account-wide decrypt"
     reference: "re:Inforce 2019 ~28:22–28:49"
+    verdict: COVERED
 
   # ─── Network / VPC (11) ────────────────────────────────────
 
@@ -99,53 +115,73 @@ checks:
     service: VPC
     description: "No security group allows 0.0.0.0/0 ingress outside approved public-listener ports"
     reference: "re:Inforce 2019 ~36:15–38:40"
+    verdict: COVERED
 
   - id: RF-NET-02
     service: VPC
     description: "Database ports admit ingress only from application-tier SG references, never world CIDRs"
     reference: "re:Inforce 2019 ~37:14–39:42"
+    verdict: COVERED
 
   - id: RF-NET-03
     service: VPC
     description: "SSH ingress restricted to bastion SG; no world-open port 22"
     reference: "re:Inforce 2019 ~37:14"
+    verdict: COVERED
 
   - id: RF-NET-04
     service: VPC
     description: "Tiered SGs chain by reference (LB to app to db); app and db SGs contain no world CIDRs"
     reference: "re:Inforce 2019 ~38:40–39:42"
+    verdict: COVERED
 
   - id: RF-NET-05
     service: VPC
     description: "Egress rules constrained where outbound restriction is intended (unrestricted egress flagged)"
     reference: "re:Inforce 2019 ~38:11"
+    verdict: COVERED
 
   - id: RF-NET-06
     service: VPC
     description: "Private subnets carry no route to an internet gateway"
     reference: "re:Inforce 2019 ~40:40–41:44"
+    verdict: COVERED
 
   - id: RF-NET-07
     service: VPC
     description: "Instances and databases on private tiers have no public IPs; auto-assign-public-IP disabled"
     reference: "re:Inforce 2019 ~40:40–42:17"
+    verdict: COVERED
 
   - id: RF-NET-08
     service: VPC
     description: "Private-subnet outbound routes via NAT gateway, not IGW"
     reference: "re:Inforce 2019 ~42:17–42:43"
+    verdict: COVERED
 
   - id: RF-NET-09
     service: VPC
     description: "VPC endpoints present for in-VPC AWS service traffic (S3/DynamoDB gateway; interface endpoints)"
     reference: "re:Inforce 2019 ~42:43–45:17"
+    verdict: COVERED
 
   - id: RF-NET-10
     service: VPC
     description: "VPC endpoint security groups admit 443 from the VPC CIDR"
     reference: "re:Inforce 2019 ~45:17"
+    verdict: N-A
+    verdict_reason: >
+      Asserts intended functionality, not a forbidden state. The property
+      asks whether an endpoint SG admits 443 from the VPC CIDR — this is
+      the expected configuration, not a misconfiguration to detect. The
+      failure mode (SG blocks 443) is fail-closed and loud: the endpoint
+      is functionally dead, API calls fail immediately, and the team
+      notices without a security control. Stave detects forbidden states
+      in configuration snapshots; asserting that a working configuration
+      is working is outside its detection model.
 
   - id: RF-NET-11
     service: VPC
     description: "VPC endpoint policies present and constrained; no unrestricted endpoint policy"
     reference: "re:Inforce 2019 ~45:17–47:19"
+    verdict: COVERED
