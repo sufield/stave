@@ -442,6 +442,21 @@ VPC endpoint policies must explicitly deny anonymous (unsigned) requests. Withou
 
 ---
 
+### CTL.VPC.ENDPOINT.BEDROCK.EGRESS.001
+
+**Bedrock Endpoint Policy Does Not Restrict Destination to Organizational Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Bedrock interface endpoint policy does not restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific model ARNs. Without destination restriction, a compromised workload can InvokeModel against models in external accounts — exfiltrating organizational data via model context window to an attacker-controlled account.
+
+**Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict access to models and knowledge bases owned by your organization, or restrict the Resource field to specific model ARNs.
+
+---
+
 ### CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001
 
 **VPC Endpoint Policy Must Restrict Target S3 Buckets**
@@ -484,6 +499,36 @@ VPC endpoint policies must not allow access to resources in external accounts. A
 Interface VPC endpoint does not have Private DNS enabled. Without Private DNS, the standard service DNS name (for example `kms.us-east-1.amazonaws.com`) resolves to the service's public IP — not to the VPC endpoint. Applications using the standard SDK configuration bypass the endpoint entirely: traffic routes through the NAT gateway to the public endpoint. The VPC endpoint exists but is unused because DNS does not point at it. Private DNS makes the standard service name resolve to the endpoint's private IP, so every SDK call routes through the endpoint without code changes. Low severity because the finding rarely causes outages — but the behavior surprises most teams because the endpoint appears to be in use when it is not.
 
 **Remediation:** Enable Private DNS on the interface endpoint. This changes the VPC's DNS resolution so the standard service DNS name resolves to the endpoint's private IP, routing all SDK traffic through the endpoint without code changes. If Private DNS cannot be enabled (conflicts with an overlapping resolver configuration), configure application SDKs to use the endpoint's VPCE-specific DNS name explicitly — but the simpler fix is Private DNS.
+
+---
+
+### CTL.VPC.ENDPOINT.DYNAMODB.EGRESS.001
+
+**DynamoDB Endpoint Policy Does Not Restrict Destination to Organizational Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+DynamoDB gateway endpoint policy does not restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific table ARNs. Without destination restriction, a compromised workload can PutItem to any DynamoDB table globally — including attacker-controlled tables in external accounts — exfiltrating data via write to a table the attacker owns.
+
+**Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict access to tables owned by your organization, or restrict the Resource field to specific table ARNs.
+
+---
+
+### CTL.VPC.ENDPOINT.ECR.EGRESS.001
+
+**ECR Endpoint Policy Does Not Restrict Destination to Organizational Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+ECR interface endpoint policy does not restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific repository ARNs. Without destination restriction, a compromised workload can PutImage to any ECR repository globally — including attacker-controlled repositories in external accounts — exfiltrating code, configuration, and embedded secrets via container image push.
+
+**Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict access to repositories owned by your organization, or restrict the Resource field to specific repository ARNs.
 
 ---
 
@@ -577,6 +622,21 @@ Interface VPC endpoint uses the default full-access policy (Principal *, Action 
 
 ---
 
+### CTL.VPC.ENDPOINT.KMS.EGRESS.001
+
+**KMS Endpoint Policy Does Not Restrict Destination to Organizational Resources**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+KMS interface endpoint policy does not restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific key ARNs. Without destination restriction, a compromised workload can call Encrypt or GenerateDataKey with keys in external accounts — data leaves the organization's encryption boundary and becomes readable only by the attacker's key.
+
+**Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict access to keys owned by your organization, or restrict the Resource field to specific key ARNs.
+
+---
+
 ### CTL.VPC.ENDPOINT.MISSING.CRITICAL.001
 
 **VPC Missing Interface Endpoints for Critical AWS Services**
@@ -652,6 +712,36 @@ VPCs must have an S3 VPC gateway endpoint to route S3 traffic privately through 
 
 ---
 
+### CTL.VPC.ENDPOINT.SAGEMAKER.EGRESS.001
+
+**SageMaker Endpoint Policy Does Not Restrict Destination to Organizational Resources**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+SageMaker interface endpoint policy does not restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific resource ARNs. Without destination restriction, a compromised workload can CreateTrainingJob referencing external S3 buckets or invoke endpoints in external accounts — exfiltrating training data and model artifacts via the SageMaker training pipeline.
+
+**Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict access to SageMaker resources owned by your organization, or restrict the Resource field to specific training job and endpoint ARNs.
+
+---
+
+### CTL.VPC.ENDPOINT.SECRETSMANAGER.EGRESS.001
+
+**Secrets Manager Endpoint Policy Does Not Restrict Destination to Organizational Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+Secrets Manager interface endpoint policy does not restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific secret ARNs. Without destination restriction, a compromised workload can PutSecretValue to any secret globally — including secrets in attacker-controlled accounts — exfiltrating data via secret creation in an external account.
+
+**Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict access to secrets owned by your organization, or restrict the Resource field to specific secret ARNs.
+
+---
+
 ### CTL.VPC.ENDPOINT.SG.BROAD.001
 
 **Interface Endpoint Security Group Matches Full VPC CIDR**
@@ -679,6 +769,21 @@ Interface VPC endpoint's security group permits inbound traffic from the entire 
 Console Private Access VPC endpoint (com.amazonaws.signin) has a policy that does not restrict which AWS accounts are reachable from within the VPC. Without an aws:PrincipalAccount condition in the endpoint policy, any user on the VPC can access the AWS console for any AWS account — the endpoint becomes an unrestricted outbound path to every account's console. This is the outbound complement to sign-in RBPs (CTL.SIGNIN.CONSOLE.AUTH.ENABLED.001) which restrict inbound access by network. Together they form the data perimeter pair for console access: RBP controls which networks can reach the console, Console Private Access controls which accounts are reachable from the network.
 
 **Remediation:** Add an aws:PrincipalAccount condition to the endpoint policy that lists only the organization's AWS account IDs. This restricts console access from the VPC to approved accounts only.
+
+---
+
+### CTL.VPC.ENDPOINT.STS.EGRESS.001
+
+**STS Endpoint Policy Does Not Restrict Destination to Organizational Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+STS interface endpoint policy does not restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific role ARNs. Without destination restriction, a compromised workload can AssumeRole into any account globally — including attacker-controlled accounts — pivoting to external infrastructure via credential exfiltration through the organization's own endpoint.
+
+**Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict AssumeRole to roles owned by your organization, or restrict the Resource field to specific role ARNs.
 
 ---
 
@@ -1008,6 +1113,36 @@ NACL has deny rules with higher rule numbers than allow rules that match the sam
 A custom (non-default) Network ACL is associated with subnets but allows all inbound and outbound traffic — the same effect as using the default NACL. Creating a custom NACL implies intent to filter; an allow-all custom NACL is either a misconfiguration or a placeholder from an incomplete deployment. The custom NACL's existence creates the appearance of defense-in-depth — dashboards show "custom NACL: attached" — while providing none of the filtering that justifies the extra moving part.
 
 **Remediation:** Replace the allow-all rules with a minimal deny-and-allow policy for the subnet's workload. At minimum: deny admin ports (22, 3389) from 0.0.0.0/0, deny known-bad CIDR blocks, allow only the egress destinations the workload requires. If the custom NACL is a placeholder for work that never completed, either finish the rule set or delete the NACL and re-associate subnets with the default.
+
+---
+
+### CTL.VPC.NAT.FLOWLOG.ADEQUACY.001
+
+**NAT Gateway Flow Log Coverage Does Not Capture Accepted Traffic**
+
+- **Severity:** low
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-2; nist_800_53_r5: AU-2; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+A flow log covers the NAT gateway but no covering log captures accepted traffic — every covering log has TrafficType REJECT. Accepted egress is the exfiltration signal; reject-only telemetry records what the security groups stopped but is blind to what got through. The control fires only when PRESENCE is satisfied (at least one covering log exists), so there is no double-fire on uncovered NATs.
+
+**Remediation:** Change at least one covering flow log's TrafficType from REJECT to ALL so accepted traffic is recorded alongside rejected traffic. ALL is the recommended setting — it records both directions.
+
+---
+
+### CTL.VPC.NAT.FLOWLOG.PRESENCE.001
+
+**NAT Gateway Has No Flow Log Coverage at Any Scope**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** audit
+- **Compliance:** cis_aws_v3.0: 3.9; fedramp_moderate: AU-12; nist_800_53_r5: AU-12; pci_dss_v4.0: 10.2.1; soc2: CC7.2;
+
+NAT gateway has no flow log whose scope covers it — no VPC-level log on the parent VPC, no subnet-level log on the NAT's subnet, and no ENI-level log on the NAT's network interfaces. Any single level satisfies coverage; the control fires only when all three are absent. This verifies the telemetry mechanism exists; traffic volume and content analysis are runtime concerns and stay out of scope.
+
+**Remediation:** Enable a VPC flow log on the parent VPC (covers all ENIs including the NAT), or a subnet-level log on the NAT's subnet, or an ENI-level log on the NAT's network interface. Direct records to a CloudWatch Logs group or S3 bucket in a logging-dedicated account.
 
 ---
 

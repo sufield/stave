@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3518
-**Pack hash:** `4579d376989c4ab9789d97b2d86b8dc05a7456b7e3dced5988c2eb4b198eafdf`
+**Total controls:** 3527
+**Pack hash:** `b1c1eabe91d97b2bf51788a0fd2d68ca786f4331760d4fac9c3489b7111768f9`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,15 +14,15 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 376 |
-| high | 1497 |
+| high | 1502 |
 | info | 19 |
-| low | 279 |
-| medium | 1347 |
+| low | 280 |
+| medium | 1350 |
 
 | Domain | Count |
 |--------|-------|
 | access | 9 |
-| audit | 101 |
+| audit | 103 |
 | availability | 1 |
 | capacity | 3 |
 | compute | 1 |
@@ -34,7 +34,7 @@ GitHub. Pick a service below.
 | hygiene | 21 |
 | identity | 689 |
 | lifecycle | 32 |
-| network | 58 |
+| network | 65 |
 | resilience | 50 |
 | secrets | 4 |
 | storage | 8 |
@@ -175,7 +175,7 @@ GitHub. Pick a service below.
 | [TRANSFER](reference/transfer.md) | 4 |
 | [VERIFIEDACCESS](reference/verifiedaccess.md) | 5 |
 | [VERIFIEDPERMISSIONS](reference/verifiedpermissions.md) | 7 |
-| [VPC](reference/vpc.md) | 120 |
+| [VPC](reference/vpc.md) | 129 |
 | [VPCLATTICE](reference/vpclattice.md) | 5 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 23 |
