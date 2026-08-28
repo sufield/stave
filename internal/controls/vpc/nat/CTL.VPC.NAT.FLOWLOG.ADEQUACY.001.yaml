@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NAT.FLOWLOG.ADEQUACY.001
+name: NAT Gateway Flow Log Coverage Does Not Capture Accepted Traffic
+description: >
+  A flow log covers the NAT gateway but no covering log captures
+  accepted traffic — every covering log has TrafficType REJECT. Accepted
+  egress is the exfiltration signal; reject-only telemetry records what
+  the security groups stopped but is blind to what got through. The
+  control fires only when PRESENCE is satisfied (at least one covering
+  log exists), so there is no double-fire on uncovered NATs.
+domain: audit
+severity: low
+compliance:
+  cis_aws_v3.0: "3.9"
+  nist_800_53_r5: "AU-2"
+  fedramp_moderate: "AU-2"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03", "LOG-08"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - logging
+  - network-isolation
+subtractive_category:
+  - S06
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_nat_gateway
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.nat.gateway_id
+  - network.nat.eni_flow_logs_enabled
+  - network.nat.subnet_flow_logs_enabled
+  - network.nat.vpc_flow_logs_enabled
+  - network.nat.covering_flow_log_captures_accepted
+remediation:
+  description: >
+    NAT gateway has flow log coverage but no covering log captures
+    accepted traffic. Successful outbound connections leave no record.
+  action: >
+    Change at least one covering flow log's TrafficType from REJECT
+    to ALL so accepted traffic is recorded alongside rejected traffic.
+    ALL is the recommended setting — it records both directions.
+  example: |
+    {
+      "network": {
+        "kind": "nat_gateway",
+        "nat": {
+          "covering_flow_log_captures_accepted": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: nat_gateway
+    - field: properties.network.nat.covering_flow_log_captures_accepted
+      op: eq
+      value: false
+    - any:
+        - field: properties.network.nat.eni_flow_logs_enabled
+          op: eq
+          value: true
+        - field: properties.network.nat.subnet_flow_logs_enabled
+          op: eq
+          value: true
+        - field: properties.network.nat.vpc_flow_logs_enabled
+          op: eq
+          value: true
+tests:
+  - name: "covered by VPC log but REJECT-only fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "nat-0ccc-reject-only"
+      asset_type: aws_vpc_nat_gateway
+      vendor: aws
+      properties:
+        network:
+          kind: nat_gateway
+          nat:
+            gateway_id: nat-0ccc
+            eni_flow_logs_enabled: false
+            subnet_flow_logs_enabled: true
+            vpc_flow_logs_enabled: false
+            covering_flow_log_captures_accepted: false
+  - name: "covered by VPC log with ALL traffic passes"
+    verdict: PASS
+    asset:
+      asset_id: "nat-0bbb-all-traffic"
+      asset_type: aws_vpc_nat_gateway
+      vendor: aws
+      properties:
+        network:
+          kind: nat_gateway
+          nat:
+            gateway_id: nat-0bbb
+            eni_flow_logs_enabled: false
+            subnet_flow_logs_enabled: false
+            vpc_flow_logs_enabled: true
+            covering_flow_log_captures_accepted: true
+  - name: "no coverage at all passes (PRESENCE handles this)"
+    verdict: PASS
+    asset:
+      asset_id: "nat-0aaa-no-coverage"
+      asset_type: aws_vpc_nat_gateway
+      vendor: aws
+      properties:
+        network:
+          kind: nat_gateway
+          nat:
+            gateway_id: nat-0aaa
+            eni_flow_logs_enabled: false
+            subnet_flow_logs_enabled: false
+            vpc_flow_logs_enabled: false
+            covering_flow_log_captures_accepted: false

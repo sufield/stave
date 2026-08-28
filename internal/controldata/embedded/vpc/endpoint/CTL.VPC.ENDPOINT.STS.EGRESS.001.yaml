@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.STS.EGRESS.001
+name: STS Endpoint Policy Does Not Restrict Destination to Organizational Resources
+description: >
+  STS interface endpoint policy does not restrict access to organizational
+  resources using aws:ResourceOrgID, aws:ResourceAccount, or specific role
+  ARNs. Without destination restriction, a compromised workload can
+  AssumeRole into any account globally — including attacker-controlled
+  accounts — pivoting to external infrastructure via credential
+  exfiltration through the organization's own endpoint.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "DSP-17"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - data-perimeter
+subtractive_category:
+  - S05
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - network.kind
+  - network.vpc_endpoint.service_name
+  - network.endpoint_policy.restricts_to_org_resources
+remediation:
+  description: >
+    STS endpoint policy does not restrict access to organizational
+    resources. Any IAM role globally is assumable through this endpoint.
+  action: >
+    Add an aws:ResourceOrgID condition to the endpoint policy to restrict
+    AssumeRole to roles owned by your organization, or restrict the
+    Resource field to specific role ARNs.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.service_name
+      op: contains
+      value: ".sts"
+    - field: properties.network.endpoint_policy.restricts_to_org_resources
+      op: eq
+      value: false
+tests:
+  - name: "STS endpoint without org restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0sts001unrestricted"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            service_name: com.amazonaws.us-east-1.sts
+          endpoint_policy:
+            restricts_to_org_resources: false
+  - name: "STS endpoint with org restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0sts002restricted"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            service_name: com.amazonaws.us-east-1.sts
+          endpoint_policy:
+            restricts_to_org_resources: true

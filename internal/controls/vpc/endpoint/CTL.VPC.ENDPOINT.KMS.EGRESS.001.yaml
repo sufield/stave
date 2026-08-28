@@ -1,0 +1,83 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.KMS.EGRESS.001
+name: KMS Endpoint Policy Does Not Restrict Destination to Organizational Resources
+description: >
+  KMS interface endpoint policy does not restrict access to organizational
+  resources using aws:ResourceOrgID, aws:ResourceAccount, or specific key
+  ARNs. Without destination restriction, a compromised workload can call
+  Encrypt or GenerateDataKey with keys in external accounts — data leaves
+  the organization's encryption boundary and becomes readable only by the
+  attacker's key.
+domain: network
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "DSP-17"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - data-perimeter
+subtractive_category:
+  - S05
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - network.kind
+  - network.vpc_endpoint.service_name
+  - network.endpoint_policy.restricts_to_org_resources
+remediation:
+  description: >
+    KMS endpoint policy does not restrict access to organizational
+    resources. Any KMS key globally is usable through this endpoint.
+  action: >
+    Add an aws:ResourceOrgID condition to the endpoint policy to restrict
+    access to keys owned by your organization, or restrict the Resource
+    field to specific key ARNs.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.service_name
+      op: contains
+      value: ".kms"
+    - field: properties.network.endpoint_policy.restricts_to_org_resources
+      op: eq
+      value: false
+tests:
+  - name: "KMS endpoint without org restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0kms001unrestricted"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            service_name: com.amazonaws.us-east-1.kms
+          endpoint_policy:
+            restricts_to_org_resources: false
+  - name: "KMS endpoint with org restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0kms002restricted"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            service_name: com.amazonaws.us-east-1.kms
+          endpoint_policy:
+            restricts_to_org_resources: true

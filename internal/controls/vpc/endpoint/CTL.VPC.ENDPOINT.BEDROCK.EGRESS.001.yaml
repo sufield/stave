@@ -1,0 +1,84 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.BEDROCK.EGRESS.001
+name: Bedrock Endpoint Policy Does Not Restrict Destination to Organizational Resources
+description: >
+  Bedrock interface endpoint policy does not restrict access to
+  organizational resources using aws:ResourceOrgID, aws:ResourceAccount,
+  or specific model ARNs. Without destination restriction, a compromised
+  workload can InvokeModel against models in external accounts —
+  exfiltrating organizational data via model context window to an
+  attacker-controlled account.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "DSP-17"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - data-perimeter
+subtractive_category:
+  - S05
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - network.kind
+  - network.vpc_endpoint.service_name
+  - network.endpoint_policy.restricts_to_org_resources
+remediation:
+  description: >
+    Bedrock endpoint policy does not restrict access to organizational
+    resources. Any Bedrock model globally is reachable through this
+    endpoint.
+  action: >
+    Add an aws:ResourceOrgID condition to the endpoint policy to restrict
+    access to models and knowledge bases owned by your organization, or
+    restrict the Resource field to specific model ARNs.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.service_name
+      op: contains
+      value: ".bedrock"
+    - field: properties.network.endpoint_policy.restricts_to_org_resources
+      op: eq
+      value: false
+tests:
+  - name: "Bedrock endpoint without org restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0br001unrestricted"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            service_name: com.amazonaws.us-east-1.bedrock-runtime
+          endpoint_policy:
+            restricts_to_org_resources: false
+  - name: "Bedrock endpoint with org restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0br002restricted"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Interface
+            service_name: com.amazonaws.us-east-1.bedrock-runtime
+          endpoint_policy:
+            restricts_to_org_resources: true

@@ -1,0 +1,132 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NAT.FLOWLOG.PRESENCE.001
+name: NAT Gateway Has No Flow Log Coverage at Any Scope
+description: >
+  NAT gateway has no flow log whose scope covers it — no VPC-level
+  log on the parent VPC, no subnet-level log on the NAT's subnet,
+  and no ENI-level log on the NAT's network interfaces. Any single
+  level satisfies coverage; the control fires only when all three
+  are absent. This verifies the telemetry mechanism exists; traffic
+  volume and content analysis are runtime concerns and stay out of
+  scope.
+domain: audit
+severity: medium
+compliance:
+  cis_aws_v3.0: "3.9"
+  nist_800_53_r5: "AU-12"
+  fedramp_moderate: "AU-12"
+  pci_dss_v4.0: "10.2.1"
+  soc2: "CC7.2"
+  ccm_v4: ["LOG-03", "LOG-08"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - logging
+  - network-isolation
+subtractive_category:
+  - S06
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_nat_gateway
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - network.kind
+  - network.nat.gateway_id
+  - network.nat.eni_flow_logs_enabled
+  - network.nat.subnet_flow_logs_enabled
+  - network.nat.vpc_flow_logs_enabled
+remediation:
+  description: >
+    NAT gateway has no flow log coverage at any scope. Outbound
+    traffic through this NAT is invisible to audit and forensics.
+  action: >
+    Enable a VPC flow log on the parent VPC (covers all ENIs
+    including the NAT), or a subnet-level log on the NAT's subnet,
+    or an ENI-level log on the NAT's network interface. Direct
+    records to a CloudWatch Logs group or S3 bucket in a
+    logging-dedicated account.
+  example: |
+    {
+      "network": {
+        "kind": "nat_gateway",
+        "nat": {
+          "vpc_flow_logs_enabled": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: nat_gateway
+    - field: properties.network.nat.eni_flow_logs_enabled
+      op: eq
+      value: false
+    - field: properties.network.nat.subnet_flow_logs_enabled
+      op: eq
+      value: false
+    - field: properties.network.nat.vpc_flow_logs_enabled
+      op: eq
+      value: false
+tests:
+  - name: "NAT with no covering flow log at any level fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "nat-0aaa-no-coverage"
+      asset_type: aws_vpc_nat_gateway
+      vendor: aws
+      properties:
+        network:
+          kind: nat_gateway
+          nat:
+            gateway_id: nat-0aaa
+            eni_flow_logs_enabled: false
+            subnet_flow_logs_enabled: false
+            vpc_flow_logs_enabled: false
+  - name: "NAT with VPC-level flow log passes"
+    verdict: PASS
+    asset:
+      asset_id: "nat-0bbb-vpc-covered"
+      asset_type: aws_vpc_nat_gateway
+      vendor: aws
+      properties:
+        network:
+          kind: nat_gateway
+          nat:
+            gateway_id: nat-0bbb
+            eni_flow_logs_enabled: false
+            subnet_flow_logs_enabled: false
+            vpc_flow_logs_enabled: true
+  - name: "NAT with subnet-level flow log passes"
+    verdict: PASS
+    asset:
+      asset_id: "nat-0ccc-subnet-covered"
+      asset_type: aws_vpc_nat_gateway
+      vendor: aws
+      properties:
+        network:
+          kind: nat_gateway
+          nat:
+            gateway_id: nat-0ccc
+            eni_flow_logs_enabled: false
+            subnet_flow_logs_enabled: true
+            vpc_flow_logs_enabled: false
+  - name: "NAT with ENI-level flow log passes"
+    verdict: PASS
+    asset:
+      asset_id: "nat-0ddd-eni-covered"
+      asset_type: aws_vpc_nat_gateway
+      vendor: aws
+      properties:
+        network:
+          kind: nat_gateway
+          nat:
+            gateway_id: nat-0ddd
+            eni_flow_logs_enabled: true
+            subnet_flow_logs_enabled: false
+            vpc_flow_logs_enabled: false

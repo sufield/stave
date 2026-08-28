@@ -1,0 +1,67 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-28T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.nat-flowlog-telemetry"
+  },
+  "assets": [
+    {
+      "id": "nat-0aaa-no-coverage",
+      "type": "aws_vpc_nat_gateway",
+      "vendor": "aws",
+
+      "properties": {
+        "network": {
+          "kind": "nat_gateway",
+          "nat": {
+            "gateway_id": "nat-0aaa",
+            "eni_id": "eni-0aaa",
+            "eni_flow_logs_enabled": false,
+            "subnet_flow_logs_enabled": false,
+            "vpc_flow_logs_enabled": false,
+            "covering_flow_log_captures_accepted": false
+          }
+        }
+      }
+    },
+    {
+      "id": "nat-0bbb-vpc-covered-all",
+      "type": "aws_vpc_nat_gateway",
+      "vendor": "aws",
+
+      "properties": {
+        "network": {
+          "kind": "nat_gateway",
+          "nat": {
+            "gateway_id": "nat-0bbb",
+            "eni_id": "eni-0bbb",
+            "eni_flow_logs_enabled": false,
+            "subnet_flow_logs_enabled": false,
+            "vpc_flow_logs_enabled": true,
+            "covering_flow_log_captures_accepted": true
+          }
+        }
+      }
+    },
+    {
+      "id": "nat-0ccc-subnet-reject-only",
+      "type": "aws_vpc_nat_gateway",
+      "vendor": "aws",
+
+      "properties": {
+        "network": {
+          "kind": "nat_gateway",
+          "nat": {
+            "gateway_id": "nat-0ccc",
+            "eni_id": "eni-0ccc",
+            "eni_flow_logs_enabled": false,
+            "subnet_flow_logs_enabled": true,
+            "vpc_flow_logs_enabled": false,
+            "covering_flow_log_captures_accepted": false
+          }
+        }
+      }
+    }
+  ]
+}
