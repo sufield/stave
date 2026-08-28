@@ -6,9 +6,11 @@ description: >
   of restricting DNS to internal resolvers or VPC DNS
   (169.254.169.253). Unrestricted DNS egress enables DNS tunneling —
   data exfiltration encoded in DNS queries to attacker-controlled
-  domains.
+  domains. The finding is informational — the exfiltration signal
+  lives in the vpc_dns_exfiltration chain which combines this
+  indicator with missing DNS Firewall.
 domain: exposure
-severity: medium
+severity: low
 compliance:
   soc2: "CC6.6"
   nist_800_53_r5: "SC-7"

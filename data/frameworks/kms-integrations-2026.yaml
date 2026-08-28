@@ -477,6 +477,8 @@ checks:
     service: VERIFIEDPERMISSIONS
     description: "Verified Permissions encryption at rest uses customer-managed KMS key"
     reference: "AWS KMS integrations 2026-08-20"
+    predicate_path:
+      - properties.authz.policy_store.encryption_type
 
   - id: KMS-NETSEC-07
     service: AUDITMANAGER
@@ -504,6 +506,7 @@ checks:
     service: AD
     description: "Directory Service encryption at rest uses customer-managed KMS key"
     reference: "AWS KMS integrations 2026-08-20"
+    tags: [schema-blocked]
 
   - id: KMS-NETSEC-12
     service: IAM

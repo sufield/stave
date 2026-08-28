@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.LAMBDA.REGION.UNAUTHORIZED.001
+name: Lambda Function Deployed In Unauthorized Region
+description: >
+  Lambda function deployed in an AWS region not on the organization's
+  approved list. Serverless functions are often deployed quickly
+  without region review — a common vector for T1535 (Unused Cloud
+  Regions). aws:RequestedRegion governs the API endpoint, not data
+  movement — replication and cross-region inference are separate
+  control families.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04", "DSP-19"]
+scope_tags:
+  - aws
+  - lambda
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lambda_function
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Lambda function in unauthorized region.
+  action: >
+    Redeploy the function in an authorized region and delete
+    the original. Update any event source mappings, triggers,
+    or API Gateway integrations.
+  example: |
+    {
+      "compute": {
+        "kind": "function",
+        "governance": {
+          "region_authorized": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: function
+    - field: properties.compute.governance.region_authorized
+      op: eq
+      value: false
+tests:
+  - name: function in unauthorized region fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lambda:ap-southeast-4:111122223333:function:exfil"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          governance:
+            region_authorized: false
+  - name: function in authorized region passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lambda:us-west-2:111122223333:function:api"
+      asset_type: aws_lambda_function
+      vendor: aws
+      properties:
+        compute:
+          kind: function
+          governance:
+            region_authorized: true

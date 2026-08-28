@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3498
-**Pack hash:** `828d32c33eba14b2947137024f0bb651ef0b6dfaca01f6b92622216870c3c210`
+**Total controls:** 3501
+**Pack hash:** `05834c5e8ab83550a52aa899014650315feb21a2cbf580c510c2f2a58e25c670`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 375 |
-| high | 1495 |
+| high | 1494 |
 | info | 19 |
-| low | 277 |
-| medium | 1332 |
+| low | 278 |
+| medium | 1335 |
 
 | Domain | Count |
 |--------|-------|
@@ -30,11 +30,11 @@ GitHub. Pick a service below.
 | detection | 162 |
 | encryption | 125 |
 | exposure | 1525 |
-| governance | 706 |
+| governance | 710 |
 | hygiene | 21 |
 | identity | 689 |
 | lifecycle | 32 |
-| network | 59 |
+| network | 58 |
 | resilience | 50 |
 | secrets | 4 |
 | storage | 8 |
@@ -88,9 +88,9 @@ GitHub. Pick a service below.
 | [DOCUMENTDB](reference/documentdb.md) | 19 |
 | [DYNAMODB](reference/dynamodb.md) | 39 |
 | [EBS](reference/ebs.md) | 3 |
-| [EC2](reference/ec2.md) | 117 |
+| [EC2](reference/ec2.md) | 118 |
 | [ECR](reference/ecr.md) | 13 |
-| [ECS](reference/ecs.md) | 60 |
+| [ECS](reference/ecs.md) | 61 |
 | [EFS](reference/efs.md) | 15 |
 | [EKS](reference/eks.md) | 120 |
 | [ELASTICACHE](reference/elasticache.md) | 15 |
@@ -120,7 +120,7 @@ GitHub. Pick a service below.
 | [KINESIS](reference/kinesis.md) | 6 |
 | [KMS](reference/kms.md) | 50 |
 | [LAKEFORMATION](reference/lakeformation.md) | 3 |
-| [LAMBDA](reference/lambda.md) | 93 |
+| [LAMBDA](reference/lambda.md) | 94 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 11 |
 | [M365](reference/m365.md) | 73 |
@@ -140,7 +140,7 @@ GitHub. Pick a service below.
 | [QLDB](reference/qldb.md) | 3 |
 | [QUICKSIGHT](reference/quicksight.md) | 2 |
 | [RAM](reference/ram.md) | 3 |
-| [RDS](reference/rds.md) | 73 |
+| [RDS](reference/rds.md) | 74 |
 | [RECYCLEBIN](reference/recyclebin.md) | 2 |
 | [REDSHIFT](reference/redshift.md) | 27 |
 | [REKOGNITION](reference/rekognition.md) | 1 |
@@ -172,7 +172,7 @@ GitHub. Pick a service below.
 | [TRANSFER](reference/transfer.md) | 4 |
 | [VERIFIEDACCESS](reference/verifiedaccess.md) | 5 |
 | [VERIFIEDPERMISSIONS](reference/verifiedpermissions.md) | 7 |
-| [VPC](reference/vpc.md) | 120 |
+| [VPC](reference/vpc.md) | 119 |
 | [VPCLATTICE](reference/vpclattice.md) | 5 |
 | [VSPHERE](reference/vsphere.md) | 35 |
 | [WAF](reference/waf.md) | 23 |

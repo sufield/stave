@@ -202,3 +202,29 @@ universals:
       aws_securitylake_data_lake:
         in_required_services: true
         detection_enabled: .security.enabled
+
+  U34:
+    sort: Resource
+    predicates: [is_regional, region_authorized]
+    groundings:
+      aws_ec2_instance:
+        is_regional: true
+        region_authorized: .compute.governance.region_authorized
+      aws_rds_instance:
+        is_regional: true
+        region_authorized: .database.governance.region_authorized
+      aws_lambda_function:
+        is_regional: true
+        region_authorized: .compute.governance.region_authorized
+      aws_ecs_service:
+        is_regional: true
+        region_authorized: .container.governance.region_authorized
+      aws_opensearch_domain:
+        is_regional: true
+        region_authorized: .search_service.governance.region_authorized
+      aws_stepfunctions_state_machine:
+        is_regional: true
+        region_authorized: .compute.compliance.region_authorized
+      aws_s3_bucket:
+        is_regional: true
+        region_authorized: .storage.region_approved

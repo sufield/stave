@@ -1,0 +1,80 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.sg-egress-proof"
+  },
+  "assets": [
+    {
+      "id": "sg-allopen-egress",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": true,
+            "dns_to_internet": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-scoped-egress",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": false,
+            "dns_to_internet": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-default-aws",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": true,
+            "dns_to_internet": false
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-dns-open-53",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": false,
+            "dns_to_internet": true
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-dns-resolver-ref",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "egress": {
+            "unrestricted_all_ports": false,
+            "dns_to_internet": false
+          }
+        }
+      }
+    }
+  ]
+}

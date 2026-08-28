@@ -1,0 +1,106 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-20T10:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "arn:aws:ec2:us-east-2:111122223333:instance/i-prefix",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "governance": {
+            "region_authorized": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:rds:us-east-1:111122223333:db:prod-db",
+      "type": "aws_rds_instance",
+      "vendor": "aws",
+      "properties": {
+        "database": {
+          "kind": "instance",
+          "governance": {
+            "region_authorized": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:lambda:af-south-1:111122223333:function:stale",
+      "type": "aws_lambda_function",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "function",
+          "governance": {
+            "region_authorized": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:ecs:us-east-1:111122223333:service/prod/web",
+      "type": "aws_ecs_service",
+      "vendor": "aws",
+      "properties": {
+        "container": {
+          "kind": "service",
+          "governance": {
+            "region_authorized": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/admin",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role"
+        }
+      }
+    },
+    {
+      "id": "arn:aws:cloudfront::111122223333:distribution/E1234",
+      "type": "aws_cloudfront_distribution",
+      "vendor": "aws",
+      "properties": {
+        "cdn": {
+          "kind": "distribution"
+        }
+      }
+    },
+    {
+      "id": "arn:aws:organizations::111122223333:organization/o-abc123",
+      "type": "aws_organization",
+      "vendor": "aws",
+      "properties": {
+        "organization": {
+          "kind": "scp_policy_set",
+          "region_restriction": {
+            "has_scp": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:guardduty:us-east-1:111122223333:detector/1",
+      "type": "aws_guardduty_detector",
+      "vendor": "aws",
+      "properties": {
+        "threat_detection": {
+          "kind": "detector",
+          "enabled": true,
+          "region_coverage": {
+            "all_regions_enabled": false
+          }
+        }
+      }
+    }
+  ]
+}

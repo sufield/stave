@@ -1373,6 +1373,21 @@ EC2 instances should not have public IP addresses unless explicitly required. Pu
 
 ---
 
+### CTL.EC2.REGION.UNAUTHORIZED.001
+
+**EC2 Instance Deployed In Unauthorized Region**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+EC2 instance deployed in an AWS region not on the organization's approved list. aws:RequestedRegion governs the API endpoint, not data movement — replication and cross-region inference are separate control families. The management account is exempt from SCPs but this control still fires on its resources (it checks placement, not prevention).
+
+**Remediation:** Create an AMI from the instance, copy the AMI to an authorized region, launch a replacement instance, then terminate the original.
+
+---
+
 ### CTL.EC2.SECUREBOOT.001
 
 **UEFI-Capable EC2 Instances Must Enable Secure Boot**

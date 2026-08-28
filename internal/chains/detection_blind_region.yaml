@@ -1,0 +1,24 @@
+id: detection_blind_region
+description: >
+  Region has no SCP restriction AND no active detection coverage.
+  An attacker can create resources in this region and operate
+  without any monitoring or alerting. Degraded: fires on two legs
+  (no region-deny + no detector). Strengthens to three legs when
+  opt-in region status (I2) is collected. Cross-asset-type chain:
+  SCP fires on aws_organization, GuardDuty on aws_guardduty_detector.
+  Surfaces in near_miss_chains until a shared scope_field (account_id)
+  is added to both asset types.
+controls:
+  - CTL.ORG.REGION.SCP.001
+  - CTL.GUARDDUTY.REGION.COVERAGE.001
+escalation_threshold: 2
+compound_severity: high
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - detection_evasion
+# Cross-asset grouping: no shared property path for scope_field today.
+# Chain fires as near_miss until both asset types carry account_id.
+# Future third leg: CTL.ACCOUNT.REGION.OPTIN.UNUSED.001
+# Blocked on I2 (SCHEMA-BLOCKED: account:ListRegions not in contract).
+implicit_dependencies: []

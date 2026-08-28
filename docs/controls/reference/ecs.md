@@ -473,6 +473,21 @@ ECS task definition does not set HTTP_PROXY/HTTPS_PROXY environment variables â€
 
 ---
 
+### CTL.ECS.REGION.UNAUTHORIZED.001
+
+**ECS Service Deployed In Unauthorized Region**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+ECS service deployed in an AWS region not on the organization's approved list. Container workloads in unauthorized regions bypass organizational monitoring and violate data residency requirements. aws:RequestedRegion governs the API endpoint, not data movement â€” replication and cross-region inference are separate control families.
+
+**Remediation:** Redeploy the service in an authorized region. Update load balancer targets, service discovery entries, and CI/CD pipelines.
+
+---
+
 ### CTL.ECS.ROOT.001
 
 **ECS Containers Must Not Run as Root User**

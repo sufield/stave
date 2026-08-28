@@ -857,6 +857,21 @@ RDS instances must not have public accessibility enabled. A publicly accessible 
 
 ---
 
+### CTL.RDS.REGION.UNAUTHORIZED.001
+
+**RDS Instance Deployed In Unauthorized Region**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** hipaa: 164.310(d); nist_800_53_r5: AC-3; soc2: CC6.1;
+
+RDS instance deployed in an AWS region not on the organization's approved list. Database instances carry persistent data subject to residency requirements. aws:RequestedRegion governs the API endpoint, not data movement — replication and cross-region read replicas are separate control families.
+
+**Remediation:** Create a snapshot, copy it to an authorized region, restore from the snapshot, then delete the original instance and snapshot.
+
+---
+
 ### CTL.RDS.REPLICA.DELETEPROT.001
 
 **RDS Read Replica Must Have Deletion Protection Enabled**

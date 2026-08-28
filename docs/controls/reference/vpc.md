@@ -1373,14 +1373,14 @@ Security groups on private resources must not allow inbound traffic on applicati
 
 ### CTL.VPC.SG.EGRESS.001
 
-**Security Groups Must Not Allow Unrestricted Egress**
+**Security Group Allows Unrestricted Egress**
 
-- **Severity:** high
+- **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** exposure
 - **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7; soc2: CC6.6;
 
-Security groups must not allow all outbound traffic to 0.0.0.0/0 on all ports. Unrestricted egress enables data exfiltration, command-and-control communication, and lateral movement to external attacker infrastructure. While most organizations currently allow all egress by default, restricting outbound traffic to required ports and destinations is a critical APT hardening measure.
+Security group allows all outbound traffic to 0.0.0.0/0 on all protocols and ports. This is the default configuration for every AWS security group. The finding is informational — the exfiltration signal lives in the compound chains (vpc_exfiltration_path, vpc_dns_exfiltration, data_exfiltration_path, vpc_private_subnet_leakage) which combine this indicator with missing detection controls.
 
 **Remediation:** Replace the default allow-all egress rule with specific outbound rules for required ports (443 for HTTPS, 53 for DNS, etc.) and destinations. Use VPC endpoints for AWS service traffic to avoid internet egress entirely.
 
@@ -1390,29 +1390,14 @@ Security groups must not allow all outbound traffic to 0.0.0.0/0 on all ports. U
 
 **Security Group Allows DNS Egress to Internet**
 
-- **Severity:** medium
+- **Severity:** low
 - **Type:** unsafe_state
 - **Domain:** exposure
 - **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
 
-Security group allows UDP/TCP port 53 outbound to 0.0.0.0/0 instead of restricting DNS to internal resolvers or VPC DNS (169.254.169.253). Unrestricted DNS egress enables DNS tunneling — data exfiltration encoded in DNS queries to attacker-controlled domains.
+Security group allows UDP/TCP port 53 outbound to 0.0.0.0/0 instead of restricting DNS to internal resolvers or VPC DNS (169.254.169.253). Unrestricted DNS egress enables DNS tunneling — data exfiltration encoded in DNS queries to attacker-controlled domains. The finding is informational — the exfiltration signal lives in the vpc_dns_exfiltration chain which combines this indicator with missing DNS Firewall.
 
 **Remediation:** Restrict DNS egress to the VPC DNS resolver (169.254.169.253) or Route53 Resolver endpoints. Remove rules allowing port 53 to 0.0.0.0/0.
-
----
-
-### CTL.VPC.SG.EGRESS.EXFIL.001
-
-**Security Groups Must Restrict Egress on Data Exfiltration Ports**
-
-- **Severity:** low
-- **Type:** unsafe_state
-- **Domain:** network
-- **Compliance:** nist_800_53_r5: SC-7; soc2: CC6.6;
-
-Security groups must not allow unrestricted outbound traffic to 0.0.0.0/0 on ports commonly used for data exfiltration (443/HTTPS, 53/DNS, 80/HTTP) even when other ports are blocked. Exfiltration traffic hides in standard web and DNS protocols.
-
-**Remediation:** Restrict egress to specific destination CIDRs where possible. For DNS (53), route through a DNS firewall or VPC resolver endpoint. For HTTPS (443), consider VPC endpoint routes instead of internet egress. Note: blocking 443/53 outbound breaks most applications — this control flags for awareness, not hard block.
 
 ---
 

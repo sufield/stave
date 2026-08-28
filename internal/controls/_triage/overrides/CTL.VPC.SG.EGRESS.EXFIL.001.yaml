@@ -1,7 +1,0 @@
-control: CTL.VPC.SG.EGRESS.EXFIL.001
-defect: >
-  The security group allows outbound traffic to 0.0.0.0/0 on data exfiltration ports (443/HTTPS, 53/DNS, 80/HTTP) even though other egress ports are restricted.
-infection: >
-  An attacker in a compromised workload can exfiltrate data via HTTPS or DNS tunneling. The security group blocks non-standard outbound ports but leaves standard web and DNS ports open — which is where exfiltration traffic hides.
-failure: >
-  Data exfiltration via allowed egress channels. The attacker uses standard protocols to tunnel data out through the security group's permitted ports.

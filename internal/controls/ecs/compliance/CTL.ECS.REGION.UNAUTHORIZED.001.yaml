@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.ECS.REGION.UNAUTHORIZED.001
+name: ECS Service Deployed In Unauthorized Region
+description: >
+  ECS service deployed in an AWS region not on the organization's
+  approved list. Container workloads in unauthorized regions bypass
+  organizational monitoring and violate data residency requirements.
+  aws:RequestedRegion governs the API endpoint, not data movement —
+  replication and cross-region inference are separate control
+  families.
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04", "DSP-19"]
+scope_tags:
+  - aws
+  - ecs
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ecs_service
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    ECS service in unauthorized region.
+  action: >
+    Redeploy the service in an authorized region. Update
+    load balancer targets, service discovery entries, and
+    CI/CD pipelines.
+  example: |
+    {
+      "container": {
+        "kind": "service",
+        "governance": {
+          "region_authorized": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.container.kind
+      op: eq
+      value: service
+    - field: properties.container.governance.region_authorized
+      op: eq
+      value: false
+tests:
+  - name: service in unauthorized region fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ecs:eu-south-2:111122223333:service/prod/api"
+      asset_type: aws_ecs_service
+      vendor: aws
+      properties:
+        container:
+          kind: service
+          governance:
+            region_authorized: false
+  - name: service in authorized region passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ecs:us-east-1:111122223333:service/prod/api"
+      asset_type: aws_ecs_service
+      vendor: aws
+      properties:
+        container:
+          kind: service
+          governance:
+            region_authorized: true

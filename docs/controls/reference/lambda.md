@@ -1128,6 +1128,21 @@ Lambda function in a VPC with Network Firewall proxy mode does not set HTTP_PROX
 
 ---
 
+### CTL.LAMBDA.REGION.UNAUTHORIZED.001
+
+**Lambda Function Deployed In Unauthorized Region**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** governance
+- **Compliance:** nist_800_53_r5: AC-3; soc2: CC6.1;
+
+Lambda function deployed in an AWS region not on the organization's approved list. Serverless functions are often deployed quickly without region review — a common vector for T1535 (Unused Cloud Regions). aws:RequestedRegion governs the API endpoint, not data movement — replication and cross-region inference are separate control families.
+
+**Remediation:** Redeploy the function in an authorized region and delete the original. Update any event source mappings, triggers, or API Gateway integrations.
+
+---
+
 ### CTL.LAMBDA.ROLE.LEASTPRIV.001
 
 **Lambda Execution Role Must Follow Least Privilege**

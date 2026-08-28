@@ -1,0 +1,76 @@
+dsl_version: ctrl.v1
+id: CTL.EC2.REGION.UNAUTHORIZED.001
+name: EC2 Instance Deployed In Unauthorized Region
+description: >
+  EC2 instance deployed in an AWS region not on the organization's
+  approved list. aws:RequestedRegion governs the API endpoint, not
+  data movement — replication and cross-region inference are separate
+  control families. The management account is exempt from SCPs but
+  this control still fires on its resources (it checks placement,
+  not prevention).
+domain: governance
+severity: medium
+compliance:
+  nist_800_53_r5: "AC-3"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-04", "DSP-19"]
+scope_tags:
+  - aws
+  - ec2
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S07
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_ec2_instance
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    EC2 instance in unauthorized region.
+  action: >
+    Create an AMI from the instance, copy the AMI to an
+    authorized region, launch a replacement instance, then
+    terminate the original.
+  example: |
+    {
+      "compute": {
+        "kind": "instance",
+        "governance": {
+          "region_authorized": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.compute.kind
+      op: eq
+      value: instance
+    - field: properties.compute.governance.region_authorized
+      op: eq
+      value: false
+tests:
+  - name: instance in unauthorized region fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ec2:af-south-1:111122223333:instance/i-0bad"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          governance:
+            region_authorized: false
+  - name: instance in authorized region passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ec2:us-east-1:111122223333:instance/i-0good"
+      asset_type: aws_ec2_instance
+      vendor: aws
+      properties:
+        compute:
+          kind: instance
+          governance:
+            region_authorized: true
