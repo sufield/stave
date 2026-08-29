@@ -739,13 +739,7 @@ func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 		// Elevated indicators: PassRole, broad service wildcards,
 		// financial commitment actions, or any registry PrivEsc action
 		// on a broad resource.
-		if action == "iam:passrole" || action == "iam:createrole" ||
-			action == "ec2:*" || action == "s3:*" ||
-			action == "lambda:*" || action == "kms:*" ||
-			action == "ec2:purchasereservedinstancesoffering" ||
-			action == "savingsplans:createsavingsplan" ||
-			action == "ec2:modifyreservedinstances" ||
-			action == "aws-marketplace:subscribe" {
+		if isElevatedAction(action) {
 			hasElevated = true
 		}
 		if !hasElevated && sensitiveActions.HasCredentialExposure(action) {
@@ -792,6 +786,24 @@ func isIAMAdminAction(action string) bool {
 		return true
 	}
 	return sensitiveActions.HasPrivEsc(action)
+}
+
+// isElevatedAction reports whether an action grants elevated privilege
+// when applied to a broad resource.
+func isElevatedAction(action string) bool {
+	switch action {
+	case "iam:passrole", "iam:createrole",
+		"ec2:*", "s3:*", "lambda:*", "kms:*",
+		"ec2:purchasereservedinstancesoffering",
+		"savingsplans:createsavingsplan",
+		"ec2:modifyreservedinstances",
+		"aws-marketplace:subscribe",
+		"aws-marketplace:acceptagreementrequest",
+		"aws-marketplace:acceptagreementapprovalrequest",
+		"aws-marketplace:createagreementrequest":
+		return true
+	}
+	return false
 }
 
 // isEffectivelyBroadResource reports whether resource is wildcard-

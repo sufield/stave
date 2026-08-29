@@ -1,0 +1,140 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.POLICY.MARKETPLACE.NOCONDITION.001
+name: Marketplace Subscription Actions Granted Without ProductId Condition
+description: >
+  IAM principal has effective permissions to subscribe to AWS
+  Marketplace products (Subscribe, AcceptAgreementRequest, or
+  related buyer-side actions) but the Allow statement has no
+  Condition scoping the grant to specific ProductIds. Without a
+  ProductId condition, the principal can subscribe to any
+  Marketplace listing — an unconstrained financial commitment
+  surface. The r/aws incident ($472k from a single agreement
+  acceptance) demonstrates the harm class: a compromised key
+  with unconditioned subscription permissions enables
+  irrecoverable spend via contract-with-consumption agreements.
+
+  The ProductId condition (aws-marketplace:ProductId) restricts
+  which listings a principal can subscribe to. This is the
+  identity-level equivalent of an SCP allow-list (P6), enforced
+  in the principal's own policy rather than at the organization
+  boundary.
+domain: identity
+severity: high
+scope: atomic
+corpus_reference: "aws:marketplace-condition-keys"
+compliance:
+  nist_800_53_r5: "AC-6"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - least-privilege
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_user
+  - aws_iam_role
+params:
+  base_impact: 7
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.marketplace.can_subscribe
+  - identity.marketplace.subscribe_conditioned
+remediation:
+  description: >
+    IAM principal can subscribe to any Marketplace product — no
+    ProductId condition restricts the subscription surface.
+  action: >
+    Add a Condition to the Allow statement scoping
+    aws-marketplace:Subscribe and agreement actions to specific
+    ProductIds. Use StringEquals on aws-marketplace:ProductId with
+    the approved product list. For broader policies (PowerUserAccess,
+    AdministratorAccess), add an SCP deny at the organization level
+    with a ProductId exception (CTL.ORG.SCP.MARKETPLACE.ALLOWLIST.001).
+  example: |
+    {
+      "identity": {
+        "marketplace": {
+          "can_subscribe": true,
+          "subscribe_conditioned": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.marketplace.can_subscribe
+      op: eq
+      value: true
+    - field: properties.identity.marketplace.subscribe_conditioned
+      op: ne
+      value: true
+defect: >
+  IAM principal has unconditioned Marketplace subscription
+  permissions — any listing is subscribable without approval.
+infection: >
+  A compromised credential with unconditioned subscription
+  permissions can accept any Marketplace agreement. Contract-
+  with-consumption agreements enable seller-side metering
+  that the buyer cannot stop or detect.
+failure: >
+  Attacker uses a compromised access key to call
+  AcceptAgreementRequest on a contract-with-consumption listing.
+  The seller meters arbitrary consumption via BatchMeterUsage.
+  The buyer discovers charges on the next billing cycle — by
+  then, the spend is irrecoverable.
+tests:
+  - name: "unconditioned subscribe fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/deploy-bot"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          marketplace:
+            can_subscribe: true
+            subscribe_conditioned: false
+  - name: "conditioned subscribe passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/procurement"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          marketplace:
+            can_subscribe: true
+            subscribe_conditioned: true
+  - name: "no subscribe capability passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:user/readonly"
+      asset_type: aws_iam_user
+      vendor: aws
+      properties:
+        identity:
+          kind: user
+          marketplace:
+            can_subscribe: false
+  - name: "role with unconditioned subscribe fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/ci-deploy"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          marketplace:
+            can_subscribe: true
+            subscribe_conditioned: false

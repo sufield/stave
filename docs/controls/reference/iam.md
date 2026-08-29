@@ -2843,6 +2843,22 @@ IAM groups must not have inline policies attached. Inline policies on groups are
 
 ---
 
+### CTL.IAM.POLICY.MARKETPLACE.NOCONDITION.001
+
+**Marketplace Subscription Actions Granted Without ProductId Condition**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM principal has effective permissions to subscribe to AWS Marketplace products (Subscribe, AcceptAgreementRequest, or related buyer-side actions) but the Allow statement has no Condition scoping the grant to specific ProductIds. Without a ProductId condition, the principal can subscribe to any Marketplace listing — an unconstrained financial commitment surface. The r/aws incident ($472k from a single agreement acceptance) demonstrates the harm class: a compromised key with unconditioned subscription permissions enables irrecoverable spend via contract-with-consumption agreements.
+The ProductId condition (aws-marketplace:ProductId) restricts which listings a principal can subscribe to. This is the identity-level equivalent of an SCP allow-list (P6), enforced in the principal's own policy rather than at the organization boundary.
+
+**Remediation:** Add a Condition to the Allow statement scoping aws-marketplace:Subscribe and agreement actions to specific ProductIds. Use StringEquals on aws-marketplace:ProductId with the approved product list. For broader policies (PowerUserAccess, AdministratorAccess), add an SCP deny at the organization level with a ProductId exception (CTL.ORG.SCP.MARKETPLACE.ALLOWLIST.001).
+
+---
+
 ### CTL.IAM.POLICY.MFA.001
 
 **Destructive Actions Must Require MFA**

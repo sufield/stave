@@ -740,6 +740,22 @@ Organization SCPs do not deny aws-marketplace:Subscribe and aws-marketplace:Acce
 
 ---
 
+### CTL.ORG.SCP.MARKETPLACE.ALLOWLIST.001
+
+**SCP Does Not Enforce Marketplace Product Allow-List**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: CM-7; soc2: CC6.1;
+
+Organization SCPs deny buyer-side Marketplace subscription actions (CTL.ORG.SCP.MARKETPLACE.001) but do not scope the deny with a ProductId condition. Without a ProductId allow-list, the SCP is all-or-nothing: either all subscriptions are blocked, or all are allowed for the excepted role. A ProductId-conditioned SCP restricts subscriptions to a curated set of approved products — defense in depth that limits the blast radius even if the procurement role's credentials are compromised.
+This is the stronger form of the deny-list (P5): instead of "deny all marketplace actions except for this role", it says "deny marketplace actions for unapproved products for all roles". Operationally heavier (requires maintaining the approved product list) but significantly reduces the financial blast radius.
+
+**Remediation:** Add an SCP that denies aws-marketplace:Subscribe and agreement actions unless the aws-marketplace:ProductId condition matches a curated list of approved products. This restricts which Marketplace listings member accounts can subscribe to, even for excepted procurement roles.
+
+---
+
 ### CTL.ORG.SCP.MWAA.DENY.001
 
 **SCP Does Not Deny MWAA Usage**

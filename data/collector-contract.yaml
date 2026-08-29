@@ -4911,3 +4911,57 @@ contracts:
     consumers:
       - CTL.S3.ACCESS.002
 
+  # ─── Marketplace Denial-of-Wallet (Aug 2026) ────────────────
+  # Applies to: aws_iam_user, aws_iam_role (P2/P3), aws_organization (P6)
+
+  - field: identity.marketplace.can_subscribe
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the principal's effective permissions include any
+      buyer-side Marketplace subscription action (Subscribe,
+      AcceptAgreementRequest, AcceptAgreementApprovalRequest,
+      CreateAgreementRequest). Derived from the IAM resolver's
+      effective permission set — requires NotAction expansion
+      (PowerUserAccess grants all marketplace actions via
+      NotAction: ["iam:*", "organizations:*"]).
+    botocore_source: >
+      iam:GetAccountAuthorizationDetails (policies),
+      iam:ListAttachedUserPolicies, iam:ListAttachedRolePolicies,
+      iam:GetPolicyVersion (inline + managed policy documents)
+    consumers:
+      - CTL.IAM.PRINCIPAL.MARKETPLACE.SUBSCRIBE.001
+      - CTL.IAM.POLICY.MARKETPLACE.NOCONDITION.001
+
+  - field: identity.marketplace.subscribe_conditioned
+    type: boolean
+    status: planned
+    postcondition: >
+      True if every Allow statement granting buyer-side Marketplace
+      subscription actions has a Condition scoping the grant to
+      specific ProductIds (StringEquals or StringLike on
+      aws-marketplace:ProductId). False if any subscription grant
+      is unconditioned or uses a non-ProductId condition.
+      Only meaningful when identity.marketplace.can_subscribe is
+      true.
+    botocore_source: >
+      iam:GetPolicyVersion (policy document Condition blocks)
+    consumers:
+      - CTL.IAM.POLICY.MARKETPLACE.NOCONDITION.001
+
+  - field: identity.scp.marketplace_allowlist_enforced
+    type: boolean
+    status: planned
+    postcondition: >
+      True if an SCP in the organization has a Deny statement for
+      buyer-side Marketplace subscription actions with a Condition
+      exception using StringEquals on aws-marketplace:ProductId
+      (positive allow-list pattern). False if no SCP uses the
+      ProductId condition key, or if the deny is unconditional
+      (deny-all pattern — covered by CTL.ORG.SCP.MARKETPLACE.001).
+    botocore_source: >
+      organizations:ListPolicies (type=SERVICE_CONTROL_POLICY),
+      organizations:DescribePolicy (policy document)
+    consumers:
+      - CTL.ORG.SCP.MARKETPLACE.ALLOWLIST.001
+

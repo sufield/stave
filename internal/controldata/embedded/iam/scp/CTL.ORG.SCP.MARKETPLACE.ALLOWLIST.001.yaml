@@ -1,0 +1,129 @@
+dsl_version: ctrl.v1
+id: CTL.ORG.SCP.MARKETPLACE.ALLOWLIST.001
+name: SCP Does Not Enforce Marketplace Product Allow-List
+description: >
+  Organization SCPs deny buyer-side Marketplace subscription
+  actions (CTL.ORG.SCP.MARKETPLACE.001) but do not scope the
+  deny with a ProductId condition. Without a ProductId
+  allow-list, the SCP is all-or-nothing: either all
+  subscriptions are blocked, or all are allowed for the
+  excepted role. A ProductId-conditioned SCP restricts
+  subscriptions to a curated set of approved products —
+  defense in depth that limits the blast radius even if the
+  procurement role's credentials are compromised.
+
+  This is the stronger form of the deny-list (P5): instead of
+  "deny all marketplace actions except for this role", it says
+  "deny marketplace actions for unapproved products for all
+  roles". Operationally heavier (requires maintaining the
+  approved product list) but significantly reduces the
+  financial blast radius.
+domain: identity
+severity: medium
+scope: atomic
+corpus_reference: "aws:marketplace-condition-keys"
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+taxonomy:
+  - account-governance
+  - least-privilege
+subtractive_category:
+  - S02
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_organization
+params:
+  base_impact: 5
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.0
+observation_fields:
+  - identity.kind
+  - identity.scp.marketplace_allowlist_enforced
+remediation:
+  description: >
+    Organization SCPs do not enforce a Marketplace product
+    allow-list via ProductId condition scoping.
+  action: >
+    Add an SCP that denies aws-marketplace:Subscribe and
+    agreement actions unless the aws-marketplace:ProductId
+    condition matches a curated list of approved products.
+    This restricts which Marketplace listings member accounts
+    can subscribe to, even for excepted procurement roles.
+  example: |
+    {
+      "identity": {
+        "kind": "organization",
+        "scp": {
+          "marketplace_allowlist_enforced": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.kind
+      op: eq
+      value: organization
+    - field: properties.identity.scp.marketplace_allowlist_enforced
+      op: ne
+      value: true
+defect: >
+  Organization SCPs deny Marketplace subscriptions but do not
+  scope the deny with a ProductId allow-list.
+infection: >
+  Member accounts can subscribe to any Marketplace product if
+  they have the excepted role. The deny-all pattern
+  (CTL.ORG.SCP.MARKETPLACE.001) blocks all subscriptions but
+  provides no path for approved procurement.
+failure: >
+  A compromised procurement role (excepted from the SCP deny)
+  can subscribe to any Marketplace listing. Without a ProductId
+  allow-list, the financial blast radius is unbounded — the
+  attacker can accept any contract-with-consumption agreement.
+tests:
+  - name: "org without allow-list fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:organization/o-abc123"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_marketplace_subscribe: true
+            marketplace_allowlist_enforced: false
+  - name: "org with allow-list passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:organization/o-def456"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_marketplace_subscribe: true
+            marketplace_allowlist_enforced: true
+  - name: "org without any SCP deny fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::777788889999:organization/o-ghi789"
+      asset_type: aws_organization
+      vendor: aws
+      properties:
+        identity:
+          kind: organization
+          scp:
+            denies_marketplace_subscribe: false
+            marketplace_allowlist_enforced: false
