@@ -1,0 +1,26 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "vendor": "aws",
+      "properties": {
+        "marketplace": {
+          "private_marketplace": {
+            "enabled": true,
+            "product_count": 12
+          }
+        },
+        "account_id": "111122223333"
+      },
+      "id": "arn:aws:organizations::111122223333:marketplace/private",
+      "type": "aws_marketplace_private_marketplace"
+    }
+  ],
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

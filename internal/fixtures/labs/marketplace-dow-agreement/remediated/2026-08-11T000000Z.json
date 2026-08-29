@@ -1,0 +1,28 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-11T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "vendor": "aws",
+      "properties": {
+        "marketplace": {
+          "agreement": {
+            "status": "CANCELLED",
+            "agreement_type": "PurchaseAgreement",
+            "proposer_account_id": "999988887777",
+            "acceptance_time": "2026-07-15T10:00:00Z"
+          }
+        },
+        "account_id": "111122223333"
+      },
+      "id": "arn:aws:marketplace::111122223333:agreement/agr-ext-001",
+      "type": "aws_marketplace_agreement"
+    }
+  ],
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}

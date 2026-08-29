@@ -3148,6 +3148,21 @@ IAM user has credentials unused for 90+ days AND has administrative permissions.
 
 ---
 
+### CTL.IAM.PRINCIPAL.MARKETPLACE.SUBSCRIBE.001
+
+**Principal Has Effective Marketplace Subscription Permissions**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; soc2: CC6.1;
+
+IAM principal's effective permissions include buyer-side Marketplace subscription actions (Subscribe, AcceptAgreementRequest, AcceptAgreementApprovalRequest, CreateAgreementRequest). A principal with these permissions can create irrecoverable financial commitments via contract-with-consumption agreements — the attack path from the r/aws $472k incident. Ship-now-not-evaluable: this control evaluates when a collector projects the identity.marketplace.can_subscribe boolean from the IAM resolver's effective permission set.
+
+**Remediation:** Remove or scope the Marketplace subscription permissions. For managed policies (AdministratorAccess, PowerUserAccess), add an SCP deny (CTL.ORG.SCP.MARKETPLACE.001) or a ProductId condition (CTL.IAM.POLICY.MARKETPLACE.NOCONDITION.001). For explicit grants, replace with least-privilege policies.
+
+---
+
 ### CTL.IAM.RCP.DENY.EXTERNAL.001
 
 **RCP Must Restrict External Principal Access to Resources**

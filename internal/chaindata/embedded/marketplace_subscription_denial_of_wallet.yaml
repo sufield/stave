@@ -1,0 +1,22 @@
+id: marketplace_subscription_denial_of_wallet
+description: >
+  Account has stale IAM credentials AND those credentials
+  carry Marketplace subscription permissions AND no SCP
+  restricts Marketplace subscriptions. A compromised stale
+  credential can accept contract-with-consumption agreements
+  via AcceptAgreementRequest; seller-side BatchMeterUsage
+  generates irrecoverable charges. The r/aws $472k incident
+  followed this exact path. Second adopter of scope: account
+  (after detection_blind_region).
+controls:
+  - CTL.IAM.CRED.ROTATION.001
+  - CTL.IAM.PRINCIPAL.MARKETPLACE.SUBSCRIBE.001
+  - CTL.ORG.SCP.MARKETPLACE.001
+escalation_threshold: 3
+compound_severity: critical
+scope: account
+preconditions:
+  - iam_credential_theft
+postconditions:
+  - financial_loss
+implicit_dependencies: []

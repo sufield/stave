@@ -1,0 +1,120 @@
+dsl_version: ctrl.v1
+id: CTL.MARKETPLACE.AGREEMENT.UNAPPROVED.001
+name: Active Marketplace Agreement With External Seller
+description: >
+  An active Marketplace agreement exists with a third-party
+  seller (proposer account differs from the organization's
+  accounts). Active agreements with external sellers represent
+  ongoing financial commitments and potential data-sharing
+  arrangements. The r/aws incident demonstrated that a single
+  agreement acceptance can generate irrecoverable charges via
+  seller-side consumption metering.
+
+  First-party AWS agreements (no proposer account) are SILENT
+  for this control — they represent AWS services, not
+  third-party risk.
+domain: exposure
+severity: high
+scope: atomic
+corpus_reference: "aws:marketplace-agreements"
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+taxonomy:
+  - account-governance
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_marketplace_agreement
+params:
+  base_impact: 7
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - marketplace.agreement.status
+  - marketplace.agreement.proposer_account_id
+remediation:
+  description: >
+    An active Marketplace agreement exists with a third-party
+    seller.
+  action: >
+    Review the agreement via aws marketplace-agreement
+    search-agreements. If the agreement is unauthorized,
+    cancel it immediately. Enable Private Marketplace
+    (CTL.MARKETPLACE.PRIVATE.ENABLED.001) and SCP deny
+    (CTL.ORG.SCP.MARKETPLACE.001) to prevent future
+    unauthorized agreements.
+  example: |
+    {
+      "marketplace": {
+        "agreement": {
+          "status": "CANCELLED",
+          "proposer_account_id": null
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.marketplace.agreement.status
+      op: eq
+      value: ACTIVE
+    - field: properties.marketplace.agreement.proposer_account_id
+      op: present
+defect: >
+  Active agreement with a third-party Marketplace seller.
+infection: >
+  The seller can meter consumption via BatchMeterUsage
+  against this agreement. The buyer has no visibility into
+  or control over the metering.
+failure: >
+  Post-compromise indicator: an attacker-accepted agreement
+  generates ongoing charges. Or operational risk: an
+  unreviewed legitimate agreement accumulates unexpected costs.
+tests:
+  - name: "active agreement with external seller fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:marketplace::111122223333:agreement/agr-ext-001"
+      asset_type: aws_marketplace_agreement
+      vendor: aws
+      properties:
+        marketplace:
+          agreement:
+            status: ACTIVE
+            agreement_type: PurchaseAgreement
+            proposer_account_id: "999988887777"
+            acceptance_time: "2026-08-15T10:00:00Z"
+        account_id: "111122223333"
+  - name: "active first-party agreement passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:marketplace::111122223333:agreement/agr-aws-001"
+      asset_type: aws_marketplace_agreement
+      vendor: aws
+      properties:
+        marketplace:
+          agreement:
+            status: ACTIVE
+            agreement_type: PurchaseAgreement
+        account_id: "111122223333"
+  - name: "cancelled agreement passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:marketplace::111122223333:agreement/agr-cancelled"
+      asset_type: aws_marketplace_agreement
+      vendor: aws
+      properties:
+        marketplace:
+          agreement:
+            status: CANCELLED
+            agreement_type: PurchaseAgreement
+            proposer_account_id: "999988887777"
+        account_id: "111122223333"

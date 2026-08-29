@@ -1,0 +1,109 @@
+dsl_version: ctrl.v1
+id: CTL.ACCOUNT.ANOMALY.MONITOR.001
+name: No Cost Anomaly Detection Monitor
+description: >
+  Account has no Cost Anomaly Detection monitor configured.
+  Anomaly detection uses ML-based analysis to identify
+  unusual spending patterns — the fastest automated detection
+  path for denial-of-wallet attacks. Without it, the account
+  relies on manual billing review or budget alerts (which
+  fire only at fixed thresholds, not on anomalous patterns).
+domain: exposure
+severity: medium
+scope: atomic
+corpus_reference: "aws:cost-anomaly-detection"
+compliance:
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+  ccm_v4: ["BCR-01"]
+scope_tags:
+  - aws
+taxonomy:
+  - account-governance
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account_anomaly_detection_coverage
+params:
+  base_impact: 5
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+observation_fields:
+  - cost.anomaly.has_monitor
+  - cost.anomaly.has_subscription
+remediation:
+  description: >
+    Account has no Cost Anomaly Detection monitor.
+  action: >
+    Create a Cost Anomaly Detection monitor via the Cost
+    Explorer API or console. Configure at least one
+    subscription (SNS topic, email, or Lambda) to receive
+    anomaly alerts.
+  example: |
+    {
+      "cost": {
+        "anomaly": {
+          "has_monitor": true,
+          "has_subscription": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cost.anomaly.has_monitor
+      op: ne
+      value: true
+defect: >
+  No cost anomaly detection monitor — anomalous spending
+  patterns go undetected.
+infection: >
+  Spending anomalies (attacker-generated or operational)
+  are not flagged until manual review or a budget threshold
+  is breached.
+failure: >
+  An attacker generates charges through an unusual pattern
+  (Marketplace agreement acceptance, Reserved Instance
+  purchase) that a budget threshold misses but anomaly
+  detection would flag.
+tests:
+  - name: "no monitor fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ce::111122223333:account/anomaly-coverage"
+      asset_type: aws_account_anomaly_detection_coverage
+      vendor: aws
+      properties:
+        cost:
+          anomaly:
+            has_monitor: false
+            has_subscription: false
+        account_id: "111122223333"
+  - name: "monitor with subscription passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:ce::444455556666:account/anomaly-coverage"
+      asset_type: aws_account_anomaly_detection_coverage
+      vendor: aws
+      properties:
+        cost:
+          anomaly:
+            has_monitor: true
+            has_subscription: true
+        account_id: "444455556666"
+  - name: "monitor without subscription fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:ce::777788889999:account/anomaly-coverage"
+      asset_type: aws_account_anomaly_detection_coverage
+      vendor: aws
+      properties:
+        cost:
+          anomaly:
+            has_monitor: true
+            has_subscription: false
+        account_id: "777788889999"

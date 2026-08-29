@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3537
-**Pack hash:** `4fc74e8e5c7616eb0572014ed17db18d5c69fc0ad29ed89be48b89a50202b93d`
+**Total controls:** 3542
+**Pack hash:** `6f1da667e45f35da93dda01207b185d7606f07cf44f41cdba25b0c365e4b3c44`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 379 |
-| high | 1507 |
+| high | 1509 |
 | info | 19 |
 | low | 280 |
-| medium | 1352 |
+| medium | 1355 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,10 +29,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 162 |
 | encryption | 137 |
-| exposure | 1532 |
+| exposure | 1535 |
 | governance | 711 |
 | hygiene | 21 |
-| identity | 696 |
+| identity | 698 |
 | lifecycle | 32 |
 | network | 65 |
 | resilience | 50 |
@@ -44,7 +44,7 @@ GitHub. Pick a service below.
 | Service | Controls |
 |---------|----------|
 | [ACCESSANALYZER](reference/accessanalyzer.md) | 1 |
-| [ACCOUNT](reference/account.md) | 4 |
+| [ACCOUNT](reference/account.md) | 6 |
 | [ACM](reference/acm.md) | 11 |
 | [ACMPCA](reference/acmpca.md) | 4 |
 | [AD](reference/ad.md) | 40 |
@@ -113,7 +113,7 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 2 |
 | [GUARDDUTY](reference/guardduty.md) | 21 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 348 |
+| [IAM](reference/iam.md) | 349 |
 | [INSPECTOR](reference/inspector.md) | 5 |
 | [IOT](reference/iot.md) | 9 |
 | [K8S](reference/k8s.md) | 68 |
@@ -127,6 +127,7 @@ GitHub. Pick a service below.
 | [LIGHTSAIL](reference/lightsail.md) | 11 |
 | [M365](reference/m365.md) | 73 |
 | [MACIE](reference/macie.md) | 5 |
+| [MARKETPLACE](reference/marketplace.md) | 2 |
 | [MEDIASTORE](reference/mediastore.md) | 2 |
 | [MEMORYDB](reference/memorydb.md) | 6 |
 | [META](reference/meta.md) | 1 |

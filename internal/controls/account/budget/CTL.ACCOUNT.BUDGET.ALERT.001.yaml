@@ -1,0 +1,105 @@
+dsl_version: ctrl.v1
+id: CTL.ACCOUNT.BUDGET.ALERT.001
+name: No AWS Budget With Alert Configured
+description: >
+  Account has no AWS Budget with an alert notification
+  configured. Without a budget alert, spending anomalies
+  (including denial-of-wallet attacks via Marketplace
+  subscriptions) are not detected until the next billing
+  cycle — potentially days or weeks after the spend occurs.
+domain: exposure
+severity: medium
+scope: atomic
+corpus_reference: "aws:budgets-notifications"
+compliance:
+  nist_800_53_r5: "AU-6"
+  soc2: "CC7.2"
+  ccm_v4: ["BCR-01"]
+scope_tags:
+  - aws
+taxonomy:
+  - account-governance
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_account_budget_coverage
+params:
+  base_impact: 5
+  attack_stage: initial_access
+  blast_radius:
+    type: detection
+    scope: account
+    multiplier: 1.0
+observation_fields:
+  - cost.budget.has_any_budget
+  - cost.budget.has_alert_notification
+remediation:
+  description: >
+    Account has no budget with alert notifications.
+  action: >
+    Create an AWS Budget with a cost threshold and configure
+    at least one notification (SNS topic or email) to alert
+    on actual or forecasted spend exceeding the threshold.
+  example: |
+    {
+      "cost": {
+        "budget": {
+          "has_any_budget": true,
+          "has_alert_notification": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.cost.budget.has_alert_notification
+      op: ne
+      value: true
+defect: >
+  No budget alert configured — spending anomalies go
+  undetected.
+infection: >
+  An attacker can generate charges (Marketplace, EC2,
+  Reserved Instances) without triggering any alert.
+failure: >
+  Unauthorized spend accumulates undetected until the
+  billing cycle. The $472k Marketplace incident went
+  undetected for hours despite the charges being immediate.
+tests:
+  - name: "no budget fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:budgets::111122223333:account/budget-coverage"
+      asset_type: aws_account_budget_coverage
+      vendor: aws
+      properties:
+        cost:
+          budget:
+            has_any_budget: false
+            has_alert_notification: false
+        account_id: "111122223333"
+  - name: "budget with alert passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:budgets::444455556666:account/budget-coverage"
+      asset_type: aws_account_budget_coverage
+      vendor: aws
+      properties:
+        cost:
+          budget:
+            has_any_budget: true
+            has_alert_notification: true
+        account_id: "444455556666"
+  - name: "budget without alert fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:budgets::777788889999:account/budget-coverage"
+      asset_type: aws_account_budget_coverage
+      vendor: aws
+      properties:
+        cost:
+          budget:
+            has_any_budget: true
+            has_alert_notification: false
+        account_id: "777788889999"

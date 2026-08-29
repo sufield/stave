@@ -20,6 +20,36 @@ AI/ML service resources detected in an account not designated for AI workloads. 
 
 ---
 
+### CTL.ACCOUNT.ANOMALY.MONITOR.001
+
+**No Cost Anomaly Detection Monitor**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-6; soc2: CC7.2;
+
+Account has no Cost Anomaly Detection monitor configured. Anomaly detection uses ML-based analysis to identify unusual spending patterns — the fastest automated detection path for denial-of-wallet attacks. Without it, the account relies on manual billing review or budget alerts (which fire only at fixed thresholds, not on anomalous patterns).
+
+**Remediation:** Create a Cost Anomaly Detection monitor via the Cost Explorer API or console. Configure at least one subscription (SNS topic, email, or Lambda) to receive anomaly alerts.
+
+---
+
+### CTL.ACCOUNT.BUDGET.ALERT.001
+
+**No AWS Budget With Alert Configured**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-6; soc2: CC7.2;
+
+Account has no AWS Budget with an alert notification configured. Without a budget alert, spending anomalies (including denial-of-wallet attacks via Marketplace subscriptions) are not detected until the next billing cycle — potentially days or weeks after the spend occurs.
+
+**Remediation:** Create an AWS Budget with a cost threshold and configure at least one notification (SNS topic or email) to alert on actual or forecasted spend exceeding the threshold.
+
+---
+
 ### CTL.ACCOUNT.DEPRECATED.SERVICE.001
 
 **No Resources Must Exist for AWS-Deprecated Services**

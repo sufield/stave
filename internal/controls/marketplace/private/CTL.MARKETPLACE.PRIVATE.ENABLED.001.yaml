@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.MARKETPLACE.PRIVATE.ENABLED.001
+name: Private Marketplace Not Enabled
+description: >
+  Organization does not have a Private Marketplace experience
+  in LIVE status. Without Private Marketplace, any principal
+  with subscription permissions can subscribe to any listing
+  in the public AWS Marketplace catalog. Private Marketplace
+  restricts subscribable products to an approved set maintained
+  by the procurement team.
+domain: identity
+severity: medium
+scope: atomic
+corpus_reference: "aws:marketplace-private-marketplace"
+compliance:
+  nist_800_53_r5: "CM-7"
+  soc2: "CC6.1"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+taxonomy:
+  - account-governance
+subtractive_category:
+  - S02
+payer_exempt: true
+payer_compensating_control: null
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_marketplace_private_marketplace
+params:
+  base_impact: 5
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.0
+observation_fields:
+  - marketplace.private_marketplace.enabled
+remediation:
+  description: >
+    Private Marketplace is not enabled for this organization.
+  action: >
+    Create a Private Marketplace experience via the AWS
+    Marketplace Catalog API and set it to LIVE status. Add
+    approved products to the experience before enabling.
+  example: |
+    {
+      "marketplace": {
+        "private_marketplace": {
+          "enabled": true,
+          "product_count": 12
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.marketplace.private_marketplace.enabled
+      op: ne
+      value: true
+defect: >
+  Private Marketplace is not enabled — any public listing
+  is subscribable.
+infection: >
+  Principals with subscription permissions can accept
+  agreements with arbitrary sellers, including attacker-
+  controlled listings designed for denial-of-wallet.
+failure: >
+  Without a curated product set, a compromised credential
+  subscribes to an attacker-controlled listing with
+  consumption-based metering.
+tests:
+  - name: "no private marketplace fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:organizations::111122223333:marketplace/private"
+      asset_type: aws_marketplace_private_marketplace
+      vendor: aws
+      properties:
+        marketplace:
+          private_marketplace:
+            enabled: false
+            product_count: 0
+        account_id: "111122223333"
+  - name: "live private marketplace passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:organizations::444455556666:marketplace/private"
+      asset_type: aws_marketplace_private_marketplace
+      vendor: aws
+      properties:
+        marketplace:
+          private_marketplace:
+            enabled: true
+            product_count: 12
+        account_id: "444455556666"

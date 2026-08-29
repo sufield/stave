@@ -1,0 +1,46 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T00:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "access_keys": {
+            "has_stale_key": true,
+            "oldest_key_age_days": 180
+          },
+          "marketplace": {
+            "can_subscribe": true,
+            "subscribe_conditioned": false
+          }
+        },
+        "account_id": "111122223333"
+      },
+      "id": "arn:aws:iam::111122223333:user/admin-user",
+      "type": "aws_iam_user"
+    },
+    {
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "organization",
+          "scp": {
+            "denies_marketplace_subscribe": false,
+            "marketplace_allowlist_enforced": false
+          }
+        },
+        "account_id": "444455556666"
+      },
+      "id": "arn:aws:organizations::444455556666:organization/o-other",
+      "type": "aws_organization"
+    }
+  ],
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  }
+}
