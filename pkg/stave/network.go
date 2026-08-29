@@ -75,8 +75,10 @@ func NetworkProve(ctx context.Context, cfg NetworkProveConfig) (*network.ProofRe
 		r, err = g.ProveFirewallMandatory()
 	case "transitive-ssh":
 		r, err = g.ProveTransitiveSSH(cfg.Port)
+	case "transitive-egress":
+		r, err = g.ProveTransitiveEgress()
 	default:
-		return nil, fmt.Errorf("network prove: unknown property %q (valid: bastion-ssh, prod-dev-isolation, database-isolation, firewall-mandatory, transitive-ssh)", cfg.Property)
+		return nil, fmt.Errorf("network prove: unknown property %q (valid: bastion-ssh, prod-dev-isolation, database-isolation, firewall-mandatory, transitive-ssh, transitive-egress)", cfg.Property)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("network prove: %w", err)

@@ -49,6 +49,7 @@ var allowedVerdicts = map[string]bool{
 	"COVERED":        true,
 	"N-A":            true,
 	"EVIDENCE-GATED": true,
+	"GAP-AUTHOR":     true,
 	"OOS":            true,
 }
 
@@ -120,6 +121,9 @@ func validateBytes(path string, data []byte) []string {
 			counts[c.Verdict]++
 			if c.Verdict == "EVIDENCE-GATED" && c.VerdictCondition == "" {
 				fail("%s: EVIDENCE-GATED without verdict_condition", c.ID)
+			}
+			if c.Verdict == "GAP-AUTHOR" && c.VerdictReason == "" {
+				fail("%s: GAP-AUTHOR without verdict_reason", c.ID)
 			}
 			if c.Verdict == "OOS" && c.VerdictReason == "" {
 				fail("%s: OOS without verdict_reason", c.ID)

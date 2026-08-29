@@ -39,6 +39,8 @@ var propertyTitles = map[string]string{
 	"prod-dev-isolation": "Production-Development Isolation Proof",
 	"database-isolation": "Database Tier Isolation Proof",
 	"firewall-mandatory": "Firewall Mandatory Routing Proof",
+	"transitive-ssh":     "Transitive SSH Routing Proof",
+	"transitive-egress":  "Transitive Internet Egress Proof",
 }
 
 func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {

@@ -22,6 +22,8 @@ Properties:
   prod-dev-isolation   No network path between production and development VPCs
   database-isolation   No cross-VPC or internet path to database-tier hosts
   firewall-mandatory   All private subnet internet traffic passes through Network Firewall
+  transitive-ssh       No SSH path from external to internal via an intermediate host
+  transitive-egress    No isolated workload reaches internet via a host with egress
 
 Inputs:
   --observations, -o  Observation snapshots directory (required)

@@ -1,0 +1,106 @@
+# OpenAI / Hugging Face Incident Coverage (July 2026)
+# Method: E.4 practitioner-source analysis
+# Source: openai.com/index/hugging-face-incident-and-the-road-ahead
+# Fine verdicts in docs-internal/openai-hf-incident-2026/gap-report.md
+standard: OpenAI Hugging Face Incident Coverage July 2026
+total: 17
+
+checks:
+
+  # --- In-scope rows (P1–P11) ---
+
+  - id: P1
+    service: VPC
+    description: "Two-leg egress: workload → reachable service → internet as transitive property — SG atoms shipped (EGRESS.001, EGRESS.DNS.001, CHAIN.WORLDBYPASS.001), 6 prover properties (incl. transitive-egress), 6 egress chains"
+    verdict: COVERED
+
+  - id: P2
+    service: VPC
+    description: "Package mirror / proxy host egress not restricted to upstream domain allowlist — Network Firewall structural controls shipped; domain-allowlist enforcement absent"
+    verdict: GAP-AUTHOR
+    verdict_reason: "author domain-allowlist egress control for Network Firewall stateful rule group domain lists"
+
+  - id: P3
+    service: S3
+    description: "Covert channel: two principals in distinct isolation domains with read+write on same mutable store"
+    verdict: GAP-AUTHOR
+    verdict_reason: "author covert-channel chain composing existing public-write and cross-account controls across isolation domains"
+
+  - id: P4
+    service: S3
+    description: "Anonymous / unauthenticated write to shared store — CTL.S3.AP.PAB.BLOCKPUBLICACLS.001, CTL.ECR.PUBLIC.001, CTL.CODEARTIFACT.POLICY.PUBLIC.001"
+    verdict: COVERED
+
+  - id: P5
+    service: EKS
+    description: "Pod → node role / cluster admin at AWS layer — CTL.EKS.ACCESSENTRY.EXTERNAL.ADMIN.001, CTL.EKS.PODIDENTITY.EXTERNAL.001, CTL.EKS.NODEGROUP.IMDSV2.001, CTL.EKS.PUBLIC.ENDPOINT.001"
+    verdict: COVERED
+
+  - id: P6
+    service: EKS
+    description: "In-cluster pod hardening (privileged, hostPath, hostPID/hostNetwork, PSA) — CTL.EKS.PSA.PRIVILEGED.PROD.001, CTL.EKS.POD.HOSTPATH.001, CTL.EKS.POD.HOSTACCESS.001, CTL.EKS.ADMISSION.POLICY.MISSING.001"
+    verdict: COVERED
+
+  - id: P7
+    service: IAM
+    description: "Worker's reachable secret set bounded to task — CTL.IAM.SECRETSMANAGER.GETSECRETVALUE.NOCONDITION.001, CTL.KMS.POLICY.DECRYPT.BROAD.001, ecs_ssrf_credential_theft chain, eks_fargate_misconfigured chain"
+    verdict: COVERED
+
+  - id: P8
+    service: IAM
+    description: "K8s admin → cloud secrets via IRSA / Pod Identity / node role — Datalog IAM reachability (reasoning/souffle/iam/), CTL.IAM.TRUST.OIDC.UNSCOPED.001"
+    verdict: COVERED
+
+  - id: P9
+    service: GuardDuty
+    description: "Detection coverage where untrusted workloads run — CTL.GUARDDUTY.INVESTIGATION.001, cloudtrail_data_access_blind, detection_blind_region, CTL.EKS.CONTROL.PLANE.AUDIT.001"
+    verdict: COVERED
+
+  - id: P10
+    service: IAM
+    description: "Long-lived cloud credential hygiene — CTL.IAM.CRED.ROTATION.001, CTL.IAM.ROOT.ACCESSKEY.001"
+    verdict: COVERED
+
+  - id: P11
+    service: EC2
+    description: "Region governance: per-service expected-regions allowlist — 6 services shipped (EC2, RDS, Lambda, ECS, OpenSearch, StepFunctions), detection_blind_region chain; remaining services not yet authored"
+    verdict: GAP-AUTHOR
+    verdict_reason: "author REGION.UNAUTHORIZED controls for remaining services beyond the 6 shipped"
+
+  # --- Out-of-scope rows (O1–O6) ---
+
+  - id: O1
+    service: Application
+    description: "Application 0-days (token refresh, RubyGems signing key, HDF5, template injection, Modal RCE)"
+    verdict: OOS
+    verdict_reason: "app-layer vulnerabilities; not snapshot-verifiable infrastructure state"
+
+  - id: O2
+    service: Model
+    description: "Model misalignment (reward hacking, persistence, unauthorized communication, goal adoption, metagaming)"
+    verdict: OOS
+    verdict_reason: "model behavior; not infrastructure configuration"
+
+  - id: O3
+    service: HuggingFace
+    description: "HF user tokens leaked on the public internet"
+    verdict: OOS
+    verdict_reason: "not a snapshot property; credential leak is runtime, not config state"
+
+  - id: O4
+    service: Artifactory
+    description: "Artifactory availability outage under agent load"
+    verdict: OOS
+    verdict_reason: "runtime availability; not infrastructure configuration"
+
+  - id: O5
+    service: Process
+    description: "Safeguard-coverage policy and incident escalation process"
+    verdict: OOS
+    verdict_reason: "organizational process; not infrastructure configuration"
+
+  - id: O6
+    service: HuggingFace
+    description: "HF Hub dataset visibility (private → public); S3 analog is P4"
+    verdict: OOS
+    verdict_reason: "app-layer visibility toggle; S3 equivalent covered under P4"

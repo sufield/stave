@@ -423,3 +423,75 @@ func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
 	result.SolveTimeMs = time.Since(start).Milliseconds()
 	return result, nil
 }
+
+// ProveTransitiveEgress checks that no isolated workload can transitively
+// reach the internet via an intermediate host whose subnet has a NAT or
+// IGW egress route. Returns UNSAT if no transitive path exists, SAT with
+// a counterexample naming the relay host and port.
+func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
+	start := time.Now()
+
+	isolated := g.IsolatedHosts()
+	if len(isolated) == 0 {
+		return nil, fmt.Errorf("%w: no hosts tagged stave:network-zone=isolated", ErrVacuousProof)
+	}
+
+	// Build the set of hosts whose subnets have internet egress routes.
+	type egressHost struct {
+		host    *Host
+		gateway string // target ID of the egress route (NAT or IGW)
+	}
+	var egress []egressHost
+	for _, h := range g.allHosts() {
+		if h.IsIsolated() {
+			continue
+		}
+		sub := g.Subnets[h.SubnetID]
+		if sub == nil || sub.RouteTableID == "" {
+			continue
+		}
+		for _, route := range g.Routes[sub.RouteTableID] {
+			if route.Destination != "0.0.0.0/0" && route.Destination != "::/0" {
+				continue
+			}
+			if route.TargetType == "nat" || route.TargetType == "igw" {
+				egress = append(egress, egressHost{host: h, gateway: route.TargetID})
+				break
+			}
+		}
+	}
+	if len(egress) == 0 {
+		return nil, fmt.Errorf("%w: no non-isolated hosts in subnets with internet egress routes", ErrVacuousProof)
+	}
+
+	result := &ProofResult{
+		Property: "transitive-egress",
+		Scope:    map[string]int{"isolated_hosts": len(isolated), "egress_hosts": len(egress)},
+	}
+
+	for _, iso := range isolated {
+		for _, eg := range egress {
+			ok, _, port := g.canReachAnyPort(iso.ID, eg.host.ID)
+			if !ok {
+				continue
+			}
+			result.Result = "SAT"
+			result.Interpretation = "Transitive internet egress path exists — an isolated workload can reach a host with internet egress."
+			result.Counterexample = &Counterexample{
+				Source:      iso.ID,
+				Destination: eg.host.ID,
+				Port:        port,
+				PathType:    "transitive-egress",
+				Explanation: "Isolated host " + iso.ID + " can reach " + eg.host.ID + " on port " + strconv.Itoa(port) + ". " + eg.host.ID + "'s subnet routes 0.0.0.0/0 to " + eg.gateway + ". Two-hop path: " + iso.ID + " → " + eg.host.ID + " → internet.",
+				Remediation: "Remove network access from " + iso.ID + " to " + eg.host.ID + ", or remove " + eg.host.ID + "'s internet egress route.",
+			}
+			result.SolveTimeMs = time.Since(start).Milliseconds()
+			return result, nil
+		}
+	}
+
+	result.Result = "UNSAT"
+	result.Interpretation = "No isolated workload can transitively reach the internet via an intermediate host."
+	result.SolveTimeMs = time.Since(start).Milliseconds()
+	return result, nil
+}

@@ -748,3 +748,92 @@ func TestProveTransitiveSSH_UNSAT(t *testing.T) {
 		t.Fatalf("expected UNSAT (only bastion can reach prod), got %s", result.Result)
 	}
 }
+
+// --- transitive-egress tests ---
+
+func TestProveTransitiveEgress_SAT(t *testing.T) {
+	// Isolated workload can reach a service host whose subnet has NAT egress.
+	// Two-hop path: isolated → service → internet (via NAT).
+	g := &Graph{
+		Hosts: map[string]*Host{
+			"i-sandbox": {ID: "i-sandbox", VPCID: "vpc-ml", SubnetID: "subnet-iso", SGIDs: []string{"sg-sandbox"}, Tags: map[string]string{"stave:network-zone": "isolated"}},
+			"i-mirror":  {ID: "i-mirror", VPCID: "vpc-ml", SubnetID: "subnet-svc", SGIDs: []string{"sg-mirror"}, Tags: map[string]string{"stave:role": "package-mirror"}},
+		},
+		SGRules: map[string][]SGRule{
+			"sg-sandbox": {},
+			"sg-mirror": {
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"},
+			},
+		},
+		Subnets: map[string]*Subnet{
+			"subnet-iso": {ID: "subnet-iso", VPCID: "vpc-ml", RouteTableID: "rt-iso", Tags: map[string]string{"stave:subnet-type": "private"}},
+			"subnet-svc": {ID: "subnet-svc", VPCID: "vpc-ml", RouteTableID: "rt-svc", Tags: map[string]string{"stave:subnet-type": "private"}},
+		},
+		Routes: map[string][]Route{
+			"rt-iso": {{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}},
+			"rt-svc": {
+				{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+				{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+			},
+		},
+		Firewalls: map[string]bool{},
+	}
+
+	result, err := g.ProveTransitiveEgress()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT (transitive egress via mirror), got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample")
+	}
+	if result.Counterexample.PathType != "transitive-egress" {
+		t.Errorf("expected transitive-egress path type, got %s", result.Counterexample.PathType)
+	}
+}
+
+func TestProveTransitiveEgress_UNSAT(t *testing.T) {
+	// Isolated workload cannot reach any host with internet egress.
+	g := &Graph{
+		Hosts: map[string]*Host{
+			"i-sandbox": {ID: "i-sandbox", VPCID: "vpc-ml", SubnetID: "subnet-iso", SGIDs: []string{"sg-sandbox"}, Tags: map[string]string{"stave:network-zone": "isolated"}},
+			"i-mirror":  {ID: "i-mirror", VPCID: "vpc-ml", SubnetID: "subnet-svc", SGIDs: []string{"sg-mirror"}, Tags: map[string]string{"stave:role": "package-mirror"}},
+		},
+		SGRules: map[string][]SGRule{
+			"sg-sandbox": {},
+			"sg-mirror": {
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-mirror"},
+			},
+		},
+		Subnets: map[string]*Subnet{
+			"subnet-iso": {ID: "subnet-iso", VPCID: "vpc-ml", RouteTableID: "rt-iso", Tags: map[string]string{"stave:subnet-type": "private"}},
+			"subnet-svc": {ID: "subnet-svc", VPCID: "vpc-ml", RouteTableID: "rt-svc", Tags: map[string]string{"stave:subnet-type": "private"}},
+		},
+		Routes: map[string][]Route{
+			"rt-iso": {{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}},
+			"rt-svc": {
+				{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+				{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+			},
+		},
+		Firewalls: map[string]bool{},
+	}
+
+	result, err := g.ProveTransitiveEgress()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "UNSAT" {
+		t.Fatalf("expected UNSAT (no reachability from sandbox to mirror), got %s", result.Result)
+	}
+}
+
+func TestProveTransitiveEgress_VacuousNoIsolated(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{bastionEnforcedSnapshot()})
+	_, err := g.ProveTransitiveEgress()
+	if err == nil {
+		t.Fatal("expected error when no isolated hosts found")
+	}
+}

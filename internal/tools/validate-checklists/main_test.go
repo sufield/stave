@@ -90,6 +90,11 @@ func TestValidateChecklists_StructuralViolations(t *testing.T) {
 			yaml:    "standard: test\nchecks:\n  - id: X\n    verdict: EVIDENCE-GATED\n",
 			wantErr: "EVIDENCE-GATED without verdict_condition",
 		},
+		{
+			name:    "gap-author without reason",
+			yaml:    "standard: test\nchecks:\n  - id: X\n    verdict: GAP-AUTHOR\n",
+			wantErr: "GAP-AUTHOR without verdict_reason",
+		},
 	}
 
 	for _, tt := range tests {
@@ -132,7 +137,7 @@ checks:
 func TestValidateChecklists_ValidVerdictFile(t *testing.T) {
 	yaml := `
 standard: "KMS Test"
-total: 3
+total: 4
 checks:
   - id: KMS-01
     verdict: COVERED
@@ -142,6 +147,9 @@ checks:
   - id: KMS-03
     verdict: OOS
     verdict_reason: "lifecycle: closed"
+  - id: KMS-04
+    verdict: GAP-AUTHOR
+    verdict_reason: "author transitive-egress prover property"
 `
 	errs := validateBytes("valid-verdict.yaml", []byte(yaml))
 	if len(errs) > 0 {

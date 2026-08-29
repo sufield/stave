@@ -21,6 +21,7 @@ func (h *Host) IsProduction() bool   { return h.Tags["stave:environment"] == "pr
 func (h *Host) IsBastion() bool      { return h.Tags["stave:role"] == "bastion" }
 func (h *Host) IsDevelopment() bool  { return h.Tags["stave:environment"] == "development" }
 func (h *Host) IsDatabaseTier() bool { return h.Tags["stave:tier"] == "database" }
+func (h *Host) IsIsolated() bool     { return h.Tags["stave:network-zone"] == "isolated" }
 
 // SGRule is a single security group rule.
 type SGRule struct {
@@ -231,6 +232,17 @@ func (g *Graph) DatabaseHosts() []*Host {
 	var out []*Host
 	for _, h := range g.Hosts {
 		if h.IsDatabaseTier() {
+			out = append(out, h)
+		}
+	}
+	return out
+}
+
+// IsolatedHosts returns all hosts tagged stave:network-zone=isolated.
+func (g *Graph) IsolatedHosts() []*Host {
+	var out []*Host
+	for _, h := range g.Hosts {
+		if h.IsIsolated() {
 			out = append(out, h)
 		}
 	}
