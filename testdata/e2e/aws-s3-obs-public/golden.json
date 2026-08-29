@@ -7,14 +7,14 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "725779c1ee6f3b80a06f69988d1ad108afb622d9ceced33f4986965e5ee6e884",
+    "policy_fingerprint": "f6a9650b86fc0c296edfce59108114ff1a16333ad6e33acd11da1b1aa955f3d6",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 1,
     "exposed_resources": 1,
     "violations": 10,
-    "indeterminate": 4
+    "indeterminate": 3
   },
   "status": "NON_COMPLIANT",
   "risk_signals": [
@@ -30,16 +30,6 @@
     },
     {
       "control_id": "CTL.S3.ACCOUNT.PAB.001",
-      "asset_id": "public-test-bucket",
-      "asset_type": "aws_s3_bucket",
-      "status": "UPCOMING",
-      "due_at": "2026-01-17T00:00:00Z",
-      "remaining_hours": 48,
-      "first_unsafe_at": "2026-01-10T00:00:00Z",
-      "threshold_hours": 168
-    },
-    {
-      "control_id": "CTL.S3.ENCRYPT.DENY.UNENCRYPTED.001",
       "asset_id": "public-test-bucket",
       "asset_type": "aws_s3_bucket",
       "status": "UPCOMING",
@@ -1878,18 +1868,6 @@
       "verdict": "INDETERMINATE",
       "missing_fields": [
         "storage.logging.destination_in_org"
-      ],
-      "gap_cause": "derived_gap"
-    },
-    {
-      "control_id": "CTL.S3.ENCRYPT.DENY.UNENCRYPTED.001",
-      "control_name": "Bucket Policy Does Not Deny Unencrypted Uploads",
-      "severity": "medium",
-      "asset_id": "public-test-bucket",
-      "asset_type": "aws_s3_bucket",
-      "verdict": "INDETERMINATE",
-      "missing_fields": [
-        "storage.encryption.encryption_enforced_in_policy"
       ],
       "gap_cause": "derived_gap"
     },
