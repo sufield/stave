@@ -20,3 +20,18 @@ X-Ray account encryption configuration does not use a customer- managed KMS key.
 
 ---
 
+### CTL.XRAY.POLICY.CROSSACCOUNT.001
+
+**X-Ray Resource Policy Grants Cross-Account Access Without Organizational Boundary**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** iso_27001_2022: A.5.15, A.5.19; nist_800_53_r5: AC-3, AC-4, AC-6; soc2: CC6.1, CC6.6;
+
+X-Ray resource policy grants actions to principals in external AWS accounts without an aws:PrincipalOrgID condition. External accounts can read distributed traces containing request parameters, error details, latency data, and service topology. If the account leaves the organization, access persists. PutResourcePolicy controls cross-account trace collection and group access.
+
+**Remediation:** Add aws:PrincipalOrgID restricting access to the organization's ID. For the rare legitimate cross-org grant, use aws:PrincipalAccount with the explicit account ID and document the trust relationship.
+
+---
+

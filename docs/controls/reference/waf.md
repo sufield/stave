@@ -244,6 +244,21 @@ WAF Web ACLs must contain a highest-priority rule that detects when the WAF's in
 
 ---
 
+### CTL.WAF.POLICY.CROSSACCOUNT.001
+
+**WAFv2 Rule Group Resource Policy Grants Cross-Account Access Without Organizational Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.5.19; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 1.2, 7.1, 7.2; soc2: CC6.1, CC6.6;
+
+WAFv2 rule group resource policy grants access to principals in external AWS accounts without an aws:PrincipalOrgID condition. External accounts can consume the shared rule group in their own web ACLs. If the account leaves the organization, access persists. WAFv2 PutPermissionPolicy controls who can reference a rule group; without an org boundary, any principal in the named external account can use the rule group. Distinct from web ACL controls — this targets the rule group sharing surface.
+
+**Remediation:** Add aws:PrincipalOrgID restricting access to the organization's ID. For the rare legitimate cross-org grant, use aws:PrincipalAccount with the explicit account ID and document the trust relationship.
+
+---
+
 ### CTL.WAF.RATELIMIT.MISSING.001
 
 **WAF Web ACL Has No Rate-Based Rule**

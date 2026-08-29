@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_177 commands across 14 groups._
+_177 commands across 13 groups._
 
 ## Getting Started
 
@@ -55,6 +55,8 @@ _177 commands across 14 groups._
 | Command | Description |
 |---|---|
 | `graph path` | Export attack path graph data from active chain findings |
+| `iam` | IAM policy analysis commands |
+| `iam loop` | Run one IAM policy analysis cycle |
 | `inspect` | Low-level security analysis primitives |
 | `inspect acl` | Analyze S3 ACL grants |
 | `inspect aliases` | List predicate aliases with metadata |
@@ -249,10 +251,3 @@ _177 commands across 14 groups._
 | `alias delete` | Delete an alias |
 | `alias list` | List all aliases |
 | `alias set` | Create or update an alias |
-
-## Uncategorized
-
-| Command | Description |
-|---|---|
-| `iam` | IAM policy analysis commands |
-| `iam loop` | Run one IAM policy analysis cycle |

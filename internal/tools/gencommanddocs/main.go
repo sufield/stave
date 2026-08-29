@@ -346,6 +346,7 @@ var categoryPrefixes = []struct {
 	{"discover", "Catalog & Coverage"},
 	{"plan", "Catalog & Coverage"},
 	{"test", "Control Authoring"},
+	{"iam", "Security Analysis"},
 }
 
 func init() {

@@ -20,6 +20,21 @@ More than two principals are configured as Lake Formation data lake administrato
 
 ---
 
+### CTL.LAKEFORMATION.CROSSACCOUNT.001
+
+**Lake Formation Grants Cross-Account Data Access Without Organizational Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.5.19; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 1.2, 7.1, 7.2; soc2: CC6.1, CC6.6;
+
+Lake Formation permission grants data access to principals in external AWS accounts without an organizational boundary condition. The external account can read or modify tables in the data lake regardless of whether it remains in the organization. Lake Formation cross-account grants are the primary mechanism for sharing data lake resources across accounts — without an org boundary, the grant persists if the account leaves the organization, and any principal in the external account with Lake Formation permissions can access the shared resources. Distinct from CTL.LAKEFORMATION.GRANT.BROAD.001 (scope of permissions) — this control fires on grants that cross account boundaries without organizational verification.
+
+**Remediation:** Scope cross-account Lake Formation grants to the organization using tag-based access control (LF-TBAC) with organization-aware tags, or use RAM resource shares with organizational conditions for cross-account data sharing. For grants that must cross organizational boundaries, document the trust relationship and use explicit account-level grants with periodic review.
+
+---
+
 ### CTL.LAKEFORMATION.DEFAULTPERM.001
 
 **Lake Formation IAMAllowedPrincipals Super-Permission Must Be Revoked**

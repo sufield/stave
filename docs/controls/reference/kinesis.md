@@ -80,6 +80,21 @@ Kinesis Data Streams must have enhanced shard-level monitoring enabled. Without 
 
 ---
 
+### CTL.KINESIS.POLICY.CROSSACCOUNT.001
+
+**Kinesis Stream Resource Policy Grants Cross-Account Access Without Organizational Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 1.20; fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.5.19; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 1.2, 7.1, 7.2; soc2: CC6.1, CC6.6;
+
+Kinesis Data Streams resource policy grants actions to principals in external AWS accounts without an aws:PrincipalOrgID condition. External accounts can GetRecords (exfiltrate stream data) or PutRecord (inject data into the stream pipeline). If the account leaves the organization, access persists. Same shape as CTL.SNS.POLICY.CROSSACCOUNT.001 on the streaming side.
+
+**Remediation:** Add aws:PrincipalOrgID restricting access to the organization's ID. For a legitimate cross-org consumer, use aws:PrincipalAccount with the explicit account ID and document the trust relationship.
+
+---
+
 ### CTL.KINESIS.RETENTION.001
 
 **Kinesis Streams Must Meet Minimum Data Retention Period**

@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3542
-**Pack hash:** `6f1da667e45f35da93dda01207b185d7606f07cf44f41cdba25b0c365e4b3c44`
+**Total controls:** 3547
+**Pack hash:** `4d8ca639524d8fba38c3742dbf63e884ea3788b2d5a9a4d292f9d5ffe254e2d3`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -14,10 +14,10 @@ GitHub. Pick a service below.
 | Severity | Count |
 |----------|-------|
 | critical | 379 |
-| high | 1509 |
+| high | 1513 |
 | info | 19 |
 | low | 280 |
-| medium | 1355 |
+| medium | 1356 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,7 +29,7 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 162 |
 | encryption | 137 |
-| exposure | 1535 |
+| exposure | 1540 |
 | governance | 711 |
 | hygiene | 21 |
 | identity | 698 |
@@ -119,9 +119,9 @@ GitHub. Pick a service below.
 | [K8S](reference/k8s.md) | 68 |
 | [KENDRA](reference/kendra.md) | 1 |
 | [KEYSPACES](reference/keyspaces.md) | 5 |
-| [KINESIS](reference/kinesis.md) | 6 |
+| [KINESIS](reference/kinesis.md) | 7 |
 | [KMS](reference/kms.md) | 51 |
-| [LAKEFORMATION](reference/lakeformation.md) | 3 |
+| [LAKEFORMATION](reference/lakeformation.md) | 4 |
 | [LAMBDA](reference/lambda.md) | 94 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
 | [LIGHTSAIL](reference/lightsail.md) | 11 |
@@ -136,7 +136,7 @@ GitHub. Pick a service below.
 | [MSK](reference/msk.md) | 14 |
 | [MWAA](reference/mwaa.md) | 4 |
 | [NEPTUNE](reference/neptune.md) | 21 |
-| [NETFIREWALL](reference/netfirewall.md) | 15 |
+| [NETFIREWALL](reference/netfirewall.md) | 16 |
 | [NLB](reference/nlb.md) | 2 |
 | [OPENSEARCH](reference/opensearch.md) | 133 |
 | [ORG](reference/org.md) | 66 |
@@ -179,6 +179,6 @@ GitHub. Pick a service below.
 | [VPC](reference/vpc.md) | 129 |
 | [VPCLATTICE](reference/vpclattice.md) | 5 |
 | [VSPHERE](reference/vsphere.md) | 35 |
-| [WAF](reference/waf.md) | 23 |
+| [WAF](reference/waf.md) | 24 |
 | [WORKSPACES](reference/workspaces.md) | 2 |
-| [XRAY](reference/xray.md) | 1 |
+| [XRAY](reference/xray.md) | 2 |

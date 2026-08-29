@@ -110,6 +110,21 @@ Network Firewalls must be deployed with subnet mappings in multiple Availability
 
 ---
 
+### CTL.NETFIREWALL.POLICY.CROSSACCOUNT.001
+
+**Network Firewall Rule Group Resource Policy Grants Cross-Account Access Without Organizational Boundary**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; iso_27001_2022: A.5.15, A.5.19; nist_800_53_r5: AC-3, AC-4, AC-6; pci_dss_v4.0: 1.2, 7.1, 7.2; soc2: CC6.1, CC6.6;
+
+Network Firewall rule group or firewall policy resource policy grants cross-account access without an aws:PrincipalOrgID condition. An external account can consume or modify shared rule groups; if the account leaves the organization, access persists. PutResourcePolicy on rule groups and firewall policies controls who can reference them in their own firewall configurations — cross-account sharing without org boundary means a departed account retains the ability to read rule definitions, which may reveal internal network segmentation strategy.
+
+**Remediation:** Add aws:PrincipalOrgID restricting access to the organization's ID. For legitimate cross-org sharing, use aws:PrincipalAccount with the explicit account ID and document the trust relationship.
+
+---
+
 ### CTL.NETFIREWALL.POLICY.RULEGROUP.001
 
 **Network Firewall Policy Must Have Rule Groups Associated**
