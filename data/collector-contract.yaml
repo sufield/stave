@@ -4965,3 +4965,172 @@ contracts:
     consumers:
       - CTL.ORG.SCP.MARKETPLACE.ALLOWLIST.001
 
+  # ─── DoW C2: Marketplace Agreement (P8) ─────────────────────
+  #
+  # Asset type: aws_marketplace_agreement (per-agreement collection)
+  # Source: marketplace-agreement:SearchAgreements
+  # Decision: per-agreement (not account-summary) because P8 needs
+  # seller identity per agreement — an account-level boolean would
+  # lose the seller dimension that the control must evaluate.
+  # Each active agreement → one asset.
+
+  - field: marketplace.agreement.status
+    type: string
+    status: planned
+    postcondition: >
+      Agreement lifecycle status. Values: ACTIVE, CANCELLED,
+      EXPIRED, RENEWED, REPLACED, ROLLED_BACK, SUPERSEDED,
+      TERMINATED. Only ACTIVE agreements are collected (the
+      collector filters on status=ACTIVE in SearchAgreements).
+    botocore_source: >
+      marketplace-agreement:SearchAgreements →
+      AgreementViewSummary.Status
+    consumers:
+      - CTL.MARKETPLACE.AGREEMENT.UNAPPROVED.001
+
+  - field: marketplace.agreement.agreement_type
+    type: string
+    status: planned
+    postcondition: >
+      Agreement type. Values: PurchaseAgreement,
+      VendorInsightsAgreement, FreeTrialAgreement. Identifies
+      whether the agreement carries financial commitment.
+    botocore_source: >
+      marketplace-agreement:SearchAgreements →
+      AgreementViewSummary.AgreementType
+    consumers:
+      - CTL.MARKETPLACE.AGREEMENT.UNAPPROVED.001
+
+  - field: marketplace.agreement.proposer_account_id
+    type: string
+    status: planned
+    postcondition: >
+      AWS account ID of the agreement proposer (seller). Derived
+      from ProposerAccountId in the SearchAgreements response.
+      Null/absent if the proposer is an AWS first-party listing.
+    botocore_source: >
+      marketplace-agreement:SearchAgreements →
+      AgreementViewSummary.Proposer.AccountId
+    consumers:
+      - CTL.MARKETPLACE.AGREEMENT.UNAPPROVED.001
+
+  - field: marketplace.agreement.acceptance_time
+    type: string
+    status: planned
+    postcondition: >
+      ISO 8601 timestamp when the agreement was accepted.
+      Enables duration-based controls (e.g., agreement older
+      than N days without review).
+    botocore_source: >
+      marketplace-agreement:SearchAgreements →
+      AgreementViewSummary.AcceptanceTime
+    consumers:
+      - CTL.MARKETPLACE.AGREEMENT.UNAPPROVED.001
+
+  # ─── DoW C2: Private Marketplace (P7) ──────────────────────
+  #
+  # Asset type: aws_marketplace_private_marketplace (org-level singleton)
+  # Source: aws-marketplace-catalog:ListEntities (EntityType Experience@1.0)
+  # One experience per organization; LIVE = enforced, DRAFT/absent = not.
+
+  - field: marketplace.private_marketplace.enabled
+    type: boolean
+    status: planned
+    postcondition: >
+      True if a Private Marketplace experience exists in LIVE
+      status for the organization. When LIVE, only products
+      approved in the experience's product set are subscribable.
+      False if no experience exists or the experience is in
+      DRAFT status. Note: the Marketplace Catalog API uses the
+      management account's credentials; this field is org-scoped.
+    botocore_source: >
+      aws-marketplace-catalog:ListEntities
+      (EntityType=Experience@1.0) → EntitySummaryList[].Name,
+      aws-marketplace-catalog:DescribeEntity →
+      Details.Status (LIVE|DRAFT)
+    consumers:
+      - CTL.MARKETPLACE.PRIVATE.ENABLED.001
+
+  - field: marketplace.private_marketplace.product_count
+    type: integer
+    status: planned
+    postcondition: >
+      Number of products in the Private Marketplace's approved
+      set. Zero when no experience exists or the experience is
+      DRAFT. Enables "Private Marketplace exists but is empty"
+      controls.
+    botocore_source: >
+      aws-marketplace-catalog:ListEntities
+      (EntityType=AmiProduct@1.0 | SaaSProduct@1.0 |
+      ContainerProduct@1.0, filtered to experience)
+    consumers:
+      - CTL.MARKETPLACE.PRIVATE.ENABLED.001
+
+  # ─── DoW C2: Budget Coverage (P9) ──────────────────────────
+  #
+  # Asset type: aws_account_budget_coverage (account-level singleton)
+  # Source: budgets:DescribeBudgets, budgets:DescribeNotificationsForBudget
+  # Singleton precedent: same as KMS-CLOSURE C2 — the control asks
+  # "does the account have this defense?" not "is each budget correct?"
+
+  - field: cost.budget.has_any_budget
+    type: boolean
+    status: planned
+    postcondition: >
+      True if at least one AWS Budget exists in the account.
+      False if DescribeBudgets returns an empty list or the
+      Budgets API returns NotFoundException (budgets feature
+      never configured).
+    botocore_source: >
+      budgets:DescribeBudgets (AccountId) →
+      Budgets[] non-empty
+    consumers:
+      - CTL.ACCOUNT.BUDGET.ALERT.001
+
+  - field: cost.budget.has_alert_notification
+    type: boolean
+    status: planned
+    postcondition: >
+      True if at least one budget in the account has at least
+      one notification (alert) configured with a threshold.
+      False if no budget has notifications. Only meaningful
+      when cost.budget.has_any_budget is true.
+    botocore_source: >
+      budgets:DescribeNotificationsForBudget →
+      Notifications[] non-empty (checked per budget)
+    consumers:
+      - CTL.ACCOUNT.BUDGET.ALERT.001
+
+  # ─── DoW C2: Cost Anomaly Detection (P10) ──────────────────
+  #
+  # Asset type: aws_account_anomaly_detection_coverage (account-level singleton)
+  # Source: ce:GetAnomalyMonitors, ce:GetAnomalySubscriptions
+  # Singleton precedent: the control asks "does the account have
+  # anomaly detection?" — per-monitor config is deferred.
+
+  - field: cost.anomaly.has_monitor
+    type: boolean
+    status: planned
+    postcondition: >
+      True if at least one Cost Anomaly Detection monitor exists
+      in the account. False if GetAnomalyMonitors returns an
+      empty list.
+    botocore_source: >
+      ce:GetAnomalyMonitors → AnomalyMonitors[] non-empty
+    consumers:
+      - CTL.ACCOUNT.ANOMALY.MONITOR.001
+
+  - field: cost.anomaly.has_subscription
+    type: boolean
+    status: planned
+    postcondition: >
+      True if at least one anomaly subscription (alert
+      destination — SNS, email, or Lambda) exists in the
+      account. A monitor without a subscription detects
+      anomalies but does not alert. Only meaningful when
+      cost.anomaly.has_monitor is true.
+    botocore_source: >
+      ce:GetAnomalySubscriptions → AnomalySubscriptions[] non-empty
+    consumers:
+      - CTL.ACCOUNT.ANOMALY.MONITOR.001
+
