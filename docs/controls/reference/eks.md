@@ -20,6 +20,39 @@ EKS Access Entry has the AWS-managed AmazonEKSClusterAdminPolicy or AmazonEKSAdm
 
 ---
 
+### CTL.EKS.ACCESSENTRY.EXTERNAL.001
+
+**EKS Access Entry Grants Access to External Account Principal**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; owasp_nhi: NHI5; soc2: CC6.1;
+
+EKS access entry associates an access policy with a principal whose account ID differs from the cluster's owning account. Cross-account access entries create a trust boundary crossing that AWS-side audits must track — in-cluster RBAC audits will not surface it.
+Disjoint with CTL.EKS.ACCESSENTRY.EXTERNAL.ADMIN.001: this control fires only when the associated policies are NOT admin class. An entry with admin-class policies fires the ADMIN variant only, never both. Admin class: AmazonEKSClusterAdminPolicy and AmazonEKSAdminPolicy only.
+
+**Remediation:** Review whether the cross-account access is required. If it is, scope the access policy and restrict namespace access. If not, remove the access entry.
+
+---
+
+### CTL.EKS.ACCESSENTRY.EXTERNAL.ADMIN.001
+
+**EKS Access Entry Grants Admin to External Account Principal**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+EKS access entry associates an admin-class policy (AmazonEKSClusterAdminPolicy or AmazonEKSAdminPolicy) with a principal whose account ID differs from the cluster's owning account. This is a cross-account cluster-admin path — the external principal has full control of the Kubernetes API surface through a mechanism that in-cluster RBAC audits miss.
+Disjoint with CTL.EKS.ACCESSENTRY.EXTERNAL.001: an entry fires exactly one of the pair. Admin-class membership is explicit — AmazonEKSClusterAdminPolicy and AmazonEKSAdminPolicy only. AmazonEKSAdminViewPolicy, AmazonEKSViewPolicy, and AmazonEKSEditPolicy are NOT admin class.
+Scope note: aws-auth ConfigMap is not snapshot-visible — in-cluster data cannot be evaluated by Stave's snapshot model. Access entries are the AWS-API-side surface this control covers.
+
+**Remediation:** If cross-account access is required, scope the access policy to AmazonEKSViewPolicy or AmazonEKSEditPolicy with namespace restrictions. Cluster-admin for external principals should require exceptional justification and be time-bounded.
+
+---
+
 ### CTL.EKS.ACCESSENTRY.GHOST.PRINCIPAL.001
 
 **EKS Access Entry References Deleted IAM Principal**
@@ -1540,6 +1573,21 @@ EKS Pod has `automountServiceAccountToken: true` (or unset, defaulting true) but
 EKS Pod Identity association binds an IAM role to a ServiceAccount in the `default` namespace. The default namespace has no RBAC isolation from cluster-default identity scope; in shared / multi-tenant clusters every team has at least read access to the default namespace by convention. A Pod Identity binding there grants the IAM role to whichever pod ends up using that ServiceAccount — which in shared clusters can be many unrelated workloads. Pod Identity associations should always be in application-specific namespaces.
 
 **Remediation:** Move the workload to an application-specific namespace with proper RBAC isolation. Recreate the Pod Identity association pointing at the new namespace + SA. Delete the default-namespace association. As a forward-looking governance move, consider an admission policy that blocks new workloads in default.
+
+---
+
+### CTL.EKS.PODIDENTITY.EXTERNAL.001
+
+**EKS Pod Identity Association Uses Role in External Account**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; owasp_nhi: NHI5; soc2: CC6.1;
+
+EKS pod identity association maps a service account to an IAM role whose account ID differs from the cluster's owning account. Pod identity is the successor to IRSA for workload identity on EKS. A cross-account role association means pods in this cluster assume credentials in a different account — a trust boundary crossing that requires explicit justification.
+
+**Remediation:** If the cross-account role is required (e.g., centralized data lake access), document the justification and ensure the role is scoped to the minimum required permissions. If not required, update the association to use a role in the cluster's account.
 
 ---
 

@@ -2650,6 +2650,42 @@ contracts:
     consumers:
       - CTL.KMS.DELETION.NOPROTECTION.001
 
+  # ─── OIDC Trust Policy CI Provider Classification ───────────
+  - field: identity.trust.oidc.is_ci_provider
+    type: boolean
+    postcondition: >
+      True if the OIDC provider URL matches a known CI/CD provider.
+      Known CI providers: token.actions.githubusercontent.com
+      (GitHub Actions), gitlab.com (GitLab CI),
+      api.bitbucket.org/2.0 (Bitbucket Pipelines),
+      oidc.circleci.com (CircleCI), app.terraform.io
+      (Terraform Cloud / HCP Terraform), app.harness.io (Harness).
+      Cognito user pools, Google Workspace, Azure AD / Entra ID,
+      and other non-CI OIDC providers MUST be false.
+      Derived from the OIDC provider URL in the trust policy
+      Federated principal.
+    botocore_source: "iam:GetRole → AssumeRolePolicyDocument → Statement[].Principal.Federated"
+    consumers:
+      - CTL.IAM.TRUST.OIDC.UNSCOPED.001
+      - CTL.IAM.TRUST.OIDC.ORGWILDCARD.001
+
+  # ─── OIDC Trust Policy Org-Wildcard Subject Claim ──────────
+  - field: identity.trust.oidc.sub_claim_org_wildcard
+    type: boolean
+    postcondition: >
+      True if the OIDC subject claim condition is present but
+      wildcarded at the organization or group level — any repo
+      in the org can assume the role. For GitHub Actions:
+      "repo:myorg/*" or "repo:myorg/*:*". For GitLab CI:
+      "project_path:mygroup/*". The sub condition exists (the
+      role is not unscoped) but does not restrict to specific
+      repositories. False when the sub condition pins to a
+      specific repo, branch, or environment. Null/absent when
+      no OIDC trust or no sub condition present.
+    botocore_source: "iam:GetRole → AssumeRolePolicyDocument → Statement[].Condition.StringLike"
+    consumers:
+      - CTL.IAM.TRUST.OIDC.ORGWILDCARD.001
+
   # ─── OIDC Trust Policy Mutable Subject Claim ────────────────
   - field: identity.trust.oidc.sub_claim_uses_mutable_id
     type: boolean
@@ -4615,6 +4651,127 @@ contracts:
       ec2:DescribeTransitGatewayPeeringAttachments → State.
     consumers:
       - CTL.VPC.TGW.PEERING.CROSSREGION.NOENCRYPT.001
+
+  # ─── KMS Grant Cross-Account (XA-1) ─────────────────────────
+  #
+  # Asset type: aws_kms_grant (per-grant, not per-key)
+  # Source: kms:ListGrants per key
+
+  - field: encryption.kms.grant.grantee_is_service_principal
+    type: boolean
+    postcondition: >
+      True if the grantee principal is an AWS service principal
+      (e.g., ebs.amazonaws.com, rds.amazonaws.com). Service
+      principals create grants constantly for operational use
+      (EBS volume encryption, RDS storage encryption) and carry
+      no account ID. False for IAM role/user ARN grantees.
+    botocore_source: "kms:ListGrants → Grants[].GranteePrincipal"
+    consumers:
+      - CTL.KMS.GRANT.EXTERNAL.001
+
+  - field: encryption.kms.grant.grantee_is_external_account
+    type: boolean
+    postcondition: >
+      True if the grantee principal ARN carries an account ID
+      different from the key's owning account. Derived by
+      extracting the account ID from the grantee principal ARN
+      and comparing to the key ARN's account ID. Service
+      principals (no account ID) MUST be false, not true.
+      Null/absent when the grantee principal format is
+      unrecognized.
+    botocore_source: "kms:ListGrants → Grants[].GranteePrincipal vs key ARN account"
+    consumers:
+      - CTL.KMS.GRANT.EXTERNAL.001
+
+  - field: encryption.kms.grant.retiring_principal_is_external
+    type: boolean
+    postcondition: >
+      True if the retiring principal ARN carries an account ID
+      different from the key's owning account. Null/absent when
+      no retiring principal is set on the grant.
+    botocore_source: "kms:ListGrants → Grants[].RetiringPrincipal vs key ARN account"
+    consumers:
+      - CTL.KMS.GRANT.EXTERNAL.001
+
+  # ─── S3 Access Point Cross-Account (XA-2) ──────────────────
+  #
+  # Asset type: aws_s3_access_point (single-region, not MRAP)
+  # Source: s3control:GetAccessPoint, s3control:GetAccessPointPolicy
+
+  - field: storage.access_point.policy.has_external_principal_grant
+    type: boolean
+    postcondition: >
+      True if any statement in the access point resource policy
+      grants access to a principal outside the AP's owning account.
+      Derived by parsing Principal in each Allow statement and
+      comparing account IDs. Delegation-conditioned self-account
+      statements (OAC-DELEG-FP pattern: self-account principal
+      with aws:SourceArn or aws:SourceAccount condition) are
+      NOT external grants — they are the delegating account
+      authorizing its own service.
+    botocore_source: "s3control:GetAccessPointPolicy → Policy"
+    consumers:
+      - CTL.S3.AP.POLICY.EXTERNAL.001
+
+  - field: storage.access_point.is_cross_account_bucket
+    type: boolean
+    postcondition: >
+      True if the access point's owning account differs from
+      the bucket's owning account. The AP itself is the
+      cross-account foothold — the delegation inversion. Derived
+      by comparing the AP's account (from GetAccessPoint) to the
+      bucket's account (from the bucket ARN or S3 API).
+    botocore_source: "s3control:GetAccessPoint → Bucket, BucketAccountId"
+    consumers:
+      - CTL.S3.AP.CROSSACCOUNT.BUCKET.001
+
+  # ─── EKS Access Entry Cross-Account (XA-3) ─────────────────
+  #
+  # Asset type: aws_eks_access_entry (per-entry, not per-cluster)
+  # Source: eks:ListAccessEntries, eks:DescribeAccessEntry,
+  #         eks:ListAssociatedAccessPolicies
+
+  - field: k8s.access_entry.is_external_account
+    type: boolean
+    postcondition: >
+      True if the access entry's principal ARN carries an account
+      ID different from the cluster's owning account. Derived by
+      comparing the principal ARN account ID to the cluster ARN
+      account ID.
+    botocore_source: "eks:DescribeAccessEntry → PrincipalArn vs cluster ARN account"
+    consumers:
+      - CTL.EKS.ACCESSENTRY.EXTERNAL.ADMIN.001
+      - CTL.EKS.ACCESSENTRY.EXTERNAL.001
+
+  - field: k8s.access_entry.has_admin_class_policy
+    type: boolean
+    postcondition: >
+      True if any associated access policy is in the admin-class
+      set: AmazonEKSClusterAdminPolicy,
+      AmazonEKSAdminPolicy. These policies grant cluster-admin
+      or namespace-admin level Kubernetes access. The admin-class
+      list is explicit: other policies (AmazonEKSAdminViewPolicy,
+      AmazonEKSViewPolicy, AmazonEKSEditPolicy) are NOT admin
+      class.
+    botocore_source: "eks:ListAssociatedAccessPolicies → AssociatedAccessPolicies[].PolicyArn"
+    consumers:
+      - CTL.EKS.ACCESSENTRY.EXTERNAL.ADMIN.001
+
+  # ─── EKS Pod Identity Cross-Account (XA-3) ─────────────────
+  #
+  # Asset type: aws_eks_pod_identity_association
+  # Source: eks:ListPodIdentityAssociations, eks:DescribePodIdentityAssociation
+
+  - field: k8s.pod_identity.role_is_external_account
+    type: boolean
+    postcondition: >
+      True if the pod identity association's role ARN carries an
+      account ID different from the cluster's owning account.
+      Derived by extracting the account ID from the role ARN
+      and comparing to the cluster ARN account ID.
+    botocore_source: "eks:DescribePodIdentityAssociation → RoleArn vs cluster ARN account"
+    consumers:
+      - CTL.EKS.PODIDENTITY.EXTERNAL.001
 
   # ─── KMS-CLOSURE C2: CMK encryption booleans ────────────────
   #

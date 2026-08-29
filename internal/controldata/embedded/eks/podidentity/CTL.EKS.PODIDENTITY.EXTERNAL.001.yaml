@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.PODIDENTITY.EXTERNAL.001
+name: EKS Pod Identity Association Uses Role in External Account
+description: >
+  EKS pod identity association maps a service account to an IAM
+  role whose account ID differs from the cluster's owning account.
+  Pod identity is the successor to IRSA for workload identity on
+  EKS. A cross-account role association means pods in this cluster
+  assume credentials in a different account — a trust boundary
+  crossing that requires explicit justification.
+domain: identity
+severity: high
+scope: atomic
+corpus_reference: "aws:eks-pod-identity-cross-account"
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["IAM-04", "IAM-08"]
+scope_tags:
+  - aws
+  - eks
+taxonomy:
+  - trust-boundary
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_pod_identity_association
+params:
+  base_impact: 7
+  attack_stage: lateral_movement
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - k8s.pod_identity.role_is_external_account
+remediation:
+  description: >
+    EKS pod identity association maps pods to an IAM role in a
+    different AWS account.
+  action: >
+    If the cross-account role is required (e.g., centralized data
+    lake access), document the justification and ensure the role
+    is scoped to the minimum required permissions. If not required,
+    update the association to use a role in the cluster's account.
+  example: |
+    {
+      "k8s": {
+        "pod_identity": {
+          "role_is_external_account": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.pod_identity.role_is_external_account
+      op: eq
+      value: true
+defect: >
+  EKS pod identity association maps a service account to an IAM
+  role in an external account.
+infection: >
+  Pods running with this service account assume credentials in
+  a different AWS account. The cross-account role's permissions
+  determine the blast radius — in the worst case, access to
+  resources the cluster account has no visibility into.
+failure: >
+  Cross-account credential assumption via pod identity. A
+  compromised pod or container escape yields credentials in the
+  external account, enabling lateral movement to resources
+  outside the cluster account's visibility.
+tests:
+  - name: "external role fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:podidentityassociation/prod/assoc-ext-001"
+      asset_type: aws_eks_pod_identity_association
+      vendor: aws
+      properties:
+        k8s:
+          pod_identity:
+            cluster_name: "prod"
+            cluster_arn: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+            cluster_account_id: "111122223333"
+            namespace: "data-pipeline"
+            service_account: "lake-reader"
+            role_arn: "arn:aws:iam::444455556666:role/data-lake-reader"
+            role_account_id: "444455556666"
+            role_is_external_account: true
+  - name: "same-account role passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:podidentityassociation/prod/assoc-int-001"
+      asset_type: aws_eks_pod_identity_association
+      vendor: aws
+      properties:
+        k8s:
+          pod_identity:
+            cluster_name: "prod"
+            cluster_arn: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+            cluster_account_id: "111122223333"
+            namespace: "app"
+            service_account: "app-svc"
+            role_arn: "arn:aws:iam::111122223333:role/app-service"
+            role_account_id: "111122223333"
+            role_is_external_account: false

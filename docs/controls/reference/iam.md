@@ -5086,6 +5086,38 @@ IAM role trust policy accepts OIDC tokens with a subject claim that uses name-ba
 
 ---
 
+### CTL.IAM.TRUST.OIDC.ORGWILDCARD.001
+
+**CI/CD OIDC Federation Subject Scoped Only to Organization Level**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6; owasp_nhi: NHI3; soc2: CC6.1;
+
+IAM role trusts a CI/CD OIDC provider with a subject claim condition, but the condition is wildcarded at the organization or group level — any repository in the org can assume the role. Examples: "repo:myorg/*" (GitHub Actions), "project_path:mygroup/*" (GitLab CI). This is a tier, not a pass: it prevents external attackers from assuming the role, but any compromised or malicious repository within the organization has full access. In a large org, the blast radius may approach the unscoped case.
+Severity is MEDIUM because the org boundary provides meaningful protection against external attackers. The upgrade path is per-repository or per-branch scoping.
+
+**Remediation:** Narrow the subject condition to specific repositories and branches. For GitHub Actions: change "repo:myorg/*" to "repo:myorg/specific-repo:ref:refs/heads/main". For GitLab CI: change "project_path:mygroup/*" to "project_path:mygroup/specific-project:ref_type:branch:ref:main".
+
+---
+
+### CTL.IAM.TRUST.OIDC.UNSCOPED.001
+
+**CI/CD OIDC Federation Has No Subject Claim Restriction**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3; owasp_nhi: NHI3; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+IAM role trusts a CI/CD OIDC provider (GitHub Actions, GitLab CI, Bitbucket Pipelines, CircleCI, Terraform Cloud, Harness) but the trust policy either has no subject claim condition or uses a fully wildcarded one ("*"). Without a subject restriction, any pipeline in the provider's namespace can assume the role — this is take-over-from-any-repo. The 19% CI/CD credential incident rate makes this the highest-probability initial access vector for federated workloads.
+CI-provider scope: GitHub Actions (token.actions.githubusercontent.com), GitLab CI (gitlab.com), Bitbucket Pipelines (api.bitbucket.org), CircleCI (oidc.circleci.com), Terraform Cloud (app.terraform.io), Harness (app.harness.io). Cognito, Google Workspace, Azure AD, and other non-CI OIDC federation is out of scope for this control — those surfaces are covered by separate controls.
+
+**Remediation:** Add a StringEquals or StringLike condition on the sub claim to restrict to specific repositories and branches. For GitHub Actions: "token.actions.githubusercontent.com:sub": "repo:org/repo:ref:refs/heads/main". For GitLab CI: "gitlab.com:sub": "project_path:group/project:ref_type:branch:ref:main".
+
+---
+
 ### CTL.IAM.TRUST.ORGBOUNDARY.001
 
 **Cross-Account Trust Must Restrict to Organization via PrincipalOrgID**

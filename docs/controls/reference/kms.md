@@ -307,6 +307,22 @@ KMS key has more than 100 active grants. The KMS service limit is 50,000 grants 
 
 ---
 
+### CTL.KMS.GRANT.EXTERNAL.001
+
+**KMS Grant Delegates Cryptographic Access to External Account**
+
+- **Severity:** critical
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: AC-3; nist_800_53_r5: AC-3, AC-6; owasp_nhi: NHI5; pci_dss_v4.0: 7.2.1; soc2: CC6.1;
+
+A KMS grant on this key has a grantee principal whose account ID differs from the key's owning account. KMS grants are the second mechanism (beside key policies) for delegating cryptographic access. Grants are harder to audit than key policies — they require a separate ListGrants API call and are invisible in the key policy document. An external-account grantee through a grant is a cross-account access path that key-policy-only reviews miss.
+Service-principal grantees (EBS, RDS, and other AWS services) are SILENT for this control. Service grants carry no account ID and represent normal operational delegation. Their constraint hygiene is a separate deferred question.
+
+**Remediation:** Review the grant with aws kms list-grants --key-id KEY. If the cross-account delegation is not required, revoke the grant with aws kms revoke-grant. If required, document the business justification and ensure the grantee's account is within the organization's trust boundary.
+
+---
+
 ### CTL.KMS.GRANT.ORPHAN.001
 
 **KMS Grant References a Deleted Principal**

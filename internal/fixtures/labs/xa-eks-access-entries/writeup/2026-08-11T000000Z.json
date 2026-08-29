@@ -1,0 +1,116 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-11T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:eks:us-east-1:111122223333:cluster/prod#access-entry/arn:aws:iam::444455556666:role/ExternalAdmin",
+      "type": "aws_eks_access_entry",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "access_entry": {
+            "principal_arn": "arn:aws:iam::444455556666:role/ExternalAdmin",
+            "cluster_arn": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+            "cluster_account_id": "111122223333",
+            "principal_account_id": "444455556666",
+            "is_external_account": true,
+            "has_admin_class_policy": true,
+            "policy_arns": [
+              "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            ],
+            "type": "STANDARD",
+            "kubernetes_groups": []
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:eks:us-east-1:111122223333:cluster/prod#access-entry/arn:aws:iam::444455556666:role/ExternalViewer",
+      "type": "aws_eks_access_entry",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "access_entry": {
+            "principal_arn": "arn:aws:iam::444455556666:role/ExternalViewer",
+            "cluster_arn": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+            "cluster_account_id": "111122223333",
+            "principal_account_id": "444455556666",
+            "is_external_account": true,
+            "has_admin_class_policy": false,
+            "policy_arns": [
+              "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+            ],
+            "type": "STANDARD",
+            "kubernetes_groups": []
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:eks:us-east-1:111122223333:cluster/prod#access-entry/arn:aws:iam::111122223333:role/PlatformAdmin",
+      "type": "aws_eks_access_entry",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "access_entry": {
+            "principal_arn": "arn:aws:iam::111122223333:role/PlatformAdmin",
+            "cluster_arn": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+            "cluster_account_id": "111122223333",
+            "principal_account_id": "111122223333",
+            "is_external_account": false,
+            "has_admin_class_policy": true,
+            "policy_arns": [
+              "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            ],
+            "type": "STANDARD",
+            "kubernetes_groups": []
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:eks:us-east-1:111122223333:podidentityassociation/prod/assoc-ext-001",
+      "type": "aws_eks_pod_identity_association",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "pod_identity": {
+            "cluster_name": "prod",
+            "cluster_arn": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+            "cluster_account_id": "111122223333",
+            "namespace": "data-pipeline",
+            "service_account": "lake-reader",
+            "role_arn": "arn:aws:iam::444455556666:role/data-lake-reader",
+            "role_account_id": "444455556666",
+            "role_is_external_account": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:eks:us-east-1:111122223333:podidentityassociation/prod/assoc-int-001",
+      "type": "aws_eks_pod_identity_association",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "pod_identity": {
+            "cluster_name": "prod",
+            "cluster_arn": "arn:aws:eks:us-east-1:111122223333:cluster/prod",
+            "cluster_account_id": "111122223333",
+            "namespace": "app",
+            "service_account": "app-svc",
+            "role_arn": "arn:aws:iam::111122223333:role/app-service",
+            "role_account_id": "111122223333",
+            "role_is_external_account": false
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,139 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AP.POLICY.EXTERNAL.001
+name: S3 Access Point Policy Grants Access to External Account
+description: >
+  S3 access point resource policy contains a statement granting
+  access to a principal outside the AP's owning account. Access
+  points are the second mechanism (beside bucket policies) for
+  controlling S3 data access. An external principal grant in the
+  AP policy is a cross-account data access path that bucket-policy
+  reviews miss.
+
+  Delegation-conditioned self-account statements (the OAC-DELEG-FP
+  pattern: self-account principal with aws:SourceArn or
+  aws:SourceAccount condition) are NOT external grants. They are
+  the owning account authorizing its own service to use the AP.
+domain: exposure
+severity: high
+scope: atomic
+corpus_reference: "aws:s3-access-points-cross-account"
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["DSP-13", "IAM-16"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - trust-boundary
+  - network-perimeter
+subtractive_category:
+  - S03
+  - S08
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_access_point
+params:
+  base_impact: 8
+  attack_stage: exfiltration
+  blast_radius:
+    type: prevention
+    scope: bucket
+    multiplier: 1.5
+observation_fields:
+  - storage.access_point.policy.has_external_principal_grant
+remediation:
+  description: >
+    S3 access point policy grants access to a principal in a
+    different AWS account. This is a cross-account data access
+    path not visible in the bucket policy.
+  action: >
+    Review the access point policy with aws s3control
+    get-access-point-policy. If the cross-account grant is not
+    required, remove it. If required, scope to specific actions
+    and prefixes, and ensure the external account is within the
+    organization's trust boundary.
+  example: |
+    {
+      "storage": {
+        "access_point": {
+          "policy": {
+            "has_external_principal_grant": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.access_point.policy.has_external_principal_grant
+      op: eq
+      value: true
+defect: >
+  S3 access point policy grants access to a principal in an external
+  account. AP policies are the second access surface beside bucket
+  policies and are often overlooked in audits.
+infection: >
+  The external principal can access S3 data through the access point
+  even if the bucket policy does not grant cross-account access.
+  Access points have their own DNS name and policy — they are an
+  independent access path that bypasses bucket-policy restrictions.
+failure: >
+  Data exfiltration via access point. An attacker who compromises
+  the external account's principal can read, write, or delete
+  objects through the access point, using an access path invisible
+  in bucket-policy audits.
+tests:
+  - name: "external principal grant fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:us-east-1:111122223333:accesspoint/ext-grant-ap"
+      asset_type: aws_s3_access_point
+      vendor: aws
+      properties:
+        storage:
+          access_point:
+            name: "ext-grant-ap"
+            owning_account_id: "111122223333"
+            bucket: "my-data-bucket"
+            bucket_account_id: "111122223333"
+            network_origin: "Internet"
+            policy:
+              has_external_principal_grant: true
+            is_cross_account_bucket: false
+  - name: "same-account policy passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:us-east-1:111122223333:accesspoint/internal-ap"
+      asset_type: aws_s3_access_point
+      vendor: aws
+      properties:
+        storage:
+          access_point:
+            name: "internal-ap"
+            owning_account_id: "111122223333"
+            bucket: "my-data-bucket"
+            bucket_account_id: "111122223333"
+            network_origin: "VPC"
+            policy:
+              has_external_principal_grant: false
+            is_cross_account_bucket: false
+  - name: "delegation-conditioned self-account passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:us-east-1:111122223333:accesspoint/deleg-ap"
+      asset_type: aws_s3_access_point
+      vendor: aws
+      properties:
+        storage:
+          access_point:
+            name: "deleg-ap"
+            owning_account_id: "111122223333"
+            bucket: "my-data-bucket"
+            bucket_account_id: "111122223333"
+            network_origin: "Internet"
+            policy:
+              has_external_principal_grant: false
+            is_cross_account_bucket: false

@@ -1,0 +1,127 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-11T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:role/gh-deploy-unscoped",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "is_ci_provider": true,
+              "sub_claim_scoped": false,
+              "has_wildcard_sub": false,
+              "has_admin_permissions": false,
+              "audience_restricted": true,
+              "provider": "github",
+              "provider_url": "token.actions.githubusercontent.com"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/gh-deploy-pinned",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "is_ci_provider": true,
+              "sub_claim_scoped": true,
+              "sub_claim_org_wildcard": false,
+              "has_wildcard_sub": false,
+              "has_admin_permissions": false,
+              "audience_restricted": true,
+              "provider": "github",
+              "provider_url": "token.actions.githubusercontent.com",
+              "subject_pattern": "repo:myorg/my-repo:ref:refs/heads/main"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/gh-deploy-org-wildcard",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "is_ci_provider": true,
+              "sub_claim_scoped": true,
+              "sub_claim_org_wildcard": true,
+              "has_wildcard_sub": false,
+              "has_admin_permissions": false,
+              "audience_restricted": true,
+              "provider": "github",
+              "provider_url": "token.actions.githubusercontent.com",
+              "subject_pattern": "repo:myorg/*"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/gh-deploy-star",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "is_ci_provider": true,
+              "sub_claim_scoped": true,
+              "has_wildcard_sub": true,
+              "has_admin_permissions": false,
+              "audience_restricted": true,
+              "provider": "github",
+              "provider_url": "token.actions.githubusercontent.com",
+              "subject_pattern": "*"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/cognito-web-app",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "trust": {
+            "oidc": {
+              "has_oidc_trust": true,
+              "is_ci_provider": false,
+              "sub_claim_scoped": false,
+              "has_wildcard_sub": false,
+              "has_admin_permissions": false,
+              "audience_restricted": true,
+              "provider": "cognito",
+              "provider_url": "cognito-idp.us-east-1.amazonaws.com/us-east-1_abc123"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

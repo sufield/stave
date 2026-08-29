@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_175 commands across 13 groups._
+_177 commands across 14 groups._
 
 ## Getting Started
 
@@ -249,3 +249,10 @@ _175 commands across 13 groups._
 | `alias delete` | Delete an alias |
 | `alias list` | List all aliases |
 | `alias set` | Create or update an alias |
+
+## Uncategorized
+
+| Command | Description |
+|---|---|
+| `iam` | IAM policy analysis commands |
+| `iam loop` | Run one IAM policy analysis cycle |

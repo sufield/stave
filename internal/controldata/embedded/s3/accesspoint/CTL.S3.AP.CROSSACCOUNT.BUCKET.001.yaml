@@ -1,0 +1,115 @@
+dsl_version: ctrl.v1
+id: CTL.S3.AP.CROSSACCOUNT.BUCKET.001
+name: S3 Access Point Owns Data in Another Account's Bucket
+description: >
+  S3 access point's owning account differs from its bucket's account.
+  This is the delegation inversion — the AP itself is the
+  cross-account foothold. The AP owner controls the AP policy and
+  can grant access to the bucket's data through a surface the bucket
+  owner cannot see in their bucket policy. The AP owner effectively
+  has a policy-controlled window into another account's bucket.
+domain: exposure
+severity: high
+scope: atomic
+corpus_reference: "aws:s3-cross-account-access-points"
+compliance:
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["DSP-13", "IAM-16"]
+scope_tags:
+  - aws
+  - s3
+taxonomy:
+  - trust-boundary
+subtractive_category:
+  - S03
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_access_point
+params:
+  base_impact: 8
+  attack_stage: lateral_movement
+  blast_radius:
+    type: prevention
+    scope: bucket
+    multiplier: 2.0
+observation_fields:
+  - storage.access_point.is_cross_account_bucket
+  - storage.access_point.owning_account_id
+  - storage.access_point.bucket_account_id
+remediation:
+  description: >
+    S3 access point is owned by a different account than the bucket
+    it targets. The AP owner controls an access path into the bucket
+    owner's data.
+  action: >
+    Review whether the cross-account AP is intentional. If it is,
+    ensure the bucket policy restricts what the AP can access (S3
+    evaluates both the AP policy and bucket policy). If the AP is
+    not required, delete it. The bucket owner should use
+    s3:AccessPointAccount condition keys to control which accounts
+    can create APs targeting their buckets.
+  example: |
+    {
+      "storage": {
+        "access_point": {
+          "is_cross_account_bucket": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.access_point.is_cross_account_bucket
+      op: eq
+      value: true
+defect: >
+  S3 access point's owning account differs from the bucket's
+  account. The AP is a cross-account foothold with its own policy.
+infection: >
+  The AP owner controls the AP policy and can grant access to
+  any principal, including principals in third accounts. The bucket
+  owner sees this access only if they specifically list access points
+  targeting their bucket — it is invisible in the bucket policy.
+failure: >
+  Data access through a cross-account access point. The AP owner
+  grants access to data in another account's bucket through a
+  policy surface the bucket owner does not control and may not
+  audit.
+tests:
+  - name: "cross-account bucket fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:s3:us-east-1:444455556666:accesspoint/xa-ap"
+      asset_type: aws_s3_access_point
+      vendor: aws
+      properties:
+        storage:
+          access_point:
+            name: "xa-ap"
+            owning_account_id: "444455556666"
+            bucket: "their-data-bucket"
+            bucket_account_id: "111122223333"
+            network_origin: "Internet"
+            policy:
+              has_external_principal_grant: false
+            is_cross_account_bucket: true
+  - name: "same-account bucket passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:s3:us-east-1:111122223333:accesspoint/same-ap"
+      asset_type: aws_s3_access_point
+      vendor: aws
+      properties:
+        storage:
+          access_point:
+            name: "same-ap"
+            owning_account_id: "111122223333"
+            bucket: "my-data-bucket"
+            bucket_account_id: "111122223333"
+            network_origin: "VPC"
+            policy:
+              has_external_principal_grant: false
+            is_cross_account_bucket: false

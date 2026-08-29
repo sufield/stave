@@ -1,0 +1,92 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:s3:us-east-1:111122223333:accesspoint/ext-grant-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "access_point": {
+            "name": "ext-grant-ap",
+            "owning_account_id": "111122223333",
+            "bucket": "my-data-bucket",
+            "bucket_account_id": "111122223333",
+            "network_origin": "Internet",
+            "policy": {
+              "has_external_principal_grant": true
+            },
+            "is_cross_account_bucket": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:us-east-1:111122223333:accesspoint/internal-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "access_point": {
+            "name": "internal-ap",
+            "owning_account_id": "111122223333",
+            "bucket": "my-data-bucket",
+            "bucket_account_id": "111122223333",
+            "network_origin": "VPC",
+            "policy": {
+              "has_external_principal_grant": false
+            },
+            "is_cross_account_bucket": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:us-east-1:444455556666:accesspoint/xa-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "access_point": {
+            "name": "xa-ap",
+            "owning_account_id": "444455556666",
+            "bucket": "their-data-bucket",
+            "bucket_account_id": "111122223333",
+            "network_origin": "Internet",
+            "policy": {
+              "has_external_principal_grant": false
+            },
+            "is_cross_account_bucket": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:us-east-1:111122223333:accesspoint/deleg-ap",
+      "type": "aws_s3_access_point",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "access_point": {
+            "name": "deleg-ap",
+            "owning_account_id": "111122223333",
+            "bucket": "my-data-bucket",
+            "bucket_account_id": "111122223333",
+            "network_origin": "Internet",
+            "policy": {
+              "has_external_principal_grant": false
+            },
+            "is_cross_account_bucket": false
+          }
+        }
+      }
+    }
+  ]
+}

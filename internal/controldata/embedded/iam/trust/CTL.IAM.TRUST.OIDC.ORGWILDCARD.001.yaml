@@ -1,0 +1,167 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.OIDC.ORGWILDCARD.001
+name: CI/CD OIDC Federation Subject Scoped Only to Organization Level
+description: >
+  IAM role trusts a CI/CD OIDC provider with a subject claim
+  condition, but the condition is wildcarded at the organization
+  or group level — any repository in the org can assume the role.
+  Examples: "repo:myorg/*" (GitHub Actions), "project_path:mygroup/*"
+  (GitLab CI). This is a tier, not a pass: it prevents external
+  attackers from assuming the role, but any compromised or malicious
+  repository within the organization has full access. In a large
+  org, the blast radius may approach the unscoped case.
+
+  Severity is MEDIUM because the org boundary provides meaningful
+  protection against external attackers. The upgrade path is
+  per-repository or per-branch scoping.
+domain: identity
+severity: medium
+scope: atomic
+corpus_reference: snyk:gh-oidc-sub-broad
+compliance:
+  owasp_nhi: "NHI3"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6"
+  ccm_v4: ["DCS-07", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - supply-chain
+taxonomy:
+  - trust-boundary
+  - identity-perimeter
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  base_impact: 6
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 1.5
+observation_fields:
+  - identity.trust.oidc.has_oidc_trust
+  - identity.trust.oidc.is_ci_provider
+  - identity.trust.oidc.sub_claim_scoped
+  - identity.trust.oidc.sub_claim_org_wildcard
+remediation:
+  description: >
+    CI/CD OIDC trust policy has a subject condition but it is
+    scoped only to the organization — any repository in the org
+    can assume this role.
+  action: >
+    Narrow the subject condition to specific repositories and
+    branches. For GitHub Actions: change "repo:myorg/*" to
+    "repo:myorg/specific-repo:ref:refs/heads/main". For GitLab
+    CI: change "project_path:mygroup/*" to
+    "project_path:mygroup/specific-project:ref_type:branch:ref:main".
+  example: |
+    {
+      "identity": {
+        "trust": {
+          "oidc": {
+            "has_oidc_trust": true,
+            "is_ci_provider": true,
+            "sub_claim_scoped": true,
+            "sub_claim_org_wildcard": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.trust.oidc.has_oidc_trust
+      op: eq
+      value: true
+    - field: properties.identity.trust.oidc.is_ci_provider
+      op: eq
+      value: true
+    - field: properties.identity.trust.oidc.sub_claim_scoped
+      op: eq
+      value: true
+    - field: properties.identity.trust.oidc.sub_claim_org_wildcard
+      op: eq
+      value: true
+defect: >
+  CI/CD OIDC trust policy has a subject condition but it is
+  wildcarded at the organization level, not the repository level.
+infection: >
+  Any repository in the organization can assume this role. A
+  compromised repository, a test project with loose controls,
+  or a departing developer's repo all become credential sources.
+failure: >
+  Attacker compromises any repository in the org (phishing,
+  dependency confusion, workflow injection) and uses its CI
+  pipeline to assume this role. The org-level wildcard means
+  the attacker needs only one foothold in any of potentially
+  hundreds of repositories.
+tests:
+  - name: "org-wildcard sub fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/gh-deploy-org"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              is_ci_provider: true
+              sub_claim_scoped: true
+              sub_claim_org_wildcard: true
+              has_wildcard_sub: false
+              provider: github
+              provider_url: "token.actions.githubusercontent.com"
+              subject_pattern: "repo:myorg/*"
+  - name: "repo-pinned sub passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/gh-deploy-pinned"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              is_ci_provider: true
+              sub_claim_scoped: true
+              sub_claim_org_wildcard: false
+              has_wildcard_sub: false
+              provider: github
+              provider_url: "token.actions.githubusercontent.com"
+              subject_pattern: "repo:myorg/my-repo:ref:refs/heads/main"
+  - name: "unscoped CI passes (caught by UNSCOPED.001)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/gh-deploy-unscoped"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              is_ci_provider: true
+              sub_claim_scoped: false
+              has_wildcard_sub: false
+              provider: github
+  - name: "non-CI OIDC passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/cognito-web"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              is_ci_provider: false
+              sub_claim_scoped: false
+              provider: cognito

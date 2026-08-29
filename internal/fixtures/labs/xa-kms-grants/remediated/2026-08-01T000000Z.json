@@ -1,0 +1,53 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123:grant/int-grant-001",
+      "type": "aws_kms_grant",
+      "vendor": "aws",
+      "properties": {
+        "encryption": {
+          "kms": {
+            "grant": {
+              "grant_id": "int-grant-001",
+              "key_arn": "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123",
+              "key_account_id": "111122223333",
+              "grantee_principal": "arn:aws:iam::111122223333:role/app-service",
+              "grantee_account_id": "111122223333",
+              "grantee_is_service_principal": false,
+              "grantee_is_external_account": false,
+              "operations": ["Decrypt"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123:grant/svc-grant-001",
+      "type": "aws_kms_grant",
+      "vendor": "aws",
+      "properties": {
+        "encryption": {
+          "kms": {
+            "grant": {
+              "grant_id": "svc-grant-001",
+              "key_arn": "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123",
+              "key_account_id": "111122223333",
+              "grantee_principal": "ebs.amazonaws.com",
+              "grantee_is_service_principal": true,
+              "grantee_is_external_account": false,
+              "operations": ["Decrypt", "Encrypt", "GenerateDataKey", "ReEncryptFrom", "ReEncryptTo", "CreateGrant"]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+dsl_version: ctrl.v1
+id: CTL.KMS.GRANT.EXTERNAL.001
+name: KMS Grant Delegates Cryptographic Access to External Account
+description: >
+  A KMS grant on this key has a grantee principal whose account ID
+  differs from the key's owning account. KMS grants are the second
+  mechanism (beside key policies) for delegating cryptographic
+  access. Grants are harder to audit than key policies — they
+  require a separate ListGrants API call and are invisible in the
+  key policy document. An external-account grantee through a grant
+  is a cross-account access path that key-policy-only reviews miss.
+
+  Service-principal grantees (EBS, RDS, and other AWS services) are
+  SILENT for this control. Service grants carry no account ID and
+  represent normal operational delegation. Their constraint hygiene
+  is a separate deferred question.
+domain: exposure
+severity: critical
+scope: atomic
+corpus_reference: "aws:kms-grants-cross-account"
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3, AC-6"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["CEK-03", "CEK-04"]
+scope_tags:
+  - aws
+  - kms
+taxonomy:
+  - trust-boundary
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_kms_grant
+params:
+  base_impact: 9
+  attack_stage: lateral_movement
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - encryption.kms.grant.grantee_is_service_principal
+  - encryption.kms.grant.grantee_is_external_account
+  - encryption.kms.grant.retiring_principal_is_external
+remediation:
+  description: >
+    KMS grant delegates cryptographic operations to a principal in
+    a different AWS account. This cross-account access path is not
+    visible in the key policy.
+  action: >
+    Review the grant with aws kms list-grants --key-id KEY. If the
+    cross-account delegation is not required, revoke the grant with
+    aws kms revoke-grant. If required, document the business
+    justification and ensure the grantee's account is within the
+    organization's trust boundary.
+  example: |
+    {
+      "encryption": {
+        "kms": {
+          "grant": {
+            "grantee_is_service_principal": false,
+            "grantee_is_external_account": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.encryption.kms.grant.grantee_is_service_principal
+      op: ne
+      value: true
+    - field: properties.encryption.kms.grant.grantee_is_external_account
+      op: eq
+      value: true
+defect: >
+  KMS grant delegates cryptographic access to a principal in an
+  external account. Grants are the second access mechanism beside
+  key policies and are invisible in key policy reviews.
+infection: >
+  The external-account grantee can perform the granted cryptographic
+  operations (Decrypt, Encrypt, GenerateDataKey, etc.) on data
+  encrypted with this key. This is a cross-account data access path
+  that bypasses key-policy-only reviews.
+failure: >
+  An attacker who compromises the external account's grantee
+  principal can decrypt data encrypted with this key, re-encrypt
+  data to a key they control, or generate data keys for offline
+  decryption — all through a grant that is invisible in the key
+  policy document.
+tests:
+  - name: "external-account grantee fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123:grant/ext-grant-001"
+      asset_type: aws_kms_grant
+      vendor: aws
+      properties:
+        encryption:
+          kms:
+            grant:
+              grant_id: "ext-grant-001"
+              key_arn: "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123"
+              key_account_id: "111122223333"
+              grantee_principal: "arn:aws:iam::444455556666:role/data-reader"
+              grantee_account_id: "444455556666"
+              grantee_is_service_principal: false
+              grantee_is_external_account: true
+              operations: ["Decrypt", "DescribeKey"]
+              retiring_principal: "arn:aws:iam::444455556666:role/admin"
+              retiring_principal_is_external: true
+  - name: "same-account grantee passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123:grant/int-grant-001"
+      asset_type: aws_kms_grant
+      vendor: aws
+      properties:
+        encryption:
+          kms:
+            grant:
+              grant_id: "int-grant-001"
+              key_arn: "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123"
+              key_account_id: "111122223333"
+              grantee_principal: "arn:aws:iam::111122223333:role/app-service"
+              grantee_account_id: "111122223333"
+              grantee_is_service_principal: false
+              grantee_is_external_account: false
+              operations: ["Decrypt"]
+  - name: "service-principal grantee passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123:grant/svc-grant-001"
+      asset_type: aws_kms_grant
+      vendor: aws
+      properties:
+        encryption:
+          kms:
+            grant:
+              grant_id: "svc-grant-001"
+              key_arn: "arn:aws:kms:us-east-1:111122223333:key/mrk-abc123"
+              key_account_id: "111122223333"
+              grantee_principal: "ebs.amazonaws.com"
+              grantee_is_service_principal: true
+              grantee_is_external_account: false
+              operations: ["Decrypt", "Encrypt", "GenerateDataKey", "ReEncryptFrom", "ReEncryptTo", "CreateGrant"]

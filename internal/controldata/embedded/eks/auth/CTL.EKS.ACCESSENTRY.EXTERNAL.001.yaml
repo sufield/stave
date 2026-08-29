@@ -1,0 +1,136 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.ACCESSENTRY.EXTERNAL.001
+name: EKS Access Entry Grants Access to External Account Principal
+description: >
+  EKS access entry associates an access policy with a principal
+  whose account ID differs from the cluster's owning account.
+  Cross-account access entries create a trust boundary crossing
+  that AWS-side audits must track — in-cluster RBAC audits will
+  not surface it.
+
+  Disjoint with CTL.EKS.ACCESSENTRY.EXTERNAL.ADMIN.001: this
+  control fires only when the associated policies are NOT admin
+  class. An entry with admin-class policies fires the ADMIN
+  variant only, never both. Admin class: AmazonEKSClusterAdminPolicy
+  and AmazonEKSAdminPolicy only.
+domain: identity
+severity: high
+scope: atomic
+corpus_reference: "aws:eks-access-entries-cross-account"
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["IAM-04", "IAM-08"]
+scope_tags:
+  - aws
+  - eks
+taxonomy:
+  - trust-boundary
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_access_entry
+params:
+  base_impact: 7
+  attack_stage: lateral_movement
+  blast_radius:
+    type: prevention
+    scope: cluster
+    multiplier: 1.5
+observation_fields:
+  - k8s.access_entry.is_external_account
+  - k8s.access_entry.has_admin_class_policy
+remediation:
+  description: >
+    EKS access entry grants Kubernetes access to a principal in a
+    different AWS account with non-admin policies.
+  action: >
+    Review whether the cross-account access is required. If it is,
+    scope the access policy and restrict namespace access. If not,
+    remove the access entry.
+  example: |
+    {
+      "k8s": {
+        "access_entry": {
+          "is_external_account": false,
+          "has_admin_class_policy": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.access_entry.is_external_account
+      op: eq
+      value: true
+    - field: properties.k8s.access_entry.has_admin_class_policy
+      op: ne
+      value: true
+defect: >
+  EKS access entry grants Kubernetes access to a principal in an
+  external account with non-admin policies.
+infection: >
+  The external principal has Kubernetes API access scoped by the
+  associated policies (view, edit, or custom). While not cluster-
+  admin, the access is a cross-account trust boundary crossing that
+  merits tracking and periodic review.
+failure: >
+  Cross-account Kubernetes access via access entry. Compromise of
+  the external principal grants access scoped by the associated
+  policies — potentially enough for reconnaissance, secret reading,
+  or workload manipulation depending on the policy.
+tests:
+  - name: "external non-admin fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#access-entry/arn:aws:iam::444455556666:role/ExternalViewer"
+      asset_type: aws_eks_access_entry
+      vendor: aws
+      properties:
+        k8s:
+          access_entry:
+            principal_arn: "arn:aws:iam::444455556666:role/ExternalViewer"
+            cluster_arn: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+            cluster_account_id: "111122223333"
+            principal_account_id: "444455556666"
+            is_external_account: true
+            has_admin_class_policy: false
+            policy_arns:
+              - "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+  - name: "external admin passes (caught by ADMIN.001)"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#access-entry/arn:aws:iam::444455556666:role/ExternalAdmin"
+      asset_type: aws_eks_access_entry
+      vendor: aws
+      properties:
+        k8s:
+          access_entry:
+            principal_arn: "arn:aws:iam::444455556666:role/ExternalAdmin"
+            cluster_arn: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+            cluster_account_id: "111122223333"
+            principal_account_id: "444455556666"
+            is_external_account: true
+            has_admin_class_policy: true
+            policy_arns:
+              - "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  - name: "same-account non-admin passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod#access-entry/arn:aws:iam::111122223333:role/InternalViewer"
+      asset_type: aws_eks_access_entry
+      vendor: aws
+      properties:
+        k8s:
+          access_entry:
+            principal_arn: "arn:aws:iam::111122223333:role/InternalViewer"
+            cluster_arn: "arn:aws:eks:us-east-1:111122223333:cluster/prod"
+            cluster_account_id: "111122223333"
+            principal_account_id: "111122223333"
+            is_external_account: false
+            has_admin_class_policy: false
+            policy_arns:
+              - "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"

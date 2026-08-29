@@ -33,6 +33,7 @@ import (
 	stavefingerprint "github.com/sufield/stave/cmd/fingerprint"
 	staveforge "github.com/sufield/stave/cmd/forge"
 	stavegaps "github.com/sufield/stave/cmd/gaps"
+	staveiam "github.com/sufield/stave/cmd/iam"
 	"github.com/sufield/stave/cmd/initcmd"
 	initalias "github.com/sufield/stave/cmd/initcmd/alias"
 	initconfig "github.com/sufield/stave/cmd/initcmd/config"
@@ -182,6 +183,9 @@ func WireCommands(app *App) error {
 
 	// Net Effective Permissions (CIEM)
 	root.AddCommand(stavenep.NewCmd())
+
+	// IAM policy analysis (composition spine — iam-explain bridge)
+	root.AddCommand(staveiam.NewCmd())
 
 	// CEL expression tools
 	root.AddCommand(stavecelcmd.NewCmd())

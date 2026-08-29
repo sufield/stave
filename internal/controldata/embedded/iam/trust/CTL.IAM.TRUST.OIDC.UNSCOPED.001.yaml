@@ -1,0 +1,186 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.TRUST.OIDC.UNSCOPED.001
+name: CI/CD OIDC Federation Has No Subject Claim Restriction
+description: >
+  IAM role trusts a CI/CD OIDC provider (GitHub Actions, GitLab CI,
+  Bitbucket Pipelines, CircleCI, Terraform Cloud, Harness) but the
+  trust policy either has no subject claim condition or uses a fully
+  wildcarded one ("*"). Without a subject restriction, any pipeline
+  in the provider's namespace can assume the role — this is
+  take-over-from-any-repo. The 19% CI/CD credential incident rate
+  makes this the highest-probability initial access vector for
+  federated workloads.
+
+  CI-provider scope: GitHub Actions
+  (token.actions.githubusercontent.com), GitLab CI (gitlab.com),
+  Bitbucket Pipelines (api.bitbucket.org), CircleCI
+  (oidc.circleci.com), Terraform Cloud (app.terraform.io),
+  Harness (app.harness.io). Cognito, Google Workspace, Azure AD,
+  and other non-CI OIDC federation is out of scope for this
+  control — those surfaces are covered by separate controls.
+domain: identity
+severity: critical
+scope: atomic
+corpus_reference: snyk:gh-oidc-sub-broad
+compliance:
+  owasp_nhi: "NHI3"
+  soc2: "CC6.1"
+  pci_dss_v4.0: "7.2.1"
+  nist_800_53_r5: "AC-3"
+  fedramp_moderate: "AC-3"
+  ccm_v4: ["DCS-07", "IAM-16"]
+scope_tags:
+  - aws
+  - iam
+  - supply-chain
+taxonomy:
+  - trust-boundary
+  - identity-perimeter
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_iam_role
+params:
+  base_impact: 10
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.5
+observation_fields:
+  - identity.trust.oidc.has_oidc_trust
+  - identity.trust.oidc.is_ci_provider
+  - identity.trust.oidc.sub_claim_scoped
+  - identity.trust.oidc.has_wildcard_sub
+remediation:
+  description: >
+    CI/CD OIDC trust policy accepts any pipeline from the identity
+    provider. Any repository or project in the provider's namespace
+    can assume this production role.
+  action: >
+    Add a StringEquals or StringLike condition on the sub claim to
+    restrict to specific repositories and branches. For GitHub
+    Actions: "token.actions.githubusercontent.com:sub":
+    "repo:org/repo:ref:refs/heads/main". For GitLab CI:
+    "gitlab.com:sub": "project_path:group/project:ref_type:branch:ref:main".
+  example: |
+    {
+      "identity": {
+        "trust": {
+          "oidc": {
+            "has_oidc_trust": true,
+            "is_ci_provider": true,
+            "sub_claim_scoped": true,
+            "has_wildcard_sub": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.trust.oidc.has_oidc_trust
+      op: eq
+      value: true
+    - field: properties.identity.trust.oidc.is_ci_provider
+      op: eq
+      value: true
+    - any:
+        - field: properties.identity.trust.oidc.sub_claim_scoped
+          op: ne
+          value: true
+        - field: properties.identity.trust.oidc.has_wildcard_sub
+          op: eq
+          value: true
+defect: >
+  CI/CD OIDC trust policy has no subject claim condition or uses
+  a fully wildcarded one. The federation eliminates long-lived
+  keys but does not scope access.
+infection: >
+  Any CI/CD pipeline in the provider's namespace can obtain
+  temporary AWS credentials for this role. An attacker who
+  controls any repository or project in the provider can
+  authenticate as this role.
+failure: >
+  Attacker creates a pipeline in a repo they control, assumes
+  the unscoped OIDC role, and obtains temporary credentials.
+  Data exfiltration, infrastructure modification, or persistence
+  via the role's permissions follows. The trust policy cannot
+  distinguish the legitimate pipeline from the attacker's.
+tests:
+  - name: "GH-federated no sub condition fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/gh-deploy-unscoped"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              is_ci_provider: true
+              sub_claim_scoped: false
+              has_wildcard_sub: false
+              provider: github
+              provider_url: "token.actions.githubusercontent.com"
+  - name: "GH-federated wildcard sub fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/gh-deploy-wildcard"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              is_ci_provider: true
+              sub_claim_scoped: true
+              has_wildcard_sub: true
+              provider: github
+              provider_url: "token.actions.githubusercontent.com"
+              subject_pattern: "*"
+  - name: "fully-pinned sub passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/gh-deploy-pinned"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              is_ci_provider: true
+              sub_claim_scoped: true
+              has_wildcard_sub: false
+              provider: github
+              provider_url: "token.actions.githubusercontent.com"
+              subject_pattern: "repo:myorg/my-repo:ref:refs/heads/main"
+  - name: "Cognito-federated passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/cognito-web"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          trust:
+            oidc:
+              has_oidc_trust: true
+              is_ci_provider: false
+              sub_claim_scoped: false
+              has_wildcard_sub: false
+              provider: cognito
+              provider_url: "cognito-idp.us-east-1.amazonaws.com/us-east-1_abc123"
+  - name: "non-OIDC role passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:iam::111122223333:role/ec2-instance"
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role

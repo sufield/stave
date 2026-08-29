@@ -79,6 +79,7 @@ var facadeCleanBaseline = map[string]struct{}{
 	"fingerprint":           {},
 	"forge":                 {},
 	"gaps":                  {},
+	"iam":                   {},
 	"initcmd":               {},
 	"initcmd/alias":         {},
 	"initcmd/env":           {},

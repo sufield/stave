@@ -3,8 +3,8 @@
 > Auto-generated from the built-in control catalog.
 > Do not edit manually. Run: `go run ./internal/tools/gencontroldocs`
 
-**Total controls:** 3527
-**Pack hash:** `b1c1eabe91d97b2bf51788a0fd2d68ca786f4331760d4fac9c3489b7111768f9`
+**Total controls:** 3535
+**Pack hash:** `20803d051c9b9e0d58a3b80a2a9b4aae2d53d133c15be124a65567011682ce8d`
 
 The full per-control detail is split by service so every page renders on
 GitHub. Pick a service below.
@@ -13,11 +13,11 @@ GitHub. Pick a service below.
 
 | Severity | Count |
 |----------|-------|
-| critical | 376 |
-| high | 1502 |
+| critical | 379 |
+| high | 1506 |
 | info | 19 |
 | low | 280 |
-| medium | 1350 |
+| medium | 1351 |
 
 | Domain | Count |
 |--------|-------|
@@ -29,10 +29,10 @@ GitHub. Pick a service below.
 | config | 2 |
 | detection | 162 |
 | encryption | 137 |
-| exposure | 1529 |
+| exposure | 1532 |
 | governance | 711 |
 | hygiene | 21 |
-| identity | 689 |
+| identity | 694 |
 | lifecycle | 32 |
 | network | 65 |
 | resilience | 50 |
@@ -93,7 +93,7 @@ GitHub. Pick a service below.
 | [ECR](reference/ecr.md) | 13 |
 | [ECS](reference/ecs.md) | 61 |
 | [EFS](reference/efs.md) | 15 |
-| [EKS](reference/eks.md) | 120 |
+| [EKS](reference/eks.md) | 123 |
 | [ELASTICACHE](reference/elasticache.md) | 15 |
 | [ELB](reference/elb.md) | 80 |
 | [EMR](reference/emr.md) | 10 |
@@ -113,14 +113,14 @@ GitHub. Pick a service below.
 | [GRAFANA](reference/grafana.md) | 2 |
 | [GUARDDUTY](reference/guardduty.md) | 21 |
 | [GUARDRAIL](reference/guardrail.md) | 1 |
-| [IAM](reference/iam.md) | 345 |
+| [IAM](reference/iam.md) | 347 |
 | [INSPECTOR](reference/inspector.md) | 5 |
 | [IOT](reference/iot.md) | 9 |
 | [K8S](reference/k8s.md) | 68 |
 | [KENDRA](reference/kendra.md) | 1 |
 | [KEYSPACES](reference/keyspaces.md) | 5 |
 | [KINESIS](reference/kinesis.md) | 6 |
-| [KMS](reference/kms.md) | 50 |
+| [KMS](reference/kms.md) | 51 |
 | [LAKEFORMATION](reference/lakeformation.md) | 3 |
 | [LAMBDA](reference/lambda.md) | 94 |
 | [LIFECYCLE](reference/lifecycle.md) | 1 |
@@ -148,7 +148,7 @@ GitHub. Pick a service below.
 | [REDSHIFT](reference/redshift.md) | 27 |
 | [REKOGNITION](reference/rekognition.md) | 3 |
 | [ROUTE53](reference/route53.md) | 54 |
-| [S3](reference/s3.md) | 153 |
+| [S3](reference/s3.md) | 155 |
 | [S3EXPRESS](reference/s3express.md) | 6 |
 | [S3TABLES](reference/s3tables.md) | 3 |
 | [S3VECTORS](reference/s3vectors.md) | 5 |
