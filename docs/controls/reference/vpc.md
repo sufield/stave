@@ -1043,16 +1043,16 @@ VPC tagged with stave:isolation-intent must use one of the three recognized valu
 
 ### CTL.VPC.NACL.ADMIN.001
 
-**No NACL Ingress from 0.0.0.0/0 to Admin Ports**
+**NACL Allows High-Risk Ports from Internet**
 
 - **Severity:** high
 - **Type:** unsafe_state
 - **Domain:** exposure
 - **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: AC-4; nist_800_53_r5: AC-4; pci_dss_v4.0: 1.3.1; soc2: CC6.6;
 
-Network ACLs must not allow inbound traffic from 0.0.0.0/0 or ::/0 to SSH (22) or RDP (3389) ports. NACLs apply to entire subnets — open admin ports expose all instances.
+Network ACL allows inbound traffic from 0.0.0.0/0 or ::/0 to high-risk service ports. NACLs apply to entire subnets — open dangerous ports expose every instance in every associated subnet. High-risk ports include admin access (SSH 22, RDP 3389, Telnet 23), file sharing (SMB 445), databases (MySQL 3306, PostgreSQL 5432, MSSQL 1433, MongoDB 27017, Redis 6379), search/cache (Elasticsearch 9200, Memcached 11211), and container management (Docker 2375, Kubelet 10250).
 
-**Remediation:** Replace the allow rule with a specific CIDR for authorized admin IP ranges using aws ec2 replace-network-acl-entry.
+**Remediation:** Replace allow rules with deny rules for high-risk ports (22, 23, 445, 1433, 2375, 3306, 3389, 5432, 6379, 9200, 10250, 11211, 27017) from 0.0.0.0/0. Position deny rules with lower rule numbers than any conflicting allow rules. Use aws ec2 create-network-acl-entry to add deny rules.
 
 ---
 
@@ -1101,6 +1101,21 @@ NACL in a VPC with airgapped or egress-restricted isolation intent allows outbou
 
 ---
 
+### CTL.VPC.NACL.EPHEMERAL.OVERBROAD.001
+
+**NACL Ephemeral Port Range Overly Broad**
+
+- **Severity:** medium
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Network ACL inbound allow rule for return traffic uses an overly broad port range (typically 0-65535 or 1-65535) instead of the OS-specific ephemeral range. NACLs are stateless — return traffic from outbound connections needs an explicit inbound allow on ephemeral ports. The legitimate ranges are Linux 32768-60999 and Windows 49152-65535. Allowing all ports (0-65535) under the guise of "ephemeral return" opens 32,000+ unnecessary inbound ports, effectively bypassing inbound restriction. This is NACL-specific; security groups are stateful and handle return traffic automatically.
+
+**Remediation:** Replace the broad inbound allow rule with a rule scoped to the OS-specific ephemeral range. For Linux workloads: 32768-60999. For Windows: 49152-65535. For mixed environments: 32768-65535. Use aws ec2 replace-network-acl-entry to narrow the port range.
+
+---
+
 ### CTL.VPC.NACL.RULE.ORDER.001
 
 **NACL Deny Rules Ordered After Allow Rules That Match Same Traffic**
@@ -1128,6 +1143,36 @@ NACL has deny rules with higher rule numbers than allow rules that match the sam
 A custom (non-default) Network ACL is associated with subnets but allows all inbound and outbound traffic — the same effect as using the default NACL. Creating a custom NACL implies intent to filter; an allow-all custom NACL is either a misconfiguration or a placeholder from an incomplete deployment. The custom NACL's existence creates the appearance of defense-in-depth — dashboards show "custom NACL: attached" — while providing none of the filtering that justifies the extra moving part.
 
 **Remediation:** Replace the allow-all rules with a minimal deny-and-allow policy for the subnet's workload. At minimum: deny admin ports (22, 3389) from 0.0.0.0/0, deny known-bad CIDR blocks, allow only the egress destinations the workload requires. If the custom NACL is a placeholder for work that never completed, either finish the rule set or delete the NACL and re-associate subnets with the default.
+
+---
+
+### CTL.VPC.NACL.UNRESTRICTED.INBOUND.001
+
+**NACL Allows All Inbound Traffic**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_aws_v3.0: 5.1; fedramp_moderate: SC-7; nist_800_53_r5: SC-7; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Network ACL allows unrestricted inbound traffic — all protocols, all ports, from 0.0.0.0/0. This is the NACL equivalent of a security group with unrestricted ingress. The NACL provides no inbound filtering; security groups become the only ingress control layer. NACLs are evaluated before security groups, so an unrestricted inbound NACL removes the subnet-level defense-in-depth that would catch SG misconfigurations.
+
+**Remediation:** Replace the inbound allow-all rule with specific allow rules for the protocols and ports required by the subnet's workloads. Add deny rules for known-bad CIDRs and high-risk ports with lower rule numbers than the allow rules.
+
+---
+
+### CTL.VPC.NACL.UNRESTRICTED.OUTBOUND.001
+
+**NACL Allows All Outbound Traffic**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** fedramp_moderate: SC-7; nist_800_53_r5: SC-7, AC-4; pci_dss_v4.0: 1.3.2; soc2: CC6.6;
+
+Network ACL allows unrestricted outbound traffic — all protocols, all ports, to 0.0.0.0/0. This is the NACL equivalent of a security group with unrestricted egress. An unrestricted outbound NACL permits data exfiltration, command-and-control traffic, and cryptomining connections from any instance in the associated subnets. NACLs are stateless, so outbound rules are evaluated independently of inbound — restricting outbound does not break inbound-initiated connections as long as ephemeral return ports are allowed inbound.
+
+**Remediation:** Replace the outbound allow-all rule with specific allow rules for required egress destinations: HTTPS (443) to known service endpoints, DNS (53) to VPC resolver, and ephemeral return ports (32768-60999 for Linux, 49152-65535 for Windows) for inbound- initiated response traffic. Deny all other outbound traffic.
 
 ---
 

@@ -1,0 +1,28 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.nacl-gap-fixes"
+  },
+  "assets": [
+    {
+      "id": "acl-partial-inbound-only",
+      "type": "aws_vpc_network_acl",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "network_acl",
+          "nacl": {
+            "is_custom": true,
+            "allows_all": false,
+            "allows_all_inbound": true,
+            "allows_all_outbound": false,
+            "allows_high_risk_from_internet": false,
+            "ephemeral_range_overbroad": true
+          }
+        }
+      }
+    }
+  ]
+}

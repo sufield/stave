@@ -1,0 +1,110 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NACL.UNRESTRICTED.OUTBOUND.001
+name: NACL Allows All Outbound Traffic
+description: >
+  Network ACL allows unrestricted outbound traffic — all protocols,
+  all ports, to 0.0.0.0/0. This is the NACL equivalent of a security
+  group with unrestricted egress. An unrestricted outbound NACL
+  permits data exfiltration, command-and-control traffic, and
+  cryptomining connections from any instance in the associated
+  subnets. NACLs are stateless, so outbound rules are evaluated
+  independently of inbound — restricting outbound does not break
+  inbound-initiated connections as long as ephemeral return ports
+  are allowed inbound.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-7, AC-4"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
+subtractive_category:
+  - S05
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_network_acl
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - network.kind
+  - network.nacl.is_custom
+  - network.nacl.allows_all_outbound
+remediation:
+  description: >
+    NACL allows all outbound traffic — no subnet-level egress
+    filtering is applied.
+  action: >
+    Replace the outbound allow-all rule with specific allow rules for
+    required egress destinations: HTTPS (443) to known service
+    endpoints, DNS (53) to VPC resolver, and ephemeral return ports
+    (32768-60999 for Linux, 49152-65535 for Windows) for inbound-
+    initiated response traffic. Deny all other outbound traffic.
+  example: |
+    {
+      "network": {
+        "kind": "network_acl",
+        "nacl": {
+          "allows_all_outbound": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_acl
+    - field: properties.network.nacl.is_custom
+      op: eq
+      value: true
+    - field: properties.network.nacl.allows_all_outbound
+      op: eq
+      value: true
+tests:
+  - name: "Custom NACL with unrestricted outbound fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "acl-outbound-open"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: true
+            allows_all_inbound: false
+            allows_all_outbound: true
+  - name: "Custom NACL with restricted outbound passes"
+    verdict: PASS
+    asset:
+      asset_id: "acl-outbound-restricted"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: true
+            allows_all_inbound: true
+            allows_all_outbound: false
+  - name: "Default NACL with unrestricted outbound passes (default is handled by DEFAULT.INUSE.001)"
+    verdict: PASS
+    asset:
+      asset_id: "acl-default-outbound-open"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: false
+            allows_all_outbound: true

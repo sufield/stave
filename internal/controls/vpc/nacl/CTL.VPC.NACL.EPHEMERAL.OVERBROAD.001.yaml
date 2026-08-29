@@ -1,0 +1,106 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NACL.EPHEMERAL.OVERBROAD.001
+name: NACL Ephemeral Port Range Overly Broad
+description: >
+  Network ACL inbound allow rule for return traffic uses an overly
+  broad port range (typically 0-65535 or 1-65535) instead of the
+  OS-specific ephemeral range. NACLs are stateless — return traffic
+  from outbound connections needs an explicit inbound allow on
+  ephemeral ports. The legitimate ranges are Linux 32768-60999 and
+  Windows 49152-65535. Allowing all ports (0-65535) under the guise
+  of "ephemeral return" opens 32,000+ unnecessary inbound ports,
+  effectively bypassing inbound restriction. This is NACL-specific;
+  security groups are stateful and handle return traffic automatically.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-7"
+  soc2: "CC6.6"
+  pci_dss_v4.0: "1.3.2"
+  ccm_v4: ["IVS-03"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
+subtractive_category:
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_network_acl
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.nacl.is_custom
+  - network.nacl.ephemeral_range_overbroad
+remediation:
+  description: >
+    NACL allows inbound traffic on an overly broad port range for
+    return traffic. The port range covers well-known service ports
+    in addition to ephemeral ports.
+  action: >
+    Replace the broad inbound allow rule with a rule scoped to the
+    OS-specific ephemeral range. For Linux workloads: 32768-60999.
+    For Windows: 49152-65535. For mixed environments: 32768-65535.
+    Use aws ec2 replace-network-acl-entry to narrow the port range.
+  example: |
+    {
+      "network": {
+        "kind": "network_acl",
+        "nacl": {
+          "ephemeral_range_overbroad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_acl
+    - field: properties.network.nacl.is_custom
+      op: eq
+      value: true
+    - field: properties.network.nacl.ephemeral_range_overbroad
+      op: eq
+      value: true
+tests:
+  - name: "NACL with overbroad ephemeral range fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "acl-ephemeral-broad"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: true
+            ephemeral_range_overbroad: true
+  - name: "NACL with Linux ephemeral range passes"
+    verdict: PASS
+    asset:
+      asset_id: "acl-ephemeral-linux"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: true
+            ephemeral_range_overbroad: false
+  - name: "Default NACL passes (default handled by DEFAULT.INUSE.001)"
+    verdict: PASS
+    asset:
+      asset_id: "acl-default-ephemeral"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: false
+            ephemeral_range_overbroad: true

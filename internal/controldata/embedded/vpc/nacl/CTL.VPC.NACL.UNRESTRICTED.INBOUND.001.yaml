@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.NACL.UNRESTRICTED.INBOUND.001
+name: NACL Allows All Inbound Traffic
+description: >
+  Network ACL allows unrestricted inbound traffic — all protocols,
+  all ports, from 0.0.0.0/0. This is the NACL equivalent of a
+  security group with unrestricted ingress. The NACL provides no
+  inbound filtering; security groups become the only ingress control
+  layer. NACLs are evaluated before security groups, so an
+  unrestricted inbound NACL removes the subnet-level defense-in-depth
+  that would catch SG misconfigurations.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "5.1"
+  nist_800_53_r5: "SC-7"
+  fedramp_moderate: "SC-7"
+  pci_dss_v4.0: "1.3.2"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "IVS-06"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - compliance-mapping
+  - network-isolation
+  - network-perimeter
+subtractive_category:
+  - S03
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_network_acl
+params:
+  attack_stage: initial_access
+observation_fields:
+  - network.kind
+  - network.nacl.is_custom
+  - network.nacl.allows_all_inbound
+remediation:
+  description: >
+    NACL allows all inbound traffic — no subnet-level ingress
+    filtering is applied.
+  action: >
+    Replace the inbound allow-all rule with specific allow rules for
+    the protocols and ports required by the subnet's workloads. Add
+    deny rules for known-bad CIDRs and high-risk ports with lower
+    rule numbers than the allow rules.
+  example: |
+    {
+      "network": {
+        "kind": "network_acl",
+        "nacl": {
+          "allows_all_inbound": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: network_acl
+    - field: properties.network.nacl.is_custom
+      op: eq
+      value: true
+    - field: properties.network.nacl.allows_all_inbound
+      op: eq
+      value: true
+tests:
+  - name: "Custom NACL with unrestricted inbound fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "acl-inbound-open"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: true
+            allows_all_inbound: true
+            allows_all_outbound: false
+  - name: "Custom NACL with restricted inbound passes"
+    verdict: PASS
+    asset:
+      asset_id: "acl-inbound-restricted"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: true
+            allows_all_inbound: false
+            allows_all_outbound: true
+  - name: "Default NACL with unrestricted inbound passes (default is handled by DEFAULT.INUSE.001)"
+    verdict: PASS
+    asset:
+      asset_id: "acl-default-inbound-open"
+      asset_type: aws_vpc_network_acl
+      vendor: aws
+      properties:
+        network:
+          kind: network_acl
+          nacl:
+            is_custom: false
+            allows_all_inbound: true
