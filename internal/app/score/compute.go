@@ -207,11 +207,25 @@ type Result struct {
 // dragging the posture score below its maximum, with the count of
 // findings driving the impact and the points lost. Centralised on
 // Result so the CLI display layer doesn't reach 3 levels deep into
+// MoverComponent classifies which sub-score component a score mover represents.
+type MoverComponent string
+
+const (
+	MoverSeverity MoverComponent = "severity"
+	MoverSLA      MoverComponent = "sla"
+	MoverChain    MoverComponent = "chain"
+	MoverCoverage MoverComponent = "coverage"
+)
+
+// ScoreMover names a sub-score component that is currently
+// dragging the posture score below its maximum, with the count of
+// findings driving the impact and the points lost. Centralised on
+// Result so the CLI display layer doesn't reach 3 levels deep into
 // component / detail fields per render.
 type ScoreMover struct {
 	// Component identifies which sub-score this mover comes from
-	// — "severity", "sla", "chain", or "coverage".
-	Component string
+	// — MoverSeverity, MoverSLA, MoverChain, or MoverCoverage.
+	Component MoverComponent
 	// Count is the impactful unit (failing findings, breaches,
 	// active chains). For coverage it is the percentage rounded to
 	// the nearest integer.
@@ -232,16 +246,16 @@ type ScoreMover struct {
 // width-aligned form.
 func (m ScoreMover) Label() string {
 	switch m.Component {
-	case "severity":
+	case MoverSeverity:
 		return fmt.Sprintf("%d findings currently failing", m.Count)
-	case "sla":
+	case MoverSLA:
 		return fmt.Sprintf("%d SLA breach(es)", m.Count)
-	case "chain":
+	case MoverChain:
 		return fmt.Sprintf("%d active compound chain(s)", m.Count)
-	case "coverage":
+	case MoverCoverage:
 		return fmt.Sprintf("Framework coverage %d%%", m.Count)
 	default:
-		return m.Component + " impact"
+		return string(m.Component) + " impact"
 	}
 }
 
@@ -254,28 +268,28 @@ func (r Result) Movers() []ScoreMover {
 	movers := make([]ScoreMover, 0, 4)
 	if r.Severity.Detail.FailingFindings > 0 {
 		movers = append(movers, ScoreMover{
-			Component:  "severity",
+			Component:  MoverSeverity,
 			Count:      r.Severity.Detail.FailingFindings,
 			PointsLost: r.Severity.MaxContribution - r.Severity.Contribution,
 		})
 	}
 	if r.SLA.Detail.FindingsBreached > 0 {
 		movers = append(movers, ScoreMover{
-			Component:  "sla",
+			Component:  MoverSLA,
 			Count:      r.SLA.Detail.FindingsBreached,
 			PointsLost: r.SLA.MaxContribution - r.SLA.Contribution,
 		})
 	}
 	if r.Chain.Detail.ActiveChains > 0 {
 		movers = append(movers, ScoreMover{
-			Component:  "chain",
+			Component:  MoverChain,
 			Count:      r.Chain.Detail.ActiveChains,
 			PointsLost: r.Chain.MaxContribution - r.Chain.Contribution,
 		})
 	}
 	if r.Coverage.SubScore < 1.0 {
 		movers = append(movers, ScoreMover{
-			Component:  "coverage",
+			Component:  MoverCoverage,
 			Count:      int(r.Coverage.Detail.CoveragePct),
 			PointsLost: r.Coverage.MaxContribution - r.Coverage.Contribution,
 		})

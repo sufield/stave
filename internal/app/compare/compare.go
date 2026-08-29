@@ -60,9 +60,9 @@ type Roadmap struct {
 
 // Phase is one phase of the roadmap.
 type Phase struct {
-	Description string   `json:"description"`
-	Controls    []string `json:"findings"`
-	Count       int      `json:"count"`
+	Description string             `json:"description"`
+	Controls    []kernel.ControlID `json:"findings"`
+	Count       int                `json:"count"`
 }
 
 // Input holds the data for gap analysis.
@@ -166,12 +166,12 @@ func Analyze(input Input) *Result {
 	}
 
 	// Roadmap.
-	var phase1IDs, phase2IDs []string
+	var phase1IDs, phase2IDs []kernel.ControlID
 	for _, s := range shared {
-		phase1IDs = append(phase1IDs, string(s.ControlID))
+		phase1IDs = append(phase1IDs, s.ControlID)
 	}
 	for _, s := range targetOnly {
-		phase2IDs = append(phase2IDs, string(s.ControlID))
+		phase2IDs = append(phase2IDs, s.ControlID)
 	}
 
 	// Leadership summary.

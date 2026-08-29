@@ -15,14 +15,21 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 )
 
+// SignatureAlgorithm names the cryptographic signature algorithm.
+type SignatureAlgorithm string
+
+const (
+	AlgorithmEd25519 SignatureAlgorithm = "Ed25519"
+)
+
 // InlineAttestation is the attestation field embedded in observation JSON.
 type InlineAttestation struct {
-	SignedAt             string `json:"signed_at"`
-	CollectorHostname    string `json:"collector_hostname,omitempty"`
-	CollectorVersion     string `json:"collector_version,omitempty"`
-	SignatureAlgorithm   string `json:"signature_algorithm"`
-	PublicKeyFingerprint string `json:"public_key_fingerprint"`
-	Signature            string `json:"signature"`
+	SignedAt             string             `json:"signed_at"`
+	CollectorHostname    string             `json:"collector_hostname,omitempty"`
+	CollectorVersion     string             `json:"collector_version,omitempty"`
+	SignatureAlgorithm   SignatureAlgorithm `json:"signature_algorithm"`
+	PublicKeyFingerprint string             `json:"public_key_fingerprint"`
+	Signature            string             `json:"signature"`
 }
 
 // AttestedSnapshot wraps a snapshot with its attestation.
@@ -61,7 +68,7 @@ func SignAssets(assets []asset.Asset, privateKey ed25519.PrivateKey, hostname, v
 		SignedAt:             signedAt.UTC().Format(time.RFC3339),
 		CollectorHostname:    hostname,
 		CollectorVersion:     version,
-		SignatureAlgorithm:   "Ed25519",
+		SignatureAlgorithm:   AlgorithmEd25519,
 		PublicKeyFingerprint: "sha256:" + hex.EncodeToString(fingerprint[:]),
 		Signature:            base64.StdEncoding.EncodeToString(sig),
 	}, nil
