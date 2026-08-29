@@ -1,0 +1,48 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.iam-escalation-set-default-policy-version"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:iam::111122223333:user/partial-user",
+      "type": "aws_iam_user",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "user",
+          "policies": {
+            "has_inline_policies": true
+          },
+          "escalation": {
+            "create_policy_version": {
+              "present": true,
+              "target_policy_arn": "arn:aws:iam::111122223333:policy/DataTeamPolicy",
+              "attachment_path": "direct",
+              "attachment_group": null,
+              "has_create_version": true,
+              "has_set_default": false
+            },
+            "can_escalate_to_admin": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::app-assets-111122223333",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "bucket_name": "app-assets-111122223333",
+        "public_access_block": {
+          "block_public_acls": true,
+          "block_public_policy": true,
+          "ignore_public_acls": true,
+          "restrict_public_buckets": true
+        }
+      }
+    }
+  ]
+}

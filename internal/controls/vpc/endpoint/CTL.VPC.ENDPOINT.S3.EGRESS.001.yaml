@@ -1,0 +1,87 @@
+dsl_version: ctrl.v1
+id: CTL.VPC.ENDPOINT.S3.EGRESS.001
+name: S3 Endpoint Policy Does Not Restrict Destination to Organizational Resources
+description: >
+  S3 VPC endpoint policy does not restrict access to organizational
+  resources using aws:ResourceOrgID, aws:ResourceAccount, or specific
+  bucket ARNs. Without destination restriction, a compromised workload
+  can PutObject to any S3 bucket globally — including attacker-controlled
+  buckets — exfiltrating data via upload to an external account's bucket.
+  This is distinct from CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001 which checks
+  the Resource element (explicit bucket ARN list); this control checks the
+  Condition element (aws:ResourceOrgID or aws:ResourceAccount) which is
+  self-maintaining across new buckets.
+domain: network
+severity: high
+compliance:
+  nist_800_53_r5: "AC-4"
+  soc2: "CC6.6"
+  ccm_v4: ["IVS-03", "DSP-17"]
+scope_tags:
+  - aws
+  - vpc
+taxonomy:
+  - network-perimeter
+  - data-perimeter
+subtractive_category:
+  - S05
+  - S06
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_vpc_endpoint
+params:
+  attack_stage: exfiltration
+observation_fields:
+  - network.kind
+  - network.vpc_endpoint.service_name
+  - network.endpoint_policy.restricts_to_org_resources
+remediation:
+  description: >
+    S3 endpoint policy does not restrict access to organizational
+    resources. Any S3 bucket globally is reachable through this
+    endpoint.
+  action: >
+    Add an aws:ResourceOrgID condition to the endpoint policy to restrict
+    access to buckets owned by your organization, or restrict the Resource
+    field to specific bucket ARNs.
+unsafe_predicate:
+  all:
+    - field: properties.network.kind
+      op: eq
+      value: vpc_endpoint
+    - field: properties.network.vpc_endpoint.service_name
+      op: contains
+      value: ".s3"
+    - field: properties.network.endpoint_policy.restricts_to_org_resources
+      op: eq
+      value: false
+tests:
+  - name: "S3 endpoint without org restriction fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "vpce-0s3001unrestricted"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            service_name: com.amazonaws.us-east-1.s3
+          endpoint_policy:
+            restricts_to_org_resources: false
+  - name: "S3 endpoint with org restriction passes"
+    verdict: PASS
+    asset:
+      asset_id: "vpce-0s3002restricted"
+      asset_type: aws_vpc_endpoint
+      vendor: aws
+      properties:
+        network:
+          kind: vpc_endpoint
+          vpc_endpoint:
+            kind: Gateway
+            service_name: com.amazonaws.us-east-1.s3
+          endpoint_policy:
+            restricts_to_org_resources: true

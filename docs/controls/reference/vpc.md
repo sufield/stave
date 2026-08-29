@@ -712,6 +712,21 @@ VPCs must have an S3 VPC gateway endpoint to route S3 traffic privately through 
 
 ---
 
+### CTL.VPC.ENDPOINT.S3.EGRESS.001
+
+**S3 Endpoint Policy Does Not Restrict Destination to Organizational Resources**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** network
+- **Compliance:** nist_800_53_r5: AC-4; soc2: CC6.6;
+
+S3 VPC endpoint policy does not restrict access to organizational resources using aws:ResourceOrgID, aws:ResourceAccount, or specific bucket ARNs. Without destination restriction, a compromised workload can PutObject to any S3 bucket globally — including attacker-controlled buckets — exfiltrating data via upload to an external account's bucket. This is distinct from CTL.VPC.ENDPOINT.BUCKET.RESTRICT.001 which checks the Resource element (explicit bucket ARN list); this control checks the Condition element (aws:ResourceOrgID or aws:ResourceAccount) which is self-maintaining across new buckets.
+
+**Remediation:** Add an aws:ResourceOrgID condition to the endpoint policy to restrict access to buckets owned by your organization, or restrict the Resource field to specific bucket ARNs.
+
+---
+
 ### CTL.VPC.ENDPOINT.SAGEMAKER.EGRESS.001
 
 **SageMaker Endpoint Policy Does Not Restrict Destination to Organizational Resources**

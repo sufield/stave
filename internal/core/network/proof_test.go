@@ -930,3 +930,276 @@ func TestProveTransitiveEgress_BuildGraph_EvidenceGated(t *testing.T) {
 		t.Errorf("expected gated-egress path type, got %s", result.Counterexample.PathType)
 	}
 }
+
+func routeTableAssetWithState(id string, routes []map[string]any) asset.Asset {
+	routesAny := make([]any, len(routes))
+	for i, r := range routes {
+		routesAny[i] = r
+	}
+	return asset.Asset{
+		ID:     asset.ID(id),
+		Type:   "aws_ec2_route_table",
+		Vendor: "aws",
+		Properties: map[string]any{
+			"network": map[string]any{
+				"route_table": map[string]any{
+					"routes": routesAny,
+				},
+			},
+		},
+	}
+}
+
+func TestTransitiveEgressFixtures(t *testing.T) {
+	tests := []struct {
+		name            string
+		assets          []asset.Asset
+		wantResult      string
+		wantErr         bool
+		wantPathType    string
+		wantPort        int
+		knownLimitation string
+	}{
+		{
+			name: "writeup",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-mirror", "vpc-ml", "subnet-svc", []string{"sg-mirror"}, map[string]string{"stave:role": "package-mirror"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-mirror", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+				subnetAsset("subnet-svc", "vpc-ml", "rt-svc", nil),
+				routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+				routeTableAsset("rt-svc", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+				}),
+			},
+			wantResult:   "SAT",
+			wantPathType: "transitive-egress",
+			wantPort:     443,
+		},
+		{
+			name: "remediated",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-mirror", "vpc-ml", "subnet-svc", []string{"sg-mirror"}, map[string]string{"stave:role": "package-mirror"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-mirror", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-mirror"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+				subnetAsset("subnet-svc", "vpc-ml", "rt-svc", nil),
+				routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+				routeTableAsset("rt-svc", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+				}),
+			},
+			wantResult: "UNSAT",
+		},
+		{
+			name: "gated",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-relay", "vpc-ml", "subnet-tgw", []string{"sg-relay"}, map[string]string{"stave:role": "relay"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-relay", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+				subnetAsset("subnet-tgw", "vpc-ml", "rt-tgw", nil),
+				routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+				routeTableAsset("rt-tgw", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "tgw", TargetID: "tgw-att-01"},
+				}),
+			},
+			wantResult:   "EVIDENCE_GATED",
+			wantPathType: "gated-egress",
+			wantPort:     443,
+		},
+		{
+			name: "partial-main-table",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-mirror", "vpc-ml", "subnet-svc", []string{"sg-mirror"}, map[string]string{"stave:role": "package-mirror"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-mirror", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-main", nil),
+				subnetAsset("subnet-svc", "vpc-ml", "rt-main", nil),
+				routeTableAsset("rt-main", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-01"},
+				}),
+			},
+			wantResult:   "SAT",
+			wantPathType: "transitive-egress",
+			wantPort:     443,
+		},
+		{
+			name: "partial-precedence-sat-over-gated",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-gated", "vpc-ml", "subnet-tgw", []string{"sg-gated"}, map[string]string{"stave:role": "relay"}),
+				hostAsset("i-sink", "vpc-ml", "subnet-nat", []string{"sg-sink"}, map[string]string{"stave:role": "mirror"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-gated", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				sgAsset("sg-sink", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+				subnetAsset("subnet-tgw", "vpc-ml", "rt-tgw", nil),
+				subnetAsset("subnet-nat", "vpc-ml", "rt-nat", nil),
+				routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+				routeTableAsset("rt-tgw", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "tgw", TargetID: "tgw-att-01"},
+				}),
+				routeTableAsset("rt-nat", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+				}),
+			},
+			wantResult:   "SAT",
+			wantPathType: "transitive-egress",
+		},
+		{
+			name: "partial-gated-over-unsat",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-vpn", "vpc-ml", "subnet-vpn", []string{"sg-vpn"}, map[string]string{"stave:role": "vpn-gateway"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-vpn", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+				subnetAsset("subnet-vpn", "vpc-ml", "rt-vpn", nil),
+				routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+				routeTableAsset("rt-vpn", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "vgw", TargetID: "vgw-01"},
+				}),
+			},
+			wantResult:   "EVIDENCE_GATED",
+			wantPathType: "gated-egress",
+		},
+		{
+			name: "partial-unknown-target",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-appliance", "vpc-ml", "subnet-app", []string{"sg-app"}, map[string]string{"stave:role": "appliance"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-app", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+				subnetAsset("subnet-app", "vpc-ml", "rt-app", nil),
+				routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+				routeTableAsset("rt-app", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "gwlbe", TargetID: "gwlbe-01"},
+				}),
+			},
+			wantResult:   "EVIDENCE_GATED",
+			wantPathType: "gated-egress",
+		},
+		{
+			name: "partial-uppercase-target",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-mirror", "vpc-ml", "subnet-svc", []string{"sg-mirror"}, map[string]string{"stave:role": "package-mirror"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-mirror", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+				subnetAsset("subnet-svc", "vpc-ml", "rt-svc", nil),
+				routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+				routeTableAsset("rt-svc", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "NAT", TargetID: "nat-01"},
+				}),
+			},
+			wantResult:   "SAT",
+			wantPathType: "transitive-egress",
+		},
+		{
+			name: "partial-no-isolated-host",
+			assets: []asset.Asset{
+				hostAsset("i-mirror", "vpc-ml", "subnet-svc", []string{"sg-mirror"}, map[string]string{"stave:role": "package-mirror"}),
+				sgAsset("sg-mirror", nil),
+				subnetAsset("subnet-svc", "vpc-ml", "rt-svc", nil),
+				routeTableAsset("rt-svc", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+				}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "partial-all-ports",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-mirror", "vpc-ml", "subnet-svc", []string{"sg-mirror"}, map[string]string{"stave:role": "package-mirror"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-mirror", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 0, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+				subnetAsset("subnet-svc", "vpc-ml", "rt-svc", nil),
+				routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+				routeTableAsset("rt-svc", []Route{
+					{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+				}),
+			},
+			wantResult:   "SAT",
+			wantPathType: "transitive-egress",
+			wantPort:     0,
+		},
+		{
+			// extractRouteTable does not read route state; a blackhole route
+			// is indistinguishable from an active one. The prover reports SAT
+			// even though the route cannot forward traffic.
+			name: "partial-blackhole",
+			assets: []asset.Asset{
+				hostAsset("i-sandbox", "vpc-ml", "subnet-iso", []string{"sg-sandbox"}, map[string]string{"stave:network-zone": "isolated"}),
+				hostAsset("i-mirror", "vpc-ml", "subnet-svc", []string{"sg-mirror"}, map[string]string{"stave:role": "package-mirror"}),
+				sgAsset("sg-sandbox", nil),
+				sgAsset("sg-mirror", []SGRule{{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-sandbox"}}),
+				subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+				subnetAsset("subnet-svc", "vpc-ml", "rt-svc", nil),
+				routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+				routeTableAssetWithState("rt-svc", []map[string]any{
+					{"destination": "10.0.0.0/16", "target_type": "local", "target_id": "local"},
+					{"destination": "0.0.0.0/0", "target_type": "nat", "target_id": "nat-01", "state": "blackhole"},
+				}),
+			},
+			wantResult:      "SAT",
+			wantPathType:    "transitive-egress",
+			knownLimitation: "extractRouteTable does not read route state; blackhole routes treated as active",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := BuildGraph([]asset.Snapshot{{Assets: tt.assets}})
+			result, err := g.ProveTransitiveEgress()
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if result.Result != tt.wantResult {
+				t.Fatalf("expected %s, got %s", tt.wantResult, result.Result)
+			}
+			if tt.wantPathType != "" {
+				if result.Counterexample == nil {
+					t.Fatal("expected counterexample")
+				}
+				if result.Counterexample.PathType != tt.wantPathType {
+					t.Errorf("expected path type %s, got %s", tt.wantPathType, result.Counterexample.PathType)
+				}
+			}
+			if tt.wantPort != 0 && result.Counterexample != nil {
+				if result.Counterexample.Port != tt.wantPort {
+					t.Errorf("expected port %d, got %d", tt.wantPort, result.Counterexample.Port)
+				}
+			}
+			if tt.knownLimitation != "" {
+				t.Logf("KNOWN-LIMITATION: %s", tt.knownLimitation)
+			}
+		})
+	}
+}
