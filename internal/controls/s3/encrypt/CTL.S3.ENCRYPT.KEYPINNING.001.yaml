@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.KEYPINNING.001
+name: "Bucket Policy Does Not Enforce KMS Key ID on Uploads"
+description: >
+  S3 bucket uses SSE-KMS default encryption but the bucket policy does
+  not contain a Deny statement with a StringNotEquals condition on
+  s3:x-amz-server-side-encryption-aws-kms-key-id. Default encryption
+  sets a preference, not an enforcement — any caller with s3:PutObject
+  can specify a different KMS key in the request, including one they
+  created in their own account. New objects get encrypted with the
+  attacker's key; old objects stay on the legitimate key. Same attack
+  shape as CVE-2020-8259 (Nextcloud encryption key substitution).
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-10", "DSP-17"]
+scope_tags:
+  - aws
+  - s3
+  - encryption-at-rest
+  - key-management
+taxonomy:
+  - data-protection
+  - encryption-at-rest
+  - key-management
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: initial_access
+observation_fields:
+  - storage.kind
+  - storage.encryption.algorithm
+  - storage.encryption.key_pinned_in_policy
+remediation:
+  description: >
+    Bucket uses SSE-KMS but the bucket policy does not enforce the
+    specific KMS key ID. Any caller with s3:PutObject can encrypt
+    objects with a different key — including one in their own account.
+  action: >
+    Add a Deny statement to the bucket policy that rejects PutObject
+    requests specifying a different KMS key. This locks all uploads to
+    the designated key.
+  example: |
+    {
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::BUCKET/*",
+      "Condition": {
+        "StringNotEquals": {
+          "s3:x-amz-server-side-encryption-aws-kms-key-id": "arn:aws:kms:REGION:ACCOUNT:key/KEY-ID"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.algorithm
+      op: eq
+      value: "aws:kms"
+    - field: properties.storage.encryption.key_pinned_in_policy
+      op: ne
+      value: true
+tests:
+  - name: kms bucket without key pinning fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-data-kms-nopolicy
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            algorithm: "aws:kms"
+            key_pinned_in_policy: false
+  - name: kms bucket with key pinning passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-data-kms-pinned
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            algorithm: "aws:kms"
+            key_pinned_in_policy: true
+  - name: sse-s3 bucket without key pinning does not fire
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::logs-bucket-aes256
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            algorithm: "AES256"
+            key_pinned_in_policy: false

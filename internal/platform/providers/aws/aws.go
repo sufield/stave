@@ -74,6 +74,10 @@ func Register() {
 	network.GraphTypes.Instance = "aws_ec2_instance"
 	network.GraphTypes.SecurityGroup = "aws_ec2_security_group"
 	network.GraphTypes.PeeringConnection = "aws_vpc_peering_connection"
+	network.GraphTypes.Subnet = "aws_ec2_subnet"
+	network.GraphTypes.RouteTable = "aws_ec2_route_table"
+	network.GraphTypes.Firewall = "aws_networkfirewall_firewall"
+	network.GraphTypes.TransitGateway = "aws_ec2_transit_gateway_attachment"
 
 	remediation.TypeTokens["aws_s3_bucket"] = []remediation.TokenDef{
 		{Placeholder: "<bucket>"},

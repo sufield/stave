@@ -1,15 +1,34 @@
 package aws_test
 
 import (
+	"reflect"
 	"slices"
 	"testing"
 
 	"github.com/sufield/stave/internal/core/kernel"
+	"github.com/sufield/stave/internal/core/network"
 	"github.com/sufield/stave/internal/platform/providers/aws"
 )
 
 // External _test package so we can import providers/aws without
 // creating a production-time cycle (aws imports core/kernel).
+
+func TestGraphTypesComplete(t *testing.T) {
+	aws.Register()
+	v := reflect.ValueOf(network.GraphTypes)
+	typ := v.Type()
+	var empty []string
+	for i := range typ.NumField() {
+		f := typ.Field(i)
+		if v.Field(i).String() == "" {
+			empty = append(empty, f.Name)
+		}
+	}
+	t.Logf("GraphTypes: %d fields, %d non-empty", typ.NumField(), typ.NumField()-len(empty))
+	if len(empty) > 0 {
+		t.Fatalf("GraphTypes fields empty after Register(): %v", empty)
+	}
+}
 
 func TestRegister_SeedsBannedCredentialKeys(t *testing.T) {
 	aws.Register()

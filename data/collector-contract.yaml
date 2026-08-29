@@ -5134,3 +5134,59 @@ contracts:
     consumers:
       - CTL.ACCOUNT.ANOMALY.MONITOR.001
 
+  # ─── S3 Encryption Policy Enforcement (Aug 2026) ────────────
+  # Applies to: aws_s3_bucket
+  # Closes the gap between "encryption is on" and "encryption is enforced."
+
+  - field: storage.encryption.key_pinned_in_policy
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the bucket policy contains a Deny statement for
+      s3:PutObject (or s3:PutObject*) with a StringNotEquals
+      condition on s3:x-amz-server-side-encryption-aws-kms-key-id
+      whose value matches the bucket's default encryption KMS key
+      ARN. False if the condition is absent, uses Allow instead of
+      Deny, uses StringEquals instead of StringNotEquals, or the
+      ARN does not match the default encryption key. Only
+      meaningful when encryption algorithm is aws:kms.
+    botocore_source: >
+      s3:GetBucketPolicy (policy document Condition blocks),
+      s3:GetBucketEncryption (default KMS key ARN for comparison)
+    consumers:
+      - CTL.S3.ENCRYPT.KEYPINNING.001
+
+  - field: storage.encryption.encryption_enforced_in_policy
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the bucket policy contains a Deny statement for
+      s3:PutObject (or s3:PutObject*) with a condition on
+      s3:x-amz-server-side-encryption that rejects requests
+      without server-side encryption specified (StringNotEquals
+      on aws:kms or AES256, or Null condition on
+      s3:x-amz-server-side-encryption = true). Only meaningful
+      when at_rest_enabled is true.
+    botocore_source: >
+      s3:GetBucketPolicy (policy document Condition blocks)
+    consumers:
+      - CTL.S3.ENCRYPT.DENY.UNENCRYPTED.001
+
+  - field: storage.encryption.kms_key_encrypt_broad
+    type: boolean
+    status: planned
+    postcondition: >
+      True if the KMS key used for S3 bucket encryption grants
+      kms:Encrypt or kms:GenerateDataKey (or kms:GenerateDataKey*)
+      to overly broad principals: Principal *, account root without
+      conditions, or {"AWS": "*"}. A kms:ViaService condition
+      narrows the grant but does not clear this field — the field
+      remains true because ViaService still permits any principal
+      via the named service. False if encrypt grants are scoped to
+      specific roles or services with principal restrictions.
+    botocore_source: >
+      kms:GetKeyPolicy (key policy document),
+      s3:GetBucketEncryption (KMS key ARN to look up)
+    consumers:
+      - CTL.S3.ENCRYPT.KMS.ENCRYPT.BROAD.001
+

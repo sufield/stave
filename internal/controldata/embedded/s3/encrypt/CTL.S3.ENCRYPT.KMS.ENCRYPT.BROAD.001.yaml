@@ -1,0 +1,86 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.KMS.ENCRYPT.BROAD.001
+name: "KMS Key Policy Grants Broad Encrypt Access"
+description: >
+  The KMS key used for S3 encryption grants kms:Encrypt or
+  kms:GenerateDataKey to overly broad principals — *, account root
+  without conditions, or Principal: {"AWS": "*"}. Broad encrypt access
+  undermines key-pinning controls: even if the bucket policy pins
+  uploads to this key, an attacker with broad encrypt access can use
+  the pinned key directly rather than substituting their own. This is
+  the write-side complement to CTL.S3.ENCRYPT.KMS.POLICY.001 which
+  checks decrypt breadth.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-12"
+  soc2: "CC6.1"
+  ccm_v4: ["CEK-01"]
+scope_tags:
+  - aws
+  - s3
+  - key-management
+taxonomy:
+  - data-protection
+  - key-management
+subtractive_category:
+  - S08
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: initial_access
+observation_fields:
+  - storage.kind
+  - storage.encryption.kms_key_encrypt_broad
+remediation:
+  description: >
+    KMS key used for S3 encryption grants broad kms:Encrypt or
+    kms:GenerateDataKey access.
+  action: >
+    Scope the KMS key policy to restrict kms:Encrypt and
+    kms:GenerateDataKey to specific principals. Use kms:ViaService
+    condition to limit usage to s3.amazonaws.com. Remove grants to
+    * or account root without conditions.
+  example: |
+    {
+      "storage": {
+        "kind": "bucket",
+        "encryption": {
+          "kms_key_encrypt_broad": false
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.kms_key_encrypt_broad
+      op: eq
+      value: true
+tests:
+  - name: broad kms encrypt access fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-data-broad-encrypt
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            kms_key_encrypt_broad: true
+  - name: scoped kms encrypt access passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-data-scoped-encrypt
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            kms_key_encrypt_broad: false

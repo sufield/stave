@@ -14,8 +14,9 @@ func NewCmd() *cobra.Command {
 		Short: "Verify a network safety property",
 		Long: `Proves a network safety property against observation snapshots.
 
-Returns UNSAT if the property holds (no violating paths), or SAT with
-a counterexample identifying the specific violation.
+Returns UNSAT if the property holds (no violating paths), SAT with
+a counterexample identifying the specific violation, or EVIDENCE_GATED
+when a path reaches a route target the snapshot cannot resolve.
 
 Properties:
   bastion-ssh          All SSH to production routes through a bastion host
@@ -23,7 +24,12 @@ Properties:
   database-isolation   No cross-VPC or internet path to database-tier hosts
   firewall-mandatory   All private subnet internet traffic passes through Network Firewall
   transitive-ssh       No SSH path from external to internal via an intermediate host
-  transitive-egress    No isolated workload reaches internet via a host with egress
+  transitive-egress    Proves no tag-isolated workload reaches the internet via a host
+                       with default-route egress. Network-layer only; IAM-layer service
+                       paths are not evaluated. EVIDENCE_GATED means a path reaches a
+                       route target the snapshot cannot resolve (TGW, VPN/DX, firewall
+                       or GWLB endpoint, NAT instance); the result names the observation
+                       that would settle it.
 
 Inputs:
   --observations, -o  Observation snapshots directory (required)
@@ -32,10 +38,11 @@ Inputs:
   --format, -f        Output format: json, text (default: text)
 
 Outputs:
-  stdout: proof result (UNSAT = property holds, SAT = violation found)
+  stdout: proof result (UNSAT = property holds, SAT = violation found,
+          EVIDENCE_GATED = inconclusive, additional observation needed)
 
 Exit codes:
-  0   Proof completed successfully (regardless of SAT/UNSAT)
+  0   Proof completed successfully (regardless of SAT/UNSAT/EVIDENCE_GATED)
   2   Input error (bad flags, missing observations)
   4   Internal error
   130 Interrupted (SIGINT)` + metadata.OfflineHelpSuffix,

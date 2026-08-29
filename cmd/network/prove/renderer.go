@@ -48,8 +48,11 @@ func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
 	if title == "" {
 		title = r.Property
 	}
-	if r.Result == "SAT" {
+	switch r.Result {
+	case "SAT":
 		title += " — VIOLATION FOUND"
+	case "EVIDENCE_GATED":
+		title += " — EVIDENCE GATED"
 	}
 
 	fmt.Fprintln(w, "═══════════════════════════════════════════")
@@ -73,19 +76,36 @@ func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
 	}
 	fmt.Fprintln(w)
 
-	if r.Result == "UNSAT" {
+	switch r.Result {
+	case "UNSAT":
 		fmt.Fprintf(w, "  PROOF: %s\n", r.Interpretation)
 		fmt.Fprintf(w, "  Solver: graph-search (completed in %dms)\n", r.SolveTimeMs)
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "  No violation exists.")
-	} else {
-		fmt.Fprintln(w, "  COUNTEREXAMPLE:")
+	case "EVIDENCE_GATED":
 		ce := r.Counterexample
+		fmt.Fprintln(w, "  EVIDENCE GATED:")
 		fmt.Fprintf(w, "    Source:      %s\n", ce.Source)
 		fmt.Fprintf(w, "    Destination: %s\n", ce.Destination)
-		if ce.Port > 0 {
-			fmt.Fprintf(w, "    Port:        %d\n", ce.Port)
+		renderPort(w, ce)
+		fmt.Fprintf(w, "    Path:        %s\n", ce.PathType)
+		if ce.RuleSG != "" {
+			fmt.Fprintf(w, "    Rule SG:     %s\n", ce.RuleSG)
 		}
+		if ce.RuleSource != "" {
+			fmt.Fprintf(w, "    Rule source: %s\n", ce.RuleSource)
+		}
+		fmt.Fprintln(w)
+		fmt.Fprintf(w, "  %s\n", ce.Explanation)
+		fmt.Fprintln(w)
+		fmt.Fprintln(w, "  REMEDIATION:")
+		fmt.Fprintf(w, "    %s\n", ce.Remediation)
+	default:
+		ce := r.Counterexample
+		fmt.Fprintln(w, "  COUNTEREXAMPLE:")
+		fmt.Fprintf(w, "    Source:      %s\n", ce.Source)
+		fmt.Fprintf(w, "    Destination: %s\n", ce.Destination)
+		renderPort(w, ce)
 		fmt.Fprintf(w, "    Path:        %s\n", ce.PathType)
 		if ce.RuleSG != "" {
 			fmt.Fprintf(w, "    Rule SG:     %s\n", ce.RuleSG)
@@ -100,4 +120,13 @@ func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
 		fmt.Fprintf(w, "    %s\n", ce.Remediation)
 	}
 	return nil
+}
+
+func renderPort(w io.Writer, ce *network.Counterexample) {
+	switch {
+	case ce.Port > 0:
+		fmt.Fprintf(w, "    Port:        %d\n", ce.Port)
+	case ce.PathType != "direct-igw":
+		fmt.Fprintf(w, "    Port:        all\n")
+	}
 }

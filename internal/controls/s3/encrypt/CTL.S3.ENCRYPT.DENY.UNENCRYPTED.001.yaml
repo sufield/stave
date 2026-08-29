@@ -1,0 +1,103 @@
+dsl_version: ctrl.v1
+id: CTL.S3.ENCRYPT.DENY.UNENCRYPTED.001
+name: "Bucket Policy Does Not Deny Unencrypted Uploads"
+description: >
+  S3 bucket has default encryption enabled but the bucket policy does
+  not deny PutObject requests that omit server-side encryption. Default
+  encryption applies only when the caller does not specify encryption.
+  An explicit ServerSideEncryption: none in the request bypasses the
+  default. Without a Deny condition on s3:x-amz-server-side-encryption,
+  default encryption is a suggestion, not a control.
+domain: exposure
+severity: medium
+compliance:
+  nist_800_53_r5: "SC-28"
+  soc2: "CC6.1"
+  ccm_v4: ["DSP-10"]
+  cis_aws_v3.0: "2.1.1"
+scope_tags:
+  - aws
+  - s3
+  - encryption-at-rest
+taxonomy:
+  - data-protection
+  - encryption-at-rest
+subtractive_category:
+  - S10
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_s3_bucket
+params:
+  attack_stage: initial_access
+observation_fields:
+  - storage.kind
+  - storage.encryption.at_rest_enabled
+  - storage.encryption.encryption_enforced_in_policy
+remediation:
+  description: >
+    Bucket has default encryption but does not deny unencrypted uploads
+    via bucket policy. A caller can explicitly bypass the default.
+  action: >
+    Add a Deny statement to the bucket policy that rejects PutObject
+    requests missing server-side encryption.
+  example: |
+    {
+      "Effect": "Deny",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::BUCKET/*",
+      "Condition": {
+        "StringNotEquals": {
+          "s3:x-amz-server-side-encryption": "aws:kms"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.storage.kind
+      op: eq
+      value: bucket
+    - field: properties.storage.encryption.at_rest_enabled
+      op: eq
+      value: true
+    - field: properties.storage.encryption.encryption_enforced_in_policy
+      op: ne
+      value: true
+tests:
+  - name: encrypted bucket without deny-unencrypted fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:s3:::prod-data-default-only
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            at_rest_enabled: true
+            encryption_enforced_in_policy: false
+  - name: encrypted bucket with deny-unencrypted passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::prod-data-enforced
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            at_rest_enabled: true
+            encryption_enforced_in_policy: true
+  - name: unencrypted bucket does not fire
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:s3:::temp-scratch
+      asset_type: aws_s3_bucket
+      vendor: aws
+      properties:
+        storage:
+          kind: bucket
+          encryption:
+            at_rest_enabled: false
+            encryption_enforced_in_policy: false

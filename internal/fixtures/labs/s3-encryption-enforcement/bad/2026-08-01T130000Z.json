@@ -1,0 +1,63 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-08-01T13:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.s3-encryption-enforcement"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:s3:::prod-data-kms-nopolicy",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "aws:kms",
+            "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/mrk-example-key",
+            "key_pinned_in_policy": false,
+            "encryption_enforced_in_policy": false,
+            "kms_key_encrypt_broad": true
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::staging-data-default-only",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "aws:kms",
+            "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/mrk-staging-key",
+            "key_pinned_in_policy": false,
+            "encryption_enforced_in_policy": false,
+            "kms_key_encrypt_broad": false
+          }
+        }
+      }
+    },
+    {
+      "id": "arn:aws:s3:::logs-bucket-aes256",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": {
+        "storage": {
+          "kind": "bucket",
+          "encryption": {
+            "at_rest_enabled": true,
+            "algorithm": "AES256",
+            "key_pinned_in_policy": false,
+            "encryption_enforced_in_policy": false,
+            "kms_key_encrypt_broad": false
+          }
+        }
+      }
+    }
+  ]
+}

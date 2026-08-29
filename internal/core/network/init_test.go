@@ -1,5 +1,6 @@
 package network
 
+// Values must match aws.Register; TestGraphTypesComplete guards drift.
 func init() {
 	GraphTypes.Instance = "aws_ec2_instance"
 	GraphTypes.SecurityGroup = "aws_ec2_security_group"
@@ -7,4 +8,5 @@ func init() {
 	GraphTypes.Subnet = "aws_ec2_subnet"
 	GraphTypes.RouteTable = "aws_ec2_route_table"
 	GraphTypes.Firewall = "aws_networkfirewall_firewall"
+	GraphTypes.TransitGateway = "aws_ec2_transit_gateway_attachment"
 }

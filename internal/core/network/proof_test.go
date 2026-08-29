@@ -837,3 +837,96 @@ func TestProveTransitiveEgress_VacuousNoIsolated(t *testing.T) {
 		t.Fatal("expected error when no isolated hosts found")
 	}
 }
+
+func TestProveTransitiveEgress_BuildGraph_SAT(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{{
+		Assets: []asset.Asset{
+			hostAsset("i-iso", "vpc-ml", "subnet-iso", []string{"sg-iso"}, map[string]string{"stave:network-zone": "isolated"}),
+			hostAsset("i-egress", "vpc-ml", "subnet-egr", []string{"sg-egr"}, map[string]string{"stave:role": "mirror"}),
+			sgAsset("sg-iso", nil),
+			sgAsset("sg-egr", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-iso"},
+			}),
+			subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+			subnetAsset("subnet-egr", "vpc-ml", "rt-egr", nil),
+			routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+			routeTableAsset("rt-egr", []Route{
+				{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+				{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+			}),
+		},
+	}})
+	result, err := g.ProveTransitiveEgress()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT, got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample")
+	}
+	if result.Counterexample.RuleSG == "" {
+		t.Error("expected RuleSG populated")
+	}
+}
+
+func TestProveTransitiveEgress_BuildGraph_UNSAT(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{{
+		Assets: []asset.Asset{
+			hostAsset("i-iso", "vpc-ml", "subnet-iso", []string{"sg-iso"}, map[string]string{"stave:network-zone": "isolated"}),
+			hostAsset("i-egress", "vpc-ml", "subnet-egr", []string{"sg-egr"}, map[string]string{"stave:role": "mirror"}),
+			sgAsset("sg-iso", nil),
+			sgAsset("sg-egr", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-egr"},
+			}),
+			subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+			subnetAsset("subnet-egr", "vpc-ml", "rt-egr", nil),
+			routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+			routeTableAsset("rt-egr", []Route{
+				{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+				{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+			}),
+		},
+	}})
+	result, err := g.ProveTransitiveEgress()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "UNSAT" {
+		t.Fatalf("expected UNSAT, got %s", result.Result)
+	}
+}
+
+func TestProveTransitiveEgress_BuildGraph_EvidenceGated(t *testing.T) {
+	g := BuildGraph([]asset.Snapshot{{
+		Assets: []asset.Asset{
+			hostAsset("i-iso", "vpc-ml", "subnet-iso", []string{"sg-iso"}, map[string]string{"stave:network-zone": "isolated"}),
+			hostAsset("i-relay", "vpc-ml", "subnet-tgw", []string{"sg-relay"}, map[string]string{"stave:role": "relay"}),
+			sgAsset("sg-iso", nil),
+			sgAsset("sg-relay", []SGRule{
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-iso"},
+			}),
+			subnetAsset("subnet-iso", "vpc-ml", "rt-iso", nil),
+			subnetAsset("subnet-tgw", "vpc-ml", "rt-tgw", nil),
+			routeTableAsset("rt-iso", []Route{{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}}),
+			routeTableAsset("rt-tgw", []Route{
+				{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+				{Destination: "0.0.0.0/0", TargetType: "tgw", TargetID: "tgw-att-01"},
+			}),
+		},
+	}})
+	result, err := g.ProveTransitiveEgress()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "EVIDENCE_GATED" {
+		t.Fatalf("expected EVIDENCE_GATED, got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample with gated path info")
+	}
+	if result.Counterexample.PathType != "gated-egress" {
+		t.Errorf("expected gated-egress path type, got %s", result.Counterexample.PathType)
+	}
+}

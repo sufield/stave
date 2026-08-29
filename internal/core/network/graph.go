@@ -291,6 +291,7 @@ func (g *Graph) extractRouteTable(a *asset.Asset) {
 				route := Route{}
 				route.Destination, _ = rm["destination"].(string)
 				route.TargetType, _ = rm["target_type"].(string)
+				route.TargetType = strings.ToLower(route.TargetType)
 				route.TargetID, _ = rm["target_id"].(string)
 				g.Routes[rtID] = append(g.Routes[rtID], route)
 			}

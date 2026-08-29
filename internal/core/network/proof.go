@@ -10,7 +10,7 @@ import (
 // ProofResult is the outcome of a network safety property proof.
 type ProofResult struct {
 	Property        string          `json:"property"`
-	Result          string          `json:"result"` // "UNSAT" | "SAT"
+	Result          string          `json:"result"` // "UNSAT" | "SAT" | "EVIDENCE_GATED"
 	Interpretation  string          `json:"interpretation"`
 	ProductionHosts int             `json:"production_hosts,omitempty"`
 	BastionHosts    int             `json:"bastion_hosts,omitempty"`
@@ -424,10 +424,52 @@ func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
 	return result, nil
 }
 
+// routeTargetClass is the sink classification for a default-route target.
+type routeTargetClass int
+
+const (
+	routeSink    routeTargetClass = iota // definite internet egress (nat, igw, eigw)
+	routeGated                           // cannot determine without additional observation
+	routeNonSink                         // no internet egress (local)
+)
+
+// classifyRouteTarget classifies a default-route target for the
+// transitive-egress prover. The default arm is Gated — an unrecognized
+// target_type can only ever widen the answer, never hide a path.
+func classifyRouteTarget(targetType string) (routeTargetClass, string) {
+	switch targetType {
+	case "nat", "igw", "eigw":
+		return routeSink, ""
+	case "local":
+		return routeNonSink, ""
+	case "tgw":
+		return routeGated, "TGW route table not resolved"
+	case "vgw":
+		return routeGated, "on-premises egress not observable"
+	case "vpce":
+		return routeGated, "firewall policy not evaluated"
+	case "instance", "eni":
+		return routeGated, "NAT instance or appliance forwarding not observable"
+	default:
+		return routeGated, "unrecognized route target"
+	}
+}
+
 // ProveTransitiveEgress checks that no isolated workload can transitively
-// reach the internet via an intermediate host whose subnet has a NAT or
-// IGW egress route. Returns UNSAT if no transitive path exists, SAT with
-// a counterexample naming the relay host and port.
+// reach the internet via an intermediate host whose subnet has a default
+// egress route. Returns UNSAT if no transitive path exists, SAT with a
+// counterexample if a path to a definite internet sink exists, or
+// EVIDENCE_GATED if a path reaches a route target the snapshot cannot
+// resolve.
+//
+// Verdict order: SAT > EVIDENCE_GATED > UNSAT.
+//
+// Sound over security-group ingress reachability. NACL denies and
+// security-group egress rules are not evaluated, so a SAT counterexample
+// may be blocked in practice, but UNSAT does not depend on them.
+// Network-layer only — IAM-layer service paths (Lambda invoke, SSM,
+// S3 replication, VPC endpoints to request-making services) are not
+// evaluated. Single-region snapshot; run per region.
 func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 	start := time.Now()
 
@@ -436,12 +478,16 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 		return nil, fmt.Errorf("%w: no hosts tagged stave:network-zone=isolated", ErrVacuousProof)
 	}
 
-	// Build the set of hosts whose subnets have internet egress routes.
-	type egressHost struct {
-		host    *Host
-		gateway string // target ID of the egress route (NAT or IGW)
+	type egressCandidate struct {
+		host       *Host
+		targetID   string
+		targetType string
+		dest       string // route destination (0.0.0.0/0 or ::/0)
+		class      routeTargetClass
+		reason     string
 	}
-	var egress []egressHost
+
+	var sinks, gated []egressCandidate
 	for _, h := range g.allHosts() {
 		if h.IsIsolated() {
 			continue
@@ -454,36 +500,85 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 			if route.Destination != "0.0.0.0/0" && route.Destination != "::/0" {
 				continue
 			}
-			if route.TargetType == "nat" || route.TargetType == "igw" {
-				egress = append(egress, egressHost{host: h, gateway: route.TargetID})
-				break
+			cls, reason := classifyRouteTarget(route.TargetType)
+			if cls == routeNonSink {
+				continue
 			}
+			c := egressCandidate{
+				host:       h,
+				targetID:   route.TargetID,
+				targetType: route.TargetType,
+				dest:       route.Destination,
+				class:      cls,
+				reason:     reason,
+			}
+			if cls == routeSink {
+				sinks = append(sinks, c)
+			} else {
+				gated = append(gated, c)
+			}
+			break
 		}
 	}
-	if len(egress) == 0 {
+	if len(sinks) == 0 && len(gated) == 0 {
 		return nil, fmt.Errorf("%w: no non-isolated hosts in subnets with internet egress routes", ErrVacuousProof)
 	}
 
 	result := &ProofResult{
 		Property: "transitive-egress",
-		Scope:    map[string]int{"isolated_hosts": len(isolated), "egress_hosts": len(egress)},
+		Scope:    map[string]int{"isolated_hosts": len(isolated), "sink_hosts": len(sinks), "gated_hosts": len(gated)},
 	}
 
 	for _, iso := range isolated {
-		for _, eg := range egress {
-			ok, _, port := g.canReachAnyPort(iso.ID, eg.host.ID)
+		for _, s := range sinks {
+			ok, _, port := g.canReachAnyPort(iso.ID, s.host.ID)
 			if !ok {
 				continue
+			}
+			ruleSG, ruleSource := g.findRule(iso, s.host, port)
+			portStr := strconv.Itoa(port)
+			if port == 0 {
+				portStr = "all"
 			}
 			result.Result = "SAT"
 			result.Interpretation = "Transitive internet egress path exists — an isolated workload can reach a host with internet egress."
 			result.Counterexample = &Counterexample{
 				Source:      iso.ID,
-				Destination: eg.host.ID,
+				Destination: s.host.ID,
 				Port:        port,
 				PathType:    "transitive-egress",
-				Explanation: "Isolated host " + iso.ID + " can reach " + eg.host.ID + " on port " + strconv.Itoa(port) + ". " + eg.host.ID + "'s subnet routes 0.0.0.0/0 to " + eg.gateway + ". Two-hop path: " + iso.ID + " → " + eg.host.ID + " → internet.",
-				Remediation: "Remove network access from " + iso.ID + " to " + eg.host.ID + ", or remove " + eg.host.ID + "'s internet egress route.",
+				RuleSG:      ruleSG,
+				RuleSource:  ruleSource,
+				Explanation: "Isolated host " + iso.ID + " can reach " + s.host.ID + " on port " + portStr + ". " + s.host.ID + "'s subnet routes " + s.dest + " to " + s.targetType + ":" + s.targetID + ". Two-hop path: " + iso.ID + " → " + s.host.ID + " → internet.",
+				Remediation: "Remove network access from " + iso.ID + " to " + s.host.ID + ", or remove " + s.host.ID + "'s internet egress route.",
+			}
+			result.SolveTimeMs = time.Since(start).Milliseconds()
+			return result, nil
+		}
+	}
+
+	for _, iso := range isolated {
+		for _, gc := range gated {
+			ok, _, port := g.canReachAnyPort(iso.ID, gc.host.ID)
+			if !ok {
+				continue
+			}
+			ruleSG, ruleSource := g.findRule(iso, gc.host, port)
+			portStr := strconv.Itoa(port)
+			if port == 0 {
+				portStr = "all"
+			}
+			result.Result = "EVIDENCE_GATED"
+			result.Interpretation = "A path reaches a route target the snapshot cannot resolve. The verdict depends on an observation not yet available."
+			result.Counterexample = &Counterexample{
+				Source:      iso.ID,
+				Destination: gc.host.ID,
+				Port:        port,
+				PathType:    "gated-egress",
+				RuleSG:      ruleSG,
+				RuleSource:  ruleSource,
+				Explanation: "Isolated host " + iso.ID + " can reach " + gc.host.ID + " on port " + portStr + ". " + gc.host.ID + "'s subnet routes " + gc.dest + " to " + gc.targetType + ":" + gc.targetID + " (" + gc.reason + ").",
+				Remediation: "Provide observation for " + gc.targetType + " " + gc.targetID + " to settle the verdict, or remove network access from " + iso.ID + " to " + gc.host.ID + ".",
 			}
 			result.SolveTimeMs = time.Since(start).Milliseconds()
 			return result, nil
@@ -491,7 +586,7 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 	}
 
 	result.Result = "UNSAT"
-	result.Interpretation = "No isolated workload can transitively reach the internet via an intermediate host."
+	result.Interpretation = "No isolated workload reaches the internet through an intermediate host, over security-group ingress reachability. Sound under that model: NACL denies and security-group egress rules are not evaluated, so a SAT counterexample may be blocked in practice, but UNSAT does not depend on them. Network-layer only — IAM-layer service paths (Lambda invoke, SSM, S3 replication, VPC endpoints to request-making services) are not evaluated. Single-region snapshot; run per region."
 	result.SolveTimeMs = time.Since(start).Milliseconds()
 	return result, nil
 }
