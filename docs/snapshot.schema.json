@@ -13,8 +13,8 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "enum": ["obs.v1", "obs.v0.1"],
-      "description": "Schema version. Use 'obs.v0.1' for current compatibility."
+      "const": "obs.v0.1",
+      "description": "Schema version identifier."
     },
     "captured_at": {
       "type": "string",

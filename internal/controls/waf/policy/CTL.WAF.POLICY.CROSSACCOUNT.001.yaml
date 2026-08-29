@@ -1,0 +1,123 @@
+dsl_version: ctrl.v1
+id: CTL.WAF.POLICY.CROSSACCOUNT.001
+name: WAFv2 Rule Group Resource Policy Grants Cross-Account Access Without Organizational Boundary
+description: >
+  WAFv2 rule group resource policy grants access to principals in
+  external AWS accounts without an aws:PrincipalOrgID condition.
+  External accounts can consume the shared rule group in their own
+  web ACLs. If the account leaves the organization, access persists.
+  WAFv2 PutPermissionPolicy controls who can reference a rule group;
+  without an org boundary, any principal in the named external account
+  can use the rule group. Distinct from web ACL controls — this
+  targets the rule group sharing surface.
+domain: exposure
+severity: high
+compliance:
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, AC-6"
+  pci_dss_v4.0: "1.2, 7.1, 7.2"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.5.19"
+  ccm_v4: ["IAM-16", "IVS-09"]
+scope_tags:
+  - aws
+  - waf
+taxonomy:
+  - identity-perimeter
+  - trust-boundary
+subtractive_category:
+  - S03
+  - S05
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_waf_web_acl
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: prevention
+    scope: organization
+    multiplier: 2.0
+remediation:
+  description: >
+    WAFv2 rule group resource policy grants cross-account access
+    without an aws:PrincipalOrgID condition.
+  action: >
+    Add aws:PrincipalOrgID restricting access to the organization's
+    ID. For the rare legitimate cross-org grant, use
+    aws:PrincipalAccount with the explicit account ID and document
+    the trust relationship.
+  example: |
+    {
+      "waf": {
+        "kind": "rule_group",
+        "policy_cross_account": false
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.waf.kind
+      op: eq
+      value: rule_group
+    - field: properties.waf.policy_cross_account
+      op: eq
+      value: true
+    - field: properties.waf.policy_has_org_condition
+      op: eq
+      value: false
+defect: >
+  WAFv2 rule group resource policy grants actions to external
+  account principals without aws:PrincipalOrgID.
+infection: >
+  Cross-account rule group access without organizational boundary
+  means the external account can reference the rule group in their
+  web ACLs regardless of current org membership. If the account
+  leaves the organization, access persists. An attacker who
+  compromises the external account gains read access to the rule
+  group configuration — exposing internal WAF bypass logic and
+  detection patterns. PrincipalOrgID ensures only accounts currently
+  in the organization can consume the rule group; departures are
+  enforced automatically.
+failure: >
+  Rule group access outside organizational boundary. External-
+  account principals can reference the rule group without
+  org-membership verification, and access persists across
+  org changes.
+tests:
+  - name: cross-account without org condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/rulegroup/shared-owasp/abc123"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: rule_group
+          policy_cross_account: true
+          policy_has_org_condition: false
+          policy_external_accounts:
+            - "222233334444"
+  - name: cross-account with org condition passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/rulegroup/shared-owasp/abc123"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: rule_group
+          policy_cross_account: true
+          policy_has_org_condition: true
+          policy_external_accounts:
+            - "222233334444"
+  - name: no cross-account access passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:wafv2:us-east-1:111122223333:regional/rulegroup/internal-rules/def456"
+      asset_type: aws_waf_web_acl
+      vendor: aws
+      properties:
+        waf:
+          kind: rule_group
+          policy_cross_account: false

@@ -1,0 +1,25 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-07-02T12:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "aws.config_api",
+    "tool": "stave-test",
+    "tool_version": "1.0.0"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:wafv2:us-east-1:111122223333:regional/rulegroup/shared-owasp/abc123",
+      "type": "aws_waf_web_acl",
+      "vendor": "aws",
+      "properties": {
+        "waf": {
+          "kind": "rule_group",
+          "policy_cross_account": true,
+          "policy_has_org_condition": true,
+          "policy_external_accounts": ["222233334444"]
+        }
+      }
+    }
+  ]
+}

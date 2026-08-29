@@ -1,0 +1,146 @@
+dsl_version: ctrl.v1
+id: CTL.LAKEFORMATION.CROSSACCOUNT.001
+name: Lake Formation Grants Cross-Account Data Access Without Organizational Boundary
+description: >
+  Lake Formation permission grants data access to principals
+  in external AWS accounts without an organizational boundary
+  condition. The external account can read or modify tables
+  in the data lake regardless of whether it remains in the
+  organization. Lake Formation cross-account grants are the
+  primary mechanism for sharing data lake resources across
+  accounts — without an org boundary, the grant persists if
+  the account leaves the organization, and any principal in
+  the external account with Lake Formation permissions can
+  access the shared resources. Distinct from
+  CTL.LAKEFORMATION.GRANT.BROAD.001 (scope of permissions) —
+  this control fires on grants that cross account boundaries
+  without organizational verification.
+domain: exposure
+severity: high
+compliance:
+  cis_aws_v3.0: "1.20"
+  soc2: "CC6.1, CC6.6"
+  nist_800_53_r5: "AC-3, AC-4, AC-6"
+  pci_dss_v4.0: "1.2, 7.1, 7.2"
+  fedramp_moderate: "AC-3"
+  iso_27001_2022: "A.5.15, A.5.19"
+  ccm_v4: ["IAM-16", "DSP-05"]
+scope_tags:
+  - aws
+  - lakeformation
+taxonomy:
+  - identity-perimeter
+  - trust-boundary
+subtractive_category:
+  - S03
+  - S05
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_lakeformation_permissions
+params:
+  attack_stage: initial_access
+  blast_radius:
+    type: data
+    scope: organization
+    multiplier: 2.0
+defect: >
+  Lake Formation permission grants data access to external
+  account principals without organizational boundary.
+infection: >
+  A Lake Formation cross-account grant shares database or
+  table resources with an external AWS account without an
+  aws:PrincipalOrgID or equivalent organizational condition.
+  Any principal in the external account with Lake Formation
+  permissions can access the shared tables — including
+  SELECT for reading data and INSERT/DELETE for modifying it.
+  If the external account leaves the organization, the grant
+  persists and the departed account retains full access to
+  the shared data lake resources. Unlike S3 cross-account
+  access where bucket policies can be scoped with conditions,
+  Lake Formation grants are principal-to-resource mappings
+  that require explicit revocation.
+failure: >
+  Cross-account data lake access without organizational
+  boundary. External-account principals can read and modify
+  shared tables without org-membership verification, and
+  access persists across org changes.
+remediation:
+  description: >
+    Lake Formation permission grants cross-account data
+    access without an organizational boundary condition.
+  action: >
+    Scope cross-account Lake Formation grants to the
+    organization using tag-based access control (LF-TBAC)
+    with organization-aware tags, or use RAM resource shares
+    with organizational conditions for cross-account data
+    sharing. For grants that must cross organizational
+    boundaries, document the trust relationship and use
+    explicit account-level grants with periodic review.
+  example: |
+    {
+      "governance": {
+        "kind": "lakeformation_grant",
+        "lakeformation": {
+          "cross_account_grant": true,
+          "has_org_condition": true,
+          "external_accounts": ["222233334444"]
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.governance.kind
+      op: eq
+      value: lakeformation_grant
+    - field: properties.governance.lakeformation.cross_account_grant
+      op: eq
+      value: true
+    - field: properties.governance.lakeformation.has_org_condition
+      op: eq
+      value: false
+tests:
+  - name: cross-account without org condition fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:lakeformation:us-east-1:111122223333:grant/shared-analytics"
+      asset_type: aws_lakeformation_permissions
+      vendor: aws
+      properties:
+        governance:
+          kind: lakeformation_grant
+          lakeformation:
+            cross_account_grant: true
+            has_org_condition: false
+            external_accounts:
+              - "222233334444"
+            database: "analytics"
+            permissions:
+              - "SELECT"
+              - "DESCRIBE"
+  - name: cross-account with org condition passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lakeformation:us-east-1:111122223333:grant/shared-analytics"
+      asset_type: aws_lakeformation_permissions
+      vendor: aws
+      properties:
+        governance:
+          kind: lakeformation_grant
+          lakeformation:
+            cross_account_grant: true
+            has_org_condition: true
+            external_accounts:
+              - "222233334444"
+  - name: same-account grant passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:lakeformation:us-east-1:111122223333:grant/internal-etl"
+      asset_type: aws_lakeformation_permissions
+      vendor: aws
+      properties:
+        governance:
+          kind: lakeformation_grant
+          lakeformation:
+            cross_account_grant: false

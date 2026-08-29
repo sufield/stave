@@ -13,12 +13,9 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "enum": [
-        "obs.v1",
-        "obs.v0.1"
-      ],
+      "const": "obs.v0.1",
       "title": "Schema Version",
-      "description": "Schema version identifier. Accepted values allow forward-compatible ingestion of obs.v0.1 documents."
+      "description": "Schema version identifier."
     },
     "captured_at": {
       "type": "string",

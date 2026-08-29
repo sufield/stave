@@ -2,32 +2,30 @@
 title: "Architectural Boundaries"
 sidebar_label: "Boundaries"
 sidebar_position: 2
-description: "What Stave verifies, what it deliberately does not, and where downstream trust attaches. Three boundaries — observation value correctness, clock pinning, and ghost-reference cross-inventory — that are architectural decisions, not bugs."
+description: "What Stave verifies, what it deliberately does not, and where downstream trust attaches. Three boundaries are observation value correctness, clock pinning, and ghost-reference cross-inventory. These are architectural decisions."
 ---
 
 # Architectural Boundaries
 
-Stave is a pure-function evaluator: files in, findings out, no network,
-no credentials, no exec. Three properties operators commonly assume
-are checked by Stave fall **outside** that function. They are not bugs.
-They are decisions the architecture forces, with corresponding
-operational responsibilities elsewhere in the pipeline. This page
-names them and tells you where the trust attaches.
+Stave is a pure-function evaluator: files in, findings out, no network, credentials or exec. Three properties operators commonly assume are checked by Stave fall **outside** that function. 
+
+They are decisions the architecture forces, with corresponding operational responsibilities elsewhere in the pipeline. 
 
 ## What Stave verifies
 
-- **Observation structure.** JSON Schema conformance against
-  `obs.v0.1` (or `obs.v1`). Wrong types, missing required fields,
-  unknown additional properties all fail.
-- **Control predicates against observation values.** CEL evaluation
-  of declared invariants against the values the collector wrote
-  into the snapshot.
-- **Compound compositions across controls.** The chain engine
-  groups co-failing controls by `scope_field` or `asset.ID` and
-  fires compound findings when the escalation threshold is met.
-- **Fact export for external reasoning.** The SIR projector emits
-  predicates that solvers (Z3, cvc5, Soufflé, Clingo, Prolog)
-  consume independently.
+**Observation structure.** 
+
+JSON Schema conformance against `obs.v0.1`. Wrong types, missing required fields, unknown additional properties all fail.
+
+**Control predicates against observation values.** 
+
+CEL evaluation of declared invariants against the values the collector wrote into the snapshot.
+
+**Compound compositions across controls.** 
+
+The chain engine groups co-failing controls by `scope_field` or `asset.ID` and fires compound findings when the escalation threshold is met.
+
+**Fact export for external reasoning.** The SIR projector emits predicates that solvers (Z3, cvc5, Soufflé, Clingo, Prolog) consume independently.
 
 ## What Stave does NOT verify
 
@@ -38,7 +36,7 @@ names them and tells you where the trust attaches.
 | **Time-dependent** verdicts without `--eval-time` | System wall clock drives duration / TTL / freshness checks | The caller of `stave apply` |
 
 The rest of this document explains each boundary, the mitigation
-discipline, and what an UNSAT verdict from a solver actually says.
+discipline, and what an UNSAT verdict from a solver says.
 
 ## Boundary 1 — Observation value correctness
 
@@ -65,20 +63,13 @@ and do not parse `raw_policy` — so the public bucket appears safe.
 
 ### Why this can't move into Stave
 
-Verifying that `public_read` reflects the raw policy requires
-parsing the policy JSON and computing its effective grants —
-which is exactly what the collector does to produce the boolean
-in the first place. Pulling that logic into Stave would either
-duplicate the collector (two implementations to keep in sync) or
-require Stave to consume the raw policy text everywhere a derived
-boolean appears, which is exactly the abstraction the
-collector-derived boolean was built to avoid.
+The interface is standardized so that the Stave core is independent of any cloud provider specific JSON format. We can add support to new cloud providers without changing the stave core. Add a new collector that is specific to the new cloud provider and transform it to the standard Stave observation contract.
 
 ### Mitigations
 
 1. **Cross-check controls** where feasible. Some controls do read
    multiple related properties and surface contradictions as their
-   own predicate — these exist for high-value pairs (encryption
+   own predicate. These exist for high-value pairs (encryption
    flag + KMS key id, public-access flags + ownership controls).
    Audit `internal/controldata/embedded/` for `mismatch` /
    `inconsistent` controls; add more for property pairs that
@@ -98,7 +89,7 @@ When Z3 returns UNSAT (safe), the proof is:
 > Given the values in this observation, no dangerous state is
 > reachable in the chains the SIR can express.
 
-If the values are wrong, the proof is valid but vacuous — correct
+If the values are wrong, the proof is valid but vacuous which means correct
 logic on incorrect premises. The proof's trustworthiness equals
 the collector's trustworthiness. Naming the collector explicitly
 in evidence packets (already part of `generated_by.tool`) keeps
@@ -117,8 +108,7 @@ determinism Stave's evaluation engine provides.
 Time-dependent controls (credential TTL, observation freshness,
 unsafe duration thresholds) use `time.Now()` when `--eval-time` is
 absent. Same fixture run a year apart yields different verdicts
-because the clock-relative answer is correct, not because the
-engine is non-deterministic.
+because the clock-relative answer is correct.
 
 The audit measured this on
 `examples/cognito-iteration2-unauth/fixtures/cross-resource-config`:
@@ -136,8 +126,8 @@ clock, several violations have been "exposed for longer than
 
 A credential at 89 days with a 90-day declared TTL is compliant
 today and non-compliant tomorrow. Producing the same answer on
-both days would be **wrong** — the credential really did age out.
-This is correct temporal evaluation, not non-determinism.
+both days would be **wrong**. The credential really did age out.
+This is correct temporal evaluation.
 
 ### Recommendations by context
 
@@ -147,7 +137,7 @@ This is correct temporal evaluation, not non-determinism.
 - **Interactive use without `--eval-time`:** correct default. You want
   today's answer about today's credentials.
 - **Agent OODA loops:** pass `--eval-time` derived from the observation,
-  not the agent's clock — prevents the assertion target from
+  not the agent's clock. This prevents the assertion target from
   moving while the agent iterates.
 
   ```bash
@@ -199,9 +189,8 @@ from incomplete collection.
 ### Why this design
 
 Moving cross-inventory reasoning into Stave's evaluation engine
-would couple it to the observation model and require Stave to
-understand vendor-specific inventory semantics (which resource
-types share namespaces, which ARNs are global vs account-scoped).
+would couple it to the observation model and tie Stave to vendor-specific inventory semantics.
+
 The collector already understands its own inventory. Asking the
 collector to write one boolean is the same abstraction the
 collector-derived booleans use for every other cross-resource
@@ -218,15 +207,15 @@ A collector that emits `has_ghost_*: true` is asserting:
 4. Ideally: the resource was present in a prior snapshot (temporal
    confirmation).
 
-When (2) fails — the resource type was not queried — the collector
+When (2) fails. The resource type was not queried. The collector
 SHOULD emit `has_ghost_*: false` rather than `true`. Absence due
 to incomplete collection is not a ghost.
 
 ### What this means for downstream consumers
 
 Ghost-finding counts are bounded by collector completeness. A
-collector with broad coverage produces trustworthy ghost counts;
-a narrow collector produces ambiguous ones. Treat ghost findings
+collector with broad coverage produces trustworthy ghost counts.
+A narrow collector produces ambiguous ones. Treat ghost findings
 as "investigate" rather than "incident" until the collection
 scope is verified.
 
@@ -239,7 +228,7 @@ scope is verified.
 | CI/CD pass/fail | Reproducible per `--eval-time` | Pipeline always passes `--eval-time` |
 | Agent self-correction loop | Verdict converges per fixed `--eval-time` | Agent passes `--eval-time` and uses the observation's `captured_at` |
 
-## Where to read next
+## Related
 
 - [Architecture Overview](overview.md) — the pipeline this document scopes
 - [Fact Export reference](https://www.systeminvariant.dev/docs/reference/fact-export) — the SIR's projected scope (separate boundary, separate doc)

@@ -236,7 +236,7 @@ func TestScrubMap_RecursesNestedMap(t *testing.T) {
 func TestSanitizer_Snapshot_NilSanitizer(t *testing.T) {
 	var s *Sanitizer
 	snap := asset.Snapshot{
-		SchemaVersion: kernel.Schema("obs.v1"),
+		SchemaVersion: kernel.SchemaObservation,
 		CapturedAt:    time.Now(),
 		Assets: []asset.Asset{
 			{ID: "my-bucket", Type: "s3_bucket"},
@@ -255,7 +255,7 @@ func TestSanitizer_Snapshot_NilSanitizer(t *testing.T) {
 func TestSanitizer_Snapshot_SanitizesAssets(t *testing.T) {
 	s := New(WithIDSanitization(true))
 	snap := asset.Snapshot{
-		SchemaVersion: kernel.Schema("obs.v1"),
+		SchemaVersion: kernel.SchemaObservation,
 		CapturedAt:    time.Now(),
 		Assets: []asset.Asset{
 			{
@@ -300,7 +300,7 @@ func TestSanitizer_Snapshot_SanitizesAssets(t *testing.T) {
 func TestSanitizer_Snapshot_SanitizesIdentities(t *testing.T) {
 	s := New(WithIDSanitization(true))
 	snap := asset.Snapshot{
-		SchemaVersion: kernel.Schema("obs.v1"),
+		SchemaVersion: kernel.SchemaObservation,
 		CapturedAt:    time.Now(),
 		Assets:        []asset.Asset{},
 		Identities: []asset.CloudIdentity{
@@ -343,7 +343,7 @@ func TestSanitizer_Snapshot_SanitizesIdentities(t *testing.T) {
 func TestSanitizer_Snapshot_NoIdentities(t *testing.T) {
 	s := New(WithIDSanitization(true))
 	snap := asset.Snapshot{
-		SchemaVersion: kernel.Schema("obs.v1"),
+		SchemaVersion: kernel.SchemaObservation,
 		Assets: []asset.Asset{
 			{ID: "bucket-a"},
 		},

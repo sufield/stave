@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability validate-checklists validate-embed xa-inventory
+.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability validate-checklists validate-embed xa-inventory xa-checklist
 # Binary name
 BINARY=stave
 
@@ -1417,6 +1417,11 @@ sync-skills:
 .PHONY: xa-inventory
 xa-inventory:
 	@python3 tools/xa-inventory.py --controls-dir internal/controls
+
+.PHONY: xa-checklist
+xa-checklist:
+	@python3 tools/xa-inventory.py --controls-dir internal/controls --checklist > data/frameworks/cross-account-v1.yaml
+	@echo "Generated data/frameworks/cross-account-v1.yaml"
 
 # ── Check-compare baseline ──────────────────────────────────────
 .PHONY: check-compare-baseline
