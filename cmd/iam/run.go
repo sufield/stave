@@ -4,8 +4,6 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-
-	"github.com/sufield/stave/pkg/stave"
 )
 
 func runLoop(cmd *cobra.Command, o *loopOptions) error {
@@ -14,7 +12,7 @@ func runLoop(cmd *cobra.Command, o *loopOptions) error {
 		return err
 	}
 
-	result, err := stave.IAMLoop(cmd.Context(), stave.IAMLoopConfig{
+	result, err := iamLoop(cmd.Context(), IAMLoopConfig{
 		PolicyPath: o.PolicyPath,
 	})
 	if err != nil {

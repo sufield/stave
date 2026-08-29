@@ -40,7 +40,7 @@ func wireHelpGroups(root *cobra.Command) {
 			"attest", "telemetry", "metrics", "render",
 		},
 		groupAnalysis: {
-			"inspect", "graph", "permissions", "fingerprint", "prove", "network",
+			"inspect", "graph", "permissions", "fingerprint", "prove", "network", "iam",
 		},
 		groupSetup: {
 			"status", "doctor", "version", "config",

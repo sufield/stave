@@ -8,12 +8,11 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/cli/ui"
-	"github.com/sufield/stave/pkg/stave"
 )
 
 // Renderer is the format-dispatch interface for `stave iam loop`.
 type Renderer interface {
-	Render(w io.Writer, r *stave.IAMLoopResult) error
+	Render(w io.Writer, r *IAMLoopResult) error
 }
 
 // NewRenderer maps a format string to its Renderer.
@@ -31,7 +30,7 @@ func NewRenderer(format string) (Renderer, error) {
 
 type textRenderer struct{}
 
-func (textRenderer) Render(w io.Writer, r *stave.IAMLoopResult) error {
+func (textRenderer) Render(w io.Writer, r *IAMLoopResult) error {
 	for _, asset := range r.Observation.Assets {
 		fmt.Fprintf(w, "Role: %s\n", asset.ID)
 		renderProperties(w, asset.Properties, "  ")
@@ -106,7 +105,7 @@ func sortedKeys(m map[string]any) []string {
 
 type jsonRenderer struct{}
 
-func (jsonRenderer) Render(w io.Writer, r *stave.IAMLoopResult) error {
+func (jsonRenderer) Render(w io.Writer, r *IAMLoopResult) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(r.Observation)

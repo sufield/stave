@@ -1,4 +1,4 @@
-package stave
+package iam
 
 import (
 	"bytes"
@@ -43,9 +43,9 @@ type IAMAsset struct {
 	Properties map[string]any `json:"properties"`
 }
 
-// IAMLoop runs one cycle of the IAM policy analysis loop: policy JSON in,
+// iamLoop runs one cycle of the IAM policy analysis loop: policy JSON in,
 // micro-observation out. Shells out to the iam-explain binary (must be in PATH).
-func IAMLoop(ctx context.Context, cfg IAMLoopConfig) (*IAMLoopResult, error) {
+func iamLoop(ctx context.Context, cfg IAMLoopConfig) (*IAMLoopResult, error) {
 	start := time.Now()
 
 	if cfg.PolicyPath == "" {
