@@ -1,0 +1,65 @@
+# IAM Escalation Fixture Baselines
+#
+# Expected atomic finding counts and chain-layer exploitability for each
+# scenario fixture. Updated whenever a scenario's fixtures change.
+# Verified by: stave apply --include-atomic --format json | jq
+#
+# Chain-layer tokens: exploitable | one_away | 0
+# Status: MATCH | MISMATCH | EVIDENCE-GATED
+
+scenarios:
+  iam-escalation-set-default-policy-version:
+    control: CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001
+    fixtures:
+      bad:
+        atomic: 1
+        chain_layer: exploitable
+        status: MATCH
+      bad-boundary-versionable:
+        atomic: 1
+        chain_layer: exploitable
+        status: MATCH
+      partial:
+        atomic: 1
+        chain_layer_expected: not-exploitable
+        chain_layer_actual: exploitable
+        status: EVIDENCE-GATED
+        gap: grant-resource vs boundary-versionability reasoning
+      clean:
+        atomic: 0
+        chain_layer: "0"
+        status: MATCH
+
+  iam-escalation-create-login-profile:
+    control: CTL.IAM.ESCALATE.CREATELOGINPROFILE.001
+    fixtures:
+      bad:
+        atomic: 1
+        chain_layer: one_away
+        status: MATCH
+      partial:
+        atomic: 1
+        chain_layer_expected: "0"
+        chain_layer_actual: one_away
+        status: MISMATCH
+        gap: resource-scope self-scoped reasoning
+      clean:
+        atomic: 0
+        chain_layer: "0"
+        status: MATCH
+
+  iam-escalation-update-login-profile:
+    control: CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001
+    fixtures:
+      bad:
+        atomic: 1
+        chain_layer: one_away
+        status: MATCH
+      partial:
+        atomic: 1
+        chain_layer: one_away
+        status: MATCH
+      clean:
+        atomic: 0
+        chain_layer: "0"
+        status: MATCH

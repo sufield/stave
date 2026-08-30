@@ -1,0 +1,148 @@
+# IAM Privilege Escalation Denominator
+# Source: Pacu iam__privesc_scan module (RhinoSecurityLabs/pacu)
+# Commit: 4de04a964654fe7a0b9d00921a0970882482284d
+# Method: E.4 practitioner-source analysis
+# Fine verdicts in docs-internal/iam-escalation/denominator-report.md
+standard: IAM Privilege Escalation Denominator (Pacu iam__privesc_scan)
+total: 26
+
+checks:
+
+  # --- COVERED (control + fixture) ---
+
+  - id: PE01
+    service: IAM
+    description: "AddUserToGroup — iam:AddUserToGroup grants to add self to higher-privilege group; CTL.IAM.ESCALATE.ADDUSERTOGROUP.001"
+    verdict: COVERED
+
+  - id: PE02
+    service: IAM
+    description: "AttachGroupPolicy — iam:AttachGroupPolicy grants to attach admin policy to belonging group; CTL.IAM.ESCALATE.ATTACHGROUPPOLICY.001"
+    verdict: COVERED
+
+  - id: PE03
+    service: IAM
+    description: "AttachRolePolicy — iam:AttachRolePolicy grants to attach policy to assumable role; CTL.IAM.ESCALATE.ATTACHROLEPOLICY.001"
+    verdict: COVERED
+
+  - id: PE04
+    service: IAM
+    description: "AttachUserPolicy — iam:AttachUserPolicy grants to attach admin policy to self; CTL.IAM.ESCALATE.ATTACHUSERPOLICY.001"
+    verdict: COVERED
+
+  - id: PE09
+    service: IAM
+    description: "CreateLoginProfile — iam:CreateLoginProfile grants to create console login for another user; CTL.IAM.ESCALATE.CREATELOGINPROFILE.001"
+    verdict: COVERED
+
+  - id: PE10
+    service: IAM
+    description: "CreateNewPolicyVersion — iam:CreatePolicyVersion grants to create and activate broader policy version via SetAsDefault parameter; CTL.IAM.ESCALATE.CREATEPOLICYVERSION.001"
+    verdict: COVERED
+
+  - id: PE20
+    service: IAM
+    description: "PutGroupPolicy — iam:PutGroupPolicy grants to write inline policy on belonging group; CTL.IAM.ESCALATE.PUTGROUPPOLICY.001"
+    verdict: COVERED
+
+  - id: PE21
+    service: IAM
+    description: "PutRolePolicy — iam:PutRolePolicy grants to write inline policy on assumable role; CTL.IAM.ESCALATE.PUTROLEPOLICY.001"
+    verdict: COVERED
+
+  - id: PE22
+    service: IAM
+    description: "PutUserPolicy — iam:PutUserPolicy grants to write inline policy on self; CTL.IAM.ESCALATE.PUTUSERPOLICY.001"
+    verdict: COVERED
+
+  - id: PE23
+    service: IAM
+    description: "SetExistingDefaultPolicyVersion — iam:SetDefaultPolicyVersion grants to activate dormant broader policy version; CTL.IAM.POLICY.VERSIONS.001, .ACCUMULATION.001, .ATCAPACITY.001"
+    verdict: COVERED
+
+  - id: PE25
+    service: IAM
+    description: "UpdateLoginProfile — iam:UpdateLoginProfile grants to reset another user's console password; CTL.IAM.ESCALATE.UPDATELOGINPROFILE.001"
+    verdict: COVERED
+
+  # --- CONTROL-ONLY (control exists, no fixture) ---
+
+  - id: PE07
+    service: IAM
+    description: "CreateAccessKey — iam:CreateAccessKey grants to create access key for another user; CTL.IAM.ESCALATE.CREATEACCESSKEY.001"
+    verdict: COVERED
+
+  - id: PE08
+    service: IAM
+    description: "CreateEC2WithExistingIP — iam:PassRole + ec2:RunInstances grants to launch instance with higher-privilege role; CTL.IAM.ESCALATE.PASSROLE.RUNINSTANCES.001"
+    verdict: COVERED
+
+  - id: PE11
+    service: IAM
+    description: "EditExistingLambdaFunctionWithRole — lambda:UpdateFunctionCode grants to replace Lambda code executing under higher-privilege role; CTL.IAM.ESCALATE.EDITLAMBDA.001"
+    verdict: COVERED
+
+  - id: PE12
+    service: IAM
+    description: "PassExistingRoleToNewCloudFormation — iam:PassRole + cloudformation:CreateStack grants to deploy stack with higher-privilege role; CTL.IAM.ESCALATE.PASSROLE.CREATESTACK.001"
+    verdict: COVERED
+
+  - id: PE14
+    service: IAM
+    description: "PassExistingRoleToNewDataPipeline — iam:PassRole + datapipeline:CreatePipeline grants to create pipeline executing under higher-privilege role; CTL.IAM.ESCALATE.PASSROLE.CREATEPIPELINE.001"
+    verdict: COVERED
+
+  - id: PE15
+    service: IAM
+    description: "PassExistingRoleToNewGlueDevEndpoint — iam:PassRole + glue:CreateDevEndpoint grants to create dev endpoint with higher-privilege role; CTL.IAM.ESCALATE.PASSROLE.CREATEDEVENDPOINT.001"
+    verdict: COVERED
+
+  - id: PE16
+    service: IAM
+    description: "PassExistingRoleToNewLambdaThenInvoke — iam:PassRole + lambda:CreateFunction + lambda:InvokeFunction grants to create and invoke Lambda with higher-privilege role; CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001"
+    verdict: COVERED
+
+  - id: PE17
+    service: IAM
+    description: "PassExistingRoleToNewLambdaThenInvokeCrossAccount — iam:PassRole + lambda:CreateFunction + lambda:AddPermission grants cross-account Lambda invocation under higher-privilege role; CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001 + CTL.IAM.ESCALATE.LAMBDAADDPERM.001"
+    verdict: COVERED
+
+  - id: PE18
+    service: IAM
+    description: "PassExistingRoleToNewLambdaThenTriggerWithExistingDynamo — iam:PassRole + lambda:CreateFunction + lambda:CreateEventSourceMapping grants DynamoDB-triggered Lambda under higher-privilege role; CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001"
+    verdict: COVERED
+
+  - id: PE19
+    service: IAM
+    description: "PassExistingRoleToNewLambdaThenTriggerWithNewDynamo — same as PE18 with dynamodb:CreateTable; CTL.IAM.ESCALATE.PASSROLE.CREATEFUNCTION.001"
+    verdict: COVERED
+
+  - id: PE24
+    service: IAM
+    description: "UpdateExistingGlueDevEndpoint — glue:UpdateDevEndpoint grants to replace SSH key on existing dev endpoint; CTL.IAM.ESCALATE.UPDATEDEVENDPOINT.001"
+    verdict: COVERED
+
+  - id: PE26
+    service: IAM
+    description: "UpdateRolePolicyToAssumeIt — iam:UpdateAssumeRolePolicy grants to modify trust policy of higher-privilege role; CTL.IAM.ESCALATE.UPDATETRUST.001"
+    verdict: COVERED
+
+  # --- N-A (not applicable) ---
+
+  - id: PE05
+    service: CodeStar
+    description: "CodeStarCreateProjectFromTemplate — codestar:CreateProjectFromTemplate; AWS CodeStar deprecated July 2024, API no longer available"
+    verdict: N-A
+    verdict_reason: "AWS CodeStar service shut down July 31 2024; not snapshot-verifiable"
+
+  - id: PE06
+    service: CodeStar
+    description: "CodeStarCreateProjectThenAssociateTeamMember — codestar:CreateProject + codestar:AssociateTeamMember; AWS CodeStar deprecated July 2024"
+    verdict: N-A
+    verdict_reason: "AWS CodeStar service shut down July 31 2024; not snapshot-verifiable"
+
+  - id: PE13
+    service: CodeStar
+    description: "PassExistingRoleToNewCodeStarProject — iam:PassRole + codestar:CreateProject; AWS CodeStar deprecated July 2024"
+    verdict: N-A
+    verdict_reason: "AWS CodeStar service shut down July 31 2024; not snapshot-verifiable"

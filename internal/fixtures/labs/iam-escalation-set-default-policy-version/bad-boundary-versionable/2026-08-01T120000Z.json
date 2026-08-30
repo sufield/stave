@@ -7,7 +7,7 @@
   },
   "assets": [
     {
-      "id": "arn:aws:iam::111122223333:user/partial-user",
+      "id": "arn:aws:iam::111122223333:user/boundary-user",
       "type": "aws_iam_user",
       "vendor": "aws",
       "properties": {
@@ -18,12 +18,12 @@
           },
           "boundary": {
             "permissions_boundary_set": true,
-            "permissions_boundary_arn": "arn:aws:iam::111122223333:policy/ReadOnlyBoundary"
+            "permissions_boundary_arn": "arn:aws:iam::111122223333:policy/BoundaryPolicy"
           },
           "escalation": {
             "create_policy_version": {
               "present": true,
-              "target_policy_arn": "arn:aws:iam::111122223333:policy/AppPolicy",
+              "target_policy_arn": "arn:aws:iam::111122223333:policy/*",
               "attachment_path": "direct",
               "attachment_group": null,
               "has_create_version": true,
