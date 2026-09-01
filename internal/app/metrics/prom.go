@@ -7,9 +7,17 @@ import (
 	"io"
 	"slices"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/report"
 )
+
+var canonicalSeverities = []policy.Severity{
+	policy.SeverityCritical,
+	policy.SeverityHigh,
+	policy.SeverityMedium,
+	policy.SeverityLow,
+}
 
 // Input configures the metrics generation.
 type Input struct {
@@ -34,15 +42,15 @@ func Write(w io.Writer, in Input) {
 	// Findings by severity.
 	severityCounts := countBySeverity(a.Findings)
 	writeComment(w, "stave_findings_total", "Number of findings by severity")
-	for _, sev := range []string{"critical", "high", "medium", "low"} {
-		fmt.Fprintf(w, "stave_findings_total{severity=%q} %d\n", sev, severityCounts[sev])
+	for _, sev := range canonicalSeverities {
+		fmt.Fprintf(w, "stave_findings_total{severity=%q} %d\n", sev.String(), severityCounts[sev])
 	}
 	fmt.Fprintln(w)
 
 	// SLA burn rates.
 	slaMetrics := computeSLAMetrics(a.Findings)
 	hasSLAOutput := false
-	for _, sev := range []string{"critical", "high", "medium", "low"} {
+	for _, sev := range canonicalSeverities {
 		if _, ok := slaMetrics[sev]; ok {
 			hasSLAOutput = true
 			break
@@ -50,9 +58,9 @@ func Write(w io.Writer, in Input) {
 	}
 	if hasSLAOutput {
 		writeComment(w, "stave_sla_burn_rate", "SLA burn rate by severity (0-1)")
-		for _, sev := range []string{"critical", "high", "medium", "low"} {
+		for _, sev := range canonicalSeverities {
 			if rate, ok := slaMetrics[sev]; ok {
-				fmt.Fprintf(w, "stave_sla_burn_rate{severity=%q} %.2f\n", sev, rate)
+				fmt.Fprintf(w, "stave_sla_burn_rate{severity=%q} %.2f\n", sev.String(), rate)
 			}
 		}
 		fmt.Fprintln(w)
@@ -86,21 +94,22 @@ func Write(w io.Writer, in Input) {
 	}
 }
 
-func countBySeverity(findings []remediation.Finding) map[string]int {
-	counts := make(map[string]int)
+func countBySeverity(findings []remediation.Finding) map[policy.Severity]int {
+	counts := make(map[policy.Severity]int)
 	for i := range findings {
-		sev := findings[i].SeverityLabel()
+		sev := findings[i].ControlSeverity
 		counts[sev]++
 	}
 	return counts
 }
 
-func computeSLAMetrics(findings []remediation.Finding) map[string]float64 {
+func computeSLAMetrics(findings []remediation.Finding) map[policy.Severity]float64 {
 	stats := remediation.FindingSet(findings).SLABreachSummary()
-	rates := make(map[string]float64, len(stats.TotalBySeverity))
-	for sev, total := range stats.TotalBySeverity {
+	rates := make(map[policy.Severity]float64, len(stats.TotalBySeverity))
+	for sName, total := range stats.TotalBySeverity {
 		if total > 0 {
-			rates[sev] = float64(stats.BreachedBySeverity[sev]) / float64(total)
+			sev, _ := policy.ParseSeverity(sName)
+			rates[sev] = float64(stats.BreachedBySeverity[sName]) / float64(total)
 		}
 	}
 	return rates

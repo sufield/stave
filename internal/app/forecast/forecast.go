@@ -4,6 +4,7 @@ package forecast
 
 import (
 	"fmt"
+	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
@@ -18,10 +19,28 @@ type Result struct {
 
 // CurrentState holds current metrics.
 type CurrentState struct {
-	PostureScore float64 `json:"posture_score"`
-	OpenFindings int     `json:"open_findings"`
-	MTTRCritical float64 `json:"mttr_critical_hours"`
-	MTTRHigh     float64 `json:"mttr_high_hours"`
+	PostureScore      float64       `json:"posture_score"`
+	OpenFindings      int           `json:"open_findings"`
+	MTTRCritical      time.Duration `json:"-"`
+	MTTRHigh          time.Duration `json:"-"`
+	MTTRCriticalHours float64       `json:"mttr_critical_hours"`
+	MTTRHighHours     float64       `json:"mttr_high_hours"`
+}
+
+// SetMTTRCritical sets both the time.Duration and float64 hours representation.
+func (c *CurrentState) SetMTTRCritical(d time.Duration) {
+	if c != nil {
+		c.MTTRCritical = d
+		c.MTTRCriticalHours = d.Hours()
+	}
+}
+
+// SetMTTRHigh sets both the time.Duration and float64 hours representation.
+func (c *CurrentState) SetMTTRHigh(d time.Duration) {
+	if c != nil {
+		c.MTTRHigh = d
+		c.MTTRHighHours = d.Hours()
+	}
 }
 
 // ProjectedState holds projected metrics.

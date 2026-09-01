@@ -12,18 +12,22 @@ import (
 
 // Result holds the staleness check outcome.
 type Result struct {
-	MostRecent   time.Time `json:"most_recent_snapshot"`
-	StalenessHrs float64   `json:"staleness_hours"`
-	ThresholdHrs float64   `json:"threshold_hours"`
-	GapHrs       float64   `json:"gap_hours"`
-	Stale        bool      `json:"stale"`
-	Message      string    `json:"message"`
+	MostRecent   time.Time     `json:"most_recent_snapshot"`
+	Staleness    time.Duration `json:"-"`
+	Threshold    time.Duration `json:"-"`
+	Gap          time.Duration `json:"-"`
+	StalenessHrs float64       `json:"staleness_hours"`
+	ThresholdHrs float64       `json:"threshold_hours"`
+	GapHrs       float64       `json:"gap_hours"`
+	Stale        bool          `json:"stale"`
+	Message      string        `json:"message"`
 }
 
 // Check compares the most recent snapshot against the threshold.
 func Check(snapshots []asset.Snapshot, threshold time.Duration, now time.Time) *Result {
 	if len(snapshots) == 0 {
 		return &Result{
+			Threshold:    threshold,
 			ThresholdHrs: threshold.Hours(),
 			Stale:        true,
 			Message:      "no snapshots found",
@@ -39,6 +43,7 @@ func Check(snapshots []asset.Snapshot, threshold time.Duration, now time.Time) *
 
 	if mostRecent.IsZero() {
 		return &Result{
+			Threshold:    threshold,
 			ThresholdHrs: threshold.Hours(),
 			Stale:        true,
 			Message:      "snapshot capture timestamp missing or zero",
@@ -50,13 +55,17 @@ func Check(snapshots []asset.Snapshot, threshold time.Duration, now time.Time) *
 
 	r := &Result{
 		MostRecent:   mostRecent,
+		Staleness:    age,
+		Threshold:    threshold,
 		StalenessHrs: age.Hours(),
 		ThresholdHrs: threshold.Hours(),
 		Stale:        stale,
 	}
 
 	if stale {
-		r.GapHrs = (age - threshold).Hours()
+		gap := age - threshold
+		r.Gap = gap
+		r.GapHrs = gap.Hours()
 		r.Message = fmt.Sprintf("observation staleness threshold exceeded: most recent snapshot %s (%.0f hours ago), threshold %.0fh",
 			mostRecent.Format(time.RFC3339), age.Hours(), threshold.Hours())
 	}
