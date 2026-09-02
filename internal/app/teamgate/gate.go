@@ -37,20 +37,20 @@ func DefaultThresholds() Thresholds {
 
 // GateResult holds the per-team gate evaluation.
 type GateResult struct {
-	TeamID        string `json:"team_id"`
-	Passed        bool   `json:"passed"`
-	CriticalCount int    `json:"critical_count"`
-	HighCount     int    `json:"high_count"`
-	MediumCount   int    `json:"medium_count"`
-	TotalFindings int    `json:"total_findings"`
-	Reason        string `json:"reason,omitempty"`
+	TeamID        teams.TeamID `json:"team_id"`
+	Passed        bool         `json:"passed"`
+	CriticalCount int          `json:"critical_count"`
+	HighCount     int          `json:"high_count"`
+	MediumCount   int          `json:"medium_count"`
+	TotalFindings int          `json:"total_findings"`
+	Reason        string       `json:"reason,omitempty"`
 }
 
 // Input configures the gate evaluation.
 type Input struct {
 	Findings   []remediation.Finding
 	Manifest   *teams.Manifest
-	TeamID     string
+	TeamID     teams.TeamID
 	Thresholds Thresholds
 }
 
@@ -59,7 +59,7 @@ func Evaluate(in Input) GateResult {
 	var teamFindings []remediation.Finding
 	for i := range in.Findings {
 		f := &in.Findings[i]
-		teamID := string(f.OwnerTeamID)
+		teamID := teams.TeamID(f.OwnerTeamID)
 		if in.Manifest != nil {
 			owner := in.Manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
 			teamID = owner.TeamID

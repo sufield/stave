@@ -22,11 +22,14 @@ type Package struct {
 	Components  []Component `json:"components"`
 }
 
+// Checksum represents a SHA-256 hex digest.
+type Checksum string
+
 // Component is one file in the evidence package.
 type Component struct {
-	Filename    string `json:"filename"`
-	Description string `json:"description"`
-	SHA256      string `json:"sha256,omitempty"`
+	Filename    string   `json:"filename"`
+	Description string   `json:"description"`
+	SHA256      Checksum `json:"sha256,omitempty"`
 }
 
 // AssembleInput holds all candidate components for the audit bundle.
@@ -73,7 +76,7 @@ func Assemble(input AssembleInput) (*Package, error) {
 		pkg.Components = append(pkg.Components, Component{
 			Filename:    filename,
 			Description: desc,
-			SHA256:      sha,
+			SHA256:      Checksum(sha),
 		})
 		return nil
 	}

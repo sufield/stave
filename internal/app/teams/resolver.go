@@ -38,9 +38,14 @@ func (m *Manifest) HierarchyByID(id string) *HierarchyGroup {
 	return nil
 }
 
+// TeamID uniquely identifies a team in the governance manifest.
+type TeamID string
+
+func (id TeamID) String() string { return string(id) }
+
 // Team defines a team identity and its resource ownership.
 type Team struct {
-	ID               string             `yaml:"id"              json:"id"`
+	ID               TeamID             `yaml:"id"              json:"id"`
 	DisplayName      string             `yaml:"display_name"    json:"display_name"`
 	Contact          string             `yaml:"contact"         json:"contact,omitempty"`
 	ResourcePatterns []string           `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
@@ -58,7 +63,7 @@ type Routing struct {
 
 // OwnerResult records the resolved owner and how it was determined.
 type OwnerResult struct {
-	TeamID         string `json:"team_id"`
+	TeamID         TeamID `json:"team_id"`
 	TeamName       string `json:"team_name"`
 	Contact        string `json:"contact,omitempty"`
 	ResolutionPath string `json:"resolution_path"`
@@ -90,7 +95,7 @@ func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN, controlID s
 	// 1. Primary tag match.
 	if tagVal, ok := tags[m.OwnerTagKey]; ok {
 		for i := range m.Teams {
-			if m.Teams[i].ID == tagVal {
+			if string(m.Teams[i].ID) == tagVal {
 				return OwnerResult{
 					TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
 					Contact: m.Teams[i].Contact, ResolutionPath: "tag",
@@ -102,7 +107,7 @@ func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN, controlID s
 	// 2. Fallback tag match.
 	if tagVal, ok := tags[m.FallbackTagKey]; ok {
 		for i := range m.Teams {
-			if m.Teams[i].ID == tagVal {
+			if string(m.Teams[i].ID) == tagVal {
 				return OwnerResult{
 					TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
 					Contact: m.Teams[i].Contact, ResolutionPath: "fallback_tag",
@@ -153,7 +158,7 @@ func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN, controlID s
 }
 
 // TeamByID returns the team definition for an ID, or nil.
-func (m *Manifest) TeamByID(id string) *Team {
+func (m *Manifest) TeamByID(id TeamID) *Team {
 	for i := range m.Teams {
 		if m.Teams[i].ID == id {
 			return &m.Teams[i]
@@ -173,7 +178,7 @@ func (m *Manifest) AnnotateFindings(findings []FindingRef, tags func(assetID str
 			t = tags(f.AssetID)
 		}
 		result := m.ResolveOwner(t, f.AssetID, f.ControlID)
-		f.OwnerTeamID = result.TeamID
+		f.OwnerTeamID = string(result.TeamID)
 		f.OwnerTeamName = result.TeamName
 		f.OwnerContact = result.Contact
 		f.OwnerResolution = result.ResolutionPath

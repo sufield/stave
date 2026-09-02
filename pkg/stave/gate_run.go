@@ -120,10 +120,10 @@ func RunGate(ctx context.Context, cfg GateRunConfig) (output []byte, warnings []
 		teamResult := teamgate.Evaluate(teamgate.Input{
 			Findings:   evalDoc.Findings,
 			Manifest:   manifest,
-			TeamID:     cfg.Team,
+			TeamID:     teams.TeamID(cfg.Team),
 			Thresholds: teamgate.DefaultThresholds(),
 		})
-		result.MergeTeamVerdict(teamResult.TeamID, teamResult.Passed, teamResult.Reason)
+		result.MergeTeamVerdict(string(teamResult.TeamID), teamResult.Passed, teamResult.Reason)
 	}
 
 	out, err := gateRenderResult(format, cfg.Quiet, result)

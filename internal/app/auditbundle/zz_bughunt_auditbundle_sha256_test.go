@@ -36,7 +36,7 @@ func TestBugHunt_AuditBundle_SHA256Populated(t *testing.T) {
 	h.Write(reportData)
 	expectedSha := hex.EncodeToString(h.Sum(nil))
 
-	if c.SHA256 != expectedSha {
+	if c.SHA256 != Checksum(expectedSha) {
 		t.Errorf("expected component SHA256 to be %q, got %q", expectedSha, c.SHA256)
 	}
 }

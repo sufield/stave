@@ -125,7 +125,7 @@ func EvalCEL(data []byte, expression, assetType, format string) (CELResult, erro
 	}
 
 	result, err := celeval.Eval(celeval.Input{
-		Expression: expression,
+		Expression: celeval.Expression(expression),
 		Assets:     assets,
 		AssetType:  kernel.AssetType(assetType),
 		Evaluator:  &celBridge{},

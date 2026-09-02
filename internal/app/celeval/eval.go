@@ -17,9 +17,14 @@ type AssetResult struct {
 	Error     string           `json:"error,omitempty"`
 }
 
+// Expression represents a raw CEL expression string.
+type Expression string
+
+func (e Expression) String() string { return string(e) }
+
 // EvalResult holds the full evaluation output.
 type EvalResult struct {
-	Expression string        `json:"expression"`
+	Expression Expression    `json:"expression"`
 	Assets     []AssetResult `json:"assets"`
 	TotalFire  int           `json:"total_fire"`
 	TotalPass  int           `json:"total_pass"`
@@ -33,7 +38,7 @@ type PredicateEvaluator interface {
 
 // Input configures the evaluation.
 type Input struct {
-	Expression string
+	Expression Expression
 	Assets     []asset.Asset
 	AssetType  kernel.AssetType // filter to this type if non-empty
 	Evaluator  PredicateEvaluator
@@ -54,7 +59,7 @@ func Eval(in Input) (*EvalResult, error) {
 		}
 
 		props := a.Map()
-		val, err := in.Evaluator.EvalBool(in.Expression, props)
+		val, err := in.Evaluator.EvalBool(string(in.Expression), props)
 
 		ar := AssetResult{
 			AssetID:   a.ID,

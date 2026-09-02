@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -154,15 +155,15 @@ type FrameworkReadiness struct {
 
 // TeamSection holds per-team data.
 type TeamSection struct {
-	ID           string     `json:"id"`
-	Name         string     `json:"name"`
-	Score        float64    `json:"posture_score"`
-	Trajectory   Trajectory `json:"trajectory"`
-	OpenFindings int        `json:"open_findings"`
-	CriticalOpen int        `json:"critical_open"`
-	SLACompPct   float64    `json:"sla_compliance_pct"`
-	MTTRHours    float64    `json:"mttr_hours"`
-	Contact      string     `json:"contact,omitempty"`
+	ID           teams.TeamID `json:"id"`
+	Name         string       `json:"name"`
+	Score        float64      `json:"posture_score"`
+	Trajectory   Trajectory   `json:"trajectory"`
+	OpenFindings int          `json:"open_findings"`
+	CriticalOpen int          `json:"critical_open"`
+	SLACompPct   float64      `json:"sla_compliance_pct"`
+	MTTRHours    float64      `json:"mttr_hours"`
+	Contact      string       `json:"contact,omitempty"`
 }
 
 // CatalogSection holds catalog metadata.

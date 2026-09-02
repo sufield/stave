@@ -144,7 +144,7 @@ func renderTrendTable(out io.Writer, r *trendReport) error {
 			arrow := t.Symbol()
 			name := t.Name
 			if name == "" {
-				name = t.ID
+				name = string(t.ID)
 			}
 			if len(name) > 16 {
 				name = name[:16]

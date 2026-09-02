@@ -35,7 +35,7 @@ func computeTeamTrends(
 	latest := assessments[len(assessments)-1]
 
 	// Group findings by team.
-	teamFindings := make(map[string][]remediation.Finding)
+	teamFindings := make(map[teams.TeamID][]remediation.Finding)
 	for i := range latest.Findings {
 		f := &latest.Findings[i]
 		owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
@@ -43,18 +43,18 @@ func computeTeamTrends(
 	}
 
 	// Build team lookup.
-	teamLookup := make(map[string]*teams.Team)
+	teamLookup := make(map[teams.TeamID]*teams.Team)
 	for i := range manifest.Teams {
 		teamLookup[manifest.Teams[i].ID] = &manifest.Teams[i]
 	}
 
 	// If we have history, compute earlier scores for trajectory.
-	var earlierScores map[string]float64
+	var earlierScores map[teams.TeamID]float64
 	if len(assessments) > 1 {
 		earliest := assessments[0]
-		earlierScores = make(map[string]float64)
-		earlierByTeam := make(map[string]int)
-		earlierTotalByTeam := make(map[string]int)
+		earlierScores = make(map[teams.TeamID]float64)
+		earlierByTeam := make(map[teams.TeamID]int)
+		earlierTotalByTeam := make(map[teams.TeamID]int)
 		for i := range earliest.Findings {
 			f := &earliest.Findings[i]
 			owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
@@ -77,7 +77,7 @@ func computeTeamTrends(
 		t := &manifest.Teams[i]
 		findings := teamFindings[t.ID]
 
-		if teamFilter != "" && t.ID != teamFilter {
+		if teamFilter != "" && string(t.ID) != teamFilter {
 			continue
 		}
 
@@ -173,9 +173,9 @@ func computeRollup(trends []teamTrend, group *teams.HierarchyGroup) *rollupResul
 	if group == nil {
 		return nil
 	}
-	memberSet := make(map[string]struct{}, len(group.Teams))
+	memberSet := make(map[teams.TeamID]struct{}, len(group.Teams))
 	for _, tid := range group.Teams {
-		memberSet[tid] = struct{}{}
+		memberSet[teams.TeamID(tid)] = struct{}{}
 	}
 
 	var totalScore, totalMTTR float64
@@ -250,7 +250,7 @@ func renderExecutiveSummary(w io.Writer, r *trendReport) error { //nolint:unpara
 			}
 			name := t.Name
 			if name == "" {
-				name = t.ID
+				name = string(t.ID)
 			}
 			fmt.Fprintf(w, "\nATTENTION REQUIRED: %s (score %.1f, %+.1f). %d critical findings open.",
 				name, t.PostureScore, t.ScoreDelta, t.CriticalOpen)
@@ -273,7 +273,7 @@ func renderExecutiveSummary(w io.Writer, r *trendReport) error { //nolint:unpara
 		if best != nil {
 			name := best.Name
 			if name == "" {
-				name = best.ID
+				name = string(best.ID)
 			}
 			fmt.Fprintf(w, "\nTop performer: %s (score %.1f, %+.1f, MTTR %.1fh, %.0f%% SLA compliance).\n",
 				name, best.PostureScore, best.ScoreDelta, best.MTTRHours, best.SLACompPct)

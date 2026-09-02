@@ -208,8 +208,8 @@ func buildATTCKSection(ctx context.Context, repo appcontracts.ControlRepository,
 // the empty-string team ID; the manifest's section list determines
 // the visible output.
 func buildTeamSections(a *corereport.Assessment, manifest *teams.Manifest) []TeamSection {
-	teamFindings := make(map[string]int)
-	teamCritical := make(map[string]int)
+	teamFindings := make(map[teams.TeamID]int)
+	teamCritical := make(map[teams.TeamID]int)
 	for i := range a.Findings {
 		f := &a.Findings[i]
 		owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))

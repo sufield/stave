@@ -5,6 +5,7 @@ import (
 	"time"
 
 	evidenceadapter "github.com/sufield/stave/internal/adapters/evidence"
+	"github.com/sufield/stave/internal/app/teams"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/report"
@@ -149,17 +150,17 @@ type velocityMetrics struct {
 
 // teamTrend holds per-team trend metrics.
 type teamTrend struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	Contact      string    `json:"contact,omitempty"`
-	PostureScore float64   `json:"posture_score"`
-	ScoreDelta   float64   `json:"posture_score_delta"`
-	Trajectory   string    `json:"trajectory"`
-	MTTRHours    float64   `json:"mttr_hours"`
-	SLACompPct   float64   `json:"sla_compliance_pct"`
-	OpenFindings int       `json:"open_findings"`
-	CriticalOpen int       `json:"critical_open"`
-	ScoreHistory []float64 `json:"score_history,omitempty"`
+	ID           teams.TeamID `json:"id"`
+	Name         string       `json:"name"`
+	Contact      string       `json:"contact,omitempty"`
+	PostureScore float64      `json:"posture_score"`
+	ScoreDelta   float64      `json:"posture_score_delta"`
+	Trajectory   string       `json:"trajectory"`
+	MTTRHours    float64      `json:"mttr_hours"`
+	SLACompPct   float64      `json:"sla_compliance_pct"`
+	OpenFindings int          `json:"open_findings"`
+	CriticalOpen int          `json:"critical_open"`
+	ScoreHistory []float64    `json:"score_history,omitempty"`
 }
 
 // IsImproving reports whether the team's posture is trending
