@@ -57,7 +57,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 				report.AlreadyExpired++
 				report.ExpiredItems = append(report.ExpiredItems, ExpiryItem{
 					ControlID:     ack.ControlID,
-					AssetID:       asset.ID(ack.AssetID),
+					AssetID:       ack.AssetID,
 					ExpiryDate:    ack.ExpiryDate,
 					DaysRemaining: daysRemaining,
 					Reason:        ack.Reason,
@@ -67,7 +67,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 				report.ExpiringDays60++
 				report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
 					ControlID:     ack.ControlID,
-					AssetID:       asset.ID(ack.AssetID),
+					AssetID:       ack.AssetID,
 					ExpiryDate:    ack.ExpiryDate,
 					DaysRemaining: daysRemaining,
 					Reason:        ack.Reason,
@@ -76,7 +76,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 				report.ExpiringDays60++
 				report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
 					ControlID:     ack.ControlID,
-					AssetID:       asset.ID(ack.AssetID),
+					AssetID:       ack.AssetID,
 					ExpiryDate:    ack.ExpiryDate,
 					DaysRemaining: daysRemaining,
 					Reason:        ack.Reason,
@@ -84,13 +84,13 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 			}
 		}
 
-		key := string(ack.ControlID) + "@" + ack.AssetID
+		key := string(ack.ControlID) + "@" + string(ack.AssetID)
 		_, active := activeFindings[key]
 		if activeFindings != nil && !active {
 			report.Resolved++
 			report.ResolvedItems = append(report.ResolvedItems, ResolvedItem{
 				ControlID:      ack.ControlID,
-				AssetID:        asset.ID(ack.AssetID),
+				AssetID:        ack.AssetID,
 				GrantedDate:    ack.AcknowledgedDate,
 				Recommendation: "revoke exemption — finding no longer active",
 			})

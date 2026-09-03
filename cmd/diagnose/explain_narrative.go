@@ -243,7 +243,7 @@ func writeNarrativeSteps(w io.Writer, steps []narrative.Step) {
 			fmt.Fprintf(w, "  %s\n", s.Action)
 		}
 		if s.Confidence != "" {
-			fmt.Fprintf(w, "  Confidence: %s\n", strings.ToUpper(s.Confidence))
+			fmt.Fprintf(w, "  Confidence: %s\n", strings.ToUpper(string(s.Confidence)))
 		}
 	}
 }

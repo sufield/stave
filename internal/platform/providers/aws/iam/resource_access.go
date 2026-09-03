@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/access"
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 // Type aliases: the canonical home for these data types is
@@ -49,7 +50,7 @@ func AddResourcePolicy(idx *ResourceAccessIndex, resourceARN, policyJSON, accoun
 			isPublic := principal == "*"
 			isCrossAccount := !isPublic && !principalInAccount(principal, accountID)
 
-			idx.AddEntry(resourceARN, access.ResourceAccessEntry{
+			idx.AddEntry(asset.ID(resourceARN), access.ResourceAccessEntry{
 				PrincipalARN:   principal,
 				Actions:        allows[i].Action,
 				IsCrossAccount: isCrossAccount,

@@ -132,7 +132,7 @@ func ExportTickets(assessmentData []byte, teamManifest, team, format string) ([]
 			t := &tickets[i]
 			if t.Team == "" {
 				owner := manifest.ResolveOwner(nil, string(t.AssetID), string(t.ControlID))
-				t.Team = owner.TeamName
+				t.Team = teams.TeamID(owner.TeamName)
 			}
 		}
 	}
@@ -141,7 +141,7 @@ func ExportTickets(assessmentData []byte, teamManifest, team, format string) ([]
 	if team != "" {
 		var filtered []ticketexport.Ticket
 		for i := range tickets {
-			if tickets[i].Team == team {
+			if string(tickets[i].Team) == team {
 				filtered = append(filtered, tickets[i])
 			}
 		}
@@ -182,14 +182,14 @@ func writeTicketsExportCSV(w io.Writer, tickets []ticketexport.Ticket) (err erro
 	for i := range tickets {
 		t := &tickets[i]
 		if err = cw.Write([]string{
-			t.TicketID,
+			string(t.TicketID),
 			t.Title,
 			t.Severity.String(),
 			string(t.Priority),
-			t.Status,
+			string(t.Status),
 			string(t.ControlID),
 			string(t.AssetID),
-			t.Team,
+			string(t.Team),
 			fmt.Sprintf("%.1f", t.DwellDays),
 			t.Description,
 		}); err != nil {

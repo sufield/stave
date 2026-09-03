@@ -13,9 +13,14 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// UUID uniquely identifies a POA&M document or item.
+type UUID string
+
+func (u UUID) String() string { return string(u) }
+
 // POAM is the top-level OSCAL POA&M document.
 type POAM struct {
-	UUID     string       `json:"uuid"`
+	UUID     UUID         `json:"uuid"`
 	Metadata POAMMetadata `json:"metadata"`
 	Items    []POAMItem   `json:"poam-items"`
 }
@@ -30,7 +35,7 @@ type POAMMetadata struct {
 
 // POAMItem is a single action item in the POA&M.
 type POAMItem struct {
-	UUID                    string       `json:"uuid"`
+	UUID                    UUID         `json:"uuid"`
 	Title                   string       `json:"title"`
 	Description             string       `json:"description"`
 	RelatedControls         []RelatedCtl `json:"related-controls,omitempty"`
@@ -116,10 +121,10 @@ func Generate(in Input) *POAM {
 	return poam
 }
 
-func deterministicUUID(namespace, value string) string {
+func deterministicUUID(namespace, value string) UUID {
 	h := sha256.Sum256([]byte(namespace + ":" + value))
 	h[6] = (h[6] & 0x0f) | 0x50 // version 5
 	h[8] = (h[8] & 0x3f) | 0x80 // variant rfc4122
 	hexVal := hex.EncodeToString(h[:16])
-	return hexVal[:8] + "-" + hexVal[8:12] + "-" + hexVal[12:16] + "-" + hexVal[16:20] + "-" + hexVal[20:32]
+	return UUID(hexVal[:8] + "-" + hexVal[8:12] + "-" + hexVal[12:16] + "-" + hexVal[16:20] + "-" + hexVal[20:32])
 }

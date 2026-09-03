@@ -99,7 +99,7 @@ func MapTelemetryHistory(dir, severity, resourceARN string) ([]byte, error) {
 
 		currentKeys := make(map[string]struct{}, len(events))
 		for i := range events {
-			currentKeys[events[i].ResourceID+"/"+events[i].ControlID] = struct{}{}
+			currentKeys[string(events[i].ResourceID)+"/"+string(events[i].ControlID)] = struct{}{}
 			if err := enc.Encode(&events[i]); err != nil {
 				return nil, fmt.Errorf("encode event: %w", err)
 			}

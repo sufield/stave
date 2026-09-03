@@ -9,6 +9,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/controls/archetype"
 	"github.com/sufield/stave/internal/app/expand"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // These exercise the expand render/resolve helpers that moved here from
@@ -48,7 +49,7 @@ func expandSampleControls() []policy.ControlDefinition {
 
 func TestRenderExpandJSON_IncludesArchetypeAndControls(t *testing.T) {
 	arch, _ := archetype.Lookup("ghost-reference")
-	matched := expand.FilterByArchetype(expandSampleControls(), "ghost-reference")
+	matched := expand.FilterByArchetype(expandSampleControls(), kernel.ArchetypeID("ghost-reference"))
 
 	var buf bytes.Buffer
 	if err := renderExpandJSON(&buf, arch, matched, nil, nil); err != nil {

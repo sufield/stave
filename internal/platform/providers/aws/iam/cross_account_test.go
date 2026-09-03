@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/access"
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 func TestApplyResourcePolicyGrants_CrossAccountAND(t *testing.T) {
@@ -114,7 +115,7 @@ func TestApplyResourcePolicyGrants_CrossAccountAND(t *testing.T) {
 			idx := access.NewResourceAccessIndex()
 			for _, g := range tt.resourceGrants {
 				for _, action := range g.actions {
-					idx.AddEntry(g.resourceARN, access.ResourceAccessEntry{
+					idx.AddEntry(asset.ID(g.resourceARN), access.ResourceAccessEntry{
 						PrincipalARN:   principal,
 						Actions:        []string{action},
 						IsCrossAccount: g.isCrossAccount,

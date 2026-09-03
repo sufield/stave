@@ -27,7 +27,7 @@ func AnnotateFindings(findings []remediation.Finding, idx *access.ResourceAccess
 	}
 	for i := range findings {
 		f := &findings[i]
-		entries := idx.EntriesFor(string(f.AssetID))
+		entries := idx.EntriesFor(f.AssetID)
 		if len(entries) == 0 {
 			continue
 		}

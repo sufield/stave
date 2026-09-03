@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/sufield/stave/internal/core/access"
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 // resourceGrant is the inverted view of a resource access entry:
@@ -53,9 +54,9 @@ func applyResourcePolicyGrants(resolved map[string]*ResolvedPermissions, idx *ac
 // invertIndex builds a principal → grants map from the resource-keyed index.
 func invertIndex(idx *access.ResourceAccessIndex) map[string][]resourceGrant {
 	out := make(map[string][]resourceGrant)
-	idx.Range(func(resourceID string, entry access.ResourceAccessEntry) {
+	idx.Range(func(resourceID asset.ID, entry access.ResourceAccessEntry) {
 		out[entry.PrincipalARN] = append(out[entry.PrincipalARN], resourceGrant{
-			resourceARN:    resourceID,
+			resourceARN:    string(resourceID),
 			actions:        entry.Actions,
 			isCrossAccount: entry.IsCrossAccount,
 			isPublic:       entry.IsPublic,

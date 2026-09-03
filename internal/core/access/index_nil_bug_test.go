@@ -2,6 +2,8 @@ package access
 
 import (
 	"testing"
+
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 func TestResourceAccessIndex_NilReceiver(t *testing.T) {
@@ -13,15 +15,15 @@ func TestResourceAccessIndex_NilReceiver(t *testing.T) {
 		}
 	}()
 
-	entries := idx.EntriesFor("arn:aws:s3:::my-bucket")
+	entries := idx.EntriesFor(asset.ID("arn:aws:s3:::my-bucket"))
 	if len(entries) != 0 {
 		t.Errorf("expected empty entries, got %v", entries)
 	}
 
-	idx.AddEntry("arn:aws:s3:::my-bucket", ResourceAccessEntry{PrincipalARN: "arn:aws:iam::123:root"})
+	idx.AddEntry(asset.ID("arn:aws:s3:::my-bucket"), ResourceAccessEntry{PrincipalARN: "arn:aws:iam::123:root"})
 
 	count := 0
-	idx.Range(func(res string, e ResourceAccessEntry) {
+	idx.Range(func(res asset.ID, e ResourceAccessEntry) {
 		count++
 	})
 	if count != 0 {

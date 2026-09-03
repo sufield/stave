@@ -8,6 +8,7 @@ import (
 	"os/user"
 	"time"
 
+	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
@@ -27,10 +28,13 @@ type AcceptanceFile struct {
 // predicate methods and the writer-side constructors (Add / Remove /
 // Expire) can all reference the same canonical strings instead of
 // open-coding "active" / "revoked" / "expired" at every site.
+// AckStatus defines acknowledgment entry status enum values.
+type AckStatus string
+
 const (
-	AckStatusActive  = "active"
-	AckStatusRevoked = "revoked"
-	AckStatusExpired = "expired"
+	AckStatusActive  AckStatus = "active"
+	AckStatusRevoked AckStatus = "revoked"
+	AckStatusExpired AckStatus = "expired"
 )
 
 // AcknowledgmentEntry is a formal risk acceptance.
@@ -39,7 +43,7 @@ const (
 type AcknowledgmentEntry struct {
 	ID                   string           `yaml:"id" json:"id"`
 	ControlID            kernel.ControlID `yaml:"control_id" json:"control_id"`
-	AssetID              string           `yaml:"asset_id" json:"asset_id"`
+	AssetID              asset.ID         `yaml:"asset_id" json:"asset_id"`
 	Reason               string           `yaml:"rationale" json:"rationale"`
 	Approver             string           `yaml:"acknowledged_by" json:"acknowledged_by"`
 	AcknowledgedDate     string           `yaml:"acknowledged_date" json:"acknowledged_date"`
@@ -47,7 +51,7 @@ type AcknowledgmentEntry struct {
 	ReviewBy             string           `yaml:"review_by,omitempty" json:"review_by,omitempty"`
 	ReviewCadence        string           `yaml:"review_cadence,omitempty" json:"review_cadence,omitempty"`
 	CompensatingControls []string         `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
-	Status               string           `yaml:"status" json:"status"`
+	Status               AckStatus        `yaml:"status" json:"status"`
 	AuditTrail           []AuditEvent     `yaml:"audit_trail" json:"audit_trail"`
 }
 
@@ -240,7 +244,7 @@ func (f *AcceptanceFile) AddAcknowledgment(entry AcknowledgmentEntry, timestamp 
 		return fmt.Errorf("expiry_date %s is in the past", entry.ExpiryDate)
 	}
 
-	entry.ID = string(entry.ControlID) + "@" + entry.AssetID
+	entry.ID = string(entry.ControlID) + "@" + string(entry.AssetID)
 	// time.Parse(RFC3339, ...) above already rejected anything shorter
 	// than the 20-char minimum (`YYYY-MM-DDTHH:MM:SSZ`), so the first
 	// 10 chars are guaranteed to be the date.

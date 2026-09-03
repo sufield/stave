@@ -71,7 +71,7 @@ func expandArchetypeFromControls(controls []policy.ControlDefinition, controlsDi
 		return nil, fmt.Errorf("unknown archetype %q (use --list to see catalog): %w", archID, ErrInvalidInput)
 	}
 
-	matched := expand.FilterByArchetype(controls, archID)
+	matched := expand.FilterByArchetype(controls, kernel.ArchetypeID(archID))
 	snap := expand.ScanSnapshots(snapshotsDir, arch.Services)
 
 	var buf bytes.Buffer

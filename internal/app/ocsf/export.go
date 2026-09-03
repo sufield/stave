@@ -11,14 +11,40 @@ import (
 	"github.com/sufield/stave/internal/util/strutil"
 )
 
+// ClassUID classifies the OCSF event class (2003 = Compliance Finding).
+type ClassUID int
+
+const ClassComplianceFinding ClassUID = 2003
+
+// ActivityID classifies the OCSF activity (1 = Create).
+type ActivityID int
+
+const ActivityCreate ActivityID = 1
+
+// SeverityID maps Stave severities to OCSF 1.1 severity numbers (1-5).
+type SeverityID int
+
+const (
+	SeverityIDUnknown  SeverityID = 1
+	SeverityIDLow      SeverityID = 2
+	SeverityIDMedium   SeverityID = 3
+	SeverityIDHigh     SeverityID = 4
+	SeverityIDCritical SeverityID = 5
+)
+
+// StatusID classifies OCSF finding status (1 = New).
+type StatusID int
+
+const StatusIDNew StatusID = 1
+
 // ComplianceFinding is an OCSF 1.1 Compliance Finding (class_uid: 2003).
 type ComplianceFinding struct {
-	ClassUID   int            `json:"class_uid"`
+	ClassUID   ClassUID       `json:"class_uid"`
 	ClassName  string         `json:"class_name"`
-	ActivityID int            `json:"activity_id"`
-	SeverityID int            `json:"severity_id"`
+	ActivityID ActivityID     `json:"activity_id"`
+	SeverityID SeverityID     `json:"severity_id"`
 	Severity   string         `json:"severity"`
-	StatusID   int            `json:"status_id"`
+	StatusID   StatusID       `json:"status_id"`
 	Status     string         `json:"status"`
 	Finding    OCSFFinding    `json:"finding"`
 	Compliance OCSFCompliance `json:"compliance"`
@@ -55,12 +81,12 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 			uid = string(f.ControlID) + ":" + string(f.AssetType) + ":" + string(f.AssetID)
 		}
 		events = append(events, ComplianceFinding{
-			ClassUID:   2003,
+			ClassUID:   ClassComplianceFinding,
 			ClassName:  "Compliance Finding",
-			ActivityID: 1,
+			ActivityID: ActivityCreate,
 			SeverityID: sevID(f.SeverityLabel()),
 			Severity:   strutil.TitleCase(f.SeverityLabel()),
-			StatusID:   1,
+			StatusID:   StatusIDNew,
 			Status:     "New",
 			Finding: OCSFFinding{
 				UID:   uid,
@@ -94,18 +120,18 @@ func ccmRequirements(ccms []string) []string {
 	return out
 }
 
-func sevID(sev string) int {
+func sevID(sev string) SeverityID {
 	if strings.EqualFold(sev, "critical") {
-		return 5
+		return SeverityIDCritical
 	}
 	if strings.EqualFold(sev, "high") {
-		return 4
+		return SeverityIDHigh
 	}
 	if strings.EqualFold(sev, "medium") {
-		return 3
+		return SeverityIDMedium
 	}
 	if strings.EqualFold(sev, "low") {
-		return 2
+		return SeverityIDLow
 	}
-	return 1
+	return SeverityIDUnknown
 }

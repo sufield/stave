@@ -42,14 +42,23 @@ type StateEntry struct {
 	HasSafeDefault bool   `json:"has_safe_default"`
 }
 
+// ConfidenceLevel classifies step confidence.
+type ConfidenceLevel string
+
+const (
+	ConfidenceHigh   ConfidenceLevel = "high"
+	ConfidenceMedium ConfidenceLevel = "medium"
+	ConfidenceLow    ConfidenceLevel = "low"
+)
+
 // Step is a single remediation action.
 type Step struct {
-	StepNumber  int    `json:"step_number"`
-	Title       string `json:"title"`
-	SafeDefault bool   `json:"safe_default"`
-	Caution     string `json:"caution,omitempty"`
-	Action      string `json:"action"`
-	Confidence  string `json:"confidence"`
+	StepNumber  int             `json:"step_number"`
+	Title       string          `json:"title"`
+	SafeDefault bool            `json:"safe_default"`
+	Caution     string          `json:"caution,omitempty"`
+	Action      string          `json:"action"`
+	Confidence  ConfidenceLevel `json:"confidence"`
 }
 
 // ChainContext describes the compound chain membership.
@@ -373,14 +382,14 @@ func stageOrder(controlID kernel.ControlID) int {
 	}
 }
 
-func confidenceLabel(c float64) string {
+func confidenceLabel(c float64) ConfidenceLevel {
 	switch {
 	case c >= 0.9:
-		return "high"
+		return ConfidenceHigh
 	case c >= 0.6:
-		return "medium"
+		return ConfidenceMedium
 	case c > 0:
-		return "low"
+		return ConfidenceLow
 	default:
 		return ""
 	}

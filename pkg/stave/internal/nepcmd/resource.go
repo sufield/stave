@@ -57,7 +57,7 @@ func ResolveResourceAccess(cfg ResourceConfig) (output []byte, warnings []string
 	}
 	addIdentityBasedAccess(idx, snap, cfg.ResourceARN)
 
-	entries := idx.EntriesFor(cfg.ResourceARN)
+	entries := idx.EntriesFor(asset.ID(cfg.ResourceARN))
 	designated := buildDesignatedSet(snap)
 
 	displayEntries := entries
@@ -196,7 +196,7 @@ func addIdentityBasedAccess(idx *iam.ResourceAccessIndex, snap *asset.Snapshot, 
 		}
 		for _, grant := range result.EffectiveAllow {
 			if matchesReadAccess(grant, targetARN, readActions) {
-				idx.AddEntry(string(id.ID), iam.ResourceAccessEntry{
+				idx.AddEntry(id.ID, iam.ResourceAccessEntry{
 					PrincipalARN: string(id.ID),
 					Actions:      []string{grant.Action},
 					GrantSource:  "identity-based",

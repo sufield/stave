@@ -9,6 +9,8 @@
 // their native policy formats.
 package access
 
+import "github.com/sufield/stave/internal/core/asset"
+
 // ResourceAccessEntry represents a principal's access to a resource
 // granted via a resource-based policy. The principal and grant
 // source identifiers carry their cloud-native form (AWS ARN today)
@@ -26,18 +28,18 @@ type ResourceAccessEntry struct {
 // per snapshot evaluation by a vendor-specific helper (e.g.
 // providers/aws/iam.AddResourcePolicy).
 type ResourceAccessIndex struct {
-	entries map[string][]ResourceAccessEntry
+	entries map[asset.ID][]ResourceAccessEntry
 }
 
 // NewResourceAccessIndex creates an empty index.
 func NewResourceAccessIndex() *ResourceAccessIndex {
 	return &ResourceAccessIndex{
-		entries: make(map[string][]ResourceAccessEntry),
+		entries: make(map[asset.ID][]ResourceAccessEntry),
 	}
 }
 
 // EntriesFor returns all access entries for a resource identifier.
-func (idx *ResourceAccessIndex) EntriesFor(resourceID string) []ResourceAccessEntry {
+func (idx *ResourceAccessIndex) EntriesFor(resourceID asset.ID) []ResourceAccessEntry {
 	if idx == nil {
 		return nil
 	}
@@ -45,18 +47,18 @@ func (idx *ResourceAccessIndex) EntriesFor(resourceID string) []ResourceAccessEn
 }
 
 // AddEntry adds a single access entry for a resource identifier.
-func (idx *ResourceAccessIndex) AddEntry(resourceID string, entry ResourceAccessEntry) {
+func (idx *ResourceAccessIndex) AddEntry(resourceID asset.ID, entry ResourceAccessEntry) {
 	if idx == nil {
 		return
 	}
 	if idx.entries == nil {
-		idx.entries = make(map[string][]ResourceAccessEntry)
+		idx.entries = make(map[asset.ID][]ResourceAccessEntry)
 	}
 	idx.entries[resourceID] = append(idx.entries[resourceID], entry)
 }
 
 // Range calls fn for every (resourceID, entry) pair in the index.
-func (idx *ResourceAccessIndex) Range(fn func(resourceID string, entry ResourceAccessEntry)) {
+func (idx *ResourceAccessIndex) Range(fn func(resourceID asset.ID, entry ResourceAccessEntry)) {
 	if idx == nil || fn == nil {
 		return
 	}
@@ -71,7 +73,7 @@ func (idx *ResourceAccessIndex) Range(fn func(resourceID string, entry ResourceA
 // accessor that is not in the designated principal set. Public
 // access is never considered designated.
 func (idx *ResourceAccessIndex) HasNonDesignatedPHIAccess(
-	resourceID string,
+	resourceID asset.ID,
 	designatedPrincipals map[string]struct{},
 ) bool {
 	if idx == nil {

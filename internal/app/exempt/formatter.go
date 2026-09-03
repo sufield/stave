@@ -35,7 +35,7 @@ func WriteList(w io.Writer, f *AcceptanceFile, format, listType string, showExpi
 				continue
 			}
 			fmt.Fprintf(w, "  [ACK]  %-40s  expires %s  %s  %s\n",
-				a.ID, a.ExpiryDate, a.Approver, strings.ToUpper(a.Status))
+				a.ID, a.ExpiryDate, a.Approver, strings.ToUpper(string(a.Status)))
 		}
 	}
 	if listType == "all" || listType == "exception" {
@@ -63,7 +63,7 @@ func WriteHistory(w io.Writer, entries []AcknowledgmentEntry) {
 	fmt.Fprintln(w, strings.Repeat("-", 70))
 	for i := range entries {
 		a := &entries[i]
-		fmt.Fprintf(w, "\n  %s  [%s]\n", a.ID, strings.ToUpper(a.Status))
+		fmt.Fprintf(w, "\n  %s  [%s]\n", a.ID, strings.ToUpper(string(a.Status)))
 		fmt.Fprintf(w, "    Control:   %s\n", a.ControlID)
 		fmt.Fprintf(w, "    Asset:     %s\n", a.AssetID)
 		fmt.Fprintf(w, "    Approver:  %s\n", a.Approver)

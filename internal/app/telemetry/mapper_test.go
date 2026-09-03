@@ -48,7 +48,7 @@ func TestMapper_ViolationFinding(t *testing.T) {
 	if e.ControlID != "CTL.S3.PUBLIC.001" {
 		t.Errorf("control_id = %q", e.ControlID)
 	}
-	if e.Verdict != "violation" {
+	if e.Verdict != evaluation.VerdictViolation {
 		t.Errorf("verdict = %q", e.Verdict)
 	}
 	if e.PolicyFingerprint != "sha256:abcd1234" {

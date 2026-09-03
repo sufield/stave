@@ -101,7 +101,7 @@ func TestExport_SeverityMapping(t *testing.T) {
 			}},
 		}
 		events := Export(findings)
-		if events[0].SeverityID != tt.wantID {
+		if events[0].SeverityID != SeverityID(tt.wantID) {
 			t.Errorf("severity %v: got ID %d, want %d",
 				tt.severity, events[0].SeverityID, tt.wantID)
 		}

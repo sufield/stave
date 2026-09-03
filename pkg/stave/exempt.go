@@ -10,6 +10,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/predicate"
 	appexempt "github.com/sufield/stave/internal/app/exempt"
 	"github.com/sufield/stave/internal/controldata"
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 // AcknowledgmentInput parameterizes [AddAcknowledgment]. Compensating is a
@@ -50,7 +51,7 @@ func AddAcknowledgment(file string, in AcknowledgmentInput) error {
 	reviewBy := computeReviewBy(in.ReviewCadence, time.Now().UTC())
 	if addErr := f.AddAcknowledgment(appexempt.AcknowledgmentEntry{
 		ControlID:            in.ControlID,
-		AssetID:              in.AssetID,
+		AssetID:              asset.ID(in.AssetID),
 		Reason:               in.Reason,
 		Approver:             in.Approver,
 		ExpiryDate:           in.Expires,

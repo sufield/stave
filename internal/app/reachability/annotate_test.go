@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/access"
+	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -11,11 +12,11 @@ import (
 
 func TestAnnotateFindings_ViolationGetsAnnotation(t *testing.T) {
 	idx := access.NewResourceAccessIndex()
-	idx.AddEntry("arn:aws:s3:::phi-records", access.ResourceAccessEntry{
+	idx.AddEntry(asset.ID("arn:aws:s3:::phi-records"), access.ResourceAccessEntry{
 		PrincipalARN: "arn:aws:iam::123:role/AdminRole",
 		Actions:      []string{"s3:*"},
 	})
-	idx.AddEntry("arn:aws:s3:::phi-records", access.ResourceAccessEntry{
+	idx.AddEntry(asset.ID("arn:aws:s3:::phi-records"), access.ResourceAccessEntry{
 		PrincipalARN: "arn:aws:iam::123:role/ReadOnly",
 		Actions:      []string{"s3:GetObject"},
 	})
@@ -72,7 +73,7 @@ func TestAnnotateFindings_NilIndex(t *testing.T) {
 
 func TestAnnotateFindings_ExternalPrincipal(t *testing.T) {
 	idx := access.NewResourceAccessIndex()
-	idx.AddEntry("arn:aws:s3:::public-bucket", access.ResourceAccessEntry{
+	idx.AddEntry(asset.ID("arn:aws:s3:::public-bucket"), access.ResourceAccessEntry{
 		PrincipalARN:   "*",
 		Actions:        []string{"s3:GetObject"},
 		IsPublic:       true,
@@ -97,11 +98,11 @@ func TestAnnotateFindings_ExternalPrincipal(t *testing.T) {
 func TestBlastRadiusScore(t *testing.T) {
 	// 2 privileged (20*2=40) + 5 total (2*5=10) + external (30) = 80
 	idx := access.NewResourceAccessIndex()
-	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "a", Actions: []string{"s3:*"}})
-	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "b", Actions: []string{"kms:*"}})
-	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "c", Actions: []string{"s3:Get"}})
-	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "d", Actions: []string{"s3:List"}})
-	idx.AddEntry("res", access.ResourceAccessEntry{PrincipalARN: "*", Actions: []string{"s3:Get"}, IsPublic: true})
+	idx.AddEntry(asset.ID("res"), access.ResourceAccessEntry{PrincipalARN: "a", Actions: []string{"s3:*"}})
+	idx.AddEntry(asset.ID("res"), access.ResourceAccessEntry{PrincipalARN: "b", Actions: []string{"kms:*"}})
+	idx.AddEntry(asset.ID("res"), access.ResourceAccessEntry{PrincipalARN: "c", Actions: []string{"s3:Get"}})
+	idx.AddEntry(asset.ID("res"), access.ResourceAccessEntry{PrincipalARN: "d", Actions: []string{"s3:List"}})
+	idx.AddEntry(asset.ID("res"), access.ResourceAccessEntry{PrincipalARN: "*", Actions: []string{"s3:Get"}, IsPublic: true})
 
 	findings := []remediation.Finding{
 		{Finding: evaluation.Finding{AssetID: "res"}},
@@ -120,11 +121,11 @@ func TestBlastRadiusScore(t *testing.T) {
 func TestBuildContext_DeduplicatesPrincipals(t *testing.T) {
 	idx := access.NewResourceAccessIndex()
 	// Same principal granted access via two different statements/entries.
-	idx.AddEntry("res", access.ResourceAccessEntry{
+	idx.AddEntry(asset.ID("res"), access.ResourceAccessEntry{
 		PrincipalARN: "arn:aws:iam::123:role/AdminRole",
 		Actions:      []string{"s3:*"}, // privileged
 	})
-	idx.AddEntry("res", access.ResourceAccessEntry{
+	idx.AddEntry(asset.ID("res"), access.ResourceAccessEntry{
 		PrincipalARN: "arn:aws:iam::123:role/AdminRole",
 		Actions:      []string{"s3:GetObject"},
 	})

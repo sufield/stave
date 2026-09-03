@@ -67,19 +67,20 @@ func exemptBuildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment
 		}
 
 		cid := string(a.ControlID)
-		ackIDs[cid+"@"+a.AssetID] = struct{}{}
-		itemUUID := exemptPOAMUUID("poam-item", cid, a.AssetID)
-		riskUUID := exemptPOAMUUID("risk", cid, a.AssetID)
+		assetID := string(a.AssetID)
+		ackIDs[cid+"@"+assetID] = struct{}{}
+		itemUUID := exemptPOAMUUID("poam-item", cid, assetID)
+		riskUUID := exemptPOAMUUID("risk", cid, assetID)
 
 		status := a.ExportStatus()
 
 		risk := map[string]any{
 			"uuid":   riskUUID,
-			"title":  "Risk: " + cid + " on " + a.AssetID,
+			"title":  "Risk: " + cid + " on " + assetID,
 			"status": status,
 			"responses": []map[string]any{
 				{
-					"uuid":        exemptPOAMUUID("response", cid, a.AssetID),
+					"uuid":        exemptPOAMUUID("response", cid, assetID),
 					"lifecycle":   "accept",
 					"title":       "Risk Accepted",
 					"description": a.Reason,
@@ -94,10 +95,10 @@ func exemptBuildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment
 
 		props := []map[string]string{
 			{"name": "stave-control-id", "value": cid},
-			{"name": "stave-asset-id", "value": a.AssetID},
+			{"name": "stave-asset-id", "value": assetID},
 			{"name": "stave-approver", "value": a.Approver},
 			{"name": "stave-acknowledged-date", "value": a.AcknowledgedDate},
-			{"name": "stave-status", "value": a.Status},
+			{"name": "stave-status", "value": string(a.Status)},
 		}
 		if len(a.CompensatingControls) > 0 {
 			props = append(props, map[string]string{
@@ -107,7 +108,7 @@ func exemptBuildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment
 
 		item := map[string]any{
 			"uuid":        itemUUID,
-			"title":       "Accepted Risk: " + cid + " on " + a.AssetID,
+			"title":       "Accepted Risk: " + cid + " on " + assetID,
 			"description": a.Reason,
 			"related-risks": []map[string]string{
 				{"risk-uuid": riskUUID},
@@ -118,12 +119,12 @@ func exemptBuildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment
 		if a.ExpiryDate != "" {
 			item["remediations"] = []map[string]any{
 				{
-					"uuid":      exemptPOAMUUID("remediation", cid, a.AssetID),
+					"uuid":      exemptPOAMUUID("remediation", cid, assetID),
 					"lifecycle": "recommendation",
 					"title":     "Review before expiry",
 					"milestones": []map[string]any{
 						{
-							"uuid":     exemptPOAMUUID("milestone", cid, a.AssetID),
+							"uuid":     exemptPOAMUUID("milestone", cid, assetID),
 							"title":    "Expiry review",
 							"due-date": a.ExpiryDate + "T00:00:00Z",
 						},

@@ -544,7 +544,7 @@ func annotateReachability(findings []evaluation.Finding, snapshots []asset.Snaps
 		return
 	}
 	for i := range findings {
-		entries := idx.EntriesFor(string(findings[i].AssetID))
+		entries := idx.EntriesFor(findings[i].AssetID)
 		if len(entries) == 0 {
 			continue
 		}

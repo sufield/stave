@@ -17,7 +17,7 @@ func TestResourceAccessIndex_PublicPolicy(t *testing.T) {
 		t.Fatalf("AddResourcePolicy: %v", err)
 	}
 
-	entries := idx.EntriesFor("arn:aws:s3:::public-bucket")
+	entries := idx.EntriesFor(asset.ID("arn:aws:s3:::public-bucket"))
 	if len(entries) == 0 {
 		t.Fatal("expected entries for public bucket")
 	}
@@ -44,7 +44,7 @@ func TestResourceAccessIndex_CrossAccountGrant(t *testing.T) {
 		t.Fatalf("AddResourcePolicy: %v", err)
 	}
 
-	entries := idx.EntriesFor("arn:aws:s3:::shared-bucket")
+	entries := idx.EntriesFor(asset.ID("arn:aws:s3:::shared-bucket"))
 	if len(entries) == 0 {
 		t.Fatal("expected entries")
 	}
@@ -64,7 +64,7 @@ func TestResourceAccessIndex_SameAccountGrant(t *testing.T) {
 		t.Fatalf("AddResourcePolicy: %v", err)
 	}
 
-	entries := idx.EntriesFor("arn:aws:s3:::internal-bucket")
+	entries := idx.EntriesFor(asset.ID("arn:aws:s3:::internal-bucket"))
 	if len(entries) == 0 {
 		t.Fatal("expected entries")
 	}
@@ -79,7 +79,7 @@ func TestResourceAccessIndex_AbsentPolicy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AddResourcePolicy: %v", err)
 	}
-	entries := idx.EntriesFor("arn:aws:s3:::no-policy")
+	entries := idx.EntriesFor(asset.ID("arn:aws:s3:::no-policy"))
 	if len(entries) != 0 {
 		t.Fatal("expected no entries for absent policy")
 	}
@@ -95,7 +95,7 @@ func TestResourceAccessIndex_DenySkipped(t *testing.T) {
 	if err != nil {
 		t.Fatalf("AddResourcePolicy: %v", err)
 	}
-	entries := idx.EntriesFor("arn:aws:s3:::deny-bucket")
+	entries := idx.EntriesFor(asset.ID("arn:aws:s3:::deny-bucket"))
 	if len(entries) != 0 {
 		t.Fatal("expected no entries for deny-only policy")
 	}
@@ -126,7 +126,7 @@ func TestBuildResourceAccessIndex_S3BucketInfersAccount(t *testing.T) {
 		t.Fatal("expected non-nil index")
 	}
 
-	entries := idx.EntriesFor("arn:aws:s3:::cross-account-bucket")
+	entries := idx.EntriesFor(asset.ID("arn:aws:s3:::cross-account-bucket"))
 	if len(entries) == 0 {
 		t.Fatal("expected entries for cross-account bucket")
 	}
@@ -160,7 +160,7 @@ func TestBuildResourceAccessIndex_S3BucketSameAccount(t *testing.T) {
 		t.Fatal("expected non-nil index")
 	}
 
-	entries := idx.EntriesFor("arn:aws:s3:::same-account-bucket")
+	entries := idx.EntriesFor(asset.ID("arn:aws:s3:::same-account-bucket"))
 	if len(entries) == 0 {
 		t.Fatal("expected entries")
 	}

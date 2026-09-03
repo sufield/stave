@@ -12,6 +12,11 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// UUID uniquely identifies an OSCAL entity.
+type UUID string
+
+func (u UUID) String() string { return string(u) }
+
 // AssessmentResults is the top-level OSCAL document.
 type AssessmentResults struct {
 	AR ARContent `json:"assessment-results"`
@@ -19,7 +24,7 @@ type AssessmentResults struct {
 
 // ARContent is the assessment-results content.
 type ARContent struct {
-	UUID     string     `json:"uuid"`
+	UUID     UUID       `json:"uuid"`
 	Metadata ARMetadata `json:"metadata"`
 	ImportAP ImportAP   `json:"import-ap"`
 	Results  []ARResult `json:"results"`
@@ -40,7 +45,7 @@ type ImportAP struct {
 
 // ARResult is one assessment result.
 type ARResult struct {
-	UUID         string          `json:"uuid"`
+	UUID         UUID            `json:"uuid"`
 	Title        string          `json:"title"`
 	Start        string          `json:"start"`
 	End          string          `json:"end"`
@@ -50,7 +55,7 @@ type ARResult struct {
 
 // ARFinding is a single OSCAL finding.
 type ARFinding struct {
-	UUID        string   `json:"uuid"`
+	UUID        UUID     `json:"uuid"`
 	Title       string   `json:"title"`
 	Description string   `json:"description,omitempty"`
 	Target      ARTarget `json:"target"`
@@ -71,12 +76,12 @@ type ARStatus struct {
 
 // RelObs references a related observation.
 type RelObs struct {
-	ObservationUUID string `json:"observation-uuid"`
+	ObservationUUID UUID `json:"observation-uuid"`
 }
 
 // ARObservation describes an observed asset.
 type ARObservation struct {
-	UUID        string      `json:"uuid"`
+	UUID        UUID        `json:"uuid"`
 	Description string      `json:"description"`
 	Methods     []string    `json:"methods"`
 	Subjects    []ARSubject `json:"subjects,omitempty"`
@@ -126,7 +131,7 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 			Methods:     []string{"EXAMINE"},
 			Subjects: []ARSubject{{
 				Type:        kernel.AssetType("component"),
-				SubjectUUID: asset.ID(uuidV5("component", string(f.AssetID))),
+				SubjectUUID: asset.ID(string(uuidV5("component", string(f.AssetID)))),
 				Title:       string(f.AssetID),
 			}},
 		})
@@ -156,10 +161,10 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 
 // uuidV5 generates a deterministic UUID from a namespace and name
 // using SHA-256 truncated to UUID format.
-func uuidV5(namespace, name string) string {
+func uuidV5(namespace, name string) UUID {
 	h := sha256.Sum256([]byte(namespace + ":" + name))
 	h[6] = (h[6] & 0x0f) | 0x50 // version 5
 	h[8] = (h[8] & 0x3f) | 0x80 // variant rfc4122
-	return fmt.Sprintf("%x-%x-%x-%x-%x",
-		h[0:4], h[4:6], h[6:8], h[8:10], h[10:16])
+	return UUID(fmt.Sprintf("%x-%x-%x-%x-%x",
+		h[0:4], h[4:6], h[6:8], h[8:10], h[10:16]))
 }

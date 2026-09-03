@@ -1,6 +1,7 @@
 package telemetry
 
 import (
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -30,12 +31,12 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 			SchemaVersion:     schemaVersion,
 			CapturedAt:        a.Run.EvalTime,
 			FindingID:         string(f.FindingID),
-			ControlID:         string(f.ControlID),
+			ControlID:         f.ControlID,
 			ControlName:       f.ControlName,
-			Severity:          f.SeverityLabel(),
-			ResourceID:        string(f.AssetID),
-			ResourceType:      string(f.AssetType),
-			Verdict:           "violation",
+			Severity:          f.ControlSeverity,
+			ResourceID:        f.AssetID,
+			ResourceType:      f.AssetType,
+			Verdict:           evaluation.VerdictViolation,
 			PolicyFingerprint: string(a.Run.PolicyFingerprint),
 			ExposureScore:     float64(f.ExposureScore),
 			Exploitability:    string(f.Exploitability),
@@ -51,7 +52,7 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 			e.UnsafeDurationDays = dwell
 		}
 		for _, cm := range f.ChainMembership {
-			e.CompoundChains = append(e.CompoundChains, string(cm.ChainID))
+			e.CompoundChains = append(e.CompoundChains, cm.ChainID)
 			if len(cm.StageSpan) > 0 && e.AttackStage == "" {
 				e.AttackStage = string(cm.StageSpan[0])
 			}

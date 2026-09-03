@@ -1,6 +1,11 @@
 package telemetry
 
-import "time"
+import (
+	"time"
+
+	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
+)
 
 // WindowTracker tracks active violation windows per (control, resource)
 // pair across a chronological sequence of assessments.
@@ -16,13 +21,13 @@ func NewWindowTracker() *WindowTracker {
 // Track processes a finding key and returns the window_id.
 // If the key is newly violated (wasn't active before), a new window_id
 // is generated. If it was already active, the existing window_id is returned.
-func (w *WindowTracker) Track(resourceID, controlID string, capturedAt time.Time) string {
-	key := resourceID + "/" + controlID
+func (w *WindowTracker) Track(resourceID asset.ID, controlID kernel.ControlID, capturedAt time.Time) string {
+	key := string(resourceID) + "/" + string(controlID)
 	if wid, exists := w.active[key]; exists {
 		return wid // continuing violation — same window
 	}
 	// New violation — open a window.
-	wid := resourceID + "/" + controlID + "/" + capturedAt.Format(time.RFC3339)
+	wid := string(resourceID) + "/" + string(controlID) + "/" + capturedAt.Format(time.RFC3339)
 	w.active[key] = wid
 	return wid
 }
