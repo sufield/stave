@@ -34,11 +34,11 @@ const (
 
 // Report summarizes catalog quality across all controls.
 type Report struct {
-	TotalControls int                        `json:"total_controls"`
+	TotalControls int                         `json:"total_controls"`
 	Completeness  map[MetadataField]FieldStat `json:"completeness"`
-	OverallPct    float64                    `json:"overall_pct"`
-	BlindSpots    []BlindSpot                `json:"blind_spots"`
-	MITREGaps     []kernel.AttackStage       `json:"mitre_gaps"`
+	OverallPct    float64                     `json:"overall_pct"`
+	BlindSpots    []BlindSpot                 `json:"blind_spots"`
+	MITREGaps     []kernel.AttackStage        `json:"mitre_gaps"`
 }
 
 // Input configures the quality analysis.
