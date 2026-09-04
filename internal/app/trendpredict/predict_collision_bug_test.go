@@ -58,7 +58,7 @@ func TestPredict_MTTRDoesNotCollideDistinctAssetTypesWithSameID(t *testing.T) {
 		t.Fatalf("expected closed MTTR entry for resolved aws_s3_bucket finding, got empty MTTR map")
 	}
 
-	if mttr["high"] != 10.0 {
-		t.Errorf("expected MTTR for high severity = 10 days, got %v", mttr["high"])
+	if mttr[policy.SeverityHigh] != 10.0 {
+		t.Errorf("expected MTTR for high severity = 10 days, got %v", mttr[policy.SeverityHigh])
 	}
 }

@@ -48,7 +48,7 @@ func TestBugHunt_Predict_MTTRNotCappedByLookback(t *testing.T) {
 
 	// We expect the high severity MTTR to be 80 days.
 	// Under the buggy code, it will be 10 days.
-	got, ok := res["high"]
+	got, ok := res[policy.SeverityHigh]
 	if !ok {
 		t.Fatalf("expected high severity MTTR to be computed")
 	}

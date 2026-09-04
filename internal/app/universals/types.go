@@ -1,5 +1,8 @@
 package universals
 
+// UniversalID uniquely identifies a universal compliance formula (e.g., "U26").
+type UniversalID string
+
 // Verdict classifies the universal formula evaluation verdict.
 type Verdict string
 
@@ -12,7 +15,7 @@ const (
 
 // Result is the outcome of evaluating one universal formula via Z3.
 type Result struct {
-	ID          string      `json:"id"`
+	ID          UniversalID `json:"id"`
 	Name        string      `json:"name"`
 	Verdict     Verdict     `json:"verdict"`
 	Holds       bool        `json:"holds"`
@@ -41,7 +44,7 @@ type Summary struct {
 
 // GroundingMap is the deserialized grounding-map.yaml.
 type GroundingMap struct {
-	Universals map[string]UniversalGrounding `yaml:"universals"`
+	Universals map[UniversalID]UniversalGrounding `yaml:"universals"`
 }
 
 // UniversalGrounding defines how to ground observations for one universal.

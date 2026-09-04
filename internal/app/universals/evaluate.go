@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var universalNames = map[string]string{
+var universalNames = map[UniversalID]string{
 	"U26": "Service-level logging enabled",
 	"U27": "Endpoint authentication required",
 	"U28": "Deletion protection enabled",
@@ -128,7 +128,7 @@ func EvaluateAll(cfg EvaluateConfig) (*Summary, error) {
 }
 
 type formula struct {
-	id      string
+	id      UniversalID
 	name    string
 	content string
 }
@@ -160,12 +160,12 @@ func loadFormulas(dir string) ([]formula, error) {
 	return out, nil
 }
 
-func extractID(filename string) string {
+func extractID(filename string) UniversalID {
 	m := idPattern.FindStringSubmatch(filename)
 	if len(m) < 2 {
-		return filename
+		return UniversalID(filename)
 	}
-	return "U" + m[1]
+	return UniversalID("U" + m[1])
 }
 
 func evaluateOne(f formula, assets []asset, gm *GroundingMap, solve Solver) Result {
@@ -174,7 +174,7 @@ func evaluateOne(f formula, assets []asset, gm *GroundingMap, solve Solver) Resu
 	ug, ok := gm.Universals[f.id]
 	if !ok {
 		r.Verdict = "skip"
-		r.Error = "no grounding map entry for " + f.id
+		r.Error = "no grounding map entry for " + string(f.id)
 		return r
 	}
 

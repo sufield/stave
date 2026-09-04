@@ -75,7 +75,7 @@ func Classify(input Input) Classification {
 
 	for i := range assessments {
 		a := &assessments[i]
-		failing := hasFinding(a, input.ControlID, string(input.AssetID), input.AssetType)
+		failing := hasFinding(a, input.ControlID, input.AssetID, input.AssetType)
 
 		if failing {
 			failCount++
@@ -119,10 +119,10 @@ func Classify(input Input) Classification {
 }
 
 // hasFinding checks if an assessment contains a finding for the given control, asset, and asset type.
-func hasFinding(a *report.Assessment, ctlID kernel.ControlID, astID string, astType kernel.AssetType) bool {
+func hasFinding(a *report.Assessment, ctlID kernel.ControlID, astID asset.ID, astType kernel.AssetType) bool {
 	for i := range a.Findings {
 		f := &a.Findings[i]
-		if f.ControlID == ctlID && string(f.AssetID) == astID {
+		if f.ControlID == ctlID && f.AssetID == astID {
 			if astType == "" || f.AssetType == astType {
 				return true
 			}

@@ -108,7 +108,7 @@ func Predict(in Input) *Prediction {
 
 	// Acceleration: top critical findings.
 	var accelerators []Accelerator
-	criticals := findBySeverity(latest.Findings, "critical")
+	criticals := findBySeverity(latest.Findings, policy.SeverityCritical)
 	if len(criticals) > 0 {
 		limit := min(len(criticals), 4)
 		ids := make([]kernel.ControlID, limit)
@@ -134,7 +134,7 @@ func Predict(in Input) *Prediction {
 	}
 }
 
-func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.Time) map[string]float64 {
+func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.Time) map[policy.Severity]float64 {
 	var cutoff time.Time
 	if lookback > 0 {
 		cutoff = now.Add(-lookback)
@@ -181,20 +181,19 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 		totalDays float64
 		count     int
 	}
-	bySeV := make(map[string]*agg)
+	bySeV := make(map[policy.Severity]*agg)
 	for _, w := range closed {
 		days := w.closeAt.Sub(w.openAt).Hours() / 24
-		sLabel := w.sev.BucketName()
-		a, ok := bySeV[sLabel]
+		a, ok := bySeV[w.sev]
 		if !ok {
 			a = &agg{}
-			bySeV[sLabel] = a
+			bySeV[w.sev] = a
 		}
 		a.totalDays += days
 		a.count++
 	}
 
-	result := make(map[string]float64, len(bySeV))
+	result := make(map[policy.Severity]float64, len(bySeV))
 	for sev, a := range bySeV {
 		if a.count > 0 {
 			result[sev] = a.totalDays / float64(a.count)
@@ -203,14 +202,13 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 	return result
 }
 
-func weightedMTTR(findings []remediation.Finding, mttr map[string]float64) float64 {
+func weightedMTTR(findings []remediation.Finding, mttr map[policy.Severity]float64) float64 {
 	if len(findings) == 0 {
 		return 14 // default 14 days
 	}
 	total := 0.0
 	for i := range findings {
-		sev := findings[i].SeverityLabel()
-		if days, ok := mttr[sev]; ok {
+		if days, ok := mttr[findings[i].ControlSeverity]; ok {
 			total += days
 		} else {
 			total += 14
@@ -219,10 +217,10 @@ func weightedMTTR(findings []remediation.Finding, mttr map[string]float64) float
 	return total / float64(len(findings))
 }
 
-func findBySeverity(findings []remediation.Finding, sev string) []remediation.Finding {
+func findBySeverity(findings []remediation.Finding, sev policy.Severity) []remediation.Finding {
 	var result []remediation.Finding
 	for i := range findings {
-		if findings[i].SeverityLabel() == sev {
+		if findings[i].ControlSeverity == sev {
 			result = append(result, findings[i])
 		}
 	}
