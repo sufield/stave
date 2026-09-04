@@ -22,13 +22,23 @@ type BlindSpot struct {
 	AssetCount int              `json:"asset_count"`
 }
 
+// MetadataField identifies a control metadata field for completeness analysis.
+type MetadataField string
+
+const (
+	FieldSeverity          MetadataField = "severity"
+	FieldRemediationAction MetadataField = "remediation.action"
+	FieldAttackStage       MetadataField = "attack_stage"
+	FieldCompliance        MetadataField = "compliance"
+)
+
 // Report summarizes catalog quality across all controls.
 type Report struct {
-	TotalControls int                  `json:"total_controls"`
-	Completeness  map[string]FieldStat `json:"completeness"`
-	OverallPct    float64              `json:"overall_pct"`
-	BlindSpots    []BlindSpot          `json:"blind_spots"`
-	MITREGaps     []kernel.AttackStage `json:"mitre_gaps"`
+	TotalControls int                        `json:"total_controls"`
+	Completeness  map[MetadataField]FieldStat `json:"completeness"`
+	OverallPct    float64                    `json:"overall_pct"`
+	BlindSpots    []BlindSpot                `json:"blind_spots"`
+	MITREGaps     []kernel.AttackStage       `json:"mitre_gaps"`
 }
 
 // Input configures the quality analysis.
@@ -40,11 +50,11 @@ type Input struct {
 // Analyze evaluates catalog metadata completeness and coverage gaps.
 func Analyze(input Input) Report {
 	total := len(input.Controls)
-	completeness := map[string]FieldStat{
-		"severity":           {},
-		"remediation.action": {},
-		"attack_stage":       {},
-		"compliance":         {},
+	completeness := map[MetadataField]FieldStat{
+		FieldSeverity:          {},
+		FieldRemediationAction: {},
+		FieldAttackStage:       {},
+		FieldCompliance:        {},
 	}
 
 	coveredTypes := make(map[kernel.AssetType]struct{})
@@ -55,32 +65,32 @@ func Analyze(input Input) Report {
 
 		// severity
 		if ctl.Severity.IsValid() {
-			inc(completeness, "severity", true)
+			inc(completeness, FieldSeverity, true)
 		} else {
-			inc(completeness, "severity", false)
+			inc(completeness, FieldSeverity, false)
 		}
 
 		// remediation.action
 		if ctl.Remediation.HasAction() {
-			inc(completeness, "remediation.action", true)
+			inc(completeness, FieldRemediationAction, true)
 		} else {
-			inc(completeness, "remediation.action", false)
+			inc(completeness, FieldRemediationAction, false)
 		}
 
 		// attack_stage
 		stage := ctl.AttackStage()
 		if stage != "" {
-			inc(completeness, "attack_stage", true)
+			inc(completeness, FieldAttackStage, true)
 			stagesSeen[stage] = struct{}{}
 		} else {
-			inc(completeness, "attack_stage", false)
+			inc(completeness, FieldAttackStage, false)
 		}
 
 		// compliance
 		if len(ctl.Compliance) > 0 {
-			inc(completeness, "compliance", true)
+			inc(completeness, FieldCompliance, true)
 		} else {
-			inc(completeness, "compliance", false)
+			inc(completeness, FieldCompliance, false)
 		}
 
 		// Track covered asset domains.
@@ -138,7 +148,7 @@ func Analyze(input Input) Report {
 	}
 }
 
-func inc(m map[string]FieldStat, key string, present bool) {
+func inc(m map[MetadataField]FieldStat, key MetadataField, present bool) {
 	fs := m[key]
 	if present {
 		fs.Present++

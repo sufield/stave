@@ -24,7 +24,7 @@ you've added or refactored Go code.
 3. **Cross-platform passes** — `go fix ./...` under `GOOS=linux/amd64`,
    `darwin/arm64`, and `windows/amd64`, so build-tagged files for every
    target platform get modernized too, not just the host's.
-4. **Go 1.26 `new(expr)` modernizer** — `go fix -newexpr ./...`.
+4. **`new(expr)` modernizer** — `go fix -newexpr ./...`.
 5. **Final pass** — `go fix ./...` to settle any follow-on rewrites.
 6. **Dead-code detection** — `deadcode -test ./...` (install:
    `go install golang.org/x/tools/cmd/deadcode@latest`).
@@ -39,7 +39,7 @@ are safe:
 - `for i := 0; i < n; i++ {` → `for i := range n {`
 - linear-search helper loops → `slices.Contains(...)`
 - `sort.Slice(s, func(i, j int) bool { return s[i] < s[j] })` → `slices.Sort(s)`
-- `new(expr)` where Go 1.26 allows it
+- `new(expr)` where Go 1.26+ allows it
 
 ## A gotcha: `make gofixer` "Error 1" is usually benign
 

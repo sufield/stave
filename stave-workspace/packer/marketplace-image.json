@@ -6,7 +6,7 @@
   "variables": {
     "do_api_token": "{{env `DO_API_TOKEN`}}",
     "stave_ref":    "{{env `STAVE_REF`}}",
-    "go_version":   "1.26.4"
+    "go_version":   "1.27.0"
   },
 
   "_comment_size": "The BUILD droplet is intentionally larger than the cheapest production runtime: `go build` for the full Stave module needs more than 1 GB. The resulting snapshot still runs on s-1vcpu-1gb (the $6 production droplet) — DO snapshots can be applied to any size droplet that has at least the snapshot's disk size.",

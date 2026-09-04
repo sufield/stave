@@ -38,7 +38,7 @@ If you'd rather work in your own environment:
 
 **Prerequisites**
 
-- Go 1.26.5 or later
+- Go 1.27.0 or later
 - golangci-lint (optional, for linting)
 - Make (for convenience targets)
 

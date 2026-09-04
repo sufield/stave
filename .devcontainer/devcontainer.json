@@ -3,7 +3,7 @@
     "build": { "dockerfile": "Dockerfile" },
     "features": {
         "ghcr.io/devcontainers/features/go:1": {
-            "version": "1.26.4"
+            "version": "1.27.0"
         }
     },
     "postCreateCommand": "bash ${containerWorkspaceFolder}/.devcontainer/post-create.sh",

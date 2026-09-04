@@ -35,13 +35,13 @@ func TestAnalyze_MissingFieldDetected(t *testing.T) {
 	}
 
 	// severity: 1 present (Critical), 1 missing (None)
-	sev := report.Completeness["severity"]
+	sev := report.Completeness[FieldSeverity]
 	if sev.Present != 1 || sev.Missing != 1 {
 		t.Errorf("severity: present=%d missing=%d, want 1/1", sev.Present, sev.Missing)
 	}
 
 	// remediation.action: 1 present, 1 missing
-	rem := report.Completeness["remediation.action"]
+	rem := report.Completeness[FieldRemediationAction]
 	if rem.Present != 1 || rem.Missing != 1 {
 		t.Errorf("remediation.action: present=%d missing=%d, want 1/1", rem.Present, rem.Missing)
 	}

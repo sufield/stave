@@ -97,7 +97,7 @@ sudo dtruss -f ./stave apply \
 
 ```bash
 # doctest:skip — requires docker and user-supplied paths
-docker run --rm --network=none -v "$(pwd):/work" -w /work golang:1.26 \
+docker run --rm --network=none -v "$(pwd):/work" -w /work golang:1.27 \
   ./stave apply --controls ./controls --observations ./obs
 # If this succeeds, the binary works with zero network access
 ```

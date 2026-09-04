@@ -139,7 +139,7 @@ func TestWalkDeterminism_Forbidden(t *testing.T) {
 	root := mustParse(t, `
 name: test
 generated_at: "2026-01-01"
-runtime: "go1.26"
+runtime: "go1.27"
 `)
 	diags := l.walkDeterminism("test.yaml", root)
 	if len(diags) != 2 {

@@ -8,7 +8,7 @@ triggers:
   - set up Stave
   - get started with Stave
 requires:
-  - go (>= 1.26 — see https://go.dev/dl/)
+  - go (>= 1.27 — see https://go.dev/dl/)
   - git
   - jq (apt: sudo apt install jq)
 ---
@@ -24,17 +24,17 @@ already passes.
 
 ## Steps
 
-### 1. Check Go (>= 1.26 required)
+### 1. Check Go (>= 1.27 required)
 ```
 go version
 ```
-- Go >= 1.26 → proceed.
-- Missing or older → install Go 1.26.x:
+- Go >= 1.27 → proceed.
+- Missing or older → install Go 1.27.x:
   ```
-  wget https://go.dev/dl/go1.26.5.linux-amd64.tar.gz
-  sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.26.5.linux-amd64.tar.gz
+  wget https://go.dev/dl/go1.27.0.linux-amd64.tar.gz
+  sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.27.0.linux-amd64.tar.gz
   export PATH=$PATH:/usr/local/go/bin
-  go version   # → go1.26.x
+  go version   # → go1.27.0
   ```
 
 ### 2. Check jq

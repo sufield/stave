@@ -20,9 +20,16 @@ import (
 // unreviewed, the higher the organizational risk.
 const severityBumpThresholdDays = 30
 
+// FindingType classifies lapsed finding types.
+type FindingType string
+
+const (
+	FindingTypeExemptionLapsed FindingType = "EXEMPTION_LAPSED"
+)
+
 // LapsedFinding represents an exemption that has expired.
 type LapsedFinding struct {
-	FindingType        string           `json:"finding_type"`
+	FindingType        FindingType      `json:"finding_type"`
 	ControlID          kernel.ControlID `json:"control_id"`
 	AssetID            asset.ID         `json:"asset_id"`
 	Severity           policy.Severity  `json:"severity"`
@@ -96,7 +103,7 @@ func Detect(in Input) []LapsedFinding {
 		}
 
 		lf := LapsedFinding{
-			FindingType:        "EXEMPTION_LAPSED",
+			FindingType:        FindingTypeExemptionLapsed,
 			ControlID:          f.ControlID,
 			AssetID:            f.AssetID,
 			Severity:           effectiveSev,

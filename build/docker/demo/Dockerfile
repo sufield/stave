@@ -1,6 +1,6 @@
 # Build stage: compile stave (cgo-free) and the z3 example
 # (cgo, links libz3) from source.
-FROM golang:1.26-bookworm@sha256:8e8aa801e8417ef0b5c42b504dd34db3db911bb73dba933bd8bde75ed815fdbb AS builder
+FROM golang:1.27-bookworm AS builder
 ARG VERSION=edge
 RUN apt-get update && \
     apt-get install -y --no-install-recommends libz3-dev pkg-config && \

@@ -23,7 +23,7 @@ type Change struct {
 	CurrentValue   any              `json:"current_value"`
 	RequiredValue  any              `json:"required_value"`
 	HasSafeDefault bool             `json:"has_safe_default"`
-	Vendor         string           `json:"vendor"`
+	Vendor         kernel.Vendor    `json:"vendor"`
 	Service        string           `json:"service"`
 	ResourceID     string           `json:"resource_id"`
 }
@@ -75,45 +75,46 @@ func Export(in Input) *Report {
 	return report
 }
 
-func parseAssetID(assetID string) (vendor, service, resourceID string) {
+func parseAssetID(assetID string) (vendor kernel.Vendor, service, resourceID string) {
 	// Parse ARN: arn:aws:s3:::bucket-name
 	if !strings.HasPrefix(assetID, "arn:") {
 		return "", "", assetID
 	}
 	remaining := assetID[4:] // skip "arn:"
 	var found bool
+	var vendorStr string
 
 	// segment 1: partition (vendor)
-	vendor, remaining, found = strings.Cut(remaining, ":")
+	vendorStr, remaining, found = strings.Cut(remaining, ":")
 	if !found {
-		return vendor, "", ""
+		return kernel.Vendor(vendorStr), "", ""
 	}
 
 	// segment 2: service
 	service, remaining, found = strings.Cut(remaining, ":")
 	if !found {
-		return vendor, service, ""
+		return kernel.Vendor(vendorStr), service, ""
 	}
 
 	// segment 3: region
 	_, remaining, found = strings.Cut(remaining, ":")
 	if !found {
-		return vendor, service, ""
+		return kernel.Vendor(vendorStr), service, ""
 	}
 
 	// segment 4: account-id
 	_, remaining, found = strings.Cut(remaining, ":")
 	if !found {
-		return vendor, service, ""
+		return kernel.Vendor(vendorStr), service, ""
 	}
 
 	// segment 5: resource-type or resource-id
 	var part5 string
 	part5, remaining, found = strings.Cut(remaining, ":")
 	if !found {
-		return vendor, service, part5
+		return kernel.Vendor(vendorStr), service, part5
 	}
 
 	// segment 6: resource-id (if there is a 6th colon)
-	return vendor, service, part5 + ":" + remaining
+	return kernel.Vendor(vendorStr), service, part5 + ":" + remaining
 }

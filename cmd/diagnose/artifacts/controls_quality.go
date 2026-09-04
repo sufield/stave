@@ -114,7 +114,7 @@ func writeQualityTable(w io.Writer, r catalogquality.Report) {
 	fmt.Fprintf(w, "  %-25s %8s %8s\n", strings.Repeat("-", 25), strings.Repeat("-", 8), strings.Repeat("-", 8))
 
 	// Sort fields for deterministic output.
-	fields := make([]string, 0, len(r.Completeness))
+	fields := make([]catalogquality.MetadataField, 0, len(r.Completeness))
 	for f := range r.Completeness {
 		fields = append(fields, f)
 	}
@@ -122,7 +122,7 @@ func writeQualityTable(w io.Writer, r catalogquality.Report) {
 
 	for _, f := range fields {
 		fs := r.Completeness[f]
-		fmt.Fprintf(w, "  %-25s %8d %8d\n", f, fs.Present, fs.Missing)
+		fmt.Fprintf(w, "  %-25s %8d %8d\n", string(f), fs.Present, fs.Missing)
 	}
 
 	if len(r.BlindSpots) > 0 {

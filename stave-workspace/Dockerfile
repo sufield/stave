@@ -1,7 +1,7 @@
 # Stave adopter workspace image.
 #
 # Multi-stage:
-#   builder  — golang:1.26.4, compiles `stave` and `stave-mcp`
+#   builder  — golang:1.27.0, compiles `stave` and `stave-mcp`
 #   runtime  — ubuntu:24.04, Go toolchain, Steampipe, the binaries,
 #              and the repo content an adopter needs at runtime
 #
@@ -21,7 +21,7 @@
 # ─── Stage 1: build the binaries ─────────────────────────────────────
 # Pinned to the toolchain go.mod declares. Bumping go.mod's `toolchain`
 # directive is the single source of truth; bump this in lockstep.
-FROM golang:1.26.4-bookworm AS builder
+FROM golang:1.27.0-bookworm AS builder
 
 ENV CGO_ENABLED=0
 
@@ -48,7 +48,7 @@ RUN make sync-schemas sync-controls sync-alternatives \
 FROM ubuntu:24.04
 
 # Pin every external tool. No floating :latest.
-ARG GO_VERSION=1.26.4
+ARG GO_VERSION=1.27.0
 ARG STEAMPIPE_VERSION=1.0.0
 
 ENV DEBIAN_FRONTEND=noninteractive \
