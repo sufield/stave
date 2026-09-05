@@ -1,6 +1,6 @@
 # Well-Architected Lens Coverage Scorecard
 
-**Date:** 2026-09-04
+**Date:** 2026-09-05
 **Method:** Automated monthly check — parse WA custom lens JSONs,
 run Stave against committed inverted fixtures, compare violation
 counts against baseline.
