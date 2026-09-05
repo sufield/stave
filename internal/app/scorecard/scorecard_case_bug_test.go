@@ -23,7 +23,7 @@ func TestCompute_CaseInsensitiveFrameworkMatching(t *testing.T) {
 	}
 
 	// Request scorecard for uppercase framework name
-	rep := Compute(findings, []string{"NIST-800-53"})
+	rep := Compute(findings, []policy.ComplianceFramework{"NIST-800-53"})
 	if len(rep.Frameworks) != 1 {
 		t.Fatalf("expected 1 framework score, got %d", len(rep.Frameworks))
 	}

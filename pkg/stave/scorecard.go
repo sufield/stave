@@ -10,10 +10,11 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/observations"
 	appsc "github.com/sufield/stave/internal/app/scorecard"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
-var defaultScorecardFrameworks = []string{
+var defaultScorecardFrameworks = []policy.ComplianceFramework{
 	"hipaa", "nist_800_53_r5", "fedramp_moderate", "soc2",
 	"pci_dss_v4.0", "cis_aws_v3.0", "iso_27001_2022",
 }
@@ -45,9 +46,14 @@ func RenderScorecard(data []byte, profiles []string, format string) ([]byte, err
 		slog.Debug("scorecard: assessment contained zero findings — treating as all-passing")
 	}
 
-	frameworks := profiles
-	if len(frameworks) == 0 {
+	var frameworks []policy.ComplianceFramework
+	if len(profiles) == 0 {
 		frameworks = defaultScorecardFrameworks
+	} else {
+		frameworks = make([]policy.ComplianceFramework, len(profiles))
+		for i, p := range profiles {
+			frameworks[i] = policy.ComplianceFramework(p)
+		}
 	}
 
 	report := appsc.Compute(assessment.Findings, frameworks)

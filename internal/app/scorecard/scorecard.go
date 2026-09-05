@@ -6,19 +6,20 @@ import (
 	"slices"
 	"strings"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // FrameworkScore holds readiness data for one framework.
 type FrameworkScore struct {
-	Framework        string  `json:"framework"`
-	ReadinessPct     float64 `json:"readiness_pct"`
-	ControlsTotal    int     `json:"controls_total"`
-	ControlsPassing  int     `json:"controls_passing"`
-	ControlsFailing  int     `json:"controls_failing"`
-	CriticalFindings int     `json:"critical_findings"`
-	NextAction       string  `json:"next_action,omitempty"`
+	Framework        policy.ComplianceFramework `json:"framework"`
+	ReadinessPct     float64                    `json:"readiness_pct"`
+	ControlsTotal    int                        `json:"controls_total"`
+	ControlsPassing  int                        `json:"controls_passing"`
+	ControlsFailing  int                        `json:"controls_failing"`
+	CriticalFindings int                        `json:"critical_findings"`
+	NextAction       string                     `json:"next_action,omitempty"`
 }
 
 // Report holds the full scorecard.
@@ -28,7 +29,7 @@ type Report struct {
 }
 
 // Compute builds a scorecard across multiple frameworks.
-func Compute(findings []remediation.Finding, frameworks []string) *Report {
+func Compute(findings []remediation.Finding, frameworks []policy.ComplianceFramework) *Report {
 	report := &Report{}
 
 	for _, fw := range frameworks {
@@ -103,10 +104,11 @@ func Compute(findings []remediation.Finding, frameworks []string) *Report {
 	return report
 }
 
-func hasFrameworkCompliance(f *remediation.Finding, target string) bool {
+func hasFrameworkCompliance(f *remediation.Finding, target policy.ComplianceFramework) bool {
+	targetStr := string(target)
 	for fw := range f.ControlCompliance {
 		fwStr := string(fw)
-		if strings.EqualFold(fwStr, target) || strings.EqualFold(strings.ReplaceAll(fwStr, "-", "_"), strings.ReplaceAll(target, "-", "_")) {
+		if strings.EqualFold(fwStr, targetStr) || strings.EqualFold(strings.ReplaceAll(fwStr, "-", "_"), strings.ReplaceAll(targetStr, "-", "_")) {
 			return true
 		}
 	}

@@ -17,6 +17,7 @@ import (
 	appatt "github.com/sufield/stave/internal/app/attest"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -27,7 +28,7 @@ import (
 // It is the library entry point behind `stave attest sign`.
 func SignSnapshot(snapData []byte, privateKey ed25519.PrivateKey, keyID, hostname string, signedAt time.Time) ([]byte, error) {
 	var snapshot struct {
-		SchemaVersion string               `json:"schema_version"`
+		SchemaVersion kernel.Schema        `json:"schema_version"`
 		CapturedAt    time.Time            `json:"captured_at"`
 		Source        asset.SnapshotSource `json:"source"`
 		Assets        []asset.Asset        `json:"assets"`

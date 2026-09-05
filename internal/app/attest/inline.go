@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // SignatureAlgorithm names the cryptographic signature algorithm.
@@ -34,7 +35,7 @@ type InlineAttestation struct {
 
 // AttestedSnapshot wraps a snapshot with its attestation.
 type AttestedSnapshot struct {
-	SchemaVersion string               `json:"schema_version"`
+	SchemaVersion kernel.Schema        `json:"schema_version"`
 	CapturedAt    time.Time            `json:"captured_at"`
 	Source        asset.SnapshotSource `json:"source"`
 	Attestation   *InlineAttestation   `json:"attestation,omitempty"`

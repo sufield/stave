@@ -36,7 +36,7 @@ func TestBugHunt_Scorecard_PrefersCriticalFindings(t *testing.T) {
 		},
 	}
 
-	report := Compute(findings, []string{"hipaa"})
+	report := Compute(findings, []policy.ComplianceFramework{"hipaa"})
 	if len(report.Frameworks) != 1 {
 		t.Fatalf("expected 1 framework score, got %d", len(report.Frameworks))
 	}
@@ -75,7 +75,7 @@ func TestBugHunt_Scorecard_HeadlinePrefersHighestSeverity(t *testing.T) {
 		},
 	}
 
-	report := Compute(findings, []string{"hipaa"})
+	report := Compute(findings, []policy.ComplianceFramework{"hipaa"})
 	if len(report.Frameworks) != 1 {
 		t.Fatalf("expected 1 framework score, got %d", len(report.Frameworks))
 	}

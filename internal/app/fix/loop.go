@@ -37,6 +37,14 @@ type LoopDeps struct {
 	ControlRepo     contracts.ControlRepository
 }
 
+// EvaluationPhase names the evaluation phase in a fix-loop ("before" vs "after").
+type EvaluationPhase string
+
+const (
+	PhaseBefore EvaluationPhase = "before"
+	PhaseAfter  EvaluationPhase = "after"
+)
+
 // evaluationState holds the result and snapshot count from one evaluation run.
 type evaluationState struct {
 	Result    *evaluation.ComplianceReport
@@ -44,13 +52,13 @@ type evaluationState struct {
 }
 
 // EvaluationParams bundles the data arguments for evaluateState,
-// preventing accidental swaps of the two string parameters (Dir, Label).
+// preventing accidental swaps of the string directory parameter and phase label.
 type EvaluationParams struct {
 	Deps     LoopDeps
 	Req      LoopRequest
 	Controls []policy.ControlDefinition
 	Dir      string
-	Label    string
+	Label    EvaluationPhase
 }
 
 // Loop executes the apply-before, apply-after, and verify sequence.
@@ -73,7 +81,7 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 	// 3. Evaluate "before" state
 	slog.Debug("evaluating before state", "dir", req.BeforeDir)
 	before, err := s.evaluateState(ctx, EvaluationParams{
-		Deps: deps, Req: req, Controls: controls, Dir: req.BeforeDir, Label: "before",
+		Deps: deps, Req: req, Controls: controls, Dir: req.BeforeDir, Label: PhaseBefore,
 	})
 	if err != nil {
 		return err
@@ -82,7 +90,7 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 	// 4. Evaluate "after" state
 	slog.Debug("evaluating after state", "dir", req.AfterDir)
 	after, err := s.evaluateState(ctx, EvaluationParams{
-		Deps: deps, Req: req, Controls: controls, Dir: req.AfterDir, Label: "after",
+		Deps: deps, Req: req, Controls: controls, Dir: req.AfterDir, Label: PhaseAfter,
 	})
 	if err != nil {
 		return err

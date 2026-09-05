@@ -3,6 +3,7 @@ package scorecard
 import (
 	"testing"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
@@ -12,7 +13,7 @@ func TestBugHunt_Compute_FrameworkSortDeterminism(t *testing.T) {
 	// Under buggy code, they are not sorted alphabetically because there is no tiebreaker,
 	// so "nist" remains before "cis" or it is non-deterministic.
 	// Under correct code, "cis" must come before "nist".
-	frameworks := []string{"nist", "cis"}
+	frameworks := []policy.ComplianceFramework{"nist", "cis"}
 	var findings []remediation.Finding
 
 	report := Compute(findings, frameworks)
@@ -29,7 +30,7 @@ func TestBugHunt_Compute_FrameworkSortDeterminism(t *testing.T) {
 }
 
 func TestBugHunt_Compute_PerfectCompliance(t *testing.T) {
-	frameworks := []string{"hipaa"}
+	frameworks := []policy.ComplianceFramework{"hipaa"}
 	var findings []remediation.Finding
 
 	report := Compute(findings, frameworks)
