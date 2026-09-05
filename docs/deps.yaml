@@ -43,7 +43,7 @@ dependencies:
   - sources: ["internal/adapters/output/**/*.go"]
     docs:
       - path: docs/reference/output-formats.md
-        last_audited: "b607466324"
+        last_audited: "b8a79f5d3a"
     auto_regen: false
 
   - sources: ["internal/platform/providers/aws/organizations/scp.go",
@@ -63,9 +63,9 @@ dependencies:
   - sources: ["cmd/apply/*.go"]
     docs:
       - path: docs/getting-started/first-evaluation.md
-        last_audited: ""
+        last_audited: "b8a79f5d3a"
       - path: docs/how-to/use-templates.md
-        last_audited: ""
+        last_audited: "b8a79f5d3a"
     auto_regen: false
 
   # --- Auto-test: make test-docs catches CLI flag drift in docs ---

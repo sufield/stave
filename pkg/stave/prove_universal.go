@@ -75,10 +75,10 @@ func runZ3(formulaContent string) (result, output string) {
 	out := strings.TrimSpace(stdout.String())
 	lines := strings.Split(out, "\n")
 	for _, line := range slices.Backward(lines) {
-		line := strings.TrimSpace(line)
-		switch line {
+		trimmed := strings.TrimSpace(line)
+		switch trimmed {
 		case "sat", "unsat", "unknown":
-			return line, out
+			return trimmed, out
 		}
 	}
 	return "error", out + "\n" + stderr.String()
