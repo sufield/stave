@@ -61,8 +61,7 @@ func ClassifyOscillation(ctx context.Context, cfg TrendOscillationConfig) (outpu
 // through plain (exit 4).
 func mapTrendInputErr(output []byte, warnings []string, err error) ([]byte, []string, error) {
 	if err != nil {
-		var ie *cmderr.InputError
-		if errors.As(err, &ie) {
+		if ie, ok := errors.AsType[*cmderr.InputError](err); ok {
 			return nil, warnings, fmt.Errorf("%w: %w", ie.Err, ErrInvalidInput)
 		}
 		return nil, warnings, err //nolint:wrapcheck // engine already wrapped; preserve exit 4.

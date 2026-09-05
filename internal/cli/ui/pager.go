@@ -61,8 +61,7 @@ func NewPager(ctx context.Context, w io.Writer, enabled bool) (io.Writer, func()
 			if errors.Is(err, syscall.EPIPE) {
 				return nil
 			}
-			var exitErr *exec.ExitError
-			if errors.As(err, &exitErr) {
+			if _, ok := errors.AsType[*exec.ExitError](err); ok {
 				return nil
 			}
 			return fmt.Errorf("wait for pager: %w", err)

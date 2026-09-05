@@ -16,17 +16,15 @@ import (
 
 func TestToReportFinding(t *testing.T) {
 	f := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       "CTL.S3.PUBLIC.001",
-			AssetID:         "bucket-1",
-			AssetType:       "storage_bucket",
-			ControlSeverity: policy.SeverityHigh,
-			Evidence: evaluation.Evidence{
-				UnsafeDurationHours: 48.0,
-				ThresholdHours:      24.0,
-				FirstUnsafeAt:       time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
-				LastSeenUnsafeAt:    time.Date(2026, 1, 3, 0, 0, 0, 0, time.UTC),
-			},
+		ControlID:       "CTL.S3.PUBLIC.001",
+		AssetID:         "bucket-1",
+		AssetType:       "storage_bucket",
+		ControlSeverity: policy.SeverityHigh,
+		Evidence: evaluation.Evidence{
+			UnsafeDurationHours: 48.0,
+			ThresholdHours:      24.0,
+			FirstUnsafeAt:       time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+			LastSeenUnsafeAt:    time.Date(2026, 1, 3, 0, 0, 0, 0, time.UTC),
 		},
 	}
 	rf := toReportFinding(&f)
@@ -46,10 +44,8 @@ func TestToReportFinding(t *testing.T) {
 
 func TestToReportRemediation(t *testing.T) {
 	f := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.S3.PUBLIC.001",
-			AssetID:   "bucket-1",
-		},
+		ControlID: "CTL.S3.PUBLIC.001",
+		AssetID:   "bucket-1",
 		RemediationSpec: policy.RemediationSpec{
 			Description: "desc",
 			Action:      "action",

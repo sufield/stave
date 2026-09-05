@@ -47,8 +47,7 @@ func ExportAssessmentGraph(assessmentData []byte, format, sourcePath string, now
 // mapGraphInputErr re-wraps a cmderr.InputError with ErrInvalidInput (exit
 // 2) and passes everything else through unchanged (plain, exit 4).
 func mapGraphInputErr(err error) error {
-	var ie *cmderr.InputError
-	if errors.As(err, &ie) {
+	if ie, ok := errors.AsType[*cmderr.InputError](err); ok {
 		return fmt.Errorf("%w: %w", ie.Err, ErrInvalidInput)
 	}
 	return err //nolint:wrapcheck // engine already wrapped; preserve exit 4.

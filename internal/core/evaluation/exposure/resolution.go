@@ -60,12 +60,11 @@ func buildExposureFromResolved(identity, resource Visibility, gov GovernanceOver
 		// Latent Reachability
 		LatentPublicRead: resolved.IsLatent,
 		LatentPublicList: (identity.Public.List || resource.Public.List) && !resolved.List,
-	}
 
-	// Cross-Account / Authenticated Exposure (Post-Guardrails)
-	exposure.AuthenticatedRead = resolveAuthField(identity.Authenticated.Read, resource.Authenticated.Read, gov)
-	exposure.AuthenticatedWrite = resolveAuthField(identity.Authenticated.Write, resource.Authenticated.Write, gov)
-	exposure.AuthenticatedAdmin = resolveAuthField(identity.Authenticated.Admin, resource.Authenticated.Admin, gov)
+		// Cross-Account / Authenticated Exposure (Post-Guardrails)
+		AuthenticatedRead:  resolveAuthField(identity.Authenticated.Read, resource.Authenticated.Read, gov),
+		AuthenticatedWrite: resolveAuthField(identity.Authenticated.Write, resource.Authenticated.Write, gov),
+		AuthenticatedAdmin: resolveAuthField(identity.Authenticated.Admin, resource.Authenticated.Admin, gov)}
 
 	return exposure
 }

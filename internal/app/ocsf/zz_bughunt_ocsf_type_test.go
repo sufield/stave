@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -13,12 +12,10 @@ import (
 func TestBugHunt_OCSF_ResourceTypeMapping(t *testing.T) {
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				ControlID:       "CTL.S3.PUBLIC.001",
-				AssetID:         asset.ID("arn:aws:s3:::prod-bucket"),
-				AssetType:       kernel.AssetType("aws_s3_bucket"),
-				ControlSeverity: policy.SeverityHigh,
-			},
+			ControlID:       "CTL.S3.PUBLIC.001",
+			AssetID:         asset.ID("arn:aws:s3:::prod-bucket"),
+			AssetType:       kernel.AssetType("aws_s3_bucket"),
+			ControlSeverity: policy.SeverityHigh,
 		},
 	}
 

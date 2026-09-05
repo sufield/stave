@@ -22,9 +22,7 @@ func (mockSanitizer) ID(s string) string {
 
 func TestBugHunt_SanitizeFinding_SanitizesRemediationCommand(t *testing.T) {
 	f := remediation.Finding{
-		Finding: evaluation.Finding{
-			AssetID: "sensitive-arn",
-		},
+		AssetID: "sensitive-arn",
 		RemediationSpec: policy.RemediationSpec{
 			Action: "aws s3api put-bucket-versioning --bucket <id>",
 		},

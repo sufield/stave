@@ -67,8 +67,7 @@ func TestWithHint_PreservesSentinelAndOriginal(t *testing.T) {
 	if !errors.Is(err, ErrHintNoControls) {
 		t.Fatalf("expected sentinel match, got: %v", err)
 	}
-	var typed *typedHintTestError
-	if !errors.As(err, &typed) {
+	if _, ok := errors.AsType[*typedHintTestError](err); !ok {
 		t.Fatalf("expected typed error match, got: %v", err)
 	}
 }

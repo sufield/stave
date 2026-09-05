@@ -24,8 +24,7 @@ func Run(ctx context.Context, cwd string) ([]byte, error) {
 	cmd.Dir = cwd
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
+		if _, ok := errors.AsType[*exec.ExitError](err); ok {
 			// Findings reported via non-zero exit. Output is the
 			// JSON vulnerability report; surface both so callers
 			// can parse the report and still know there were

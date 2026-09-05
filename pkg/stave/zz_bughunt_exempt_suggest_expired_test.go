@@ -35,11 +35,9 @@ func TestBugHunt_SuggestExemptions_ExpiredException(t *testing.T) {
 		Run:           evaluation.RunInfo{EvalTime: t0},
 		Findings: []remediation.Finding{
 			{
-				Finding: evaluation.Finding{
-					ControlID:       kernel.ControlID("CTL.A.001"),
-					AssetID:         asset.ID("asset-1"),
-					ControlSeverity: policy.SeverityHigh,
-				},
+				ControlID:       kernel.ControlID("CTL.A.001"),
+				AssetID:         asset.ID("asset-1"),
+				ControlSeverity: policy.SeverityHigh,
 			},
 		},
 	}
@@ -50,11 +48,9 @@ func TestBugHunt_SuggestExemptions_ExpiredException(t *testing.T) {
 		Run:           evaluation.RunInfo{EvalTime: tLatest},
 		Findings: []remediation.Finding{
 			{
-				Finding: evaluation.Finding{
-					ControlID:       kernel.ControlID("CTL.A.001"),
-					AssetID:         asset.ID("asset-1"),
-					ControlSeverity: policy.SeverityHigh,
-				},
+				ControlID:       kernel.ControlID("CTL.A.001"),
+				AssetID:         asset.ID("asset-1"),
+				ControlSeverity: policy.SeverityHigh,
 			},
 		},
 	}

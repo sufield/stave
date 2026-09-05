@@ -13,26 +13,22 @@ import (
 func TestBugHunt_Compare_DwellHoursDeterministic(t *testing.T) {
 	// Two findings for the same control with different dwell hours
 	f1 := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:         kernel.ControlID("CTL.A.001"),
-			AssetID:           asset.ID("asset-1"),
-			ControlSeverity:   policy.SeverityHigh,
-			ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312"},
-			Evidence: evaluation.Evidence{
-				UnsafeDurationHours: 10.0,
-			},
+		ControlID:         kernel.ControlID("CTL.A.001"),
+		AssetID:           asset.ID("asset-1"),
+		ControlSeverity:   policy.SeverityHigh,
+		ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312"},
+		Evidence: evaluation.Evidence{
+			UnsafeDurationHours: 10.0,
 		},
 	}
 
 	f2 := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:         kernel.ControlID("CTL.A.001"),
-			AssetID:           asset.ID("asset-2"),
-			ControlSeverity:   policy.SeverityHigh,
-			ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312"},
-			Evidence: evaluation.Evidence{
-				UnsafeDurationHours: 50.0,
-			},
+		ControlID:         kernel.ControlID("CTL.A.001"),
+		AssetID:           asset.ID("asset-2"),
+		ControlSeverity:   policy.SeverityHigh,
+		ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312"},
+		Evidence: evaluation.Evidence{
+			UnsafeDurationHours: 50.0,
 		},
 	}
 

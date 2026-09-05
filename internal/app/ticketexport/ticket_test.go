@@ -12,16 +12,14 @@ import (
 
 func mkFinding(ctlID, astID string, sev policy.Severity) remediation.Finding {
 	return remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:          kernel.ControlID(ctlID),
-			AssetID:            asset.ID(astID),
-			ControlSeverity:    sev,
-			ControlName:        "S3 Public Read",
-			ControlDescription: "Detects public read access on S3 buckets",
-			AssetType:          "s3_bucket",
-			Evidence: evaluation.Evidence{
-				UnsafeDurationHours: 48,
-			},
+		ControlID:          kernel.ControlID(ctlID),
+		AssetID:            asset.ID(astID),
+		ControlSeverity:    sev,
+		ControlName:        "S3 Public Read",
+		ControlDescription: "Detects public read access on S3 buckets",
+		AssetType:          "s3_bucket",
+		Evidence: evaluation.Evidence{
+			UnsafeDurationHours: 48,
 		},
 		RemediationSpec: policy.RemediationSpec{
 			Action: "Set block_public_access to true",

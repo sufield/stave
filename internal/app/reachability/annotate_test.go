@@ -6,7 +6,6 @@ import (
 	"github.com/sufield/stave/internal/core/access"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
@@ -22,10 +21,9 @@ func TestAnnotateFindings_ViolationGetsAnnotation(t *testing.T) {
 	})
 
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{
+		{
 			ControlSeverity: policy.SeverityCritical,
-			AssetID:         "arn:aws:s3:::phi-records",
-		}},
+			AssetID:         "arn:aws:s3:::phi-records"},
 	}
 
 	AnnotateFindings(findings, idx)
@@ -49,9 +47,8 @@ func TestAnnotateFindings_ResourceNotInIndex(t *testing.T) {
 	idx := access.NewResourceAccessIndex()
 
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{
-			AssetID: "arn:aws:s3:::unknown-bucket",
-		}},
+		{
+			AssetID: "arn:aws:s3:::unknown-bucket"},
 	}
 
 	AnnotateFindings(findings, idx)
@@ -63,7 +60,7 @@ func TestAnnotateFindings_ResourceNotInIndex(t *testing.T) {
 
 func TestAnnotateFindings_NilIndex(t *testing.T) {
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{AssetID: "arn:aws:s3:::bucket"}},
+		{AssetID: "arn:aws:s3:::bucket"},
 	}
 	AnnotateFindings(findings, nil)
 	if findings[0].Reachability != nil {
@@ -81,7 +78,7 @@ func TestAnnotateFindings_ExternalPrincipal(t *testing.T) {
 	})
 
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{AssetID: "arn:aws:s3:::public-bucket"}},
+		{AssetID: "arn:aws:s3:::public-bucket"},
 	}
 
 	AnnotateFindings(findings, idx)
@@ -105,7 +102,7 @@ func TestBlastRadiusScore(t *testing.T) {
 	idx.AddEntry(asset.ID("res"), access.ResourceAccessEntry{PrincipalARN: "*", Actions: []string{"s3:Get"}, IsPublic: true})
 
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{AssetID: "res"}},
+		{AssetID: "res"},
 	}
 	AnnotateFindings(findings, idx)
 
@@ -131,7 +128,7 @@ func TestBuildContext_DeduplicatesPrincipals(t *testing.T) {
 	})
 
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{AssetID: "res"}},
+		{AssetID: "res"},
 	}
 	AnnotateFindings(findings, idx)
 

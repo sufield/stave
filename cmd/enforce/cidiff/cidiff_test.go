@@ -34,13 +34,13 @@ func TestCIDiff_NewAndResolved(t *testing.T) {
 	dir := t.TempDir()
 
 	baselinePath := writeEvalJSON(t, dir, "baseline.json", []remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.TEST.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"}},
-		{Finding: evaluation.Finding{ControlID: "CTL.TEST.B.001", ControlName: "B", AssetID: "res-2", AssetType: "bucket"}},
+		{ControlID: "CTL.TEST.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"},
+		{ControlID: "CTL.TEST.B.001", ControlName: "B", AssetID: "res-2", AssetType: "bucket"},
 	})
 
 	currentPath := writeEvalJSON(t, dir, "current.json", []remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.TEST.B.001", ControlName: "B", AssetID: "res-2", AssetType: "bucket"}},
-		{Finding: evaluation.Finding{ControlID: "CTL.TEST.C.001", ControlName: "C", AssetID: "res-3", AssetType: "bucket"}},
+		{ControlID: "CTL.TEST.B.001", ControlName: "B", AssetID: "res-2", AssetType: "bucket"},
+		{ControlID: "CTL.TEST.C.001", ControlName: "C", AssetID: "res-3", AssetType: "bucket"},
 	})
 
 	// Load and compare using the same functions as runCIDiff
@@ -104,7 +104,7 @@ func TestCIDiff_AllNew(t *testing.T) {
 
 	baselinePath := writeEvalJSON(t, dir, "baseline.json", nil)
 	currentPath := writeEvalJSON(t, dir, "current.json", []remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.TEST.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"}},
+		{ControlID: "CTL.TEST.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"},
 	})
 
 	baselineEval, err := artifact.NewLoader().Evaluation(context.Background(), baselinePath)
@@ -132,7 +132,7 @@ func TestCIDiff_AllResolved(t *testing.T) {
 	dir := t.TempDir()
 
 	baselinePath := writeEvalJSON(t, dir, "baseline.json", []remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.TEST.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"}},
+		{ControlID: "CTL.TEST.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"},
 	})
 	currentPath := writeEvalJSON(t, dir, "current.json", nil)
 

@@ -18,22 +18,18 @@ func TestPredict_MTTRDoesNotCollideDistinctAssetTypesWithSameID(t *testing.T) {
 
 	// findingBucket is present at t0, fixed at t1 (MTTR = 10 days)
 	findingBucket := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID("CTL.S3.001"),
-			AssetID:         asset.ID("shared-id"),
-			AssetType:       kernel.AssetType("aws_s3_bucket"),
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       kernel.ControlID("CTL.S3.001"),
+		AssetID:         asset.ID("shared-id"),
+		AssetType:       kernel.AssetType("aws_s3_bucket"),
+		ControlSeverity: policy.SeverityHigh,
 	}
 
 	// findingRole is present at t0 AND STILL OPEN at t1 (not fixed!)
 	findingRole := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID("CTL.S3.001"),
-			AssetID:         asset.ID("shared-id"),
-			AssetType:       kernel.AssetType("aws_iam_role"),
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       kernel.ControlID("CTL.S3.001"),
+		AssetID:         asset.ID("shared-id"),
+		AssetType:       kernel.AssetType("aws_iam_role"),
+		ControlSeverity: policy.SeverityHigh,
 	}
 
 	history := []*report.Assessment{

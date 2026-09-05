@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
@@ -19,11 +18,9 @@ func assessmentWith(findings ...remediation.Finding) report.Assessment {
 
 func mkFinding(ctlID string, astID string) remediation.Finding {
 	return remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID(ctlID),
-			AssetID:         asset.ID(astID),
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       kernel.ControlID(ctlID),
+		AssetID:         asset.ID(astID),
+		ControlSeverity: policy.SeverityHigh,
 	}
 }
 

@@ -245,8 +245,7 @@ func runE2ECase(t *testing.T, bin, caseDir string) {
 		)
 	}
 	if runErr != nil {
-		var exitErr *exec.ExitError
-		if errors.As(runErr, &exitErr) {
+		if exitErr, ok := errors.AsType[*exec.ExitError](runErr); ok {
 			exitCode = exitErr.ExitCode()
 		} else {
 			t.Fatalf("exec error: %v\nstdout:\n%s\nstderr:\n%s", runErr, stdout.String(), stderr.String())

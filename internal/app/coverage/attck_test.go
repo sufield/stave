@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -82,7 +81,7 @@ func TestBuild_PostureOverlay(t *testing.T) {
 		makeCtl("CTL.B", "initial_access"),
 	}
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.B"}},
+		{ControlID: "CTL.B"},
 	}
 
 	report := Build(BuildInput{Controls: controls, Findings: findings})

@@ -110,8 +110,7 @@ func resolvePrimaryErrorSignal(err error, message, suggested, docsRef string) *u
 			"exit_code", exit, "error", message)
 	}
 
-	var userErr *ui.UserError
-	if errors.As(err, &userErr) {
+	if _, ok := errors.AsType[*ui.UserError](err); ok {
 		return ui.NewErrorInfo(ui.CodeInvalidInput, message).
 			WithTitle("Input validation failed").
 			WithAction(suggested + "Check the command arguments and rerun with -v or -vv for additional context.").

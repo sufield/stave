@@ -17,20 +17,18 @@ func TestBuild_FindingsProduceCorrectNodes(t *testing.T) {
 	t.Parallel()
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				FindingID:       "sha256:aaa",
-				ControlID:       "CTL.S3.PUBLIC.001",
-				ControlName:     "No Public S3 Bucket",
-				AssetID:         "arn:aws:s3::123456789012:phi-records",
-				AssetType:       "aws_s3_bucket",
-				AssetVendor:     "aws",
-				ControlSeverity: policy.SeverityCritical,
-				ControlCompliance: policy.ComplianceMapping{
-					"hipaa": "164.312(a)(1)",
-				},
-				Evidence: evaluation.Evidence{
-					TemporalRisk: "Unsafe for 240h",
-				},
+			FindingID:       "sha256:aaa",
+			ControlID:       "CTL.S3.PUBLIC.001",
+			ControlName:     "No Public S3 Bucket",
+			AssetID:         "arn:aws:s3::123456789012:phi-records",
+			AssetType:       "aws_s3_bucket",
+			AssetVendor:     "aws",
+			ControlSeverity: policy.SeverityCritical,
+			ControlCompliance: policy.ComplianceMapping{
+				"hipaa": "164.312(a)(1)",
+			},
+			Evidence: evaluation.Evidence{
+				TemporalRisk: "Unsafe for 240h",
 			},
 			RemediationSpec: policy.RemediationSpec{
 				Action: "Enable Block Public Access",
@@ -79,24 +77,20 @@ func TestBuild_ChainsProduceCorrectNodes(t *testing.T) {
 	t.Parallel()
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				FindingID:       "sha256:aaa",
-				ControlID:       "CTL.S3.PUBLIC.001",
-				AssetID:         "arn:aws:s3::123456789012:bucket",
-				AssetType:       "aws_s3_bucket",
-				AssetVendor:     "aws",
-				ControlSeverity: policy.SeverityCritical,
-			},
+			FindingID:       "sha256:aaa",
+			ControlID:       "CTL.S3.PUBLIC.001",
+			AssetID:         "arn:aws:s3::123456789012:bucket",
+			AssetType:       "aws_s3_bucket",
+			AssetVendor:     "aws",
+			ControlSeverity: policy.SeverityCritical,
 		},
 		{
-			Finding: evaluation.Finding{
-				FindingID:       "sha256:bbb",
-				ControlID:       "CTL.CLOUDTRAIL.ENABLED.001",
-				AssetID:         "arn:aws:cloudtrail:us-east-1:123:trail/main",
-				AssetType:       "aws_cloudtrail_trail",
-				AssetVendor:     "aws",
-				ControlSeverity: policy.SeverityHigh,
-			},
+			FindingID:       "sha256:bbb",
+			ControlID:       "CTL.CLOUDTRAIL.ENABLED.001",
+			AssetID:         "arn:aws:cloudtrail:us-east-1:123:trail/main",
+			AssetType:       "aws_cloudtrail_trail",
+			AssetVendor:     "aws",
+			ControlSeverity: policy.SeverityHigh,
 		},
 	}
 
@@ -152,16 +146,12 @@ func TestBuild_EdgeDeduplication(t *testing.T) {
 	// Two findings on the same resource should produce only one BELONGS_TO_SCOPE edge.
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				FindingID: "sha256:aaa", ControlID: "CTL.A",
-				AssetID: "arn:aws:s3::123456789012:bucket", AssetType: "aws_s3_bucket", AssetVendor: "aws",
-			},
+			FindingID: "sha256:aaa", ControlID: "CTL.A",
+			AssetID: "arn:aws:s3::123456789012:bucket", AssetType: "aws_s3_bucket", AssetVendor: "aws",
 		},
 		{
-			Finding: evaluation.Finding{
-				FindingID: "sha256:bbb", ControlID: "CTL.B",
-				AssetID: "arn:aws:s3::123456789012:bucket", AssetType: "aws_s3_bucket", AssetVendor: "aws",
-			},
+			FindingID: "sha256:bbb", ControlID: "CTL.B",
+			AssetID: "arn:aws:s3::123456789012:bucket", AssetType: "aws_s3_bucket", AssetVendor: "aws",
 		},
 	}
 

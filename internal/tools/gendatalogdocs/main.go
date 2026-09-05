@@ -279,7 +279,7 @@ func firstSentence(doc string) string {
 	if doc == "" {
 		return ""
 	}
-	line := strings.SplitN(doc, "\n", 2)[0]
+	line, _, _ := strings.Cut(doc, "\n")
 	if idx := strings.Index(line, " — "); idx >= 0 {
 		line = line[idx+len(" — "):]
 	}

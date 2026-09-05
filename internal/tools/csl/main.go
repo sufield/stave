@@ -184,8 +184,7 @@ func validateSchema(doc any) []issue {
 	}
 
 	if err := schema.Validate(doc); err != nil {
-		var vErr *jsonschema.ValidationError
-		if errors.As(err, &vErr) {
+		if vErr, ok := errors.AsType[*jsonschema.ValidationError](err); ok {
 			return flattenValidationErrors(vErr)
 		}
 		return []issue{{check: "schema", message: err.Error()}}

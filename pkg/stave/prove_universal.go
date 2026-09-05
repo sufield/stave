@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/app/universals"
@@ -73,8 +74,8 @@ func runZ3(formulaContent string) (result, output string) {
 
 	out := strings.TrimSpace(stdout.String())
 	lines := strings.Split(out, "\n")
-	for i := len(lines) - 1; i >= 0; i-- {
-		line := strings.TrimSpace(lines[i])
+	for _, line := range slices.Backward(lines) {
+		line := strings.TrimSpace(line)
 		switch line {
 		case "sat", "unsat", "unknown":
 			return line, out

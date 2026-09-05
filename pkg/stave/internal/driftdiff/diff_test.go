@@ -97,8 +97,7 @@ func TestBuildFilter_InvalidChangeType(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected invalid change type error")
 	}
-	var ie *cmderr.InputError
-	if !errors.As(err, &ie) {
+	if _, ok := errors.AsType[*cmderr.InputError](err); !ok {
 		t.Fatalf("expected *cmderr.InputError, got %T", err)
 	}
 }

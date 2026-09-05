@@ -131,8 +131,7 @@ func ExitCode(err error) int {
 		return ExitInternal
 	}
 
-	var uErr *UserError
-	if errors.As(err, &uErr) {
+	if _, ok := errors.AsType[*UserError](err); ok {
 		return ExitInputError
 	}
 

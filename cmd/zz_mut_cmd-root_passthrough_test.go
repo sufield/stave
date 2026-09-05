@@ -56,8 +56,7 @@ func Test_Mut_SuggestCommandIfUnknown_NonUnknownPassthrough(t *testing.T) {
 	got := app.suggestCommandIfUnknown(internalErr)
 
 	// Must NOT have been reclassified as a user input error.
-	var uErr *ui.UserError
-	if errors.As(got, &uErr) {
+	if _, ok := errors.AsType[*ui.UserError](got); ok {
 		t.Fatalf(
 			"non-unknown-command error was wrapped as *ui.UserError; a genuine "+
 				"internal fault must not be downgraded to user-input class\n"+

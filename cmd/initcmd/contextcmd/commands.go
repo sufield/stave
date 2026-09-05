@@ -237,8 +237,8 @@ func runContextCreate(in CreateInput) error {
 		return fmt.Errorf("load context store: %w", err)
 	}
 
-	c := contexts.Context{ProjectRoot: rootAbs}
-	c.ProjectConfig = strings.TrimSpace(in.ConfigFile)
+	c := contexts.Context{ProjectRoot: rootAbs,
+		ProjectConfig: strings.TrimSpace(in.ConfigFile)}
 	c.Defaults.ControlsDir = strings.TrimSpace(in.ControlsDir)
 	c.Defaults.ObservationsDir = strings.TrimSpace(in.ObservationsDir)
 

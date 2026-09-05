@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -329,8 +330,8 @@ func runZ3(formula string) (result, output string) {
 
 	out := strings.TrimSpace(stdout.String())
 	lines := strings.Split(out, "\n")
-	for i := len(lines) - 1; i >= 0; i-- {
-		line := strings.TrimSpace(lines[i])
+	for _, line := range slices.Backward(lines) {
+		line := strings.TrimSpace(line)
 		switch line {
 		case "sat", "unsat", "unknown":
 			return line, out

@@ -18,22 +18,18 @@ func TestClassify_DistinctAssetTypesWithSameIDDoNotCollide(t *testing.T) {
 
 	// findingBucket was present in history (chronic)
 	findingBucket := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID("CTL.S3.001"),
-			AssetID:         asset.ID("shared-id"),
-			AssetType:       kernel.AssetType("aws_s3_bucket"),
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       kernel.ControlID("CTL.S3.001"),
+		AssetID:         asset.ID("shared-id"),
+		AssetType:       kernel.AssetType("aws_s3_bucket"),
+		ControlSeverity: policy.SeverityHigh,
 	}
 
 	// findingRole is BRAND NEW (never seen in history), but has the same AssetID "shared-id"
 	findingRole := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID("CTL.S3.001"),
-			AssetID:         asset.ID("shared-id"),
-			AssetType:       kernel.AssetType("aws_iam_role"),
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       kernel.ControlID("CTL.S3.001"),
+		AssetID:         asset.ID("shared-id"),
+		AssetType:       kernel.AssetType("aws_iam_role"),
+		ControlSeverity: policy.SeverityHigh,
 	}
 
 	history := []*report.Assessment{

@@ -29,8 +29,7 @@ func ObservationDriftChangeTypes() []string { return driftdiff.ChangeTypeNames()
 func DiffObservationDrift(ctx context.Context, cfg ObservationDriftConfig) ([]byte, error) {
 	out, err := driftdiff.Run(ctx, cfg)
 	if err != nil {
-		var ie *cmderr.InputError
-		if errors.As(err, &ie) {
+		if ie, ok := errors.AsType[*cmderr.InputError](err); ok {
 			return nil, fmt.Errorf("%w: %w", ie.Err, ErrInvalidInput)
 		}
 		return nil, err //nolint:wrapcheck // engine already wrapped; preserve exit 4.

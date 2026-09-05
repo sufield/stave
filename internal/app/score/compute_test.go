@@ -5,7 +5,6 @@ import (
 	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	findingsdata "github.com/sufield/stave/internal/core/findings"
 )
@@ -26,7 +25,7 @@ func TestCompute_AllCriticalFailing(t *testing.T) {
 	findings := make([]remediation.Finding, 10)
 	for i := range findings {
 		findings[i] = remediation.Finding{
-			Finding: evaluation.Finding{ControlSeverity: policy.SeverityCritical},
+			ControlSeverity: policy.SeverityCritical,
 		}
 	}
 
@@ -51,12 +50,12 @@ func TestCompute_FixingFindingIncreasesScore(t *testing.T) {
 	allFindings := make([]remediation.Finding, 10)
 	for i := range 5 {
 		allFindings[i] = remediation.Finding{
-			Finding: evaluation.Finding{ControlSeverity: policy.SeverityCritical},
+			ControlSeverity: policy.SeverityCritical,
 		}
 	}
 	for i := 5; i < 10; i++ {
 		allFindings[i] = remediation.Finding{
-			Finding: evaluation.Finding{ControlSeverity: policy.SeverityHigh},
+			ControlSeverity: policy.SeverityHigh,
 		}
 	}
 
@@ -87,8 +86,8 @@ func TestCompute_AddingPassingControlsDoesNotDecreaseScore(t *testing.T) {
 	// denominator (TotalCheckWeight) while violations stay the same,
 	// so severity score stays stable or improves.
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityHigh}},
-		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityMedium}},
+		{ControlSeverity: policy.SeverityHigh},
+		{ControlSeverity: policy.SeverityMedium},
 	}
 	// Violation weight = 4 + 2 = 6
 	baseWeight := 50.0 // 50 total evaluations
@@ -177,7 +176,7 @@ func TestCompute_WeightsOverrideProducesCorrectSum(t *testing.T) {
 	// All components at 0.5 sub-score with equal weights.
 	findings := make([]remediation.Finding, 2)
 	findings[0] = remediation.Finding{
-		Finding: evaluation.Finding{ControlSeverity: policy.SeverityLow},
+		ControlSeverity: policy.SeverityLow,
 	}
 	// 1 finding failing out of 1 = severity 0.
 
@@ -208,9 +207,9 @@ func TestCompute_WeightsOverrideProducesCorrectSum(t *testing.T) {
 
 func TestCompute_DetailFields(t *testing.T) {
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityCritical}},
-		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityHigh}},
-		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityLow}},
+		{ControlSeverity: policy.SeverityCritical},
+		{ControlSeverity: policy.SeverityHigh},
+		{ControlSeverity: policy.SeverityLow},
 	}
 
 	r := Compute(Input{
@@ -326,7 +325,7 @@ func TestCompute_SeverityScore_ZeroTotalWeight_FallbackUsesAvgSeverity(t *testin
 	// On the NormalizedWeight (1—4) ladder, Low-only findings score
 	// 1 - 1/4 = 0.75; Critical-only score 0.
 	low := []remediation.Finding{
-		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityLow}},
+		{ControlSeverity: policy.SeverityLow},
 	}
 	rLow := Compute(Input{Findings: low, Weights: DefaultWeights()})
 	if rLow.Severity.SubScore < 0.7 {
@@ -334,7 +333,7 @@ func TestCompute_SeverityScore_ZeroTotalWeight_FallbackUsesAvgSeverity(t *testin
 	}
 
 	crit := []remediation.Finding{
-		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityCritical}},
+		{ControlSeverity: policy.SeverityCritical},
 	}
 	rCrit := Compute(Input{Findings: crit, Weights: DefaultWeights()})
 	if rCrit.Severity.SubScore != 0 {
@@ -348,7 +347,7 @@ func TestCompute_SeverityScore_NegativeTotalWeight_ClampsTo01(t *testing.T) {
 	// as a rubric band not in the catalog.
 	r := Compute(Input{
 		Findings: []remediation.Finding{
-			{Finding: evaluation.Finding{ControlSeverity: policy.SeverityHigh}},
+			{ControlSeverity: policy.SeverityHigh},
 		},
 		TotalCheckWeight: -100,
 		Weights:          DefaultWeights(),
@@ -366,7 +365,7 @@ func TestCompute_SeverityScore_WeightLessThanExposure_ClampsToZero(t *testing.T)
 	findings := make([]remediation.Finding, 5)
 	for i := range findings {
 		findings[i] = remediation.Finding{
-			Finding: evaluation.Finding{ControlSeverity: policy.SeverityCritical},
+			ControlSeverity: policy.SeverityCritical,
 		}
 	}
 	r := Compute(Input{

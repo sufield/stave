@@ -19,22 +19,18 @@ func TestClassify_DistinctAssetTypesWithSameIDDoNotCollide(t *testing.T) {
 
 	// findingBucket fails only at t0
 	findingBucket := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID("CTL.S3.001"),
-			AssetID:         asset.ID("shared-id"),
-			AssetType:       kernel.AssetType("aws_s3_bucket"),
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       kernel.ControlID("CTL.S3.001"),
+		AssetID:         asset.ID("shared-id"),
+		AssetType:       kernel.AssetType("aws_s3_bucket"),
+		ControlSeverity: policy.SeverityHigh,
 	}
 
 	// findingRole fails at t1 and t2 on SAME asset ID "shared-id"
 	findingRole := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID("CTL.S3.001"),
-			AssetID:         asset.ID("shared-id"),
-			AssetType:       kernel.AssetType("aws_iam_role"),
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       kernel.ControlID("CTL.S3.001"),
+		AssetID:         asset.ID("shared-id"),
+		AssetType:       kernel.AssetType("aws_iam_role"),
+		ControlSeverity: policy.SeverityHigh,
 	}
 
 	assessments := []report.Assessment{

@@ -20,17 +20,15 @@ func TestExperiment01_MinimalFinding(t *testing.T) {
 	t.Parallel()
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				FindingID:       "sha256:exp01aaa",
-				ControlID:       "CTL.S3.PUBLIC.001",
-				ControlName:     "S3 bucket must not be publicly accessible",
-				AssetID:         "arn:aws:s3::111111111111:acme-prod-logs",
-				AssetType:       "aws_s3_bucket",
-				AssetVendor:     "aws",
-				ControlSeverity: policy.SeverityCritical,
-				Evidence: evaluation.Evidence{
-					TemporalRisk: "S3 bucket acme-prod-logs is publicly accessible",
-				},
+			FindingID:       "sha256:exp01aaa",
+			ControlID:       "CTL.S3.PUBLIC.001",
+			ControlName:     "S3 bucket must not be publicly accessible",
+			AssetID:         "arn:aws:s3::111111111111:acme-prod-logs",
+			AssetType:       "aws_s3_bucket",
+			AssetVendor:     "aws",
+			ControlSeverity: policy.SeverityCritical,
+			Evidence: evaluation.Evidence{
+				TemporalRisk: "S3 bucket acme-prod-logs is publicly accessible",
 			},
 			RemediationSpec: policy.RemediationSpec{
 				Action: "Enable Block Public Access",
@@ -120,37 +118,31 @@ func TestExperiment02_ActiveChain(t *testing.T) {
 	t.Parallel()
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				FindingID: "sha256:exp02s3", ControlID: "CTL.S3.PUBLIC.001",
-				ControlName: "S3 Public Access", AssetID: "arn:aws:s3::111111111111:acme-phi-records",
-				AssetType: "aws_s3_bucket", AssetVendor: "aws", ControlSeverity: policy.SeverityCritical,
-				ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312(a)(1)"},
-				ChainMembership: []evaluation.ChainMembershipEntry{
-					{ChainID: "data_exfiltration_path", ChainSeverity: policy.SeverityCritical,
-						StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
-				},
+			FindingID: "sha256:exp02s3", ControlID: "CTL.S3.PUBLIC.001",
+			ControlName: "S3 Public Access", AssetID: "arn:aws:s3::111111111111:acme-phi-records",
+			AssetType: "aws_s3_bucket", AssetVendor: "aws", ControlSeverity: policy.SeverityCritical,
+			ControlCompliance: policy.ComplianceMapping{"hipaa": "164.312(a)(1)"},
+			ChainMembership: []evaluation.ChainMembershipEntry{
+				{ChainID: "data_exfiltration_path", ChainSeverity: policy.SeverityCritical,
+					StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
 			},
 		},
 		{
-			Finding: evaluation.Finding{
-				FindingID: "sha256:exp02kms", ControlID: "CTL.KMS.ROTATION.001",
-				ControlName: "KMS Key Rotation", AssetID: "arn:aws:kms::111111111111:key/acme-phi-key",
-				AssetType: "aws_kms_key", AssetVendor: "aws", ControlSeverity: policy.SeverityHigh,
-				ChainMembership: []evaluation.ChainMembershipEntry{
-					{ChainID: "data_exfiltration_path", ChainSeverity: policy.SeverityCritical,
-						StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
-				},
+			FindingID: "sha256:exp02kms", ControlID: "CTL.KMS.ROTATION.001",
+			ControlName: "KMS Key Rotation", AssetID: "arn:aws:kms::111111111111:key/acme-phi-key",
+			AssetType: "aws_kms_key", AssetVendor: "aws", ControlSeverity: policy.SeverityHigh,
+			ChainMembership: []evaluation.ChainMembershipEntry{
+				{ChainID: "data_exfiltration_path", ChainSeverity: policy.SeverityCritical,
+					StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
 			},
 		},
 		{
-			Finding: evaluation.Finding{
-				FindingID: "sha256:exp02ct", ControlID: "CTL.CLOUDTRAIL.ENABLED.001",
-				ControlName: "CloudTrail Enabled", AssetID: "arn:aws:cloudtrail:us-east-1:111111111111:trail/acme-main",
-				AssetType: "aws_cloudtrail_trail", AssetVendor: "aws", ControlSeverity: policy.SeverityHigh,
-				ChainMembership: []evaluation.ChainMembershipEntry{
-					{ChainID: "data_exfiltration_path", ChainSeverity: policy.SeverityCritical,
-						StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
-				},
+			FindingID: "sha256:exp02ct", ControlID: "CTL.CLOUDTRAIL.ENABLED.001",
+			ControlName: "CloudTrail Enabled", AssetID: "arn:aws:cloudtrail:us-east-1:111111111111:trail/acme-main",
+			AssetType: "aws_cloudtrail_trail", AssetVendor: "aws", ControlSeverity: policy.SeverityHigh,
+			ChainMembership: []evaluation.ChainMembershipEntry{
+				{ChainID: "data_exfiltration_path", ChainSeverity: policy.SeverityCritical,
+					StageSpan: []kernel.AttackStage{"initial_access", "exfiltration"}, Narrative: "PHI exfiltration path"},
 			},
 		},
 	}
@@ -258,15 +250,13 @@ func TestExperiment03_ComplianceMapping(t *testing.T) {
 	t.Parallel()
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				FindingID: "sha256:exp03", ControlID: "CTL.S3.PUBLIC.001",
-				AssetID: "arn:aws:s3::111111111111:bucket", AssetType: "aws_s3_bucket", AssetVendor: "aws",
-				ControlSeverity: policy.SeverityCritical,
-				ControlCompliance: policy.ComplianceMapping{
-					"hipaa":        "164.312(a)(1)",
-					"pci_dss_v4.0": "7.2.1",
-					"soc2":         "CC6.1",
-				},
+			FindingID: "sha256:exp03", ControlID: "CTL.S3.PUBLIC.001",
+			AssetID: "arn:aws:s3::111111111111:bucket", AssetType: "aws_s3_bucket", AssetVendor: "aws",
+			ControlSeverity: policy.SeverityCritical,
+			ControlCompliance: policy.ComplianceMapping{
+				"hipaa":        "164.312(a)(1)",
+				"pci_dss_v4.0": "7.2.1",
+				"soc2":         "CC6.1",
 			},
 		},
 	}
@@ -326,12 +316,10 @@ func TestExperiment04_NoChain(t *testing.T) {
 	findings := make([]remediation.Finding, len(types))
 	for i, tt := range types {
 		findings[i] = remediation.Finding{
-			Finding: evaluation.Finding{
-				FindingID: kernel.FindingID("sha256:exp04" + string(rune('a'+i))),
-				ControlID: kernel.ControlID("CTL.TEST." + string(rune('A'+i))),
-				AssetID:   asset.ID(tt.assetID), AssetType: kernel.AssetType(tt.assetType),
-				AssetVendor: "aws", ControlSeverity: policy.SeverityHigh,
-			},
+			FindingID: kernel.FindingID("sha256:exp04" + string(rune('a'+i))),
+			ControlID: kernel.ControlID("CTL.TEST." + string(rune('A'+i))),
+			AssetID:   asset.ID(tt.assetID), AssetType: kernel.AssetType(tt.assetType),
+			AssetVendor: "aws", ControlSeverity: policy.SeverityHigh,
 		}
 	}
 
@@ -372,11 +360,9 @@ func TestExperiment09_JSONRoundTrip(t *testing.T) {
 	t.Parallel()
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				FindingID: "sha256:rt01", ControlID: "CTL.S3.PUBLIC.001",
-				AssetID: "arn:aws:s3::111111111111:bucket", AssetType: "aws_s3_bucket", AssetVendor: "aws",
-				ControlSeverity: policy.SeverityCritical,
-			},
+			FindingID: "sha256:rt01", ControlID: "CTL.S3.PUBLIC.001",
+			AssetID: "arn:aws:s3::111111111111:bucket", AssetType: "aws_s3_bucket", AssetVendor: "aws",
+			ControlSeverity: policy.SeverityCritical,
 		},
 	}
 	g := Build(BuildInput{Findings: findings, EvalTime: time.Date(2025, 11, 15, 0, 0, 0, 0, time.UTC)})

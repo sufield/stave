@@ -101,9 +101,8 @@ func ValidateMapping(ctx context.Context, file string, raw []byte, controlsDir, 
 			Total:  len(m.Operations),
 			ByKind: mappingTallyKinds(m.Operations),
 		},
-	}
 
-	r.Structural = mappingStructuralFindings(m)
+		Structural: mappingStructuralFindings(m)}
 
 	schemaBytes, schemaErr := contractschema.AssetTypeSchema(m.AssetType)
 	if schemaErr == nil {

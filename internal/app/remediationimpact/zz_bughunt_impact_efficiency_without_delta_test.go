@@ -3,7 +3,6 @@ package remediationimpact
 import (
 	"testing"
 
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
@@ -13,13 +12,13 @@ func TestBugHunt_Analyze_EfficiencyWithoutDelta(t *testing.T) {
 	// Before assessment has one finding on CTL.1
 	before := &report.Assessment{
 		Findings: []remediation.Finding{
-			{Finding: evaluation.Finding{ControlID: kernel.ControlID("CTL.1")}},
+			{ControlID: kernel.ControlID("CTL.1")},
 		},
 	}
 	// After assessment also has the same finding on CTL.1
 	after := &report.Assessment{
 		Findings: []remediation.Finding{
-			{Finding: evaluation.Finding{ControlID: kernel.ControlID("CTL.1")}},
+			{ControlID: kernel.ControlID("CTL.1")},
 		},
 	}
 

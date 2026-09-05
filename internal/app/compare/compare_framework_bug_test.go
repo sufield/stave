@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -18,12 +17,10 @@ func TestAnalyze_FrameworkKeyVersionAndHyphenFlexibility(t *testing.T) {
 		TargetKey:    "nist-800-53", // hyphenated key supplied by user
 		Findings: []remediation.Finding{
 			{
-				Finding: evaluation.Finding{
-					ControlID: kernel.ControlID("CTL.S3.001"),
-					ControlCompliance: policy.ComplianceMapping{
-						"cis_aws_v1.4.0": "1.1",
-						"nist_800_53_r5": "AC-2",
-					},
+				ControlID: kernel.ControlID("CTL.S3.001"),
+				ControlCompliance: policy.ComplianceMapping{
+					"cis_aws_v1.4.0": "1.1",
+					"nist_800_53_r5": "AC-2",
 				},
 			},
 		},

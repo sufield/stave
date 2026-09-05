@@ -38,8 +38,7 @@ const (
 func ExportCompliance(ctx context.Context, cfg ComplianceExportConfig) (output []byte, outcome ComplianceOutcome, err error) {
 	res, err := compliancexport.Run(ctx, &cfg)
 	if err != nil {
-		var ie *cmderr.InputError
-		if errors.As(err, &ie) {
+		if ie, ok := errors.AsType[*cmderr.InputError](err); ok {
 			return nil, ComplianceSatisfied, fmt.Errorf("%w: %w", ie.Err, ErrInvalidInput)
 		}
 		return nil, ComplianceSatisfied, err //nolint:wrapcheck // engine already wrapped; preserve exit 4.

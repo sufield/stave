@@ -18,15 +18,15 @@ func TestBugHunt_Suggest_DwellTimeNotCappedByWindow(t *testing.T) {
 	history := []*report.Assessment{
 		{
 			Run:      evaluation.RunInfo{EvalTime: t0},
-			Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "asset-1"}}},
+			Findings: []remediation.Finding{{ControlID: "CTL.A", AssetID: "asset-1"}},
 		},
 		{
 			Run:      evaluation.RunInfo{EvalTime: t1},
-			Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "asset-1"}}},
+			Findings: []remediation.Finding{{ControlID: "CTL.A", AssetID: "asset-1"}},
 		},
 		{
 			Run:      evaluation.RunInfo{EvalTime: t2},
-			Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "asset-1"}}},
+			Findings: []remediation.Finding{{ControlID: "CTL.A", AssetID: "asset-1"}},
 		},
 	}
 
@@ -61,7 +61,7 @@ func TestBugHunt_Suggest_DwellTimeResetOnSafe(t *testing.T) {
 	history := []*report.Assessment{
 		{
 			Run:      evaluation.RunInfo{EvalTime: t0},
-			Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "asset-1"}}},
+			Findings: []remediation.Finding{{ControlID: "CTL.A", AssetID: "asset-1"}},
 		},
 		{
 			Run:      evaluation.RunInfo{EvalTime: t1},
@@ -69,11 +69,11 @@ func TestBugHunt_Suggest_DwellTimeResetOnSafe(t *testing.T) {
 		},
 		{
 			Run:      evaluation.RunInfo{EvalTime: t2},
-			Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "asset-1"}}},
+			Findings: []remediation.Finding{{ControlID: "CTL.A", AssetID: "asset-1"}},
 		},
 		{
 			Run:      evaluation.RunInfo{EvalTime: t3},
-			Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "asset-1"}}},
+			Findings: []remediation.Finding{{ControlID: "CTL.A", AssetID: "asset-1"}},
 		},
 	}
 

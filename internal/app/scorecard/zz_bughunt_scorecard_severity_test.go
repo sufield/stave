@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -15,23 +14,19 @@ func TestBugHunt_Scorecard_PrefersCriticalFindings(t *testing.T) {
 	// 2. critical severity on asset-2
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				ControlID:       kernel.ControlID("CTL.A.001"),
-				AssetID:         "asset-1",
-				ControlSeverity: policy.SeverityLow,
-				ControlCompliance: policy.ComplianceMapping{
-					"hipaa": "164.312",
-				},
+			ControlID:       kernel.ControlID("CTL.A.001"),
+			AssetID:         "asset-1",
+			ControlSeverity: policy.SeverityLow,
+			ControlCompliance: policy.ComplianceMapping{
+				"hipaa": "164.312",
 			},
 		},
 		{
-			Finding: evaluation.Finding{
-				ControlID:       kernel.ControlID("CTL.A.001"),
-				AssetID:         "asset-2",
-				ControlSeverity: policy.SeverityCritical,
-				ControlCompliance: policy.ComplianceMapping{
-					"hipaa": "164.312",
-				},
+			ControlID:       kernel.ControlID("CTL.A.001"),
+			AssetID:         "asset-2",
+			ControlSeverity: policy.SeverityCritical,
+			ControlCompliance: policy.ComplianceMapping{
+				"hipaa": "164.312",
 			},
 		},
 	}
@@ -54,23 +49,19 @@ func TestBugHunt_Scorecard_PrefersCriticalFindings(t *testing.T) {
 func TestBugHunt_Scorecard_HeadlinePrefersHighestSeverity(t *testing.T) {
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				ControlID:       kernel.ControlID("CTL.LOW.001"),
-				AssetID:         "asset-1",
-				ControlSeverity: policy.SeverityLow,
-				ControlCompliance: policy.ComplianceMapping{
-					"hipaa": "164.312",
-				},
+			ControlID:       kernel.ControlID("CTL.LOW.001"),
+			AssetID:         "asset-1",
+			ControlSeverity: policy.SeverityLow,
+			ControlCompliance: policy.ComplianceMapping{
+				"hipaa": "164.312",
 			},
 		},
 		{
-			Finding: evaluation.Finding{
-				ControlID:       kernel.ControlID("CTL.HIGH.001"),
-				AssetID:         "asset-2",
-				ControlSeverity: policy.SeverityHigh,
-				ControlCompliance: policy.ComplianceMapping{
-					"hipaa": "164.312",
-				},
+			ControlID:       kernel.ControlID("CTL.HIGH.001"),
+			AssetID:         "asset-2",
+			ControlSeverity: policy.SeverityHigh,
+			ControlCompliance: policy.ComplianceMapping{
+				"hipaa": "164.312",
 			},
 		},
 	}

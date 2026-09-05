@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
@@ -13,7 +12,7 @@ func TestBugHunt_Score_MaxRiskExposureFallback(t *testing.T) {
 	// ControlSeverity.NormalizedWeight() for High is 3.0.
 	// SeverityCritical.NormalizedWeight() is 4.0.
 	findings := []remediation.Finding{
-		{Finding: evaluation.Finding{ControlSeverity: policy.SeverityHigh}},
+		{ControlSeverity: policy.SeverityHigh},
 	}
 
 	r := Compute(Input{

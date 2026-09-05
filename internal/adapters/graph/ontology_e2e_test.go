@@ -37,8 +37,7 @@ func runGraphExport(t *testing.T, bin, repoRoot, assessmentPath string) map[stri
 	cmd.Dir = repoRoot
 	stdout, err := cmd.Output()
 	if err != nil {
-		var ee *exec.ExitError
-		if errors.As(err, &ee) {
+		if ee, ok := errors.AsType[*exec.ExitError](err); ok {
 			t.Fatalf("graph export failed (exit %d):\n%s", ee.ExitCode(), ee.Stderr)
 		}
 		t.Fatalf("graph export failed: %v", err)
@@ -483,8 +482,7 @@ func TestExperiment03_STIXExport(t *testing.T) {
 	cmd.Dir = repoRoot
 	stdout, err := cmd.Output()
 	if err != nil {
-		var ee *exec.ExitError
-		if errors.As(err, &ee) {
+		if ee, ok := errors.AsType[*exec.ExitError](err); ok {
 			t.Fatalf("stix export failed (exit %d):\n%s", ee.ExitCode(), ee.Stderr)
 		}
 		t.Fatalf("stix export failed: %v", err)

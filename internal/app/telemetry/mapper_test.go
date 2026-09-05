@@ -27,13 +27,11 @@ func makeAssessment(findings []remediation.Finding) *report.Assessment {
 func TestMapper_ViolationFinding(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				ControlID:       "CTL.S3.PUBLIC.001",
-				ControlName:     "Public Bucket Access",
-				ControlSeverity: policy.SeverityCritical,
-				AssetID:         asset.ID("arn:aws:s3:::prod-phi"),
-				AssetType:       "aws_s3_bucket",
-			},
+			ControlID:       "CTL.S3.PUBLIC.001",
+			ControlName:     "Public Bucket Access",
+			ControlSeverity: policy.SeverityCritical,
+			AssetID:         asset.ID("arn:aws:s3:::prod-phi"),
+			AssetType:       "aws_s3_bucket",
 		},
 	})
 
@@ -69,9 +67,9 @@ func TestMapper_EmptyFindings(t *testing.T) {
 
 func TestMapper_SeverityFilter(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.A", ControlSeverity: policy.SeverityCritical, AssetID: "a"}},
-		{Finding: evaluation.Finding{ControlID: "CTL.B", ControlSeverity: policy.SeverityHigh, AssetID: "b"}},
-		{Finding: evaluation.Finding{ControlID: "CTL.C", ControlSeverity: policy.SeverityMedium, AssetID: "c"}},
+		{ControlID: "CTL.A", ControlSeverity: policy.SeverityCritical, AssetID: "a"},
+		{ControlID: "CTL.B", ControlSeverity: policy.SeverityHigh, AssetID: "b"},
+		{ControlID: "CTL.C", ControlSeverity: policy.SeverityMedium, AssetID: "c"},
 	})
 
 	filter := Filter{Severities: map[string]struct{}{"critical": {}}}
@@ -86,8 +84,8 @@ func TestMapper_SeverityFilter(t *testing.T) {
 
 func TestMapper_ResourceFilter(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "arn:aws:s3:::bucket-a"}},
-		{Finding: evaluation.Finding{ControlID: "CTL.B", AssetID: "arn:aws:s3:::bucket-b"}},
+		{ControlID: "CTL.A", AssetID: "arn:aws:s3:::bucket-a"},
+		{ControlID: "CTL.B", AssetID: "arn:aws:s3:::bucket-b"},
 	})
 
 	filter := Filter{ResourceARN: "arn:aws:s3:::bucket-a"}
@@ -102,7 +100,7 @@ func TestMapper_ResourceFilter(t *testing.T) {
 
 func TestMapper_ControlFingerprint(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "a"}},
+		{ControlID: "CTL.A", AssetID: "a"},
 	})
 	fps := ControlFingerprints{"CTL.A": "sha256:per-control-hash"}
 	events := MapAssessment(a, Filter{}, fps)
@@ -116,7 +114,7 @@ func TestMapper_ControlFingerprint(t *testing.T) {
 
 func TestMapper_EnvironmentalScore(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "a"}},
+		{ControlID: "CTL.A", AssetID: "a"},
 	})
 	events := MapAssessment(a, Filter{}, nil)
 	if len(events) != 1 {
@@ -130,7 +128,7 @@ func TestMapper_EnvironmentalScore(t *testing.T) {
 
 func TestMapper_WithWindows(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "bucket-a"}},
+		{ControlID: "CTL.A", AssetID: "bucket-a"},
 	})
 	tracker := NewWindowTracker()
 	events := MapAssessmentWithWindows(a, Filter{}, nil, tracker)

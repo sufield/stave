@@ -4,25 +4,20 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
 func TestExport_DistinctAssetTypesProduceUniqueUIDs(t *testing.T) {
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				ControlID: "CTL.S3.001",
-				AssetID:   asset.ID("arn:aws:s3:::my-resource"),
-				AssetType: "aws_s3_bucket",
-			},
+			ControlID: "CTL.S3.001",
+			AssetID:   asset.ID("arn:aws:s3:::my-resource"),
+			AssetType: "aws_s3_bucket",
 		},
 		{
-			Finding: evaluation.Finding{
-				ControlID: "CTL.S3.001",
-				AssetID:   asset.ID("arn:aws:s3:::my-resource"),
-				AssetType: "aws_s3_access_point",
-			},
+			ControlID: "CTL.S3.001",
+			AssetID:   asset.ID("arn:aws:s3:::my-resource"),
+			AssetType: "aws_s3_access_point",
 		},
 	}
 

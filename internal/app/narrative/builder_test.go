@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -43,12 +42,10 @@ func TestBuildSteps_CautionOnUnsafe(t *testing.T) {
 
 func TestBuildPlaybook_NoChainContext(t *testing.T) {
 	f := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       "CTL.TEST.001",
-			ControlName:     "Test Control",
-			AssetID:         "res-1",
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       "CTL.TEST.001",
+		ControlName:     "Test Control",
+		AssetID:         "res-1",
+		ControlSeverity: policy.SeverityHigh,
 		RemediationSpec: policy.RemediationSpec{
 			Action: "Fix it",
 		},
@@ -61,13 +58,11 @@ func TestBuildPlaybook_NoChainContext(t *testing.T) {
 
 func TestBuildPlaybook_WhyOmitsReachabilityWhenAbsent(t *testing.T) {
 	f := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:          "CTL.TEST.001",
-			ControlName:        "Test",
-			ControlDescription: "Test description",
-			AssetID:            "res-1",
-		},
-		RemediationSpec: policy.RemediationSpec{Action: "fix"},
+		ControlID:          "CTL.TEST.001",
+		ControlName:        "Test",
+		ControlDescription: "Test description",
+		AssetID:            "res-1",
+		RemediationSpec:    policy.RemediationSpec{Action: "fix"},
 	}
 	pb := BuildPlaybook(&Input{Finding: f})
 	if pb.Narrative.WhyThisMatters == "" {

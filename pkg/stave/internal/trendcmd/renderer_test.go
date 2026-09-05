@@ -33,8 +33,7 @@ func TestRenderTrend_UnknownFormatErrors(t *testing.T) {
 	}
 	// The main trend command never wrapped its format error, so it must NOT
 	// be an InputError (which the facade would map to exit 2).
-	var ie *cmderr.InputError
-	if errors.As(err, &ie) {
+	if _, ok := errors.AsType[*cmderr.InputError](err); ok {
 		t.Error("renderTrend format error must be plain (exit 4), not InputError")
 	}
 }
@@ -54,8 +53,7 @@ func TestRenderForecast_KnownFormats(t *testing.T) {
 
 func TestRenderForecast_UnknownFormatIsInputError(t *testing.T) {
 	err := renderForecast("xml", &bytes.Buffer{}, &forecast.Result{})
-	var ie *cmderr.InputError
-	if !errors.As(err, &ie) {
+	if _, ok := errors.AsType[*cmderr.InputError](err); !ok {
 		t.Fatalf("expected *cmderr.InputError, got %T", err)
 	}
 }
@@ -75,8 +73,7 @@ func TestRenderOscillation_KnownFormats(t *testing.T) {
 
 func TestRenderOscillation_UnknownFormatIsInputError(t *testing.T) {
 	err := renderOscillation("xml", &bytes.Buffer{}, nil)
-	var ie *cmderr.InputError
-	if !errors.As(err, &ie) {
+	if _, ok := errors.AsType[*cmderr.InputError](err); !ok {
 		t.Fatalf("expected *cmderr.InputError, got %T", err)
 	}
 }
@@ -96,8 +93,7 @@ func TestRenderPredict_KnownFormats(t *testing.T) {
 
 func TestRenderPredict_UnknownFormatIsInputError(t *testing.T) {
 	err := renderPredict("xml", &bytes.Buffer{}, &trendpredict.Prediction{})
-	var ie *cmderr.InputError
-	if !errors.As(err, &ie) {
+	if _, ok := errors.AsType[*cmderr.InputError](err); !ok {
 		t.Fatalf("expected *cmderr.InputError, got %T", err)
 	}
 }

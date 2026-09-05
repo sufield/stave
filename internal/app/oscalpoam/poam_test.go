@@ -51,10 +51,8 @@ func TestGenerate_FindingMapsToItem(t *testing.T) {
 func TestGenerate_DeterministicUUID(t *testing.T) {
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				ControlID: "CTL.A.001",
-				AssetID:   "asset1",
-			},
+			ControlID: "CTL.A.001",
+			AssetID:   "asset1",
 		},
 	}
 

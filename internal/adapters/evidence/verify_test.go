@@ -85,7 +85,7 @@ func buildTestBundle(t *testing.T, privateKeyPEM []byte) []byte {
 		},
 		Status: "NON_COMPLIANT",
 		Findings: []remediation.Finding{
-			{Finding: evaluation.Finding{AssetID: "arn:aws:s3:::test-bucket"}},
+			{AssetID: "arn:aws:s3:::test-bucket"},
 		},
 	}
 

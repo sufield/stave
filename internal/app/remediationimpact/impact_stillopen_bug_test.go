@@ -13,17 +13,17 @@ import (
 func TestAnalyze_StillOpenDeterministicAndDeduplicated(t *testing.T) {
 	before := &report.Assessment{
 		Findings: []remediation.Finding{
-			{Finding: evaluation.Finding{ControlID: "CTL.B", AssetID: asset.ID("ast-1")}},
-			{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: asset.ID("ast-2")}},
+			{ControlID: "CTL.B", AssetID: asset.ID("ast-1")},
+			{ControlID: "CTL.A", AssetID: asset.ID("ast-2")},
 		},
 		Summary: evaluation.ComplianceSummary{TotalAssets: 2, Violations: 2},
 	}
 
 	after := &report.Assessment{
 		Findings: []remediation.Finding{
-			{Finding: evaluation.Finding{ControlID: "CTL.B", AssetID: asset.ID("ast-1")}},
-			{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: asset.ID("ast-2")}},
-			{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: asset.ID("ast-3")}}, // duplicate CTL.A in after
+			{ControlID: "CTL.B", AssetID: asset.ID("ast-1")},
+			{ControlID: "CTL.A", AssetID: asset.ID("ast-2")},
+			{ControlID: "CTL.A", AssetID: asset.ID("ast-3")}, // duplicate CTL.A in after
 		},
 		Summary: evaluation.ComplianceSummary{TotalAssets: 3, Violations: 3},
 	}

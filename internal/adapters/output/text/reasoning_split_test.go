@@ -14,13 +14,13 @@ import (
 // "Scope:" and the unsafe-match clauses under "Reasoning:" — the
 // audit's sub-bug 2 fix.
 func TestWriteFindingReasoning_SplitSections(t *testing.T) {
-	f := remediation.Finding{}
-	f.ReasoningTrace = []evaluation.MatchedClause{
-		{ObservationKey: "storage.kind", Operator: "eq", ExpectedValue: "bucket", ObservedValue: "bucket"},
-		{ObservationKey: "storage.access.public_read", Operator: "eq", ExpectedValue: true, ObservedValue: true},
-		{ObservationKey: "protected_prefix", Operator: "eq", ExpectedValue: "backups/", ObservedValue: "backups/"},
-		{ObservationKey: "storage.controls.public_access_block.block_public_acls", Operator: "eq", ExpectedValue: false, ObservedValue: false},
-	}
+	f := remediation.Finding{
+		ReasoningTrace: []evaluation.MatchedClause{
+			{ObservationKey: "storage.kind", Operator: "eq", ExpectedValue: "bucket", ObservedValue: "bucket"},
+			{ObservationKey: "storage.access.public_read", Operator: "eq", ExpectedValue: true, ObservedValue: true},
+			{ObservationKey: "protected_prefix", Operator: "eq", ExpectedValue: "backups/", ObservedValue: "backups/"},
+			{ObservationKey: "storage.controls.public_access_block.block_public_acls", Operator: "eq", ExpectedValue: false, ObservedValue: false},
+		}}
 
 	var buf bytes.Buffer
 	d := &drawer{w: &buf}
@@ -63,10 +63,10 @@ func TestWriteFindingReasoning_SplitSections(t *testing.T) {
 // TestWriteFindingReasoning_OnlyUnsafeMatch confirms output is silent
 // about the Scope section when no gates fire.
 func TestWriteFindingReasoning_OnlyUnsafeMatch(t *testing.T) {
-	f := remediation.Finding{}
-	f.ReasoningTrace = []evaluation.MatchedClause{
-		{ObservationKey: "storage.access.public_read", Operator: "eq", ExpectedValue: true, ObservedValue: true},
-	}
+	f := remediation.Finding{
+		ReasoningTrace: []evaluation.MatchedClause{
+			{ObservationKey: "storage.access.public_read", Operator: "eq", ExpectedValue: true, ObservedValue: true},
+		}}
 
 	var buf bytes.Buffer
 	d := &drawer{w: &buf}
@@ -84,10 +84,10 @@ func TestWriteFindingReasoning_OnlyUnsafeMatch(t *testing.T) {
 // TestWriteFindingReasoning_OnlyGate confirms output is silent about
 // the Reasoning section when only gates fire (degenerate case).
 func TestWriteFindingReasoning_OnlyGate(t *testing.T) {
-	f := remediation.Finding{}
-	f.ReasoningTrace = []evaluation.MatchedClause{
-		{ObservationKey: "storage.kind", Operator: "eq", ExpectedValue: "bucket", ObservedValue: "bucket"},
-	}
+	f := remediation.Finding{
+		ReasoningTrace: []evaluation.MatchedClause{
+			{ObservationKey: "storage.kind", Operator: "eq", ExpectedValue: "bucket", ObservedValue: "bucket"},
+		}}
 
 	var buf bytes.Buffer
 	d := &drawer{w: &buf}

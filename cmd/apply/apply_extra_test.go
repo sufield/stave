@@ -89,8 +89,7 @@ func TestDecorateError_NoControls(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected non-nil error")
 	}
-	var ue *ui.UserError
-	if !errors.As(err, &ue) {
+	if _, ok := errors.AsType[*ui.UserError](err); !ok {
 		t.Fatalf("expected UserError, got %T", err)
 	}
 }
@@ -100,8 +99,7 @@ func TestDecorateError_NoSnapshots(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected non-nil error")
 	}
-	var ue *ui.UserError
-	if !errors.As(err, &ue) {
+	if _, ok := errors.AsType[*ui.UserError](err); !ok {
 		t.Fatalf("expected UserError, got %T", err)
 	}
 }

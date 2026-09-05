@@ -14,11 +14,9 @@ import (
 
 func finding(ctl string, ast string) remediation.Finding {
 	return remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID(ctl),
-			AssetID:         asset.ID(ast),
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       kernel.ControlID(ctl),
+		AssetID:         asset.ID(ast),
+		ControlSeverity: policy.SeverityHigh,
 	}
 }
 

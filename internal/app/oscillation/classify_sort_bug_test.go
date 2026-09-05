@@ -20,9 +20,9 @@ func TestClassify_UnsortedInputSortsChronologically(t *testing.T) {
 
 	// Chronological sequence: Fail (t0) -> Pass (t1) -> Fail (t2) -> Pass (t3)
 	// That is 3 transitions (fail->pass, pass->fail, fail->pass), i.e. 3 cycles.
-	a0 := report.Assessment{Run: evaluation.RunInfo{EvalTime: t0}, Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.S3.001", AssetID: asset.ID("ast-1")}}}}
+	a0 := report.Assessment{Run: evaluation.RunInfo{EvalTime: t0}, Findings: []remediation.Finding{{ControlID: "CTL.S3.001", AssetID: asset.ID("ast-1")}}}
 	a1 := report.Assessment{Run: evaluation.RunInfo{EvalTime: t1}, Findings: nil}
-	a2 := report.Assessment{Run: evaluation.RunInfo{EvalTime: t2}, Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.S3.001", AssetID: asset.ID("ast-1")}}}}
+	a2 := report.Assessment{Run: evaluation.RunInfo{EvalTime: t2}, Findings: []remediation.Finding{{ControlID: "CTL.S3.001", AssetID: asset.ID("ast-1")}}}
 	a3 := report.Assessment{Run: evaluation.RunInfo{EvalTime: t3}, Findings: nil}
 
 	// Pass in reversed / unsorted order: a3, a0, a2, a1

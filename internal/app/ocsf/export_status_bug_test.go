@@ -5,18 +5,15 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestExport_OCSFStatusIDMatchesNewStatus(t *testing.T) {
 	finding := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID("CTL.S3.001"),
-			AssetID:         asset.ID("my-bucket"),
-			ControlSeverity: policy.SeverityHigh,
-		},
+		ControlID:       kernel.ControlID("CTL.S3.001"),
+		AssetID:         asset.ID("my-bucket"),
+		ControlSeverity: policy.SeverityHigh,
 	}
 
 	events := Export([]remediation.Finding{finding})

@@ -5,7 +5,6 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -13,12 +12,10 @@ import (
 func TestExport_ConfidenceFilter(t *testing.T) {
 	findings := []remediation.Finding{
 		{
-			Finding: evaluation.Finding{
-				ControlID:       kernel.ControlID("CTL.S3.PUBLIC.001"),
-				AssetID:         asset.ID("arn:aws:s3:::prod-bucket"),
-				AssetType:       "s3_bucket",
-				ControlSeverity: policy.SeverityCritical,
-			},
+			ControlID:       kernel.ControlID("CTL.S3.PUBLIC.001"),
+			AssetID:         asset.ID("arn:aws:s3:::prod-bucket"),
+			AssetType:       "s3_bucket",
+			ControlSeverity: policy.SeverityCritical,
 			RemediationSpec: policy.RemediationSpec{
 				Confidence: 1.0,
 				Changes: []policy.PropertyChange{
@@ -27,12 +24,10 @@ func TestExport_ConfidenceFilter(t *testing.T) {
 			},
 		},
 		{
-			Finding: evaluation.Finding{
-				ControlID:       kernel.ControlID("CTL.S3.ENCRYPT.001"),
-				AssetID:         asset.ID("arn:aws:s3:::log-bucket"),
-				AssetType:       "s3_bucket",
-				ControlSeverity: policy.SeverityHigh,
-			},
+			ControlID:       kernel.ControlID("CTL.S3.ENCRYPT.001"),
+			AssetID:         asset.ID("arn:aws:s3:::log-bucket"),
+			AssetType:       "s3_bucket",
+			ControlSeverity: policy.SeverityHigh,
 			RemediationSpec: policy.RemediationSpec{
 				Confidence: 0.5,
 				Changes: []policy.PropertyChange{

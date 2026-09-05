@@ -21,16 +21,14 @@ import (
 // fields.
 func fixtureFinding(severity policy.Severity, controlID, assetID, assetType string, vendor kernel.Vendor) remediation.Finding {
 	return remediation.Finding{
-		Finding: evaluation.Finding{
-			FindingID:       kernel.FindingID("finding-" + assetID),
-			ControlID:       kernel.ControlID(controlID),
-			ControlName:     "Test Control",
-			ControlSeverity: severity,
-			AssetID:         asset.ID(assetID),
-			AssetType:       kernel.AssetType(assetType),
-			AssetVendor:     vendor,
-			Evidence:        evaluation.Evidence{TemporalRisk: "exposed"},
-		},
+		FindingID:       kernel.FindingID("finding-" + assetID),
+		ControlID:       kernel.ControlID(controlID),
+		ControlName:     "Test Control",
+		ControlSeverity: severity,
+		AssetID:         asset.ID(assetID),
+		AssetType:       kernel.AssetType(assetType),
+		AssetVendor:     vendor,
+		Evidence:        evaluation.Evidence{TemporalRisk: "exposed"},
 	}
 }
 

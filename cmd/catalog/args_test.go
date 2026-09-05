@@ -22,8 +22,7 @@ func TestArgs_SurplusPositionalIsUserError(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected an error for two positional args")
 	}
-	var userErr *ui.UserError
-	if !errors.As(err, &userErr) {
+	if _, ok := errors.AsType[*ui.UserError](err); !ok {
 		t.Errorf("surplus-arg error must be *ui.UserError (-> exit 2), got %T: %v", err, err)
 	}
 }

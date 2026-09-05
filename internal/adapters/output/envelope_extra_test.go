@@ -47,7 +47,7 @@ func TestBuildAssessmentFromEnriched_WithFindings(t *testing.T) {
 			SecurityState: evaluation.StateNonCompliant,
 		},
 		Findings: []appcontracts.EnrichedFinding{
-			{Finding: evaluation.Finding{ControlID: "CTL.A.001", AssetID: "bucket-1"}},
+			{ControlID: "CTL.A.001", AssetID: "bucket-1"},
 		},
 	}
 	env := output.BuildAssessmentFromEnriched(&enriched)

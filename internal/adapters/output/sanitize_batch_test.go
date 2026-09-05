@@ -27,21 +27,19 @@ func TestSanitizeFindings_Redaction(t *testing.T) {
 	grantees := []kernel.GranteeID{"http://acs.amazonaws.com/groups/global/AllUsers"}
 
 	findings := []remediation.Finding{{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.S3.PUBLIC.001",
-			AssetID:   "my-phi-bucket",
-			AssetType: kernel.AssetType("storage_bucket"),
-			Source:    src,
-			Evidence: evaluation.Evidence{
-				Misconfigurations: []policy.Misconfiguration{
-					{Property: predicate.NewFieldPath("properties.storage.access.public_read"), ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
-				},
-				SourceEvidence: &evaluation.SourceEvidence{
-					IdentityStatements: stmts,
-					ResourceGrantees:   grantees,
-				},
-				TemporalRisk: "Unsafe for 24h, threshold is 0h",
+		ControlID: "CTL.S3.PUBLIC.001",
+		AssetID:   "my-phi-bucket",
+		AssetType: kernel.AssetType("storage_bucket"),
+		Source:    src,
+		Evidence: evaluation.Evidence{
+			Misconfigurations: []policy.Misconfiguration{
+				{Property: predicate.NewFieldPath("properties.storage.access.public_read"), ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
 			},
+			SourceEvidence: &evaluation.SourceEvidence{
+				IdentityStatements: stmts,
+				ResourceGrantees:   grantees,
+			},
+			TemporalRisk: "Unsafe for 24h, threshold is 0h",
 		},
 	}}
 
@@ -147,19 +145,17 @@ func TestRedactedFindingJSON_NoSensitivePatterns(t *testing.T) {
 	r := sanitize.New(sanitize.WithIDSanitization(true))
 	src := &asset.SourceRef{File: "/home/user/ctl/public.yaml", Line: 10}
 	f := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.S3.PUBLIC.001",
-			AssetID:   "my-phi-bucket",
-			AssetType: kernel.AssetType("storage_bucket"),
-			Source:    src,
-			Evidence: evaluation.Evidence{
-				Misconfigurations: []policy.Misconfiguration{
-					{Property: predicate.NewFieldPath("properties.public_read"), ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
-				},
-				SourceEvidence: &evaluation.SourceEvidence{
-					IdentityStatements: []kernel.StatementID{"AllowPublicRead"},
-					ResourceGrantees:   []kernel.GranteeID{"http://acs.amazonaws.com/groups/global/AllUsers"},
-				},
+		ControlID: "CTL.S3.PUBLIC.001",
+		AssetID:   "my-phi-bucket",
+		AssetType: kernel.AssetType("storage_bucket"),
+		Source:    src,
+		Evidence: evaluation.Evidence{
+			Misconfigurations: []policy.Misconfiguration{
+				{Property: predicate.NewFieldPath("properties.public_read"), ActualValue: true, Operator: predicate.OpEq, UnsafeValue: true},
+			},
+			SourceEvidence: &evaluation.SourceEvidence{
+				IdentityStatements: []kernel.StatementID{"AllowPublicRead"},
+				ResourceGrantees:   []kernel.GranteeID{"http://acs.amazonaws.com/groups/global/AllUsers"},
 			},
 		},
 	}

@@ -293,8 +293,8 @@ func (s *Sanitizer) Snapshot(snap asset.Snapshot) asset.Snapshot {
 		// and downstream filters keyed on Source produced empty
 		// results.
 		Source: snap.Source,
-	}
-	out.Assets = make([]asset.Asset, len(snap.Assets))
+
+		Assets: make([]asset.Asset, len(snap.Assets))}
 	for i, a := range snap.Assets {
 		out.Assets[i] = s.scrubAsset(a)
 	}

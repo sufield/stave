@@ -85,39 +85,37 @@ func TestFromFinding_AllFields(t *testing.T) {
 	t.Parallel()
 	now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
 	f := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:          "CTL.S3.PUBLIC.001",
-			ControlName:        "No Public S3 Bucket Read",
-			ControlDescription: "Buckets must not allow public read access.",
-			AssetID:            "res:aws:s3:bucket:test-bucket",
-			AssetType:          kernel.AssetType("aws:s3:bucket"),
-			AssetVendor:        kernel.Vendor("aws"),
-			Source:             &asset.SourceRef{File: "/tmp/main.tf", Line: 42},
-			Evidence: evaluation.Evidence{
-				FirstUnsafeAt:       now.Add(-48 * time.Hour),
-				LastSeenUnsafeAt:    now.Add(-1 * time.Hour),
-				UnsafeDurationHours: 47,
-				ThresholdHours:      24,
-				TemporalRisk:        "Threshold exceeded",
-				Misconfigurations: []policy.Misconfiguration{
-					{Property: predicate.NewFieldPath("storage.access.public_read"), ActualValue: true, Operator: "eq", UnsafeValue: true},
-				},
-				RootCauses: []evaluation.RootCause{evaluation.RootCauseIdentity},
-				SourceEvidence: &evaluation.SourceEvidence{
-					IdentityStatements: []kernel.StatementID{"arn:aws:iam::123456789012:user/admin"},
-					ResourceGrantees:   []kernel.GranteeID{"AllUsers"},
-				},
+		ControlID:          "CTL.S3.PUBLIC.001",
+		ControlName:        "No Public S3 Bucket Read",
+		ControlDescription: "Buckets must not allow public read access.",
+		AssetID:            "res:aws:s3:bucket:test-bucket",
+		AssetType:          kernel.AssetType("aws:s3:bucket"),
+		AssetVendor:        kernel.Vendor("aws"),
+		Source:             &asset.SourceRef{File: "/tmp/main.tf", Line: 42},
+		Evidence: evaluation.Evidence{
+			FirstUnsafeAt:       now.Add(-48 * time.Hour),
+			LastSeenUnsafeAt:    now.Add(-1 * time.Hour),
+			UnsafeDurationHours: 47,
+			ThresholdHours:      24,
+			TemporalRisk:        "Threshold exceeded",
+			Misconfigurations: []policy.Misconfiguration{
+				{Property: predicate.NewFieldPath("storage.access.public_read"), ActualValue: true, Operator: "eq", UnsafeValue: true},
 			},
-			ControlSeverity:   policy.SeverityCritical,
-			ControlCompliance: policy.ComplianceMapping{"cis_aws": "2.1.5"},
-			Exposure: &policy.Exposure{
-				Type:           exposure.Type("public_read"),
-				PrincipalScope: kernel.ScopePublic,
+			RootCauses: []evaluation.RootCause{evaluation.RootCauseIdentity},
+			SourceEvidence: &evaluation.SourceEvidence{
+				IdentityStatements: []kernel.StatementID{"arn:aws:iam::123456789012:user/admin"},
+				ResourceGrantees:   []kernel.GranteeID{"AllUsers"},
 			},
-			PostureDrift: &evaluation.PostureDrift{
-				Pattern:             evaluation.DriftIntermittent,
-				ExposureWindowCount: 3,
-			},
+		},
+		ControlSeverity:   policy.SeverityCritical,
+		ControlCompliance: policy.ComplianceMapping{"cis_aws": "2.1.5"},
+		Exposure: &policy.Exposure{
+			Type:           exposure.Type("public_read"),
+			PrincipalScope: kernel.ScopePublic,
+		},
+		PostureDrift: &evaluation.PostureDrift{
+			Pattern:             evaluation.DriftIntermittent,
+			ExposureWindowCount: 3,
 		},
 		RemediationSpec: policy.RemediationSpec{
 			Description: "Disable public read access",
@@ -202,10 +200,8 @@ func TestFromFinding_AllFields(t *testing.T) {
 func TestFromFinding_MinimalFields(t *testing.T) {
 	t.Parallel()
 	f := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.TEST.001",
-			AssetID:   "res-1",
-		},
+		ControlID: "CTL.TEST.001",
+		AssetID:   "res-1",
 	}
 	dto := FromFinding(&f)
 

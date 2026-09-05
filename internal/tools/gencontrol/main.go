@@ -32,6 +32,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 	"time"
@@ -355,8 +356,8 @@ func buildNestedProps(fieldPath string, value any) map[string]any {
 	parts := strings.Split(path, ".")
 
 	result := value
-	for i := len(parts) - 1; i >= 0; i-- {
-		result = map[string]any{parts[i]: result}
+	for _, part := range slices.Backward(parts) {
+		result = map[string]any{part: result}
 	}
 	if m, ok := result.(map[string]any); ok {
 		return m

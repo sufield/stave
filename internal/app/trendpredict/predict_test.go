@@ -16,11 +16,9 @@ var now = time.Date(2026, 4, 15, 0, 0, 0, 0, time.UTC)
 
 func finding(ctl string, sev policy.Severity) remediation.Finding {
 	return remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID(ctl),
-			AssetID:         asset.ID("asset1"),
-			ControlSeverity: sev,
-		},
+		ControlID:       kernel.ControlID(ctl),
+		AssetID:         asset.ID("asset1"),
+		ControlSeverity: sev,
 	}
 }
 

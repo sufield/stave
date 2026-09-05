@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
-	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -14,11 +13,9 @@ func TestBuildRemediationPlan_S3Public(t *testing.T) {
 	t.Parallel()
 	planner := remediation.NewPlanner()
 	finding := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID: kernel.ControlID("CTL.S3.PUBLIC.001"),
-			AssetID:   asset.ID("bucket-a"),
-			AssetType: kernel.AssetType("storage_bucket"),
-		},
+		ControlID: kernel.ControlID("CTL.S3.PUBLIC.001"),
+		AssetID:   asset.ID("bucket-a"),
+		AssetType: kernel.AssetType("storage_bucket"),
 	}
 
 	plan := planner.PlanFor(&finding)
@@ -53,11 +50,9 @@ func TestBuildRemediationPlan_UnknownClass(t *testing.T) {
 	t.Parallel()
 	planner := remediation.NewPlanner()
 	finding := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID: kernel.ControlID("CTL.CUSTOM.001"),
-			AssetID:   asset.ID("res-1"),
-			AssetType: kernel.AssetType("storage_bucket"),
-		},
+		ControlID: kernel.ControlID("CTL.CUSTOM.001"),
+		AssetID:   asset.ID("res-1"),
+		AssetType: kernel.AssetType("storage_bucket"),
 	}
 
 	plan := planner.PlanFor(&finding)
