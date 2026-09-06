@@ -63,12 +63,12 @@ type FrameworkCoverage struct {
 
 // Report is the full coverage analysis output.
 type Report struct {
-	Snapshot          string                                         `json:"snapshot"`
-	GeneratedAt       string                                         `json:"generated_at"`
-	Summary           Summary                                        `json:"summary"`
-	SilentRisk        []ControlResult                                `json:"silent_risk"`
-	IncompleteResults []ControlResult                                `json:"incomplete"`
-	ShoppingList      map[kernel.AssetType][]ShoppingItem            `json:"extractor_shopping_list"`
+	Snapshot          string                                            `json:"snapshot"`
+	GeneratedAt       string                                            `json:"generated_at"`
+	Summary           Summary                                           `json:"summary"`
+	SilentRisk        []ControlResult                                   `json:"silent_risk"`
+	IncompleteResults []ControlResult                                   `json:"incomplete"`
+	ShoppingList      map[kernel.AssetType][]ShoppingItem               `json:"extractor_shopping_list"`
 	FrameworkCoverage map[policy.ComplianceFramework]*FrameworkCoverage `json:"framework_coverage"`
 }
 
