@@ -44,11 +44,11 @@ const (
 
 // Efficiency holds the predicted-vs-realized comparison.
 type Efficiency struct {
-	PredictedDelta float64           `json:"predicted_delta"`
-	RealizedDelta  float64           `json:"realized_delta"`
-	Ratio          float64           `json:"efficiency_ratio"`
-	Verdict        EfficiencyVerdict `json:"verdict"`
-	StillOpen      []string          `json:"still_open,omitempty"`
+	PredictedDelta float64            `json:"predicted_delta"`
+	RealizedDelta  float64            `json:"realized_delta"`
+	Ratio          float64            `json:"efficiency_ratio"`
+	Verdict        EfficiencyVerdict  `json:"verdict"`
+	StillOpen      []kernel.ControlID `json:"still_open,omitempty"`
 }
 
 // Report holds the remediation impact analysis.
@@ -67,8 +67,8 @@ type Report struct {
 type Input struct {
 	Before          *report.Assessment
 	After           *report.Assessment
-	PredictedDelta  float64  // from stave simulate, 0 if not provided
-	PredictedClosed []string // control IDs predicted to close
+	PredictedDelta  float64            // from stave simulate, 0 if not provided
+	PredictedClosed []kernel.ControlID // control IDs predicted to close
 }
 
 // Analyze compares before and after assessments. Before and After must
@@ -171,17 +171,18 @@ func Analyze(in Input) (*Report, error) {
 func computeEfficiency(in Input, realized float64, afterKeys map[findingKey]*remediation.Finding) *Efficiency {
 	ratio, verdict := classifyEfficiency(in.PredictedDelta, realized)
 
-	var stillOpen []string
+	var stillOpen []kernel.ControlID
 	for _, ctlID := range in.PredictedClosed {
-		target := kernel.ControlID(ctlID)
 		for ak := range afterKeys {
-			if ak.ControlID == target {
+			if ak.ControlID == ctlID {
 				stillOpen = append(stillOpen, ctlID)
 				break
 			}
 		}
 	}
-	slices.Sort(stillOpen)
+	slices.SortFunc(stillOpen, func(a, b kernel.ControlID) int {
+		return cmp.Compare(string(a), string(b))
+	})
 	stillOpen = slices.Compact(stillOpen)
 
 	return &Efficiency{

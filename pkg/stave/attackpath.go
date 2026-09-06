@@ -70,7 +70,7 @@ func BuildAttackPath(assessmentData []byte, chainsDir, assessmentPath, format st
 			cids = append(cids, kernel.ControlID(c))
 		}
 		findings = append(findings, attackpath.ActiveFinding{
-			ChainID:         cf.Chain,
+			ChainID:         kernel.ChainID(cf.Chain),
 			ControlsFailing: cids,
 		})
 	}

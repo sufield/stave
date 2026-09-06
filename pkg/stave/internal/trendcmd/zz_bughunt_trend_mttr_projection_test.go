@@ -46,8 +46,8 @@ func TestBugHunt_BuildMTTRHistory_Alignment(t *testing.T) {
 	// Under the buggy code: it only appends resolved durations directly, resulting in
 	// a slice of length 2 (representing the 2 resolved findings), which causes
 	// a dimensional mismatch in linear regression forecasting.
-	if len(mttrHistory["critical"]) != len(assessments) {
+	if len(mttrHistory[policy.SeverityCritical]) != len(assessments) {
 		t.Fatalf("expected critical MTTR history length to be %d (one per assessment point), but got %d",
-			len(assessments), len(mttrHistory["critical"]))
+			len(assessments), len(mttrHistory[policy.SeverityCritical]))
 	}
 }

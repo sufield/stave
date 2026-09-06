@@ -35,18 +35,17 @@ Please report security vulnerabilities through [GitHub Security Advisories](http
 
 Stave is designed with a minimal attack surface:
 
-- **No network access in the evaluation engine** — The evaluation core (`internal/core/`, `internal/app/eval/`, `pkg/stave/`) makes zero network connections and does not import `net/http`, `crypto/tls`, or `os/exec`. This is enforced by `TestNoBannedImportsInRuntime`. All evaluation commands (`apply`, `diagnose`, `enforce`, `validate`) operate entirely on local files.
-- **One opt-in network call** — `stave version --check-update` makes a single HTTPS GET to the GitHub Releases API to check for newer versions. This is the only network call in the binary, it is never triggered automatically, and it requires the user to pass `--check-update` explicitly.
+- **No network access in the binary** — Stave makes zero network connections and does not import `net/http`, `crypto/tls`, or network dialing packages in any runtime or CLI command. This is enforced by test suites. All commands operate entirely on local files.
 - **Subprocess execution** — The CLI uses `os/exec` in three places: `stave bundle` (self re-exec for sealed evaluation), `stave forge` (codegen post-processing), and terminal pager display. The evaluation engine does not spawn subprocesses.
 - **No persistent state** — No databases, caches, or config files are created.
 - **Read-only inputs** — Observation and control files are never modified.
-- **Air-gapped operation** — The evaluation engine is architecturally incapable of networking. Stave is safe to run in air-gapped, network-isolated, and offline-only environments. The `--check-update` flag is the only network-capable code path in the binary and is never invoked unless explicitly requested. Build and release processes (CI, signing, SBOM generation) require network access; see [Offline & Air-Gapped Operation](https://www.systeminvariant.dev/docs/explanation/offline-airgapped) for the full inventory.
+- **Air-gapped operation** — Stave is 100% air-gapped and architecturally incapable of networking. Stave is safe to run in air-gapped, network-isolated, and offline-only environments. Build and release processes (CI, signing, SBOM generation) require network access; see [Offline & Air-Gapped Operation](https://www.systeminvariant.dev/docs/explanation/offline-airgapped) for the full inventory.
 - **`--require-offline` environment guard** — The `--require-offline` flag performs a best-effort runtime self-check that refuses to run if proxy environment variables (`HTTP_PROXY`, `HTTPS_PROXY`, `ALL_PROXY`) are set. This is an operational convenience for environments that want to assert no proxy misconfiguration.
 - **Runtime offline confirmation** — All JSON output includes `"offline": true` in the `run` metadata, and `stave capabilities` includes `"offline": true` at the top level. These confirm the evaluation engine's architectural guarantee.
 
 ### Transitive `net` package usage
 
-The `pflag` library (used by Cobra for flag parsing) transitively imports the `net` package for `net.ParseIP()` and related IP address parsing functions. This is **parsing-only** — no sockets are opened, no connections are made, and no network I/O occurs. The evaluation engine does not import `net/http`, `net/rpc`, `crypto/tls`, or any package that performs network I/O. The `cmd/` layer imports `net/http` solely for the opt-in `--check-update` path.
+The `pflag` library (used by Cobra for flag parsing) transitively imports the `net` package for `net.ParseIP()` and related IP address parsing functions. This is **parsing-only** — no sockets are opened, no connections are made, and no network I/O occurs. Neither the CLI layer nor the evaluation engine imports `net/http`, `net/rpc`, `crypto/tls`, or any package that performs network I/O.
 
 ### Development tools that use os/exec
 

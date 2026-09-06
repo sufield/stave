@@ -27,7 +27,7 @@ func TestBugHunt_Analyze_EfficiencyWithoutDelta(t *testing.T) {
 		Before:          before,
 		After:           after,
 		PredictedDelta:  0.0,
-		PredictedClosed: []string{"CTL.1"},
+		PredictedClosed: []kernel.ControlID{"CTL.1"},
 	}
 
 	report, err := Analyze(input)

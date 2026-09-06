@@ -3,6 +3,8 @@ package forecast
 import (
 	"math"
 	"testing"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func TestLinearFit_Ascending(t *testing.T) {
@@ -56,14 +58,14 @@ func TestCompute_SLAProjection(t *testing.T) {
 	for i := range history {
 		history[i] = 70 + float64(i)*0.1
 	}
-	mttrHistory := map[string][]float64{
-		"critical": {48, 45, 42, 40, 38, 36, 34},
+	mttrHistory := map[policy.Severity][]float64{
+		policy.SeverityCritical: {48, 45, 42, 40, 38, 36, 34},
 	}
 
 	result, err := Compute(Input{
 		ScoreHistory: history,
 		HorizonDays:  30,
-		SLADeadlines: map[string]float64{"critical": 24},
+		SLADeadlines: map[policy.Severity]float64{policy.SeverityCritical: 24},
 		MTTRHistory:  mttrHistory,
 	})
 	if err != nil {

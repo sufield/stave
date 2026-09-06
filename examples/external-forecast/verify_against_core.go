@@ -16,6 +16,7 @@ import (
 	"os"
 
 	"github.com/sufield/stave/internal/app/forecast"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 type inputShape struct {
@@ -40,11 +41,23 @@ func main() {
 		fmt.Fprintf(os.Stderr, "parse input: %v\n", err)
 		os.Exit(1)
 	}
+
+	slaDeadlines := map[policy.Severity]float64{}
+	for k, v := range in.SLADeadlinesHours {
+		sev, _ := policy.ParseSeverity(k)
+		slaDeadlines[sev] = v
+	}
+	mttrHistory := map[policy.Severity][]float64{}
+	for k, v := range in.MTTRHistoryHours {
+		sev, _ := policy.ParseSeverity(k)
+		mttrHistory[sev] = v
+	}
+
 	result, err := forecast.Compute(forecast.Input{
 		ScoreHistory: in.ScoreHistory,
 		HorizonDays:  in.HorizonDays,
-		SLADeadlines: in.SLADeadlinesHours,
-		MTTRHistory:  in.MTTRHistoryHours,
+		SLADeadlines: slaDeadlines,
+		MTTRHistory:  mttrHistory,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "forecast.Compute: %v\n", err)

@@ -27,8 +27,8 @@ func TestBuild_MatchingCapability_ProducesEdge(t *testing.T) {
 		},
 	}
 	findings := []ActiveFinding{
-		{ChainID: "chain_a"},
-		{ChainID: "chain_b"},
+		{ChainID: kernel.ChainID("chain_a")},
+		{ChainID: kernel.ChainID("chain_b")},
 	}
 
 	graph := Build(BuildInput{
@@ -47,7 +47,7 @@ func TestBuild_MatchingCapability_ProducesEdge(t *testing.T) {
 	if edge.ToChain != "chain_b" {
 		t.Errorf("to_chain = %q, want chain_b", edge.ToChain)
 	}
-	if edge.ViaCapability != "iam_credential_theft" {
+	if edge.ViaCapability != CapabilityID("iam_credential_theft") {
 		t.Errorf("via_capability = %q, want iam_credential_theft", edge.ViaCapability)
 	}
 }
@@ -70,8 +70,8 @@ func TestBuild_NoMatch_ZeroEdges(t *testing.T) {
 		},
 	}
 	findings := []ActiveFinding{
-		{ChainID: "chain_a"},
-		{ChainID: "chain_b"},
+		{ChainID: kernel.ChainID("chain_a")},
+		{ChainID: kernel.ChainID("chain_b")},
 	}
 
 	graph := Build(BuildInput{
@@ -104,7 +104,7 @@ func TestBuild_InactiveChain_ExcludedFromEdges(t *testing.T) {
 	}
 	// Only chain_a is active — chain_b is inactive.
 	findings := []ActiveFinding{
-		{ChainID: "chain_a"},
+		{ChainID: kernel.ChainID("chain_a")},
 	}
 
 	graph := Build(BuildInput{
@@ -143,7 +143,7 @@ func TestBuild_UnannotatedChain_NoEdges(t *testing.T) {
 		},
 	}
 	findings := []ActiveFinding{
-		{ChainID: "chain_no_caps"},
+		{ChainID: kernel.ChainID("chain_no_caps")},
 	}
 
 	graph := Build(BuildInput{
@@ -166,23 +166,23 @@ func TestBuild_UnannotatedChain_NoEdges(t *testing.T) {
 func TestWriteDOT_ValidOutput(t *testing.T) {
 	graph := &Graph{
 		Capabilities: []Capability{
-			{ID: "internet_access", Label: "Internet Access"},
-			{ID: "iam_credential_theft", Label: "IAM Credentials"},
+			{ID: CapabilityID("internet_access"), Label: "Internet Access"},
+			{ID: CapabilityID("iam_credential_theft"), Label: "IAM Credentials"},
 		},
 		ChainNodes: []ChainNode{
 			{
 				ChainID:        "chain_a",
 				Severity:       policy.SeverityHigh,
 				Status:         "active",
-				Preconditions:  []string{"internet_access"},
-				Postconditions: []string{"iam_credential_theft"},
+				Preconditions:  []CapabilityID{"internet_access"},
+				Postconditions: []CapabilityID{"iam_credential_theft"},
 			},
 		},
 		Edges: []Edge{
 			{
 				FromChain:     "chain_a",
 				ToChain:       "chain_b",
-				ViaCapability: "iam_credential_theft",
+				ViaCapability: CapabilityID("iam_credential_theft"),
 			},
 		},
 	}

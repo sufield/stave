@@ -10,16 +10,16 @@ import (
 )
 
 // Mode selects the search strategy.
-type Mode int
+type Mode string
 
 const (
 	// ModeBisect uses binary search to find the transition into the current
 	// violation window. O(log N) assessments. Correct only when the history
 	// is monotonic (once violated, stays violated).
-	ModeBisect Mode = iota
+	ModeBisect Mode = "BISECT"
 	// ModeScan uses linear scan to find ALL violation windows. O(N)
 	// assessments. Correct for non-monotonic histories.
-	ModeScan
+	ModeScan Mode = "SCAN"
 )
 
 // ViolationWindow represents a contiguous period where an invariant was violated.

@@ -27,8 +27,8 @@ func TestBugHunt_Build_DeterministicEdgeSorting(t *testing.T) {
 	}
 
 	findings := []ActiveFinding{
-		{ChainID: "A"},
-		{ChainID: "B"},
+		{ChainID: kernel.ChainID("A")},
+		{ChainID: kernel.ChainID("B")},
 	}
 
 	g := Build(BuildInput{
@@ -42,10 +42,10 @@ func TestBugHunt_Build_DeterministicEdgeSorting(t *testing.T) {
 
 	// Under buggy code, the order of edges could match the loop traversal order: "cap_z" first, then "cap_a".
 	// We assert that the edges are sorted alphabetically by ViaCapability: "cap_a" first.
-	if g.Edges[0].ViaCapability != "cap_a" {
+	if g.Edges[0].ViaCapability != CapabilityID("cap_a") {
 		t.Errorf("expected Edge 0 to have ViaCapability='cap_a', got %q", g.Edges[0].ViaCapability)
 	}
-	if g.Edges[1].ViaCapability != "cap_z" {
+	if g.Edges[1].ViaCapability != CapabilityID("cap_z") {
 		t.Errorf("expected Edge 1 to have ViaCapability='cap_z', got %q", g.Edges[1].ViaCapability)
 	}
 }

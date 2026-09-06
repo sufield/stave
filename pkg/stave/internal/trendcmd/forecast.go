@@ -13,6 +13,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/sla"
 	"github.com/sufield/stave/internal/app/forecast"
 	appscore "github.com/sufield/stave/internal/app/score"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -53,14 +54,15 @@ func ForecastPosture(ctx context.Context, cfg ForecastConfig) ([]byte, []string,
 
 	mttrHistory := buildMTTRHistory(assessments)
 
-	slaDeadlines := map[string]float64{}
+	slaDeadlines := map[policy.Severity]float64{}
 	if cfg.SLAProfileFile != "" {
 		pol, slaErr := sla.LoadFromFile(cfg.SLAProfileFile)
 		if slaErr != nil {
 			return nil, warnings, fmt.Errorf("load sla profile: %w", slaErr)
 		}
-		for _, sev := range []string{"critical", "high", "medium", "low"} {
-			slaDeadlines[sev] = pol.DeadlineHoursFor(sev)
+		for _, s := range []string{"critical", "high", "medium", "low"} {
+			sev, _ := policy.ParseSeverity(s)
+			slaDeadlines[sev] = pol.DeadlineHoursFor(s)
 		}
 	}
 
@@ -93,18 +95,20 @@ func computeForecastScore(a *report.Assessment) float64 {
 	}).Score
 }
 
-func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
+func buildMTTRHistory(assessments []*report.Assessment) map[policy.Severity][]float64 {
 	type fkey struct{ ctl, ast string }
 	type window struct {
-		sev    string
+		sev    policy.Severity
 		openAt time.Time
 	}
 
 	open := make(map[fkey]*window)
-	resolvedDurations := make(map[string][]float64)
+	resolvedDurations := make(map[policy.Severity][]float64)
 
-	result := make(map[string][]float64)
-	for _, sev := range []string{"critical", "high", "medium", "low"} {
+	severities := []policy.Severity{policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium, policy.SeverityLow}
+
+	result := make(map[policy.Severity][]float64)
+	for _, sev := range severities {
 		result[sev] = make([]float64, 0, len(assessments))
 	}
 
@@ -114,8 +118,9 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 			k := fkey{string(a.Findings[i].ControlID), string(a.Findings[i].AssetID)}
 			currentKeys[k] = struct{}{}
 			if _, exists := open[k]; !exists {
+				sev, _ := policy.ParseSeverity(a.Findings[i].SeverityLabel())
 				open[k] = &window{
-					sev:    a.Findings[i].SeverityLabel(),
+					sev:    sev,
 					openAt: a.Run.EvalTime,
 				}
 			}
@@ -128,7 +133,7 @@ func buildMTTRHistory(assessments []*report.Assessment) map[string][]float64 {
 			}
 		}
 
-		for _, sev := range []string{"critical", "high", "medium", "low"} {
+		for _, sev := range severities {
 			durations := resolvedDurations[sev]
 			if len(durations) == 0 {
 				result[sev] = append(result[sev], 0.0)

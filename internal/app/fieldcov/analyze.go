@@ -36,13 +36,13 @@ const (
 
 // ControlResult holds the coverage analysis for a single control.
 type ControlResult struct {
-	ControlID      kernel.ControlID `json:"control_id"`
-	Severity       policy.Severity  `json:"severity"`
-	Classification Classification   `json:"classification"`
-	MissingFields  []string         `json:"missing_fields,omitempty"`
-	AssetType      kernel.AssetType `json:"asset_type,omitempty"`
-	Frameworks     []string         `json:"compliance_frameworks,omitempty"`
-	Risk           string           `json:"risk,omitempty"`
+	ControlID      kernel.ControlID             `json:"control_id"`
+	Severity       policy.Severity              `json:"severity"`
+	Classification Classification               `json:"classification"`
+	MissingFields  []string                     `json:"missing_fields,omitempty"`
+	AssetType      kernel.AssetType             `json:"asset_type,omitempty"`
+	Frameworks     []policy.ComplianceFramework `json:"compliance_frameworks,omitempty"`
+	Risk           string                       `json:"risk,omitempty"`
 }
 
 // ShoppingItem is a missing field grouped by asset type.
@@ -63,13 +63,13 @@ type FrameworkCoverage struct {
 
 // Report is the full coverage analysis output.
 type Report struct {
-	Snapshot          string                        `json:"snapshot"`
-	GeneratedAt       string                        `json:"generated_at"`
-	Summary           Summary                       `json:"summary"`
-	SilentRisk        []ControlResult               `json:"silent_risk"`
-	IncompleteResults []ControlResult               `json:"incomplete"`
-	ShoppingList      map[string][]ShoppingItem     `json:"extractor_shopping_list"`
-	FrameworkCoverage map[string]*FrameworkCoverage `json:"framework_coverage"`
+	Snapshot          string                                         `json:"snapshot"`
+	GeneratedAt       string                                         `json:"generated_at"`
+	Summary           Summary                                        `json:"summary"`
+	SilentRisk        []ControlResult                                `json:"silent_risk"`
+	IncompleteResults []ControlResult                                `json:"incomplete"`
+	ShoppingList      map[kernel.AssetType][]ShoppingItem            `json:"extractor_shopping_list"`
+	FrameworkCoverage map[policy.ComplianceFramework]*FrameworkCoverage `json:"framework_coverage"`
 }
 
 // Summary holds aggregate counts.
@@ -459,15 +459,17 @@ func fieldPresent(path string, fields map[string]struct{}) bool {
 }
 
 // extractFrameworks returns compliance framework names from a control.
-func extractFrameworks(ctl *policy.ControlDefinition) []string {
+func extractFrameworks(ctl *policy.ControlDefinition) []policy.ComplianceFramework {
 	if len(ctl.Compliance) == 0 {
 		return nil
 	}
-	var fws []string
+	var fws []policy.ComplianceFramework
 	for fw := range ctl.Compliance {
-		fws = append(fws, string(fw))
+		fws = append(fws, fw)
 	}
-	slices.Sort(fws)
+	slices.SortFunc(fws, func(a, b policy.ComplianceFramework) int {
+		return strings.Compare(string(a), string(b))
+	})
 	return fws
 }
 
@@ -475,8 +477,8 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	report := &Report{
 		Snapshot:          input.SnapshotPath,
 		GeneratedAt:       input.GeneratedAt,
-		ShoppingList:      make(map[string][]ShoppingItem),
-		FrameworkCoverage: make(map[string]*FrameworkCoverage),
+		ShoppingList:      make(map[kernel.AssetType][]ShoppingItem),
+		FrameworkCoverage: make(map[policy.ComplianceFramework]*FrameworkCoverage),
 	}
 
 	var silentRisk, incomplete []ControlResult
@@ -567,10 +569,10 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	}
 
 	for field, ctls := range fieldToControls {
-		assetType := ""
+		var assetType kernel.AssetType
 		for _, ctlID := range ctls {
 			if at, ok := controlAssetType[ctlID]; ok {
-				assetType = string(at)
+				assetType = at
 				break
 			}
 		}
@@ -600,7 +602,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 }
 
 // deriveAssetType guesses asset type from field path prefix.
-func deriveAssetType(field string) string {
+func deriveAssetType(field string) kernel.AssetType {
 	_, rest, found := strings.Cut(field, ".")
 	if !found {
 		return "unknown"
@@ -636,6 +638,6 @@ func deriveAssetType(field string) string {
 	case "k8s", "logging", "addons", "encryption", "endpoint", "nodegroup":
 		return "eks_cluster"
 	default:
-		return part1
+		return kernel.AssetType(part1)
 	}
 }

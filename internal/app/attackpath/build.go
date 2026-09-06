@@ -13,6 +13,9 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// CapabilityID uniquely identifies an attacker capability.
+type CapabilityID string
+
 // Graph is the top-level attack path export.
 type Graph struct {
 	GeneratedAt  string       `json:"generated_at"`
@@ -26,9 +29,9 @@ type Graph struct {
 
 // Capability describes a named attacker capability.
 type Capability struct {
-	ID          string `json:"id"`
-	Label       string `json:"label"`
-	Description string `json:"description"`
+	ID          CapabilityID `json:"id"`
+	Label       string       `json:"label"`
+	Description string       `json:"description"`
 }
 
 // ChainNode represents a chain in the graph.
@@ -37,8 +40,8 @@ type ChainNode struct {
 	Name            string           `json:"name"`
 	Severity        policy.Severity  `json:"severity"`
 	Status          string           `json:"status"`
-	Preconditions   []string         `json:"preconditions"`
-	Postconditions  []string         `json:"postconditions"`
+	Preconditions   []CapabilityID   `json:"preconditions"`
+	Postconditions  []CapabilityID   `json:"postconditions"`
 	MemberControls  []MemberControl  `json:"member_controls"`
 	ToolAnnotations []ToolAnnotation `json:"tool_annotations,omitempty"`
 }
@@ -46,8 +49,8 @@ type ChainNode struct {
 // ToolAnnotation records an offensive tool whose prerequisites
 // overlap with this chain's capabilities.
 type ToolAnnotation struct {
-	ToolName            string   `json:"tool_name"`
-	MatchedCapabilities []string `json:"matched_capabilities"`
+	ToolName            string         `json:"tool_name"`
+	MatchedCapabilities []CapabilityID `json:"matched_capabilities"`
 }
 
 // MemberControl is a control within a chain node.
@@ -60,7 +63,7 @@ type MemberControl struct {
 type Edge struct {
 	FromChain     kernel.ChainID `json:"from_chain"`
 	ToChain       kernel.ChainID `json:"to_chain"`
-	ViaCapability string         `json:"via_capability"`
+	ViaCapability CapabilityID   `json:"via_capability"`
 	Description   string         `json:"description"`
 }
 
@@ -74,7 +77,7 @@ type AssetRef struct {
 
 // ActiveFinding is a minimal representation of an active compound finding.
 type ActiveFinding struct {
-	ChainID         string
+	ChainID         kernel.ChainID
 	ControlsFailing []kernel.ControlID
 }
 
@@ -82,7 +85,7 @@ type ActiveFinding struct {
 // capability. Implementations live in toolmap.Registry; nil disables
 // tool annotations on the graph.
 type ToolLookup interface {
-	ToolNamesForCapability(capability string) []string
+	ToolNamesForCapability(capability CapabilityID) []string
 }
 
 // BuildInput holds the data needed to build an attack path graph.
@@ -96,20 +99,20 @@ type BuildInput struct {
 	Tools          ToolLookup
 }
 
-// Build produces an attack path graph from active chain findings.
+// Build constructs an attack path graph from chain definitions and active findings.
 func Build(input BuildInput) *Graph {
-	activeChains := make(map[string]struct{}, len(input.Findings))
+	activeChains := make(map[kernel.ChainID]struct{}, len(input.Findings))
 	for _, f := range input.Findings {
 		activeChains[f.ChainID] = struct{}{}
 	}
 
 	// Collect capabilities referenced by active annotated chains.
-	capSet := make(map[string]struct{})
+	capSet := make(map[CapabilityID]struct{})
 	var nodes []ChainNode
 	for i := range input.Chains {
 		ch := &input.Chains[i]
 		status := "inactive"
-		if _, ok := activeChains[string(ch.ID)]; ok {
+		if _, ok := activeChains[ch.ID]; ok {
 			status = "active"
 		}
 
@@ -122,29 +125,32 @@ func Build(input BuildInput) *Graph {
 			members = append(members, mc)
 		}
 
+		pre := make([]CapabilityID, len(ch.Preconditions))
+		for j, p := range ch.Preconditions {
+			pre[j] = CapabilityID(p)
+		}
+		post := make([]CapabilityID, len(ch.Postconditions))
+		for j, p := range ch.Postconditions {
+			post[j] = CapabilityID(p)
+		}
+
 		node := ChainNode{
 			ChainID:        ch.ID,
 			Name:           strings.ReplaceAll(string(ch.ID), "_", " "),
 			Severity:       ch.CompoundSeverity,
 			Status:         status,
-			Preconditions:  ch.Preconditions,
-			Postconditions: ch.Postconditions,
+			Preconditions:  pre,
+			Postconditions: post,
 			MemberControls: members,
-		}
-		if node.Preconditions == nil {
-			node.Preconditions = []string{}
-		}
-		if node.Postconditions == nil {
-			node.Postconditions = []string{}
 		}
 		nodes = append(nodes, node)
 
 		if status == "active" {
 			for _, c := range ch.Preconditions {
-				capSet[c] = struct{}{}
+				capSet[CapabilityID(c)] = struct{}{}
 			}
 			for _, c := range ch.Postconditions {
-				capSet[c] = struct{}{}
+				capSet[CapabilityID(c)] = struct{}{}
 			}
 		}
 	}
@@ -159,12 +165,12 @@ func Build(input BuildInput) *Graph {
 	var edges []Edge
 	for i := range input.Chains {
 		a := &input.Chains[i]
-		if _, ok := activeChains[string(a.ID)]; !ok || len(a.Postconditions) == 0 {
+		if _, ok := activeChains[a.ID]; !ok || len(a.Postconditions) == 0 {
 			continue
 		}
 		for j := range input.Chains {
 			b := &input.Chains[j]
-			_, isActiveB := activeChains[string(b.ID)]
+			_, isActiveB := activeChains[b.ID]
 			if a.ID == b.ID || !isActiveB || len(b.Preconditions) == 0 {
 				continue
 			}
@@ -174,8 +180,8 @@ func Build(input BuildInput) *Graph {
 						edges = append(edges, Edge{
 							FromChain:     a.ID,
 							ToChain:       b.ID,
-							ViaCapability: post,
-							Description:   capLabel(post) + " enables " + strings.ReplaceAll(string(b.ID), "_", " "),
+							ViaCapability: CapabilityID(post),
+							Description:   capLabel(CapabilityID(post)) + " enables " + strings.ReplaceAll(string(b.ID), "_", " "),
 						})
 					}
 				}
@@ -187,7 +193,7 @@ func Build(input BuildInput) *Graph {
 		return cmp.Or(
 			cmp.Compare(string(a.FromChain), string(b.FromChain)),
 			cmp.Compare(string(a.ToChain), string(b.ToChain)),
-			cmp.Compare(a.ViaCapability, b.ViaCapability),
+			cmp.Compare(string(a.ViaCapability), string(b.ViaCapability)),
 		)
 	})
 
@@ -238,16 +244,6 @@ var (
 		"data_stream_capture":                    "Data Stream Capture",
 		"data_warehouse_compromise":              "Data Warehouse Compromise",
 		"database_compromise":                    "Database Compromise",
-		"db_credential_theft":                    "Database Credentials",
-		"detection_blindness":                    "Detection Blindness",
-		"detection_evasion":                      "Detection Evasion",
-		"detection_fragmented":                   "Detection Fragmented",
-		"detection_without_response":             "Detection Without Response",
-		"domain_takeover":                        "Domain Takeover",
-		"ec2_code_execution":                     "EC2 Code Execution",
-		"encryption_bypass":                      "Encryption Bypass",
-		"iam_credential_theft":                   "IAM Credentials",
-		"indirect_data_rerouting":                "Indirect Data Rerouting",
 		"initial_access":                         "Initial Access",
 		"internet_access":                        "Internet Access",
 		"invisible_data_exfiltration":            "Invisible Data Exfiltration",
@@ -345,15 +341,15 @@ var (
 	}
 )
 
-func capLabel(id string) string {
-	if l, ok := capLabels[id]; ok {
+func capLabel(id CapabilityID) string {
+	if l, ok := capLabels[string(id)]; ok {
 		return l
 	}
-	return strings.ReplaceAll(id, "_", " ")
+	return strings.ReplaceAll(string(id), "_", " ")
 }
 
-func capDescription(id string) string {
-	if d, ok := capDescriptions[id]; ok {
+func capDescription(id CapabilityID) string {
+	if d, ok := capDescriptions[string(id)]; ok {
 		return d
 	}
 	return ""
@@ -363,16 +359,16 @@ func capDescription(id string) string {
 // tool registry and records which tools could exploit each chain.
 func annotateTools(nodes []ChainNode, chains []policy.ChainDefinition, tools ToolLookup) {
 	for i := range nodes {
-		caps := make(map[string]struct{})
+		caps := make(map[CapabilityID]struct{})
 		ch := &chains[i]
 		for _, c := range ch.Preconditions {
-			caps[c] = struct{}{}
+			caps[CapabilityID(c)] = struct{}{}
 		}
 		for _, c := range ch.Postconditions {
-			caps[c] = struct{}{}
+			caps[CapabilityID(c)] = struct{}{}
 		}
 
-		toolMatches := make(map[string][]string) // tool name → matched caps
+		toolMatches := make(map[string][]CapabilityID) // tool name → matched caps
 		for cap := range caps {
 			for _, name := range tools.ToolNamesForCapability(cap) {
 				toolMatches[name] = append(toolMatches[name], cap)
@@ -390,7 +386,7 @@ func annotateTools(nodes []ChainNode, chains []policy.ChainDefinition, tools Too
 
 		for _, name := range names {
 			matched := toolMatches[name]
-			slices.Sort(matched)
+			slices.SortFunc(matched, func(a, b CapabilityID) int { return cmp.Compare(string(a), string(b)) })
 			nodes[i].ToolAnnotations = append(nodes[i].ToolAnnotations, ToolAnnotation{
 				ToolName:            name,
 				MatchedCapabilities: matched,

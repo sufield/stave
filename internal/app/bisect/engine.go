@@ -50,7 +50,7 @@ func (e *Engine) Run(ctx context.Context, snapshots []asset.Snapshot, mode Mode,
 	case ModeScan:
 		return e.runScan(ctx, sorted, result)
 	default:
-		return Result{}, fmt.Errorf("unknown bisect mode: %d", mode)
+		return Result{}, fmt.Errorf("unknown bisect mode: %s", mode)
 	}
 }
 

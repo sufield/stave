@@ -47,7 +47,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 			FixableByAgent: true,
 			Guidance:       "Add this tag to the resource via the cloud provider's tag-resource API.",
 			Command:        tagCommand(at, key),
-			Effort:         "30 seconds per asset",
+			Effort:         EffortPerAsset,
 		}
 	}
 
@@ -63,7 +63,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 			FixableByAgent: false,
 			Guidance:       "Requires a secondary cloud API call (Access Advisor / service-last-accessed) not exposed by the standard inventory. Collector must call the API and stamp the result.",
 			Command:        fmt.Sprintf("Collector must compute %s from iam:GenerateServiceLastAccessedDetails (or equivalent); see docs/extractor-*.md.", rel),
-			Effort:         "Collector code change (secondary API)",
+			Effort:         EffortSecondaryAPI,
 		}
 	}
 
@@ -80,7 +80,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 			FixableByAgent: false,
 			Guidance:       "Requires a collector-side analysis (cross-inventory or relational walk). The collector code must grow to cover it.",
 			Command:        fmt.Sprintf("Collector must compute %s; see docs/extractor-*.md for the property-derivation guide.", rel),
-			Effort:         "Collector code change (analysis)",
+			Effort:         EffortCollectorAnalysis,
 		}
 	}
 
@@ -93,7 +93,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 		FixableByAgent: true,
 		Guidance:       "Add this property to the Steampipe → Stave mapping; the source row likely carries the value.",
 		Command:        fmt.Sprintf("Add %s to the field map for %s in contracts/steampipe/%s.yaml; see docs/extractor-prompt.md.", rel, at, at),
-		Effort:         "Mapping change (no collector code)",
+		Effort:         EffortMappingChange,
 	}
 }
 

@@ -18,9 +18,9 @@ func WriteDOT(w io.Writer, g *Graph) error {
 
 	// Emit capability nodes.
 	for _, cap := range g.Capabilities {
-		color := capColor(cap.ID)
+		color := capColor(string(cap.ID))
 		fmt.Fprintf(w, "  %s [label=%q, fillcolor=%q, fontcolor=%q];\n",
-			dotID(cap.ID), cap.Label, color, fontColorFor(color))
+			dotID(string(cap.ID)), cap.Label, color, fontColorFor(color))
 	}
 	fmt.Fprintln(w)
 
@@ -42,7 +42,7 @@ func WriteDOT(w io.Writer, g *Graph) error {
 			if g.ChainNodes[i].ChainID == edge.FromChain {
 				for _, pre := range g.ChainNodes[i].Preconditions {
 					fmt.Fprintf(w, "  %s -> %s [label=%q];\n",
-						dotID(pre), dotID(edge.ViaCapability), label)
+						dotID(string(pre)), dotID(string(edge.ViaCapability)), label)
 				}
 				break
 			}

@@ -78,12 +78,22 @@ const (
 	RemediationCollector RemediationType = "collector"
 )
 
+// RemediationEffort classifies the estimated effort required to resolve an observation gap.
+type RemediationEffort string
+
+const (
+	EffortPerAsset          RemediationEffort = "30 seconds per asset"
+	EffortSecondaryAPI      RemediationEffort = "Collector code change (secondary API)"
+	EffortCollectorAnalysis RemediationEffort = "Collector code change (analysis)"
+	EffortMappingChange     RemediationEffort = "Mapping change (no collector code)"
+)
+
 type Remediation struct {
-	Type           RemediationType `json:"type"`
-	FixableByAgent bool            `json:"fixable_by_agent"`
-	Guidance       string          `json:"guidance,omitempty"`
-	Command        string          `json:"command,omitempty"`
-	Effort         string          `json:"effort"`
+	Type           RemediationType   `json:"type"`
+	FixableByAgent bool              `json:"fixable_by_agent"`
+	Guidance       string            `json:"guidance,omitempty"`
+	Command        string            `json:"command,omitempty"`
+	Effort         RemediationEffort `json:"effort"`
 }
 
 // Summary aggregates counts and a "quick wins" estimate so the

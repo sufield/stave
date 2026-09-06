@@ -1,11 +1,13 @@
 package fieldcov
 
 import (
+	"cmp"
 	"fmt"
 	"io"
 	"slices"
 	"strings"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -63,11 +65,13 @@ func WriteTable(w io.Writer, r *Report) {
 	if len(r.ShoppingList) > 0 {
 		fmt.Fprintln(w, "EXTRACTOR SHOPPING LIST — fields to add to close gaps")
 		fmt.Fprintln(w, strings.Repeat("-", 72))
-		var assetTypes []string
+		var assetTypes []kernel.AssetType
 		for at := range r.ShoppingList {
 			assetTypes = append(assetTypes, at)
 		}
-		slices.Sort(assetTypes)
+		slices.SortFunc(assetTypes, func(a, b kernel.AssetType) int {
+			return cmp.Compare(string(a), string(b))
+		})
 		for _, at := range assetTypes {
 			fmt.Fprintf(w, "\n  Asset type: %s\n", at)
 			for _, item := range r.ShoppingList[at] {
@@ -86,11 +90,13 @@ func WriteTable(w io.Writer, r *Report) {
 		fmt.Fprintf(w, "  %-12s %-12s %-12s %-12s %s\n",
 			strings.Repeat("-", 10), strings.Repeat("-", 10),
 			strings.Repeat("-", 10), strings.Repeat("-", 10), strings.Repeat("-", 8))
-		var fws []string
+		var fws []policy.ComplianceFramework
 		for fw := range r.FrameworkCoverage {
 			fws = append(fws, fw)
 		}
-		slices.Sort(fws)
+		slices.SortFunc(fws, func(a, b policy.ComplianceFramework) int {
+			return cmp.Compare(string(a), string(b))
+		})
 		for _, fw := range fws {
 			fc := r.FrameworkCoverage[fw]
 			fmt.Fprintf(w, "  %-12s %-12s %-12d %-12d %.1f%%\n",
@@ -108,7 +114,7 @@ func pct(n, total int) float64 {
 	return float64(n) / float64(total) * 100
 }
 
-func shortFrameworks(fws []string) []string {
+func shortFrameworks(fws []policy.ComplianceFramework) []string {
 	out := make([]string, len(fws))
 	for i, fw := range fws {
 		out[i] = shortFramework(fw)
@@ -124,23 +130,24 @@ func controlIDStrings(ids []kernel.ControlID) []string {
 	return s
 }
 
-func shortFramework(fw string) string {
+func shortFramework(fw policy.ComplianceFramework) string {
+	fwStr := string(fw)
 	switch {
-	case strings.Contains(fw, "hipaa"):
+	case strings.Contains(fwStr, "hipaa"):
 		return "HIPAA"
-	case strings.Contains(fw, "nist_800"):
+	case strings.Contains(fwStr, "nist_800"):
 		return "NIST"
-	case strings.Contains(fw, "cis"):
+	case strings.Contains(fwStr, "cis"):
 		return "CIS"
-	case strings.Contains(fw, "fedramp"):
+	case strings.Contains(fwStr, "fedramp"):
 		return "FedRAMP"
-	case strings.Contains(fw, "pci"):
+	case strings.Contains(fwStr, "pci"):
 		return "PCI"
-	case strings.Contains(fw, "soc2"):
+	case strings.Contains(fwStr, "soc2"):
 		return "SOC2"
-	case strings.Contains(fw, "gdpr"):
+	case strings.Contains(fwStr, "gdpr"):
 		return "GDPR"
 	default:
-		return strings.ToUpper(fw)
+		return strings.ToUpper(fwStr)
 	}
 }

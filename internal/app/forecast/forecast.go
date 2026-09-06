@@ -113,8 +113,8 @@ func (s *SLAProjection) StatusMarker() string {
 type Input struct {
 	ScoreHistory []float64 // one per day
 	HorizonDays  int
-	SLADeadlines map[string]float64   // severity → hours
-	MTTRHistory  map[string][]float64 // severity → MTTR per day
+	SLADeadlines map[policy.Severity]float64   // severity → hours
+	MTTRHistory  map[policy.Severity][]float64 // severity → MTTR per day
 }
 
 // Compute produces a linear forecast.
@@ -153,7 +153,7 @@ func Compute(input Input) (*Result, error) {
 	}
 
 	// SLA projections per severity.
-	for _, sev := range []string{"critical", "high", "medium", "low"} {
+	for _, sev := range []policy.Severity{policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium, policy.SeverityLow} {
 		history := input.MTTRHistory[sev]
 		deadline := input.SLADeadlines[sev]
 		if len(history) < 3 || deadline <= 0 {
@@ -173,10 +173,8 @@ func Compute(input Input) (*Result, error) {
 			status = StatusAtRisk
 		}
 
-		sevVal, _ := policy.ParseSeverity(sev)
-
 		result.SLAProj = append(result.SLAProj, SLAProjection{
-			Severity:      sevVal,
+			Severity:      sev,
 			CurrentMTTR:   currentMTTR,
 			ProjectedMTTR: projectedMTTR,
 			Deadline:      deadline,

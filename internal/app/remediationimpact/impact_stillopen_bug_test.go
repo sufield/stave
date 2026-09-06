@@ -7,6 +7,7 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -32,7 +33,7 @@ func TestAnalyze_StillOpenDeterministicAndDeduplicated(t *testing.T) {
 		Before:          before,
 		After:           after,
 		PredictedDelta:  10,
-		PredictedClosed: []string{"CTL.B", "CTL.A", "CTL.B"}, // includes duplicates & unsorted
+		PredictedClosed: []kernel.ControlID{"CTL.B", "CTL.A", "CTL.B"}, // includes duplicates & unsorted
 	}
 
 	rep, err := Analyze(input)
@@ -44,7 +45,7 @@ func TestAnalyze_StillOpenDeterministicAndDeduplicated(t *testing.T) {
 		t.Fatalf("expected Efficiency report")
 	}
 
-	wantStillOpen := []string{"CTL.A", "CTL.B"}
+	wantStillOpen := []kernel.ControlID{"CTL.A", "CTL.B"}
 	if !reflect.DeepEqual(rep.Efficiency.StillOpen, wantStillOpen) {
 		t.Errorf("expected StillOpen sorted & deduplicated %v, got %v", wantStillOpen, rep.Efficiency.StillOpen)
 	}

@@ -113,13 +113,13 @@ func BisectControl(ctx context.Context, in BisectInput) (BisectOutput, error) {
 }
 
 func parseBisectMode(s string) (appbisect.Mode, error) {
-	switch s {
-	case "bisect":
-		return appbisect.Mode(0), nil // ModeBisect
+	switch strings.ToLower(s) {
+	case "bisect", "":
+		return appbisect.ModeBisect, nil
 	case "scan":
-		return appbisect.Mode(1), nil // ModeScan
+		return appbisect.ModeScan, nil
 	default:
-		return 0, fmt.Errorf("invalid --mode %q (supported: bisect, scan)", s)
+		return "", fmt.Errorf("invalid --mode %q (supported: bisect, scan)", s)
 	}
 }
 

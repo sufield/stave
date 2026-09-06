@@ -188,7 +188,7 @@ func policyLibraryHash(cfs fs.FS) (string, int, error) {
 // ---------------------------------------------------------------------------
 
 func newVersionCmd(edition Edition) *cobra.Command {
-	var verbose, verify, sbom, checkUpdate bool
+	var verbose, verify, sbom bool
 	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print version and environment state",
@@ -196,9 +196,6 @@ func newVersionCmd(edition Edition) *cobra.Command {
 With --verify, prints integrity hashes for the binary, embedded policy library,
 and Go module dependencies. Auditors compare these against known-good values.
 With --sbom, outputs a CycloneDX JSON Software Bill of Materials.
-With --check-update, performs an explicit network call to GitHub to report
-whether a newer release is available. This is the only flag on this command
-that touches the network; the default flow is air-gapped.
 
 Exit Codes:
   0   - Success
@@ -208,9 +205,7 @@ Examples:
   stave version
   stave version --details
   stave version --verify
-  stave version --sbom > stave-sbom.json
-  stave version --check-update                # opt-in network check
-  STAVE_NO_NETWORK=1 stave version --check-update  # short-circuits cleanly` + OfflineHelpSuffix,
+  stave version --sbom > stave-sbom.json` + OfflineHelpSuffix,
 		Example:       `  stave version --verify`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
@@ -222,13 +217,7 @@ Examples:
 			runner := &VersionRunner{
 				Stdout: cmd.OutOrStdout(),
 			}
-			if err := runner.Run(edition, verbose, verify); err != nil {
-				return err
-			}
-			if checkUpdate {
-				runUpdateCheck(cmd.Context(), cmd.OutOrStdout(), Version())
-			}
-			return nil
+			return runner.Run(edition, verbose, verify)
 		},
 	}
 	// `--details` rather than `--verbose`: the root command
@@ -238,7 +227,6 @@ Examples:
 	cmd.Flags().BoolVar(&verbose, "details", false, "Include schema and lockfile status")
 	cmd.Flags().BoolVar(&verify, "verify", false, "Print binary and policy library integrity hashes")
 	cmd.Flags().BoolVar(&sbom, "sbom", false, "Output CycloneDX JSON Software Bill of Materials")
-	cmd.Flags().BoolVar(&checkUpdate, "check-update", false, "Check GitHub for a newer release (opt-in network call)")
 	return cmd
 }
 
