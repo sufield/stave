@@ -440,7 +440,7 @@ func annotateOwners(report *evaluation.ComplianceReport, teamManifest string, ow
 
 	for i := range report.Findings {
 		f := &report.Findings[i]
-		owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
+		owner := manifest.ResolveOwner(nil, string(f.AssetID), f.ControlID)
 		f.OwnerTeamID = kernel.TeamID(owner.TeamID)
 		f.OwnerTeamName = owner.TeamName
 		f.OwnerContact = owner.Contact

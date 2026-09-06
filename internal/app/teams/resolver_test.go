@@ -24,7 +24,7 @@ func testManifest() *Manifest {
 
 func TestResolveOwner_TagMatch(t *testing.T) {
 	m := testManifest()
-	result := m.ResolveOwner(map[string]string{"team": "payments"}, "arn:aws:s3:::anything", "CTL.S3.PUBLIC.001")
+	result := m.ResolveOwner(map[string]string{"team": "payments"}, "arn:aws:s3:::anything", kernel.ControlID("CTL.S3.PUBLIC.001"))
 	if result.TeamID != "payments" {
 		t.Errorf("team = %q, want payments", result.TeamID)
 	}
@@ -35,7 +35,7 @@ func TestResolveOwner_TagMatch(t *testing.T) {
 
 func TestResolveOwner_FallbackTag(t *testing.T) {
 	m := testManifest()
-	result := m.ResolveOwner(map[string]string{"owner": "data"}, "arn:any", "CTL.S3.001")
+	result := m.ResolveOwner(map[string]string{"owner": "data"}, "arn:any", kernel.ControlID("CTL.S3.001"))
 	if result.TeamID != "data" {
 		t.Errorf("team = %q, want data", result.TeamID)
 	}
@@ -46,7 +46,7 @@ func TestResolveOwner_FallbackTag(t *testing.T) {
 
 func TestResolveOwner_ARNPattern(t *testing.T) {
 	m := testManifest()
-	result := m.ResolveOwner(nil, "arn:aws:s3:::payments-checkout", "CTL.S3.001")
+	result := m.ResolveOwner(nil, "arn:aws:s3:::payments-checkout", kernel.ControlID("CTL.S3.001"))
 	if result.TeamID != "payments" {
 		t.Errorf("team = %q, want payments", result.TeamID)
 	}
@@ -57,7 +57,7 @@ func TestResolveOwner_ARNPattern(t *testing.T) {
 
 func TestResolveOwner_ControlOwnership(t *testing.T) {
 	m := testManifest()
-	result := m.ResolveOwner(nil, "arn:any", "CTL.IAM.NEP.ADMIN.001")
+	result := m.ResolveOwner(nil, "arn:any", kernel.ControlID("CTL.IAM.NEP.ADMIN.001"))
 	if result.TeamID != "data" {
 		t.Errorf("team = %q, want data", result.TeamID)
 	}
@@ -68,7 +68,7 @@ func TestResolveOwner_ControlOwnership(t *testing.T) {
 
 func TestResolveOwner_Default(t *testing.T) {
 	m := testManifest()
-	result := m.ResolveOwner(nil, "arn:aws:ec2::123:instance/unknown", "CTL.EC2.001")
+	result := m.ResolveOwner(nil, "arn:aws:ec2::123:instance/unknown", kernel.ControlID("CTL.EC2.001"))
 	if result.TeamID != "platform" {
 		t.Errorf("team = %q, want platform (default)", result.TeamID)
 	}
@@ -81,7 +81,7 @@ func TestResolveOwner_Unassigned(t *testing.T) {
 	m := &Manifest{OwnerTagKey: "team", FallbackTagKey: "owner", Teams: []Team{
 		{ID: "only-team", ResourcePatterns: []string{"arn:specific"}},
 	}}
-	result := m.ResolveOwner(nil, "arn:other", "CTL.X")
+	result := m.ResolveOwner(nil, "arn:other", kernel.ControlID("CTL.X"))
 	if result.TeamID != "unassigned" {
 		t.Errorf("team = %q, want unassigned", result.TeamID)
 	}

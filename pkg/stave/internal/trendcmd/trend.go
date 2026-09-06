@@ -142,7 +142,7 @@ func TrendReport(ctx context.Context, cfg TrendConfig) (output []byte, warnings 
 		rep.TeamSummary = teamSummary
 
 		if cfg.Rollup != "" {
-			group := manifest.HierarchyByID(cfg.Rollup)
+			group := manifest.HierarchyByID(teams.HierarchyGroupID(cfg.Rollup))
 			if group == nil {
 				return nil, warnings, fmt.Errorf("hierarchy group %q not found in manifest", cfg.Rollup)
 			}

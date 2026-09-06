@@ -21,15 +21,18 @@ type Manifest struct {
 	Hierarchy      []HierarchyGroup `yaml:"hierarchy,omitempty"`
 }
 
+// HierarchyGroupID uniquely identifies a team hierarchy group.
+type HierarchyGroupID string
+
 // HierarchyGroup defines a named group of teams for rollup reporting.
 type HierarchyGroup struct {
-	Name  string   `yaml:"name"  json:"name"`
-	ID    string   `yaml:"id"    json:"id"`
-	Teams []string `yaml:"teams" json:"teams"`
+	Name  string           `yaml:"name"  json:"name"`
+	ID    HierarchyGroupID `yaml:"id"    json:"id"`
+	Teams []TeamID         `yaml:"teams" json:"teams"`
 }
 
 // HierarchyByID returns the hierarchy group with the given ID, or nil.
-func (m *Manifest) HierarchyByID(id string) *HierarchyGroup {
+func (m *Manifest) HierarchyByID(id HierarchyGroupID) *HierarchyGroup {
 	for i := range m.Hierarchy {
 		if m.Hierarchy[i].ID == id {
 			return &m.Hierarchy[i]
@@ -91,7 +94,7 @@ func LoadManifest(path string) (*Manifest, error) {
 // ResolveOwner determines which team owns a finding based on the
 // resolution hierarchy: tag → fallback tag → ARN pattern →
 // control ownership → default → unassigned.
-func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN, controlID string) OwnerResult {
+func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN string, controlID kernel.ControlID) OwnerResult {
 	// 1. Primary tag match.
 	if tagVal, ok := tags[m.OwnerTagKey]; ok {
 		for i := range m.Teams {
@@ -131,7 +134,7 @@ func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN, controlID s
 	// 4. Control ID ownership match.
 	for i := range m.Teams {
 		for _, pattern := range m.Teams[i].ControlOwnership {
-			if globMatch(string(pattern), controlID) {
+			if globMatch(string(pattern), string(controlID)) {
 				return OwnerResult{
 					TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
 					Contact: m.Teams[i].Contact, ResolutionPath: "control_ownership",
@@ -189,7 +192,7 @@ func (m *Manifest) AnnotateFindings(findings []FindingRef, tags func(assetID str
 // Callers build a slice of these referencing their actual finding structs.
 type FindingRef struct {
 	AssetID         string
-	ControlID       string
+	ControlID       kernel.ControlID
 	OwnerTeamID     string
 	OwnerTeamName   string
 	OwnerContact    string

@@ -144,7 +144,7 @@ var catalogAnnotations = []catalogAnnotation{
 	{Path: "sanitize", Group: "Snapshot Integrity & Sharing", When: "Removing identifiers before sharing"},
 	{Path: "cel eval", Group: "Snapshot Integrity & Sharing", When: "Ad-hoc CEL probing of a snapshot"},
 	{Path: "contract show", Group: "Snapshot Integrity & Sharing", When: "Understanding required fields for an asset type"},
-	{Path: "validate-mapping", Group: "Snapshot Integrity & Sharing", When: "Before relying on a Steampipe mapping"},
+	{Path: "vet", Group: "Snapshot Integrity & Sharing", When: "Before relying on a Steampipe mapping"},
 	{Path: "transform", Group: "Snapshot Integrity & Sharing", When: "Converting raw AWS CLI output to obs.v0.1 format"},
 	{Path: "snapshot compare", Group: "Snapshot Integrity & Sharing", When: "What changed between two explicit snapshot files"},
 	{Path: "doctor", Group: "Supportability & Diagnostics", When: "First-time setup — verifies tools/paths"},

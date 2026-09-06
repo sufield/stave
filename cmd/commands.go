@@ -66,7 +66,7 @@ import (
 	stavetoolmap "github.com/sufield/stave/cmd/toolmap"
 	stavetransform "github.com/sufield/stave/cmd/transform"
 	stavetrend "github.com/sufield/stave/cmd/trend"
-	validatemapping "github.com/sufield/stave/cmd/validatemapping"
+	stavevet "github.com/sufield/stave/cmd/vet"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	infrareport "github.com/sufield/stave/internal/adapters/report"
 	"github.com/sufield/stave/internal/cli/ui"
@@ -245,7 +245,7 @@ func WireCommands(app *App) error {
 	// generated contracts/steampipe/*.yaml is well-formed, references
 	// only declared schema paths, and covers the catalog's read
 	// surface for that asset type before it ships an observation.
-	root.AddCommand(validatemapping.NewCmd())
+	root.AddCommand(stavevet.NewCmd())
 
 	// User-facing catalog: grouped detections + chains + operational
 	// features. Also registered under `capabilities catalog` below

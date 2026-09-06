@@ -35,6 +35,15 @@ func DefaultThresholds() Thresholds {
 	}
 }
 
+// GateReason classifies the outcome rationale for a team gate evaluation.
+type GateReason string
+
+const (
+	ReasonCriticalThresholdExceeded GateReason = "critical findings exceed threshold"
+	ReasonHighThresholdExceeded     GateReason = "high findings exceed threshold"
+	ReasonMediumThresholdExceeded   GateReason = "medium findings exceed threshold"
+)
+
 // GateResult holds the per-team gate evaluation.
 type GateResult struct {
 	TeamID        teams.TeamID `json:"team_id"`
@@ -43,7 +52,7 @@ type GateResult struct {
 	HighCount     int          `json:"high_count"`
 	MediumCount   int          `json:"medium_count"`
 	TotalFindings int          `json:"total_findings"`
-	Reason        string       `json:"reason,omitempty"`
+	Reason        GateReason   `json:"reason,omitempty"`
 }
 
 // Input configures the gate evaluation.
@@ -61,7 +70,7 @@ func Evaluate(in Input) GateResult {
 		f := &in.Findings[i]
 		teamID := teams.TeamID(f.OwnerTeamID)
 		if in.Manifest != nil {
-			owner := in.Manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
+			owner := in.Manifest.ResolveOwner(nil, string(f.AssetID), f.ControlID)
 			teamID = owner.TeamID
 		}
 		if teamID == in.TeamID {
@@ -89,13 +98,13 @@ func Evaluate(in Input) GateResult {
 	// per tier.
 	if in.Thresholds.MaxCritical >= 0 && counts.Critical > in.Thresholds.MaxCritical {
 		result.Passed = false
-		result.Reason = "critical findings exceed threshold"
+		result.Reason = ReasonCriticalThresholdExceeded
 	} else if in.Thresholds.MaxHigh >= 0 && counts.High > in.Thresholds.MaxHigh {
 		result.Passed = false
-		result.Reason = "high findings exceed threshold"
+		result.Reason = ReasonHighThresholdExceeded
 	} else if in.Thresholds.MaxMedium >= 0 && counts.Medium > in.Thresholds.MaxMedium {
 		result.Passed = false
-		result.Reason = "medium findings exceed threshold"
+		result.Reason = ReasonMediumThresholdExceeded
 	}
 
 	return result

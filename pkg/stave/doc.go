@@ -96,7 +96,7 @@
 //	ContractList       — asset types with controls (schema/mapping presence).
 //	BuildReport        — executive posture report (json/markdown).
 //	MapAttackCoverage  — MITRE ATT&CK tactic coverage map from the catalog.
-//	ValidateMapping    — pre-flight check a Steampipe->Stave mapping file.
+//	VetMapping         — pre-flight check a Steampipe->Stave mapping file.
 //	AvailableFrameworks — list every embedded framework profile ID.
 //	SearchCatalog      — rank the catalog against a free-form intent.
 //	RenderCatalogSearch — load (dir) + rank + render the catalog search.

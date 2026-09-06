@@ -197,9 +197,9 @@ _177 commands across 13 groups._
 | `attest verify` | Verify an attested snapshot against a public key |
 | `fingerprint` | Policy fingerprint diagnostics |
 | `fingerprint explain` | Show the policy fingerprint preimage and diagnosis |
-| `lint-mapping` | Lint a Steampipe→Stave mapping file before use |
 | `sanitize` | Sanitize a snapshot for cross-boundary sharing |
 | `transform` | Convert raw AWS CLI snapshots into obs.v0.1 observations (built-in jq) |
+| `vet` | Vet a Steampipe→Stave mapping file before use |
 
 ## Interop & Export
 

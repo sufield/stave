@@ -212,7 +212,7 @@ func buildTeamSections(a *corereport.Assessment, manifest *teams.Manifest) []Tea
 	teamCritical := make(map[teams.TeamID]int)
 	for i := range a.Findings {
 		f := &a.Findings[i]
-		owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
+		owner := manifest.ResolveOwner(nil, string(f.AssetID), f.ControlID)
 		teamFindings[owner.TeamID]++
 		if f.IsCritical() {
 			teamCritical[owner.TeamID]++

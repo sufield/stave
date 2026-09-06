@@ -312,7 +312,7 @@ var categoryPrefixes = []struct {
 	{"fingerprint", "Snapshot & Transform"},
 	{"transform", "Snapshot & Transform"},
 	{"sanitize", "Snapshot & Transform"},
-	{"lint-mapping", "Snapshot & Transform"},
+	{"vet", "Snapshot & Transform"},
 	{"config", "Environment & Config"},
 	{"completion", "Environment & Config"},
 	{"doctor", "Environment & Config"},

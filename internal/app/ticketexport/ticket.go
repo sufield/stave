@@ -74,13 +74,13 @@ func StableTicketID(controlID kernel.ControlID, assetID asset.ID, assetType ...k
 }
 
 // SeverityToPriority maps severity levels to priority codes.
-func SeverityToPriority(severity string) Priority {
+func SeverityToPriority(severity policy.Severity) Priority {
 	switch severity {
-	case "critical":
+	case policy.SeverityCritical:
 		return PriorityP1
-	case "high":
+	case policy.SeverityHigh:
 		return PriorityP2
-	case "medium":
+	case policy.SeverityMedium:
 		return PriorityP3
 	default:
 		return PriorityP4
@@ -109,7 +109,7 @@ func fromFinding(f *remediation.Finding) Ticket {
 		TicketID:    StableTicketID(f.ControlID, f.AssetID, f.AssetType),
 		Title:       fmt.Sprintf("[%s] %s - %s", sev, f.ControlName, astID),
 		Severity:    f.ControlSeverity,
-		Priority:    SeverityToPriority(sev),
+		Priority:    SeverityToPriority(f.ControlSeverity),
 		Description: desc,
 		Labels:      labels,
 		AssetID:     f.AssetID,

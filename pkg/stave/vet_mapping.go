@@ -80,15 +80,15 @@ type mappingUnpopulated struct {
 	Chains   int    `json:"chains"`
 }
 
-// ValidateMapping validates a Steampipe→Stave mapping (raw YAML for the
-// file at path) against the structural contract, the per-asset JSON
-// Schema, and the control+chain catalog's read surface, and renders the
-// report in the requested format ("json" or "text"/""). It returns the
-// rendered bytes and whether the mapping is INVALID (the caller maps that
-// to exit 3 — the report is still rendered). A YAML parse failure wraps
-// [ErrInvalidInput] (exit 2); loader failures stay plain (exit 4). It is
-// the library entry point behind `stave lint-mapping`.
-func ValidateMapping(ctx context.Context, file string, raw []byte, controlsDir, chainsDir, format string, strict bool) ([]byte, bool, error) {
+// VetMapping vets a Steampipe→Stave mapping (raw YAML for the file at
+// path) against the structural contract, the per-asset JSON Schema,
+// and the control+chain catalog's read surface, and renders the report
+// in the requested format ("json" or "text"/""). It returns the
+// rendered bytes and whether the mapping is INVALID (the caller maps
+// that to exit 3 — the report is still rendered). A YAML parse failure
+// wraps [ErrInvalidInput] (exit 2); loader failures stay plain
+// (exit 4). It is the library entry point behind `stave vet`.
+func VetMapping(ctx context.Context, file string, raw []byte, controlsDir, chainsDir, format string, strict bool) ([]byte, bool, error) {
 	var m mappingDoc
 	if parseErr := yaml.Unmarshal(raw, &m); parseErr != nil {
 		return nil, false, fmt.Errorf("parse %s: %w: %w", file, parseErr, ErrInvalidInput)

@@ -1,7 +1,7 @@
-// Package validatemapping implements `stave lint-mapping` — a
-// pre-flight check for Steampipe→Stave transform contracts. It
-// answers three questions about a mapping file before an agent uses
-// it to populate observations:
+// Package vet implements `stave vet` — a pre-flight check for
+// Steampipe→Stave transform contracts. It answers three questions
+// about a mapping file before an agent uses it to populate
+// observations:
 //
 //  1. Structural: required fields present, operation kinds recognised,
 //     each kind has its mandatory subfields.
@@ -17,7 +17,7 @@
 // only — the YAML interpreter lives in examples/agents/stave_transform.py
 // and runs at observation-build time. Use this to catch typos, missing
 // operations, and coverage holes before the agent ships a snapshot.
-package validatemapping
+package vet
 
 import (
 	"context"
@@ -42,7 +42,7 @@ type options struct {
 	Strict      bool
 }
 
-// NewCmd constructs the `lint-mapping` command.
+// NewCmd constructs the `vet` command.
 func NewCmd() *cobra.Command {
 	opts := &options{
 		Format:      "text",
@@ -50,9 +50,9 @@ func NewCmd() *cobra.Command {
 		ChainsDir:   "chains",
 	}
 	cmd := &cobra.Command{
-		Use:   "lint-mapping",
-		Short: "Lint a Steampipe→Stave mapping file before use",
-		Long: `Lint inspects a contracts/steampipe/<asset_type>.yaml mapping and
+		Use:   "vet",
+		Short: "Vet a Steampipe→Stave mapping file before use",
+		Long: `Vet inspects a contracts/steampipe/<asset_type>.yaml mapping and
 reports whether it can produce a schema-valid observation for the
 declared asset type, plus how much of the catalog's read surface it
 covers.
@@ -69,7 +69,7 @@ Three checks:
      highest-control-count gaps surfaced.
 
 Inputs:
-  --file FILE        Mapping YAML to lint (required)
+  --file FILE        Mapping YAML to vet (required)
   --controls DIR     Control catalog (default: controls)
   --chains DIR       Chain catalog (default: chains)
   --format F         text (default) | json
@@ -82,9 +82,9 @@ Exit codes:
   3   Mapping is invalid (structural or, with --strict, coverage gap)
   4   Internal error
 `,
-		Example: `  stave lint-mapping --file contracts/steampipe/aws_s3_bucket.yaml
-  stave lint-mapping --file contracts/steampipe/aws_iam_role.yaml --strict
-  stave lint-mapping --file contracts/steampipe/aws_kms_key.yaml --format json`,
+		Example: `  stave vet --file contracts/steampipe/aws_s3_bucket.yaml
+  stave vet --file contracts/steampipe/aws_iam_role.yaml --strict
+  stave vet --file contracts/steampipe/aws_kms_key.yaml --format json`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -92,7 +92,7 @@ Exit codes:
 			return run(cmd.Context(), cmd.OutOrStdout(), opts)
 		},
 	}
-	cmd.Flags().StringVar(&opts.File, "file", "", "mapping YAML file to validate (required)")
+	cmd.Flags().StringVar(&opts.File, "file", "", "mapping YAML file to vet (required)")
 	cmd.Flags().StringVarP(&opts.ControlsDir, "controls", "i", "", "control catalog directory (default: embedded catalog)")
 	cmd.Flags().StringVar(&opts.ChainsDir, "chains", "", "chain catalog directory (default: embedded chains)")
 	cmd.Flags().StringVarP(&opts.Format, "format", "f", "text", "output format: text | json")
@@ -104,9 +104,6 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 	if strings.TrimSpace(opts.File) == "" {
 		return &ui.UserError{Err: errors.New("--file is required")}
 	}
-	// Validate the format up front (guard, not a render dispatch — the
-	// rendering lives in pkg/stave — so this does not trip the
-	// inline-format-switch lint).
 	if opts.Format != "text" && opts.Format != "json" && opts.Format != "" {
 		return &ui.UserError{Err: fmt.Errorf("--format must be text | json (got %q)", opts.Format)}
 	}
@@ -116,7 +113,7 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 		return &ui.UserError{Err: fmt.Errorf("read %s: %w", opts.File, err)}
 	}
 
-	out, invalid, err := stave.ValidateMapping(ctx, opts.File, raw, opts.ControlsDir, opts.ChainsDir, opts.Format, opts.Strict)
+	out, invalid, err := stave.VetMapping(ctx, opts.File, raw, opts.ControlsDir, opts.ChainsDir, opts.Format, opts.Strict)
 	if err != nil {
 		if errors.Is(err, stave.ErrInvalidInput) {
 			return &ui.UserError{Err: err}
@@ -125,11 +122,11 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 	}
 
 	if _, werr := w.Write(out); werr != nil {
-		return fmt.Errorf("write validation report: %w", werr)
+		return fmt.Errorf("write vet report: %w", werr)
 	}
 
 	if invalid {
-		return fmt.Errorf("mapping %s failed validation: %w", opts.File, ui.ErrDiagnosticsFound)
+		return fmt.Errorf("mapping %s failed vetting: %w", opts.File, ui.ErrDiagnosticsFound)
 	}
 	return nil
 }

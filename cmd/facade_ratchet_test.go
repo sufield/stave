@@ -120,7 +120,7 @@ var facadeCleanBaseline = map[string]struct{}{
 	"templatecmd/verifycmd": {},
 	"test":                  {},
 	"trend":                 {},
-	"validatemapping":       {},
+	"vet":                   {},
 }
 
 func TestFacadeRatchet(t *testing.T) {

@@ -131,7 +131,7 @@ func ExportTickets(assessmentData []byte, teamManifest, team, format string) ([]
 		for i := range tickets {
 			t := &tickets[i]
 			if t.Team == "" {
-				owner := manifest.ResolveOwner(nil, string(t.AssetID), string(t.ControlID))
+				owner := manifest.ResolveOwner(nil, string(t.AssetID), t.ControlID)
 				t.Team = teams.TeamID(owner.TeamName)
 			}
 		}

@@ -38,7 +38,7 @@ func computeTeamTrends(
 	teamFindings := make(map[teams.TeamID][]remediation.Finding)
 	for i := range latest.Findings {
 		f := &latest.Findings[i]
-		owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
+		owner := manifest.ResolveOwner(nil, string(f.AssetID), f.ControlID)
 		teamFindings[owner.TeamID] = append(teamFindings[owner.TeamID], *f)
 	}
 
@@ -57,7 +57,7 @@ func computeTeamTrends(
 		earlierTotalByTeam := make(map[teams.TeamID]int)
 		for i := range earliest.Findings {
 			f := &earliest.Findings[i]
-			owner := manifest.ResolveOwner(nil, string(f.AssetID), string(f.ControlID))
+			owner := manifest.ResolveOwner(nil, string(f.AssetID), f.ControlID)
 			earlierByTeam[owner.TeamID]++
 		}
 		// Estimate per-team score from violation count change.
@@ -175,7 +175,7 @@ func computeRollup(trends []teamTrend, group *teams.HierarchyGroup) *rollupResul
 	}
 	memberSet := make(map[teams.TeamID]struct{}, len(group.Teams))
 	for _, tid := range group.Teams {
-		memberSet[teams.TeamID(tid)] = struct{}{}
+		memberSet[tid] = struct{}{}
 	}
 
 	var totalScore, totalMTTR float64
@@ -208,7 +208,7 @@ func computeRollup(trends []teamTrend, group *teams.HierarchyGroup) *rollupResul
 	}
 
 	return &rollupResult{
-		GroupID:      group.ID,
+		GroupID:      string(group.ID),
 		GroupName:    group.Name,
 		PostureScore: totalScore / float64(count),
 		MTTRHours:    totalMTTR / float64(count),

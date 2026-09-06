@@ -24,7 +24,7 @@ func wireHelpGroups(root *cobra.Command) {
 		groupData: {
 			"discover", "transform", "snapshot", "readiness",
 			"gaps", "coverage", "sanitize", "contract",
-			"lint-mapping",
+			"vet",
 		},
 		groupControls: {
 			"controls", "test", "cel",

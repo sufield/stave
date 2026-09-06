@@ -6,9 +6,8 @@ import (
 	"testing"
 )
 
-// These exercise the validate-mapping helpers + renderers that moved here
-// from cmd/validatemapping. End-to-end coverage that loads catalogs from
-// disk lives in the txtar suite.
+// These exercise the vet-mapping helpers + renderers. End-to-end
+// coverage that loads catalogs from disk lives in the txtar suite.
 
 func TestMappingStructuralFindings_OK(t *testing.T) {
 	m := mappingDoc{

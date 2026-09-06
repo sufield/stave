@@ -1,4 +1,4 @@
-package validatemapping
+package vet
 
 import (
 	"go/parser"
@@ -11,13 +11,13 @@ import (
 )
 
 // TestArchitecture_FacadeOnly enforces the Phase-3 facade bar for
-// `stave lint-mapping`: production code here may import only
-// pkg/stave, cmd/cmdutil, stdlib, third-party CLI deps, and the four
-// exempt CLI helpers. _test.go files are exempt.
+// `stave vet`: production code here may import only pkg/stave,
+// cmd/cmdutil, stdlib, third-party CLI deps, and the four exempt CLI
+// helpers. _test.go files are exempt.
 //
 // YAML parsing, the structural/schema/coverage checks, the catalog
-// loading, and both renderers moved into stave.ValidateMapping
-// (pkg/stave/validatemapping.go); the command keeps only flag wiring, the
+// loading, and both renderers moved into stave.VetMapping
+// (pkg/stave/vet_mapping.go); the command keeps only flag wiring, the
 // file read, and the exit-3 INVALID signal. See
 // docs/architecture/pkg-stave-facade.md.
 func TestArchitecture_FacadeOnly(t *testing.T) {
@@ -57,7 +57,7 @@ func TestArchitecture_FacadeOnly(t *testing.T) {
 	}
 
 	if len(offenders) > 0 {
-		t.Errorf("cmd/validatemapping/ production code may import only pkg/stave, cmd/cmdutil, stdlib, and the four\n"+
+		t.Errorf("cmd/vet/ production code may import only pkg/stave, cmd/cmdutil, stdlib, and the four\n"+
 			"exempt CLI helpers (see docs/architecture/pkg-stave-facade.md).\n"+
 			"Forbidden internal imports:\n  %s",
 			strings.Join(offenders, "\n  "))

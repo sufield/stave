@@ -176,7 +176,7 @@ func TestComputeRollup_WeightedScoreAverage(t *testing.T) {
 		{ID: "gamma", PostureScore: 100, MTTRHours: 10, SLACompPct: 100, OpenFindings: 0, CriticalOpen: 0},
 	}
 	group := &teams.HierarchyGroup{
-		ID: "platform", Name: "Platform", Teams: []string{"alpha", "beta"},
+		ID: "platform", Name: "Platform", Teams: []teams.TeamID{"alpha", "beta"},
 	}
 
 	result := computeRollup(trends, group)

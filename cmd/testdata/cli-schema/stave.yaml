@@ -176,7 +176,6 @@ see_also:
     - stave iam - IAM policy analysis commands
     - stave inspect - Low-level security analysis primitives
     - stave lint - Lint inputs without evaluation
-    - stave lint-mapping - Lint a Steampipe→Stave mapping file before use
     - stave map - ATT&CK tactic coverage and gap analysis
     - stave metrics - Write Prometheus scrape file for node_exporter
     - stave network - Network reachability analysis and safety proofs
@@ -201,3 +200,4 @@ see_also:
     - stave transform - Convert raw AWS CLI snapshots into obs.v0.1 observations (built-in jq)
     - stave trend - Analyze compliance posture trends across assessment runs
     - stave version - Print version and environment state
+    - stave vet - Vet a Steampipe→Stave mapping file before use
