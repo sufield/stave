@@ -14,7 +14,7 @@ Steampipe          Agent 1              Agent 2              Stave
 ```
 
 Both agents live in the **ingestion layer** — outside Stave's core. The deterministic
-evaluation path is untouched. If an agent produces garbage, `stave validate` catches
+evaluation path is untouched. If an agent produces garbage, `stave lint` catches
 it before Stave ever evaluates it.
 
 ## Agent 1: Steampipe Collector Agent (`steampipe_collector.py`)
@@ -30,7 +30,7 @@ python3 steampipe_collector.py --tables aws_s3_bucket,aws_iam_role --output ./ra
 ## Agent 2: Stave Transform Agent (`stave_transform.py`)
 
 Reads raw JSON (from Agent 1 or any source), transforms it to Stave's observation
-contract, validates the output via `stave validate`, and self-corrects on failure.
+contract, validates the output via `stave lint`, and self-corrects on failure.
 Uses the observation schema and example transforms as context for an LLM to generate
 the field mapping.
 
@@ -39,7 +39,7 @@ python3 stave_transform.py \
     --input ./raw/aws_s3_bucket.json \
     --asset-type aws_s3_bucket \
     --output ./observations/ \
-    --validate   # runs stave validate in OODA loop
+    --validate   # runs stave lint in OODA loop
 ```
 
 ## The Contract Is the Interface
@@ -52,7 +52,7 @@ Both agents target Stave's published observation schema as a stable surface:
 Any validator in any language can check the output:
 
 ```bash
-stave validate --in output.obs.json --kind observation --strict
+stave lint --in output.obs.json --kind observation --strict
 npx ajv validate -s observation.schema.json -d output.obs.json
 check-jsonschema --schemafile observation.schema.json output.obs.json
 ```
@@ -127,7 +127,7 @@ column names, the LLM can interactively:
 1. `DESCRIBE aws_s3_bucket` — inspect the table schema
 2. `SELECT * FROM aws_s3_bucket LIMIT 1` — see actual column shapes
 3. Generate the transform with full context
-4. Validate via `stave validate`
+4. Validate via `stave lint`
 5. Self-correct on failure
 
 Setup:

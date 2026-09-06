@@ -39,7 +39,7 @@ func Test_RedGate_UnknownCmdNoMatchExit(t *testing.T) {
 	// collectVisibleCommandNames returns real candidate names.
 	root := &cobra.Command{Use: "stave"}
 	root.AddCommand(&cobra.Command{Use: "apply"})
-	root.AddCommand(&cobra.Command{Use: "validate"})
+	root.AddCommand(&cobra.Command{Use: "lint"})
 	root.AddCommand(&cobra.Command{Use: "version"})
 
 	app := &App{Root: root}

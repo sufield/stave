@@ -21,7 +21,7 @@ type LabelFunc = validatecmd.LabelFunc
 // ui.ExecuteTemplate command-side).
 type TemplateFunc = validatecmd.TemplateFunc
 
-// ValidateProject runs full project validation — the default `stave validate`
+// ValidateProject runs full project validation — the default `stave lint`
 // path: parse params, validate controls + observations against the builtin
 // catalog fallback, fold in unknown-pack diagnostics, render to bytes, and
 // apply the optional --assert-recent staleness assertion.
@@ -41,7 +41,7 @@ func ValidateProject(
 	return validatecmd.Run(ctx, req, label, tmpl, packIssues) //nolint:wrapcheck // engine already wraps; preserve exit-code sentinels (ErrValidationFailed/Warnings).
 }
 
-// ValidateContent validates a single document (the `stave validate --in`
+// ValidateContent validates a single document (the `stave lint --in`
 // path). kind is the canonical kind string resolved command-side, or "" for
 // auto-detection.
 func ValidateContent(

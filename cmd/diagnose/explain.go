@@ -74,7 +74,7 @@ func (f *repoFinder) FindByID(ctx context.Context, dir string, id kernel.Control
 	ctl, err := compose.FindControlByID(ctx, f.repo, dir, id)
 	if err != nil {
 		return policy.ControlDefinition{}, ui.WithNextCommand(err,
-			"stave validate --controls "+dir)
+			"stave lint --controls "+dir)
 	}
 	return ctl, nil
 }

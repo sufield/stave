@@ -83,7 +83,7 @@ func writeSchemas(w io.Writer, format appcontracts.OutputFormat) error {
 			{"snapshot_archive", kernel.SchemaSnapshotArchive.String()},
 			{"snapshot_plan", kernel.SchemaSnapshotPlan.String()},
 			{"snapshot_quality", kernel.SchemaSnapshotQuality.String()},
-			{"validate", kernel.SchemaValidate.String()},
+			{"lint", kernel.SchemaLint.String()},
 		},
 		Artifact: []schemaEntry{
 			{"bug_report", kernel.SchemaBugReport.String()},

@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/pflag"
 	"github.com/sufield/stave/cmd/apply"
-	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
+	applylint "github.com/sufield/stave/cmd/apply/lint"
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/diagnose"
 	"github.com/sufield/stave/cmd/enforce"
@@ -136,7 +136,7 @@ func TestEnforceFlagRegistered(t *testing.T) {
 
 // TestValidateInFlagRegistered verifies --in flag exists on validate.
 func TestValidateInFlagRegistered(t *testing.T) {
-	f := applyvalidate.NewCmd(ui.DefaultRuntime()).Flags().Lookup("in")
+	f := applylint.NewCmd(ui.DefaultRuntime()).Flags().Lookup("in")
 	if f == nil {
 		t.Error("validate missing --in flag")
 	}
@@ -145,7 +145,7 @@ func TestValidateInFlagRegistered(t *testing.T) {
 func TestCommonShortAliasesRegistered(t *testing.T) {
 	f := compose.DefaultFactories()
 	applyCmd := apply.NewApplyCmd()
-	validateCmd := applyvalidate.NewCmd(ui.DefaultRuntime())
+	validateCmd := applylint.NewCmd(ui.DefaultRuntime())
 	cases := []struct {
 		name      string
 		shorthand string

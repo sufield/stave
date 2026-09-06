@@ -66,7 +66,7 @@ func TestPrintReadinessIssue(t *testing.T) {
 		Status:      outcome.Pass,
 		Message:     "found 5 controls",
 		Remediation: "run validate",
-		FixCommand:  "stave validate",
+		FixCommand:  "stave lint",
 	}
 	if err := printReadinessIssue(&buf, issue); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -78,7 +78,7 @@ func TestPrintReadinessIssue(t *testing.T) {
 	if !strings.Contains(out, "Fix: run validate") {
 		t.Fatalf("expected fix in output, got: %s", out)
 	}
-	if !strings.Contains(out, "Command: stave validate") {
+	if !strings.Contains(out, "Command: stave lint") {
 		t.Fatalf("expected command in output, got: %s", out)
 	}
 }

@@ -25,7 +25,7 @@ func NewCmd() *cobra.Command {
 
 Subcommands:
   list       Show built-in and custom profiles
-  validate   Validate a profile file
+  lint       Lint a profile file
   create     Generate a starter profile YAML
 
 Exit Codes:
@@ -56,11 +56,10 @@ Exit Codes:
 	listCmd.Flags().StringVar(&profilesDir, "profiles-dir", "", "directory of custom profile YAML files")
 	cmd.AddCommand(listCmd)
 
-	// validate
 	var validateFile string
 	validateCmd := &cobra.Command{
-		Use:   "validate",
-		Short: "Validate a profile file",
+		Use:   "lint",
+		Short: "Lint a profile file",
 		Long: `Check a custom compliance profile YAML for correctness: required
 fields present, referenced control IDs exist in the catalog.
 
@@ -68,7 +67,7 @@ Exit Codes:
   0   Valid
   1   Errors found
   2   Invalid input`,
-		Example:       `  stave profile validate --file profiles/my-policy.yaml`,
+		Example:       `  stave profile lint --file profiles/my-policy.yaml`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -178,7 +177,7 @@ sections:
 		return fmt.Errorf("write profile: %w", err)
 	}
 
-	fmt.Fprintf(stderr, "Wrote %s\nEdit to add sections and controls.\nValidate with: stave profile validate --file %s\n",
+	fmt.Fprintf(stderr, "Wrote %s\nEdit to add sections and controls.\nValidate with: stave profile lint --file %s\n",
 		outPath, filepath.Base(outPath))
 	return nil
 }

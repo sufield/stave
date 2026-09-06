@@ -11,7 +11,7 @@ import (
 )
 
 // TestArchitecture_FacadeOnly enforces the Phase-3 facade bar for
-// `stave validate-mapping`: production code here may import only
+// `stave lint-mapping`: production code here may import only
 // pkg/stave, cmd/cmdutil, stdlib, third-party CLI deps, and the four
 // exempt CLI helpers. _test.go files are exempt.
 //

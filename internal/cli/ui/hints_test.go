@@ -12,7 +12,7 @@ func TestEvaluateErrorWithHint_MissingObservations(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !strings.Contains(err.Error(), "Next: stave validate --controls ./controls --observations ./observations") {
+	if !strings.Contains(err.Error(), "Next: stave lint --controls ./controls --observations ./observations") {
 		t.Fatalf("expected validate hint, got: %v", err)
 	}
 	// metadata.DocsRef now returns a GitHub URL by default (the old
@@ -29,7 +29,7 @@ func TestEvaluateErrorWithHint_SchemaValidation(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if !strings.Contains(err.Error(), "Next: stave validate --controls ./controls --observations ./observations") {
+	if !strings.Contains(err.Error(), "Next: stave lint --controls ./controls --observations ./observations") {
 		t.Fatalf("expected validate hint, got: %v", err)
 	}
 }
@@ -78,7 +78,7 @@ func TestSuggestForError_UsesSentinelLookup(t *testing.T) {
 	if hint.NextCommand == "" {
 		t.Fatalf("expected sentinel hint, got: %+v", hint)
 	}
-	if !strings.Contains(hint.NextCommand, "stave validate") {
+	if !strings.Contains(hint.NextCommand, "stave lint") {
 		t.Fatalf("expected validate command, got: %q", hint.NextCommand)
 	}
 }

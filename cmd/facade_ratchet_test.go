@@ -47,7 +47,7 @@ import (
 // regression the test should have caught).
 var facadeCleanBaseline = map[string]struct{}{
 	"apply":                 {},
-	"apply/validate":        {},
+	"apply/lint":            {},
 	"apply/verify":          {},
 	"attest":                {},
 	"bisect":                {},

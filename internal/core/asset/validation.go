@@ -286,7 +286,7 @@ func (s Snapshots) createNowPrecedenceError(now time.Time, lifecycle *snapshotLi
 			"latest_snapshot": latest,
 		}).
 		Build()
-	issue.FixCommand = "stave validate --eval-time " + latest
+	issue.FixCommand = "stave lint --eval-time " + latest
 	return issue
 }
 
@@ -352,7 +352,7 @@ func (s Snapshots) checkDurationFeasibility(ctx *validationCtx, maxUnsafe time.D
 				"max_unsafe": kernel.FormatDuration(maxUnsafe),
 			}).
 			Build()
-		issue.FixCommand = "stave validate --max-unsafe " + kernel.FormatDuration(ctx.lifecycle.span)
+		issue.FixCommand = "stave lint --max-unsafe " + kernel.FormatDuration(ctx.lifecycle.span)
 		issues = append(issues, issue)
 	}
 

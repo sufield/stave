@@ -1,50 +1,27 @@
-name: stave capabilities catalog validate
-synopsis: Validate the entire control and chain catalog
-description: |
-    Validate runs combined structural checks across the control and
-    chain catalog in a single pass:
+name: stave controls lint
+synopsis: Lint control files for design quality
+description: |-
+    Lint checks control design quality rules independent of schema validity.
+    It is deterministic, offline, and file-based.
 
-      1. Control lint   — schema, CEL syntax, completeness (forge lint)
-      2. Chain lint     — structure, member controls, capabilities
-      3. Cross-reference — chain ControlIDs exist in the loaded catalog
-      4. Duplicate detection — no two chains share the same ID
+    Rules:
+      - ID namespace format
+      - Required metadata (name/description/remediation)
+      - Determinism key constraints
+      - Stable ordering hints for list-like sections
 
-    With --semantic, control lint includes always-firing and impossible
-    condition checks. With --strict, warnings are treated as errors.
+    Exit Codes:
+      0    Success
+      2    Input error
+      4    Internal error
 
-    Inputs:
-      --controls DIR   Control catalog directory (default: controls)
-      --chains DIR     Chain catalog directory (default: chains)
-      --format F       text (default) | json
-      --semantic       Enable semantic analysis on controls
-      --strict         Treat warnings as errors
-
-    Exit codes:
-      0   No errors
-      2   Invalid input (bad flags)
-      3   Validation errors found
-      4   Internal error
-usage: stave capabilities catalog validate [flags]
+    Offline-only: reads local files; makes zero network connections; no cloud credentials.
+usage: stave controls lint <path> [flags]
 options:
-    - name: chains
-      usage: 'chain catalog directory (default: embedded chains)'
-    - name: controls
-      shorthand: i
-      usage: 'control catalog directory (default: embedded catalog)'
-    - name: format
-      shorthand: f
-      default_value: text
-      usage: 'output format: text | json'
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for validate
-    - name: semantic
-      default_value: "false"
-      usage: enable semantic analysis on controls
-    - name: strict
-      default_value: "false"
-      usage: treat warnings as errors
+      usage: help for lint
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -91,6 +68,10 @@ inherited_options:
       default_value: "false"
       usage: |
         In --help, list only development-only commands (default: hide them from the listing)
+    - name: strict
+      default_value: "false"
+      usage: |
+        Enable strict integrity checks for embedded registries and references
     - name: verbose
       shorthand: v
       default_value: "0"
@@ -100,10 +81,6 @@ inherited_options:
       default_value: "false"
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
-example: |4-
-      stave catalog validate
-      stave catalog validate --semantic --strict
-      stave catalog validate --format json | jq '.total_errors'
-      stave catalog validate --controls controls/s3
+example: '  stave lint --controls controls/s3'
 see_also:
-    - stave capabilities catalog - Print the user-facing capability catalog
+    - stave controls - Work with control definitions

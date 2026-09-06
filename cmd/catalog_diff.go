@@ -16,6 +16,8 @@ import (
 func newControlsCmd(newCtlRepo compose.CtlRepoFactory) *cobra.Command {
 	cmd := artifacts.NewControlsCmd(newCtlRepo)
 	cmd.AddCommand(newCatalogDiffCmd())
+	cmd.AddCommand(artifacts.NewLintCmd())
+	cmd.AddCommand(artifacts.NewFmtCmd())
 	return cmd
 }
 

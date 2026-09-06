@@ -22,7 +22,7 @@ func WriteExplainText(w io.Writer, out contracts.ExplainResult) error {
 	if err := writeExplainMinimalObservation(w, out.MinimalObservation); err != nil {
 		return err
 	}
-	_, err := fmt.Fprintln(w, "Next: save this JSON under ./observations/<timestamp>.json, then run `stave validate --controls ./controls --observations ./observations`")
+	_, err := fmt.Fprintln(w, "Next: save this JSON under ./observations/<timestamp>.json, then run `stave lint --controls ./controls --observations ./observations`")
 	return err
 }
 

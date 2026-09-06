@@ -11,7 +11,7 @@ description: |-
       list          List all active entries
       remove        Mark an acknowledgment as revoked
       upcoming      Show entries approaching expiry
-      validate      Validate the acceptance file
+      lint          Lint the acceptance file
       suggest       Suggest exemptions for chronic/oscillating findings
 options:
     - name: help
@@ -84,8 +84,8 @@ see_also:
     - stave exempt except - Add an operational suppression
     - stave exempt export - Export risk register as OSCAL POA&M
     - stave exempt history - Show full audit trail including expired entries
+    - stave exempt lint - Lint the acceptance file
     - stave exempt list - List all active risk acceptances
     - stave exempt remove - Mark an acknowledgment as revoked
     - stave exempt suggest - Suggest exemptions for chronic/oscillating findings
     - stave exempt upcoming - Show acceptances approaching expiry
-    - stave exempt validate - Validate the acceptance file

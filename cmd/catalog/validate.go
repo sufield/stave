@@ -15,9 +15,9 @@ func newValidateCmd() *cobra.Command {
 	}
 	var semantic, strict bool
 	cmd := &cobra.Command{
-		Use:   "validate",
-		Short: "Validate the entire control and chain catalog",
-		Long: `Validate runs combined structural checks across the control and
+		Use:   "lint",
+		Short: "Lint the entire control and chain catalog",
+		Long: `Lint runs combined structural checks across the control and
 chain catalog in a single pass:
 
   1. Control lint   — schema, CEL syntax, completeness (forge lint)
@@ -38,13 +38,13 @@ Inputs:
 Exit codes:
   0   No errors
   2   Invalid input (bad flags)
-  3   Validation errors found
+  3   Lint errors found
   4   Internal error
 `,
-		Example: `  stave catalog validate
-  stave catalog validate --semantic --strict
-  stave catalog validate --format json | jq '.total_errors'
-  stave catalog validate --controls controls/s3`,
+		Example: `  stave catalog lint
+  stave catalog lint --semantic --strict
+  stave catalog lint --format json | jq '.total_errors'
+  stave catalog lint --controls controls/s3`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,
@@ -63,14 +63,14 @@ Exit codes:
 				return err //nolint:wrapcheck // facade already wrapped; preserve exit 4.
 			}
 			if renderErr := renderer.Render(cmd.OutOrStdout(), result); renderErr != nil {
-				return fmt.Errorf("render validate output: %w", renderErr)
+				return fmt.Errorf("render lint output: %w", renderErr)
 			}
 			if result.TotalErrors > 0 {
-				return fmt.Errorf("%d catalog validation error(s): %w",
+				return fmt.Errorf("%d catalog lint error(s): %w",
 					result.TotalErrors, ui.ErrViolationsFound)
 			}
 			if strict && result.TotalWarnings > 0 {
-				return fmt.Errorf("%d catalog validation warning(s) (--strict): %w",
+				return fmt.Errorf("%d catalog lint warning(s) (--strict): %w",
 					result.TotalWarnings, ui.ErrViolationsFound)
 			}
 			return nil

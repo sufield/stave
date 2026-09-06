@@ -36,8 +36,8 @@ func TestRecommendNextValidateEvaluateWhenOutputMissing(t *testing.T) {
 		Observations: appstatus.Summary{Count: 2, HasLatest: true, Latest: time.Now().Add(-time.Hour)},
 	}
 	next := state.RecommendNext()
-	if !strings.Contains(next, "stave validate") || !strings.Contains(next, "stave apply") {
-		t.Fatalf("expected validate+apply recommendation, got: %s", next)
+	if !strings.Contains(next, "stave lint") || !strings.Contains(next, "stave apply") {
+		t.Fatalf("expected lint+apply recommendation, got: %s", next)
 	}
 }
 

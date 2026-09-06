@@ -29,7 +29,7 @@ Subcommands:
   list          List all active entries
   remove        Mark an acknowledgment as revoked
   upcoming      Show entries approaching expiry
-  validate      Validate the acceptance file
+  lint          Lint the acceptance file
   suggest       Suggest exemptions for chronic/oscillating findings`,
 		Args: cobra.NoArgs,
 	}
@@ -376,18 +376,18 @@ func newValidateCmd() *cobra.Command {
 	opts := validateOptions{File: defaultFile}
 
 	cmd := &cobra.Command{
-		Use:   "validate",
-		Short: "Validate the acceptance file",
-		Long: `Validate the acceptance file for required fields, date formats, and structural correctness.
+		Use:   "lint",
+		Short: "Lint the acceptance file",
+		Long: `Lint the acceptance file for required fields, date formats, and structural correctness.
 
 Overdue exemption reviews are surfaced as warnings by default.
 With --strict, overdue reviews are treated as errors.
 
 Exit Codes:
-  0   Validation passed
+  0   Lint passed
   2   Invalid input
   4   Internal error`,
-		Example:       "  stave exempt validate --file ./stave-acknowledgments.yaml",
+		Example:       "  stave exempt lint --file ./stave-acknowledgments.yaml",
 		SilenceUsage:  true,
 		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, _ []string) error {

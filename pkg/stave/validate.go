@@ -65,7 +65,7 @@ type ValidationFinding struct {
 }
 
 // Validate runs structural validation on the observation snapshots and
-// control definitions. Equivalent to `stave validate` on the command
+// control definitions. Equivalent to `stave lint` on the command
 // line, minus CLI concerns (formatting, exit codes, hints).
 func Validate(ctx context.Context, cfg ValidateConfig) (*ValidationResult, error) {
 	if cfg.SnapshotsDir == "" {

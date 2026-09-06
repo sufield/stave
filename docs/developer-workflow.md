@@ -37,7 +37,7 @@ stave transform -i raw/ -o my-obs/
 ./my-extractor.sh > my-obs/2026-03-15T000000Z.json
 
 # Validate catches schema mistakes before evaluation
-stave validate --controls internal/controls/s3 --observations ./my-obs
+stave lint --controls internal/controls/s3 --observations ./my-obs
 
 # Evaluate
 stave apply --controls internal/controls/s3 --observations ./my-obs --max-unsafe 168h

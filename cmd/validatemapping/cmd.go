@@ -1,4 +1,4 @@
-// Package validatemapping implements `stave validate-mapping` — a
+// Package validatemapping implements `stave lint-mapping` — a
 // pre-flight check for Steampipe→Stave transform contracts. It
 // answers three questions about a mapping file before an agent uses
 // it to populate observations:
@@ -42,7 +42,7 @@ type options struct {
 	Strict      bool
 }
 
-// NewCmd constructs the `validate-mapping` command.
+// NewCmd constructs the `lint-mapping` command.
 func NewCmd() *cobra.Command {
 	opts := &options{
 		Format:      "text",
@@ -50,9 +50,9 @@ func NewCmd() *cobra.Command {
 		ChainsDir:   "chains",
 	}
 	cmd := &cobra.Command{
-		Use:   "validate-mapping",
-		Short: "Validate a Steampipe→Stave mapping file before use",
-		Long: `Validate inspects a contracts/steampipe/<asset_type>.yaml mapping and
+		Use:   "lint-mapping",
+		Short: "Lint a Steampipe→Stave mapping file before use",
+		Long: `Lint inspects a contracts/steampipe/<asset_type>.yaml mapping and
 reports whether it can produce a schema-valid observation for the
 declared asset type, plus how much of the catalog's read surface it
 covers.
@@ -69,7 +69,7 @@ Three checks:
      highest-control-count gaps surfaced.
 
 Inputs:
-  --file FILE        Mapping YAML to validate (required)
+  --file FILE        Mapping YAML to lint (required)
   --controls DIR     Control catalog (default: controls)
   --chains DIR       Chain catalog (default: chains)
   --format F         text (default) | json
@@ -82,9 +82,9 @@ Exit codes:
   3   Mapping is invalid (structural or, with --strict, coverage gap)
   4   Internal error
 `,
-		Example: `  stave validate-mapping --file contracts/steampipe/aws_s3_bucket.yaml
-  stave validate-mapping --file contracts/steampipe/aws_iam_role.yaml --strict
-  stave validate-mapping --file contracts/steampipe/aws_kms_key.yaml --format json`,
+		Example: `  stave lint-mapping --file contracts/steampipe/aws_s3_bucket.yaml
+  stave lint-mapping --file contracts/steampipe/aws_iam_role.yaml --strict
+  stave lint-mapping --file contracts/steampipe/aws_kms_key.yaml --format json`,
 		Args:          cobra.NoArgs,
 		SilenceUsage:  true,
 		SilenceErrors: true,

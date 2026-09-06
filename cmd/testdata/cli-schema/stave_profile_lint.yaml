@@ -1,15 +1,21 @@
-name: stave controls
-synopsis: Work with control definitions
+name: stave profile lint
+synopsis: Lint a profile file
 description: |-
-    Controls groups commands for discovering and understanding control
-    definitions used by Stave.
+    Check a custom compliance profile YAML for correctness: required
+    fields present, referenced control IDs exist in the catalog.
 
-    Offline-only: reads local files; makes zero network connections; no cloud credentials.
+    Exit Codes:
+      0   Valid
+      1   Errors found
+      2   Invalid input
+usage: stave profile lint [flags]
 options:
+    - name: file
+      usage: profile YAML file (required)
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for controls
+      usage: help for lint
 inherited_options:
     - name: allow-symlink-output
       default_value: "false"
@@ -69,17 +75,6 @@ inherited_options:
       default_value: "false"
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
-example: |4-
-      stave controls list --controls ./controls
-      stave controls explain CTL.S3.PUBLIC.001 --controls ./controls
+example: '  stave profile lint --file profiles/my-policy.yaml'
 see_also:
-    - stave - Configuration safety evaluator
-    - stave controls alias-explain - Show expanded predicate for an alias
-    - stave controls aliases - List built-in semantic predicate aliases
-    - stave controls diff - Compare two control catalog versions
-    - stave controls explain - Explain a specific control
-    - stave controls fmt - Format control and observation files deterministically
-    - stave controls lint - Lint control files for design quality
-    - stave controls list - List control IDs and names
-    - stave controls quality - Analyze control catalog metadata completeness and coverage gaps
-    - stave controls search - Search the built-in control catalog
+    - stave profile - Manage compliance profiles

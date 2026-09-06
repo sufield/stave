@@ -1,4 +1,4 @@
-package validate
+package lint
 
 import (
 	"go/parser"
@@ -11,7 +11,7 @@ import (
 )
 
 // TestArchitecture_FacadeOnly enforces the Phase-3 facade bar for the
-// `stave validate` command: production code here may import only pkg/stave,
+// `stave lint` command: production code here may import only pkg/stave,
 // cmd/cmdutil, stdlib, third-party CLI deps, and the four exempt CLI helpers.
 // _test.go files are exempt.
 //
@@ -58,7 +58,7 @@ func TestArchitecture_FacadeOnly(t *testing.T) {
 	}
 
 	if len(offenders) > 0 {
-		t.Errorf("cmd/apply/validate/ production code may import only pkg/stave, cmd/cmdutil, stdlib, and the\n"+
+		t.Errorf("cmd/apply/lint/ production code may import only pkg/stave, cmd/cmdutil, stdlib, and the\n"+
 			"four exempt CLI helpers (see docs/architecture/pkg-stave-facade.md).\n"+
 			"Forbidden internal imports:\n  %s",
 			strings.Join(offenders, "\n  "))

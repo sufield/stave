@@ -152,7 +152,7 @@ see_also:
     - stave capabilities catalog coverage - Show per-service control coverage
     - stave capabilities catalog gaps - Compare catalog against an external checklist
     - stave capabilities catalog inspect - Show full metadata for a single control
+    - stave capabilities catalog lint - Lint the entire control and chain catalog
     - stave capabilities catalog matrix - Show taxonomy × service cross-product with gap cells
     - stave capabilities catalog stats - Print aggregate catalog statistics
     - stave capabilities catalog taxonomy - List taxonomy categories with control counts
-    - stave capabilities catalog validate - Validate the entire control and chain catalog

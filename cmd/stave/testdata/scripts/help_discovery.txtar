@@ -18,7 +18,7 @@ stdout 'Inputs'
 exec stave diagnose --help
 stdout 'Exit Codes'
 
-exec stave validate --help
+exec stave lint --help
 stdout 'Exit Codes'
 
 exec stave doctor --help

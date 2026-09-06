@@ -11,7 +11,7 @@ import (
 )
 
 // ValidateGenerated finds <controlID>.yaml under outDir and validates it the
-// same way `stave validate` parses controls (unmarshal + Prepare). It returns
+// same way `stave lint` parses controls (unmarshal + Prepare). It returns
 // the status output and a non-nil error when the expected YAML is absent
 // (generation produced nothing) or fails to parse/prepare. It is the library
 // entry point behind the validation step of `stave forge new`.
@@ -58,13 +58,13 @@ func ValidateGenerated(controlID, outDir string) ([]byte, error) {
 	ctl, err := ctlyaml.UnmarshalControlDefinition(data)
 	if err != nil {
 		fmt.Fprintf(&buf, "\nValidating generated control...  FAILED\n  error: %v\n", err)
-		fmt.Fprintf(&buf, "\nThe generated control has a schema error. Edit the file and\nrun 'stave validate %s' to verify.\n", yamlPath)
+		fmt.Fprintf(&buf, "\nThe generated control has a schema error. Edit the file and\nrun 'stave lint %s' to verify.\n", yamlPath)
 		return buf.Bytes(), fmt.Errorf("parse generated control %s: %w", yamlPath, err)
 	}
 
 	if err := ctl.Prepare(); err != nil {
 		fmt.Fprintf(&buf, "\nValidating generated control...  FAILED\n  error: %v\n", err)
-		fmt.Fprintf(&buf, "\nThe generated control has a preparation error. Edit the file and\nrun 'stave validate %s' to verify.\n", yamlPath)
+		fmt.Fprintf(&buf, "\nThe generated control has a preparation error. Edit the file and\nrun 'stave lint %s' to verify.\n", yamlPath)
 		return buf.Bytes(), fmt.Errorf("prepare generated control %s: %w", yamlPath, err)
 	}
 

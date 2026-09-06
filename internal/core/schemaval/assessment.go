@@ -74,7 +74,7 @@ func (r *ReadinessAssessment) IsReady() bool {
 // NextCommand returns the recommended next CLI command for the
 // operator to run, based on readiness state. When the assessment
 // is ready, the next command is `stave apply`; when unsafe, the
-// command is `stave validate` so the operator can investigate
+// command is `stave lint` so the operator can investigate
 // the recorded findings before re-running.
 //
 // Centralised here so the cmd-side renderer stops constructing
@@ -84,7 +84,7 @@ func (r *ReadinessAssessment) NextCommand() string {
 	if r == nil {
 		return ""
 	}
-	verb := "validate"
+	verb := "lint"
 	if r.IsReady() {
 		verb = "apply"
 	}

@@ -24,7 +24,7 @@ stdout '"version"'
 stdout '"data_ingress"'
 
 # validate help
-exec stave validate --help
+exec stave lint --help
 stdout 'Exit Codes'
 
 -- controls/CTL.TEST.001.yaml --

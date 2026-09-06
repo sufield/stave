@@ -104,7 +104,7 @@ func TestExtractCommands_DoctestSkip(t *testing.T) {
 }
 
 func TestExtractCommands_DoctestExpectError(t *testing.T) {
-	md := []byte("```bash\n# doctest:expect-error — demonstrates error handling\nstave validate --in nonexistent.yaml\n```\n")
+	md := []byte("```bash\n# doctest:expect-error — demonstrates error handling\nstave lint --in nonexistent.yaml\n```\n")
 	cmds, err := ExtractCommands(md, "test.md", []string{"bash"})
 	if err != nil {
 		t.Fatal(err)

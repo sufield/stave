@@ -29,12 +29,12 @@ type catalogAnnotation struct {
 
 // catalogAnnotations is ordered: groups follow catalogGroupOrder and
 // commands within a group keep this slice's order (editorial, e.g.
-// validate before apply before diagnose).
+// lint before apply before diagnose).
 var catalogAnnotations = []catalogAnnotation{
 	{Path: "discover", Group: "Getting Started", When: "Determining what Stave needs for your AWS services"},
 	{Path: "generate", Group: "Getting Started", When: "First-time setup — scaffold a project's controls/observations layout"},
 	{Path: "generate observation", Group: "Getting Started", When: "Creating a new observation snapshot to fill in"},
-	{Path: "validate", Group: "Control Engine (the daily loop)", When: "Before `apply`, to catch schema/format errors early"},
+	{Path: "lint", Group: "Control Engine (the daily loop)", When: "Before `apply`, to catch schema/format errors early"},
 	{Path: "plan", Group: "Control Engine (the daily loop)", When: "Preview what controls will evaluate before collecting data"},
 	{Path: "apply", Group: "Control Engine (the daily loop)", When: "Primary evaluation — produces findings JSON (use `--dry-run` for readiness only)"},
 	{Path: "diagnose", Group: "Control Engine (the daily loop)", When: "When `apply` output doesn't match expectations"},

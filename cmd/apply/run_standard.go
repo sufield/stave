@@ -176,7 +176,7 @@ func warnContractViolations(ctx context.Context, obsDir string, sio StandardIO) 
 	n := stave.ContractViolationCount(ctx, obsDir)
 	if n > 0 {
 		fmt.Fprintf(sio.Stderr,
-			"warning: %d collector contract violation%s found — run stave validate --check collector-contract for details\n",
+			"warning: %d collector contract violation%s found — run stave lint --check collector-contract for details\n",
 			n, plural(n))
 	}
 }

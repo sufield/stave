@@ -14,11 +14,11 @@ description: |-
 
       Or start a project layout with built-in S3 controls:
         stave generate                             - Scaffold starter artifacts
-        stave validate                             - Check inputs are well-formed
+        stave lint                             - Check inputs are well-formed
         stave apply                                - Evaluate and produce findings
 
     Operational Workflow:
-      1. validate   - Check inputs are well-formed (run first)
+      1. lint       - Check inputs are well-formed (run first)
       2. apply      - Run control evaluation and produce findings
                       Use --dry-run to verify readiness first
       3. diagnose   - Understand unexpected results
@@ -54,7 +54,7 @@ description: |-
 
     Examples:
       # Step 1: Validate inputs
-      stave validate --controls ./controls --observations ./obs
+      stave lint --controls ./controls --observations ./obs
 
       # Step 2: Dry-run readiness checks
       stave apply --dry-run --controls ./controls --observations ./obs
@@ -169,14 +169,14 @@ see_also:
     - stave export - Export controls and compliance evidence
     - stave features - Show what Stave does and deliberately does not do
     - stave fingerprint - Policy fingerprint diagnostics
-    - stave fmt - Format control and observation files deterministically
     - stave forge - Author and test custom controls
     - stave gaps - Report which observation properties are absent + what they unlock
     - stave generate - Generate starter artifacts
     - stave graph - Visualize control and asset relationships
     - stave iam - IAM policy analysis commands
     - stave inspect - Low-level security analysis primitives
-    - stave lint - Lint control files for design quality
+    - stave lint - Lint inputs without evaluation
+    - stave lint-mapping - Lint a Steampipe→Stave mapping file before use
     - stave map - ATT&CK tactic coverage and gap analysis
     - stave metrics - Write Prometheus scrape file for node_exporter
     - stave network - Network reachability analysis and safety proofs
@@ -200,6 +200,4 @@ see_also:
     - stave test - Run embedded control test cases
     - stave transform - Convert raw AWS CLI snapshots into obs.v0.1 observations (built-in jq)
     - stave trend - Analyze compliance posture trends across assessment runs
-    - stave validate - Validate inputs without evaluation
-    - stave validate-mapping - Validate a Steampipe→Stave mapping file before use
     - stave version - Print version and environment state

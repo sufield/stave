@@ -23,7 +23,7 @@ dsl_version: ctrl.v1
 When a future DSL version is introduced, use this checklist:
 
 1. Update `dsl_version` in each control.
-2. Validate with `stave validate --controls <dir>`.
+2. Validate with `stave lint --controls <dir>`.
 3. Run evaluation against known test fixtures.
 4. Compare findings for intentional changes only.
 5. Update any internal docs or examples pinned to old syntax.
@@ -31,7 +31,7 @@ When a future DSL version is introduced, use this checklist:
 ## Validation Command
 
 ```bash
-stave validate --controls ./controls
+stave lint --controls ./controls
 ```
 
 Fix all validation issues before release.

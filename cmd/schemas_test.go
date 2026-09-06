@@ -23,7 +23,7 @@ func TestSchemasTextOutput(t *testing.T) {
 		"diagnose.v1",
 		"diff.v0.1",
 		"baseline.v0.1",
-		"validate.v0.1",
+		"lint.v0.1",
 		"bug-report.v0.1",
 		"security-audit.v1",
 		"Data Contracts:",

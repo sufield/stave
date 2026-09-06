@@ -43,7 +43,7 @@ func Test_Mut_SuggestCommandIfUnknown_NonUnknownPassthrough(t *testing.T) {
 	// candidate names and SuggestCommandError actually attempts a match.
 	root := &cobra.Command{Use: "stave"}
 	root.AddCommand(&cobra.Command{Use: "apply"})
-	root.AddCommand(&cobra.Command{Use: "validate"})
+	root.AddCommand(&cobra.Command{Use: "lint"})
 	root.AddCommand(&cobra.Command{Use: "version"})
 
 	app := &App{Root: root}

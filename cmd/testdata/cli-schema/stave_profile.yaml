@@ -5,7 +5,7 @@ description: |-
 
     Subcommands:
       list       Show built-in and custom profiles
-      validate   Validate a profile file
+      lint       Lint a profile file
       create     Generate a starter profile YAML
 
     Exit Codes:
@@ -79,5 +79,5 @@ inherited_options:
 see_also:
     - stave - Configuration safety evaluator
     - stave profile create - Generate a starter profile YAML
+    - stave profile lint - Lint a profile file
     - stave profile list - List available compliance profiles
-    - stave profile validate - Validate a profile file

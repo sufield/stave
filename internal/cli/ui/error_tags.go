@@ -51,7 +51,7 @@ var hintRegistry = []hintRule{
 		patterns: []string{"--observations not accessible"},
 		hint: RemediationHint{
 			Reason:      "Observation snapshots are missing or unreadable.",
-			NextCommand: "stave validate --controls ./controls --observations ./observations",
+			NextCommand: "stave lint --controls ./controls --observations ./observations",
 			SearchQuery: "observations directory not accessible",
 		},
 	},
@@ -78,7 +78,7 @@ var hintRegistry = []hintRule{
 		patterns: []string{"no snapshots in"},
 		hint: RemediationHint{
 			Reason:      "No observation snapshots found for evaluation.",
-			NextCommand: "stave validate --controls ./controls --observations ./observations",
+			NextCommand: "stave lint --controls ./controls --observations ./observations",
 			SearchQuery: "no observation snapshots",
 		},
 	},
@@ -87,7 +87,7 @@ var hintRegistry = []hintRule{
 		patterns: []string{"schema validation failed"},
 		hint: RemediationHint{
 			Reason:      "Input files do not conform to schema.",
-			NextCommand: "stave validate --controls ./controls --observations ./observations",
+			NextCommand: "stave lint --controls ./controls --observations ./observations",
 			SearchQuery: "validate schema validation failed",
 		},
 	},

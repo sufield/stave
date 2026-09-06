@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/apply"
-	applyvalidate "github.com/sufield/stave/cmd/apply/validate"
+	applylint "github.com/sufield/stave/cmd/apply/lint"
 	applyverify "github.com/sufield/stave/cmd/apply/verify"
 	staveattest "github.com/sufield/stave/cmd/attest"
 	stavebisect "github.com/sufield/stave/cmd/bisect"
@@ -21,7 +21,6 @@ import (
 	contract "github.com/sufield/stave/cmd/contract"
 	stavecoverage "github.com/sufield/stave/cmd/coverage"
 	"github.com/sufield/stave/cmd/diagnose"
-	"github.com/sufield/stave/cmd/diagnose/artifacts"
 	diagreport "github.com/sufield/stave/cmd/diagnose/report"
 	stavediscover "github.com/sufield/stave/cmd/discover"
 	"github.com/sufield/stave/cmd/doctor"
@@ -102,7 +101,7 @@ func WireCommands(app *App) error {
 	root.AddCommand(initcmd.NewGenerateCmd())
 
 	// Control Engine
-	root.AddCommand(applyvalidate.NewCmd(ui.DefaultRuntime()))
+	root.AddCommand(applylint.NewCmd(ui.DefaultRuntime()))
 	root.AddCommand(apply.NewApplyCmd())
 	root.AddCommand(applyverify.NewCmd(ui.DefaultRuntime()))
 	diagnoseCmd := diagnose.NewDiagnoseCmd(f.NewObsRepo, f.NewCtlRepo)
@@ -168,8 +167,6 @@ func WireCommands(app *App) error {
 
 	// Data & Artifacts
 	root.AddCommand(enforce.NewGenerateCmd())
-	root.AddCommand(artifacts.NewLintCmd())
-	root.AddCommand(artifacts.NewFmtCmd())
 	root.AddCommand(newControlsCmd(f.NewCtlRepo))
 
 	// Introspection

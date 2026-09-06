@@ -13,7 +13,7 @@ exec stave apply --controls controls --observations observations-clean --max-uns
 ! exec stave apply --controls /nonexistent --observations /nonexistent
 
 # Validate help
-exec stave validate --help
+exec stave lint --help
 stdout 'Exit Codes'
 
 -- controls/CTL.TEST.001.yaml --

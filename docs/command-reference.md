@@ -29,7 +29,7 @@ _177 commands across 13 groups._
 | `diagnose trace` | Trace predicate evaluation for a single control against a single asset |
 | `expand` | Show every control sharing a structural defect archetype |
 | `explain` | Explain how a control evaluates and which fields it needs |
-| `validate` | Validate inputs without evaluation |
+| `lint` | Lint inputs without evaluation |
 
 ## Workflow & CI
 
@@ -96,8 +96,8 @@ _177 commands across 13 groups._
 | `export tickets` | Export findings as canonical ticket records |
 | `profile` | Manage compliance profiles |
 | `profile create` | Generate a starter profile YAML |
+| `profile lint` | Lint a profile file |
 | `profile list` | List available compliance profiles |
-| `profile validate` | Validate a profile file |
 | `report` | Generate executive security posture report |
 | `trend` | Analyze compliance posture trends across assessment runs |
 | `trend forecast` | Project posture score trajectory with SLA breach warnings |
@@ -114,11 +114,11 @@ _177 commands across 13 groups._
 | `exempt except` | Add an operational suppression |
 | `exempt export` | Export risk register as OSCAL POA&M |
 | `exempt history` | Show full audit trail including expired entries |
+| `exempt lint` | Lint the acceptance file |
 | `exempt list` | List all active risk acceptances |
 | `exempt remove` | Mark an acknowledgment as revoked |
 | `exempt suggest` | Suggest exemptions for chronic/oscillating findings |
 | `exempt upcoming` | Show acceptances approaching expiry |
-| `exempt validate` | Validate the acceptance file |
 
 ## Control Authoring
 
@@ -129,10 +129,11 @@ _177 commands across 13 groups._
 | `controls aliases` | List built-in semantic predicate aliases |
 | `controls diff` | Compare two control catalog versions |
 | `controls explain` | Explain a specific control |
+| `controls fmt` | Format control and observation files deterministically |
+| `controls lint` | Lint control files for design quality |
 | `controls list` | List control IDs and names |
 | `controls quality` | Analyze control catalog metadata completeness and coverage gaps |
 | `controls search` | Search the built-in control catalog |
-| `fmt` | Format control and observation files deterministically |
 | `forge` | Author and test custom controls |
 | `forge chain` | Author and validate custom chains |
 | `forge chain lint` | Validate chain YAML |
@@ -142,7 +143,6 @@ _177 commands across 13 groups._
 | `forge preview` | Evaluate a predicate against a snapshot without writing files |
 | `forge scaffold` | Generate test fixtures from a real snapshot |
 | `forge test` | Run fixture-based assertions against a control |
-| `lint` | Lint control files for design quality |
 | `test` | Run embedded control test cases |
 
 ## Catalog & Coverage
@@ -154,18 +154,18 @@ _177 commands across 13 groups._
 | `capabilities catalog coverage` | Show per-service control coverage |
 | `capabilities catalog gaps` | Compare catalog against an external checklist |
 | `capabilities catalog inspect` | Show full metadata for a single control |
+| `capabilities catalog lint` | Lint the entire control and chain catalog |
 | `capabilities catalog matrix` | Show taxonomy × service cross-product with gap cells |
 | `capabilities catalog stats` | Print aggregate catalog statistics |
 | `capabilities catalog taxonomy` | List taxonomy categories with control counts |
-| `capabilities catalog validate` | Validate the entire control and chain catalog |
 | `catalog` | Print the user-facing capability catalog |
 | `catalog coverage` | Show per-service control coverage |
 | `catalog gaps` | Compare catalog against an external checklist |
 | `catalog inspect` | Show full metadata for a single control |
+| `catalog lint` | Lint the entire control and chain catalog |
 | `catalog matrix` | Show taxonomy × service cross-product with gap cells |
 | `catalog stats` | Print aggregate catalog statistics |
 | `catalog taxonomy` | List taxonomy categories with control counts |
-| `catalog validate` | Validate the entire control and chain catalog |
 | `coverage` | Analyze observation field coverage against control predicates |
 | `discover` | Resolve AWS services to the data Stave needs (the collection manifest) |
 | `gaps` | Report which observation properties are absent + what they unlock |
@@ -197,9 +197,9 @@ _177 commands across 13 groups._
 | `attest verify` | Verify an attested snapshot against a public key |
 | `fingerprint` | Policy fingerprint diagnostics |
 | `fingerprint explain` | Show the policy fingerprint preimage and diagnosis |
+| `lint-mapping` | Lint a Steampipe→Stave mapping file before use |
 | `sanitize` | Sanitize a snapshot for cross-boundary sharing |
 | `transform` | Convert raw AWS CLI snapshots into obs.v0.1 observations (built-in jq) |
-| `validate-mapping` | Validate a Steampipe→Stave mapping file before use |
 
 ## Interop & Export
 

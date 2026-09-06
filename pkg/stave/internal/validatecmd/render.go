@@ -178,7 +178,7 @@ type ReportSummary struct {
 func buildReport(res *appvalidation.Report, includeHints bool, hc hintContext) Report {
 	d := diagnosticsOf(res)
 	report := Report{
-		SchemaVersion: kernel.SchemaValidate,
+		SchemaVersion: kernel.SchemaLint,
 		Valid:         res.Valid(),
 		Errors:        d.Errors(),
 		Warnings:      d.Warnings(),

@@ -18,16 +18,16 @@ func wireHelpGroups(root *cobra.Command) {
 
 	groupMap := map[string][]string{
 		groupEvaluate: {
-			"plan", "apply", "validate", "check",
+			"plan", "apply", "lint", "check",
 			"diagnose", "explain", "expand", "bisect",
 		},
 		groupData: {
 			"discover", "transform", "snapshot", "readiness",
 			"gaps", "coverage", "sanitize", "contract",
-			"validate-mapping",
+			"lint-mapping",
 		},
 		groupControls: {
-			"controls", "lint", "fmt", "test", "cel",
+			"controls", "test", "cel",
 			"template", "pack", "catalog", "search",
 			"recommend", "forge",
 		},

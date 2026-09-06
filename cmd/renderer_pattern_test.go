@@ -144,7 +144,7 @@ func switchesOnFormat(tag ast.Expr) bool {
 // format value in its case conditions (e.g. `case opts.Format.IsJSON():` or
 // `case r.Format != "" && r.Format != string(FormatText):`). Same dispatch
 // anti-pattern as a tagged `switch opts.Format`, written as a conditionless
-// switch — the form cmd/apply/validate and cmd/scorecard used to slip past the
+// switch — the form cmd/apply/lint and cmd/scorecard used to slip past the
 // tagged-switch check.
 func taglessSwitchOnFormat(sw *ast.SwitchStmt) bool {
 	if sw.Body == nil {

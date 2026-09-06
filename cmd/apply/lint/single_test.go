@@ -1,4 +1,4 @@
-package validate
+package lint
 
 import (
 	"strings"

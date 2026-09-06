@@ -1,5 +1,5 @@
-// Package validate implements the validate command.
-package validate
+// Package lint implements the lint command.
+package lint
 
 import (
 	"fmt"
@@ -13,9 +13,9 @@ import (
 	"github.com/sufield/stave/internal/platform/metadata"
 )
 
-const validateLongHelp = `Validate controls, observations, and configuration for correctness without evaluation.
+const lintLongHelp = `Lint controls, observations, and configuration for correctness without evaluation.
 
-Validate checks structural and semantic correctness of all evaluation inputs
+Lint checks structural and semantic correctness of all evaluation inputs
 before running the full apply pipeline. It catches schema violations, invalid
 timestamps, and cross-file inconsistencies early, reducing time spent debugging
 failed evaluations.
@@ -42,28 +42,28 @@ Inputs:
   --template           Custom output template
 
 Outputs:
-  stdout               Validation report listing issues found (text or JSON)
+  stdout               Lint report listing issues found (text or JSON)
   stderr               Error messages (if any)
 
 Exit Codes:
   0   - All inputs are valid; no issues found
-  2   - Invalid input or validation failure (also used in --strict mode for warnings)
+  2   - Invalid input or lint failure (also used in --strict mode for warnings)
   130 - Interrupted (SIGINT)
 
 Examples:
-  # Validate project controls and observations
-  stave validate
+  # Lint project controls and observations
+  stave lint
 
-  # Validate with JSON output
-  stave validate --format json
+  # Lint with JSON output
+  stave lint --format json
 
-  # Validate a single file from stdin
-  cat control.yaml | stave validate --in - --kind control
+  # Lint a single file from stdin
+  cat control.yaml | stave lint --in - --kind control
 
   # Strict mode: treat warnings as errors
-  stave validate --strict` + metadata.OfflineHelpSuffix
+  stave lint --strict` + metadata.OfflineHelpSuffix
 
-// NewCmd builds the validate command.
+// NewCmd builds the lint command.
 // Returns nil if rt is nil — the caller (WireCommands) must provide a valid runtime.
 func NewCmd(rt *ui.Runtime) *cobra.Command {
 	if rt == nil {
@@ -73,19 +73,15 @@ func NewCmd(rt *ui.Runtime) *cobra.Command {
 	opts := newOptions()
 
 	cmd := &cobra.Command{
-		Use:     "validate",
-		Short:   "Validate inputs without evaluation",
-		Long:    validateLongHelp,
-		Example: `  stave validate --controls controls/s3 --observations observations`,
+		Use:     "lint",
+		Short:   "Lint inputs without evaluation",
+		Long:    lintLongHelp,
+		Example: `  stave lint --controls controls/s3 --observations observations`,
 		Args:    cobra.NoArgs,
 		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return opts.Prepare(cmd)
 		},
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			// resolvedFormat is appcontracts.OutputFormat (inferred). It is
-			// passed to compose helpers and converted to a string for the
-			// facade — never named — so the command does not import
-			// internal/app/contracts.
 			resolvedFormat, fmtErr := compose.ResolveFormatValue(opts.Format)
 			if fmtErr != nil {
 				return fmt.Errorf("resolve output format: %w", fmtErr)

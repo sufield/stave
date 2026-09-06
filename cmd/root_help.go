@@ -13,11 +13,11 @@ Getting Started:
 
   Or start a project layout with built-in S3 controls:
     stave generate                             - Scaffold starter artifacts
-    stave validate                             - Check inputs are well-formed
+    stave lint                             - Check inputs are well-formed
     stave apply                                - Evaluate and produce findings
 
 Operational Workflow:
-  1. validate   - Check inputs are well-formed (run first)
+  1. lint       - Check inputs are well-formed (run first)
   2. apply      - Run control evaluation and produce findings
                   Use --dry-run to verify readiness first
   3. diagnose   - Understand unexpected results
@@ -53,7 +53,7 @@ Exit Codes:
 
 Examples:
   # Step 1: Validate inputs
-  stave validate --controls ./controls --observations ./obs
+  stave lint --controls ./controls --observations ./obs
 
   # Step 2: Dry-run readiness checks
   stave apply --dry-run --controls ./controls --observations ./obs

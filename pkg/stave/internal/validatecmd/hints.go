@@ -113,9 +113,9 @@ func hintDiagnoseObservations(_ diag.Finding, ctx hintContext) string {
 
 func hintValidateCoverage(_ diag.Finding, ctx hintContext) string {
 	if ctx.ControlsDir == "" || ctx.ObservationsDir == "" {
-		return "stave validate"
+		return "stave lint"
 	}
-	return fmt.Sprintf("stave validate --controls %s --observations %s --max-unsafe 24h",
+	return fmt.Sprintf("stave lint --controls %s --observations %s --max-unsafe 24h",
 		shellQuote(ctx.ControlsDir),
 		shellQuote(ctx.ObservationsDir),
 	)

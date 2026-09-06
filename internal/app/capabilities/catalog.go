@@ -214,7 +214,7 @@ func operationalCaps() []Capability {
 			Title:       "Validate observation files before evaluation",
 			Description: "Schema check that a collector's output conforms to the obs.v0.1 contract before piping it into apply.",
 			UseWhen:     "You built a custom collector and want to verify its output.",
-			ExampleCmd:  "stave validate --in ./snapshot.json --kind observation --strict",
+			ExampleCmd:  "stave lint --in ./snapshot.json --kind observation --strict",
 			Keywords:    []string{"validate", "schema", "contract", "format", "input", "obs.v0.1"},
 		},
 		{

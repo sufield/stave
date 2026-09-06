@@ -1,14 +1,14 @@
-# Exercise validate, lint, and fmt against real controls
+# Exercise lint and controls lint/fmt against real controls
 
-# Validate runs (may warn about short span, exit 2)
-! exec stave validate --controls controls --observations observations
+# Lint runs (may warn about short span, exit 2)
+! exec stave lint --controls controls --observations observations
 stdout 'Validation passed'
 
-# Lint runs (may exit non-zero for warnings)
-! exec stave lint --controls controls
+# Controls lint runs (may exit non-zero for warnings)
+! exec stave controls lint --controls controls
 
-# Fmt check runs
-! exec stave fmt --controls controls --check
+# Controls fmt check runs
+! exec stave controls fmt --controls controls --check
 
 -- controls/CTL.S3.PUBLIC.001.yaml --
 dsl_version: ctrl.v1

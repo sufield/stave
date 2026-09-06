@@ -37,7 +37,7 @@ stave ci gate --policy fail_on_new_violation --in output/evaluation.json --basel
 
 ```bash
 # See integrations/pre-commit/ for setup
-stave validate --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations
+stave lint --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations
 ```
 
 See [integrations/pre-commit/](../../internal/integrations/pre-commit/) for configuration.

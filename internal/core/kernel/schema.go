@@ -26,8 +26,8 @@ const (
 	SchemaEnforce Schema = "enforce.v0.1"
 	// SchemaGate is the schema version for gate check output.
 	SchemaGate Schema = "gate.v0.1"
-	// SchemaValidate is the schema version for validation output.
-	SchemaValidate Schema = "validate.v0.1"
+	// SchemaLint is the schema version for lint output.
+	SchemaLint Schema = "lint.v0.1"
 	// SchemaSnapshotPlan is the schema version for snapshot plan output.
 	SchemaSnapshotPlan Schema = "snapshot_plan.v0.1"
 	// SchemaSnapshotQuality is the schema version for snapshot quality output.
@@ -61,7 +61,7 @@ var validSchemas = NewEnumSet(
 	SchemaBaseline,
 	SchemaEnforce,
 	SchemaGate,
-	SchemaValidate,
+	SchemaLint,
 	SchemaSnapshotPlan,
 	SchemaSnapshotQuality,
 	SchemaSnapshotArchive,

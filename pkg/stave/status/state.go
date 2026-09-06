@@ -51,7 +51,7 @@ func (s ProjectState) RecommendNext() string {
 		return fmt.Sprintf("Create observation snapshots in %s from your AWS environment data", obsDir)
 	}
 	if s.NeedsReevaluation() {
-		return fmt.Sprintf("stave validate --controls %s --observations %s && stave apply --controls %s --observations %s --format json > %s",
+		return fmt.Sprintf("stave lint --controls %s --observations %s && stave apply --controls %s --observations %s --format json > %s",
 			ctlDir, obsDir, ctlDir, obsDir, outPath)
 	}
 	return fmt.Sprintf("stave diagnose --controls %s --observations %s --previous-output %s",

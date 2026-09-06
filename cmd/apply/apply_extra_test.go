@@ -77,7 +77,7 @@ func TestReadinessNextCommand_NotReady(t *testing.T) {
 		ObservationSource: "observations",
 	}
 	got := report.NextCommand()
-	if !strings.Contains(got, "stave validate") {
+	if !strings.Contains(got, "stave lint") {
 		t.Fatalf("expected validate command, got: %q", got)
 	}
 }

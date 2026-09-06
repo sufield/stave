@@ -47,7 +47,7 @@ func TestSchemasRenderers_Smoke(t *testing.T) {
 	out := schemasOutput{
 		Data:          []schemaEntry{{"control", "ctrl.v1"}},
 		Diagnostic:    []schemaEntry{{"diagnose", "diagnose.v1"}},
-		CommandOutput: []schemaEntry{{"validate", "validate.v0.1"}},
+		CommandOutput: []schemaEntry{{"lint", "lint.v0.1"}},
 		Artifact:      []schemaEntry{{"bug_report", "bug-report.v0.1"}},
 	}
 	for _, format := range []appcontracts.OutputFormat{appcontracts.FormatJSON, appcontracts.FormatText} {

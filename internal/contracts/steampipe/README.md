@@ -98,7 +98,7 @@ their values to a single boolean.
 Read the YAML for the target asset type. Process `operations` in
 order. For each operation, write the resolved value to the named
 `path` inside the asset's `properties` object. The output is an
-`obs.v0.1` snapshot — pass it through `stave validate --strict` to
+`obs.v0.1` snapshot — pass it through `stave lint --strict` to
 confirm conformance.
 
 The deterministic loader in `examples/agents/stave_transform.py`
@@ -133,7 +133,7 @@ honours the same shape produces the same output.
      --output ./obs/ \
      --validate
    ```
-   `--validate` runs `stave validate --strict` on the produced
+   `--validate` runs `stave lint --strict` on the produced
    snapshot. Iterate until validation passes.
 
 ## Source of truth
@@ -142,7 +142,7 @@ The per-asset JSON Schema at
 `schemas/observation/v1/asset-types/<asset_type>.schema.json` defines
 which property paths are valid. These mapping files define how to
 PRODUCE conforming observations from Steampipe. A mapping that writes
-an unrecognised path will fail `stave validate`.
+an unrecognised path will fail `stave lint`.
 
 ## What lives where
 

@@ -1,4 +1,4 @@
-// Package validatecmd is the engine behind `stave validate` (and the
+// Package validatecmd is the engine behind `stave lint` (and the
 // validate facade in pkg/stave). It owns the load -> compute -> render
 // pipeline so the command stays a thin shell. cli/ui-bound formatting
 // (severity labels, template execution) is injected as callbacks because
@@ -169,7 +169,7 @@ func parseParams(req Request) validateParams {
 		issue := diag.NewFinding(diag.RuleInvalidMaxUnsafe).
 			Error().
 			Remediation("Use format like 168h, 7d, or 1d12h").
-			FixCommand("stave validate --max-unsafe 168h").
+			FixCommand("stave lint --max-unsafe 168h").
 			Attribute("value", req.MaxUnsafe).
 			SensitiveAttribute("error", err.Error()).
 			Build()
@@ -184,7 +184,7 @@ func parseParams(req Request) validateParams {
 			issue := diag.NewFinding(diag.RuleInvalidNowTime).
 				Error().
 				Remediation("Use RFC3339 format").
-				FixCommand("stave validate --eval-time 2026-01-15T00:00:00Z").
+				FixCommand("stave lint --eval-time 2026-01-15T00:00:00Z").
 				Attribute("value", req.EvalTime).
 				SensitiveAttribute("error", perr.Error()).
 				Build()

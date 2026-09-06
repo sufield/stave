@@ -2,7 +2,7 @@
 exec stave lint --help
 stdout 'Exit Codes'
 
-exec stave fmt --help
+exec stave controls fmt --help
 stdout 'Exit Codes'
 
 exec stave graph --help

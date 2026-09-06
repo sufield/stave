@@ -1,7 +1,7 @@
-name: stave validate-mapping
-synopsis: Validate a Steampipe→Stave mapping file before use
+name: stave lint-mapping
+synopsis: Lint a Steampipe→Stave mapping file before use
 description: |
-    Validate inspects a contracts/steampipe/<asset_type>.yaml mapping and
+    Lint inspects a contracts/steampipe/<asset_type>.yaml mapping and
     reports whether it can produce a schema-valid observation for the
     declared asset type, plus how much of the catalog's read surface it
     covers.
@@ -18,7 +18,7 @@ description: |
          highest-control-count gaps surfaced.
 
     Inputs:
-      --file FILE        Mapping YAML to validate (required)
+      --file FILE        Mapping YAML to lint (required)
       --controls DIR     Control catalog (default: controls)
       --chains DIR       Chain catalog (default: chains)
       --format F         text (default) | json
@@ -30,7 +30,7 @@ description: |
       2   Invalid input (missing flag, unreadable file, bad format)
       3   Mapping is invalid (structural or, with --strict, coverage gap)
       4   Internal error
-usage: stave validate-mapping [flags]
+usage: stave lint-mapping [flags]
 options:
     - name: chains
       usage: 'chain catalog directory (default: embedded chains)'
@@ -46,7 +46,7 @@ options:
     - name: help
       shorthand: h
       default_value: "false"
-      usage: help for validate-mapping
+      usage: help for lint-mapping
     - name: strict
       default_value: "false"
       usage: treat coverage gaps and unknown-to-schema paths as failures
@@ -106,8 +106,8 @@ inherited_options:
       usage: |
         Auto-confirm all interactive prompts (distinct from --force which controls file overwriting)
 example: |4-
-      stave validate-mapping --file contracts/steampipe/aws_s3_bucket.yaml
-      stave validate-mapping --file contracts/steampipe/aws_iam_role.yaml --strict
-      stave validate-mapping --file contracts/steampipe/aws_kms_key.yaml --format json
+      stave lint-mapping --file contracts/steampipe/aws_s3_bucket.yaml
+      stave lint-mapping --file contracts/steampipe/aws_iam_role.yaml --strict
+      stave lint-mapping --file contracts/steampipe/aws_kms_key.yaml --format json
 see_also:
     - stave - Configuration safety evaluator

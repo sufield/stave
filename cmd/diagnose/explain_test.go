@@ -90,7 +90,7 @@ func TestExplainNotFound(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error for missing control")
 	}
-	if !strings.Contains(err.Error(), "Next: stave validate --controls") {
+	if !strings.Contains(err.Error(), "Next: stave lint --controls") {
 		t.Fatalf("expected next-command hint, got: %v", err)
 	}
 }

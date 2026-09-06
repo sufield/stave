@@ -170,7 +170,7 @@ func isDataCommand(cmd *cobra.Command) bool {
 	multiFormatCommands := map[string]struct{}{
 		"stave apply":             {},
 		"stave diagnose":          {},
-		"stave validate":          {},
+		"stave lint":              {},
 		"stave report":            {},
 		"stave doctor":            {},
 		"stave security-audit":    {},

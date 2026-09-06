@@ -36,7 +36,7 @@ var sentinelTemplates = map[int]errorTemplate{
 	ui.ExitInputError: {
 		Code:   ui.CodeInvalidInput,
 		Title:  "Input validation failed",
-		Action: "Run `stave validate` with the same inputs to get actionable fix hints.",
+		Action: "Run `stave lint` with the same inputs to get actionable fix hints.",
 	},
 	ui.ExitInternal: {
 		Code:   ui.CodeInternalError,

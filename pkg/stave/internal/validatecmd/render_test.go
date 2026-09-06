@@ -121,7 +121,7 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 		t.Fatalf("Write failed: %v", err)
 	}
 	output := buf.String()
-	if !strings.Contains(output, `"schema_version": "validate.v0.1"`) {
+	if !strings.Contains(output, `"schema_version": "lint.v0.1"`) {
 		t.Errorf("expected JSON to contain schema_version, got %s", output)
 	}
 	if !strings.Contains(output, `"valid": true`) {
@@ -167,7 +167,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 				RuleID:      "INVALID_MAX_UNSAFE",
 				Severity:    diag.SeverityError,
 				Remediation: "Use valid duration",
-				FixCommand:  "stave validate --max-unsafe 168h",
+				FixCommand:  "stave lint --max-unsafe 168h",
 			},
 		}},
 	}
@@ -178,7 +178,7 @@ func TestOutputAndExit_JSONOutput_WithFixHints(t *testing.T) {
 	if !strings.Contains(out, `"fix_hints"`) {
 		t.Fatalf("expected fix_hints in json output, got: %s", out)
 	}
-	if !strings.Contains(out, "stave validate --max-unsafe 168h") {
+	if !strings.Contains(out, "stave lint --max-unsafe 168h") {
 		t.Fatalf("expected command hint in json output, got: %s", out)
 	}
 }

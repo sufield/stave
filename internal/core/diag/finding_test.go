@@ -99,7 +99,7 @@ func TestBuilder_Fluent(t *testing.T) {
 		Error().
 		Message("load failed").
 		Remediation("fix the file").
-		FixCommand("stave validate").
+		FixCommand("stave lint").
 		Attribute("file", "test.yaml").
 		Build()
 
@@ -115,7 +115,7 @@ func TestBuilder_Fluent(t *testing.T) {
 	if finding.Remediation != "fix the file" {
 		t.Fatalf("action=%q", finding.Remediation)
 	}
-	if finding.FixCommand != "stave validate" {
+	if finding.FixCommand != "stave lint" {
 		t.Fatalf("command=%q", finding.FixCommand)
 	}
 	f, _ := finding.Resource.Get("file")

@@ -95,7 +95,7 @@ func TestHintValidateCoverage(t *testing.T) {
 	issue := diag.Finding{RuleID: diag.RuleSpanLessThanMaxUnsafe}
 	ctx := hintContext{ControlsDir: "controls", ObservationsDir: "observations"}
 	got := hintValidateCoverage(issue, ctx)
-	if !strings.Contains(got, "stave validate") {
+	if !strings.Contains(got, "stave lint") {
 		t.Fatalf("expected validate command, got: %q", got)
 	}
 	if !strings.Contains(got, "--max-unsafe") {
@@ -107,8 +107,8 @@ func TestHintValidateCoverage_NoDirs(t *testing.T) {
 	issue := diag.Finding{}
 	ctx := hintContext{}
 	got := hintValidateCoverage(issue, ctx)
-	if got != "stave validate" {
-		t.Fatalf("expected bare 'stave validate', got: %q", got)
+	if got != "stave lint" {
+		t.Fatalf("expected bare 'stave lint', got: %q", got)
 	}
 }
 

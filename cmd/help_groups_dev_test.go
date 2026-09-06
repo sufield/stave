@@ -17,7 +17,6 @@ func TestPromotedCommandsRegistered(t *testing.T) {
 		"capabilities",
 		"version",
 		"lint",
-		"fmt",
 		"controls",
 	}
 
@@ -34,6 +33,7 @@ func TestPromotedCommandsRegistered(t *testing.T) {
 		"diagnose": {"trace"},
 		"contract": {"schemas"},
 		"graph":    {"path"},
+		"controls": {"lint", "fmt"},
 	}
 	for parent, subs := range subcommands {
 		for _, sub := range subs {

@@ -28,8 +28,8 @@ repos:
   - repo: local
     hooks:
       - id: stave-validate
-        name: stave validate
-        entry: stave validate --controls controls --observations observations --strict
+        name: stave lint
+        entry: stave lint --controls controls --observations observations --strict
         language: system
         pass_filenames: false
         always_run: true
@@ -58,7 +58,7 @@ blocked with the specific error.
 ## What you see
 
 ```
-stave validate...........................................................Failed
+stave lint...........................................................Failed
 - hook id: stave-validate
 - exit code: 2
 

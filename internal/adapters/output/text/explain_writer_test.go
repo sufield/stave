@@ -46,7 +46,7 @@ func TestWriteExplainText(t *testing.T) {
 		"Rules:",
 		"eq",
 		"Minimal observation snippet:",
-		"stave validate",
+		"stave lint",
 	}
 	for _, c := range checks {
 		if !strings.Contains(out, c) {
