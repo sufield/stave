@@ -5,13 +5,15 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func TestAssemble_ProducesAllComponents(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "audit-pkg")
 
 	pkg, err := Assemble(AssembleInput{
-		Framework:      "hipaa",
+		Framework:      policy.ComplianceFramework("hipaa"),
 		Period:         "2026-Q1",
 		OutputDir:      dir,
 		ReportJSON:     []byte(`{"posture":{"score":81.2}}`),
@@ -25,7 +27,7 @@ func TestAssemble_ProducesAllComponents(t *testing.T) {
 		t.Fatalf("assemble failed: %v", err)
 	}
 
-	if pkg.Framework != "hipaa" {
+	if pkg.Framework != policy.ComplianceFramework("hipaa") {
 		t.Errorf("framework = %q, want hipaa", pkg.Framework)
 	}
 	if pkg.Period != "2026-Q1" {

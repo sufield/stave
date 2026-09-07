@@ -2,10 +2,12 @@ package exportchanges
 
 import (
 	"testing"
+
+	"github.com/sufield/stave/internal/core/asset"
 )
 
 func TestParseAssetID_7ComponentARNPreservesResourceType(t *testing.T) {
-	arn := "arn:aws:ecs:us-east-1:123456789012:task:my-task-id"
+	arn := asset.ID("arn:aws:ecs:us-east-1:123456789012:task:my-task-id")
 	vendor, service, resourceID := parseAssetID(arn)
 
 	if vendor != "aws" {

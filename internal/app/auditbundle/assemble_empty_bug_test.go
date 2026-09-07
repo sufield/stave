@@ -3,13 +3,15 @@ package auditbundle
 import (
 	"testing"
 	"time"
+
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 func TestAssemble_EmptyByteSlicesNotWrittenAsFiles(t *testing.T) {
 	outDir := t.TempDir()
 
 	input := AssembleInput{
-		Framework:      "nist_800_53",
+		Framework:      policy.ComplianceFramework("nist_800_53"),
 		Period:         "2026-Q1",
 		OutputDir:      outDir,
 		ReportMarkdown: []byte("# Summary"),

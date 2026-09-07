@@ -11,15 +11,16 @@ import (
 	"path/filepath"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
 // Package describes the assembled audit evidence package.
 type Package struct {
-	Framework   string      `json:"framework"`
-	Period      string      `json:"period"`
-	GeneratedAt time.Time   `json:"generated_at"`
-	Components  []Component `json:"components"`
+	Framework   policy.ComplianceFramework `json:"framework"`
+	Period      string                     `json:"period"`
+	GeneratedAt time.Time                  `json:"generated_at"`
+	Components  []Component                `json:"components"`
 }
 
 // Checksum represents a SHA-256 hex digest.
@@ -34,7 +35,7 @@ type Component struct {
 
 // AssembleInput holds all candidate components for the audit bundle.
 type AssembleInput struct {
-	Framework      string
+	Framework      policy.ComplianceFramework
 	Period         string
 	OutputDir      string
 	ReportJSON     []byte

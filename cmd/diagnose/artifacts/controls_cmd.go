@@ -260,7 +260,7 @@ Exit Codes:
 
 			results := catalogsearch.Search(controls, catalogsearch.Filter{
 				Query:       query,
-				Domain:      domain,
+				Domain:      kernel.AssetType(domain),
 				Severity:    sevFilter,
 				AttackStage: kernel.AttackStage(attackStage),
 			})

@@ -53,7 +53,7 @@ func Export(in Input) *Report {
 				continue
 			}
 
-			vendor, service, resourceID := parseAssetID(string(f.AssetID))
+			vendor, service, resourceID := parseAssetID(f.AssetID)
 
 			report.Changes = append(report.Changes, Change{
 				ControlID:      f.ControlID,
@@ -75,12 +75,13 @@ func Export(in Input) *Report {
 	return report
 }
 
-func parseAssetID(assetID string) (vendor kernel.Vendor, service, resourceID string) {
+func parseAssetID(assetID asset.ID) (vendor kernel.Vendor, service, resourceID string) {
+	rawID := assetID.String()
 	// Parse ARN: arn:aws:s3:::bucket-name
-	if !strings.HasPrefix(assetID, "arn:") {
-		return "", "", assetID
+	if !strings.HasPrefix(rawID, "arn:") {
+		return "", "", rawID
 	}
-	remaining := assetID[4:] // skip "arn:"
+	remaining := rawID[4:] // skip "arn:"
 	var found bool
 	var vendorStr string
 

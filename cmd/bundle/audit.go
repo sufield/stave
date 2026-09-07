@@ -81,7 +81,7 @@ func runAudit(ctx context.Context, stdout io.Writer, opts *auditOptions) error {
 	}
 
 	res, err := stave.AssembleAuditBundle(ctx, stave.AuditBundleInput{
-		Framework:  opts.Framework,
+		Framework:  stave.ComplianceFramework(opts.Framework),
 		Period:     periodLabel,
 		Start:      startDate,
 		End:        endDate,

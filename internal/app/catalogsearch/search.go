@@ -13,18 +13,18 @@ import (
 
 // SearchResult holds one matching control.
 type SearchResult struct {
-	ControlID   kernel.ControlID   `json:"control_id"`
-	Name        string             `json:"name"`
-	Severity    policy.Severity    `json:"severity"`
-	Domain      string             `json:"domain"`
-	Frameworks  []string           `json:"frameworks,omitempty"`
-	AttackStage kernel.AttackStage `json:"attack_stage,omitempty"`
+	ControlID   kernel.ControlID             `json:"control_id"`
+	Name        string                       `json:"name"`
+	Severity    policy.Severity              `json:"severity"`
+	Domain      kernel.AssetType             `json:"domain"`
+	Frameworks  []policy.ComplianceFramework `json:"frameworks,omitempty"`
+	AttackStage kernel.AttackStage           `json:"attack_stage,omitempty"`
 }
 
 // Filter constrains the search.
 type Filter struct {
 	Query       string
-	Domain      string
+	Domain      kernel.AssetType
 	Severity    policy.Severity
 	AttackStage kernel.AttackStage
 	Profile     string
@@ -33,7 +33,7 @@ type Filter struct {
 // Search finds controls matching the filter criteria.
 func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 	query := toLower(f.Query)
-	domainFilter := toLower(f.Domain)
+	domainFilter := toLower(string(f.Domain))
 	profileFilter := toLower(f.Profile)
 	var results []SearchResult
 
@@ -60,14 +60,16 @@ func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
 			ControlID:   ctl.ID,
 			Name:        ctl.Name,
 			Severity:    ctl.Severity,
-			Domain:      getDomain(ctl),
+			Domain:      kernel.AssetType(getDomain(ctl)),
 			AttackStage: ctl.AttackStage(),
-			Frameworks:  make([]string, 0, len(ctl.Compliance)),
+			Frameworks:  make([]policy.ComplianceFramework, 0, len(ctl.Compliance)),
 		}
 		for fw := range ctl.Compliance {
-			sr.Frameworks = append(sr.Frameworks, string(fw))
+			sr.Frameworks = append(sr.Frameworks, fw)
 		}
-		slices.Sort(sr.Frameworks)
+		slices.SortFunc(sr.Frameworks, func(a, b policy.ComplianceFramework) int {
+			return strings.Compare(string(a), string(b))
+		})
 		results = append(results, sr)
 	}
 

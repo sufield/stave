@@ -52,7 +52,7 @@ func TestExport_ConfidenceFilter(t *testing.T) {
 }
 
 func TestExport_ParseARN(t *testing.T) {
-	v, s, r := parseAssetID("arn:aws:s3:::prod-bucket")
+	v, s, r := parseAssetID(asset.ID("arn:aws:s3:::prod-bucket"))
 	if v != "aws" || s != "s3" || r != "prod-bucket" {
 		t.Errorf("parsed = %s/%s/%s, want aws/s3/prod-bucket", v, s, r)
 	}

@@ -16,9 +16,13 @@ import (
 	"github.com/sufield/stave/internal/adapters/output/asff"
 	"github.com/sufield/stave/internal/app/auditbundle"
 	appexempt "github.com/sufield/stave/internal/app/exempt"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
+
+// ComplianceFramework identifies a compliance standard (e.g., "hipaa", "nist_800_53").
+type ComplianceFramework = policy.ComplianceFramework
 
 // EvidenceBundleResult carries the assembled evidence bundle bytes (and
 // optional ASFF bytes) plus the finding counts the CLI reports.
@@ -108,7 +112,7 @@ func VerifyEvidenceBundle(bundleData, publicKeyPEM []byte) (BundleVerifyResult, 
 
 // AuditBundleInput parameterizes [AssembleAuditBundle].
 type AuditBundleInput struct {
-	Framework  string
+	Framework  policy.ComplianceFramework
 	Period     string
 	Start      time.Time
 	End        time.Time
@@ -155,7 +159,7 @@ func AssembleAuditBundle(ctx context.Context, in AuditBundleInput) (AuditBundleR
 	}
 
 	reportMD := fmt.Appendf(nil, "# %s Audit Report — %s\n\nAssessments in period: %d\n",
-		strings.ToUpper(in.Framework), in.Period, len(assessments))
+		strings.ToUpper(string(in.Framework)), in.Period, len(assessments))
 
 	var exemptJSON []byte
 	if in.ExemptPath != "" {
