@@ -133,6 +133,7 @@ jobs:
           git push
       - name: Upload regen tree
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        timeout-minutes: 10
         with:
           name: goldens
           path: |
@@ -143,6 +144,7 @@ jobs:
             **/testdata/golden/
           retention-days: 1
           if-no-files-found: error
+          compression-level: 6
 
   test-fast:
     # Sub-minute PR feedback. Mirrors `make test-fast`: -short across
@@ -351,7 +353,7 @@ jobs:
           check-latest: true
           cache: true
       - name: Install go-licenses
-        run: go install github.com/google/go-licenses@v1.6.0
+        run: go install github.com/google/go-licenses@latest
       - name: Check licenses
         run: |
           go-licenses report ./cmd/stave --template=csv > licenses.csv 2>licenses-warnings.txt || true
