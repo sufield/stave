@@ -3,6 +3,7 @@ package capabilities
 import (
 	"cmp"
 	"fmt"
+	"maps"
 	"slices"
 	"strings"
 
@@ -376,12 +377,7 @@ func extractKeywordsFromControls(ctls []*policy.ControlDefinition) []string {
 			addKeywords(seen, string(at))
 		}
 	}
-	out := make([]string, 0, len(seen))
-	for k := range seen {
-		out = append(out, k)
-	}
-	slices.Sort(out)
-	return out
+	return slices.Sorted(maps.Keys(seen))
 }
 
 func extractKeywordsFromText(parts ...string) []string {
@@ -389,12 +385,7 @@ func extractKeywordsFromText(parts ...string) []string {
 	for _, p := range parts {
 		addKeywords(seen, p)
 	}
-	out := make([]string, 0, len(seen))
-	for k := range seen {
-		out = append(out, k)
-	}
-	slices.Sort(out)
-	return out
+	return slices.Sorted(maps.Keys(seen))
 }
 
 // addKeywords tokenises text and adds every non-stopword to the set.

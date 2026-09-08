@@ -24,7 +24,7 @@ type Result struct {
 }
 
 // Check compares the most recent snapshot against the threshold.
-func Check(snapshots []asset.Snapshot, threshold time.Duration, now time.Time) *Result {
+func Check(snapshots asset.Snapshots, threshold time.Duration, now time.Time) *Result {
 	if len(snapshots) == 0 {
 		return &Result{
 			Threshold:    threshold,

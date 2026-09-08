@@ -3,6 +3,11 @@
 // attack path capability vocabulary from attackpath.Build.
 package toolmap
 
+import (
+	"cmp"
+	"slices"
+)
+
 // Tool describes an offensive security tool and the
 // capabilities it requires to operate.
 type Tool struct {
@@ -214,9 +219,7 @@ func (r *Registry) ToolNamesForCapability(capability string) []string {
 }
 
 func sortTools(tools []Tool) {
-	for i := 1; i < len(tools); i++ {
-		for j := i; j > 0 && tools[j].Name < tools[j-1].Name; j-- {
-			tools[j], tools[j-1] = tools[j-1], tools[j]
-		}
-	}
+	slices.SortFunc(tools, func(a, b Tool) int {
+		return cmp.Compare(a.Name, b.Name)
+	})
 }

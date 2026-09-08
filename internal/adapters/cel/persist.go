@@ -255,16 +255,19 @@ func encodeCache(entries []cachedEntry) []byte {
 		expr string
 		ce   []byte
 	}
-	framed := make([]framedEntry, 0, len(entries))
-	for _, e := range entries {
-		if !fitsUint32(len(e.Expression)) {
-			continue
+	var framed []framedEntry
+	if len(entries) > 0 {
+		framed = make([]framedEntry, 0, len(entries))
+		for _, e := range entries {
+			if !fitsUint32(len(e.Expression)) {
+				continue
+			}
+			ceBytes, _ := proto.Marshal(e.CheckedExpr)
+			if !fitsUint32(len(ceBytes)) {
+				continue
+			}
+			framed = append(framed, framedEntry{sha: e.ExpressionSHA, expr: e.Expression, ce: ceBytes})
 		}
-		ceBytes, _ := proto.Marshal(e.CheckedExpr)
-		if !fitsUint32(len(ceBytes)) {
-			continue
-		}
-		framed = append(framed, framedEntry{sha: e.ExpressionSHA, expr: e.Expression, ce: ceBytes})
 	}
 
 	var buf []byte

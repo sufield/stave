@@ -161,7 +161,12 @@ func (c *Compiler) PersistCache() error {
 		return nil
 	}
 	c.dirtyMu.Lock()
-	entries := make([]cachedEntry, 0, len(c.diskCache)+len(c.dirty))
+	total := len(c.diskCache) + len(c.dirty)
+	if total == 0 {
+		c.dirtyMu.Unlock()
+		return nil
+	}
+	entries := make([]cachedEntry, 0, total)
 	for expr, ce := range c.diskCache {
 		entries = append(entries, cachedEntry{
 			ExpressionSHA: hashExpression(expr),
@@ -806,6 +811,9 @@ func parseRuleList(v any, breadcrumb string) ([]policy.PredicateRule, error) {
 	list, ok := v.([]any)
 	if !ok {
 		return nil, fmt.Errorf("%s: expected list, got %T", breadcrumb, v)
+	}
+	if len(list) == 0 {
+		return nil, nil
 	}
 
 	rules := make([]policy.PredicateRule, 0, len(list))

@@ -1,6 +1,7 @@
 package capabilities
 
 import (
+	"maps"
 	"slices"
 	"strings"
 )
@@ -101,10 +102,5 @@ func ExpandQuery(tokens []string) []string {
 			seen[syn] = struct{}{}
 		}
 	}
-	out := make([]string, 0, len(seen))
-	for k := range seen {
-		out = append(out, k)
-	}
-	slices.Sort(out)
-	return out
+	return slices.Sorted(maps.Keys(seen))
 }

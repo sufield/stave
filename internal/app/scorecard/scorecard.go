@@ -19,7 +19,7 @@ type FrameworkScore struct {
 	ControlsPassing  int                        `json:"controls_passing"`
 	ControlsFailing  int                        `json:"controls_failing"`
 	CriticalFindings int                        `json:"critical_findings"`
-	NextAction       string                     `json:"next_action,omitempty"`
+	NextAction       kernel.ControlID           `json:"next_action,omitempty"`
 }
 
 // Report holds the full scorecard.
@@ -68,7 +68,7 @@ func Compute(findings []remediation.Finding, frameworks []policy.ComplianceFrame
 		total := len(perControl)
 		failing := total
 		critical := perControl.CountCritical()
-		topFailing := string(perControl.Headline())
+		topFailing := perControl.Headline()
 
 		// Approximate total controls from findings (we only see failures).
 		// In practice, the caller would provide control catalog count.

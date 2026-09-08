@@ -18,7 +18,7 @@ import (
 //
 // topN bounds the action plan output to the N highest-unlock
 // missing asset types. A non-positive value emits no action plan.
-func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinition, snapshots []asset.Snapshot, topN int) Report {
+func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinition, snapshots asset.Snapshots, topN int) Report {
 	observedTypes, observationCount := observed(snapshots)
 	catalogTypes := catalogAssetTypes(controls)
 
@@ -47,7 +47,7 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 // across time; per-type counts come from the latest snapshot to
 // avoid inflating coverage with historical observations of the
 // same asset.
-func observed(snapshots []asset.Snapshot) (map[kernel.AssetType]int, int) {
+func observed(snapshots asset.Snapshots) (map[kernel.AssetType]int, int) {
 	out := map[kernel.AssetType]int{}
 	if len(snapshots) == 0 {
 		return out, 0
