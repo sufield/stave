@@ -84,7 +84,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 		report = appdiagnose.SanitizeDiagnosisReport(cfg.Sanitizer, report)
 	}
 	report = appdiagnose.Filter{
-		Cases:          cfg.Cases,
+		Cases:          appdiagnose.ToScenarios(cfg.Cases),
 		SignalContains: cfg.SignalContains,
 	}.Apply(report)
 	// Guard before passing to the presenter: Filter.Apply may

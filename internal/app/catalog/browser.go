@@ -25,11 +25,11 @@ type DiscoveryRequest struct {
 
 // PolicyEntry represents a high-level summary of a security control for catalog display.
 type PolicyEntry struct {
-	ID     kernel.ControlID `json:"id"`
-	Name   string           `json:"name"`
-	Type   string           `json:"type"`
-	Risk   policy.Severity  `json:"risk,omitempty"`
-	Domain string           `json:"domain,omitempty"`
+	ID     kernel.ControlID   `json:"id"`
+	Name   string             `json:"name"`
+	Type   policy.ControlType `json:"type"`
+	Risk   policy.Severity    `json:"risk,omitempty"`
+	Domain kernel.AssetDomain `json:"domain,omitempty"`
 }
 
 // CatalogBrowser orchestrates the discovery and presentation of security controls.
@@ -58,9 +58,9 @@ func SummarizePolicies(controls []policy.ControlDefinition) []PolicyEntry {
 		entries = append(entries, PolicyEntry{
 			ID:     c.ID,
 			Name:   c.Name,
-			Type:   c.Type.String(),
+			Type:   c.Type,
 			Risk:   c.Severity,
-			Domain: string(c.Domain),
+			Domain: c.Domain,
 		})
 	}
 	return entries
@@ -74,13 +74,13 @@ func OrderEntries(entries []PolicyEntry, orderBy string) error {
 	} else if strings.EqualFold(trimmed, "name") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Name, b.Name) })
 	} else if strings.EqualFold(trimmed, "type") {
-		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Type, b.Type) })
+		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Type.String(), b.Type.String()) })
 	} else if strings.EqualFold(trimmed, "risk") {
 		slices.SortFunc(entries, func(a, b PolicyEntry) int {
 			return cmp.Compare(severityRank(b.Risk), severityRank(a.Risk))
 		})
 	} else if strings.EqualFold(trimmed, "domain") {
-		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(a.Domain, b.Domain) })
+		slices.SortFunc(entries, func(a, b PolicyEntry) int { return cmp.Compare(string(a.Domain), string(b.Domain)) })
 	} else {
 		return fmt.Errorf("invalid order attribute %q (available: id, name, type, risk, domain)", orderBy)
 	}
@@ -148,11 +148,11 @@ func GetAttribute(entry PolicyEntry, field string) string {
 	case "name":
 		return entry.Name
 	case "type":
-		return entry.Type
+		return entry.Type.String()
 	case "risk":
 		return entry.Risk.String()
 	case "domain":
-		return entry.Domain
+		return string(entry.Domain)
 	default:
 		return ""
 	}

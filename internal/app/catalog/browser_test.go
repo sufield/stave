@@ -90,7 +90,7 @@ func TestOrderEntries(t *testing.T) {
 			case "name":
 				got = rows[0].Name
 			case "domain":
-				got = rows[0].Domain
+				got = string(rows[0].Domain)
 			case "risk":
 				got = rows[0].Risk.String()
 			}
@@ -171,9 +171,9 @@ func TestGetAttribute(t *testing.T) {
 	row := PolicyEntry{
 		ID:     kernel.ControlID("CTL.001"),
 		Name:   "Test",
-		Type:   "unsafe_state",
+		Type:   policy.TypeUnsafeState,
 		Risk:   policy.SeverityCritical,
-		Domain: "storage",
+		Domain: kernel.AssetDomain("storage"),
 	}
 
 	tests := []struct {

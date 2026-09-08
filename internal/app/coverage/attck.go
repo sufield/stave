@@ -117,15 +117,15 @@ type StaveOnlyTactic struct {
 
 // CoverageReport is the full coverage analysis output.
 type CoverageReport struct {
-	Framework           string            `json:"framework"`
-	ControlsAnalyzed    int               `json:"controls_analyzed"`
-	ControlsAnnotated   int               `json:"controls_annotated"`
-	ControlsUnannotated int               `json:"controls_unannotated"`
-	AssessmentOverlay   bool              `json:"assessment_overlay"`
-	Tactics             []TacticCoverage  `json:"tactics"`
-	StaveOnly           []StaveOnlyTactic `json:"stave_only,omitempty"`
-	UnannotatedControls []string          `json:"unannotated_controls,omitempty"`
-	Summary             CoverageSummary   `json:"summary"`
+	Framework           string             `json:"framework"`
+	ControlsAnalyzed    int                `json:"controls_analyzed"`
+	ControlsAnnotated   int                `json:"controls_annotated"`
+	ControlsUnannotated int                `json:"controls_unannotated"`
+	AssessmentOverlay   bool               `json:"assessment_overlay"`
+	Tactics             []TacticCoverage   `json:"tactics"`
+	StaveOnly           []StaveOnlyTactic  `json:"stave_only,omitempty"`
+	UnannotatedControls []kernel.ControlID `json:"unannotated_controls,omitempty"`
+	Summary             CoverageSummary    `json:"summary"`
 }
 
 // CoverageSummary holds aggregate metrics.
@@ -152,12 +152,12 @@ func Build(input BuildInput) *CoverageReport {
 
 	// Group controls by attack stage.
 	byStage := make(map[kernel.AttackStage][]kernel.ControlID) // stave_stage → []controlID
-	var unannotated []string
+	var unannotated []kernel.ControlID
 	for i := range input.Controls {
 		ctl := &input.Controls[i]
 		stage := ctl.AttackStage()
 		if stage == "" {
-			unannotated = append(unannotated, string(ctl.ID))
+			unannotated = append(unannotated, ctl.ID)
 			continue
 		}
 		byStage[stage] = append(byStage[stage], ctl.ID)

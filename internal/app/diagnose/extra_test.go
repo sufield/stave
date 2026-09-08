@@ -18,7 +18,7 @@ func TestFilter_Apply_ByCasesOnly(t *testing.T) {
 			{Case: diagnosis.ScenarioViolationEvidence, Signal: "warn"},
 		},
 	}
-	f := Filter{Cases: []string{string(diagnosis.ScenarioEmptyFindings)}}
+	f := Filter{Cases: []diagnosis.Scenario{diagnosis.ScenarioEmptyFindings}}
 	result := f.Apply(report)
 	if len(result.Issues) != 1 {
 		t.Fatalf("len = %d, want 1", len(result.Issues))
@@ -49,7 +49,7 @@ func TestFilter_Apply_TrimmedCases(t *testing.T) {
 		},
 	}
 	// Empty trimmed case should be ignored
-	f := Filter{Cases: []string{"  ", "a"}}
+	f := Filter{Cases: []diagnosis.Scenario{"  ", "a"}}
 	result := f.Apply(report)
 	if len(result.Issues) != 1 {
 		t.Fatalf("len = %d, want 1", len(result.Issues))

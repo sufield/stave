@@ -9,13 +9,25 @@ import (
 
 // Filter defines the criteria for narrowing down a diagnostic report.
 type Filter struct {
-	Cases          []string
+	Cases          []diagnosis.Scenario
 	SignalContains string
 }
 
 // IsEmpty returns true if no filtering criteria have been provided.
 func (f Filter) IsEmpty() bool {
 	return len(f.Cases) == 0 && f.SignalContains == ""
+}
+
+// ToScenarios converts a slice of string scenario names into diagnosis.Scenario domain types.
+func ToScenarios(cases []string) []diagnosis.Scenario {
+	if len(cases) == 0 {
+		return nil
+	}
+	out := make([]diagnosis.Scenario, len(cases))
+	for i, c := range cases {
+		out[i] = diagnosis.Scenario(c)
+	}
+	return out
 }
 
 func toLowerTrim(s string) string {
@@ -48,10 +60,10 @@ func (f Filter) Apply(report *diagnosis.Report) *diagnosis.Report {
 		return report
 	}
 
-	caseSet := make(map[string]struct{}, len(f.Cases))
+	caseSet := make(map[diagnosis.Scenario]struct{}, len(f.Cases))
 	for _, c := range f.Cases {
-		if trimmed := strings.TrimSpace(c); trimmed != "" {
-			caseSet[trimmed] = struct{}{}
+		if trimmed := strings.TrimSpace(string(c)); trimmed != "" {
+			caseSet[diagnosis.Scenario(trimmed)] = struct{}{}
 		}
 	}
 
@@ -69,9 +81,9 @@ func (f Filter) Apply(report *diagnosis.Report) *diagnosis.Report {
 	return &filtered
 }
 
-func matchesFilter(issue diagnosis.Insight, caseSet map[string]struct{}, needle string) bool {
+func matchesFilter(issue diagnosis.Insight, caseSet map[diagnosis.Scenario]struct{}, needle string) bool {
 	if len(caseSet) > 0 {
-		if _, ok := caseSet[string(issue.Case)]; !ok {
+		if _, ok := caseSet[issue.Case]; !ok {
 			return false
 		}
 	}

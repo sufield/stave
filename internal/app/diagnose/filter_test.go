@@ -27,7 +27,7 @@ func TestFilter_Apply_ByCaseAndSignal(t *testing.T) {
 		},
 	}
 	filtered := Filter{
-		Cases:          []string{string(diagnosis.ScenarioExpectedNone), string(diagnosis.ScenarioEmptyFindings)},
+		Cases:          []diagnosis.Scenario{diagnosis.ScenarioExpectedNone, diagnosis.ScenarioEmptyFindings},
 		SignalContains: "threshold",
 	}.Apply(report)
 	if len(filtered.Issues) != 1 {
@@ -39,7 +39,7 @@ func TestFilter_Apply_ByCaseAndSignal(t *testing.T) {
 }
 
 func TestFilter_Apply_NilReport(t *testing.T) {
-	result := Filter{Cases: []string{"x"}}.Apply(nil)
+	result := Filter{Cases: []diagnosis.Scenario{"x"}}.Apply(nil)
 	if result != nil {
 		t.Fatal("expected nil for nil report")
 	}
@@ -49,7 +49,7 @@ func TestFilter_IsEmpty(t *testing.T) {
 	if !(Filter{}).IsEmpty() {
 		t.Fatal("empty filter should be empty")
 	}
-	if (Filter{Cases: []string{"x"}}).IsEmpty() {
+	if (Filter{Cases: []diagnosis.Scenario{"x"}}).IsEmpty() {
 		t.Fatal("filter with cases should not be empty")
 	}
 	if (Filter{SignalContains: "y"}).IsEmpty() {
