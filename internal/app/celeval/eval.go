@@ -33,7 +33,7 @@ type EvalResult struct {
 
 // PredicateEvaluator evaluates a CEL expression against an asset property map.
 type PredicateEvaluator interface {
-	EvalBool(expr string, props map[string]any) (bool, error)
+	EvalBool(expr Expression, props map[string]any) (bool, error)
 }
 
 // Input configures the evaluation.
@@ -54,12 +54,12 @@ func Eval(in Input) (*EvalResult, error) {
 
 	for i := range in.Assets {
 		a := &in.Assets[i]
-		if in.AssetType != "" && !a.IsType(string(in.AssetType)) {
+		if in.AssetType != "" && !a.IsType(in.AssetType.String()) {
 			continue
 		}
 
 		props := a.Map()
-		val, err := in.Evaluator.EvalBool(string(in.Expression), props)
+		val, err := in.Evaluator.EvalBool(in.Expression, props)
 
 		ar := AssetResult{
 			AssetID:   a.ID,

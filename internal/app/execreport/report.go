@@ -102,8 +102,8 @@ type TopFinding struct {
 	DwellHours        float64          `json:"dwell_hours"`
 	SLABurnRate       float64          `json:"sla_burn_rate,omitempty"`
 	SLABreached       bool             `json:"sla_breached,omitempty"`
-	RemediationAction string           `json:"remediation_action,omitempty"`
-	Frameworks        []string         `json:"compliance_frameworks,omitempty"`
+	RemediationAction string                       `json:"remediation_action,omitempty"`
+	Frameworks        []policy.ComplianceFramework `json:"compliance_frameworks,omitempty"`
 }
 
 // IsAnyBreach reports whether the underlying finding has breached
@@ -146,11 +146,11 @@ type TacticItem struct {
 
 // FrameworkReadiness holds compliance framework data.
 type FrameworkReadiness struct {
-	Framework    string  `json:"framework"`
-	Total        int     `json:"controls_total"`
-	Passing      int     `json:"controls_passing"`
-	Failing      int     `json:"controls_failing"`
-	ReadinessPct float64 `json:"readiness_pct"`
+	Framework    policy.ComplianceFramework `json:"framework"`
+	Total        int                        `json:"controls_total"`
+	Passing      int                        `json:"controls_passing"`
+	Failing      int                        `json:"controls_failing"`
+	ReadinessPct float64                    `json:"readiness_pct"`
 }
 
 // TeamSection holds per-team data.

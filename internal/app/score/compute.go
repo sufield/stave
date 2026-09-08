@@ -132,10 +132,10 @@ type ChainDetail struct {
 
 // CoverageDetail holds breakdown data for the coverage component.
 type CoverageDetail struct {
-	Framework             string  `json:"framework,omitempty"`
-	RequirementsSatisfied int     `json:"requirements_satisfied"`
-	RequirementsTotal     int     `json:"requirements_total"`
-	CoveragePct           float64 `json:"coverage_percent"`
+	Framework             policy.ComplianceFramework `json:"framework,omitempty"`
+	RequirementsSatisfied int                        `json:"requirements_satisfied"`
+	RequirementsTotal     int                        `json:"requirements_total"`
+	CoveragePct           float64                    `json:"coverage_percent"`
 }
 
 // Component holds a single score dimension.
@@ -350,6 +350,7 @@ type Input struct {
 	SLABreached      int
 	SLATotal         int
 	CoveragePct      float64 // 0-100 from compliance profile
+	Framework        policy.ComplianceFramework
 	TotalCheckWeight float64 // severity-weighted total of ALL evaluations (pass + fail); 0 = derive from findings
 	HasSLA           bool
 	HasCoverage      bool
@@ -556,6 +557,7 @@ func Compute(input Input) Result {
 				Contribution: w.Coverage * covScore * 100, MaxContribution: w.Coverage * 100,
 			},
 			Detail: CoverageDetail{
+				Framework:   input.Framework,
 				CoveragePct: input.CoveragePct,
 			},
 		},

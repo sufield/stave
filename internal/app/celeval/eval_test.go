@@ -13,7 +13,7 @@ type mockEvaluator struct {
 	err    error
 }
 
-func (m *mockEvaluator) EvalBool(_ string, _ map[string]any) (bool, error) {
+func (m *mockEvaluator) EvalBool(_ Expression, _ map[string]any) (bool, error) {
 	return m.result, m.err
 }
 

@@ -17,13 +17,13 @@ import (
 // celBridge adapts the stave CEL environment to celeval.PredicateEvaluator.
 type celBridge struct{}
 
-func (b *celBridge) EvalBool(expr string, props map[string]any) (bool, error) {
+func (b *celBridge) EvalBool(expr celeval.Expression, props map[string]any) (bool, error) {
 	celEnv, err := stavecel.NewEnv()
 	if err != nil {
 		return false, fmt.Errorf("create CEL environment: %w", err)
 	}
 
-	ast, issues := celEnv.Compile(expr)
+	ast, issues := celEnv.Compile(expr.String())
 	if issues != nil && issues.Err() != nil {
 		return false, fmt.Errorf("compile expression: %w", issues.Err())
 	}
