@@ -94,14 +94,14 @@ type SLASev struct {
 
 // TopFinding is a ranked finding for the report.
 type TopFinding struct {
-	Rank              int              `json:"rank"`
-	ControlID         kernel.ControlID `json:"control_id"`
-	Severity          policy.Severity  `json:"severity"`
-	AssetID           asset.ID         `json:"asset_id,omitempty"`
-	Team              string           `json:"team,omitempty"`
-	DwellHours        float64          `json:"dwell_hours"`
-	SLABurnRate       float64          `json:"sla_burn_rate,omitempty"`
-	SLABreached       bool             `json:"sla_breached,omitempty"`
+	Rank              int                          `json:"rank"`
+	ControlID         kernel.ControlID             `json:"control_id"`
+	Severity          policy.Severity              `json:"severity"`
+	AssetID           asset.ID                     `json:"asset_id,omitempty"`
+	Team              string                       `json:"team,omitempty"`
+	DwellHours        float64                      `json:"dwell_hours"`
+	SLABurnRate       float64                      `json:"sla_burn_rate,omitempty"`
+	SLABreached       bool                         `json:"sla_breached,omitempty"`
 	RemediationAction string                       `json:"remediation_action,omitempty"`
 	Frameworks        []policy.ComplianceFramework `json:"compliance_frameworks,omitempty"`
 }
