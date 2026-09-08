@@ -207,17 +207,6 @@ var builtinTools = []Tool{
 	},
 }
 
-// ToolNamesForCapability returns tool names matching a capability,
-// satisfying the attackpath.ToolLookup interface.
-func (r *Registry) ToolNamesForCapability(capability string) []string {
-	tools := r.ToolsForCapability(capability)
-	names := make([]string, len(tools))
-	for i, t := range tools {
-		names[i] = t.Name
-	}
-	return names
-}
-
 func sortTools(tools []Tool) {
 	slices.SortFunc(tools, func(a, b Tool) int {
 		return cmp.Compare(a.Name, b.Name)

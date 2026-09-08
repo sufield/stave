@@ -2,18 +2,12 @@
 //
 // Nil-Set behavior:
 //   - Add panics with a clear message (writes need an underlying map).
-//   - Contains, Len, Slice return false / 0 / nil — read-only methods
-//     are total over a nil set, matching the natural semantics of
-//     reading from a nil Go map.
+//   - Contains returns false — read-only methods are total over a nil set,
+//     matching the natural semantics of reading from a nil Go map.
 //
 // Always construct sets via New() (or a literal `Set[T]{}`) when
 // mutation is required. Reading from a zero-value Set is safe.
 package sets
-
-import (
-	"maps"
-	"slices"
-)
 
 // Set is a generic set.
 type Set[T comparable] map[T]struct{}
@@ -51,21 +45,4 @@ func (s Set[T]) Contains(item T) bool {
 	}
 	_, ok := s[item]
 	return ok
-}
-
-// Len returns the number of items. A nil Set has zero items.
-func (s Set[T]) Len() int {
-	if s == nil {
-		return 0
-	}
-	return len(s)
-}
-
-// Slice returns all items as a slice (unordered). A nil Set returns
-// nil — distinct from a non-nil empty Set, which returns []T{}.
-func (s Set[T]) Slice() []T {
-	if s == nil {
-		return nil
-	}
-	return slices.Collect(maps.Keys(s))
 }

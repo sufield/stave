@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/sufield/stave/internal/app/toolmap"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -81,11 +82,11 @@ type ActiveFinding struct {
 	ControlsFailing []kernel.ControlID
 }
 
-// ToolLookup returns tool names whose prerequisites include the given
+// ToolLookup returns tools whose prerequisites include the given
 // capability. Implementations live in toolmap.Registry; nil disables
 // tool annotations on the graph.
 type ToolLookup interface {
-	ToolNamesForCapability(capability CapabilityID) []string
+	ToolsForCapability(capability string) []toolmap.Tool
 }
 
 // BuildInput holds the data needed to build an attack path graph.
@@ -370,8 +371,8 @@ func annotateTools(nodes []ChainNode, chains []policy.ChainDefinition, tools Too
 
 		toolMatches := make(map[string][]CapabilityID) // tool name → matched caps
 		for cap := range caps {
-			for _, name := range tools.ToolNamesForCapability(cap) {
-				toolMatches[name] = append(toolMatches[name], cap)
+			for _, t := range tools.ToolsForCapability(string(cap)) {
+				toolMatches[t.Name] = append(toolMatches[t.Name], cap)
 			}
 		}
 		if len(toolMatches) == 0 {
