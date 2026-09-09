@@ -30,7 +30,7 @@ type DeactivatedChain struct {
 	ChainID          kernel.ChainID  `json:"chain_id"`
 	PreviousSeverity policy.Severity `json:"previous_severity"`
 	AssetID          asset.ID        `json:"asset_id,omitempty"`
-	ScopeID          string          `json:"scope_id,omitempty"`
+	ScopeID          kernel.ScopeID  `json:"scope_id,omitempty"`
 }
 
 // EfficiencyVerdict classifies the remediation outcome.
@@ -115,17 +115,17 @@ func Analyze(in Input) (*Report, error) {
 	type chainKey struct {
 		chainID kernel.ChainID
 		assetID asset.ID
-		scopeID string
+		scopeID kernel.ScopeID
 	}
 	beforeSev := make(map[chainKey]policy.Severity, len(in.Before.ChainFindings))
 	for i := range in.Before.ChainFindings {
 		c := &in.Before.ChainFindings[i]
-		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: c.ScopeID}
+		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: kernel.ScopeID(c.ScopeID)}
 		beforeSev[k] = c.Severity
 	}
 	for i := range in.After.ChainFindings {
 		c := &in.After.ChainFindings[i]
-		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: c.ScopeID}
+		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: kernel.ScopeID(c.ScopeID)}
 		delete(beforeSev, k)
 	}
 	var deactivated []DeactivatedChain

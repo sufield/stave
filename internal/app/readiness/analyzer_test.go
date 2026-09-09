@@ -65,7 +65,7 @@ func TestAnalyze_AllRequiredTypesObserved_FullScore(t *testing.T) {
 		ctl("CTL.IAM.001", "aws_iam_role"),
 	}
 	snapshot := snap(a("b1", "aws_s3_bucket"), a("r1", "aws_iam_role"))
-	report := Analyze(controls, nil, []asset.Snapshot{snapshot}, 5)
+	report := Analyze(controls, nil, asset.Snapshots{snapshot}, 5)
 	if report.Controls.CanFire != 2 {
 		t.Errorf("CanFire: want 2, got %d", report.Controls.CanFire)
 	}
@@ -120,7 +120,7 @@ func TestAnalyze_ChainBlockedByOneMember(t *testing.T) {
 	}
 	// Observe S3 but not IAM. Chain is blocked because IAM is missing.
 	snapshot := snap(a("b1", "aws_s3_bucket"))
-	report := Analyze(controls, chains, []asset.Snapshot{snapshot}, 5)
+	report := Analyze(controls, chains, asset.Snapshots{snapshot}, 5)
 	if report.Chains.Blocked != 1 {
 		t.Errorf("Chain blocked: want 1, got %d", report.Chains.Blocked)
 	}
@@ -152,7 +152,7 @@ func TestAnalyze_ChainIndeterminate_WhenMemberHasNoApplicable(t *testing.T) {
 		},
 	}
 	snapshot := snap(a("b1", "aws_s3_bucket"))
-	report := Analyze(controls, chains, []asset.Snapshot{snapshot}, 5)
+	report := Analyze(controls, chains, asset.Snapshots{snapshot}, 5)
 	// One member can fire; one is indeterminate; chain is indeterminate.
 	if report.Chains.Indeterminate != 1 {
 		t.Errorf("Chain indeterminate: want 1, got %d", report.Chains.Indeterminate)
@@ -324,7 +324,7 @@ func TestAnalyze_BucketPercentages_SumToHundred(t *testing.T) {
 		ctl("CTL.C.001" /* no applicable types */), // Indeterminate
 	}
 	snapshot := snap(a("b1", "aws_s3_bucket"))
-	r := Analyze(controls, nil, []asset.Snapshot{snapshot}, 0)
+	r := Analyze(controls, nil, asset.Snapshots{snapshot}, 0)
 
 	c := r.Controls
 	if c.Total != 3 {

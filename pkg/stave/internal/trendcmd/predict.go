@@ -8,6 +8,7 @@ import (
 	"io"
 	"time"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/app/trendpredict"
 )
 
@@ -43,7 +44,7 @@ func PredictReadiness(ctx context.Context, cfg PredictConfig) ([]byte, []string,
 
 	prediction := trendpredict.Predict(trendpredict.Input{
 		Assessments:     assessments,
-		Profile:         cfg.Profile,
+		Profile:         policy.ComplianceFramework(cfg.Profile),
 		TargetReadiness: cfg.TargetReadiness,
 		Window:          window,
 		EvalTime:        now,

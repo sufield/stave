@@ -16,13 +16,13 @@ import (
 
 // Prediction holds the readiness timeline projection.
 type Prediction struct {
-	Profile          string        `json:"profile"`
-	TargetReadiness  float64       `json:"target_readiness_pct"`
-	CurrentReadiness float64       `json:"current_readiness_pct"`
-	ProjectedDate    time.Time     `json:"projected_date"`
-	OptimisticDate   time.Time     `json:"optimistic_date"`
-	PessimisticDate  time.Time     `json:"pessimistic_date"`
-	Accelerators     []Accelerator `json:"accelerators,omitempty"`
+	Profile          policy.ComplianceFramework `json:"profile"`
+	TargetReadiness  float64                    `json:"target_readiness_pct"`
+	CurrentReadiness float64                    `json:"current_readiness_pct"`
+	ProjectedDate    time.Time                  `json:"projected_date"`
+	OptimisticDate   time.Time                  `json:"optimistic_date"`
+	PessimisticDate  time.Time                  `json:"pessimistic_date"`
+	Accelerators     []Accelerator              `json:"accelerators,omitempty"`
 }
 
 // Accelerator describes a sprint-sized intervention that moves the date.
@@ -35,7 +35,7 @@ type Accelerator struct {
 // Input configures the prediction.
 type Input struct {
 	Assessments     []*report.Assessment
-	Profile         string
+	Profile         policy.ComplianceFramework
 	TargetReadiness float64
 	Window          time.Duration
 	EvalTime        time.Time

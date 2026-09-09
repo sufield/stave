@@ -37,7 +37,7 @@ func TestBugHunt_Analyze_UnsortedSnapshots_UsesChronologicallyLatest(t *testing.
 	// We pass the snapshots in unsorted order (newer snap2 first, older snap1 last).
 	// Under the buggy code, the analyzer picks the last element (snap1) as the latest
 	// and incorrectly thinks aws_s3_bucket is observed.
-	report := Analyze(controls, nil, []asset.Snapshot{snap2, snap1}, 5)
+	report := Analyze(controls, nil, asset.Snapshots{snap2, snap1}, 5)
 
 	if _, ok := report.ObservedTypes["aws_s3_bucket"]; ok {
 		t.Errorf("expected aws_s3_bucket NOT to be observed (deleted in chronologically latest snapshot), but it was included because snapshots slice wasn't sorted chronologically")

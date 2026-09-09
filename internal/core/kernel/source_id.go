@@ -31,6 +31,11 @@ func NewGranteeID(raw string) (GranteeID, error) {
 	return GranteeID(raw), nil
 }
 
+// ScopeID identifies an evaluation or deployment scope boundary.
+type ScopeID string
+
+func (s ScopeID) String() string { return string(s) }
+
 // StringsFrom converts a typed ID slice back to raw strings.
 func StringsFrom[T ~string](ids []T) []string {
 	if ids == nil {

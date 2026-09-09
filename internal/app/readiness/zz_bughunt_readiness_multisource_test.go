@@ -45,7 +45,7 @@ func TestBugHunt_Analyze_MultipleSourcesObserved(t *testing.T) {
 		},
 	}
 
-	report := Analyze(controls, nil, []asset.Snapshot{snap1, snap2}, 5)
+	report := Analyze(controls, nil, asset.Snapshots{snap1, snap2}, 5)
 
 	// Under the buggy code: it only walks snap2 (latest), so aws_s3_bucket is missing.
 	// Both S3 and IAM should be considered observed because they represent different sources.

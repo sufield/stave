@@ -32,7 +32,7 @@ func TestBugHunt_Analyze_ExcludesStaleHistoricalAssets(t *testing.T) {
 	}
 
 	// Analyze both snapshots
-	report := Analyze(controls, nil, []asset.Snapshot{snap1, snap2}, 5)
+	report := Analyze(controls, nil, asset.Snapshots{snap1, snap2}, 5)
 
 	// Since the bucket was deleted in the latest snapshot, no S3 buckets are active.
 	// The readiness analyzer's documented intent is to count observed types from the
