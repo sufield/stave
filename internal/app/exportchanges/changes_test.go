@@ -57,3 +57,27 @@ func TestExport_ParseARN(t *testing.T) {
 		t.Errorf("parsed = %s/%s/%s, want aws/s3/prod-bucket", v, s, r)
 	}
 }
+
+func TestChanges_CollectionMethods(t *testing.T) {
+	cs := Changes{
+		{ControlID: "CTL-1", Severity: policy.SeverityCritical, Confidence: 1.0},
+		{ControlID: "CTL-2", Severity: policy.SeverityHigh, Confidence: 0.5},
+		{ControlID: "CTL-1", Severity: policy.SeverityHigh, Confidence: 0.8},
+	}
+
+	if cs.Len() != 3 {
+		t.Errorf("cs.Len() = %d, want 3", cs.Len())
+	}
+
+	if cs.FilterByMinConfidence(0.8).Len() != 2 {
+		t.Errorf("FilterByMinConfidence(0.8) len = %d, want 2", cs.FilterByMinConfidence(0.8).Len())
+	}
+
+	if cs.BySeverity(policy.SeverityCritical).Len() != 1 {
+		t.Errorf("BySeverity(Critical) len = %d, want 1", cs.BySeverity(policy.SeverityCritical).Len())
+	}
+
+	if cs.ByControl("CTL-1").Len() != 2 {
+		t.Errorf("ByControl(CTL-1) len = %d, want 2", cs.ByControl("CTL-1").Len())
+	}
+}

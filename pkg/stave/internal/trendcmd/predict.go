@@ -8,8 +8,8 @@ import (
 	"io"
 	"time"
 
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/app/trendpredict"
+	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
 // PredictConfig parameterizes [PredictReadiness].

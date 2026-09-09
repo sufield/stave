@@ -28,10 +28,60 @@ type Change struct {
 	ResourceID     string           `json:"resource_id"`
 }
 
+// Changes is a domain collection of Change items with query and filter methods.
+type Changes []Change
+
+// Len returns the number of changes in the collection.
+func (cs Changes) Len() int {
+	return len(cs)
+}
+
+// FilterByMinConfidence returns a new Changes collection with items having at least minConfidence.
+func (cs Changes) FilterByMinConfidence(minConfidence float64) Changes {
+	if len(cs) == 0 {
+		return nil
+	}
+	var filtered Changes
+	for i := range cs {
+		if cs[i].Confidence >= minConfidence {
+			filtered = append(filtered, cs[i])
+		}
+	}
+	return filtered
+}
+
+// BySeverity returns a new Changes collection filtered by policy severity.
+func (cs Changes) BySeverity(sev policy.Severity) Changes {
+	if len(cs) == 0 {
+		return nil
+	}
+	var filtered Changes
+	for i := range cs {
+		if cs[i].Severity == sev {
+			filtered = append(filtered, cs[i])
+		}
+	}
+	return filtered
+}
+
+// ByControl returns a new Changes collection filtered by control ID.
+func (cs Changes) ByControl(id kernel.ControlID) Changes {
+	if len(cs) == 0 {
+		return nil
+	}
+	var filtered Changes
+	for i := range cs {
+		if cs[i].ControlID == id {
+			filtered = append(filtered, cs[i])
+		}
+	}
+	return filtered
+}
+
 // Report holds the exported changes.
 type Report struct {
-	GeneratedAt string   `json:"generated_at"`
-	Changes     []Change `json:"changes"`
+	GeneratedAt string  `json:"generated_at"`
+	Changes     Changes `json:"changes"`
 }
 
 // Input configures the export.

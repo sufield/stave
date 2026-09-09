@@ -79,3 +79,25 @@ func TestGenerate_PriorityMapping(t *testing.T) {
 		}
 	}
 }
+
+func TestTickets_CollectionMethods(t *testing.T) {
+	tickets := Tickets{
+		{TicketID: "1", Team: "secops"},
+		{TicketID: "2", Team: "devops"},
+		{TicketID: "3", Team: "secops"},
+	}
+
+	if tickets.Len() != 3 {
+		t.Errorf("tickets.Len() = %d, want 3", tickets.Len())
+	}
+
+	secops := tickets.FilterByTeam("secops")
+	if secops.Len() != 2 {
+		t.Errorf("secops.Len() = %d, want 2", secops.Len())
+	}
+
+	var empty Tickets
+	if empty.FilterByTeam("secops") != nil {
+		t.Error("expected nil for empty filter")
+	}
+}

@@ -15,12 +15,48 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// FieldGaps is a domain collection of FieldGap items with domain querying and filtering methods.
+type FieldGaps []FieldGap
+
+// Len returns the number of gaps in the collection.
+func (fg FieldGaps) Len() int {
+	return len(fg)
+}
+
+// FixableByAgent returns a new FieldGaps collection containing only gaps fixable by an agent loop.
+func (fg FieldGaps) FixableByAgent() FieldGaps {
+	if len(fg) == 0 {
+		return nil
+	}
+	var filtered FieldGaps
+	for i := range fg {
+		if fg[i].Remediation.FixableByAgent {
+			filtered = append(filtered, fg[i])
+		}
+	}
+	return filtered
+}
+
+// ByAssetType returns a new FieldGaps collection filtered by asset type.
+func (fg FieldGaps) ByAssetType(at kernel.AssetType) FieldGaps {
+	if len(fg) == 0 {
+		return nil
+	}
+	var filtered FieldGaps
+	for i := range fg {
+		if fg[i].AssetType == at {
+			filtered = append(filtered, fg[i])
+		}
+	}
+	return filtered
+}
+
 // Report is the analyzer's output: the prioritized gap list plus
 // a summary that aggregates counts for the operator's "what
 // fraction of the catalog is this unlocking?" question.
 type Report struct {
-	Gaps    []FieldGap `json:"gaps"`
-	Summary Summary    `json:"summary"`
+	Gaps    FieldGaps `json:"gaps"`
+	Summary Summary   `json:"summary"`
 }
 
 // FieldGap is one (asset_type, property_path) pair where at least

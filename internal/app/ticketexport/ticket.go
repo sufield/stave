@@ -52,9 +52,31 @@ type Ticket struct {
 	DwellDays   float64          `json:"dwell_days"`
 }
 
+// Tickets is a domain collection of Ticket items with domain methods.
+type Tickets []Ticket
+
+// Len returns the number of tickets in the collection.
+func (ts Tickets) Len() int {
+	return len(ts)
+}
+
+// FilterByTeam returns a new Tickets collection filtered to tickets owned by the given team.
+func (ts Tickets) FilterByTeam(team teams.TeamID) Tickets {
+	if len(ts) == 0 {
+		return nil
+	}
+	var filtered Tickets
+	for i := range ts {
+		if ts[i].Team == team {
+			filtered = append(filtered, ts[i])
+		}
+	}
+	return filtered
+}
+
 // Generate creates tickets from findings with stable IDs and priority mapping.
-func Generate(findings []remediation.Finding) []Ticket {
-	tickets := make([]Ticket, 0, len(findings))
+func Generate(findings []remediation.Finding) Tickets {
+	tickets := make(Tickets, 0, len(findings))
 	for i := range findings {
 		f := &findings[i]
 		tickets = append(tickets, fromFinding(f))

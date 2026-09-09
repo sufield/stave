@@ -169,3 +169,23 @@ func TestAnalyze_AssetTypeWithoutDeclarationProducesNoGaps(t *testing.T) {
 		t.Errorf("undeclared control should not surface a gap; got %d", r.Summary.TotalGaps)
 	}
 }
+
+func TestFieldGaps_CollectionMethods(t *testing.T) {
+	gaps := FieldGaps{
+		{AssetType: "aws_s3_bucket", Remediation: Remediation{FixableByAgent: true}},
+		{AssetType: "aws_ec2_instance", Remediation: Remediation{FixableByAgent: false}},
+		{AssetType: "aws_s3_bucket", Remediation: Remediation{FixableByAgent: false}},
+	}
+
+	if gaps.Len() != 3 {
+		t.Errorf("gaps.Len() = %d, want 3", gaps.Len())
+	}
+
+	if gaps.FixableByAgent().Len() != 1 {
+		t.Errorf("FixableByAgent().Len() = %d, want 1", gaps.FixableByAgent().Len())
+	}
+
+	if gaps.ByAssetType("aws_s3_bucket").Len() != 2 {
+		t.Errorf("ByAssetType(aws_s3_bucket).Len() = %d, want 2", gaps.ByAssetType("aws_s3_bucket").Len())
+	}
+}

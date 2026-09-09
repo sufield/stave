@@ -139,13 +139,7 @@ func ExportTickets(assessmentData []byte, teamManifest, team, format string) ([]
 
 	// Filter by team.
 	if team != "" {
-		var filtered []ticketexport.Ticket
-		for i := range tickets {
-			if string(tickets[i].Team) == team {
-				filtered = append(filtered, tickets[i])
-			}
-		}
-		tickets = filtered
+		tickets = tickets.FilterByTeam(teams.TeamID(team))
 	}
 
 	var buf bytes.Buffer
@@ -163,7 +157,7 @@ func ExportTickets(assessmentData []byte, teamManifest, team, format string) ([]
 	return buf.Bytes(), nil
 }
 
-func writeTicketsExportCSV(w io.Writer, tickets []ticketexport.Ticket) (err error) {
+func writeTicketsExportCSV(w io.Writer, tickets ticketexport.Tickets) (err error) {
 	cw := csv.NewWriter(w)
 	defer func() {
 		cw.Flush()
