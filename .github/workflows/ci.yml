@@ -353,7 +353,7 @@ jobs:
           check-latest: true
           cache: true
       - name: Install go-licenses
-        run: go install github.com/google/go-licenses@latest
+        run: go install github.com/google/go-licenses@v1.6.0
       - name: Check licenses
         run: |
           go-licenses report ./cmd/stave --template=csv > licenses.csv 2>licenses-warnings.txt || true
