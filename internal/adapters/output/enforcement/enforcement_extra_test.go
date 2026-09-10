@@ -106,3 +106,25 @@ func TestExtractBucketTargets_Empty(t *testing.T) {
 func testBucketRef(name string) kernel.BucketRef {
 	return kernel.NewBucketRef(name)
 }
+
+func TestFindingRefs_CollectionMethods(t *testing.T) {
+	refs := FindingRefs{
+		{ControlID: "CTL.S3.PUBLIC.001", AssetID: "bucket-a"},
+		{ControlID: "CTL.S3.ENCRYPT.001", AssetID: "bucket-b"},
+		{ControlID: "CTL.S3.PUBLIC.002", AssetID: "bucket-c"},
+	}
+
+	if refs.Len() != 3 {
+		t.Errorf("refs.Len() = %d, want 3", refs.Len())
+	}
+
+	publicRefs := refs.FilterS3Public()
+	if publicRefs.Len() != 2 {
+		t.Errorf("FilterS3Public len = %d, want 2", publicRefs.Len())
+	}
+
+	targets := refs.ExtractBucketTargets()
+	if len(targets) != 2 {
+		t.Errorf("ExtractBucketTargets len = %d, want 2", len(targets))
+	}
+}

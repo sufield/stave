@@ -84,3 +84,23 @@ func TestClassify_DeployTimeDetected(t *testing.T) {
 		t.Errorf("expected at least 3 cycles, got %d", result.Cycles)
 	}
 }
+
+func TestClassifications_CollectionMethods(t *testing.T) {
+	cs := Classifications{
+		{Pattern: PatternChronic, Confidence: 0.9},
+		{Pattern: PatternDeployTime, Confidence: 0.4},
+		{Pattern: PatternChronic, Confidence: 0.85},
+	}
+
+	if cs.Len() != 3 {
+		t.Errorf("cs.Len() = %d, want 3", cs.Len())
+	}
+
+	if cs.FilterByPattern(PatternChronic).Len() != 2 {
+		t.Errorf("FilterByPattern len = %d, want 2", cs.FilterByPattern(PatternChronic).Len())
+	}
+
+	if cs.HighConfidence(0.8).Len() != 2 {
+		t.Errorf("HighConfidence len = %d, want 2", cs.HighConfidence(0.8).Len())
+	}
+}

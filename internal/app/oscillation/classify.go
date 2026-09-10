@@ -30,6 +30,42 @@ type Classification struct {
 	Cycles      int              `json:"cycles"`
 }
 
+// Classifications is a domain collection of Classification items with domain methods.
+type Classifications []Classification
+
+// Len returns the number of classifications in the collection.
+func (cs Classifications) Len() int {
+	return len(cs)
+}
+
+// FilterByPattern returns a new Classifications collection filtered by pattern.
+func (cs Classifications) FilterByPattern(p Pattern) Classifications {
+	if len(cs) == 0 {
+		return nil
+	}
+	var filtered Classifications
+	for i := range cs {
+		if cs[i].Pattern == p {
+			filtered = append(filtered, cs[i])
+		}
+	}
+	return filtered
+}
+
+// HighConfidence returns a new Classifications collection filtered by confidence threshold.
+func (cs Classifications) HighConfidence(minConfidence float64) Classifications {
+	if len(cs) == 0 {
+		return nil
+	}
+	var filtered Classifications
+	for i := range cs {
+		if cs[i].Confidence >= minConfidence {
+			filtered = append(filtered, cs[i])
+		}
+	}
+	return filtered
+}
+
 // Input configures the oscillation classifier.
 type Input struct {
 	Assessments     []report.Assessment

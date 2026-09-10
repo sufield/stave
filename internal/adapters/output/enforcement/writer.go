@@ -90,15 +90,35 @@ type FindingRef struct {
 	AssetID   asset.ID
 }
 
+// FindingRefs is a domain collection of FindingRef items with domain extraction methods.
+type FindingRefs []FindingRef
+
+// Len returns the number of finding references in the collection.
+func (frs FindingRefs) Len() int {
+	return len(frs)
+}
+
+// FilterS3Public returns a new FindingRefs collection containing only S3 public-exposure controls.
+func (frs FindingRefs) FilterS3Public() FindingRefs {
+	if len(frs) == 0 {
+		return nil
+	}
+	var filtered FindingRefs
+	for i := range frs {
+		if strings.HasPrefix(string(frs[i].ControlID), "CTL.S3.PUBLIC.") {
+			filtered = append(filtered, frs[i])
+		}
+	}
+	return filtered
+}
+
 // ExtractBucketTargets filters findings to S3 public-exposure controls,
 // deduplicates by asset ID, and returns sorted bucket targets.
-func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
+func (frs FindingRefs) ExtractBucketTargets() []BucketTarget {
+	publicGaps := frs.FilterS3Public()
 	seen := make(map[string]struct{})
 	var targets []BucketTarget
-	for _, f := range findings {
-		if !strings.HasPrefix(string(f.ControlID), "CTL.S3.PUBLIC.") {
-			continue
-		}
+	for _, f := range publicGaps {
 		assetID := strings.TrimSpace(f.AssetID.String())
 		if assetID == "" {
 			continue
@@ -109,17 +129,18 @@ func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
 		seen[assetID] = struct{}{}
 		bucketRef, parseErr := s3.ParseS3Reference(assetID)
 		if parseErr != nil {
-			// Skip malformed asset IDs rather than emit a target
-			// with an empty bucket — downstream enforcement
-			// templates would silently apply to nothing. The
-			// upstream pipeline guards asset IDs at ingestion;
-			// reaching here means a producer drift we want to see.
 			continue
 		}
 		targets = append(targets, BucketTarget{AssetID: assetID, BucketName: bucketRef})
 	}
 	SortTargets(targets)
 	return targets
+}
+
+// ExtractBucketTargets filters findings to S3 public-exposure controls,
+// deduplicates by asset ID, and returns sorted bucket targets.
+func ExtractBucketTargets(findings []FindingRef) []BucketTarget {
+	return FindingRefs(findings).ExtractBucketTargets()
 }
 
 func terraformResourceName(bucket string) string {

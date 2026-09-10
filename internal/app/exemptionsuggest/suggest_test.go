@@ -180,3 +180,23 @@ func TestCountCycles(t *testing.T) {
 		})
 	}
 }
+
+func TestCandidates_CollectionMethods(t *testing.T) {
+	cs := Candidates{
+		{Pattern: PatternOscillating, OwnerTeamID: "team-a"},
+		{Pattern: PatternChronic, OwnerTeamID: "team-b"},
+		{Pattern: PatternOscillating, OwnerTeamID: "team-a"},
+	}
+
+	if cs.Len() != 3 {
+		t.Errorf("cs.Len() = %d, want 3", cs.Len())
+	}
+
+	if cs.FilterByPattern(PatternOscillating).Len() != 2 {
+		t.Errorf("FilterByPattern len = %d, want 2", cs.FilterByPattern(PatternOscillating).Len())
+	}
+
+	if cs.ByOwner("team-a").Len() != 2 {
+		t.Errorf("ByOwner len = %d, want 2", cs.ByOwner("team-a").Len())
+	}
+}

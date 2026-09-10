@@ -6,6 +6,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -23,10 +24,9 @@ type findingKey struct {
 type Pattern string
 
 const (
-	// PatternOscillating means the finding has been fixed and returned
-	// multiple times, indicating a systemic issue.
+	// PatternOscillating indicates a finding that appears, disappears, and reappears.
 	PatternOscillating Pattern = "oscillating"
-	// PatternChronic means the finding has been continuously open
+	// PatternChronic indicates a finding that has fired continuously
 	// without exemption for longer than the threshold.
 	PatternChronic Pattern = "chronic"
 )
@@ -40,8 +40,44 @@ type Candidate struct {
 	Pattern     Pattern          `json:"pattern"`
 	DwellDays   float64          `json:"dwell_days"`
 	Cycles      int              `json:"cycles,omitempty"`
-	OwnerTeamID string           `json:"owner_team_id,omitempty"`
+	OwnerTeamID teams.TeamID     `json:"owner_team_id,omitempty"`
 	ExemptCmd   string           `json:"exempt_command"`
+}
+
+// Candidates is a domain collection of Candidate items with querying and filtering methods.
+type Candidates []Candidate
+
+// Len returns the number of candidates in the collection.
+func (cs Candidates) Len() int {
+	return len(cs)
+}
+
+// FilterByPattern returns a new Candidates collection filtered by pattern.
+func (cs Candidates) FilterByPattern(p Pattern) Candidates {
+	if len(cs) == 0 {
+		return nil
+	}
+	var filtered Candidates
+	for i := range cs {
+		if cs[i].Pattern == p {
+			filtered = append(filtered, cs[i])
+		}
+	}
+	return filtered
+}
+
+// ByOwner returns a new Candidates collection filtered by owner team ID.
+func (cs Candidates) ByOwner(team teams.TeamID) Candidates {
+	if len(cs) == 0 {
+		return nil
+	}
+	var filtered Candidates
+	for i := range cs {
+		if cs[i].OwnerTeamID == team {
+			filtered = append(filtered, cs[i])
+		}
+	}
+	return filtered
 }
 
 // HasOwner reports whether this candidate carries an owner-team
@@ -58,15 +94,15 @@ func (c *Candidate) OwnerKey() string {
 	if c == nil {
 		return ""
 	}
-	return c.OwnerTeamID
+	return string(c.OwnerTeamID)
 }
 
 // Result holds the exemption suggestions.
 type Result struct {
-	Oscillating  []Candidate `json:"oscillating"`
-	Chronic      []Candidate `json:"chronic"`
-	WindowDays   int         `json:"window_days"`
-	MinDwellDays int         `json:"min_dwell_days"`
+	Oscillating  Candidates `json:"oscillating"`
+	Chronic      Candidates `json:"chronic"`
+	WindowDays   int        `json:"window_days"`
+	MinDwellDays int        `json:"min_dwell_days"`
 }
 
 // Input configures the suggestion analysis.
@@ -128,7 +164,7 @@ func Suggest(in Input) *Result {
 		controlID   kernel.ControlID
 		assetID     asset.ID
 		severity    policy.Severity
-		ownerTeamID string
+		ownerTeamID teams.TeamID
 		firstSeen   time.Time
 		lastSeen    time.Time
 		appearances []bool // true for each assessment where present
@@ -149,7 +185,7 @@ func Suggest(in Input) *Result {
 					controlID:   f.ControlID,
 					assetID:     f.AssetID,
 					severity:    f.ControlSeverity,
-					ownerTeamID: f.OwnerKey(),
+					ownerTeamID: teams.TeamID(f.OwnerKey()),
 					firstSeen:   a.Run.EvalTime,
 					appearances: make([]bool, assessmentCount),
 				}
@@ -174,7 +210,7 @@ func Suggest(in Input) *Result {
 			m.lastSeen = a.Run.EvalTime
 			m.appearances[idx] = true
 			if k := f.OwnerKey(); k != "" {
-				m.ownerTeamID = k
+				m.ownerTeamID = teams.TeamID(k)
 			}
 		}
 	}
