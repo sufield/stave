@@ -1,0 +1,338 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-09-10T21:21:44.03857135Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "77258173756f9eed47aa39a14f905c61024366b79c1ba00e59e2706166a3f85a",
+        "2026-01-11T000000Z.json": "a87d8b90779ed2b586ab1714c055b5092af58139f3af0c0df6050a5c53c5c5d8"
+      },
+      "overall": "9540f7bb2c5c8765fbc943de3c185f9d7a5ed588b051dad1e2c66f822a84994b"
+    },
+    "policy_fingerprint": "bd7cb97c6018dee370580ec0691c5b16a81f84c6d577a7548cfc63c73d046c5a",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EKS.WEBHOOK.MUTATING.FAILUREPOLICY.001",
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector",
+      "asset_type": "aws_eks_webhook_configuration",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -5901.362232936486,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:9279f60fc37b2c21",
+      "control_id": "CTL.EKS.WEBHOOK.MUTATING.FAILUREPOLICY.001",
+      "control_name": "Mutating Webhook Must Not Use FailurePolicy Ignore",
+      "control_description": "A MutatingWebhookConfiguration with failurePolicy set to Ignore silently skips mutation when the webhook is unreachable (service down, certificate expired, timeout). Pods come up without the expected sidecar or mutation, dashboards stay green, nobody notices. This is fail-open silent failure. failurePolicy: Fail rejects the pod, which is loud and catchable.\n",
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector",
+      "asset_type": "aws_eks_webhook_configuration",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 6069.362232936486,
+        "misconfigurations": [
+          {
+            "property": "k8s.webhook.failure_policy",
+            "actual_value": "Ignore",
+            "operator": "eq",
+            "unsafe_value": "Ignore"
+          },
+          {
+            "property": "k8s.webhook.kind",
+            "actual_value": "MutatingWebhookConfiguration",
+            "operator": "eq",
+            "unsafe_value": "MutatingWebhookConfiguration"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 6069 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "high",
+      "control_compliance": {
+        "cis_kubernetes": "1.4.1",
+        "nist_800_53_r5": "SI-7"
+      },
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Mutating webhook uses failurePolicy: Ignore. Webhook outages silently skip mutation — pods launch without expected sidecars or modifications.",
+        "action": "Set failurePolicy to Fail on the MutatingWebhookConfiguration. This ensures that webhook unavailability blocks pod admission rather than silently degrading. Monitor webhook availability with readiness probes and PodDisruptionBudgets on the webhook service.",
+        "example": "{\n  \"k8s\": {\n    \"webhook\": {\n      \"kind\": \"MutatingWebhookConfiguration\",\n      \"failure_policy\": \"Fail\"\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-7f8884b549c497c2",
+        "target": {
+          "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector",
+          "asset_type": "aws_eks_webhook_configuration"
+        },
+        "action": "Set failurePolicy to Fail on the MutatingWebhookConfiguration. This ensures that webhook unavailability blocks pod admission rather than silently degrading. Monitor webhook availability with readiness probes and PodDisruptionBudgets on the webhook service."
+      },
+      "exploitability": "reachable",
+      "sla_deadline_hours": 336,
+      "sla_breached": true,
+      "sla_overdue_hours": 5733.362232936486,
+      "sla_escalated_severity": "critical",
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 75,
+        "duration_factor": 2,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.6928495699699186,
+        "days_blind": 252.89009303902026
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "k8s.webhook.failure_policy eq \"Ignore\"",
+          "observation_key": "k8s.webhook.failure_policy",
+          "operator": "eq",
+          "expected_value": "Ignore",
+          "observed_value": "Ignore"
+        },
+        {
+          "predicate_expr": "k8s.webhook.kind eq \"MutatingWebhookConfiguration\"",
+          "observation_key": "k8s.webhook.kind",
+          "operator": "eq",
+          "expected_value": "MutatingWebhookConfiguration",
+          "observed_value": "MutatingWebhookConfiguration"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector",
+          "type": "aws_eks_webhook_configuration",
+          "vendor": "aws",
+          "arn": "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.EKS.WEBHOOK.MUTATING.FAILUREPOLICY.001",
+          "control_name": "Mutating Webhook Must Not Use FailurePolicy Ignore",
+          "severity": "high",
+          "reasoning": [
+            {
+              "clause": "k8s.webhook.failure_policy = \"Ignore\"",
+              "observation_key": "k8s.webhook.failure_policy",
+              "observed_value": "Ignore"
+            },
+            {
+              "clause": "k8s.webhook.kind = \"MutatingWebhookConfiguration\"",
+              "observation_key": "k8s.webhook.kind",
+              "observed_value": "MutatingWebhookConfiguration"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "k8s.webhook.failure_policy",
+            "current_value": "Ignore",
+            "required_value": "any value other than Ignore",
+            "has_safe_default": false,
+            "description": "Change k8s.webhook.failure_policy away from Ignore"
+          },
+          {
+            "path": "k8s.webhook.kind",
+            "current_value": "MutatingWebhookConfiguration",
+            "required_value": "any value other than MutatingWebhookConfiguration",
+            "has_safe_default": false,
+            "description": "Change k8s.webhook.kind away from MutatingWebhookConfiguration"
+          }
+        ],
+        "action": "Set failurePolicy to Fail on the MutatingWebhookConfiguration. This ensures that webhook unavailability blocks pod admission rather than silently degrading. Monitor webhook availability with readiness probes and PodDisruptionBudgets on the webhook service."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "eks"
+      ],
+      "defect": "MutatingWebhookConfiguration uses failurePolicy: Ignore.\n",
+      "infection": "When the webhook service is unreachable — certificate expired, service scaled to zero, DNS resolution failure, network partition — the API server skips mutation and admits the pod as-is. Sidecar injection (Istio, Linkerd, Vault Agent) stops silently. Security proxies, logging agents, and policy sidecars are absent from newly created pods. Existing pods with sidecars continue working, masking the gap until the next rollout.\n",
+      "failure": "Silent sidecar absence. Pods run without expected mutation. Service mesh traffic bypasses mTLS. Secrets injection fails. The failure is invisible until a dependent system breaks or an audit reveals the gap.\n",
+      "delta": [
+        {
+          "property_label": "webhook failure policy",
+          "property_path": "k8s.webhook.failure_policy",
+          "current_value": "Ignore",
+          "fix_action": "change from \"Ignore\" to any other value, or remove"
+        }
+      ],
+      "contributing_fact_ids": [
+        "f2cf4b41fd3a",
+        "fd59de49d2a0",
+        "24df7eb74875",
+        "afd8ef47995e",
+        "08b412b3c62a",
+        "1689936d7b11"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:4d60ca2d5d53d678",
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector",
+      "shared_keys": [
+        "k8s.webhook",
+        "k8s.webhook.failure_policy",
+        "k8s.webhook.kind"
+      ],
+      "headline_finding_id": "sha256:9279f60fc37b2c21",
+      "member_finding_ids": [
+        "sha256:9279f60fc37b2c21"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector",
+      "asset_type": "aws_eks_webhook_configuration",
+      "fix_plan": {
+        "id": "fix-7f8884b549c497c2",
+        "target": {
+          "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector",
+          "asset_type": "aws_eks_webhook_configuration"
+        },
+        "action": "Set failurePolicy to Fail on the MutatingWebhookConfiguration. This ensures that webhook unavailability blocks pod admission rather than silently degrading. Monitor webhook availability with readiness probes and PodDisruptionBudgets on the webhook service."
+      },
+      "contributing_controls": [
+        "CTL.EKS.WEBHOOK.MUTATING.FAILUREPOLICY.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.EKS.WEBHOOK.MUTATING.FAILUREPOLICY.001",
+      "asset_id": "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 2,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.6928495699699186,
+        "days_blind": 252.89009303902026
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}

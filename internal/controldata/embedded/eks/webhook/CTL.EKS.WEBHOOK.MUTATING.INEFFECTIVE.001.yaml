@@ -1,0 +1,111 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.WEBHOOK.MUTATING.INEFFECTIVE.001
+name: Mutating Webhook Selector Matches No Namespace
+description: >
+  A MutatingWebhookConfiguration whose namespaceSelector uses
+  label keys that no namespace in the cluster carries. The
+  webhook exists but its selector matches nothing — it never
+  fires. Pods launch without the expected mutation (sidecar
+  injection, config injection, policy enforcement). The webhook
+  appears configured; the gap is invisible without cross-
+  referencing selectors against actual namespace labels.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-7, CM-6"
+  cis_kubernetes: "1.4.1"
+scope_tags:
+  - aws
+  - eks
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_webhook_configuration
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Mutating webhook selector does not match any namespace.
+    The webhook is configured but never fires — pods launch
+    without the expected mutation.
+  action: >
+    Verify the namespaceSelector labels on the
+    MutatingWebhookConfiguration match at least one namespace.
+    Common causes: label key typo (inject vs istio-injection),
+    namespace created without the required label, Helm upgrade
+    that narrowed the selector without updating namespaces.
+    Add the expected label to target namespaces or widen the
+    webhook selector.
+  example: |
+    {
+      "k8s": {
+        "webhook": {
+          "kind": "MutatingWebhookConfiguration",
+          "selector_matches_any_namespace": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.webhook.kind
+      op: eq
+      value: MutatingWebhookConfiguration
+    - field: properties.k8s.webhook.selector_matches_any_namespace
+      op: eq
+      value: false
+defect: >
+  MutatingWebhookConfiguration selector matches no namespace.
+infection: >
+  The webhook is deployed and the configuration exists, but
+  the namespaceSelector labels don't match any namespace in
+  the cluster. The webhook never intercepts pod admission.
+  Sidecar injection doesn't happen. Config injection doesn't
+  happen. The webhook appears healthy in API server logs
+  because it's never called — not because it's working.
+failure: >
+  Silently ineffective mutation. The webhook exists but
+  reaches nothing. Pods run without sidecars. Dashboards
+  show the webhook as configured. Nobody notices until a
+  dependent system fails or an audit cross-references
+  selectors against namespace labels.
+tests:
+  - name: webhook selector matches no namespace fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/inject-sidecar"
+      asset_type: aws_eks_webhook_configuration
+      vendor: aws
+      properties:
+        k8s:
+          webhook:
+            kind: MutatingWebhookConfiguration
+            name: inject-sidecar
+            selector_matches_any_namespace: false
+  - name: webhook selector matches a namespace passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector"
+      asset_type: aws_eks_webhook_configuration
+      vendor: aws
+      properties:
+        k8s:
+          webhook:
+            kind: MutatingWebhookConfiguration
+            name: istio-sidecar-injector
+            selector_matches_any_namespace: true
+  - name: webhook with no selector (unrestricted scope) passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/global-injector"
+      asset_type: aws_eks_webhook_configuration
+      vendor: aws
+      properties:
+        k8s:
+          webhook:
+            kind: MutatingWebhookConfiguration
+            name: global-injector
+            selector_matches_any_namespace: true

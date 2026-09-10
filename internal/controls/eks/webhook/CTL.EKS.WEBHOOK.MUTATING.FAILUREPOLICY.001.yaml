@@ -1,0 +1,108 @@
+dsl_version: ctrl.v1
+id: CTL.EKS.WEBHOOK.MUTATING.FAILUREPOLICY.001
+name: Mutating Webhook Must Not Use FailurePolicy Ignore
+description: >
+  A MutatingWebhookConfiguration with failurePolicy set to Ignore
+  silently skips mutation when the webhook is unreachable (service
+  down, certificate expired, timeout). Pods come up without the
+  expected sidecar or mutation, dashboards stay green, nobody
+  notices. This is fail-open silent failure. failurePolicy: Fail
+  rejects the pod, which is loud and catchable.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "SI-7"
+  cis_kubernetes: "1.4.1"
+scope_tags:
+  - aws
+  - eks
+taxonomy:
+  - compliance-mapping
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_eks_webhook_configuration
+params:
+  attack_stage: persistence
+remediation:
+  description: >
+    Mutating webhook uses failurePolicy: Ignore. Webhook
+    outages silently skip mutation — pods launch without
+    expected sidecars or modifications.
+  action: >
+    Set failurePolicy to Fail on the MutatingWebhookConfiguration.
+    This ensures that webhook unavailability blocks pod admission
+    rather than silently degrading. Monitor webhook availability
+    with readiness probes and PodDisruptionBudgets on the webhook
+    service.
+  example: |
+    {
+      "k8s": {
+        "webhook": {
+          "kind": "MutatingWebhookConfiguration",
+          "failure_policy": "Fail"
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.k8s.webhook.kind
+      op: eq
+      value: MutatingWebhookConfiguration
+    - field: properties.k8s.webhook.failure_policy
+      op: eq
+      value: Ignore
+defect: >
+  MutatingWebhookConfiguration uses failurePolicy: Ignore.
+infection: >
+  When the webhook service is unreachable — certificate expired,
+  service scaled to zero, DNS resolution failure, network partition —
+  the API server skips mutation and admits the pod as-is. Sidecar
+  injection (Istio, Linkerd, Vault Agent) stops silently. Security
+  proxies, logging agents, and policy sidecars are absent from
+  newly created pods. Existing pods with sidecars continue working,
+  masking the gap until the next rollout.
+failure: >
+  Silent sidecar absence. Pods run without expected mutation.
+  Service mesh traffic bypasses mTLS. Secrets injection fails.
+  The failure is invisible until a dependent system breaks or
+  an audit reveals the gap.
+tests:
+  - name: mutating webhook with Ignore fires
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector"
+      asset_type: aws_eks_webhook_configuration
+      vendor: aws
+      properties:
+        k8s:
+          webhook:
+            kind: MutatingWebhookConfiguration
+            name: istio-sidecar-injector
+            failure_policy: Ignore
+  - name: mutating webhook with Fail passes
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/istio-sidecar-injector"
+      asset_type: aws_eks_webhook_configuration
+      vendor: aws
+      properties:
+        k8s:
+          webhook:
+            kind: MutatingWebhookConfiguration
+            name: istio-sidecar-injector
+            failure_policy: Fail
+  - name: validating webhook with Ignore is silent
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:eks:us-east-1:111122223333:cluster/prod/webhook/gatekeeper"
+      asset_type: aws_eks_webhook_configuration
+      vendor: aws
+      properties:
+        k8s:
+          webhook:
+            kind: ValidatingWebhookConfiguration
+            name: gatekeeper-validating
+            failure_policy: Ignore
