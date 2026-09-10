@@ -57,7 +57,7 @@ Redirect stdout to persist output. Errors and logs still go to stderr.
 
 ## Validation Output
 
-The `validate` command defaults to text output but supports JSON:
+The `lint` command defaults to text output but supports JSON:
 
 ```bash
 stave lint --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations --format json
