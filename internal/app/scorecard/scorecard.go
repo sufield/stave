@@ -22,10 +22,42 @@ type FrameworkScore struct {
 	NextAction       kernel.ControlID           `json:"next_action,omitempty"`
 }
 
+// FrameworkScores is a domain collection of FrameworkScore items with querying methods.
+type FrameworkScores []FrameworkScore
+
+// Len returns the number of framework scores in the collection.
+func (fs FrameworkScores) Len() int {
+	return len(fs)
+}
+
+// WorstReadiness returns the framework score with the lowest readiness percentage, or nil if empty.
+func (fs FrameworkScores) WorstReadiness() *FrameworkScore {
+	if len(fs) == 0 {
+		return nil
+	}
+	worst := &fs[0]
+	for i := 1; i < len(fs); i++ {
+		if fs[i].ReadinessPct < worst.ReadinessPct {
+			worst = &fs[i]
+		}
+	}
+	return worst
+}
+
+// ByFramework returns the score for a specific compliance framework, or nil if not found.
+func (fs FrameworkScores) ByFramework(fw policy.ComplianceFramework) *FrameworkScore {
+	for i := range fs {
+		if fs[i].Framework == fw {
+			return &fs[i]
+		}
+	}
+	return nil
+}
+
 // Report holds the full scorecard.
 type Report struct {
-	GeneratedAt string           `json:"generated_at"`
-	Frameworks  []FrameworkScore `json:"frameworks"`
+	GeneratedAt string          `json:"generated_at"`
+	Frameworks  FrameworkScores `json:"frameworks"`
 }
 
 // Compute builds a scorecard across multiple frameworks.

@@ -75,3 +75,28 @@ func TestCompute_SLAProjection(t *testing.T) {
 		t.Fatalf("sla projections = %d, want 1", len(result.SLAProj))
 	}
 }
+
+func TestSLAProjections_CollectionMethods(t *testing.T) {
+	sp := SLAProjections{
+		{Severity: policy.SeverityCritical, Status: StatusBreaching},
+		{Severity: policy.SeverityHigh, Status: StatusAtRisk},
+		{Severity: policy.SeverityMedium, Status: StatusOnTrack},
+	}
+
+	if sp.Len() != 3 {
+		t.Errorf("sp.Len() = %d, want 3", sp.Len())
+	}
+
+	if sp.Breaching().Len() != 1 {
+		t.Errorf("Breaching len = %d, want 1", sp.Breaching().Len())
+	}
+
+	if sp.AtRisk().Len() != 1 {
+		t.Errorf("AtRisk len = %d, want 1", sp.AtRisk().Len())
+	}
+
+	found := sp.BySeverity(policy.SeverityCritical)
+	if found == nil || !found.IsBreaching() {
+		t.Errorf("BySeverity(Critical) = %v, want breaching", found)
+	}
+}

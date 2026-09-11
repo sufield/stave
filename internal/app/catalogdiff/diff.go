@@ -11,20 +11,56 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// SeverityChange records a control whose severity changed.
+type SeverityChange struct {
+	ControlID kernel.ControlID `json:"control_id"`
+	Before    policy.Severity  `json:"before"`
+	After     policy.Severity  `json:"after"`
+}
+
+// SeverityChanges is a domain collection of SeverityChange items with querying methods.
+type SeverityChanges []SeverityChange
+
+// Len returns the number of severity changes in the collection.
+func (scs SeverityChanges) Len() int {
+	return len(scs)
+}
+
+// Escalated returns severity changes where severity increased (e.g. Medium -> High).
+func (scs SeverityChanges) Escalated() SeverityChanges {
+	if len(scs) == 0 {
+		return nil
+	}
+	var filtered SeverityChanges
+	for i := range scs {
+		if scs[i].After > scs[i].Before {
+			filtered = append(filtered, scs[i])
+		}
+	}
+	return filtered
+}
+
+// Deescalated returns severity changes where severity decreased (e.g. High -> Medium).
+func (scs SeverityChanges) Deescalated() SeverityChanges {
+	if len(scs) == 0 {
+		return nil
+	}
+	var filtered SeverityChanges
+	for i := range scs {
+		if scs[i].After < scs[i].Before {
+			filtered = append(filtered, scs[i])
+		}
+	}
+	return filtered
+}
+
 // Delta describes the difference between two catalog versions.
 type Delta struct {
 	CatalogBefore   int                `json:"catalog_before_count"`
 	CatalogAfter    int                `json:"catalog_after_count"`
 	NewControls     []kernel.ControlID `json:"new_controls"`
 	RemovedControls []kernel.ControlID `json:"removed_controls"`
-	SeverityChanges []SeverityChange   `json:"severity_changes,omitempty"`
-}
-
-// SeverityChange records a control whose severity changed.
-type SeverityChange struct {
-	ControlID kernel.ControlID `json:"control_id"`
-	Before    policy.Severity  `json:"before"`
-	After     policy.Severity  `json:"after"`
+	SeverityChanges SeverityChanges    `json:"severity_changes,omitempty"`
 }
 
 // Compute produces a Delta from two sets of control definitions.

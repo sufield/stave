@@ -9,12 +9,58 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
+// SLAProjections is a domain collection of SLAProjection items with querying methods.
+type SLAProjections []SLAProjection
+
+// Len returns the number of projections in the collection.
+func (sp SLAProjections) Len() int {
+	return len(sp)
+}
+
+// Breaching returns SLA projections that breach deadline.
+func (sp SLAProjections) Breaching() SLAProjections {
+	if len(sp) == 0 {
+		return nil
+	}
+	var filtered SLAProjections
+	for i := range sp {
+		if sp[i].IsBreaching() {
+			filtered = append(filtered, sp[i])
+		}
+	}
+	return filtered
+}
+
+// AtRisk returns SLA projections that are at risk of breaching.
+func (sp SLAProjections) AtRisk() SLAProjections {
+	if len(sp) == 0 {
+		return nil
+	}
+	var filtered SLAProjections
+	for i := range sp {
+		if sp[i].IsAtRisk() {
+			filtered = append(filtered, sp[i])
+		}
+	}
+	return filtered
+}
+
+// BySeverity returns the projection for a specific policy severity, or nil if not found.
+func (sp SLAProjections) BySeverity(sev policy.Severity) *SLAProjection {
+	for i := range sp {
+		if sp[i].Severity == sev {
+			return &sp[i]
+		}
+	}
+	return nil
+}
+
 // Result holds forecast output.
 type Result struct {
-	Current   CurrentState    `json:"current"`
-	Projected ProjectedState  `json:"projected"`
-	SLAProj   []SLAProjection `json:"sla_projections,omitempty"`
-	ModelNote string          `json:"model_note"`
+	Current   CurrentState   `json:"current"`
+	Projected ProjectedState `json:"projected"`
+	SLAProj   SLAProjections `json:"sla_projections,omitempty"`
+	ModelNote string         `json:"model_note"`
 }
 
 // CurrentState holds current metrics.

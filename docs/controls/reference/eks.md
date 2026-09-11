@@ -1999,6 +1999,36 @@ EKS clusters with VPC CNI NetworkPolicy enforcement must have completed pod fire
 
 ---
 
+### CTL.EKS.WEBHOOK.MUTATING.FAILUREPOLICY.001
+
+**Mutating Webhook Must Not Use FailurePolicy Ignore**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_kubernetes: 1.4.1; nist_800_53_r5: SI-7;
+
+A MutatingWebhookConfiguration with failurePolicy set to Ignore silently skips mutation when the webhook is unreachable (service down, certificate expired, timeout). Pods come up without the expected sidecar or mutation, dashboards stay green, nobody notices. This is fail-open silent failure. failurePolicy: Fail rejects the pod, which is loud and catchable.
+
+**Remediation:** Set failurePolicy to Fail on the MutatingWebhookConfiguration. This ensures that webhook unavailability blocks pod admission rather than silently degrading. Monitor webhook availability with readiness probes and PodDisruptionBudgets on the webhook service.
+
+---
+
+### CTL.EKS.WEBHOOK.MUTATING.INEFFECTIVE.001
+
+**Mutating Webhook Selector Matches No Namespace**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** cis_kubernetes: 1.4.1; nist_800_53_r5: SI-7, CM-6;
+
+A MutatingWebhookConfiguration whose namespaceSelector uses label keys that no namespace in the cluster carries. The webhook exists but its selector matches nothing — it never fires. Pods launch without the expected mutation (sidecar injection, config injection, policy enforcement). The webhook appears configured; the gap is invisible without cross- referencing selectors against actual namespace labels.
+
+**Remediation:** Verify the namespaceSelector labels on the MutatingWebhookConfiguration match at least one namespace. Common causes: label key typo (inject vs istio-injection), namespace created without the required label, Helm upgrade that narrowed the selector without updating namespaces. Add the expected label to target namespaces or widen the webhook selector.
+
+---
+
 ### CTL.EKS.WORKLOAD.GHOST.IMAGE.001
 
 **EKS Workload References Image From Deleted ECR Repository**

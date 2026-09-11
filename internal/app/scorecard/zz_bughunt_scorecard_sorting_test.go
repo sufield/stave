@@ -45,3 +45,24 @@ func TestBugHunt_Compute_PerfectCompliance(t *testing.T) {
 		t.Errorf("expected 100.0%% readiness for zero findings, got %f", f.ReadinessPct)
 	}
 }
+
+func TestFrameworkScores_CollectionMethods(t *testing.T) {
+	fs := FrameworkScores{
+		{Framework: "nist", ReadinessPct: 80.0},
+		{Framework: "cis", ReadinessPct: 60.0},
+	}
+
+	if fs.Len() != 2 {
+		t.Errorf("fs.Len() = %d, want 2", fs.Len())
+	}
+
+	worst := fs.WorstReadiness()
+	if worst == nil || worst.Framework != "cis" {
+		t.Errorf("WorstReadiness framework = %v, want cis", worst)
+	}
+
+	found := fs.ByFramework("nist")
+	if found == nil || found.ReadinessPct != 80.0 {
+		t.Errorf("ByFramework(nist) = %v, want 80.0", found)
+	}
+}
