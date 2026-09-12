@@ -21,6 +21,56 @@ type PropertyChange struct {
 	RiskDirection diff.RiskDirection `json:"risk_direction"`
 }
 
+// PropertyChanges is a domain collection of PropertyChange items with querying methods.
+type PropertyChanges []PropertyChange
+
+// Len returns the number of property changes in the collection.
+func (pcs PropertyChanges) Len() int {
+	return len(pcs)
+}
+
+// RiskIncreasing returns property changes that increase risk.
+func (pcs PropertyChanges) RiskIncreasing() PropertyChanges {
+	if len(pcs) == 0 {
+		return nil
+	}
+	var filtered PropertyChanges
+	for i := range pcs {
+		if pcs[i].RiskDirection == diff.RiskIncreasing {
+			filtered = append(filtered, pcs[i])
+		}
+	}
+	return filtered
+}
+
+// RiskDecreasing returns property changes that decrease risk.
+func (pcs PropertyChanges) RiskDecreasing() PropertyChanges {
+	if len(pcs) == 0 {
+		return nil
+	}
+	var filtered PropertyChanges
+	for i := range pcs {
+		if pcs[i].RiskDirection == diff.RiskDecreasing {
+			filtered = append(filtered, pcs[i])
+		}
+	}
+	return filtered
+}
+
+// ByProperty returns property changes matching a specific property path.
+func (pcs PropertyChanges) ByProperty(path string) PropertyChanges {
+	if len(pcs) == 0 {
+		return nil
+	}
+	var filtered PropertyChanges
+	for i := range pcs {
+		if pcs[i].Property == path {
+			filtered = append(filtered, pcs[i])
+		}
+	}
+	return filtered
+}
+
 // NewAsset records an asset present in after but not before.
 type NewAsset struct {
 	AssetID   asset.ID         `json:"asset_id"`
@@ -48,7 +98,7 @@ type DiffResult struct {
 	AfterTime       time.Time        `json:"after_time"`
 	BeforeAssets    int              `json:"before_assets"`
 	AfterAssets     int              `json:"after_assets"`
-	PropertyChanges []PropertyChange `json:"property_changes"`
+	PropertyChanges PropertyChanges  `json:"property_changes"`
 	NewAssets       []NewAsset       `json:"new_assets"`
 	RemovedAssets   []RemovedAsset   `json:"removed_assets"`
 	RiskSummary     RiskSummary      `json:"risk_summary"`
@@ -141,8 +191,8 @@ func Diff(before, after asset.Snapshot) *DiffResult {
 }
 
 // diffProperties recursively compares two property maps and returns changes.
-func diffProperties(assetID asset.ID, before, after map[string]any, prefix string) []PropertyChange {
-	var changes []PropertyChange
+func diffProperties(assetID asset.ID, before, after map[string]any, prefix string) PropertyChanges {
+	var changes PropertyChanges
 	if before == nil {
 		before = map[string]any{}
 	}

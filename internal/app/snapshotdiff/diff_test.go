@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/diff"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -174,5 +175,29 @@ func TestBugHunt_Diff_NumericTypeCoercion(t *testing.T) {
 	if len(result.PropertyChanges) != 0 {
 		t.Errorf("expected 0 property changes because 1 and 1.0 are numerically equal, but got %d: %+v",
 			len(result.PropertyChanges), result.PropertyChanges)
+	}
+}
+
+func TestPropertyChanges_CollectionMethods(t *testing.T) {
+	pcs := PropertyChanges{
+		{Property: "p1", RiskDirection: diff.RiskIncreasing},
+		{Property: "p2", RiskDirection: diff.RiskDecreasing},
+		{Property: "p1", RiskDirection: diff.RiskNeutral},
+	}
+
+	if pcs.Len() != 3 {
+		t.Errorf("pcs.Len() = %d, want 3", pcs.Len())
+	}
+
+	if pcs.RiskIncreasing().Len() != 1 {
+		t.Errorf("RiskIncreasing len = %d, want 1", pcs.RiskIncreasing().Len())
+	}
+
+	if pcs.RiskDecreasing().Len() != 1 {
+		t.Errorf("RiskDecreasing len = %d, want 1", pcs.RiskDecreasing().Len())
+	}
+
+	if pcs.ByProperty("p1").Len() != 2 {
+		t.Errorf("ByProperty(p1) len = %d, want 2", pcs.ByProperty("p1").Len())
 	}
 }

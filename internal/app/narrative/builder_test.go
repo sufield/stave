@@ -110,3 +110,22 @@ func containsStr(s, sub string) bool {
 	}
 	return false
 }
+
+func TestSteps_CollectionMethods(t *testing.T) {
+	steps := Steps{
+		{StepNumber: 1, SafeDefault: true, Caution: ""},
+		{StepNumber: 2, SafeDefault: false, Caution: "High impact"},
+	}
+
+	if steps.Len() != 2 {
+		t.Errorf("steps.Len() = %d, want 2", steps.Len())
+	}
+
+	if steps.SafeDefaults().Len() != 1 {
+		t.Errorf("SafeDefaults len = %d, want 1", steps.SafeDefaults().Len())
+	}
+
+	if steps.RequiresCaution().Len() != 1 {
+		t.Errorf("RequiresCaution len = %d, want 1", steps.RequiresCaution().Len())
+	}
+}

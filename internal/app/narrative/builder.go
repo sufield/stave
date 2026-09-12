@@ -30,7 +30,7 @@ type NarrativeSections struct {
 	WhyThisMatters string             `json:"why_this_matters,omitempty"`
 	AttackStage    kernel.AttackStage `json:"attack_stage,omitempty"`
 	CurrentState   []StateEntry       `json:"current_state,omitempty"`
-	Steps          []Step             `json:"steps"`
+	Steps          Steps              `json:"steps"`
 	ChainContext   *ChainContext      `json:"chain_context,omitempty"`
 }
 
@@ -59,6 +59,42 @@ type Step struct {
 	Caution     string          `json:"caution,omitempty"`
 	Action      string          `json:"action"`
 	Confidence  ConfidenceLevel `json:"confidence"`
+}
+
+// Steps is a domain collection of Step items with querying methods.
+type Steps []Step
+
+// Len returns the number of steps in the collection.
+func (ss Steps) Len() int {
+	return len(ss)
+}
+
+// SafeDefaults returns steps that have a safe default remediation.
+func (ss Steps) SafeDefaults() Steps {
+	if len(ss) == 0 {
+		return nil
+	}
+	var filtered Steps
+	for i := range ss {
+		if ss[i].SafeDefault {
+			filtered = append(filtered, ss[i])
+		}
+	}
+	return filtered
+}
+
+// RequiresCaution returns steps that carry a caution note.
+func (ss Steps) RequiresCaution() Steps {
+	if len(ss) == 0 {
+		return nil
+	}
+	var filtered Steps
+	for i := range ss {
+		if ss[i].Caution != "" {
+			filtered = append(filtered, ss[i])
+		}
+	}
+	return filtered
 }
 
 // ChainContext describes the compound chain membership.

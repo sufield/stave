@@ -22,7 +22,7 @@ type Prediction struct {
 	ProjectedDate    time.Time                  `json:"projected_date"`
 	OptimisticDate   time.Time                  `json:"optimistic_date"`
 	PessimisticDate  time.Time                  `json:"pessimistic_date"`
-	Accelerators     []Accelerator              `json:"accelerators,omitempty"`
+	Accelerators     Accelerators               `json:"accelerators,omitempty"`
 }
 
 // Accelerator describes a sprint-sized intervention that moves the date.
@@ -30,6 +30,23 @@ type Accelerator struct {
 	Description string             `json:"description"`
 	ControlIDs  []kernel.ControlID `json:"control_ids"`
 	DaysSaved   int                `json:"days_saved"`
+}
+
+// Accelerators is a domain collection of Accelerator items with querying methods.
+type Accelerators []Accelerator
+
+// Len returns the number of accelerators in the collection.
+func (as Accelerators) Len() int {
+	return len(as)
+}
+
+// TotalDaysSaved returns the aggregate days saved across all accelerators.
+func (as Accelerators) TotalDaysSaved() int {
+	total := 0
+	for i := range as {
+		total += as[i].DaysSaved
+	}
+	return total
 }
 
 // Input configures the prediction.
