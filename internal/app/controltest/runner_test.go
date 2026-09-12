@@ -187,3 +187,39 @@ func TestRun_FailFast(t *testing.T) {
 		t.Errorf("controls tested = %d, want 1 (fail-fast should stop after first failure)", summary.ControlsTested)
 	}
 }
+
+func TestCaseResults_CollectionMethods(t *testing.T) {
+	cases := CaseResults{
+		{Name: "c1", Passed: true},
+		{Name: "c2", Passed: false},
+	}
+
+	if cases.Len() != 2 {
+		t.Errorf("cases.Len() = %d, want 2", cases.Len())
+	}
+
+	if cases.Passing().Len() != 1 {
+		t.Errorf("Passing len = %d, want 1", cases.Passing().Len())
+	}
+
+	if cases.Failing().Len() != 1 {
+		t.Errorf("Failing len = %d, want 1", cases.Failing().Len())
+	}
+
+	trs := TestResults{
+		{ControlID: "ctl1", Failed: 0},
+		{ControlID: "ctl2", Failed: 1},
+	}
+
+	if trs.Len() != 2 {
+		t.Errorf("trs.Len() = %d, want 2", trs.Len())
+	}
+
+	if trs.Passing().Len() != 1 {
+		t.Errorf("Passing len = %d, want 1", trs.Passing().Len())
+	}
+
+	if trs.Failing().Len() != 1 {
+		t.Errorf("Failing len = %d, want 1", trs.Failing().Len())
+	}
+}

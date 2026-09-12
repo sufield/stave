@@ -205,3 +205,27 @@ func TestScan_NeverViolated(t *testing.T) {
 		t.Error("no violations should be monotonic")
 	}
 }
+
+func TestViolationWindows_CollectionMethods(t *testing.T) {
+	vws := ViolationWindows{
+		{IsOngoing: true},
+		{IsOngoing: false},
+	}
+
+	if vws.Len() != 2 {
+		t.Errorf("vws.Len() = %d, want 2", vws.Len())
+	}
+
+	if vws.Ongoing().Len() != 1 {
+		t.Errorf("Ongoing len = %d, want 1", vws.Ongoing().Len())
+	}
+
+	if vws.Remediated().Len() != 1 {
+		t.Errorf("Remediated len = %d, want 1", vws.Remediated().Len())
+	}
+
+	pz := vws.PatientZero()
+	if pz == nil || !pz.IsOngoing {
+		t.Errorf("PatientZero = %v, want ongoing window", pz)
+	}
+}

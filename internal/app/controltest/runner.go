@@ -12,13 +12,95 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// CaseResult is the outcome of a single test case.
+type CaseResult struct {
+	Name            string  `json:"name"`
+	ExpectedVerdict Verdict `json:"expected_verdict"`
+	ActualVerdict   Verdict `json:"actual_verdict"`
+	Passed          bool    `json:"passed"`
+	Diagnosis       string  `json:"diagnosis,omitempty"`
+	Hint            string  `json:"hint,omitempty"`
+}
+
+// CaseResults is a domain collection of CaseResult items with querying methods.
+type CaseResults []CaseResult
+
+// Len returns the number of case results in the collection.
+func (crs CaseResults) Len() int {
+	return len(crs)
+}
+
+// Passing returns case results that passed.
+func (crs CaseResults) Passing() CaseResults {
+	if len(crs) == 0 {
+		return nil
+	}
+	var filtered CaseResults
+	for i := range crs {
+		if crs[i].IsPassing() {
+			filtered = append(filtered, crs[i])
+		}
+	}
+	return filtered
+}
+
+// Failing returns case results that failed.
+func (crs CaseResults) Failing() CaseResults {
+	if len(crs) == 0 {
+		return nil
+	}
+	var filtered CaseResults
+	for i := range crs {
+		if !crs[i].IsPassing() {
+			filtered = append(filtered, crs[i])
+		}
+	}
+	return filtered
+}
+
 // Result is the outcome of running all tests in a control.
 type Result struct {
 	ControlID kernel.ControlID `json:"control_id"`
 	TestCount int              `json:"test_count"`
 	Passed    int              `json:"passed"`
 	Failed    int              `json:"failed"`
-	Cases     []CaseResult     `json:"cases"`
+	Cases     CaseResults      `json:"cases"`
+}
+
+// TestResults is a domain collection of Result items across multiple controls.
+type TestResults []Result
+
+// Len returns the number of control test results.
+func (trs TestResults) Len() int {
+	return len(trs)
+}
+
+// Passing returns results for controls where all test cases passed.
+func (trs TestResults) Passing() TestResults {
+	if len(trs) == 0 {
+		return nil
+	}
+	var filtered TestResults
+	for i := range trs {
+		if trs[i].Failed == 0 {
+			filtered = append(filtered, trs[i])
+		}
+	}
+	return filtered
+}
+
+// Failing returns results for controls with at least one failed test case.
+func (trs TestResults) Failing() TestResults {
+	if len(trs) == 0 {
+		return nil
+	}
+	var filtered TestResults
+	for i := range trs {
+		if trs[i].Failed > 0 {
+			filtered = append(filtered, trs[i])
+		}
+	}
+	return filtered
 }
 
 // Verdict classifies the test case verdict.
@@ -29,16 +111,6 @@ const (
 	VerdictViolation    Verdict = "VIOLATION"
 	VerdictInconclusive Verdict = "INCONCLUSIVE"
 )
-
-// CaseResult is the outcome of a single test case.
-type CaseResult struct {
-	Name            string  `json:"name"`
-	ExpectedVerdict Verdict `json:"expected_verdict"`
-	ActualVerdict   Verdict `json:"actual_verdict"`
-	Passed          bool    `json:"passed"`
-	Diagnosis       string  `json:"diagnosis,omitempty"`
-	Hint            string  `json:"hint,omitempty"`
-}
 
 // IsPassing reports whether the case matched its expected verdict.
 // Centralised so cmd/test renderers stop reading the raw Passed
@@ -66,8 +138,8 @@ type RunInput struct {
 }
 
 // Run executes all embedded test cases across all controls.
-func Run(input RunInput) ([]Result, Summary) {
-	var results []Result
+func Run(input RunInput) (TestResults, Summary) {
+	var results TestResults
 	var summary Summary
 
 	for i := range input.Controls {

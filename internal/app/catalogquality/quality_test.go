@@ -78,3 +78,23 @@ func TestAnalyze_BlindSpotIdentified(t *testing.T) {
 		t.Errorf("expected 3 assets, got %d", report.BlindSpots[0].AssetCount)
 	}
 }
+
+func TestBlindSpots_CollectionMethods(t *testing.T) {
+	bs := BlindSpots{
+		{AssetType: "aws_lambda_function", AssetCount: 3},
+		{AssetType: "aws_sqs_queue", AssetCount: 7},
+	}
+
+	if bs.Len() != 2 {
+		t.Errorf("bs.Len() = %d, want 2", bs.Len())
+	}
+
+	found := bs.ByAssetType("aws_sqs_queue")
+	if found == nil || found.AssetCount != 7 {
+		t.Errorf("ByAssetType = %v, want asset count 7", found)
+	}
+
+	if bs.TotalUncoveredAssets() != 10 {
+		t.Errorf("TotalUncoveredAssets = %d, want 10", bs.TotalUncoveredAssets())
+	}
+}

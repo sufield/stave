@@ -15,14 +15,6 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// Package describes the assembled audit evidence package.
-type Package struct {
-	Framework   policy.ComplianceFramework `json:"framework"`
-	Period      string                     `json:"period"`
-	GeneratedAt time.Time                  `json:"generated_at"`
-	Components  []Component                `json:"components"`
-}
-
 // Checksum represents a SHA-256 hex digest.
 type Checksum string
 
@@ -31,6 +23,45 @@ type Component struct {
 	Filename    string   `json:"filename"`
 	Description string   `json:"description"`
 	SHA256      Checksum `json:"sha256,omitempty"`
+}
+
+// Components is a domain collection of Component items with querying methods.
+type Components []Component
+
+// Len returns the number of components in the collection.
+func (cs Components) Len() int {
+	return len(cs)
+}
+
+// ByFilename returns the component matching the given filename, or nil if not found.
+func (cs Components) ByFilename(filename string) *Component {
+	for i := range cs {
+		if cs[i].Filename == filename {
+			return &cs[i]
+		}
+	}
+	return nil
+}
+
+// HasIntegrityHashes reports whether all components have non-empty SHA256 hashes.
+func (cs Components) HasIntegrityHashes() bool {
+	if len(cs) == 0 {
+		return false
+	}
+	for i := range cs {
+		if cs[i].SHA256 == "" {
+			return false
+		}
+	}
+	return true
+}
+
+// Package describes the assembled audit evidence package.
+type Package struct {
+	Framework   policy.ComplianceFramework `json:"framework"`
+	Period      string                     `json:"period"`
+	GeneratedAt time.Time                  `json:"generated_at"`
+	Components  Components                 `json:"components"`
 }
 
 // AssembleInput holds all candidate components for the audit bundle.

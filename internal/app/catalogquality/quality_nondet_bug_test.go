@@ -18,7 +18,7 @@ func TestAnalyze_BlindSpotsDeterministic(t *testing.T) {
 	}
 
 	first := Analyze(in)
-	wantBlindSpots := []BlindSpot{
+	wantBlindSpots := BlindSpots{
 		{AssetType: "aws_ec2_instance", AssetCount: 15},
 		{AssetType: "aws_iam_role", AssetCount: 20},
 		{AssetType: "aws_lambda_function", AssetCount: 10},

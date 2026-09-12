@@ -148,3 +148,28 @@ func findTactic(tactics []TacticCoverage, id string) *TacticCoverage {
 	}
 	return nil
 }
+
+func TestTacticsCoverage_CollectionMethods(t *testing.T) {
+	tcs := TacticsCoverage{
+		{TacticID: "TA0001", Status: StatusCovered},
+		{TacticID: "TA0002", Status: StatusNoCoverage},
+		{TacticID: "TA0003", Status: StatusThin},
+	}
+
+	if tcs.Len() != 3 {
+		t.Errorf("tcs.Len() = %d, want 3", tcs.Len())
+	}
+
+	if tcs.Covered().Len() != 2 {
+		t.Errorf("Covered len = %d, want 2", tcs.Covered().Len())
+	}
+
+	if tcs.Gaps().Len() != 2 {
+		t.Errorf("Gaps len = %d, want 2", tcs.Gaps().Len())
+	}
+
+	found := tcs.ByTacticID("TA0001")
+	if found == nil || found.Status != StatusCovered {
+		t.Errorf("ByTacticID = %v, want Covered", found)
+	}
+}

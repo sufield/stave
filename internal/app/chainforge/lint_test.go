@@ -200,3 +200,30 @@ func TestLintChain_ImplicitDependency_FailOpenWarns(t *testing.T) {
 		t.Errorf("should warn about fail_open, warnings: %v", result.Warnings)
 	}
 }
+
+func TestLintResults_CollectionMethods(t *testing.T) {
+	results := LintResults{
+		{ChainID: "c1", Errors: []string{"err1"}},
+		{ChainID: "c2", Warnings: []string{"warn1", "warn2"}},
+	}
+
+	if results.Len() != 2 {
+		t.Errorf("results.Len() = %d, want 2", results.Len())
+	}
+
+	if results.Valid() {
+		t.Error("expected Valid() = false due to c1 error")
+	}
+
+	if !results.HasErrors() {
+		t.Error("expected HasErrors() = true")
+	}
+
+	if results.TotalErrors() != 1 {
+		t.Errorf("TotalErrors() = %d, want 1", results.TotalErrors())
+	}
+
+	if results.TotalWarnings() != 2 {
+		t.Errorf("TotalWarnings() = %d, want 2", results.TotalWarnings())
+	}
+}

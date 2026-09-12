@@ -22,6 +22,33 @@ type BlindSpot struct {
 	AssetCount int              `json:"asset_count"`
 }
 
+// BlindSpots is a domain collection of BlindSpot items with querying methods.
+type BlindSpots []BlindSpot
+
+// Len returns the number of blind spots in the collection.
+func (bs BlindSpots) Len() int {
+	return len(bs)
+}
+
+// ByAssetType returns the blind spot matching the given asset type, or nil if not found.
+func (bs BlindSpots) ByAssetType(at kernel.AssetType) *BlindSpot {
+	for i := range bs {
+		if bs[i].AssetType == at {
+			return &bs[i]
+		}
+	}
+	return nil
+}
+
+// TotalUncoveredAssets returns the sum of asset counts across all blind spots.
+func (bs BlindSpots) TotalUncoveredAssets() int {
+	total := 0
+	for i := range bs {
+		total += bs[i].AssetCount
+	}
+	return total
+}
+
 // MetadataField identifies a control metadata field for completeness analysis.
 type MetadataField string
 
@@ -37,7 +64,7 @@ type Report struct {
 	TotalControls int                         `json:"total_controls"`
 	Completeness  map[MetadataField]FieldStat `json:"completeness"`
 	OverallPct    float64                     `json:"overall_pct"`
-	BlindSpots    []BlindSpot                 `json:"blind_spots"`
+	BlindSpots    BlindSpots                  `json:"blind_spots"`
 	MITREGaps     []kernel.AttackStage        `json:"mitre_gaps"`
 }
 

@@ -16,6 +16,47 @@ type LintResult struct {
 	Warnings []string       `json:"warnings,omitempty"`
 }
 
+// LintResults is a domain collection of LintResult items with querying methods.
+type LintResults []LintResult
+
+// Len returns the number of lint results in the collection.
+func (lrs LintResults) Len() int {
+	return len(lrs)
+}
+
+// Valid reports whether all lint results in the collection have zero errors.
+func (lrs LintResults) Valid() bool {
+	for i := range lrs {
+		if len(lrs[i].Errors) > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// HasErrors reports whether any lint result in the collection contains errors.
+func (lrs LintResults) HasErrors() bool {
+	return !lrs.Valid()
+}
+
+// TotalErrors returns the aggregate error count across all lint results.
+func (lrs LintResults) TotalErrors() int {
+	total := 0
+	for i := range lrs {
+		total += len(lrs[i].Errors)
+	}
+	return total
+}
+
+// TotalWarnings returns the aggregate warning count across all lint results.
+func (lrs LintResults) TotalWarnings() int {
+	total := 0
+	for i := range lrs {
+		total += len(lrs[i].Warnings)
+	}
+	return total
+}
+
 // LintChain validates a chain definition against the control catalog
 // and the catalog-supplied capability registry.
 func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]struct{}, registry policy.CapabilityRegistry) LintResult {

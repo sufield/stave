@@ -115,6 +115,52 @@ type StaveOnlyTactic struct {
 	FailingCount *int   `json:"failing_count"`
 }
 
+// TacticsCoverage is a domain collection of TacticCoverage items with querying methods.
+type TacticsCoverage []TacticCoverage
+
+// Len returns the number of tactics in the collection.
+func (tcs TacticsCoverage) Len() int {
+	return len(tcs)
+}
+
+// Covered returns tactics that meet or exceed the thin coverage threshold.
+func (tcs TacticsCoverage) Covered() TacticsCoverage {
+	if len(tcs) == 0 {
+		return nil
+	}
+	var filtered TacticsCoverage
+	for i := range tcs {
+		if tcs[i].IsCovered() {
+			filtered = append(filtered, tcs[i])
+		}
+	}
+	return filtered
+}
+
+// Gaps returns tactics that are coverage gaps (no coverage or thin coverage).
+func (tcs TacticsCoverage) Gaps() TacticsCoverage {
+	if len(tcs) == 0 {
+		return nil
+	}
+	var filtered TacticsCoverage
+	for i := range tcs {
+		if tcs[i].IsGap() {
+			filtered = append(filtered, tcs[i])
+		}
+	}
+	return filtered
+}
+
+// ByTacticID returns the tactic coverage matching the given tactic ID, or nil if not found.
+func (tcs TacticsCoverage) ByTacticID(id string) *TacticCoverage {
+	for i := range tcs {
+		if tcs[i].TacticID == id {
+			return &tcs[i]
+		}
+	}
+	return nil
+}
+
 // CoverageReport is the full coverage analysis output.
 type CoverageReport struct {
 	Framework           string             `json:"framework"`
@@ -122,7 +168,7 @@ type CoverageReport struct {
 	ControlsAnnotated   int                `json:"controls_annotated"`
 	ControlsUnannotated int                `json:"controls_unannotated"`
 	AssessmentOverlay   bool               `json:"assessment_overlay"`
-	Tactics             []TacticCoverage   `json:"tactics"`
+	Tactics             TacticsCoverage    `json:"tactics"`
 	StaveOnly           []StaveOnlyTactic  `json:"stave_only,omitempty"`
 	UnannotatedControls []kernel.ControlID `json:"unannotated_controls,omitempty"`
 	Summary             CoverageSummary    `json:"summary"`

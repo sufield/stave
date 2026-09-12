@@ -39,6 +39,50 @@ type ViolationWindow struct {
 	IsOngoing bool `json:"is_ongoing"`
 }
 
+// ViolationWindows is a domain collection of ViolationWindow items with querying methods.
+type ViolationWindows []ViolationWindow
+
+// Len returns the number of violation windows in the collection.
+func (vws ViolationWindows) Len() int {
+	return len(vws)
+}
+
+// Ongoing returns violation windows that have not been remediated.
+func (vws ViolationWindows) Ongoing() ViolationWindows {
+	if len(vws) == 0 {
+		return nil
+	}
+	var filtered ViolationWindows
+	for i := range vws {
+		if vws[i].IsOngoing {
+			filtered = append(filtered, vws[i])
+		}
+	}
+	return filtered
+}
+
+// Remediated returns violation windows that have been resolved.
+func (vws ViolationWindows) Remediated() ViolationWindows {
+	if len(vws) == 0 {
+		return nil
+	}
+	var filtered ViolationWindows
+	for i := range vws {
+		if !vws[i].IsOngoing {
+			filtered = append(filtered, vws[i])
+		}
+	}
+	return filtered
+}
+
+// PatientZero returns the earliest violation window, or nil if empty.
+func (vws ViolationWindows) PatientZero() *ViolationWindow {
+	if len(vws) == 0 {
+		return nil
+	}
+	return &vws[0]
+}
+
 // Result holds the output of a bisect or scan operation.
 type Result struct {
 	Mode           Mode                       `json:"mode"`
@@ -46,7 +90,7 @@ type Result struct {
 	ResourceARN    asset.ID                   `json:"resource_arn,omitempty"`
 	SnapshotsTotal int                        `json:"snapshots_total"`
 	AssessmentsRun int                        `json:"assessments_run"`
-	Windows        []ViolationWindow          `json:"windows,omitempty"`
+	Windows        ViolationWindows           `json:"windows,omitempty"`
 	IsMonotonic    bool                       `json:"is_monotonic"`
 	Delta          *asset.InfrastructureDrift `json:"delta,omitempty"`
 }

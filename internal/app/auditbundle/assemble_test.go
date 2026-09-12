@@ -75,3 +75,30 @@ func TestAssemble_NilComponentsSkipped(t *testing.T) {
 		t.Errorf("components = %d, want 1 (only report JSON)", len(pkg.Components))
 	}
 }
+
+func TestComponents_CollectionMethods(t *testing.T) {
+	cs := Components{
+		{Filename: "01-executive-summary.md", SHA256: "abc123"},
+		{Filename: "02-posture-report.json", SHA256: "def456"},
+	}
+
+	if cs.Len() != 2 {
+		t.Errorf("cs.Len() = %d, want 2", cs.Len())
+	}
+
+	found := cs.ByFilename("01-executive-summary.md")
+	if found == nil || found.SHA256 != "abc123" {
+		t.Errorf("ByFilename = %v, want sha abc123", found)
+	}
+
+	if !cs.HasIntegrityHashes() {
+		t.Error("expected HasIntegrityHashes = true")
+	}
+
+	incomplete := Components{
+		{Filename: "file1.txt", SHA256: ""},
+	}
+	if incomplete.HasIntegrityHashes() {
+		t.Error("expected HasIntegrityHashes = false for empty sha")
+	}
+}
