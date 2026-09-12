@@ -21,7 +21,7 @@ func TestGenerate_FindingMapsToItem(t *testing.T) {
 				AssetID:         asset.ID("arn:aws:s3:::prod-bucket"),
 				ControlSeverity: policy.SeverityHigh,
 			}
-			ev.RehydrateSLA(&slaHours, false, nil, 0, "")
+			ev.RehydrateSLA(evaluation.SLAState{Deadline: &slaHours})
 			return remediation.Finding{Finding: ev}
 		}(),
 	}

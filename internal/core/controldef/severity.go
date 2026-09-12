@@ -154,6 +154,45 @@ func (s Severity) Weight() int {
 	}
 }
 
+// ScoreWeight returns the exposure-score weight used by the score
+// package's severity and chain weighting. Replaces the package-level
+// severityWeight / chainWeight maps in app/score/compute.go.
+func (s Severity) ScoreWeight() float64 {
+	switch s {
+	case SeverityCritical:
+		return 10.0
+	case SeverityHigh:
+		return 4.0
+	case SeverityMedium:
+		return 2.0
+	case SeverityLow:
+		return 1.0
+	default:
+		return 0.0
+	}
+}
+
+// GraphWeight returns the GDS-friendly numeric weight for graph
+// algorithms (centrality, shortest path, influence propagation).
+// Wider spread (10/7/4/1) than ScoreWeight so shortest-path
+// differences between severities aren't lost in rounding.
+// Replaces the package-level severityWeights map in
+// adapters/graph/export_model.go.
+func (s Severity) GraphWeight() float64 {
+	switch s {
+	case SeverityCritical:
+		return 10.0
+	case SeverityHigh:
+		return 7.0
+	case SeverityMedium:
+		return 4.0
+	case SeverityLow:
+		return 1.0
+	default:
+		return 0.0
+	}
+}
+
 // Bump escalates this severity by n tiers along the
 // Info → Low → Medium → High → Critical ladder, capped at Critical. Severities
 // outside the escalation ladder (None) are returned unchanged so

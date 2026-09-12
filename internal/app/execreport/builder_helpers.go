@@ -41,7 +41,7 @@ func buildSLASection(a *corereport.Assessment, cfg *evaluation.SLAConfig) *SLASe
 	for i := range a.Findings {
 		f := &a.Findings[i]
 		sev := f.SeverityLabel()
-		deadline := cfg.DeadlineBySeverity[sev]
+		deadline := cfg.DeadlineBySeverity[f.ControlSeverity]
 		if deadline <= 0 {
 			continue
 		}

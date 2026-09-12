@@ -11,11 +11,11 @@ import (
 func defaultSLAConfig() *SLAConfig {
 	return &SLAConfig{
 		ProfileID: "default",
-		DeadlineBySeverity: map[string]float64{
-			"critical": 72,
-			"high":     336,
-			"medium":   1440,
-			"low":      4320,
+		DeadlineBySeverity: map[policy.Severity]float64{
+			policy.SeverityCritical: 72,
+			policy.SeverityHigh:     336,
+			policy.SeverityMedium:   1440,
+			policy.SeverityLow:      4320,
 		},
 		EscalationFactor: 1.5,
 	}
@@ -165,7 +165,7 @@ func TestSeverityBump(t *testing.T) {
 // (off by one) and 3× gave +2.
 func TestFindingAnnotateSLA_2xDwellEscalates_2Tiers(t *testing.T) {
 	cfg := defaultSLAConfig()
-	deadline := cfg.DeadlineBySeverity["medium"]
+	deadline := cfg.DeadlineBySeverity[policy.SeverityMedium]
 	if deadline == 0 {
 		t.Fatal("test fixture relies on medium having a non-zero deadline")
 	}
@@ -191,7 +191,7 @@ func TestFindingAnnotateSLA_2xDwellEscalates_2Tiers(t *testing.T) {
 
 func TestFindingAnnotateSLA_3xDwellEscalates_3Tiers(t *testing.T) {
 	cfg := defaultSLAConfig()
-	deadline := cfg.DeadlineBySeverity["low"]
+	deadline := cfg.DeadlineBySeverity[policy.SeverityLow]
 	if deadline == 0 {
 		t.Fatal("test fixture relies on low having a non-zero deadline")
 	}

@@ -10,8 +10,8 @@ type SLAConfig struct {
 	// ProfileID is the loaded SLA profile (e.g. "hipaa", "default").
 	ProfileID string
 
-	// DeadlineBySeverity maps severity string to deadline in hours.
-	DeadlineBySeverity map[string]float64
+	// DeadlineBySeverity maps typed severity to deadline in hours.
+	DeadlineBySeverity map[policy.Severity]float64
 
 	// EscalationFactor is the multiplier per breach period.
 	EscalationFactor float64
@@ -35,8 +35,7 @@ func (f *Finding) AnnotateSLA(ctl *policy.ControlDefinition, cfg *SLAConfig) {
 		deadlineHours = ctl.SLADeadline().Hours()
 		source = kernel.SLAPolicySourceControlOverride
 	} else {
-		sev := f.SeverityLabel()
-		deadlineHours = cfg.DeadlineBySeverity[sev]
+		deadlineHours = cfg.DeadlineBySeverity[f.ControlSeverity]
 		source = kernel.SLAPolicySourceProfile(cfg.ProfileID)
 	}
 

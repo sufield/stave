@@ -1,17 +1,19 @@
 package evidence
 
+import "github.com/sufield/stave/internal/core/kernel"
+
 // MapVerdict translates an assessment engine verdict string to an
-// EvidenceVerdict. Uses string matching (not importing the evaluation
-// package) to keep the evidence package dependency-free within core.
+// EvidenceVerdict. Uses shared kernel constants so a verdict rename
+// produces a compile error in both packages.
 func MapVerdict(v string) EvidenceVerdict {
 	switch v {
-	case "VIOLATION":
+	case kernel.VerdictViolation:
 		return VerdictFail
-	case "PASS":
+	case kernel.VerdictPass:
 		return VerdictPass
-	case "INCONCLUSIVE":
+	case kernel.VerdictInconclusive:
 		return VerdictIncomplete
-	case "NOT_APPLICABLE", "SKIPPED":
+	case kernel.VerdictNotApplicable, kernel.VerdictSkipped:
 		return VerdictNotApplicable
 	default:
 		return VerdictNotApplicable

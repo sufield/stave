@@ -1,11 +1,6 @@
 package evaluation
 
-import (
-	"testing"
-
-	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
-)
+import "testing"
 
 // Bug 7: SLAUrgencyFactor must compute "remaining" against the SLA policy
 // deadline (slaDeadlineHours), not the control threshold. The old code
@@ -32,7 +27,7 @@ func TestSLAUrgencyFactor_UsesSLADeadlineNotControlThreshold(t *testing.T) {
 			// not yet reached, so urgency must see positive remaining.
 			Evidence: Evidence{ThresholdHours: 1, UnsafeDurationHours: 24},
 		}
-		f.RehydrateSLA(&deadline, false, nil, policy.SeverityNone, kernel.SLAPolicySource(""))
+		f.RehydrateSLA(SLAState{Deadline: &deadline})
 
 		f.SLAUrgencyFactor(urgencyFn)
 		if gotOverdue {
@@ -48,7 +43,7 @@ func TestSLAUrgencyFactor_UsesSLADeadlineNotControlThreshold(t *testing.T) {
 		f := &Finding{
 			Evidence: Evidence{ThresholdHours: 1, UnsafeDurationHours: 100},
 		}
-		f.RehydrateSLA(&deadline, true, &overdue, policy.SeverityNone, kernel.SLAPolicySource(""))
+		f.RehydrateSLA(SLAState{Deadline: &deadline, Breached: true, Overdue: &overdue})
 
 		f.SLAUrgencyFactor(urgencyFn)
 		if !gotOverdue {

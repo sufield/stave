@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -43,8 +44,12 @@ func TestRemediationFindingRoundtrip(t *testing.T) {
 		ControlID: "C.1", AssetID: "A.1",
 		RemediationSpec: policy.RemediationSpec{Description: "d", Action: "a"},
 	}
-	original.RehydrateSLA(&deadline, true, nil, policy.SeverityHigh,
-		kernel.SLAPolicySourceControlOverride)
+	original.RehydrateSLA(evaluation.SLAState{
+		Deadline:  &deadline,
+		Breached:  true,
+		Escalated: policy.SeverityHigh,
+		Source:    kernel.SLAPolicySourceControlOverride,
+	})
 
 	raw, err := json.Marshal(&original)
 	if err != nil {

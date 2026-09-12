@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"maps"
 	"time"
 
 	covadapter "github.com/sufield/stave/internal/adapters/coverage"
@@ -86,8 +85,13 @@ func toEvalSLAConfig(c *SLAConfig) *evaluation.SLAConfig {
 	if c == nil {
 		return nil
 	}
-	deadlines := make(map[string]float64, len(c.DeadlineBySeverity))
-	maps.Copy(deadlines, c.DeadlineBySeverity)
+	deadlines := make(map[policy.Severity]float64, len(c.DeadlineBySeverity))
+	for k, v := range c.DeadlineBySeverity {
+		sev, err := policy.ParseSeverity(k)
+		if err == nil {
+			deadlines[sev] = v
+		}
+	}
 	return &evaluation.SLAConfig{
 		ProfileID:          c.ProfileID,
 		DeadlineBySeverity: deadlines,

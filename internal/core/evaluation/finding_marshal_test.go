@@ -21,8 +21,13 @@ func TestFindingMarshalShadow(t *testing.T) {
 		ControlID: "CTL.S3.ACCESS.001",
 		AssetID:   "arn:aws:s3:::test",
 	}
-	f.RehydrateSLA(&deadline, true, &overdue, policy.SeverityCritical,
-		kernel.SLAPolicySourceProfile("default"))
+	f.RehydrateSLA(SLAState{
+		Deadline:  &deadline,
+		Breached:  true,
+		Overdue:   &overdue,
+		Escalated: policy.SeverityCritical,
+		Source:    kernel.SLAPolicySourceProfile("default"),
+	})
 
 	raw, err := json.Marshal(&f)
 	if err != nil {
@@ -52,8 +57,13 @@ func TestFindingMarshalRoundtrip(t *testing.T) {
 	deadline := 72.0
 	overdue := 12.0
 	original := Finding{ControlID: "CTL.X.001", AssetID: "arn:test"}
-	original.RehydrateSLA(&deadline, true, &overdue, policy.SeverityHigh,
-		kernel.SLAPolicySourceControlOverride)
+	original.RehydrateSLA(SLAState{
+		Deadline:  &deadline,
+		Breached:  true,
+		Overdue:   &overdue,
+		Escalated: policy.SeverityHigh,
+		Source:    kernel.SLAPolicySourceControlOverride,
+	})
 
 	raw, err := json.Marshal(&original)
 	if err != nil {

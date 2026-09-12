@@ -228,7 +228,11 @@ func scoreFindingsFromAssessment(a *Assessment) []remediation.Finding {
 		// score consumes here, so they pass through as zero —
 		// sufficient for the scorer, which only reads the breach
 		// + dwell signals.
-		ev.RehydrateSLA(f.SLADeadlineHours, f.SLABreached, f.SLAOverdueHours, 0, "")
+		ev.RehydrateSLA(evaluation.SLAState{
+			Deadline: f.SLADeadlineHours,
+			Breached: f.SLABreached,
+			Overdue:  f.SLAOverdueHours,
+		})
 		out[i] = remediation.Finding{Finding: ev}
 	}
 	return out

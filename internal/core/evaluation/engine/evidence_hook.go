@@ -9,7 +9,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evidence"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/sanitize"
 )
 
 // buildEvidencePackage converts assessment findings and checks into a
@@ -132,7 +131,7 @@ func isSensitiveField(key string) bool {
 		return r == '_' || r == '-' || r == '.' || r == ':'
 	})
 	for _, t := range tokens {
-		if _, ok := sanitize.SensitiveTokens[t]; ok {
+		if _, ok := kernel.SensitiveTokens[t]; ok {
 			return true
 		}
 	}

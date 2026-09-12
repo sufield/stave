@@ -66,6 +66,18 @@ type Evidence struct {
 	EvidenceInvalid bool `json:"evidence_invalid,omitempty"`
 }
 
+// SafeDurationHours returns the unsafe-duration value and true when
+// the evidence is valid; (0, false) when EvidenceInvalid is set.
+// Consumers should prefer this over reading UnsafeDurationHours
+// directly to avoid arithmetic on the -1.0 sentinel the engine
+// writes when duration calculation fails.
+func (e Evidence) SafeDurationHours() (float64, bool) {
+	if e.EvidenceInvalid {
+		return 0, false
+	}
+	return e.UnsafeDurationHours, true
+}
+
 // HasTemporalRisk reports whether the evidence carries a human-
 // readable temporal-risk summary string. Replaces the
 // (e.TemporalRisk != "") probe at renderer call sites.

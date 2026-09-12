@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -30,13 +30,10 @@ func Test_RedGate_SLABreachedOmitempty(t *testing.T) {
 	// Build a finding with an SLA deadline set (72h) but NOT breached.
 	deadline := 72.0
 	var f remediation.Finding
-	f.RehydrateSLA(
-		&deadline,           // non-nil deadline => SLADeadlinePtr() returns *72.0
-		false,               // breached=false => SLABreachedFlag() returns false
-		nil,                 // no overdue dwell
-		policy.SeverityNone, // no escalation
-		kernel.SLAPolicySourceControlOverride,
-	)
+	f.RehydrateSLA(evaluation.SLAState{
+		Deadline: &deadline,
+		Source:   kernel.SLAPolicySourceControlOverride,
+	})
 
 	// Sanity-check the trigger preconditions via the public predicates
 	// the mapper relies on, so the test is self-documenting.

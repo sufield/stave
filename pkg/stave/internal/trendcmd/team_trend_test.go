@@ -47,7 +47,7 @@ func makeFinding(ctlID, assetID string, sev policy.Severity, dwell float64, brea
 	}
 	if breached {
 		deadline := 24.0
-		f.RehydrateSLA(&deadline, true, nil, 0, "")
+		f.RehydrateSLA(evaluation.SLAState{Deadline: &deadline, Breached: true})
 	}
 	return f
 }

@@ -105,6 +105,18 @@ func (f *Finding) OverdueHours() (float64, bool) {
 	return *f.slaOverdueHours, true
 }
 
+// SLAState holds the wire-shape SLA fields for RehydrateSLA.
+// Named fields replace the five positional parameters so that
+// swapping the two *float64 values (Deadline / Overdue) is a
+// compile error rather than a silent bug.
+type SLAState struct {
+	Deadline  *float64
+	Breached  bool
+	Overdue   *float64
+	Escalated policy.Severity
+	Source    kernel.SLAPolicySource
+}
+
 // RehydrateSLA restores the SLA state from previously-serialised
 // wire fields. Used by loaders / library converters that
 // reconstruct a Finding from JSON (or from a public mirror like
@@ -115,15 +127,15 @@ func (f *Finding) OverdueHours() (float64, bool) {
 //
 // The escalated severity carries through as-is; if the snapshot
 // did not capture an escalation, callers pass policy.SeverityNone.
-func (f *Finding) RehydrateSLA(deadline *float64, breached bool, overdue *float64, escalated policy.Severity, source kernel.SLAPolicySource) {
+func (f *Finding) RehydrateSLA(s SLAState) {
 	if f == nil {
 		return
 	}
-	f.slaDeadlineHours = deadline
-	f.slaBreached = breached
-	f.slaOverdueHours = overdue
-	f.slaEscalatedSeverity = escalated
-	f.slaPolicySource = source
+	f.slaDeadlineHours = s.Deadline
+	f.slaBreached = s.Breached
+	f.slaOverdueHours = s.Overdue
+	f.slaEscalatedSeverity = s.Escalated
+	f.slaPolicySource = s.Source
 }
 
 // SLAEscalatedSeverityValue returns the escalated severity the SLA

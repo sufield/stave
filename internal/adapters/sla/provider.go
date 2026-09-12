@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 )
 
@@ -63,11 +64,11 @@ func (p *Provider) LoadSLAConfig(_ context.Context, profileID, filePath string) 
 
 	return &evaluation.SLAConfig{
 		ProfileID: pol.ID,
-		DeadlineBySeverity: map[string]float64{
-			"critical": pol.DeadlineHoursFor("critical"),
-			"high":     pol.DeadlineHoursFor("high"),
-			"medium":   pol.DeadlineHoursFor("medium"),
-			"low":      pol.DeadlineHoursFor("low"),
+		DeadlineBySeverity: map[policy.Severity]float64{
+			policy.SeverityCritical: pol.DeadlineHoursFor("critical"),
+			policy.SeverityHigh:     pol.DeadlineHoursFor("high"),
+			policy.SeverityMedium:   pol.DeadlineHoursFor("medium"),
+			policy.SeverityLow:      pol.DeadlineHoursFor("low"),
 		},
 		EscalationFactor: pol.EscalationFactor,
 	}, nil

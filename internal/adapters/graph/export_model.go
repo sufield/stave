@@ -16,22 +16,6 @@ const ontologyBaseIRI = "urn:stave:ontology#"
 // graph and the schema graph never collide on a term.
 const resourceBaseIRI = "urn:stave:"
 
-// Severity → numeric weight. Used by GDS algorithms (centrality,
-// shortest path, influence propagation) that need a scalar edge
-// weight rather than a categorical label. Higher = more dangerous.
-//
-// Independent from policy.SeverityWeight: graph algorithms want a
-// wider spread (10/7/4/1) than the risk-scoring weights (4/3/2/1)
-// so shortest-path differences between severities aren't lost in
-// integer rounding.
-var severityWeights = map[policy.Severity]float64{
-	policy.SeverityCritical: 10.0,
-	policy.SeverityHigh:     7.0,
-	policy.SeverityMedium:   4.0,
-	policy.SeverityLow:      1.0,
-	policy.SeverityNone:     0.0,
-}
-
 // SeverityWeight returns the GDS-friendly numeric weight for a
 // categorical severity string. Unknown severities return 0 so an
 // algorithm running over the graph treats them as non-edges of the
@@ -41,7 +25,7 @@ func SeverityWeight(severity string) float64 {
 	if err != nil {
 		return 0.0
 	}
-	return severityWeights[parsed]
+	return parsed.GraphWeight()
 }
 
 // rdfNode is the export-shaped representation of a graph node. The

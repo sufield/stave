@@ -404,53 +404,25 @@ func ParseWeights(s string) (Weights, error) {
 	return w, nil
 }
 
-var severityWeight = map[policy.Severity]float64{
-	policy.SeverityCritical: 10.0,
-	policy.SeverityHigh:     4.0,
-	policy.SeverityMedium:   2.0,
-	policy.SeverityLow:      1.0,
-	// Info findings carry zero exposure weight — they exist to
-	// surface observations, not score them. Without an explicit
-	// entry the map's zero-value lookup matched anyway, but
-	// SeverityWeightFor's "0 → 1.0" fallback would have promoted
-	// Info to Low's weight, which is exactly the misclassification
-	// this entry prevents.
-	policy.SeverityInfo: 0.0,
-}
-
 // SeverityWeightFor returns the score weight for a given severity level.
 func SeverityWeightFor(sev policy.Severity) float64 {
-	if w, ok := severityWeight[sev]; ok {
-		return w
+	w := sev.ScoreWeight()
+	if w == 0 && sev != policy.SeverityInfo && sev != policy.SeverityNone {
+		return 1.0
 	}
-	return 1.0
-}
-
-// chainWeight maps a chain's compound severity to its score weight.
-// Mirrors severityWeight's full ladder so a chain authored at Low or
-// Info severity scores against the same scale as a chain authored at
-// Medium/High/Critical. The earlier shape omitted Low/Info, which
-// silently routed those chains through the bare-map zero-value
-// fallback and inflated their downstream weight to 2.0 (the
-// fallback default).
-var chainWeight = map[policy.Severity]float64{
-	policy.SeverityCritical: 10.0,
-	policy.SeverityHigh:     4.0,
-	policy.SeverityMedium:   2.0,
-	policy.SeverityLow:      1.0,
-	policy.SeverityInfo:     0.0,
+	return w
 }
 
 // ChainMaxWeight computes the severity-weighted maximum chain weight
 // from actual chain definitions. Each chain contributes its
-// CompoundSeverity weight (critical=10, high=4, medium=2, low=1,
+// CompoundSeverity ScoreWeight (critical=10, high=4, medium=2, low=1,
 // info=0). Unrecognised severities fall back to medium so a typo in
 // a chain definition does not silently zero out its contribution.
 func ChainMaxWeight(chains []policy.ChainDefinition) float64 {
 	var total float64
 	for i := range chains {
-		cw, ok := chainWeight[chains[i].CompoundSeverity]
-		if !ok {
+		cw := chains[i].CompoundSeverity.ScoreWeight()
+		if cw == 0 && !chains[i].CompoundSeverity.IsValid() {
 			cw = 2.0 // default for unknown severity
 		}
 		total += cw
@@ -657,8 +629,8 @@ func computeChainScore(input Input) chainResult {
 		maxW = float64(input.ChainDefs) * 10.0
 	}
 	for i := range input.ChainFindings {
-		cw, ok := chainWeight[input.ChainFindings[i].Severity]
-		if !ok {
+		cw := input.ChainFindings[i].Severity.ScoreWeight()
+		if cw == 0 && !input.ChainFindings[i].Severity.IsValid() {
 			cw = 2.0
 		}
 		activeW += cw

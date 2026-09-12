@@ -2,8 +2,10 @@ package evaluation
 
 import (
 	"cmp"
+	"log/slog"
 	"maps"
 	"slices"
+	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -74,11 +76,11 @@ func DeriveSecurityState(violations int, upcoming findings.ThresholdItems) Secur
 type Verdict string
 
 const (
-	VerdictViolation     Verdict = "VIOLATION"
-	VerdictPass          Verdict = "PASS"
-	VerdictInconclusive  Verdict = "INCONCLUSIVE"
-	VerdictNotApplicable Verdict = "NOT_APPLICABLE"
-	VerdictSkipped       Verdict = "SKIPPED"
+	VerdictViolation     Verdict = Verdict(kernel.VerdictViolation)
+	VerdictPass          Verdict = Verdict(kernel.VerdictPass)
+	VerdictInconclusive  Verdict = Verdict(kernel.VerdictInconclusive)
+	VerdictNotApplicable Verdict = Verdict(kernel.VerdictNotApplicable)
+	VerdictSkipped       Verdict = Verdict(kernel.VerdictSkipped)
 )
 
 // ResourceCheck captures the granular result for a single control/asset pairing.
@@ -472,4 +474,41 @@ func (r *ComplianceReport) HasCriticalSLABreach() bool {
 		}
 	}
 	return false
+}
+
+// EnrichFindings runs the post-assessment annotation pipeline in the
+// required order: SLA annotation first, then lifecycle-deadline
+// escalation. Encapsulates the ordering constraint so callers don't
+// need to know that chain detection reads SLA state set by the SLA
+// pass. Logger is optional (nil suppresses warnings).
+func (r *ComplianceReport) EnrichFindings(controls []policy.ControlDefinition, slaCfg *SLAConfig, evalTime time.Time, logger *slog.Logger) {
+	if r == nil {
+		return
+	}
+	ctlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
+	for i := range controls {
+		ctlLookup[controls[i].ID] = &controls[i]
+	}
+
+	if slaCfg != nil {
+		for i := range r.Findings {
+			ctl := ctlLookup[r.Findings[i].ControlID]
+			if ctl == nil {
+				if logger != nil {
+					logger.Warn("sla annotation skipped: control not in catalog",
+						"control_id", r.Findings[i].ControlID,
+						"asset_id", r.Findings[i].AssetID)
+				}
+				continue
+			}
+			r.Findings[i].AnnotateSLA(ctl, slaCfg)
+		}
+	}
+
+	for i := range r.Findings {
+		ctl := ctlLookup[r.Findings[i].ControlID]
+		if ctl != nil {
+			r.Findings[i].AnnotateLifecycleDeadline(ctl, evalTime)
+		}
+	}
 }

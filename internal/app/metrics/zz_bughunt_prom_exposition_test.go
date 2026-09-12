@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"
@@ -16,7 +17,12 @@ func TestBugHunt_Write_PrometheusExpositionHeadersOnly(t *testing.T) {
 	f := finding("CTL.INFO.001", policy.SeverityInfo)
 	deadline := 24.0
 	overdue := 12.0
-	f.RehydrateSLA(&deadline, true, &overdue, policy.SeverityNone, kernel.SLAPolicySource("default"))
+	f.RehydrateSLA(evaluation.SLAState{
+		Deadline: &deadline,
+		Breached: true,
+		Overdue:  &overdue,
+		Source:   kernel.SLAPolicySource("default"),
+	})
 
 	var buf bytes.Buffer
 	Write(&buf, Input{
