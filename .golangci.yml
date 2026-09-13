@@ -60,9 +60,12 @@ linters:
               desc: "pflag is a CLI adapter; keep it out of application/domain code"
             - pkg: "github.com/sufield/stave/cmd/cmdutil/cliflags"
               desc: "cliflags transitively imports cobra; core code should depend on internal/config (GlobalSettings) instead"
+              # MIGRATED: also enforced by go-arch-lint — core/app/adapters/platform deps exclude cmd
             - pkg: "github.com/sufield/stave/cmd/cmdutil/cmdctx"
               desc: "cmdctx transitively imports cobra; core code should receive resolved context/logger values"
+              # MIGRATED: also enforced by go-arch-lint — core/app/adapters/platform deps exclude cmd
         core-no-aws:
+          # MIGRATED: also enforced by go-arch-lint — core component deps exclude adapters
           files:
             - "internal/core/**"
           deny:

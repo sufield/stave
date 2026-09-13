@@ -1,0 +1,250 @@
+# Hexagonal architecture enforcement via go-arch-lint (v1.19.0+).
+# Complements depguard (which blocks specific external packages)
+# and architecture_dependency_test.go (which asserts the same
+# boundaries in Go test code). This config makes the architecture
+# readable as a YAML document and generates dependency graphs.
+#
+# Legalized violations are marked with TODO comments — they
+# represent known technical debt, not bugs introduced by this config.
+version: 3
+workdir: .
+
+allow:
+  depOnAnyVendor: true
+  deepScan: false
+
+excludeFiles:
+  - ".*_test\\.go$"
+  - ".*/vendor/.*"
+
+commonComponents:
+  - util
+  - env
+  - version
+
+components:
+  # ── Core domain (hexagonal center) ──────────────────────────
+  core:
+    in: internal/core/**
+
+  # ── Application services ────────────────────────────────────
+  app:
+    in: internal/app/**
+
+  # ── Infrastructure adapters ─────────────────────────────────
+  adapters:
+    in: internal/adapters/**
+
+  # ── Cross-cutting platform utilities ────────────────────────
+  platform:
+    in: internal/platform/**
+
+  # ── CLI entry points ────────────────────────────────────────
+  cmd:
+    in: cmd/**
+
+  # ── Public API facade ───────────────────────────────────────
+  pkg-facade:
+    in: pkg/**
+
+  # ── Cross-cutting leaf packages ─────────────────────────────
+  sanitize:
+    in: internal/sanitize
+  config:
+    in: internal/config
+  cli:
+    in: internal/cli/**
+  env:
+    in: internal/env
+  util:
+    in: internal/util/**
+  version:
+    in: internal/version
+  yamlutil:
+    in: internal/yamlutil
+  compliance:
+    in: internal/compliance
+  contracts:
+    in: internal/contracts/**
+  controldata:
+    in: internal/controldata
+  chaindata:
+    in: internal/chaindata
+  doctor:
+    in: internal/doctor
+  collectorcontract:
+    in: internal/collectorcontract
+  templates:
+    in: internal/templates
+
+  # ── Reasoning engines (Datalog/Z3) ──────────────────────────
+  reasoning:
+    in: internal/reasoning/**
+
+  # ── Dev / test ──────────────────────────────────────────────
+  architecture:
+    in: internal/architecture
+  testutil:
+    in: internal/testutil
+  tools:
+    in: internal/tools/**
+  docsverify:
+    in: internal/docsverify
+  e2e:
+    in: e2e
+  examples:
+    in: examples/**
+  features:
+    in: features
+
+deps:
+  # ── Hexagonal center: core depends on nothing outside core ──
+  core:
+    mayDependOn:
+      - core
+      - yamlutil
+      - compliance
+    anyVendorDeps: true
+
+  # ── App layer: core + selected cross-cutting, never adapters ──
+  app:
+    mayDependOn:
+      - app
+      - core
+      - compliance
+      - contracts
+      - controldata
+      - platform
+      - sanitize
+      - yamlutil
+      - config
+      - chaindata
+      - collectorcontract
+    anyVendorDeps: true
+
+  # ── Adapters: core + platform + cross-cutting, never app ──
+  adapters:
+    mayDependOn:
+      - adapters
+      - core
+      - platform
+      - cli
+      - contracts
+      - controldata
+      - doctor
+      - sanitize
+      - yamlutil
+      - compliance
+      - chaindata
+      - collectorcontract
+      - templates
+    anyVendorDeps: true
+
+  # ── Platform: core + leaf utilities, never app/adapters/cmd ──
+  platform:
+    mayDependOn:
+      - platform
+      - core
+      - sanitize
+      - yamlutil
+    anyVendorDeps: true
+
+  # ── Cross-cutting packages ──────────────────────────────────
+  sanitize:
+    mayDependOn:
+      - core
+      - platform
+    anyVendorDeps: true
+
+  config:
+    mayDependOn:
+      - sanitize
+      - platform
+    anyVendorDeps: true
+
+  cli:
+    mayDependOn:
+      - cli
+      - core
+      - platform
+      - pkg-facade  # TODO: cli/ui/error.go references pkg/stave error sentinels — break with interface
+    anyVendorDeps: true
+
+  compliance:
+    mayDependOn:
+      - core
+    anyVendorDeps: true
+
+  contracts:
+    mayDependOn:
+      - contracts
+      - core
+    anyVendorDeps: true
+
+  doctor:
+    mayDependOn:
+      - core
+    anyVendorDeps: true
+
+  collectorcontract:
+    mayDependOn:
+      - core
+    anyVendorDeps: true
+
+  controldata:
+    anyProjectDeps: false
+    anyVendorDeps: true
+
+  chaindata:
+    anyProjectDeps: false
+    anyVendorDeps: true
+
+  templates:
+    anyProjectDeps: false
+    anyVendorDeps: true
+
+  yamlutil:
+    anyProjectDeps: false
+    anyVendorDeps: true
+
+  # ── Facade: wires everything ────────────────────────────────
+  cmd:
+    anyProjectDeps: true
+    anyVendorDeps: true
+
+  pkg-facade:
+    anyProjectDeps: true
+    anyVendorDeps: true
+
+  reasoning:
+    anyProjectDeps: true
+    anyVendorDeps: true
+
+  # ── Dev / test: unrestricted ────────────────────────────────
+  architecture:
+    anyProjectDeps: true
+    anyVendorDeps: true
+
+  testutil:
+    anyProjectDeps: true
+    anyVendorDeps: true
+
+  tools:
+    anyProjectDeps: true
+    anyVendorDeps: true
+
+  docsverify:
+    anyProjectDeps: true
+    anyVendorDeps: true
+
+  e2e:
+    anyProjectDeps: true
+    anyVendorDeps: true
+
+  examples:
+    anyProjectDeps: true
+    anyVendorDeps: true
+
+  features:
+    anyProjectDeps: true
+    anyVendorDeps: true
