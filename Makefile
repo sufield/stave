@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover arch-lint arch-graph arch-test lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability validate-checklists validate-embed
+.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover arch-lint arch-graph arch-test grit-check lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability validate-checklists validate-embed
 # Binary name
 BINARY=stave
 
@@ -349,6 +349,12 @@ clig-check:
 ## Checks: hexagonal dependencies, evaluator function bounds, content rules.
 arch-test:
 	$(GOTEST) ./architecture/... -v -count=1
+
+## grit-check: Run GritQL structural patterns against control YAMLs.
+## Patterns: .grit/patterns/consistency/ (CI-enforced).
+## Warning mode — promote to error after tuning.
+grit-check:
+	grit check internal/controls/ --grit-dir .grit
 
 ## arch-lint: Enforce hexagonal architecture boundaries via go-arch-lint.
 ## Config: .go-arch-lint.yml — components, dependency rules, legalized violations.
