@@ -321,6 +321,13 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 		opt = opts[0]
 	}
 
+	for i := range snapshots {
+		if snapshots[i].Sanitized {
+			a.logger.Warn("evaluating sanitized snapshot; results may differ from unsanitized original",
+				"snapshot_index", i, "captured_at", snapshots[i].CapturedAt)
+		}
+	}
+
 	sequenced := a.sortSnapshots(snapshots)
 
 	// Pre-pass: derive cross-resource properties (e.g., KMS key isolation).
@@ -684,8 +691,10 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 func partitionIndeterminateFindings(findings []evaluation.Finding) (confirmed, indeterminate []evaluation.Finding) {
 	for i := range findings {
 		if findings[i].IsIndeterminate() {
+			findings[i].DataQuality = evaluation.DataQualityIndeterminate
 			indeterminate = append(indeterminate, findings[i])
 		} else {
+			findings[i].DataQuality = evaluation.DataQualityConfirmed
 			confirmed = append(confirmed, findings[i])
 		}
 	}

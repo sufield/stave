@@ -53,6 +53,17 @@ const (
 	FindingSuppressed FindingStatus = "SUPPRESSED"
 )
 
+// DataQuality classifies the epistemic confidence in a finding's
+// evidence, orthogonal to its lifecycle Status. A finding can be
+// SUPPRESSED (policy-accepted) AND INDETERMINATE (coverage gap) —
+// these are independent dimensions.
+type DataQuality string
+
+const (
+	DataQualityConfirmed     DataQuality = "CONFIRMED"
+	DataQualityIndeterminate DataQuality = "INDETERMINATE"
+)
+
 // Suppression records why a finding was suppressed (excepted or acknowledged).
 type Suppression struct {
 	Kind             string            `json:"kind"`
@@ -181,6 +192,10 @@ type Finding struct {
 
 	// Status classifies the finding lifecycle: ACTIVE or SUPPRESSED.
 	Status FindingStatus `json:"status,omitempty"`
+
+	// DataQuality classifies evidence confidence, orthogonal to
+	// Status. A finding can be both SUPPRESSED and INDETERMINATE.
+	DataQuality DataQuality `json:"data_quality,omitempty"`
 
 	// Suppression records why a suppressed finding was exempted.
 	Suppression *Suppression `json:"suppression,omitempty"`

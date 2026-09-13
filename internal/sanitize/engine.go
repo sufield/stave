@@ -292,7 +292,8 @@ func (s *Sanitizer) Snapshot(snap asset.Snapshot) asset.Snapshot {
 		// so sanitised reports rendered with an empty source field
 		// and downstream filters keyed on Source produced empty
 		// results.
-		Source: snap.Source,
+		Source:    snap.Source,
+		Sanitized: true,
 
 		Assets: make([]asset.Asset, len(snap.Assets))}
 	for i, a := range snap.Assets {

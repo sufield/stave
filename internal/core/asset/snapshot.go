@@ -34,6 +34,11 @@ type Snapshot struct {
 	CapturedAt    time.Time       `json:"captured_at"`
 	Assets        []Asset         `json:"assets"`
 	Identities    []CloudIdentity `json:"identities,omitempty"`
+	// Sanitized is set by the sanitizer when properties have been
+	// scrubbed. Evaluating a sanitized snapshot may produce different
+	// results than the unsanitized original (a stripped property
+	// triggers fail-closed predicates).
+	Sanitized bool `json:"sanitized,omitempty"`
 }
 
 // FindAsset returns the asset with the given ID.

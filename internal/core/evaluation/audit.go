@@ -25,6 +25,21 @@ const (
 	ConfidenceInconclusive ConfidenceLevel = "INCONCLUSIVE"
 )
 
+// ConfidenceBasis distinguishes how a ConfidenceLevel was derived.
+// Coverage-derived HIGH (multi-snapshot duration check with sufficient
+// observation span) and policy-assigned HIGH (zero-threshold state
+// check, no coverage signal) carry different epistemic meaning.
+type ConfidenceBasis string
+
+const (
+	// BasisCoverage means confidence was derived from the observation
+	// coverage calculator (gap-to-threshold ratio).
+	BasisCoverage ConfidenceBasis = "coverage"
+	// BasisPolicy means confidence was assigned by policy (e.g.
+	// zero-threshold controls that bypass the coverage calculator).
+	BasisPolicy ConfidenceBasis = "policy"
+)
+
 // SecurityState classifies the high-level security posture of the environment.
 type SecurityState string
 
@@ -90,8 +105,9 @@ type ResourceCheck struct {
 	AssetType    kernel.AssetType   `json:"asset_type"`
 	AssetDomain  kernel.AssetDomain `json:"asset_domain"`
 	Verdict      Verdict            `json:"verdict"`
-	Confidence   ConfidenceLevel    `json:"confidence"`
-	Evidence     *Evidence          `json:"evidence,omitempty"`
+	Confidence      ConfidenceLevel `json:"confidence"`
+	ConfidenceBasis ConfidenceBasis `json:"confidence_basis,omitempty"`
+	Evidence        *Evidence       `json:"evidence,omitempty"`
 	TemporalRisk string             `json:"temporal_risk,omitempty"`
 	Reason       string             `json:"reason,omitempty"`
 }

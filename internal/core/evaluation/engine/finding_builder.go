@@ -77,6 +77,10 @@ func newBaseFinding(ctl *policy.ControlDefinition, t *asset.ExposureLifecycle) *
 			"nil_lifecycle", t == nil, "nil_control", ctl == nil)
 		return nil
 	}
+	if ctl.ID == "" {
+		slog.Warn("newBaseFinding called with empty ControlID; skipping finding")
+		return nil
+	}
 	a := t.Asset()
 	f := borrowFinding()
 	*f = evaluation.NewFindingFromMetadata(ctl.Metadata())

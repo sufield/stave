@@ -131,6 +131,12 @@ func (f *Finding) RehydrateSLA(s SLAState) {
 	if f == nil {
 		return
 	}
+	// ponytail: enforce SLA ladder (HasSLA ⊇ IsAnyBreach). A breach
+	// without a deadline violates the invariant and causes
+	// SLAContribution() to silently drop the breach from rollups.
+	if s.Breached && s.Deadline == nil {
+		s.Breached = false
+	}
 	f.slaDeadlineHours = s.Deadline
 	f.slaBreached = s.Breached
 	f.slaOverdueHours = s.Overdue

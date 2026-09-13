@@ -146,6 +146,7 @@ func emitViolationFinding(
 			"finding_emitted", true)
 	}
 	confidence := deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
+	observation.ConfidenceBasis = evaluation.BasisCoverage
 	return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
 }
 
@@ -285,9 +286,12 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 		// policy intent explicit.
 		hasSLA := maxUnsafe > 0
 		confidence := evaluation.ConfidenceHigh
+		basis := evaluation.BasisPolicy
 		if hasSLA {
 			confidence = s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
+			basis = evaluation.BasisCoverage
 		}
+		observation.ConfidenceBasis = basis
 		return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
 
 	case asset.VerdictInconclusive:
@@ -390,6 +394,7 @@ func (s *unsafeDurationStrategy) Evaluate(t *asset.ExposureLifecycle, now time.T
 		"reason":  "threshold not exceeded and observation coverage is sufficient",
 	})
 	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
+	observation.ConfidenceBasis = evaluation.BasisCoverage
 	return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
 }
 
@@ -454,6 +459,7 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 			"finding_count": len(recurrenceViolations),
 		})
 		confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), p.WindowDuration())
+		observation.ConfidenceBasis = evaluation.BasisCoverage
 		return finalizeRow(observation, evaluation.VerdictViolation, confidence), recurrenceViolations
 	}
 
@@ -479,6 +485,7 @@ func (s *unsafeRecurrenceStrategy) Evaluate(t *asset.ExposureLifecycle, now time
 		"reason":  "recurrence count within limit and coverage is sufficient",
 	})
 	confidence := s.deps.confidenceCalculator().Derive(t.Stats().MaxGap(), p.WindowDuration())
+	observation.ConfidenceBasis = evaluation.BasisCoverage
 	return finalizeRow(observation, evaluation.VerdictPass, confidence), nil
 }
 
