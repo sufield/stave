@@ -60,12 +60,12 @@ linters:
               desc: "pflag is a CLI adapter; keep it out of application/domain code"
             - pkg: "github.com/sufield/stave/cmd/cmdutil/cliflags"
               desc: "cliflags transitively imports cobra; core code should depend on internal/config (GlobalSettings) instead"
-              # MIGRATED: also enforced by go-arch-lint — core/app/adapters/platform deps exclude cmd
+              # MIGRATED: also enforced by go-arch-lint and arch-go TestArchitecture
             - pkg: "github.com/sufield/stave/cmd/cmdutil/cmdctx"
               desc: "cmdctx transitively imports cobra; core code should receive resolved context/logger values"
-              # MIGRATED: also enforced by go-arch-lint — core/app/adapters/platform deps exclude cmd
+              # MIGRATED: also enforced by go-arch-lint and arch-go TestArchitecture
         core-no-aws:
-          # MIGRATED: also enforced by go-arch-lint — core component deps exclude adapters
+          # MIGRATED: also enforced by go-arch-lint and arch-go TestArchitecture
           files:
             - "internal/core/**"
           deny:
@@ -78,6 +78,7 @@ linters:
             - pkg: "github.com/*/stave/internal/infra/**"
               desc: "CLI adapters must not know about infrastructure"
         gaps-facade-only:
+          # MIGRATED: also enforced by arch-go TestArchitecture — cmd.gaps ShouldNotDependsOn internal
           # Facade ratchet: cmd/gaps consumes pkg/stave only. The
           # orchestration (loading snapshots/controls/chains, calling
           # the gap analyzer) moved into pkg/stave.Gaps in the Step 0
@@ -93,6 +94,7 @@ linters:
             - pkg: "github.com/sufield/stave/internal/**"
               desc: "cmd/gaps is facade-only — add capability to pkg/stave, then consume it"
         readiness-facade-only:
+          # MIGRATED: also enforced by arch-go TestArchitecture — cmd.readiness ShouldNotDependsOn internal
           # Step 2 of the facade migration. Same rule shape as
           # gaps-facade-only; cmd/readiness now consumes
           # pkg/stave.Readiness exclusively. The orchestration and

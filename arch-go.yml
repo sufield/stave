@@ -1,0 +1,63 @@
+# Companion config for arch-go describe output (human-readable documentation).
+# The authoritative rules live in architecture/architecture_test.go.
+# Keep this file in sync with the Go test.
+version: 1
+
+threshold:
+  compliance: 100
+  coverage: 100
+
+dependenciesRules:
+  - package: "**.core.evaluation.engine.**"
+    shouldOnlyDependsOn:
+      internal:
+        - "**.core.**"
+
+  - package: "**.core.**"
+    shouldNotDependsOn:
+      internal:
+        - "**.adapters.**"
+        - "**.app.**"
+        - "**.cmd.**"
+        - "**.platform.**"
+
+  - package: "**.app.**"
+    shouldNotDependsOn:
+      internal:
+        - "**.adapters.**"
+        - "**.cmd.**"
+
+  - package: "**.adapters.**"
+    shouldNotDependsOn:
+      internal:
+        - "**.app.**"
+        - "**.cmd.**"
+
+  - package: "**.platform.**"
+    shouldNotDependsOn:
+      internal:
+        - "**.adapters.**"
+        - "**.app.**"
+        - "**.cmd.**"
+
+  - package: "**.cmd.gaps"
+    shouldNotDependsOn:
+      internal:
+        - "**.internal.**"
+
+  - package: "**.cmd.readiness"
+    shouldNotDependsOn:
+      internal:
+        - "**.internal.**"
+
+functionsRules:
+  - package: "**.core.evaluation.engine.**"
+    maxLines: 130
+    maxParameters: 5
+    maxReturnValues: 3
+    maxPublicFunctionPerFile: 15
+
+# TODO: enable after extracting value types from ports to a separate package.
+# contentsRules:
+#   - package: "**.core.ports"
+#     shouldOnlyContainInterfaces: true
