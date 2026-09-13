@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
@@ -259,7 +260,7 @@ func buildProductFields(f *remediation.Finding, version string) map[string]strin
 	}
 	fields := map[string]string{
 		"ControlId":     string(f.ControlID),
-		"SecurityState": "NON_COMPLIANT",
+		"SecurityState": string(evaluation.StateNonCompliant),
 		"DurationHours": fmt.Sprintf("%.1f", f.DwellHours()),
 		"StaveVersion":  version,
 	}
