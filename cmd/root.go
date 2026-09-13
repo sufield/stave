@@ -262,8 +262,8 @@ func NewApp(opts ...AppOption) (*App, error) {
 		SilenceUsage:       true,
 		DisableSuggestions: true,
 		PersistentPreRunE:  app.bootstrap,
-		Long:              rootLongHelp,
-		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
+		Long:               rootLongHelp,
+		CompletionOptions:  cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 	AddGlobalFlags(app.Root, &app.Flags)
 	if err := WireCommands(app); err != nil {

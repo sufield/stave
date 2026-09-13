@@ -100,16 +100,16 @@ const (
 
 // ResourceCheck captures the granular result for a single control/asset pairing.
 type ResourceCheck struct {
-	ControlID    kernel.ControlID   `json:"control_id"`
-	AssetID      asset.ID           `json:"asset_id"`
-	AssetType    kernel.AssetType   `json:"asset_type"`
-	AssetDomain  kernel.AssetDomain `json:"asset_domain"`
-	Verdict      Verdict            `json:"verdict"`
-	Confidence      ConfidenceLevel `json:"confidence"`
-	ConfidenceBasis ConfidenceBasis `json:"confidence_basis,omitempty"`
-	Evidence        *Evidence       `json:"evidence,omitempty"`
-	TemporalRisk string             `json:"temporal_risk,omitempty"`
-	Reason       string             `json:"reason,omitempty"`
+	ControlID       kernel.ControlID   `json:"control_id"`
+	AssetID         asset.ID           `json:"asset_id"`
+	AssetType       kernel.AssetType   `json:"asset_type"`
+	AssetDomain     kernel.AssetDomain `json:"asset_domain"`
+	Verdict         Verdict            `json:"verdict"`
+	Confidence      ConfidenceLevel    `json:"confidence"`
+	ConfidenceBasis ConfidenceBasis    `json:"confidence_basis,omitempty"`
+	Evidence        *Evidence          `json:"evidence,omitempty"`
+	TemporalRisk    string             `json:"temporal_risk,omitempty"`
+	Reason          string             `json:"reason,omitempty"`
 }
 
 // MarkInconclusive shifts a check to an inconclusive state with a specific explanation.

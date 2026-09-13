@@ -354,9 +354,9 @@ func TestAssessorAssess_BasicViolation(t *testing.T) {
 			},
 		},
 		governance: GovernanceConfig{slaThreshold: 1 * time.Hour},
-		clock:        stubClock{t: base.Add(48 * time.Hour)},
-		exemptions:   policy.NewExemptionConfig("", nil),
-		exceptions:   policy.NewExceptionConfig(nil),
+		clock:      stubClock{t: base.Add(48 * time.Hour)},
+		exemptions: policy.NewExemptionConfig("", nil),
+		exceptions: policy.NewExceptionConfig(nil),
 		predicateEval: func(_ *policy.ControlDefinition, _ asset.Asset, _ []asset.CloudIdentity) (bool, error) {
 			return true, nil
 		},
