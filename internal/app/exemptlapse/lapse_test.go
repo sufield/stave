@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -113,3 +114,22 @@ func TestDetect_ActiveExemptionStillSuppresses(t *testing.T) {
 		t.Errorf("lapsed = %d, want 0 (active exemption)", len(result))
 	}
 }
+
+func TestLapsedFindings_DomainMethods(t *testing.T) {
+	lf := LapsedFindings{
+		{ControlID: "CTL.A", Severity: policy.SeverityHigh, SeverityBumpReason: "expired"},
+		{ControlID: "CTL.B", Severity: policy.SeverityMedium},
+		{ControlID: "CTL.C", Severity: policy.SeverityHigh, SeverityBumpReason: "expired"},
+	}
+
+	if lf.Len() != 3 {
+		t.Errorf("Len: got %d, want 3", lf.Len())
+	}
+	if lf.BumpedCount() != 2 {
+		t.Errorf("BumpedCount: got %d, want 2", lf.BumpedCount())
+	}
+	if highs := lf.BySeverity(policy.SeverityHigh); highs.Len() != 2 {
+		t.Errorf("BySeverity High: got %d, want 2", highs.Len())
+	}
+}
+

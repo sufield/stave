@@ -37,7 +37,7 @@ type Report struct {
 	Chains ChainForecast `json:"chains"`
 
 	// Action plan: ranked unblockers.
-	Actions []Action `json:"actions,omitempty"`
+	Actions Actions `json:"actions,omitempty"`
 
 	// ReadinessScore = can_fire / (can_fire + blocked).
 	// Indeterminate controls (those without applicable_asset_types)
@@ -101,3 +101,30 @@ type Action struct {
 	ControlsUnblocked int              `json:"controls_unblocked"`
 	Description       string           `json:"description"`
 }
+
+// Actions represents a collection of readiness Action recommendations with query and summary methods.
+type Actions []Action
+
+// Len returns the number of actions.
+func (a Actions) Len() int {
+	return len(a)
+}
+
+// TotalControlsUnblocked returns the sum of controls unblocked across all actions.
+func (a Actions) TotalControlsUnblocked() int {
+	total := 0
+	for _, act := range a {
+		total += act.ControlsUnblocked
+	}
+	return total
+}
+
+// TotalChainsUnblocked returns the sum of chains unblocked across all actions.
+func (a Actions) TotalChainsUnblocked() int {
+	total := 0
+	for _, act := range a {
+		total += act.ChainsUnblocked
+	}
+	return total
+}
+

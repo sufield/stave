@@ -42,6 +42,36 @@ type LapsedFinding struct {
 	CompensatingNote   string           `json:"compensating_note,omitempty"`
 }
 
+// LapsedFindings represents a collection of LapsedFinding entries with query methods.
+type LapsedFindings []LapsedFinding
+
+// Len returns the number of lapsed findings.
+func (lf LapsedFindings) Len() int {
+	return len(lf)
+}
+
+// BumpedCount returns the number of findings whose severity was bumped due to threshold expiry.
+func (lf LapsedFindings) BumpedCount() int {
+	count := 0
+	for _, f := range lf {
+		if f.SeverityBumpReason != "" {
+			count++
+		}
+	}
+	return count
+}
+
+// BySeverity returns a subset of lapsed findings matching the given severity.
+func (lf LapsedFindings) BySeverity(sev policy.Severity) LapsedFindings {
+	var filtered LapsedFindings
+	for _, f := range lf {
+		if f.Severity == sev {
+			filtered = append(filtered, f)
+		}
+	}
+	return filtered
+}
+
 // Input configures the lapse detection.
 type Input struct {
 	Findings []evaluation.Finding
@@ -50,12 +80,12 @@ type Input struct {
 
 // Detect scans suppressed findings for expired or invalid exemptions
 // and produces LapsedFinding entries.
-func Detect(in Input) []LapsedFinding {
+func Detect(in Input) LapsedFindings {
 	evalTime := in.EvalTime
 	if evalTime.IsZero() {
 		evalTime = ports.RealClock{}.Now()
 	}
-	var lapsed []LapsedFinding
+	var lapsed LapsedFindings
 
 	for i := range in.Findings {
 		f := &in.Findings[i]

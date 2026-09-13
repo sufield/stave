@@ -355,3 +355,21 @@ func TestAnalyze_EmptyForecast_NoPercentageDivisionByZero(t *testing.T) {
 			[]float64{r.Controls.CanFirePct, r.Controls.BlockedPct, r.Controls.IndeterminatePct})
 	}
 }
+
+func TestActions_DomainMethods(t *testing.T) {
+	actions := Actions{
+		{AssetType: "aws_s3_bucket", ControlsUnblocked: 3, ChainsUnblocked: 1},
+		{AssetType: "aws_iam_role", ControlsUnblocked: 2, ChainsUnblocked: 2},
+	}
+
+	if actions.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", actions.Len())
+	}
+	if actions.TotalControlsUnblocked() != 5 {
+		t.Errorf("TotalControlsUnblocked: got %d, want 5", actions.TotalControlsUnblocked())
+	}
+	if actions.TotalChainsUnblocked() != 3 {
+		t.Errorf("TotalChainsUnblocked: got %d, want 3", actions.TotalChainsUnblocked())
+	}
+}
+

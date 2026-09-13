@@ -163,7 +163,7 @@ func classifyChains(controls []policy.ControlDefinition, chains []policy.ChainDe
 // marginal value (new chains unblocked, then new controls as
 // tiebreaker). After selection, its coverage is subtracted from
 // the remaining universe so overlapping types don't double-count.
-func rankActions(controls []policy.ControlDefinition, chains []policy.ChainDefinition, observed map[kernel.AssetType]int, topN int) []Action {
+func rankActions(controls []policy.ControlDefinition, chains []policy.ChainDefinition, observed map[kernel.AssetType]int, topN int) Actions {
 	ctlIndex := indexControls(controls)
 
 	// Collect candidate types: all applicable types not yet observed.

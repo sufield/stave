@@ -44,6 +44,25 @@ type ClassifiedFinding struct {
 	Cycles    int                 `json:"cycles,omitempty"`
 }
 
+// ClassifiedFindings represents a collection of ClassifiedFinding items with query methods.
+type ClassifiedFindings []ClassifiedFinding
+
+// Len returns the count of classified findings.
+func (cf ClassifiedFindings) Len() int {
+	return len(cf)
+}
+
+// ByClass returns a filtered slice of ClassifiedFinding items matching the specified classification.
+func (cf ClassifiedFindings) ByClass(class Classification) ClassifiedFindings {
+	var filtered ClassifiedFindings
+	for _, f := range cf {
+		if f.Class == class {
+			filtered = append(filtered, f)
+		}
+	}
+	return filtered
+}
+
 // ResolvedFinding is a finding present in a previous assessment but
 // absent from the current one.
 type ResolvedFinding struct {
@@ -51,6 +70,25 @@ type ResolvedFinding struct {
 	AssetID   asset.ID         `json:"asset_id"`
 	Severity  policy.Severity  `json:"severity"`
 	DwellDays float64          `json:"dwell_days,omitempty"`
+}
+
+// ResolvedFindings represents a collection of ResolvedFinding items with query methods.
+type ResolvedFindings []ResolvedFinding
+
+// Len returns the count of resolved findings.
+func (rf ResolvedFindings) Len() int {
+	return len(rf)
+}
+
+// BySeverity returns a filtered slice of ResolvedFinding items matching the given severity.
+func (rf ResolvedFindings) BySeverity(sev policy.Severity) ResolvedFindings {
+	var filtered ResolvedFindings
+	for _, r := range rf {
+		if r.Severity == sev {
+			filtered = append(filtered, r)
+		}
+	}
+	return filtered
 }
 
 // SeverityLabel returns the canonical severity string for this
@@ -66,12 +104,12 @@ func (r *ResolvedFinding) SeverityLabel() string {
 
 // Result holds the classified findings after filtering.
 type Result struct {
-	NewFindings      []ClassifiedFinding `json:"new_findings"`
-	ReturnedFindings []ClassifiedFinding `json:"returned_findings"`
-	ResolvedFindings []ResolvedFinding   `json:"resolved_findings"`
-	SuppressedCount  int                 `json:"suppressed_count"`
-	TotalFindings    int                 `json:"total_findings"`
-	SnapshotTime     time.Time           `json:"snapshot_time"`
+	NewFindings      ClassifiedFindings `json:"new_findings"`
+	ReturnedFindings ClassifiedFindings `json:"returned_findings"`
+	ResolvedFindings ResolvedFindings   `json:"resolved_findings"`
+	SuppressedCount  int                `json:"suppressed_count"`
+	TotalFindings    int                `json:"total_findings"`
+	SnapshotTime     time.Time          `json:"snapshot_time"`
 }
 
 // Input configures the classification.
@@ -151,7 +189,7 @@ func Classify(in Input) *Result {
 // is classified as NEW because there's no prior assessment to compare
 // against (or the NewSince window excluded all history).
 func classifyAllNew(in Input) *Result {
-	classified := make([]ClassifiedFinding, len(in.CurrentFindings))
+	classified := make(ClassifiedFindings, len(in.CurrentFindings))
 	for i := range in.CurrentFindings {
 		classified[i] = ClassifiedFinding{
 			Finding: in.CurrentFindings[i],
@@ -229,7 +267,7 @@ func buildTimeline(sorted []*report.Assessment, latest *report.Assessment) map[f
 // every historical assessment, CHRONIC (suppressed) if present in the
 // latest historical assessment, and RETURNED if it appeared in the
 // past but not in the latest.
-func classifyCurrent(in Input, timeline map[findingKey]*appearance, gapCount map[findingKey]int) (newFindings, returnedFindings []ClassifiedFinding, suppressedCount int) {
+func classifyCurrent(in Input, timeline map[findingKey]*appearance, gapCount map[findingKey]int) (newFindings, returnedFindings ClassifiedFindings, suppressedCount int) {
 	for i := range in.CurrentFindings {
 		f := &in.CurrentFindings[i]
 		k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID, AssetType: f.AssetType}
@@ -263,7 +301,7 @@ func classifyCurrent(in Input, timeline map[findingKey]*appearance, gapCount map
 // buildResolved returns findings present in the latest historical
 // assessment but absent from the current set — i.e. fixed since last
 // run.
-func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]*appearance) []ResolvedFinding {
+func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]*appearance) ResolvedFindings {
 	currentKeys := make(map[findingKey]struct{}, len(in.CurrentFindings))
 	for i := range in.CurrentFindings {
 		currentKeys[findingKey{
@@ -273,7 +311,7 @@ func buildResolved(in Input, latest *report.Assessment, timeline map[findingKey]
 		}] = struct{}{}
 	}
 
-	var resolved []ResolvedFinding
+	var resolved ResolvedFindings
 	for i := range latest.Findings {
 		k := findingKey{
 			ControlID: latest.Findings[i].ControlID,

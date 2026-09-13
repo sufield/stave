@@ -215,3 +215,33 @@ func TestClassify_NewSince_OutsideWindow_AllNew(t *testing.T) {
 		t.Errorf("suppressed = %d, want 0", result.SuppressedCount)
 	}
 }
+
+func TestClassifiedFindings_DomainMethods(t *testing.T) {
+	cf := ClassifiedFindings{
+		{Class: ClassNew},
+		{Class: ClassReturned},
+		{Class: ClassNew},
+	}
+
+	if cf.Len() != 3 {
+		t.Errorf("Len: got %d, want 3", cf.Len())
+	}
+	if news := cf.ByClass(ClassNew); news.Len() != 2 {
+		t.Errorf("ByClass ClassNew: got %d, want 2", news.Len())
+	}
+}
+
+func TestResolvedFindings_DomainMethods(t *testing.T) {
+	rf := ResolvedFindings{
+		{ControlID: "CTL.A", Severity: policy.SeverityHigh},
+		{ControlID: "CTL.B", Severity: policy.SeverityMedium},
+	}
+
+	if rf.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", rf.Len())
+	}
+	if highs := rf.BySeverity(policy.SeverityHigh); highs.Len() != 1 {
+		t.Errorf("BySeverity High: got %d, want 1", highs.Len())
+	}
+}
+
