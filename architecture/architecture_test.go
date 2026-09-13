@@ -182,10 +182,10 @@ func dependencyRules() []*configuration.DependenciesRule {
 func functionRules() []*configuration.FunctionsRule {
 	return []*configuration.FunctionsRule{
 		{
-			Package:                 "**.core.evaluation.engine.**",
-			MaxLines:                intPtr(130),
-			MaxParameters:           intPtr(5),
-			MaxReturnValues:         intPtr(3),
+			Package:                  "**.core.evaluation.engine.**",
+			MaxLines:                 intPtr(130),
+			MaxParameters:            intPtr(5),
+			MaxReturnValues:          intPtr(3),
 			MaxPublicFunctionPerFile: intPtr(15),
 		},
 	}

@@ -55,9 +55,9 @@ func (cf ClassifiedFindings) Len() int {
 // ByClass returns a filtered slice of ClassifiedFinding items matching the specified classification.
 func (cf ClassifiedFindings) ByClass(class Classification) ClassifiedFindings {
 	var filtered ClassifiedFindings
-	for _, f := range cf {
-		if f.Class == class {
-			filtered = append(filtered, f)
+	for i := range cf {
+		if cf[i].Class == class {
+			filtered = append(filtered, cf[i])
 		}
 	}
 	return filtered

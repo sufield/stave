@@ -372,4 +372,3 @@ func TestActions_DomainMethods(t *testing.T) {
 		t.Errorf("TotalChainsUnblocked: got %d, want 3", actions.TotalChainsUnblocked())
 	}
 }
-

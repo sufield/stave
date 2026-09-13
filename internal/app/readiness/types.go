@@ -127,4 +127,3 @@ func (a Actions) TotalChainsUnblocked() int {
 	}
 	return total
 }
-
