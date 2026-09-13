@@ -10,9 +10,9 @@ import (
 	appconfig "github.com/sufield/stave/internal/app/config"
 
 	"github.com/sufield/stave/cmd/cmdutil/projconfig"
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	cliconfig "github.com/sufield/stave/internal/cli/config"
 	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 // --- Domain Types ---

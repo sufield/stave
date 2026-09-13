@@ -23,8 +23,8 @@ import (
 	"fmt"
 	"io"
 
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/asset"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"

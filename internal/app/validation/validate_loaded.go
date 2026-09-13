@@ -3,8 +3,8 @@ package validation
 import (
 	"time"
 
-	"github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/diag"
 )

@@ -8,8 +8,8 @@ import (
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	outsarif "github.com/sufield/stave/internal/adapters/output/sarif"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 // DefaultFindingWriter is the standard implementation for finding marshalers.

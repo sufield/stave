@@ -6,8 +6,8 @@ import (
 
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/diagnosis"
 )

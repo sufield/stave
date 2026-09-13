@@ -14,9 +14,9 @@ import (
 	"github.com/sufield/stave/internal/adapters/output/dto"
 	"github.com/sufield/stave/internal/env"
 
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"

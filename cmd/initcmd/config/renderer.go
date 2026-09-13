@@ -5,8 +5,8 @@ import (
 	"io"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 

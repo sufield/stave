@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/diag"
 	"github.com/sufield/stave/internal/core/kernel"
 )

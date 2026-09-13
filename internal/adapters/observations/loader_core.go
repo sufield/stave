@@ -15,8 +15,8 @@ import (
 	"github.com/sufield/stave/internal/core/asset"
 
 	"github.com/sufield/stave/internal/adapters/integrity"
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 	platformcrypto "github.com/sufield/stave/internal/platform/crypto"

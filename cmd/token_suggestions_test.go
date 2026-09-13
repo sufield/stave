@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/enforce/generate"
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 func TestParseOutputFormat_IsCaseInsensitive(t *testing.T) {

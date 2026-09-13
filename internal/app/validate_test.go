@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
 

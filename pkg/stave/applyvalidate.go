@@ -8,8 +8,8 @@ import (
 
 	packs "github.com/sufield/stave/internal/adapters/controls/pack"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
-	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/diag"
 	schemaval "github.com/sufield/stave/internal/core/schemaval"
 )
