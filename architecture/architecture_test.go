@@ -28,44 +28,71 @@ func TestArchitecture(t *testing.T) {
 	}
 
 	result := archgo.CheckArchitecture(moduleInfo, cfg)
+	if result.Pass {
+		return
+	}
 
-	if !result.Pass {
-		if dr := result.DependenciesRuleResult; dr != nil && !dr.Passes {
-			for _, r := range dr.Results {
-				if !r.Passes {
-					t.Errorf("dependency: %s", r.Description)
-					for _, v := range r.Verifications {
-						if !v.Passes {
-							for _, d := range v.Details {
-								t.Logf("  %s: %s", v.Package, d)
-							}
-						}
-					}
-				}
+	reportDeps(t, result)
+	reportFuncs(t, result)
+	reportContents(t, result)
+	t.Fatal("architecture checks failed — run 'arch-go describe' for full rule set")
+}
+
+func reportDeps(t *testing.T, result *archgo.Result) {
+	t.Helper()
+	dr := result.DependenciesRuleResult
+	if dr == nil || dr.Passes {
+		return
+	}
+	for _, r := range dr.Results {
+		if r.Passes {
+			continue
+		}
+		t.Errorf("dependency: %s", r.Description)
+		for _, v := range r.Verifications {
+			if v.Passes {
+				continue
+			}
+			for _, d := range v.Details {
+				t.Logf("  %s: %s", v.Package, d)
 			}
 		}
-		if fr := result.FunctionsRuleResult; fr != nil && !fr.Passes {
-			for _, r := range fr.Results {
-				if !r.Passes {
-					t.Errorf("function: %s", r.Description)
-					for _, v := range r.Verifications {
-						if !v.Passes {
-							for _, d := range v.Details {
-								t.Logf("  %s: %s", v.Package, d)
-							}
-						}
-					}
-				}
+	}
+}
+
+func reportFuncs(t *testing.T, result *archgo.Result) {
+	t.Helper()
+	fr := result.FunctionsRuleResult
+	if fr == nil || fr.Passes {
+		return
+	}
+	for _, r := range fr.Results {
+		if r.Passes {
+			continue
+		}
+		t.Errorf("function: %s", r.Description)
+		for _, v := range r.Verifications {
+			if v.Passes {
+				continue
+			}
+			for _, d := range v.Details {
+				t.Logf("  %s: %s", v.Package, d)
 			}
 		}
-		if cr := result.ContentsRuleResult; cr != nil && !cr.Passes {
-			for _, r := range cr.Results {
-				if !r.Passes {
-					t.Errorf("content: %s", r.Description)
-				}
-			}
+	}
+}
+
+func reportContents(t *testing.T, result *archgo.Result) {
+	t.Helper()
+	cr := result.ContentsRuleResult
+	if cr == nil || cr.Passes {
+		return
+	}
+	for _, r := range cr.Results {
+		if r.Passes {
+			continue
 		}
-		t.Fatal("architecture checks failed — run 'arch-go describe' for full rule set")
+		t.Errorf("content: %s", r.Description)
 	}
 }
 
