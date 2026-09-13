@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 func TestExplainText(t *testing.T) {

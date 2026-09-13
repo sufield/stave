@@ -12,7 +12,7 @@ import (
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	"github.com/sufield/stave/cmd/initcmd/contextcmd"
 	initenv "github.com/sufield/stave/cmd/initcmd/env"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/metadata"
 )

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 // TestBugHunt_PrepareNilResolver proves that the diagnose command's PreRunE

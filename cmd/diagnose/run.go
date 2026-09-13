@@ -10,7 +10,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/cel"
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appdiagnose "github.com/sufield/stave/internal/app/diagnose"
 	apptrace "github.com/sufield/stave/internal/app/trace"
 	"github.com/sufield/stave/internal/cli/ui"

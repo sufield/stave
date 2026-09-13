@@ -13,7 +13,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/adapters/sla"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"

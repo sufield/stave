@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 func TestErrorInfo_Error_WithTitle(t *testing.T) {

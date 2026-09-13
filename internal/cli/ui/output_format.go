@@ -3,7 +3,7 @@ package ui
 import (
 	"fmt"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 // ParseOutputFormat validates and returns an OutputFormat value.

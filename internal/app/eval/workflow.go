@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/app/eval/cache"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"

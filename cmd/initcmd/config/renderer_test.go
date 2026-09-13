@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 func TestNewValueRenderer_KnownFormats(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 func TestNewSchemasRenderer_KnownFormats(t *testing.T) {

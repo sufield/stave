@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/compliance"
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/kernel"

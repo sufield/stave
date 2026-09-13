@@ -25,7 +25,7 @@ import (
 	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/adapters/sirbridge"
 	appcapabilities "github.com/sufield/stave/internal/app/capabilities"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/app/fieldcov"
 	"github.com/sufield/stave/internal/app/reachability"

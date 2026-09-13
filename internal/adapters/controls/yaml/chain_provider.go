@@ -3,7 +3,7 @@ package yaml
 import (
 	"context"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
 

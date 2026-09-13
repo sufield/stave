@@ -18,7 +18,7 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
 	builtinpredicate "github.com/sufield/stave/internal/adapters/predicate"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/app/staleness"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 	"github.com/sufield/stave/internal/collectorcontract"

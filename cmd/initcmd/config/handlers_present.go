@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 func (r *Runner) presentValue(res ValueResult, format appcontracts.OutputFormat) error {

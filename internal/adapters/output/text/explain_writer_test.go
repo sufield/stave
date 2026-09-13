@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/contracts"
 )
 
 func TestWriteExplainText(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
 	reportrender "github.com/sufield/stave/internal/adapters/output/report"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	corereport "github.com/sufield/stave/internal/core/report"
 )
 

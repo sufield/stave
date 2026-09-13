@@ -1,7 +1,7 @@
 package pack
 
 import (
-	"github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/contracts"
 )
 
 // Library wraps an *Index to satisfy the

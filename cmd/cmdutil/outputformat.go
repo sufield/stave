@@ -1,6 +1,6 @@
 package cmdutil
 
-import "github.com/sufield/stave/internal/app/contracts"
+import "github.com/sufield/stave/internal/core/contracts"
 
 // OutputFormat is the CLI's output-format type, re-exported from
 // internal/app/contracts so command packages can stay facade-clean —

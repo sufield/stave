@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/env"
 	"github.com/sufield/stave/internal/sanitize"

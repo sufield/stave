@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/capabilities"

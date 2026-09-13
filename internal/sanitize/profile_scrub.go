@@ -10,6 +10,8 @@ package sanitize
 
 import (
 	"strings"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // SanitizedValue is the canonical placeholder for redacted values.
@@ -27,17 +29,9 @@ var SensitiveArgNames = map[string]struct{}{
 	"authorization":        {},
 }
 
-// SensitiveTokens are individual words that mark a compound flag name as
-// sensitive when they appear as a discrete segment (split on _-.:).
-var SensitiveTokens = map[string]struct{}{
-	"token":      {},
-	"secret":     {},
-	"password":   {},
-	"credential": {},
-	"auth":       {},
-	"bearer":     {},
-	"key":        {},
-}
+// SensitiveTokens aliases kernel.SensitiveTokens so existing importers
+// (platform/logging) continue to compile without a path change.
+var SensitiveTokens = kernel.SensitiveTokens
 
 // --- Property scrub profiles (used by snapshot scrubbing) ---
 

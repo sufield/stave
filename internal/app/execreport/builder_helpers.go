@@ -5,7 +5,7 @@ import (
 	"context"
 	"slices"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appcoverage "github.com/sufield/stave/internal/app/coverage"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/evaluation"

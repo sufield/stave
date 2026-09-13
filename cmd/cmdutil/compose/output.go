@@ -8,7 +8,7 @@ import (
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
 	outsarif "github.com/sufield/stave/internal/adapters/output/sarif"
 	outtext "github.com/sufield/stave/internal/adapters/output/text"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 

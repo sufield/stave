@@ -94,15 +94,15 @@ type ScopeWarning struct {
 
 // DiffResult holds the structured diff between two snapshots.
 type DiffResult struct {
-	BeforeTime      time.Time        `json:"before_time"`
-	AfterTime       time.Time        `json:"after_time"`
-	BeforeAssets    int              `json:"before_assets"`
-	AfterAssets     int              `json:"after_assets"`
-	PropertyChanges PropertyChanges  `json:"property_changes"`
-	NewAssets       []NewAsset       `json:"new_assets"`
-	RemovedAssets   []RemovedAsset   `json:"removed_assets"`
-	RiskSummary     RiskSummary      `json:"risk_summary"`
-	ScopeWarning    *ScopeWarning    `json:"scope_warning,omitempty"`
+	BeforeTime      time.Time       `json:"before_time"`
+	AfterTime       time.Time       `json:"after_time"`
+	BeforeAssets    int             `json:"before_assets"`
+	AfterAssets     int             `json:"after_assets"`
+	PropertyChanges PropertyChanges `json:"property_changes"`
+	NewAssets       []NewAsset      `json:"new_assets"`
+	RemovedAssets   []RemovedAsset  `json:"removed_assets"`
+	RiskSummary     RiskSummary     `json:"risk_summary"`
+	ScopeWarning    *ScopeWarning   `json:"scope_warning,omitempty"`
 }
 
 // RiskSummary aggregates risk direction counts from property changes.

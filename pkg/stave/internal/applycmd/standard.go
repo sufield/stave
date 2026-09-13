@@ -22,7 +22,7 @@ import (
 	"github.com/sufield/stave/internal/adapters/sla"
 	"github.com/sufield/stave/internal/adapters/telemetry"
 	appconfig "github.com/sufield/stave/internal/app/config"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	"github.com/sufield/stave/internal/app/exemptlapse"
 	"github.com/sufield/stave/internal/app/reachability"

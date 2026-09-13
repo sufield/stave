@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 // TestBugHunt_FindingPreRunNilResolver proves that NewFindingCmd's PreRunE

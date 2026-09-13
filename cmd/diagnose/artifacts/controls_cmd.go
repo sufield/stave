@@ -16,7 +16,7 @@ import (
 	appartifacts "github.com/sufield/stave/internal/app/artifacts"
 	"github.com/sufield/stave/internal/app/catalog"
 	"github.com/sufield/stave/internal/app/catalogsearch"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"

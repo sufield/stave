@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	appconfig "github.com/sufield/stave/internal/app/config"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 func TestConfigFileLine_WithPath(t *testing.T) {

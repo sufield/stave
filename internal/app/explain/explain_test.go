@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/contracts"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"

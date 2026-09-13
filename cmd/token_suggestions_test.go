@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/cmd/enforce/generate"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/cli/ui"
 )
 

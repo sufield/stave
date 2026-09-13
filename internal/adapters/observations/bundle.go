@@ -29,7 +29,7 @@ import (
 	"errors"
 	"fmt"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/asset"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	appattest "github.com/sufield/stave/internal/app/attestation"
-	"github.com/sufield/stave/internal/app/contracts"
+	"github.com/sufield/stave/internal/core/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
 	policy "github.com/sufield/stave/internal/core/controldef"

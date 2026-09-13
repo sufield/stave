@@ -5,7 +5,7 @@ import (
 	"io"
 
 	outjson "github.com/sufield/stave/internal/adapters/output/json"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appvalidation "github.com/sufield/stave/internal/app/validation"
 )
 

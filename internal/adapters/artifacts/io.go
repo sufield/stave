@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	evaljson "github.com/sufield/stave/internal/adapters/evaluation"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/report"

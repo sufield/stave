@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 func TestContextCreateUseShowDeleteFlow(t *testing.T) {

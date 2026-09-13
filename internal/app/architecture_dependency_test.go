@@ -66,7 +66,7 @@ func TestHexagonalDependencyDirection(t *testing.T) {
 				"github.com/sufield/stave/cmd/",
 			},
 			allowed: []string{
-				"github.com/sufield/stave/internal/app/contracts",
+				"github.com/sufield/stave/internal/core/contracts",
 			},
 		},
 	}

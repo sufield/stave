@@ -8,7 +8,7 @@ import (
 	"io"
 	"time"
 
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	appeval "github.com/sufield/stave/internal/app/eval"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"

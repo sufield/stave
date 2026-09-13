@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/adapters/output"
-	appcontracts "github.com/sufield/stave/internal/app/contracts"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
