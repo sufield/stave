@@ -66,6 +66,16 @@ type Suppression struct {
 	InvalidReason    string            `json:"invalid_reason,omitempty"`
 }
 
+// FindingOwnership groups the owner-routing fields populated when a
+// team manifest is loaded. Embedded anonymously in Finding so JSON
+// tags and direct field access (f.OwnerTeamID) are preserved.
+type FindingOwnership struct {
+	OwnerTeamID     kernel.TeamID `json:"owner_team_id,omitempty"`
+	OwnerTeamName   string        `json:"owner_team_name,omitempty"`
+	OwnerContact    string        `json:"owner_contact,omitempty"`
+	OwnerResolution string        `json:"owner_resolution_path,omitempty"`
+}
+
 // Finding represents a detected control violation.
 // A Finding is purely factual: evidence + classification, no advice.
 type Finding struct {
@@ -130,10 +140,7 @@ type Finding struct {
 	lifecycleEscalatedSeverity policy.Severity
 
 	// Owner routing — populated when a team manifest is loaded.
-	OwnerTeamID     kernel.TeamID `json:"owner_team_id,omitempty"`
-	OwnerTeamName   string        `json:"owner_team_name,omitempty"`
-	OwnerContact    string        `json:"owner_contact,omitempty"`
-	OwnerResolution string        `json:"owner_resolution_path,omitempty"`
+	FindingOwnership
 
 	// Reachability — populated when IAM data is in the snapshot.
 	Reachability *ReachabilityContext `json:"reachability,omitempty"`

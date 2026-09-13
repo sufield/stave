@@ -56,7 +56,7 @@ func (benchNopDigester) Digest(_ []string, _ byte) kernel.Digest { return "" }
 func benchAssessor(now time.Time, sla time.Duration, controls []policy.ControlDefinition) *Assessor {
 	return &Assessor{
 		controls:        controls,
-		slaThreshold:    sla,
+		governance:      GovernanceConfig{slaThreshold: sla},
 		clock:           ports.FixedClock(now),
 		predicateEval:   benchPredicateEval,
 		predicateParser: benchPredicateParser,

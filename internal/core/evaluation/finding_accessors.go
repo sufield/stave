@@ -219,27 +219,26 @@ func (f *Finding) TemporalRiskMessage() string {
 	return f.Evidence.TemporalRisk
 }
 
-// HasOwner reports whether ownership routing has populated a team
-// for this finding.
-func (f *Finding) HasOwner() bool {
-	return !f.OwnerTeamID.IsEmpty()
+// HasOwner reports whether ownership routing has populated a team.
+func (o *FindingOwnership) HasOwner() bool {
+	return !o.OwnerTeamID.IsEmpty()
 }
 
 // OwnerKey returns the owning team's ID rendered as a string.
-func (f *Finding) OwnerKey() string {
-	if f == nil || !f.HasOwner() {
+func (o *FindingOwnership) OwnerKey() string {
+	if !o.HasOwner() {
 		return ""
 	}
-	return f.OwnerTeamID.String()
+	return o.OwnerTeamID.String()
 }
 
 // MatchesOwner reports whether this finding's owner key is present
 // in the supplied allow-set.
-func (f *Finding) MatchesOwner(allowed map[string]struct{}) bool {
-	if f == nil || allowed == nil {
+func (o *FindingOwnership) MatchesOwner(allowed map[string]struct{}) bool {
+	if allowed == nil {
 		return false
 	}
-	_, ok := allowed[f.OwnerKey()]
+	_, ok := allowed[o.OwnerKey()]
 	return ok
 }
 

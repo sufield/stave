@@ -48,9 +48,9 @@ func TestLargeScale_WallClock(t *testing.T) {
 	}
 	snapshots := buildBenchmarkSnapshots(now, 200)
 	assessor := &Assessor{
-		controls:     controls,
-		slaThreshold: 168 * time.Hour,
-		clock:        ports.FixedClock(now),
+		controls:   controls,
+		governance: GovernanceConfig{slaThreshold: 168 * time.Hour},
+		clock:      ports.FixedClock(now),
 		// Wire a real predicate evaluator so Assess() actually evaluates
 		// each control×asset pair — the lambda below mirrors the
 		// "alwaysUnsafe" helper in testbuilder_test.go and is what makes

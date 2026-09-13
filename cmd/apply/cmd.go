@@ -18,7 +18,7 @@ import (
 // resolveEnvVarDefaults fills shared flag values from STAVE_* environment
 // variables when the user did not set them explicitly on the command line.
 // Precedence: CLI flag > env var > config file > default.
-func (o *Options) resolveEnvVarDefaults(cmd *cobra.Command) {
+func (o *SharedOptions) resolveEnvVarDefaults(cmd *cobra.Command) {
 	o.Format = cmdutil.OutputFormat(cliflags.ResolveFormatEnv(cmd, string(o.Format)))
 	o.ControlsDir = cliflags.ResolveControlsEnv(cmd, o.ControlsDir)
 	o.ObservationsDir = cliflags.ResolveObservationsEnv(cmd, o.ObservationsDir)
@@ -253,7 +253,7 @@ Remediation scope:
 	// for the existing suite.
 	opts.bindCommon(cmd, cmdutil.FormatText)
 	opts.bindApplySpecific(cmd)
-	opts.markMutuallyExclusive(cmd)
+	markMutuallyExclusive(cmd)
 	// Completion registration is best-effort — if it fails, help output
 	// loses tab completion but the command still works.
 	_ = cmd.RegisterFlagCompletionFunc("format", cliflags.CompleteFixed(cliflags.FormatsTextJSONSARIF...))
@@ -344,7 +344,7 @@ func (o *Options) validate() error {
 }
 
 // markMutuallyExclusive registers flag groups that cannot be combined.
-func (o *Options) markMutuallyExclusive(cmd *cobra.Command) {
+func markMutuallyExclusive(cmd *cobra.Command) {
 	cmd.MarkFlagsMutuallyExclusive("profile", "controls")
 	cmd.MarkFlagsMutuallyExclusive("profile", "observations")
 	// --new-only collapses to "new-since-the-last-assessment", so

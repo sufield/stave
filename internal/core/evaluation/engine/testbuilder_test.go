@@ -80,7 +80,7 @@ func (b *assessorBuilder) withTracer(t ports.Tracer) *assessorBuilder {
 func (b *assessorBuilder) build() *Assessor {
 	a := NewAssessor()
 	a.clock = b.clock
-	a.slaThreshold = b.sla
+	a.governance.slaThreshold = b.sla
 	a.controls = b.controls
 	a.exemptions = b.exemptions
 	a.exceptions = b.exceptions

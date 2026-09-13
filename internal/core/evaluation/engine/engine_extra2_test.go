@@ -353,7 +353,7 @@ func TestAssessorAssess_BasicViolation(t *testing.T) {
 				Type:     policy.TypeUnsafeState,
 			},
 		},
-		slaThreshold: 1 * time.Hour,
+		governance: GovernanceConfig{slaThreshold: 1 * time.Hour},
 		clock:        stubClock{t: base.Add(48 * time.Hour)},
 		exemptions:   policy.NewExemptionConfig("", nil),
 		exceptions:   policy.NewExceptionConfig(nil),

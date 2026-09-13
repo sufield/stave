@@ -222,14 +222,9 @@ func hasAnnotation(cmd *cobra.Command, key string) bool {
 	return false
 }
 
-func (a *App) postRun(cmd *cobra.Command, _ []string) {
-	// No-op: resources are released at the end of execute() to avoid closing
-	// the log file before finalizeExecute runs.
-}
-
 // releaseResources stops the CPU profile, writes the memory profile,
-// and closes the log file. Called from both the normal exit path
-// (postRun) and the error/signal path (cleanupBeforeExit). Each
+// and closes the log file. Called from the normal exit path
+// (execute) and the error/signal path (cleanupBeforeExit). Each
 // individual method has its own idempotency guard so calling both
 // paths is safe.
 func (a *App) releaseResources(cmd *cobra.Command) {

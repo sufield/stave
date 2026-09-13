@@ -30,7 +30,6 @@ func TestExecute_LoggerRemainsOpenForFinalize(t *testing.T) {
 	}
 
 	a.Root.PersistentPreRunE = a.bootstrap
-	a.Root.PersistentPostRun = a.postRun
 
 	a.Flags.Verbosity = 2 // Enable DEBUG logs
 	a.Flags.LogFile = logPath

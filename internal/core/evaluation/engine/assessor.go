@@ -21,6 +21,15 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 )
 
+// GovernanceConfig groups the risk-threshold and confidence parameters
+// that govern SLA, data-continuity, and confidence scoring. Extracted
+// from Assessor so these three concerns form one cohesive unit.
+type GovernanceConfig struct {
+	slaThreshold    time.Duration
+	continuityLimit time.Duration
+	confidence      evaluation.ConfidenceCalculator
+}
+
 // Assessor orchestrates the evaluation of security controls against cloud resource states.
 // It is the central engine that transforms raw snapshots into a verified ComplianceReport.
 //
@@ -36,20 +45,16 @@ type Assessor struct {
 	hasher          ports.Digester
 	predicateEval   policy.PredicateEval
 	predicateParser func(any) (*policy.UnsafePredicate, error)
-	confidence      evaluation.ConfidenceCalculator
 
 	// Observability — optional logic trace for audit transparency.
 	tracer ports.Tracer
 
-	// Governance — the policy-set and override configurations.
+	// Governance — the policy-set, override configurations, and risk thresholds.
 	controls        []policy.ControlDefinition
 	exemptions      *policy.ExemptionConfig
 	exceptions      *policy.ExceptionConfig
 	acknowledgments *policy.AcknowledgmentConfig
-
-	// Risk Thresholds — global parameters for SLA and data continuity.
-	slaThreshold    time.Duration
-	continuityLimit time.Duration
+	governance      GovernanceConfig
 }
 
 // AssessorOption configures an Assessor at construction time.
@@ -75,7 +80,7 @@ func WithPredicateParser(p func(any) (*policy.UnsafePredicate, error)) AssessorO
 
 // WithConfidence overrides the default confidence calculator.
 func WithConfidence(c evaluation.ConfidenceCalculator) AssessorOption {
-	return func(a *Assessor) { a.confidence = c }
+	return func(a *Assessor) { a.governance.confidence = c }
 }
 
 // WithTracer attaches an optional logic tracer for audit transparency.
@@ -105,7 +110,7 @@ func WithAcknowledgments(ack *policy.AcknowledgmentConfig) AssessorOption {
 
 // WithSLAThreshold sets the global max-unsafe-duration default.
 func WithSLAThreshold(d time.Duration) AssessorOption {
-	return func(a *Assessor) { a.slaThreshold = d }
+	return func(a *Assessor) { a.governance.slaThreshold = d }
 }
 
 // NewAssessor creates an engine with sensible defaults for security
@@ -120,9 +125,11 @@ func WithSLAThreshold(d time.Duration) AssessorOption {
 // configuration.
 func NewAssessor(opts ...AssessorOption) *Assessor {
 	a := &Assessor{
-		logger:          slog.Default(),
-		continuityLimit: DefaultContinuityLimit,
-		confidence:      evaluation.DefaultConfidenceCalculator(),
+		logger: slog.Default(),
+		governance: GovernanceConfig{
+			continuityLimit: DefaultContinuityLimit,
+			confidence:      evaluation.DefaultConfidenceCalculator(),
+		},
 	}
 	for _, opt := range opts {
 		opt(a)
@@ -173,20 +180,31 @@ func (a *Assessor) PredicateParser() policy.PredicateParser { return a.predicate
 
 // ContinuityLimit returns the configured continuity limit (max
 // allowed gap between observation snapshots).
-func (a *Assessor) ContinuityLimit() time.Duration { return a.continuityLimit }
+func (g *GovernanceConfig) ContinuityLimit() time.Duration { return g.continuityLimit }
 
 // slaThresholdFor returns the effective SLA (Max Unsafe Duration) for a control.
-// A nil control falls back to the assessor's default SLA threshold rather than
+// A nil control falls back to the default SLA threshold rather than
 // panicking — callers in the chain-finding path occasionally synthesize
 // findings without a corresponding ControlDefinition lookup.
-func (a *Assessor) slaThresholdFor(ctl *policy.ControlDefinition) time.Duration {
+func (g *GovernanceConfig) slaThresholdFor(ctl *policy.ControlDefinition) time.Duration {
 	if ctl == nil {
-		return a.slaThreshold
+		return g.slaThreshold
 	}
-	return ctl.EffectiveMaxUnsafeDuration(a.slaThreshold)
+	return ctl.EffectiveMaxUnsafeDuration(g.slaThreshold)
 }
 
-func (a *Assessor) confidenceCalculator() evaluation.ConfidenceCalculator { return a.confidence }
+func (g *GovernanceConfig) confidenceCalculator() evaluation.ConfidenceCalculator {
+	return g.confidence
+}
+
+// Forwarding methods satisfy the strategyDeps interface on Assessor.
+func (a *Assessor) ContinuityLimit() time.Duration { return a.governance.ContinuityLimit() }
+func (a *Assessor) slaThresholdFor(ctl *policy.ControlDefinition) time.Duration {
+	return a.governance.slaThresholdFor(ctl)
+}
+func (a *Assessor) confidenceCalculator() evaluation.ConfidenceCalculator {
+	return a.governance.confidenceCalculator()
+}
 
 // sortSnapshots returns a chronological copy of the snapshots.
 // Uses stable sort with source as secondary key for determinism
@@ -591,7 +609,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 	riskSignals := risk.ComputeItems(risk.ThresholdRequest{
 		Controls:                s.assessor.Controls(),
 		Snapshots:               s.snapshots,
-		GlobalMaxUnsafeDuration: s.assessor.slaThreshold,
+		GlobalMaxUnsafeDuration: s.assessor.governance.slaThreshold,
 		EvalTime:                s.auditTime,
 		PredicateEval:           s.assessor.predicateEval,
 		Exemptions:              s.assessor.exemptions,
@@ -611,7 +629,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 			StaveVersion:      s.opts.StaveVersion,
 			Offline:           true,
 			EvalTime:          s.auditTime,
-			MaxUnsafeDuration: kernel.Duration(s.assessor.slaThreshold),
+			MaxUnsafeDuration: kernel.Duration(s.assessor.governance.slaThreshold),
 			Snapshots:         len(s.snapshots),
 			InputHashes:       s.opts.InputHashes,
 			PolicyFingerprint: s.assessor.FingerprintPolicy(),

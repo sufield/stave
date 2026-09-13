@@ -262,14 +262,6 @@ func NewApp(opts ...AppOption) (*App, error) {
 		SilenceUsage:       true,
 		DisableSuggestions: true,
 		PersistentPreRunE:  app.bootstrap,
-		// Cobra invokes the deepest matching PersistentPostRun in the
-		// command tree — a subcommand that defines its own
-		// PersistentPostRun would silently REPLACE this hook, skipping
-		// app.postRun's CPU-profile stop, mem-profile write, and log
-		// flush. Today no subcommand under cmd/ defines a Persistent
-		// hook (audited via `grep PersistentPostRun cmd/`); future
-		// additions must wrap, not override, this hook.
-		PersistentPostRun: app.postRun,
 		Long:              rootLongHelp,
 		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
