@@ -25,6 +25,7 @@ controls:
   - CTL.EVENTBRIDGE.RULE.RETRY.NONE.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

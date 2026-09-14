@@ -12,6 +12,7 @@ controls:
   - CTL.VPC.SG.DEFAULT.INUSE.001
 escalation_threshold: 2
 compound_severity: high
+scope: account
 preconditions:
   - network_access_vpc
 postconditions:

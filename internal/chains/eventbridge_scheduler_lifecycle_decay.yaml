@@ -15,6 +15,7 @@ controls:
   - CTL.EVENTBRIDGE.SCHEDULER.GROUP.NOCMK.001
 escalation_threshold: 2
 compound_severity: medium
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

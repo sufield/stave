@@ -15,7 +15,8 @@ controls:
   - CTL.EKS.FARGATE.PROFILE.OVERPRIV.001
   - CTL.EKS.FARGATE.DAEMONSET.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

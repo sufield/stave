@@ -13,7 +13,7 @@ controls:
   - CTL.OPENSEARCH.ALARM.JVM.PRESSURE.001
   - CTL.OPENSEARCH.ALARM.THREADPOOL.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
 preconditions:
   - ungoverned_operation
 postconditions:

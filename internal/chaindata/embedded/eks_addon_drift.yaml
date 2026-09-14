@@ -14,7 +14,7 @@ controls:
   - CTL.EKS.ADDON.HELMDUAL.001
   - CTL.EKS.ADDON.SELFMANAGED.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
 preconditions:
   - ungoverned_operation
 postconditions:

@@ -17,6 +17,7 @@ controls:
   - CTL.IAM.SCP.DATAPERIMETER.S3.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - s3_delete_bucket_permission
 postconditions:

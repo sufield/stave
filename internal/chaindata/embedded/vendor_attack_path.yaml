@@ -8,6 +8,7 @@ controls:
   - CTL.S3.ACCESS.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - internet_access
 postconditions:

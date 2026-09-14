@@ -17,7 +17,8 @@ controls:
   - CTL.LAMBDA.GHOST.DLQ.001
   - CTL.LAMBDA.TRIGGER.GHOST.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
+scope: account
 preconditions:
   - network_access_lambda
 postconditions:

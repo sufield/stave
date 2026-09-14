@@ -18,6 +18,7 @@ controls:
   - CTL.EKS.IMAGE.NOSIGNATURE.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - container_code_execution
 postconditions:

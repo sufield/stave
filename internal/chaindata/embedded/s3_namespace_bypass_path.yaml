@@ -15,6 +15,7 @@ controls:
   - CTL.S3TABLES.POLICY.PUBLIC.001
 escalation_threshold: 1
 compound_severity: critical
+scope: account
 preconditions:
   - internet_access
 postconditions:

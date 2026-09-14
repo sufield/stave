@@ -11,6 +11,7 @@ controls:
   - CTL.LAMBDA.CODESIGN.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - supply_chain_compromise
 postconditions:

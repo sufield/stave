@@ -16,7 +16,7 @@ controls:
   - CTL.CONFIG.LIFECYCLE.REMEDIATION.NEVEREXECUTED.001
   - CTL.CONFIG.RULE.DISABLED.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
 preconditions:
   - ungoverned_operation
 postconditions:

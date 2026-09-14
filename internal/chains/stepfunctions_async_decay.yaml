@@ -20,7 +20,7 @@ controls:
   - CTL.STEPFUNCTIONS.SYNCEXP.APIGW.TIMEOUT.001
   - CTL.STEPFUNCTIONS.RATE.LIMIT.NONOTIFY.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
 preconditions:
   - ungoverned_operation
 postconditions:

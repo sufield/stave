@@ -13,6 +13,7 @@ controls:
   - CTL.BEDROCK.SHADOW.MODEL.ACCESS.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 incident_precedent:
   name: Eric Doerr (Tenable) AI Data Exposure Pattern
   impact: Unauthorized AI workloads processing sensitive data without classification or DLP controls

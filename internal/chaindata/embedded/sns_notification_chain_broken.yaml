@@ -15,6 +15,7 @@ controls:
   - CTL.SNS.GHOST.SUBSCRIPTION.LAMBDA.001
 escalation_threshold: 1
 compound_severity: critical
+scope: account
 preconditions:
   - kms_encryption_configured
 postconditions:

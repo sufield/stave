@@ -15,6 +15,7 @@ controls:
   - CTL.IAM.ROLE.CROSSSERVICE.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - ec2_code_execution
 postconditions:

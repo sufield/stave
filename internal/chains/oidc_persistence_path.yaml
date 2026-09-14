@@ -14,6 +14,7 @@ controls:
   - CTL.IAM.OIDC.GITHUB.SUBJECT.001
 escalation_threshold: 1
 compound_severity: critical
+scope: account
 preconditions:
   - internet_access
 postconditions:

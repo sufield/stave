@@ -16,6 +16,7 @@ controls:
   - CTL.EKS.HELM.RELEASE.FAILED.001
 escalation_threshold: 2
 compound_severity: medium
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

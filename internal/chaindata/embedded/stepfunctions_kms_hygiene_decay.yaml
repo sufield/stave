@@ -13,7 +13,7 @@ controls:
   - CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOROTATION.001
   - CTL.STEPFUNCTIONS.ENCRYPT.KMS.NOMULTIREGION.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: critical
 preconditions:
   - ungoverned_operation
 postconditions:

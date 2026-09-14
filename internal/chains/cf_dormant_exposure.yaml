@@ -20,7 +20,7 @@ controls:
   - CTL.CLOUDFRONT.GHOST.ORIGIN.001
   - CTL.CLOUDFRONT.WAF.001
 escalation_threshold: 2
-compound_severity: high
+compound_severity: critical
 preconditions:
   - internet_access
 postconditions:

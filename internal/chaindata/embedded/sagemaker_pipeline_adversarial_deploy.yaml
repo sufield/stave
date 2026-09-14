@@ -18,6 +18,7 @@ controls:
   - CTL.SAGEMAKER.ENDPOINT.MONITOR.001
 escalation_threshold: 3
 compound_severity: critical
+scope: account
 preconditions:
   - supply_chain_compromise
 postconditions:

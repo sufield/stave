@@ -17,7 +17,7 @@ controls:
   - CTL.CLOUDFRONT.ORIGIN.OAI.LEGACY.001
   - CTL.CLOUDFRONT.GHOST.ORIGIN.001
 escalation_threshold: 1
-compound_severity: high
+compound_severity: critical
 preconditions:
   - internet_access
 postconditions:

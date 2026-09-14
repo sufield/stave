@@ -19,6 +19,7 @@ controls:
   - CTL.SNS.GHOST.POLICY.SOURCEARN.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - kms_encryption_configured
 postconditions:

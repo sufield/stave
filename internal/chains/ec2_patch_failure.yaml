@@ -18,6 +18,7 @@ controls:
   - CTL.EC2.PATCH.SCAN.STALE.001
 escalation_threshold: 2
 compound_severity: high
+scope: account
 preconditions:
   - network_access_ec2
 postconditions:

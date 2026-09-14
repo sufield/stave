@@ -18,6 +18,7 @@ controls:
   - CTL.EKS.PODIDENTITY.GHOST.SA.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

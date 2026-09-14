@@ -45,6 +45,36 @@ type ControlResult struct {
 	Risk           string                       `json:"risk,omitempty"`
 }
 
+// ControlResults represents a collection of ControlResult items with query methods.
+type ControlResults []ControlResult
+
+// Len returns the count of control results.
+func (cr ControlResults) Len() int {
+	return len(cr)
+}
+
+// ByClassification returns a filtered slice of ControlResult items matching the classification.
+func (cr ControlResults) ByClassification(c Classification) ControlResults {
+	var filtered ControlResults
+	for _, r := range cr {
+		if r.Classification == c {
+			filtered = append(filtered, r)
+		}
+	}
+	return filtered
+}
+
+// BySeverity returns a filtered slice of ControlResult items matching the given severity.
+func (cr ControlResults) BySeverity(sev policy.Severity) ControlResults {
+	var filtered ControlResults
+	for _, r := range cr {
+		if r.Severity == sev {
+			filtered = append(filtered, r)
+		}
+	}
+	return filtered
+}
+
 // ShoppingItem is a missing field grouped by asset type.
 type ShoppingItem struct {
 	Field       string             `json:"field"`
@@ -66,8 +96,8 @@ type Report struct {
 	Snapshot          string                                            `json:"snapshot"`
 	GeneratedAt       string                                            `json:"generated_at"`
 	Summary           Summary                                           `json:"summary"`
-	SilentRisk        []ControlResult                                   `json:"silent_risk"`
-	IncompleteResults []ControlResult                                   `json:"incomplete"`
+	SilentRisk        ControlResults                                    `json:"silent_risk"`
+	IncompleteResults ControlResults                                    `json:"incomplete"`
 	ShoppingList      map[kernel.AssetType][]ShoppingItem               `json:"extractor_shopping_list"`
 	FrameworkCoverage map[policy.ComplianceFramework]*FrameworkCoverage `json:"framework_coverage"`
 }
@@ -481,7 +511,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 		FrameworkCoverage: make(map[policy.ComplianceFramework]*FrameworkCoverage),
 	}
 
-	var silentRisk, incomplete []ControlResult
+	var silentRisk, incomplete ControlResults
 	for i := range results {
 		r := &results[i]
 		switch r.Classification {

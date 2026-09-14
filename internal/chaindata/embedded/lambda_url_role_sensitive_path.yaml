@@ -14,6 +14,7 @@ controls:
   - CTL.IAM.IDENTITY.BLASTRADIUS.004
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - network_access_lambda
 postconditions:

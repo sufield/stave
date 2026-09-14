@@ -17,6 +17,7 @@ controls:
   - CTL.VPC.ENDPOINT.INTERFACE.DEFAULTPOLICY.001
 escalation_threshold: 1
 compound_severity: critical
+scope: account
 preconditions:
   - network_access_ec2
 postconditions:

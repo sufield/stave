@@ -16,6 +16,7 @@ controls:
   - CTL.CONFIG.ACCESS.DELETERULE.BROAD.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

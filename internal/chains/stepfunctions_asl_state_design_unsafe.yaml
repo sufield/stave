@@ -16,7 +16,7 @@ controls:
   - CTL.STEPFUNCTIONS.ASL.QUERY.LANG.MISMATCH.001
   - CTL.STEPFUNCTIONS.ASL.DM.CHILD.IAM.INHERIT.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
 preconditions:
   - ungoverned_operation
 postconditions:

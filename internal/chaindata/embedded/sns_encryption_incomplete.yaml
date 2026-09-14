@@ -15,6 +15,7 @@ controls:
   - CTL.SNS.SUBSCRIPTION.HTTP.001
 escalation_threshold: 2
 compound_severity: high
+scope: account
 preconditions:
   - data_in_transit_exposure
 postconditions:

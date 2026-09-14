@@ -18,6 +18,7 @@ controls:
   - CTL.S3.REPLICATION.EXTERNAL.001
 escalation_threshold: 1
 compound_severity: critical
+scope: account
 preconditions:
   - data_access
 postconditions:

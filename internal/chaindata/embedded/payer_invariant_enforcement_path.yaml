@@ -16,6 +16,7 @@ controls:
   - CTL.IAM.BOUNDARY.ESCAPE.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - iam_credential_theft
 postconditions:

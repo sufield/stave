@@ -13,6 +13,7 @@ controls:
   - CTL.LAMBDA.PROXY.BYPASS.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - internet_access
 postconditions:

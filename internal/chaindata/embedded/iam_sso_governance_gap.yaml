@@ -9,6 +9,7 @@ controls:
   - CTL.IAM.SSO.MFA.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - iam_credential_theft
 postconditions:

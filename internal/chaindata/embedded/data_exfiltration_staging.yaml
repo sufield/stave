@@ -16,6 +16,7 @@ controls:
   - CTL.LIFECYCLE.STAGING.STALE.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - s3_data_access
 postconditions:

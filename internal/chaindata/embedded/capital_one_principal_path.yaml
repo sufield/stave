@@ -19,6 +19,7 @@ controls:
   - CTL.IAM.IDENTITY.BLASTRADIUS.004
 escalation_threshold: 3
 compound_severity: critical
+scope: account
 complexity: dependent
 complexity_rationale: >
   Requires an application-layer SSRF vulnerability to initiate

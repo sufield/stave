@@ -10,6 +10,7 @@ controls:
   - CTL.IAM.POLICY.GHOSTREF.002
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - iam_credential_theft
 postconditions:

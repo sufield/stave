@@ -25,12 +25,50 @@ type ClosedFinding struct {
 	DwellDays float64          `json:"dwell_days,omitempty"`
 }
 
+// ClosedFindings represents a collection of ClosedFinding items with query methods.
+type ClosedFindings []ClosedFinding
+
+// Len returns the count of closed findings.
+func (cf ClosedFindings) Len() int {
+	return len(cf)
+}
+
+// BySeverity returns a filtered slice of ClosedFinding items matching the given severity.
+func (cf ClosedFindings) BySeverity(sev policy.Severity) ClosedFindings {
+	var filtered ClosedFindings
+	for _, f := range cf {
+		if f.Severity == sev {
+			filtered = append(filtered, f)
+		}
+	}
+	return filtered
+}
+
 // DeactivatedChain is a chain active in before but inactive in after.
 type DeactivatedChain struct {
 	ChainID          kernel.ChainID  `json:"chain_id"`
 	PreviousSeverity policy.Severity `json:"previous_severity"`
 	AssetID          asset.ID        `json:"asset_id,omitempty"`
 	ScopeID          kernel.ScopeID  `json:"scope_id,omitempty"`
+}
+
+// DeactivatedChains represents a collection of DeactivatedChain items with query methods.
+type DeactivatedChains []DeactivatedChain
+
+// Len returns the count of deactivated chains.
+func (dc DeactivatedChains) Len() int {
+	return len(dc)
+}
+
+// BySeverity returns a filtered slice of DeactivatedChain items matching the given previous severity.
+func (dc DeactivatedChains) BySeverity(sev policy.Severity) DeactivatedChains {
+	var filtered DeactivatedChains
+	for _, c := range dc {
+		if c.PreviousSeverity == sev {
+			filtered = append(filtered, c)
+		}
+	}
+	return filtered
 }
 
 // EfficiencyVerdict classifies the remediation outcome.
@@ -53,14 +91,14 @@ type Efficiency struct {
 
 // Report holds the remediation impact analysis.
 type Report struct {
-	BeforeFindings    int                `json:"before_findings"`
-	AfterFindings     int                `json:"after_findings"`
-	Closed            []ClosedFinding    `json:"findings_closed"`
-	ChainsDeactivated []DeactivatedChain `json:"chains_deactivated,omitempty"`
-	ScoreBefore       float64            `json:"score_before"`
-	ScoreAfter        float64            `json:"score_after"`
-	ScoreDelta        float64            `json:"score_delta"`
-	Efficiency        *Efficiency        `json:"efficiency,omitempty"`
+	BeforeFindings    int               `json:"before_findings"`
+	AfterFindings     int               `json:"after_findings"`
+	Closed            ClosedFindings    `json:"findings_closed"`
+	ChainsDeactivated DeactivatedChains `json:"chains_deactivated,omitempty"`
+	ScoreBefore       float64           `json:"score_before"`
+	ScoreAfter        float64           `json:"score_after"`
+	ScoreDelta        float64           `json:"score_delta"`
+	Efficiency        *Efficiency       `json:"efficiency,omitempty"`
 }
 
 // Input configures the impact analysis.
@@ -87,7 +125,7 @@ func Analyze(in Input) (*Report, error) {
 	afterKeys := buildKeySet(in.After.Findings)
 
 	// Find closed findings.
-	var closed []ClosedFinding
+	var closed ClosedFindings
 	for k := range beforeKeys {
 		if _, stillOpen := afterKeys[k]; !stillOpen {
 			f := beforeKeys[k]
@@ -128,7 +166,7 @@ func Analyze(in Input) (*Report, error) {
 		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: kernel.ScopeID(c.ScopeID)}
 		delete(beforeSev, k)
 	}
-	var deactivated []DeactivatedChain
+	var deactivated DeactivatedChains
 	for k, sev := range beforeSev {
 		deactivated = append(deactivated, DeactivatedChain{
 			ChainID:          k.chainID,

@@ -17,6 +17,7 @@ controls:
   - CTL.BACKUP.VAULT.POLICY.CROSSACCOUNT.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 incident_precedent:
   name: Code Spaces (2014)
   impact: Complete business destruction within 12 hours; company ceased operations

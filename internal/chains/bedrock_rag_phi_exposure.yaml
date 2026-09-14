@@ -16,6 +16,7 @@ controls:
   - CTL.S3.MARKER.PHI.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 scope_field: properties.ai.knowledge_base.target_bucket_arn
 preconditions:
   - ungoverned_operation

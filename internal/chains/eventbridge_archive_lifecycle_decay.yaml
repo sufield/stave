@@ -16,7 +16,8 @@ controls:
   - CTL.EVENTBRIDGE.REPLAY.UNTHROTTLED.001
   - CTL.EVENTBRIDGE.REPLAY.SESSION.STALE.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

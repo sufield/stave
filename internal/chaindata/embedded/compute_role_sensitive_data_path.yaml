@@ -16,7 +16,8 @@ controls:
   - CTL.EC2.IMDSV2.001
   - CTL.IAM.IDENTITY.BLASTRADIUS.004
 escalation_threshold: 2
-compound_severity: high
+compound_severity: critical
+scope: account
 preconditions:
   - container_code_execution
 postconditions:

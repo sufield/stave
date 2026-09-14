@@ -17,6 +17,7 @@ controls:
   - CTL.CLOUDTRAIL.NETWORK.ACTIVITY.IDENTITYFILTER.001
 escalation_threshold: 3
 compound_severity: critical
+scope: account
 preconditions:
   - vpc_instance_compromise
 postconditions:

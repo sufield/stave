@@ -17,6 +17,7 @@ controls:
   - CTL.EC2.EBS.GHOST.DLM.ROLE.001
 escalation_threshold: 1
 compound_severity: critical
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

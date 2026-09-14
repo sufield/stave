@@ -14,6 +14,7 @@ controls:
   - CTL.VPC.SG.IPV6.PARITY.001
 escalation_threshold: 2
 compound_severity: high
+scope: account
 preconditions:
   - internet_access
 postconditions:

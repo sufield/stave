@@ -16,6 +16,7 @@ controls:
   - CTL.IAM.POLICY.SHADOW.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - initial_access
 postconditions:

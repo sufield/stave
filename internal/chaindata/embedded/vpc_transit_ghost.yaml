@@ -12,7 +12,8 @@ controls:
   - CTL.VPC.TGW.BLACKHOLE.001
   - CTL.VPC.ENDPOINT.GHOST.001
 escalation_threshold: 1
-compound_severity: medium
+compound_severity: high
+scope: account
 preconditions:
   - network_access_vpc
 postconditions:

@@ -393,3 +393,22 @@ func TestClassify_AnyMatch_Evaluable(t *testing.T) {
 		t.Errorf("classification = %q, want EVALUABLE", result.Classification)
 	}
 }
+
+func TestControlResults_DomainMethods(t *testing.T) {
+	cr := ControlResults{
+		{ControlID: "CTL.A", Classification: SilentRisk, Severity: policy.SeverityHigh},
+		{ControlID: "CTL.B", Classification: Incomplete, Severity: policy.SeverityMedium},
+		{ControlID: "CTL.C", Classification: SilentRisk, Severity: policy.SeverityHigh},
+	}
+
+	if cr.Len() != 3 {
+		t.Errorf("Len: got %d, want 3", cr.Len())
+	}
+	if silent := cr.ByClassification(SilentRisk); silent.Len() != 2 {
+		t.Errorf("ByClassification SilentRisk: got %d, want 2", silent.Len())
+	}
+	if highs := cr.BySeverity(policy.SeverityHigh); highs.Len() != 2 {
+		t.Errorf("BySeverity High: got %d, want 2", highs.Len())
+	}
+}
+

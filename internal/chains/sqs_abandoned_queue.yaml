@@ -15,7 +15,7 @@ controls:
   - CTL.SQS.LIFECYCLE.NOCONSUMER.001
   - CTL.SQS.LIFECYCLE.DLQ.ORPHAN.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
 preconditions:
   - kms_encryption_configured
 postconditions:

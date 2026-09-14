@@ -18,7 +18,7 @@ controls:
   - CTL.STEPFUNCTIONS.LAMBDA.CALLBACK.NOHEARTBEAT.001
   - CTL.STEPFUNCTIONS.WAITFORCALLBACK.NOTIMEOUT.001
 escalation_threshold: 2
-compound_severity: medium
+compound_severity: high
 preconditions:
   - ungoverned_operation
 postconditions:

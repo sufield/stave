@@ -19,6 +19,7 @@ controls:
   - CTL.IAM.MARKER.PRODUCTION.001
 escalation_threshold: 2
 compound_severity: high
+scope: account
 scope_field: properties.compute.identity.execution_role.assumable_role_arn
 preconditions:
   - automation_hijack

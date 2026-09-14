@@ -12,6 +12,7 @@ controls:
   - CTL.VPC.VPN.ENCRYPTION.WEAK.001
 escalation_threshold: 1
 compound_severity: high
+scope: account
 preconditions:
   - network_access_vpc
 postconditions:

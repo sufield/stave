@@ -19,6 +19,7 @@ controls:
   - CTL.GUARDDUTY.REGION.COVERAGE.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - iam_credential_theft
 postconditions:

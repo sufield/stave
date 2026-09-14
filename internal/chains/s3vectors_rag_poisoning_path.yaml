@@ -17,6 +17,7 @@ controls:
   - CTL.CLOUDTRAIL.DATA.S3VECTORS.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - cross_account_access
 postconditions:

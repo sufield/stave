@@ -136,3 +136,33 @@ func TestAnalyze_ChainDeactivationDetected(t *testing.T) {
 		t.Error("chain.persisting should not be deactivated (present in After)")
 	}
 }
+
+func TestClosedFindings_DomainMethods(t *testing.T) {
+	cf := ClosedFindings{
+		{ControlID: "CTL.A", Severity: policy.SeverityHigh},
+		{ControlID: "CTL.B", Severity: policy.SeverityMedium},
+		{ControlID: "CTL.C", Severity: policy.SeverityHigh},
+	}
+
+	if cf.Len() != 3 {
+		t.Errorf("Len: got %d, want 3", cf.Len())
+	}
+	if highs := cf.BySeverity(policy.SeverityHigh); highs.Len() != 2 {
+		t.Errorf("BySeverity High: got %d, want 2", highs.Len())
+	}
+}
+
+func TestDeactivatedChains_DomainMethods(t *testing.T) {
+	dc := DeactivatedChains{
+		{ChainID: "CH.A", PreviousSeverity: policy.SeverityCritical},
+		{ChainID: "CH.B", PreviousSeverity: policy.SeverityHigh},
+	}
+
+	if dc.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", dc.Len())
+	}
+	if crits := dc.BySeverity(policy.SeverityCritical); crits.Len() != 1 {
+		t.Errorf("BySeverity Critical: got %d, want 1", crits.Len())
+	}
+}
+

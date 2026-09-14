@@ -24,6 +24,7 @@ controls:
 scope_field: properties.network.vpc_id
 escalation_threshold: 2
 compound_severity: high
+scope: account
 preconditions:
   - network_access_vpc
 postconditions:

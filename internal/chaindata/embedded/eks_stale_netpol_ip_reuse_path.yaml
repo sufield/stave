@@ -11,6 +11,7 @@ controls:
   - CTL.K8S.JOB.TTL.001
 escalation_threshold: 2
 compound_severity: high
+scope: account
 preconditions:
   - k8s_service_account_token
 postconditions:

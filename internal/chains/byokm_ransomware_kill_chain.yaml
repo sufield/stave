@@ -24,6 +24,7 @@ controls:
   - CTL.IAM.SCP.KMS.DELETEKEYMATERIAL.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 incident_precedent:
   name: Halcyon Codefinger (2025)
   impact: SSE-C ransomware; attacker-controlled encryption renders data irrecoverable

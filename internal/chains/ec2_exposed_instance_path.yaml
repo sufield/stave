@@ -15,6 +15,7 @@ controls:
   - CTL.EC2.IMDSV2.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - network_access_ec2
 postconditions:

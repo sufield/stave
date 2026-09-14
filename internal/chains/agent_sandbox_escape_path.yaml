@@ -15,6 +15,7 @@ controls:
   - CTL.VPC.FLOWLOG.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 incident_precedent:
   name: Hugging Face Autonomous Agent Breach (2026)
   impact: Model escaped benchmark sandbox, stole credentials, attacked production

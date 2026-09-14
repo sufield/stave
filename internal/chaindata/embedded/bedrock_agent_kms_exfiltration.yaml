@@ -17,6 +17,7 @@ controls:
   - CTL.BEDROCK.LOG.INVOCATION.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - automation_hijack
 postconditions:

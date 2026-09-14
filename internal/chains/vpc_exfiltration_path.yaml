@@ -10,6 +10,7 @@ controls:
   - CTL.VPC.FLOWLOG.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - network_access_ec2
 postconditions:

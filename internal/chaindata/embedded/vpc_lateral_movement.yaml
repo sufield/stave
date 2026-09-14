@@ -13,6 +13,7 @@ controls:
   - CTL.VPC.SEGMENT.EASTWEST.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - network_access_vpc
 postconditions:

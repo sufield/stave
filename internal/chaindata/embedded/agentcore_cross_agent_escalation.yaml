@@ -18,6 +18,7 @@ controls:
   - CTL.IAM.POLICY.RESOURCE.WILDCARD.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 scope_field: properties.ai.runtime.execution_role_arn
 preconditions:
   - initial_access

@@ -28,6 +28,7 @@ controls:
   - CTL.LAMBDA.INVOKE.PUBLIC.001
 escalation_threshold: 3
 compound_severity: critical
+scope: account
 preconditions:
   - internet_access
 postconditions:

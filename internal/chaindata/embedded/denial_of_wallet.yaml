@@ -19,6 +19,7 @@ controls:
   - CTL.EKS.NS.NORESOURCEQUOTA.001
 escalation_threshold: 2
 compound_severity: high
+scope: account
 preconditions:
   - internet_access
 postconditions:

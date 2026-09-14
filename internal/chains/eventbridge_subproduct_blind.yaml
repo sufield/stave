@@ -15,6 +15,7 @@ controls:
   - CTL.EVENTBRIDGE.ALARM.APIDEST.5XX.001
 escalation_threshold: 2
 compound_severity: medium
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

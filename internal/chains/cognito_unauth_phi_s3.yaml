@@ -17,6 +17,7 @@ controls:
   - CTL.S3.MARKER.PHI.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 # The Cognito side stamps a target_bucket_arn on the identity-pool
 # asset (the bucket the unauth role can reach); the S3 side's scope
 # is its own ARN (asset.ID). The resolver returns the property

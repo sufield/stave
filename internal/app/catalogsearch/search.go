@@ -21,6 +21,36 @@ type SearchResult struct {
 	AttackStage kernel.AttackStage           `json:"attack_stage,omitempty"`
 }
 
+// SearchResults represents a collection of SearchResult items with query methods.
+type SearchResults []SearchResult
+
+// Len returns the count of search results.
+func (sr SearchResults) Len() int {
+	return len(sr)
+}
+
+// BySeverity returns a filtered slice of SearchResult items matching the given severity.
+func (sr SearchResults) BySeverity(sev policy.Severity) SearchResults {
+	var filtered SearchResults
+	for _, r := range sr {
+		if r.Severity == sev {
+			filtered = append(filtered, r)
+		}
+	}
+	return filtered
+}
+
+// ByDomain returns a filtered slice of SearchResult items matching the given domain asset type.
+func (sr SearchResults) ByDomain(domain kernel.AssetType) SearchResults {
+	var filtered SearchResults
+	for _, r := range sr {
+		if r.Domain == domain {
+			filtered = append(filtered, r)
+		}
+	}
+	return filtered
+}
+
 // Filter constrains the search.
 type Filter struct {
 	Query       string
@@ -31,11 +61,11 @@ type Filter struct {
 }
 
 // Search finds controls matching the filter criteria.
-func Search(controls []policy.ControlDefinition, f Filter) []SearchResult {
+func Search(controls []policy.ControlDefinition, f Filter) SearchResults {
 	query := toLower(f.Query)
 	domainFilter := toLower(string(f.Domain))
 	profileFilter := toLower(f.Profile)
-	var results []SearchResult
+	var results SearchResults
 
 	for i := range controls {
 		ctl := &controls[i]

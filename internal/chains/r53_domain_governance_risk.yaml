@@ -16,6 +16,7 @@ controls:
   - CTL.ORG.ACCOUNT.DOMAINTAG.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 preconditions:
   - account_closure
 postconditions:

@@ -15,7 +15,7 @@ controls:
   - CTL.S3.ENCRYPT.001
   - CTL.S3.LOG.001
 escalation_threshold: 2
-compound_severity: high
+compound_severity: critical
 preconditions:
   - s3_data_access
 postconditions:

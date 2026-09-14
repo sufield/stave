@@ -15,6 +15,7 @@ controls:
   - CTL.CLOUDTRAIL.DATA.LAMBDA.001
 escalation_threshold: 2
 compound_severity: high
+scope: account
 preconditions:
   - iam_credential_theft
 postconditions:

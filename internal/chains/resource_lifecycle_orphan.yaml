@@ -24,6 +24,7 @@ controls:
   - CTL.CLOUDWATCH.LOGGROUP.ORPHAN.001
 escalation_threshold: 3
 compound_severity: medium
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

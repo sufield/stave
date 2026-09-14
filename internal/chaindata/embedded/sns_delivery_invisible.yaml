@@ -17,6 +17,7 @@ controls:
   - CTL.SNS.GHOST.SUBSCRIPTION.SQS.001
 escalation_threshold: 2
 compound_severity: high
+scope: account
 preconditions:
   - ungoverned_operation
 postconditions:

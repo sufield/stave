@@ -17,6 +17,7 @@ controls:
   - CTL.IAM.ROLE.UNUSED.001
 escalation_threshold: 2
 compound_severity: medium
+scope: account
 preconditions:
   - network_access_lambda
 postconditions:
