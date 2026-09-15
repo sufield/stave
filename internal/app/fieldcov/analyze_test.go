@@ -411,4 +411,3 @@ func TestControlResults_DomainMethods(t *testing.T) {
 		t.Errorf("BySeverity High: got %d, want 2", highs.Len())
 	}
 }
-

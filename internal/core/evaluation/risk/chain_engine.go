@@ -251,6 +251,12 @@ func groupingKey(chain *policy.ChainDefinition, assetID asset.ID, resolver Scope
 	if chain.Scope.IsGlobal() {
 		return "__global__", true
 	}
+	if chain.ScopeField != "" && resolver != nil {
+		if v, ok := resolver(assetID, chain.ScopeField); ok && v != "" {
+			return v, true
+		}
+		return string(assetID), false
+	}
 	if chain.Scope.IsAccount() {
 		if resolver == nil {
 			return "", false
@@ -259,12 +265,6 @@ func groupingKey(chain *policy.ChainDefinition, assetID asset.ID, resolver Scope
 			return v, true
 		}
 		return "", false
-	}
-	if chain.ScopeField == "" || resolver == nil {
-		return string(assetID), false
-	}
-	if v, ok := resolver(assetID, chain.ScopeField); ok && v != "" {
-		return v, true
 	}
 	return string(assetID), false
 }

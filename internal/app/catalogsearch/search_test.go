@@ -64,4 +64,3 @@ func TestSearchResults_DomainMethods(t *testing.T) {
 		t.Errorf("ByDomain s3_bucket: got %d, want 2", s3s.Len())
 	}
 }
-

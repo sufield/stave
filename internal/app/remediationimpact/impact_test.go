@@ -165,4 +165,3 @@ func TestDeactivatedChains_DomainMethods(t *testing.T) {
 		t.Errorf("BySeverity Critical: got %d, want 1", crits.Len())
 	}
 }
-

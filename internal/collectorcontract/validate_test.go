@@ -26,8 +26,8 @@ func TestFieldIndex(t *testing.T) {
 		t.Fatalf("Load() error: %v", err)
 	}
 	idx := c.FieldIndex()
-	if _, ok := idx["denies_assume_root"]; !ok {
-		t.Error("expected denies_assume_root in index")
+	if _, ok := idx["identity.scp.denies_assume_root"]; !ok {
+		t.Error("expected identity.scp.denies_assume_root in index")
 	}
 }
 

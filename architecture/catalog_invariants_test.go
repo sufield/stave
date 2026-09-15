@@ -14,8 +14,8 @@ import (
 	"testing"
 
 	builtin "github.com/sufield/stave/internal/adapters/controls/builtin"
-	"github.com/sufield/stave/internal/adapters/predicate"
 	yamladapter "github.com/sufield/stave/internal/adapters/controls/yaml"
+	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/collectorcontract"
 	"github.com/sufield/stave/internal/controldata"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -204,23 +204,23 @@ func TestPreconditionsSatisfiable(t *testing.T) {
 	// from collector data rather than capabilities a chain establishes.
 	// All 17 unsatisfied preconditions from Alloy analysis are environmental.
 	environmental := map[string]bool{
-		"account_closure":                      true,
-		"az_failure":                           true,
+		"account_closure":                        true,
+		"az_failure":                             true,
 		"bucket_name_available_for_registration": true,
-		"cloudfront_origin_configured":         true,
-		"cross_account_access":                 true,
-		"cross_account_destination_configured":  true,
-		"internet_access":                      true,
-		"kms_encryption_configured":            true,
-		"network_access_eks":                   true,
-		"network_access_lambda":                true,
-		"network_access_rds":                   true,
-		"no_router_update_permission":          true,
-		"ram_share_active":                     true,
-		"s3_delete_bucket_permission":          true,
-		"s3_replication_configured":            true,
-		"scp_governance_configured":            true,
-		"shadow_infrastructure":                true,
+		"cloudfront_origin_configured":           true,
+		"cross_account_access":                   true,
+		"cross_account_destination_configured":   true,
+		"internet_access":                        true,
+		"kms_encryption_configured":              true,
+		"network_access_eks":                     true,
+		"network_access_lambda":                  true,
+		"network_access_rds":                     true,
+		"no_router_update_permission":            true,
+		"ram_share_active":                       true,
+		"s3_delete_bucket_permission":            true,
+		"s3_replication_configured":              true,
+		"scp_governance_configured":              true,
+		"shadow_infrastructure":                  true,
 	}
 
 	preconditions := make(map[string]bool)
@@ -266,39 +266,40 @@ func TestNoOrphanControls(t *testing.T) {
 	// These are gap-finder backlog items — the chain needs to be authored.
 	chainMissing := map[string]bool{
 		// Ghost controls not in any ghost-cascade chain
-		"CTL.COGNITO.FEDERATION.GHOST.IDENTITY.001":          true,
-		"CTL.COGNITO.GHOST.PRESIGNUP.001":                    true,
-		"CTL.FIREHOSE.GHOST.ICEBERG.001":                     true,
-		"CTL.IAM.SSO.IDENTITYSOURCE.GHOST.001":               true,
-		"CTL.VERIFIEDPERMISSIONS.IDENTITYSOURCE.GHOST.001":    true,
+		"CTL.COGNITO.FEDERATION.GHOST.IDENTITY.001":        true,
+		"CTL.COGNITO.GHOST.PRESIGNUP.001":                  true,
+		"CTL.FIREHOSE.GHOST.ICEBERG.001":                   true,
+		"CTL.IAM.SSO.IDENTITYSOURCE.GHOST.001":             true,
+		"CTL.VERIFIEDPERMISSIONS.IDENTITYSOURCE.GHOST.001": true,
 		// DocumentDB network controls not in existing DocDB chains
-		"CTL.DOCUMENTDB.INSTANCE.PUBLIC.001":                  true,
-		"CTL.DOCUMENTDB.SG.OPEN.001":                         true,
+		"CTL.DOCUMENTDB.INSTANCE.PUBLIC.001": true,
+		"CTL.DOCUMENTDB.SG.OPEN.001":         true,
 		// DNS dangling not in existing R53 chains
-		"CTL.DNS.DANGLING.002":                               true,
-		"CTL.DNS.DANGLING.003":                               true,
+		"CTL.DNS.DANGLING.002": true,
+		"CTL.DNS.DANGLING.003": true,
 		// Lambda MicroVM — new service, no chains authored yet
-		"CTL.LAMBDA.MICROVM.EXECROLE.001":                    true,
-		"CTL.LAMBDA.MICROVM.INGRESSAUTH.001":                 true,
-		"CTL.LAMBDA.MICROVM.S3PUBLIC.001":                    true,
-		"CTL.LAMBDA.MICROVM.SHELLAUTH.ELEVATED.001":          true,
-		"CTL.LAMBDA.MICROVM.SNAPSHOTSECRET.001":              true,
-		"CTL.LAMBDA.MICROVM.WILDCARD.ELEVATED.001":           true,
+		"CTL.LAMBDA.MICROVM.EXECROLE.001":           true,
+		"CTL.LAMBDA.MICROVM.INGRESSAUTH.001":        true,
+		"CTL.LAMBDA.MICROVM.S3PUBLIC.001":           true,
+		"CTL.LAMBDA.MICROVM.SHELLAUTH.ELEVATED.001": true,
+		"CTL.LAMBDA.MICROVM.SNAPSHOTSECRET.001":     true,
+		"CTL.LAMBDA.MICROVM.WILDCARD.ELEVATED.001":  true,
 		// Bedrock AgentCore not in existing AgentCore chains
-		"CTL.BEDROCK.AGENTCORE.CRED.001":                     true,
-		"CTL.BEDROCK.AGENTCORE.VERSION.VULNERABLE.001":       true,
+		"CTL.BEDROCK.AGENTCORE.CRED.001":               true,
+		"CTL.BEDROCK.AGENTCORE.VERSION.VULNERABLE.001": true,
 		// MCP governance — new capability, no chains
-		"CTL.ORG.MCP.FAILOPEN.001":                           true,
-		"CTL.ORG.MCP.NORULES.001":                            true,
+		"CTL.ORG.MCP.FAILOPEN.001": true,
+		"CTL.ORG.MCP.NORULES.001":  true,
 		// Cognito controls not in existing Cognito chains
-		"CTL.COGNITO.IDPOOL.UNAUTH.DDB.001":                  true,
-		"CTL.COGNITO.CLIENT.WRITEATTR.DEFAULT.001":           true,
+		"CTL.COGNITO.IDPOOL.UNAUTH.DDB.001":        true,
+		"CTL.COGNITO.CLIENT.WRITEATTR.DEFAULT.001": true,
 	}
 
 	var orphans int
 	bySev := make(map[policy.Severity]int)
 	var unclassified []string
 
+	var standaloneCritical int
 	for _, ctl := range controls {
 		if referenced[string(ctl.ID)] {
 			continue
@@ -307,8 +308,7 @@ func TestNoOrphanControls(t *testing.T) {
 		bySev[ctl.Severity]++
 
 		if ctl.Severity == policy.SeverityCritical && !chainMissing[string(ctl.ID)] {
-			// Critical orphan not in chain-missing list = standalone-valid.
-			// Track count but don't fail — these are independently actionable.
+			standaloneCritical++
 		}
 	}
 
