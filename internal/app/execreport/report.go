@@ -24,7 +24,7 @@ type Report struct {
 	Posture          PostureSection        `json:"posture"`
 	FindingsSummary  FindingsSummary       `json:"findings_summary"`
 	SLA              *SLASection           `json:"sla,omitempty"`
-	TopFindings      []TopFinding          `json:"top_findings"`
+	TopFindings      TopFindings           `json:"top_findings"`
 	Chains           ChainsSection         `json:"chains"`
 	AttackCoverage   AttackCoverageSection `json:"attack_coverage"`
 	FrameworkReady   []FrameworkReadiness  `json:"framework_readiness,omitempty"`
@@ -112,6 +112,42 @@ type TopFinding struct {
 // directly.
 func (t *TopFinding) IsAnyBreach() bool {
 	return t != nil && t.SLABreached
+}
+
+// TopFindings is a domain collection of TopFinding items with query methods.
+type TopFindings []TopFinding
+
+// Len returns the number of top findings in the collection.
+func (tf TopFindings) Len() int {
+	return len(tf)
+}
+
+// BySeverity returns a new TopFindings collection filtered by policy severity.
+func (tf TopFindings) BySeverity(sev policy.Severity) TopFindings {
+	if len(tf) == 0 {
+		return nil
+	}
+	var filtered TopFindings
+	for i := range tf {
+		if tf[i].Severity == sev {
+			filtered = append(filtered, tf[i])
+		}
+	}
+	return filtered
+}
+
+// Breached returns a new TopFindings collection filtered by SLA breach status.
+func (tf TopFindings) Breached() TopFindings {
+	if len(tf) == 0 {
+		return nil
+	}
+	var filtered TopFindings
+	for i := range tf {
+		if tf[i].SLABreached {
+			filtered = append(filtered, tf[i])
+		}
+	}
+	return filtered
 }
 
 // ChainsSection holds active chain data.

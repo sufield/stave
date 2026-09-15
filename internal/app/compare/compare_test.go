@@ -116,3 +116,33 @@ func TestAnalyze_SameProfile_AllShared(t *testing.T) {
 		t.Errorf("target-only = %d, want 0", len(r.TargetOnly))
 	}
 }
+
+func TestCompareItems_DomainMethods(t *testing.T) {
+	items := CompareItems{
+		{ControlID: kernel.ControlID("CTL.A.001"), Severity: policy.SeverityCritical},
+		{ControlID: kernel.ControlID("CTL.B.002"), Severity: policy.SeverityHigh},
+		{ControlID: kernel.ControlID("CTL.C.003"), Severity: policy.SeverityCritical},
+	}
+
+	if items.Len() != 3 {
+		t.Errorf("Len() = %d, want 3", items.Len())
+	}
+
+	crit := items.BySeverity(policy.SeverityCritical)
+	if crit.Len() != 2 {
+		t.Errorf("BySeverity(Critical).Len() = %d, want 2", crit.Len())
+	}
+
+	high := items.BySeverity(policy.SeverityHigh)
+	if high.Len() != 1 {
+		t.Errorf("BySeverity(High).Len() = %d, want 1", high.Len())
+	}
+
+	var empty CompareItems
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.BySeverity(policy.SeverityCritical) != nil {
+		t.Error("empty.BySeverity() should return nil")
+	}
+}

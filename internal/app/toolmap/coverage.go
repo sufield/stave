@@ -28,10 +28,32 @@ type Gap struct {
 	ControlIDs []kernel.ControlID `json:"control_ids,omitempty"`
 }
 
+// Gaps is a domain collection of Gap items with query and filter methods.
+type Gaps []Gap
+
+// Len returns the number of gaps in the collection.
+func (g Gaps) Len() int {
+	return len(g)
+}
+
+// ByTool returns a new Gaps collection filtered by tool name.
+func (g Gaps) ByTool(tool string) Gaps {
+	if len(g) == 0 {
+		return nil
+	}
+	var filtered Gaps
+	for i := range g {
+		if g[i].Tool == tool {
+			filtered = append(filtered, g[i])
+		}
+	}
+	return filtered
+}
+
 // CoverageResult holds the output of a three-way join.
 type CoverageResult struct {
-	Covered []Gap `json:"covered"`
-	Gaps    []Gap `json:"gaps"`
+	Covered Gaps `json:"covered"`
+	Gaps    Gaps `json:"gaps"`
 }
 
 // Analyze performs the three-way join:

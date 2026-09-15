@@ -19,9 +19,9 @@ type Result struct {
 	Baseline          ProfileSummary    `json:"baseline"`
 	Target            ProfileSummary    `json:"target"`
 	AdoptionReadiness AdoptionReadiness `json:"adoption_readiness"`
-	SharedViolations  []CompareItem     `json:"shared_violations"`
-	TargetOnly        []CompareItem     `json:"target_only_violations"`
-	BaselineOnly      []CompareItem     `json:"baseline_only_violations"`
+	SharedViolations  CompareItems      `json:"shared_violations"`
+	TargetOnly        CompareItems      `json:"target_only_violations"`
+	BaselineOnly      CompareItems      `json:"baseline_only_violations"`
 	FreeCoverage      int               `json:"free_coverage_count"`
 	Roadmap           Roadmap           `json:"roadmap"`
 	LeadershipSummary string            `json:"leadership_summary"`
@@ -50,6 +50,28 @@ type CompareItem struct {
 	DwellHours float64          `json:"dwell_hours,omitempty"`
 	Baseline   []string         `json:"satisfies_baseline,omitempty"`
 	Target     []string         `json:"satisfies_target,omitempty"`
+}
+
+// CompareItems is a domain collection of CompareItem entries with query and filtering methods.
+type CompareItems []CompareItem
+
+// Len returns the number of items in the collection.
+func (ci CompareItems) Len() int {
+	return len(ci)
+}
+
+// BySeverity returns a new CompareItems collection filtered by policy severity.
+func (ci CompareItems) BySeverity(sev policy.Severity) CompareItems {
+	if len(ci) == 0 {
+		return nil
+	}
+	var filtered CompareItems
+	for i := range ci {
+		if ci[i].Severity == sev {
+			filtered = append(filtered, ci[i])
+		}
+	}
+	return filtered
 }
 
 // Roadmap describes the upgrade phases.

@@ -184,3 +184,33 @@ func writeFile(t *testing.T, dir, name, content string) {
 		t.Fatal(err)
 	}
 }
+
+func TestGaps_DomainMethods(t *testing.T) {
+	gaps := Gaps{
+		{Tool: "pacu", Capability: "iam_credential_theft"},
+		{Tool: "prowler", Capability: "s3_public_bucket"},
+		{Tool: "pacu", Capability: "privesc_role_assumption"},
+	}
+
+	if gaps.Len() != 3 {
+		t.Errorf("Len() = %d, want 3", gaps.Len())
+	}
+
+	pacuGaps := gaps.ByTool("pacu")
+	if pacuGaps.Len() != 2 {
+		t.Errorf("ByTool(pacu).Len() = %d, want 2", pacuGaps.Len())
+	}
+
+	prowlerGaps := gaps.ByTool("prowler")
+	if prowlerGaps.Len() != 1 {
+		t.Errorf("ByTool(prowler).Len() = %d, want 1", prowlerGaps.Len())
+	}
+
+	var empty Gaps
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.ByTool("pacu") != nil {
+		t.Error("empty.ByTool() should return nil")
+	}
+}
