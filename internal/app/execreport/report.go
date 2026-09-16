@@ -267,7 +267,7 @@ func GenerateSummary(r *Report) ExecutiveSummary {
 	if len(r.Teams) > 0 {
 		regressing := 0
 		for _, t := range r.Teams {
-			if t.Trajectory == "REGRESSING" {
+			if t.Trajectory == TrajectoryRegressing {
 				regressing++
 			}
 		}
@@ -286,7 +286,7 @@ func GenerateSummary(r *Report) ExecutiveSummary {
 	}
 
 	for _, t := range r.Teams {
-		if t.Trajectory == "REGRESSING" {
+		if t.Trajectory == TrajectoryRegressing {
 			parts = append(parts, fmt.Sprintf("Team %s is regressing (score %.1f) with %d critical findings.", t.Name, t.Score, t.CriticalOpen))
 		}
 	}
@@ -300,7 +300,7 @@ func GenerateSummary(r *Report) ExecutiveSummary {
 	// Attention items.
 	var attention []AttentionItem
 	for _, t := range r.Teams {
-		if t.Trajectory == "REGRESSING" {
+		if t.Trajectory == TrajectoryRegressing {
 			attention = append(attention, AttentionItem{
 				Subject: t.Name,
 				Reason:  fmt.Sprintf("Score %.1f, %d critical findings open", t.Score, t.CriticalOpen),

@@ -10,6 +10,7 @@ import (
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
 	appcompare "github.com/sufield/stave/internal/app/compare"
 	"github.com/sufield/stave/internal/app/remediationimpact"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 )
 
@@ -28,11 +29,11 @@ func CompareFrameworks(generatedAt time.Time, from, to string, assessmentData []
 	}
 
 	result := appcompare.Analyze(appcompare.Input{
-		GeneratedAt:  generatedAt.Format(time.RFC3339),
+		GeneratedAt:  generatedAt,
 		BaselineName: from,
 		TargetName:   to,
-		BaselineKey:  from,
-		TargetKey:    to,
+		BaselineKey:  policy.ComplianceFramework(from),
+		TargetKey:    policy.ComplianceFramework(to),
 		Findings:     assessment.Findings,
 	})
 

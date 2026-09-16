@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -15,7 +16,7 @@ import (
 
 // Result holds the gap analysis output.
 type Result struct {
-	GeneratedAt       string            `json:"generated_at"`
+	GeneratedAt       time.Time         `json:"generated_at"`
 	Baseline          ProfileSummary    `json:"baseline"`
 	Target            ProfileSummary    `json:"target"`
 	AdoptionReadiness AdoptionReadiness `json:"adoption_readiness"`
@@ -45,11 +46,11 @@ type AdoptionReadiness struct {
 
 // CompareItem is a finding in the gap analysis.
 type CompareItem struct {
-	ControlID  kernel.ControlID `json:"control_id"`
-	Severity   policy.Severity  `json:"severity"`
-	DwellHours float64          `json:"dwell_hours,omitempty"`
-	Baseline   []string         `json:"satisfies_baseline,omitempty"`
-	Target     []string         `json:"satisfies_target,omitempty"`
+	ControlID  kernel.ControlID       `json:"control_id"`
+	Severity   policy.Severity        `json:"severity"`
+	DwellHours float64                `json:"dwell_hours,omitempty"`
+	Baseline   []policy.RequirementID `json:"satisfies_baseline,omitempty"`
+	Target     []policy.RequirementID `json:"satisfies_target,omitempty"`
 }
 
 // CompareItems is a domain collection of CompareItem entries with query and filtering methods.
@@ -89,11 +90,11 @@ type Phase struct {
 
 // Input holds the data for gap analysis.
 type Input struct {
-	GeneratedAt  string
+	GeneratedAt  time.Time
 	BaselineName string
 	TargetName   string
-	BaselineKey  string // compliance framework key
-	TargetKey    string
+	BaselineKey  policy.ComplianceFramework
+	TargetKey    policy.ComplianceFramework
 	Findings     []remediation.Finding
 }
 
@@ -108,15 +109,14 @@ func Analyze(input Input) *Result {
 	}
 
 	// Collect unique controls and their framework membership.
-	controlMap := make(map[string]*classified, len(input.Findings))
+	controlMap := make(map[kernel.ControlID]*classified, len(input.Findings))
 
 	for i := range input.Findings {
 		f := &input.Findings[i]
-		cid := string(f.ControlID)
-		c, exists := controlMap[cid]
+		c, exists := controlMap[f.ControlID]
 		if !exists {
 			c = &classified{finding: f, failing: true}
-			controlMap[cid] = c
+			controlMap[f.ControlID] = c
 		} else {
 			if f.DwellHours() > c.finding.DwellHours() {
 				c.finding = f
@@ -139,7 +139,7 @@ func Analyze(input Input) *Result {
 
 	for cid, c := range controlMap {
 		item := CompareItem{
-			ControlID:  kernel.ControlID(cid),
+			ControlID:  cid,
 			Severity:   c.finding.ControlSeverity,
 			DwellHours: c.finding.DwellHours(),
 		}
@@ -244,11 +244,11 @@ func normalizeKey(v string) string {
 	return v
 }
 
-func hasFramework(compliance policy.ComplianceMapping, key string) bool {
+func hasFramework(compliance policy.ComplianceMapping, key policy.ComplianceFramework) bool {
 	if compliance == nil || key == "" {
 		return false
 	}
-	normKey := normalizeKey(key)
+	normKey := normalizeKey(string(key))
 	for f := range compliance {
 		normF := normalizeKey(string(f))
 		if normF == normKey || strings.HasPrefix(normF, normKey) || strings.HasPrefix(normKey, normF) {
@@ -258,16 +258,16 @@ func hasFramework(compliance policy.ComplianceMapping, key string) bool {
 	return false
 }
 
-func extractCitations(compliance policy.ComplianceMapping, key string) []string {
+func extractCitations(compliance policy.ComplianceMapping, key policy.ComplianceFramework) []policy.RequirementID {
 	if compliance == nil || key == "" {
 		return nil
 	}
-	normKey := normalizeKey(key)
+	normKey := normalizeKey(string(key))
 	for f, cite := range compliance {
 		normF := normalizeKey(string(f))
 		if normF == normKey || strings.HasPrefix(normF, normKey) || strings.HasPrefix(normKey, normF) {
 			if cite != "" {
-				return []string{string(cite)}
+				return []policy.RequirementID{cite}
 			}
 		}
 	}

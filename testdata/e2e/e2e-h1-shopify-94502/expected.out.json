@@ -778,7 +778,7 @@
       "near_miss_chains": [
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -787,7 +787,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -796,7 +796,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -805,7 +805,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.LOG.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -814,7 +814,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -823,7 +823,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -832,7 +832,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -841,7 +841,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.LOG.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -850,7 +850,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -859,7 +859,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -868,7 +868,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -877,12 +877,93 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.LOG.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
           ],
           "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or lacks access logging. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LOG.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LOG.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LOG.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
         }
       ],
       "sla_deadline_hours": 72,
@@ -1067,7 +1148,7 @@
       "near_miss_chains": [
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1076,7 +1157,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1085,7 +1166,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1094,7 +1175,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.LOG.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1103,7 +1184,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1112,7 +1193,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1121,7 +1202,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1130,7 +1211,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.LOG.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1139,7 +1220,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1148,7 +1229,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1157,7 +1238,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1166,12 +1247,93 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.LOG.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
           ],
           "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or lacks access logging. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LOG.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LOG.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LOG.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
         }
       ],
       "sla_deadline_hours": 72,
@@ -1356,7 +1518,7 @@
       "near_miss_chains": [
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1365,7 +1527,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1374,7 +1536,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1383,7 +1545,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.LOG.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1392,7 +1554,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1401,7 +1563,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1410,7 +1572,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1419,7 +1581,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.LOG.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1428,7 +1590,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1437,7 +1599,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1446,7 +1608,7 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
@@ -1455,12 +1617,93 @@
         },
         {
           "chain_id": "classified_data_unprotected_storage",
-          "chain_severity": "critical",
+          "chain_severity": "high",
           "missing_control": "CTL.S3.LOG.001",
           "controls_failing": [
             "CTL.S3.PUBLIC.001"
           ],
           "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or lacks access logging. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LOG.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LOG.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.ENCRYPT.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
+        },
+        {
+          "chain_id": "public_phi_exposure",
+          "chain_severity": "critical",
+          "missing_control": "CTL.S3.LOG.001",
+          "controls_failing": [
+            "CTL.S3.PUBLIC.001"
+          ],
+          "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n"
         }
       ],
       "sla_deadline_hours": 72,
@@ -2275,7 +2518,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-owned-1"
     },
     {
@@ -2285,7 +2528,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.S3.ENCRYPT.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-owned-1"
     },
     {
@@ -2295,7 +2538,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-owned-1"
     },
     {
@@ -2305,7 +2548,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.S3.LOG.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-owned-1"
     },
     {
@@ -2315,7 +2558,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-owned-2"
     },
     {
@@ -2325,7 +2568,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.S3.ENCRYPT.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-owned-2"
     },
     {
@@ -2335,7 +2578,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-owned-2"
     },
     {
@@ -2345,7 +2588,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.S3.LOG.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-owned-2"
     },
     {
@@ -2355,7 +2598,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.DATACLASS.TAG.INVERTED.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-writeable-1"
     },
     {
@@ -2365,7 +2608,7 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.S3.ENCRYPT.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-writeable-1"
     },
     {
@@ -2375,12 +2618,102 @@
         "CTL.S3.PUBLIC.001"
       ],
       "missing_control": "CTL.S3.ENCRYPT.PUBLIC.COMPOUND.001",
-      "severity": "critical",
+      "severity": "high",
       "scope_id": "shopify-writeable-1"
     },
     {
       "chain": "classified_data_unprotected_storage",
       "description": "A resource tagged with a high-sensitivity classification (confidential, restricted, PII, PHI, PCI) is stored in or accessed from an unprotected storage resource — one that is publicly accessible, lacks encryption, or lacks access logging. The classification tag declares the data as sensitive; the storage posture contradicts that declaration. Individually the classification and storage controls may pass their own checks; the compound finding is that the two together create a gap.\n",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_control": "CTL.S3.LOG.001",
+      "severity": "high",
+      "scope_id": "shopify-writeable-1"
+    },
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+      "severity": "critical",
+      "scope_id": "shopify-owned-1"
+    },
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_control": "CTL.S3.ENCRYPT.001",
+      "severity": "critical",
+      "scope_id": "shopify-owned-1"
+    },
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_control": "CTL.S3.LOG.001",
+      "severity": "critical",
+      "scope_id": "shopify-owned-1"
+    },
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+      "severity": "critical",
+      "scope_id": "shopify-owned-2"
+    },
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_control": "CTL.S3.ENCRYPT.001",
+      "severity": "critical",
+      "scope_id": "shopify-owned-2"
+    },
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_control": "CTL.S3.LOG.001",
+      "severity": "critical",
+      "scope_id": "shopify-owned-2"
+    },
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
+      "severity": "critical",
+      "scope_id": "shopify-writeable-1"
+    },
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
+      "controls_failing": [
+        "CTL.S3.PUBLIC.001"
+      ],
+      "missing_control": "CTL.S3.ENCRYPT.001",
+      "severity": "critical",
+      "scope_id": "shopify-writeable-1"
+    },
+    {
+      "chain": "public_phi_exposure",
+      "description": "PHI data reachable from public internet with no encryption or audit trail — total safety envelope failure. Any two of these co-failing creates a compound risk because the data is both exposed and either unprotected or unmonitored.\n",
       "controls_failing": [
         "CTL.S3.PUBLIC.001"
       ],

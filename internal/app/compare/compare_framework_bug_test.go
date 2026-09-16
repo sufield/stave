@@ -10,7 +10,6 @@ import (
 
 func TestAnalyze_FrameworkKeyVersionAndHyphenFlexibility(t *testing.T) {
 	input := Input{
-		GeneratedAt:  "2026-01-01T00:00:00Z",
 		BaselineName: "CIS AWS",
 		TargetName:   "NIST 800-53",
 		BaselineKey:  "cis_aws",     // unversioned key supplied by user
