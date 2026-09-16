@@ -162,6 +162,7 @@ type Finding struct {
 
 	// Confidence qualifies the certainty of this finding's verdict.
 	Confidence      ConfidenceLevel `json:"confidence,omitempty"`
+	ConfidenceBasis ConfidenceBasis `json:"confidence_basis,omitempty"`
 	FreshnessReason string          `json:"freshness_reason,omitempty"`
 
 	// ExposureScore is the priority score used to order findings.

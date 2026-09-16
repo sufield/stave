@@ -545,6 +545,11 @@ func (s *assessmentSession) applyControl(
 		span.End()
 
 		s.collector.RecordCheck(check)
+		for i := range findings {
+			if findings[i] != nil {
+				findings[i].ConfidenceBasis = check.ConfidenceBasis
+			}
+		}
 		s.collector.RecordFindings(findings)
 		// Increment exposed-resource count only when a violation
 		// verdict actually came back from the strategy. Recording
@@ -688,11 +693,22 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 // misconfiguration in its evidence was triggered by an absent field
 // (FieldAbsent=true) — the predicate fired due to fail-closed semantics
 // on missing data, not because the resource was confirmed insecure.
+//
+// DataQuality is set on ALL findings regardless of which slice they
+// land in — Status and DataQuality are independent dimensions.
+// Suppressed-indeterminate findings stay in the confirmed slice
+// because their policy resolution (exception/acknowledgment) takes
+// precedence; routing them to indeterminate would present an
+// already-excepted finding as "needs more data."
 func partitionIndeterminateFindings(findings []evaluation.Finding) (confirmed, indeterminate []evaluation.Finding) {
 	for i := range findings {
 		if findings[i].IsIndeterminate() {
 			findings[i].DataQuality = evaluation.DataQualityIndeterminate
-			indeterminate = append(indeterminate, findings[i])
+			if findings[i].Status == evaluation.FindingSuppressed {
+				confirmed = append(confirmed, findings[i])
+			} else {
+				indeterminate = append(indeterminate, findings[i])
+			}
 		} else {
 			findings[i].DataQuality = evaluation.DataQualityConfirmed
 			confirmed = append(confirmed, findings[i])

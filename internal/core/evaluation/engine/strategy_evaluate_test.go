@@ -325,6 +325,48 @@ func TestWrapInPointers_Empty(t *testing.T) {
 	}
 }
 
+func TestConfidenceBasis_PolicyForZeroThreshold(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	now := base.Add(2 * time.Hour)
+	tl := buildLifecycle(t, []struct {
+		at     time.Time
+		unsafe bool
+	}{
+		{base, false},
+	})
+
+	s := &unsafeStateStrategy{
+		deps: testAssessor(0, now),
+		ctl:  testControl("CTL.STATE.001", policy.TypeUnsafeState),
+	}
+	row, _ := s.Evaluate(tl, now, IdentityIndex{})
+	if row.ConfidenceBasis != evaluation.BasisPolicy {
+		t.Fatalf("zero-threshold PASS: expected basis %q, got %q", evaluation.BasisPolicy, row.ConfidenceBasis)
+	}
+}
+
+func TestConfidenceBasis_CoverageForDuration(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	now := base.Add(24 * time.Hour)
+	tl := buildLifecycle(t, []struct {
+		at     time.Time
+		unsafe bool
+	}{
+		{base, false},
+		{base.Add(6 * time.Hour), false},
+		{base.Add(12 * time.Hour), false},
+	})
+
+	s := &unsafeDurationStrategy{
+		deps: testAssessor(4*time.Hour, now),
+		ctl:  testControl("CTL.DUR.001", policy.TypeUnsafeDuration),
+	}
+	row, _ := s.Evaluate(tl, now, IdentityIndex{})
+	if row.ConfidenceBasis != evaluation.BasisCoverage {
+		t.Fatalf("duration PASS: expected basis %q, got %q", evaluation.BasisCoverage, row.ConfidenceBasis)
+	}
+}
+
 func TestWrapInPointers_NonEmpty(t *testing.T) {
 	findings := []evaluation.Finding{
 		{ControlID: "CTL.A.001"},

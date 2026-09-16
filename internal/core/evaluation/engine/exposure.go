@@ -64,12 +64,13 @@ func newPrefixExposureRow(t *asset.ExposureLifecycle, ctl *policy.ControlDefinit
 	}
 	resType := t.Asset().Type
 	return evaluation.ResourceCheck{
-		ControlID:   ctl.ID,
-		AssetID:     t.ID(),
-		AssetType:   resType,
-		AssetDomain: resType.Domain(),
-		Verdict:     evaluation.VerdictPass,
-		Confidence:  evaluation.ConfidenceHigh,
+		ControlID:       ctl.ID,
+		AssetID:         t.ID(),
+		AssetType:       resType,
+		AssetDomain:     resType.Domain(),
+		Verdict:         evaluation.VerdictPass,
+		Confidence:      evaluation.ConfidenceHigh,
+		ConfidenceBasis: evaluation.BasisPolicy,
 	}
 }
 

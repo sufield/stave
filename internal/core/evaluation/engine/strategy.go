@@ -146,7 +146,11 @@ func emitViolationFinding(
 			"finding_emitted", true)
 	}
 	confidence := deps.confidenceCalculator().Derive(t.Stats().MaxGap(), maxUnsafe)
-	observation.ConfidenceBasis = evaluation.BasisCoverage
+	if maxUnsafe > 0 {
+		observation.ConfidenceBasis = evaluation.BasisCoverage
+	} else {
+		observation.ConfidenceBasis = evaluation.BasisPolicy
+	}
 	return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
 }
 
@@ -256,6 +260,7 @@ func (s *unsafeStateStrategy) Evaluate(t *asset.ExposureLifecycle, now time.Time
 				"verdict": "PASS",
 				"reason":  reason,
 			})
+			observation.ConfidenceBasis = evaluation.BasisPolicy
 			return finalizeRow(observation, evaluation.VerdictPass, evaluation.ConfidenceHigh), nil
 		}
 		thresholdInputs := map[string]any{
