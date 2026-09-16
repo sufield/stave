@@ -1387,7 +1387,12 @@ SYNC_EXCLUDES = \
 	--exclude='docs/ontology/' \
 	--exclude='/gofixer.md' \
 	--exclude='.stave-backlog/' \
-	--exclude='docs-internal/'
+	--exclude='docs-internal/' \
+	--exclude='catalog-checks/' \
+	--exclude='catalog/' \
+	--exclude='formal/' \
+	--exclude='internal/app/oscal/export_test.go' \
+	--exclude='scripts/gen-contract.py'
 
 ## sync: Sync to public repo (calls sync-skills automatically so the
 ##       monorepo's external-but-published assets ride along)

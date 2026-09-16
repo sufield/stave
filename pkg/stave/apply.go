@@ -85,16 +85,9 @@ func toEvalSLAConfig(c *SLAConfig) *evaluation.SLAConfig {
 	if c == nil {
 		return nil
 	}
-	deadlines := make(map[policy.Severity]float64, len(c.DeadlineBySeverity))
-	for k, v := range c.DeadlineBySeverity {
-		sev, err := policy.ParseSeverity(k)
-		if err == nil {
-			deadlines[sev] = v
-		}
-	}
 	return &evaluation.SLAConfig{
 		ProfileID:          c.ProfileID,
-		DeadlineBySeverity: deadlines,
+		DeadlineBySeverity: c.DeadlineBySeverity,
 		EscalationFactor:   c.EscalationFactor,
 	}
 }

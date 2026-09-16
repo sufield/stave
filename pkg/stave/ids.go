@@ -106,11 +106,11 @@ type SLAConfig struct {
 	// "pci_dss_v4"). Surfaced on report metadata.
 	ProfileID string
 
-	// DeadlineBySeverity maps severity ("critical", "high",
-	// "medium", "low") to deadline in hours. A finding whose
-	// dwell time exceeds the deadline for its severity is flagged
-	// SLABreached and counted in Assessment.SLABreaches.
-	DeadlineBySeverity map[string]float64
+	// DeadlineBySeverity maps severity to deadline in hours.
+	// A finding whose dwell time exceeds the deadline for its
+	// severity is flagged SLABreached and counted in
+	// Assessment.SLABreaches.
+	DeadlineBySeverity map[policy.Severity]float64
 
 	// EscalationFactor multiplies severity by one tier per
 	// multiple of the deadline elapsed (e.g. 2× the deadline
