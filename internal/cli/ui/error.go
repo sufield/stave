@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	appcontracts "github.com/sufield/stave/internal/core/contracts"
-	"github.com/sufield/stave/pkg/stave"
 )
 
 // Exit codes following the platform contract.
@@ -61,7 +60,7 @@ var (
 	ErrDiagnosticsFound      = errors.New("diagnostics found")
 	ErrSecurityAuditFindings = errors.New("security audit findings")
 	ErrIndeterminateOnly     = errors.New("indeterminate results only")
-	ErrAttestationFailed     = stave.ErrAttestationFailed
+	ErrAttestationFailed     = appcontracts.ErrAttestationFailed
 	ErrInterrupted           = errors.New("interrupted")
 	ErrInternal              = errors.New("internal error")
 )
@@ -108,20 +107,9 @@ func ExitCode(err error) int {
 		return ExitIndeterminate
 	case errors.Is(err, ErrValidationWarnings), errors.Is(err, ErrValidationFailed):
 		return ExitInputError
-	case errors.Is(err, stave.ErrInvalidInput):
-		// Public sentinel for facade-bar commands (cmd/score,
-		// cmd/exportinvariants, ...) that cannot import this
-		// package per their architecture tests. They wrap their
-		// flag-validation errors with `%w stave.ErrInvalidInput`
-		// instead of *UserError; the resulting exit code is the
-		// same as the legacy *UserError path.
+	case errors.Is(err, appcontracts.ErrInvalidInput):
 		return ExitInputError
-	case errors.Is(err, stave.ErrFailingTests):
-		// Same public-sentinel mechanism for facade-bar commands
-		// that need ExitViolations (3) for a "completed but with
-		// findings" failure shape — emitted by stave.RunControlTests
-		// when at least one control test case didn't match its
-		// expected verdict.
+	case errors.Is(err, appcontracts.ErrFailingTests):
 		return ExitViolations
 	case errors.Is(err, ErrAttestationFailed):
 		return ExitAttestationFailed
@@ -251,6 +239,6 @@ func IsSentinel(err error) bool {
 		// ExitInputError(2)/ExitViolations(3) are platform sentinels
 		// too. Without these, the executor prints a contradictory
 		// INTERNAL_ERROR banner over output the command already wrote.
-		errors.Is(err, stave.ErrInvalidInput) ||
-		errors.Is(err, stave.ErrFailingTests)
+		errors.Is(err, appcontracts.ErrInvalidInput) ||
+		errors.Is(err, appcontracts.ErrFailingTests)
 }

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sufield/stave/pkg/stave"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 func TestExitCode(t *testing.T) {
@@ -58,18 +58,15 @@ func TestExitCode(t *testing.T) {
 			expected: ExitInternal,
 		},
 		{
-			// Facade-bar commands wrap their flag-validation errors
-			// with stave.ErrInvalidInput so they can map to exit 2
-			// without importing internal/cli/ui. This test pins
-			// that the roundtrip works through errors.Is on a
-			// fmt.Errorf chain (the actual usage pattern).
-			name:     "stave.ErrInvalidInput wrapped via fmt.Errorf returns 2",
-			err:      fmt.Errorf("--format must be json (got %q): %w", "xml", stave.ErrInvalidInput),
+			// Facade-bar commands wrap flag-validation errors with
+			// ErrInvalidInput so they map to exit 2.
+			name:     "ErrInvalidInput wrapped via fmt.Errorf returns 2",
+			err:      fmt.Errorf("--format must be json (got %q): %w", "xml", appcontracts.ErrInvalidInput),
 			expected: ExitInputError,
 		},
 		{
-			name:     "bare stave.ErrInvalidInput returns 2",
-			err:      stave.ErrInvalidInput,
+			name:     "bare ErrInvalidInput returns 2",
+			err:      appcontracts.ErrInvalidInput,
 			expected: ExitInputError,
 		},
 		{

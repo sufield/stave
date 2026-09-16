@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/sufield/stave/pkg/stave"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 )
 
 // Test_RedGate_IsSentinelFacade asserts the CORRECT behavior for
 // error.go:222 IsSentinel: errors wrapping the public facade sentinels
-// stave.ErrFailingTests and stave.ErrInvalidInput must be recognised as
+// appcontracts.ErrFailingTests and appcontracts.ErrInvalidInput must be recognised as
 // sentinels.
 //
 // ExitCode (error.go:103-117) already classifies these wrapped sentinels
@@ -38,13 +38,13 @@ func Test_RedGate_IsSentinelFacade(t *testing.T) {
 		wantExitCode int
 	}{
 		{
-			name:         "wrap stave.ErrFailingTests",
-			err:          fmt.Errorf("control tests: %w", stave.ErrFailingTests),
+			name:         "wrap appcontracts.ErrFailingTests",
+			err:          fmt.Errorf("control tests: %w", appcontracts.ErrFailingTests),
 			wantExitCode: ExitViolations,
 		},
 		{
-			name:         "wrap stave.ErrInvalidInput",
-			err:          fmt.Errorf("--format must be json: %w", stave.ErrInvalidInput),
+			name:         "wrap appcontracts.ErrInvalidInput",
+			err:          fmt.Errorf("--format must be json: %w", appcontracts.ErrInvalidInput),
 			wantExitCode: ExitInputError,
 		},
 	}
@@ -74,17 +74,17 @@ func Test_RedGate_IsSentinelFacade(t *testing.T) {
 	}
 
 	// Bare sentinels (not wrapped) must also be recognised.
-	if !IsSentinel(stave.ErrFailingTests) {
-		t.Fatalf("IsSentinel(stave.ErrFailingTests) = false, want true")
+	if !IsSentinel(appcontracts.ErrFailingTests) {
+		t.Fatalf("IsSentinel(appcontracts.ErrFailingTests) = false, want true")
 	}
-	if !IsSentinel(stave.ErrInvalidInput) {
-		t.Fatalf("IsSentinel(stave.ErrInvalidInput) = false, want true")
+	if !IsSentinel(appcontracts.ErrInvalidInput) {
+		t.Fatalf("IsSentinel(appcontracts.ErrInvalidInput) = false, want true")
 	}
 
 	// Guard against a tautological test: confirm errors.Is wiring on the
 	// public sentinels behaves as expected (so a false IsSentinel result
 	// is a real defect, not a broken wrap).
-	if !errors.Is(fmt.Errorf("x: %w", stave.ErrFailingTests), stave.ErrFailingTests) {
+	if !errors.Is(fmt.Errorf("x: %w", appcontracts.ErrFailingTests), appcontracts.ErrFailingTests) {
 		t.Fatalf("errors.Is wrap chain broken for ErrFailingTests; test setup invalid")
 	}
 }

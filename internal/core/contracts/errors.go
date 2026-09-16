@@ -17,3 +17,15 @@ var ErrValidationFailed = errors.New("validation failed")
 // only (no errors) and the caller is in non-strict mode. Sibling of
 // ErrValidationFailed; same re-export pattern in cli/ui.
 var ErrValidationWarnings = errors.New("validation warnings")
+
+// ErrInvalidInput marks user-input errors (bad flags, missing args,
+// unsupported formats). CLI maps errors.Is matches to exit code 2.
+var ErrInvalidInput = errors.New("invalid input")
+
+// ErrAttestationFailed marks attestation verification failures
+// (tampered snapshots, key mismatches). CLI maps to exit code 6.
+var ErrAttestationFailed = errors.New("attestation verification failed")
+
+// ErrFailingTests signals that control tests completed but at least
+// one test case did not match its expected verdict. CLI maps to exit 3.
+var ErrFailingTests = errors.New("control tests failed")

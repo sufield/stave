@@ -127,17 +127,25 @@ type Options struct {
 	RequireSigned      bool   // --require-signed: refuse to evaluate unsigned snapshots
 }
 
+// Prepare resolves environment/config defaults, normalizes paths,
+// and validates flags. Called from PreRunE — the single method that
+// connects all Options fields into one cohesive pipeline.
+func (o *Options) Prepare(cmd *cobra.Command) error {
+	o.controlsSet = cliflags.ControlsFlagChanged(cmd)
+	o.formatSet = cmd.Flags().Changed("format")
+	o.obsSet = cmd.Flags().Changed("observations")
+	o.normalize()
+	o.resolveEnvVarDefaults(cmd)
+	o.resolveApplyConfigDefaults(cmd)
+	return o.validate()
+}
+
 // IsNewOnlyMode reports whether the run is in new-only mode —
-// either --new-only is set or --new-since carries a window. Used
-// by the standard-apply pipeline to gate the post-evaluation
-// classification step. Centralised so the OR pair stays in one
-// place; adding a future "new-X" flag is a single-line change on
-// this method.
+// either --new-only is set or --new-since carries a window.
 func (o *Options) IsNewOnlyMode() bool {
 	return o != nil && (o.NewOnly || o.NewSince != "")
 }
 
-// normalize cleans all user-supplied paths in one pass.
 func (o *Options) normalize() {
 	o.SharedOptions.normalize()
 	o.ExemptionFile = fsutil.CleanUserPath(o.ExemptionFile)
@@ -220,16 +228,8 @@ Remediation scope:
 
   # Profile-based evaluation with bundled observations
   stave apply --profile aws-s3 --input observations.json --eval-time 2026-01-15T00:00:00Z`,
-		Args: cobra.NoArgs,
-		PreRunE: func(cmd *cobra.Command, _ []string) error {
-			opts.controlsSet = cliflags.ControlsFlagChanged(cmd)
-			opts.formatSet = cmd.Flags().Changed("format")
-			opts.obsSet = cmd.Flags().Changed("observations")
-			opts.normalize()
-			opts.resolveEnvVarDefaults(cmd)
-			opts.resolveApplyConfigDefaults(cmd)
-			return opts.validate()
-		},
+		Args:    cobra.NoArgs,
+		PreRunE: func(cmd *cobra.Command, _ []string) error { return opts.Prepare(cmd) },
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cs := cobraState{
 				Logger:      cmdctx.LoggerFromCmd(cmd),

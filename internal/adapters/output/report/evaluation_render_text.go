@@ -5,10 +5,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/core/evaluation"
 	corereport "github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/fsutil"
+	"github.com/sufield/stave/internal/platform/tplutil"
 )
 
 type reportTemplateMetadata struct {
@@ -60,7 +60,7 @@ func RenderText(eval corereport.Assessment, opts RenderTextOptions) error {
 
 	data := buildReportTemplateData(eval, opts.StaveVersion)
 	var buf strings.Builder
-	if err := ui.ExecuteTemplate(&buf, tplText, data); err != nil {
+	if err := tplutil.Execute(&buf, tplText, data); err != nil {
 		return fmt.Errorf("render report template: %w", err)
 	}
 

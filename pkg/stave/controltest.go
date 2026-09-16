@@ -12,6 +12,7 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/predicate"
 	"github.com/sufield/stave/internal/app/controltest"
+	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -132,4 +133,4 @@ func controlIDFromFile(path string) (string, error) {
 // expected verdict. The CLI exit-code shim maps this (and similar
 // sentinels) to ExitViolations (3) so CI can fail the build
 // without parsing the JSON output.
-var ErrFailingTests = errors.New("control tests failed")
+var ErrFailingTests = appcontracts.ErrFailingTests

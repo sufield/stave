@@ -159,6 +159,46 @@
   "findings": [],
   "chain_findings": [
     {
+      "finding_id": "sha256:a545016c228f40e7",
+      "chain": "k8s_anonymous_access_path",
+      "asset_id": "apiserver-dev-01",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.APISERVER.ANON.001",
+        "CTL.K8S.APISERVER.AUDIT.001"
+      ],
+      "missing_safeguards": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n Failing: CTL.K8S.APISERVER.ANON.001, CTL.K8S.APISERVER.AUDIT.001.",
+      "attack_stages": [
+        "detection_evasion",
+        "initial_access"
+      ]
+    },
+    {
+      "finding_id": "sha256:7f6db413af71d499",
+      "chain": "k8s_anonymous_access_path",
+      "asset_id": "apiserver-staging-01",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.APISERVER.ANON.001",
+        "CTL.K8S.APISERVER.AUDIT.001"
+      ],
+      "missing_safeguards": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "compound_score": 100,
+      "severity": "critical",
+      "narrative": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n Failing: CTL.K8S.APISERVER.ANON.001, CTL.K8S.APISERVER.AUDIT.001.",
+      "attack_stages": [
+        "detection_evasion",
+        "initial_access"
+      ]
+    },
+    {
       "finding_id": "sha256:5f12ef4e890ff5bf",
       "chain": "k8s_etcd_exposure_path",
       "asset_id": "etcd-dev-01",
@@ -189,6 +229,48 @@
       "attack_stages": [
         "credential_access"
       ]
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "k8s_anonymous_access_path",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "missing_control": "CTL.K8S.APISERVER.ANON.001",
+      "severity": "critical",
+      "scope_id": "kubelet-dev-node-01"
+    },
+    {
+      "chain": "k8s_anonymous_access_path",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
+      "severity": "critical",
+      "scope_id": "kubelet-dev-node-01"
+    },
+    {
+      "chain": "k8s_anonymous_access_path",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "missing_control": "CTL.K8S.APISERVER.ANON.001",
+      "severity": "critical",
+      "scope_id": "kubelet-staging-node-01"
+    },
+    {
+      "chain": "k8s_anonymous_access_path",
+      "description": "Both API server and kubelet accept anonymous requests with no audit logging. Full cluster compromise with no evidence trail.\n",
+      "controls_failing": [
+        "CTL.K8S.KUBELET.ANON.001"
+      ],
+      "missing_control": "CTL.K8S.APISERVER.AUDIT.001",
+      "severity": "critical",
+      "scope_id": "kubelet-staging-node-01"
     }
   ],
   "issues": [
@@ -304,7 +386,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 2,
         "blind_multiplier": 1.0027397260273974,
         "days_blind": 1
       },
@@ -320,7 +402,39 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 1,
+        "chain_bonus": 2,
+        "blind_multiplier": 1.0027397260273974,
+        "days_blind": 1
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 2,
+      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
+      "asset_id": "apiserver-dev-01",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 2,
+        "blind_multiplier": 1.0027397260273974,
+        "days_blind": 1
+      },
+      "silent_killer": false
+    },
+    {
+      "finding_index": 3,
+      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
+      "asset_id": "apiserver-staging-01",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 75,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 2,
         "blind_multiplier": 1.0027397260273974,
         "days_blind": 1
       },
@@ -445,38 +559,6 @@
       "exposure_score": 100,
       "breakdown": {
         "base_score": 100,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0027397260273974,
-        "days_blind": 1
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 2,
-      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
-      "asset_id": "apiserver-dev-01",
-      "exposure_score": 75.2054794520548,
-      "breakdown": {
-        "base_score": 75,
-        "duration_factor": 1,
-        "blast_multiplier": 1,
-        "exposure_multiplier": 1,
-        "chain_bonus": 1,
-        "blind_multiplier": 1.0027397260273974,
-        "days_blind": 1
-      },
-      "silent_killer": false
-    },
-    {
-      "finding_index": 3,
-      "control_id": "CTL.K8S.APISERVER.AUDIT.001",
-      "asset_id": "apiserver-staging-01",
-      "exposure_score": 75.2054794520548,
-      "breakdown": {
-        "base_score": 75,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
