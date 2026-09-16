@@ -7,7 +7,7 @@
     "eval_time": "2026-01-15T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
-    "policy_fingerprint": "a016b0d9920ea5d4df781347c9aef44c81b80cf1d1ba1f69460a8c033c856ca2",
+    "policy_fingerprint": "2760098d2ac22843b58a4144fb327b461d0e800963ab158929d1fd9cbfe68266",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -712,32 +712,25 @@
         },
         "action": "Delete the root access keys. Create IAM users or roles with least-privilege policies for programmatic access."
       },
-      "chain_membership": [
+      "exploitability": "one_away",
+      "near_miss_chains": [
         {
-          "chain_id": "chegg_root_credential_path",
+          "chain_id": "management_account_root_key",
           "chain_severity": "critical",
-          "stage_span": [
-            "credential_access"
+          "missing_control": "CTL.IAM.ORG.MGMT.PRINCIPALS.001",
+          "controls_failing": [
+            "CTL.IAM.ROOT.ACCESSKEY.001"
           ],
-          "narrative": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n"
-        },
-        {
-          "chain_id": "root_compromise_path",
-          "chain_severity": "critical",
-          "stage_span": [
-            "credential_access"
-          ],
-          "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
+          "description": "Root access key active on the Organizations management account. The management account is exempt from all SCPs by AWS design, so root credentials on the management account have unrestricted organizational control (create/delete accounts, modify SCPs, access billing). No compensating SCP can limit the blast radius.\n"
         }
       ],
-      "exploitability": "exploitable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 2,
+        "chain_bonus": 1,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -915,32 +908,14 @@
         },
         "action": "Enable MFA on the root account using a hardware MFA device or virtual MFA app. Navigate to IAM \u003e Security credentials \u003e MFA."
       },
-      "chain_membership": [
-        {
-          "chain_id": "chegg_root_credential_path",
-          "chain_severity": "critical",
-          "stage_span": [
-            "credential_access"
-          ],
-          "narrative": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n"
-        },
-        {
-          "chain_id": "root_compromise_path",
-          "chain_severity": "critical",
-          "stage_span": [
-            "credential_access"
-          ],
-          "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n"
-        }
-      ],
-      "exploitability": "exploitable",
+      "exploitability": "reachable",
       "exposure_score": 100,
       "score_breakdown": {
         "base_score": 100,
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 2,
+        "chain_bonus": 1,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -1291,14 +1266,6 @@
             "exfiltration"
           ],
           "narrative": "RDS instance is running an EOL database engine with no security patches available. The instance is either unencrypted, publicly accessible, or both. An unpatched database engine with known CVEs is exposed through the public network or unencrypted storage. For PHI workloads this constitutes a direct compliance failure across multiple requirements.\n"
-        },
-        {
-          "chain_id": "vpc_database_exposure",
-          "chain_severity": "high",
-          "stage_span": [
-            "initial_access"
-          ],
-          "narrative": "Either a subnet containing database resources has an Internet Gateway route or an RDS instance is configured as publicly accessible. The two controls check different layers — network routing vs the RDS `PubliclyAccessible` flag — but either condition alone creates a direct internet exposure path to the database. Firing on a single failure avoids the database-exposure false negative that would result from requiring both layers to fail simultaneously.\n"
         }
       ],
       "exploitability": "exploitable",
@@ -1308,7 +1275,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 2,
+        "chain_bonus": 1.5,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -1450,96 +1417,6 @@
       "exploitability": "one_away",
       "near_miss_chains": [
         {
-          "chain_id": "agent_sandbox_escape_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.IAM.AGENT.CHAIN.SENSITIVE.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n"
-        },
-        {
-          "chain_id": "agent_sandbox_escape_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.VPC.SG.EGRESS.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n"
-        },
-        {
-          "chain_id": "bastion_bypass_unmonitored",
-          "chain_severity": "critical",
-          "missing_control": "CTL.EC2.SG.SSH.INTERNAL.CIDR.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n"
-        },
-        {
-          "chain_id": "bastion_bypass_unmonitored",
-          "chain_severity": "critical",
-          "missing_control": "CTL.VPC.SEGMENT.BASTION.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n"
-        },
-        {
-          "chain_id": "data_exfiltration_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
-        },
-        {
-          "chain_id": "data_exfiltration_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.EXPOSURE.EXFIL.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
-        },
-        {
-          "chain_id": "data_exfiltration_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.EXPOSURE.EXFIL.002",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n"
-        },
-        {
-          "chain_id": "detection_blindness",
-          "chain_severity": "critical",
-          "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
-        },
-        {
-          "chain_id": "detection_blindness",
-          "chain_severity": "critical",
-          "missing_control": "CTL.CONFIG.ENABLED.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
-        },
-        {
-          "chain_id": "detection_blindness",
-          "chain_severity": "critical",
-          "missing_control": "CTL.GUARDDUTY.ENABLED.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n"
-        },
-        {
           "chain_id": "elasticache_unauthenticated_unmonitored",
           "chain_severity": "high",
           "missing_control": "CTL.ELASTICACHE.AUTH.001",
@@ -1547,78 +1424,6 @@
             "CTL.VPC.FLOWLOG.001"
           ],
           "description": "Redis cache has no AUTH token AND the VPC has no flow logs. Without AUTH, any client with network access reads and writes cached data (sessions, credentials, application state). Without flow logs, there is no record of which hosts connected to the cache endpoint. The combination is an unauthenticated data store with zero network forensics — an attacker exfiltrates cached data and the breach leaves no evidence trail. Either control alone mitigates: AUTH blocks unauthorized access; flow logs record connection attempts for post-incident investigation.\n"
-        },
-        {
-          "chain_id": "enclave_lateral_to_egress",
-          "chain_severity": "high",
-          "missing_control": "CTL.VPC.SG.EASTWEST.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n"
-        },
-        {
-          "chain_id": "enclave_lateral_to_egress",
-          "chain_severity": "high",
-          "missing_control": "CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n"
-        },
-        {
-          "chain_id": "vpc_dns_exfiltration",
-          "chain_severity": "high",
-          "missing_control": "CTL.VPC.DNSFIREWALL.ENABLED.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
-        },
-        {
-          "chain_id": "vpc_dns_exfiltration",
-          "chain_severity": "high",
-          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n"
-        },
-        {
-          "chain_id": "vpc_exfiltration_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.VPC.SG.EGRESS.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
-        },
-        {
-          "chain_id": "vpc_exfiltration_path",
-          "chain_severity": "critical",
-          "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n"
-        },
-        {
-          "chain_id": "vpc_no_inspection",
-          "chain_severity": "high",
-          "missing_control": "CTL.VPC.NETWORK.FIREWALL.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
-        },
-        {
-          "chain_id": "vpc_no_inspection",
-          "chain_severity": "high",
-          "missing_control": "CTL.VPC.SG.EGRESS.001",
-          "controls_failing": [
-            "CTL.VPC.FLOWLOG.001"
-          ],
-          "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n"
         }
       ],
       "exposure_score": 100,
@@ -3637,54 +3442,7 @@
         },
         "action": "Modify the instance to enable Multi-AZ. Run: aws rds modify-db-instance --db-instance-identifier xxx --multi-az --apply-immediately"
       },
-      "exploitability": "one_away",
-      "near_miss_chains": [
-        {
-          "chain_id": "redundancy_single_point",
-          "chain_severity": "critical",
-          "missing_control": "CTL.AUTOSCALING.MULTIAZ.001",
-          "controls_failing": [
-            "CTL.RDS.MULTIAZ.001"
-          ],
-          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
-        },
-        {
-          "chain_id": "redundancy_single_point",
-          "chain_severity": "critical",
-          "missing_control": "CTL.EFS.MULTIAZ.001",
-          "controls_failing": [
-            "CTL.RDS.MULTIAZ.001"
-          ],
-          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
-        },
-        {
-          "chain_id": "redundancy_single_point",
-          "chain_severity": "critical",
-          "missing_control": "CTL.ELB.NETWORK.SINGLEAZ.001",
-          "controls_failing": [
-            "CTL.RDS.MULTIAZ.001"
-          ],
-          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
-        },
-        {
-          "chain_id": "redundancy_single_point",
-          "chain_severity": "critical",
-          "missing_control": "CTL.ELB.TARGET.SINGLEAZ.001",
-          "controls_failing": [
-            "CTL.RDS.MULTIAZ.001"
-          ],
-          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
-        },
-        {
-          "chain_id": "redundancy_single_point",
-          "chain_severity": "critical",
-          "missing_control": "CTL.VPC.NAT.SINGLEAZ.001",
-          "controls_failing": [
-            "CTL.RDS.MULTIAZ.001"
-          ],
-          "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n"
-        }
-      ],
+      "exploitability": "reachable",
       "exposure_score": 50.68493150684932,
       "score_breakdown": {
         "base_score": 50,
@@ -4042,128 +3800,6 @@
   ],
   "chain_findings": [
     {
-      "finding_id": "sha256:f6b9b5dd50ded011",
-      "chain": "chegg_root_credential_path",
-      "asset_id": "aws-account-root",
-      "description": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.ACCESSKEY.001",
-        "CTL.IAM.ROOT.MFA.001"
-      ],
-      "missing_safeguards": [
-        "CTL.IAM.CRED.ROTATION.001"
-      ],
-      "compound_score": 100,
-      "severity": "critical",
-      "narrative": "Chegg incident shape (2018): former contractor used shared ROOT credentials to exfiltrate 40M user records from S3. The FTC issued a consent order. Invariants: root credentials should not exist on member accounts (centralized root management), and root access should never be shared. This chain fires when centralized root management is not enabled AND root credentials exist AND root MFA is missing.\n Failing: CTL.IAM.ROOT.ACCESSKEY.001, CTL.IAM.ROOT.MFA.001.",
-      "attack_stages": [
-        "credential_access"
-      ],
-      "member_evidence": [
-        {
-          "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
-          "asset_id": "aws-account-root",
-          "misconfigurations": [
-            {
-              "property": "identity.kind",
-              "actual_value": "account",
-              "operator": "eq",
-              "unsafe_value": "account"
-            },
-            {
-              "property": "identity.root.has_access_keys",
-              "actual_value": true,
-              "operator": "eq",
-              "unsafe_value": true
-            },
-            {
-              "property": "identity.root.has_access_keys",
-              "actual_value": true,
-              "operator": "present"
-            }
-          ],
-          "reasoning_trace": [
-            {
-              "predicate_expr": "identity.kind eq \"account\"",
-              "observation_key": "identity.kind",
-              "operator": "eq",
-              "expected_value": "account",
-              "observed_value": "account"
-            },
-            {
-              "predicate_expr": "identity.root.has_access_keys eq true",
-              "observation_key": "identity.root.has_access_keys",
-              "operator": "eq",
-              "expected_value": true,
-              "observed_value": true
-            },
-            {
-              "predicate_expr": "identity.root.has_access_keys present",
-              "observation_key": "identity.root.has_access_keys",
-              "operator": "present",
-              "observed_value": true
-            }
-          ],
-          "delta": [
-            {
-              "property_label": "root account access keys",
-              "property_path": "identity.root.has_access_keys",
-              "current_value": "true",
-              "fix_action": "set to false (disable)"
-            },
-            {
-              "property_label": "root account access keys",
-              "property_path": "identity.root.has_access_keys",
-              "current_value": "true",
-              "fix_action": "remove this property from the configuration"
-            }
-          ]
-        },
-        {
-          "control_id": "CTL.IAM.ROOT.MFA.001",
-          "asset_id": "aws-account-root",
-          "misconfigurations": [
-            {
-              "property": "identity.kind",
-              "actual_value": "account",
-              "operator": "eq",
-              "unsafe_value": "account"
-            },
-            {
-              "property": "identity.root.mfa_enabled",
-              "actual_value": false,
-              "operator": "ne",
-              "unsafe_value": true
-            }
-          ],
-          "reasoning_trace": [
-            {
-              "predicate_expr": "identity.kind eq \"account\"",
-              "observation_key": "identity.kind",
-              "operator": "eq",
-              "expected_value": "account",
-              "observed_value": "account"
-            },
-            {
-              "predicate_expr": "identity.root.mfa_enabled ne true",
-              "observation_key": "identity.root.mfa_enabled",
-              "operator": "ne",
-              "expected_value": true,
-              "observed_value": false
-            }
-          ],
-          "delta": [
-            {
-              "property_label": "root account MFA",
-              "property_path": "identity.root.mfa_enabled",
-              "current_value": "false",
-              "fix_action": "set to true"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "finding_id": "sha256:42667f1c998de82c",
       "chain": "config_completely_blind",
       "asset_id": "config-recorder",
@@ -4396,129 +4032,6 @@
       ]
     },
     {
-      "finding_id": "sha256:6eb69e593d66a2ba",
-      "chain": "root_compromise_path",
-      "asset_id": "aws-account-root",
-      "description": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n",
-      "controls_failing": [
-        "CTL.IAM.ROOT.MFA.001",
-        "CTL.IAM.ROOT.ACCESSKEY.001"
-      ],
-      "missing_safeguards": [
-        "CTL.IAM.POLICY.ADMIN.001",
-        "CTL.IAM.ROOT.HWMFA.001"
-      ],
-      "compound_score": 100,
-      "severity": "critical",
-      "narrative": "Root account lacks fundamental protections. Without MFA, with active access keys, and with admin policies attached — a single credential theft gives unrestricted account control. This is the highest-impact identity chain.\n Failing: CTL.IAM.ROOT.MFA.001, CTL.IAM.ROOT.ACCESSKEY.001.",
-      "attack_stages": [
-        "credential_access"
-      ],
-      "member_evidence": [
-        {
-          "control_id": "CTL.IAM.ROOT.MFA.001",
-          "asset_id": "aws-account-root",
-          "misconfigurations": [
-            {
-              "property": "identity.kind",
-              "actual_value": "account",
-              "operator": "eq",
-              "unsafe_value": "account"
-            },
-            {
-              "property": "identity.root.mfa_enabled",
-              "actual_value": false,
-              "operator": "ne",
-              "unsafe_value": true
-            }
-          ],
-          "reasoning_trace": [
-            {
-              "predicate_expr": "identity.kind eq \"account\"",
-              "observation_key": "identity.kind",
-              "operator": "eq",
-              "expected_value": "account",
-              "observed_value": "account"
-            },
-            {
-              "predicate_expr": "identity.root.mfa_enabled ne true",
-              "observation_key": "identity.root.mfa_enabled",
-              "operator": "ne",
-              "expected_value": true,
-              "observed_value": false
-            }
-          ],
-          "delta": [
-            {
-              "property_label": "root account MFA",
-              "property_path": "identity.root.mfa_enabled",
-              "current_value": "false",
-              "fix_action": "set to true"
-            }
-          ]
-        },
-        {
-          "control_id": "CTL.IAM.ROOT.ACCESSKEY.001",
-          "asset_id": "aws-account-root",
-          "misconfigurations": [
-            {
-              "property": "identity.kind",
-              "actual_value": "account",
-              "operator": "eq",
-              "unsafe_value": "account"
-            },
-            {
-              "property": "identity.root.has_access_keys",
-              "actual_value": true,
-              "operator": "eq",
-              "unsafe_value": true
-            },
-            {
-              "property": "identity.root.has_access_keys",
-              "actual_value": true,
-              "operator": "present"
-            }
-          ],
-          "reasoning_trace": [
-            {
-              "predicate_expr": "identity.kind eq \"account\"",
-              "observation_key": "identity.kind",
-              "operator": "eq",
-              "expected_value": "account",
-              "observed_value": "account"
-            },
-            {
-              "predicate_expr": "identity.root.has_access_keys eq true",
-              "observation_key": "identity.root.has_access_keys",
-              "operator": "eq",
-              "expected_value": true,
-              "observed_value": true
-            },
-            {
-              "predicate_expr": "identity.root.has_access_keys present",
-              "observation_key": "identity.root.has_access_keys",
-              "operator": "present",
-              "observed_value": true
-            }
-          ],
-          "delta": [
-            {
-              "property_label": "root account access keys",
-              "property_path": "identity.root.has_access_keys",
-              "current_value": "true",
-              "fix_action": "set to false (disable)"
-            },
-            {
-              "property_label": "root account access keys",
-              "property_path": "identity.root.has_access_keys",
-              "current_value": "true",
-              "fix_action": "remove this property from the configuration"
-            }
-          ]
-        }
-      ]
-    },
-    {
       "finding_id": "sha256:f6baaa324d559aff",
       "chain": "shadow_account_invisible",
       "asset_id": "config-recorder",
@@ -4628,68 +4141,6 @@
           ]
         }
       ]
-    },
-    {
-      "finding_id": "sha256:21167ba6a18e501d",
-      "chain": "vpc_database_exposure",
-      "asset_id": "phi-database",
-      "description": "Either a subnet containing database resources has an Internet Gateway route or an RDS instance is configured as publicly accessible. The two controls check different layers — network routing vs the RDS `PubliclyAccessible` flag — but either condition alone creates a direct internet exposure path to the database. Firing on a single failure avoids the database-exposure false negative that would result from requiring both layers to fail simultaneously.\n",
-      "controls_failing": [
-        "CTL.RDS.PUBLIC.001"
-      ],
-      "missing_safeguards": [
-        "CTL.VPC.SUBNET.PRIVATEDB.001"
-      ],
-      "compound_score": 90,
-      "severity": "high",
-      "narrative": "Either a subnet containing database resources has an Internet Gateway route or an RDS instance is configured as publicly accessible. The two controls check different layers — network routing vs the RDS `PubliclyAccessible` flag — but either condition alone creates a direct internet exposure path to the database. Firing on a single failure avoids the database-exposure false negative that would result from requiring both layers to fail simultaneously.\n Failing: CTL.RDS.PUBLIC.001.",
-      "attack_stages": [
-        "initial_access"
-      ],
-      "member_evidence": [
-        {
-          "control_id": "CTL.RDS.PUBLIC.001",
-          "asset_id": "phi-database",
-          "misconfigurations": [
-            {
-              "property": "database.access.publicly_accessible",
-              "actual_value": true,
-              "operator": "eq",
-              "unsafe_value": true
-            },
-            {
-              "property": "database.kind",
-              "actual_value": "instance",
-              "operator": "eq",
-              "unsafe_value": "instance"
-            }
-          ],
-          "reasoning_trace": [
-            {
-              "predicate_expr": "database.access.publicly_accessible eq true",
-              "observation_key": "database.access.publicly_accessible",
-              "operator": "eq",
-              "expected_value": true,
-              "observed_value": true
-            },
-            {
-              "predicate_expr": "database.kind eq \"instance\"",
-              "observation_key": "database.kind",
-              "operator": "eq",
-              "expected_value": "instance",
-              "observed_value": "instance"
-            }
-          ],
-          "delta": [
-            {
-              "property_label": "access publicly accessible",
-              "property_path": "database.access.publicly_accessible",
-              "current_value": "true",
-              "fix_action": "set to false (disable)"
-            }
-          ]
-        }
-      ]
     }
   ],
   "near_miss_chains": [
@@ -4710,48 +4161,8 @@
         "CTL.CLOUDTRAIL.ENABLED.001"
       ],
       "missing_control": "CTL.ACM.ACME.WILDCARD.001",
-      "severity": "high",
+      "severity": "critical",
       "scope_id": "__global__"
-    },
-    {
-      "chain": "agent_sandbox_escape_path",
-      "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.IAM.AGENT.CHAIN.SENSITIVE.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "agent_sandbox_escape_path",
-      "description": "Agent compute has a network egress path to the internet AND the agent role has broad permissions (or transitive reach to sensitive resources) AND network telemetry is missing. This is the Hugging Face autonomous agent breach shape (July 2026): a model in a benchmark sandbox escaped containment because the sandbox had a network path to the internet, the agent's role could reach production resources, and flow logs were not enabled to detect the exfiltration. Drop any one leg and the chain breaks — restrict egress, scope the role, or enable flow logs.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.SG.EGRESS.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "bastion_bypass_unmonitored",
-      "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.EC2.SG.SSH.INTERNAL.CIDR.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "bastion_bypass_unmonitored",
-      "description": "Bastion host exists in the VPC but production instances accept SSH from non-bastion sources (internal CIDRs) AND VPC flow logs are absent — SSH connections bypass the bastion with no network-level visibility. The bastion architecture is intended (CTL.VPC.SEGMENT.BASTION.001 identifies the bastion) but defeated: other instances accept SSH from broad internal CIDRs instead of the bastion's security group reference. Without flow logs, the bypass is invisible to forensics — no record of who connected to what, when, or from where.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.SEGMENT.BASTION.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
     },
     {
       "chain": "cloudformation_template_injection_unaudited",
@@ -4864,56 +4275,6 @@
       "scope_id": "db-credentials"
     },
     {
-      "chain": "confused_deputy_path",
-      "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.ENABLED.001"
-      ],
-      "missing_control": "CTL.IAM.TRUST.CONFUSEDDEPUTY.001",
-      "severity": "high",
-      "scope_id": "main-trail"
-    },
-    {
-      "chain": "confused_deputy_path",
-      "description": "Cross-account IAM role lacks ExternalId condition on its trust policy, the role has overprivileged permissions, and CloudTrail is not capturing STS AssumeRole events. An attacker who compromises any trusted third-party can assume the victim's role without knowing the account ID, operate with broad permissions, and leave no audit trail in the victim's account.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.ENABLED.001"
-      ],
-      "missing_control": "CTL.IAM.TRUST.EXTERNALID.001",
-      "severity": "high",
-      "scope_id": "main-trail"
-    },
-    {
-      "chain": "data_exfiltration_path",
-      "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.CLOUDTRAIL.DATAREAD.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "data_exfiltration_path",
-      "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.EXPOSURE.EXFIL.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "data_exfiltration_path",
-      "description": "Sensitive data readable by compute with internet egress and weak monitoring. The combination of data access, outbound connectivity, and missing audit trail creates an exfiltration path where a compromised instance can copy sensitive data to an external destination with minimal detection risk.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.EXPOSURE.EXFIL.002",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
       "chain": "ddb_encryption_inconsistent",
       "description": "Multiple encryption failures across the data and cache layers. The table is not encrypted with a customer-managed KMS key (CTL.DYNAMODB.ENCRYPT.001) AND either the DAX cluster is unencrypted at rest (CTL.DYNAMODB.DAX.ENCRYPT.REST.001) or the table and its DAX cluster have inconsistent encryption posture (CTL.DYNAMODB.ENCRYPT.DAX.MISMATCH.001). Threshold of 2 reflects that one encryption miss alone is a known posture concern; two together describe a workload whose data layer encryption story is broken at multiple points — the table doesn't have key-policy control and the cache layer doesn't have or doesn't match the table's protection.\n",
       "controls_failing": [
@@ -4934,96 +4295,6 @@
       "scope_id": "phi-events-table"
     },
     {
-      "chain": "detection_blindness",
-      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
-      "controls_failing": [
-        "CTL.CONFIG.ENABLED.001"
-      ],
-      "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
-      "severity": "critical",
-      "scope_id": "config-recorder"
-    },
-    {
-      "chain": "detection_blindness",
-      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
-      "controls_failing": [
-        "CTL.CONFIG.ENABLED.001"
-      ],
-      "missing_control": "CTL.GUARDDUTY.ENABLED.001",
-      "severity": "critical",
-      "scope_id": "config-recorder"
-    },
-    {
-      "chain": "detection_blindness",
-      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
-      "controls_failing": [
-        "CTL.CONFIG.ENABLED.001"
-      ],
-      "missing_control": "CTL.VPC.FLOWLOG.001",
-      "severity": "critical",
-      "scope_id": "config-recorder"
-    },
-    {
-      "chain": "detection_blindness",
-      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.ENABLED.001"
-      ],
-      "missing_control": "CTL.CONFIG.ENABLED.001",
-      "severity": "critical",
-      "scope_id": "main-trail"
-    },
-    {
-      "chain": "detection_blindness",
-      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.ENABLED.001"
-      ],
-      "missing_control": "CTL.GUARDDUTY.ENABLED.001",
-      "severity": "critical",
-      "scope_id": "main-trail"
-    },
-    {
-      "chain": "detection_blindness",
-      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.ENABLED.001"
-      ],
-      "missing_control": "CTL.VPC.FLOWLOG.001",
-      "severity": "critical",
-      "scope_id": "main-trail"
-    },
-    {
-      "chain": "detection_blindness",
-      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.CLOUDTRAIL.ENABLED.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "detection_blindness",
-      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.CONFIG.ENABLED.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "detection_blindness",
-      "description": "Multiple detection and monitoring controls disabled simultaneously. When CloudTrail, GuardDuty, Config, and VPC Flow Logs are all absent, every other violation in the account is invisible — the blast radius of any single misconfiguration becomes unbounded because there is no evidence trail.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.GUARDDUTY.ENABLED.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
       "chain": "eks_to_secretsmanager_lateral",
       "description": "EKS node group has an overbroad IAM role and Secrets Manager secrets lack rotation — a compromised pod inheriting the node role can call secretsmanager:GetSecretValue to extract long-lived secrets. The first leg detects that the EKS node group's IAM role exceeds kubelet-minimum permissions (CTL.EKS.NODEGROUP.ROLE.OVERBROAD.001) — the role grants broad Secrets Manager actions. The second leg detects that the target secret has no automatic rotation (CTL.SECRETSMANAGER.ACCESS.001) — the secret value is static and remains valid indefinitely after exfiltration. Together: pod compromise yields access to secrets that never expire. Pods without IRSA or Pod Identity inherit the node role via IMDS — the node role becomes the secret-extraction credential. Removing either leg breaks the chain: scope the node role to kubelet-minimum and move workload Secrets Manager access to IRSA, OR enable automatic rotation so exfiltrated secrets expire promptly.\n",
       "controls_failing": [
@@ -5040,7 +4311,7 @@
         "CTL.CLOUDTRAIL.ENABLED.001"
       ],
       "missing_control": "CTL.ELASTICACHE.SG.BROAD.001",
-      "severity": "high",
+      "severity": "critical",
       "scope_id": "__global__"
     },
     {
@@ -5062,26 +4333,6 @@
       "missing_control": "CTL.ELASTICACHE.ENCRYPT.REST.001",
       "severity": "high",
       "scope_id": "__global__"
-    },
-    {
-      "chain": "enclave_lateral_to_egress",
-      "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.SG.EASTWEST.001",
-      "severity": "high",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "enclave_lateral_to_egress",
-      "description": "Isolated VPC has security group rules that permit traffic from enclave instances to egress-capable nodes, combined with broad internal connectivity (east-west permissiveness) and no flow log visibility. An attacker with code execution in the enclave can reach a node with internet egress and use it as an exfiltration relay — the lateral movement is invisible without flow logs.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.SG.ENCLAVE.EGRESS.REACH.001",
-      "severity": "high",
-      "scope_id": "vpc-prod-001"
     },
     {
       "chain": "management_account_root_key",
@@ -5145,56 +4396,6 @@
       "scope_id": "phi-database"
     },
     {
-      "chain": "redundancy_single_point",
-      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
-      "controls_failing": [
-        "CTL.RDS.MULTIAZ.001"
-      ],
-      "missing_control": "CTL.AUTOSCALING.MULTIAZ.001",
-      "severity": "critical",
-      "scope_id": "phi-database"
-    },
-    {
-      "chain": "redundancy_single_point",
-      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
-      "controls_failing": [
-        "CTL.RDS.MULTIAZ.001"
-      ],
-      "missing_control": "CTL.EFS.MULTIAZ.001",
-      "severity": "critical",
-      "scope_id": "phi-database"
-    },
-    {
-      "chain": "redundancy_single_point",
-      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
-      "controls_failing": [
-        "CTL.RDS.MULTIAZ.001"
-      ],
-      "missing_control": "CTL.ELB.NETWORK.SINGLEAZ.001",
-      "severity": "critical",
-      "scope_id": "phi-database"
-    },
-    {
-      "chain": "redundancy_single_point",
-      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
-      "controls_failing": [
-        "CTL.RDS.MULTIAZ.001"
-      ],
-      "missing_control": "CTL.ELB.TARGET.SINGLEAZ.001",
-      "severity": "critical",
-      "scope_id": "phi-database"
-    },
-    {
-      "chain": "redundancy_single_point",
-      "description": "Single-point-of-failure at the topology level. Individual resources may pass their own AZ redundancy checks, but the dependency graph converges to one Availability Zone — an AZ failure takes down the entire path. Compounds per-resource AZ controls with graph-level analysis of load-balancer target placement, NAT Gateway routing, compute-to-data-tier dependencies, and cross-service choke points.\n",
-      "controls_failing": [
-        "CTL.RDS.MULTIAZ.001"
-      ],
-      "missing_control": "CTL.VPC.NAT.SINGLEAZ.001",
-      "severity": "critical",
-      "scope_id": "phi-database"
-    },
-    {
       "chain": "sqs_encryption_incomplete",
       "description": "No CMK encryption plus either no transport enforcement or no encryption at all. Messages are either unencrypted at rest AND in transit, or encrypted with a key the organization cannot control AND transportable over plaintext HTTP. Threshold of 2 fires when at least two of the three SQS encryption gaps coexist on the same queue.\n",
       "controls_failing": [
@@ -5213,106 +4414,6 @@
       "missing_control": "CTL.SQS.ENCRYPT.TRANSPORT.001",
       "severity": "high",
       "scope_id": "phi-notifications"
-    },
-    {
-      "chain": "unmonitored_region_evasion",
-      "description": "No region restriction SCP exists and monitoring controls are not deployed in all regions. An attacker can operate in unmonitored regions with no detection. The defense evasion path requires no exploitation — only knowledge of which regions are unmonitored.\n",
-      "controls_failing": [
-        "CTL.CONFIG.ENABLED.001"
-      ],
-      "missing_control": "CTL.GUARDDUTY.ENABLED.001",
-      "severity": "high",
-      "scope_id": "config-recorder"
-    },
-    {
-      "chain": "unmonitored_region_evasion",
-      "description": "No region restriction SCP exists and monitoring controls are not deployed in all regions. An attacker can operate in unmonitored regions with no detection. The defense evasion path requires no exploitation — only knowledge of which regions are unmonitored.\n",
-      "controls_failing": [
-        "CTL.CONFIG.ENABLED.001"
-      ],
-      "missing_control": "CTL.ORG.REGION.SCP.001",
-      "severity": "high",
-      "scope_id": "config-recorder"
-    },
-    {
-      "chain": "vpc_dns_exfiltration",
-      "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.DNSFIREWALL.ENABLED.001",
-      "severity": "high",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "vpc_dns_exfiltration",
-      "description": "VPC has no DNS Firewall AND either DNS egress is unrestricted (port 53 to 0.0.0.0/0) or VPC flow logs are disabled. DNS resolution is unfiltered at the resolver AND either the network permits DNS to arbitrary upstream resolvers or the network traffic is unrecorded. DNS tunneling — encoding exfiltrated data in query names to an attacker-controlled authoritative server — succeeds and leaves no forensic evidence that can be correlated to the originating workload.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
-      "severity": "high",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "vpc_exfiltration_path",
-      "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.SG.EGRESS.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "vpc_exfiltration_path",
-      "description": "Unrestricted egress plus either DNS tunneling possible or no flow logs. Data can leave via any protocol to any destination AND either DNS tunneling is available as a covert channel or the egress traffic is not logged.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.SG.EGRESS.DNS.001",
-      "severity": "critical",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "vpc_no_inspection",
-      "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.NETWORK.FIREWALL.001",
-      "severity": "high",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "vpc_no_inspection",
-      "description": "VPC has no Network Firewall AND either flow logs are disabled or a security group permits unrestricted egress. There is no network inspection layer AND either no traffic visibility or no egress constraint. Traffic crosses the VPC boundary without being inspected, recorded, or restricted across multiple layers of control.\n",
-      "controls_failing": [
-        "CTL.VPC.FLOWLOG.001"
-      ],
-      "missing_control": "CTL.VPC.SG.EGRESS.001",
-      "severity": "high",
-      "scope_id": "vpc-prod-001"
-    },
-    {
-      "chain": "waf_blind_evasion",
-      "description": "WAF evasion observability is absent and detection layers are also failing. Evasion attempts using encoding or parser confusion succeed without generating any observable signal across any detection layer. The attack is invisible from detection through investigation.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.ENABLED.001"
-      ],
-      "missing_control": "CTL.WAF.EVASION.OBSERVE.001",
-      "severity": "critical",
-      "scope_id": "main-trail"
-    },
-    {
-      "chain": "waf_blind_evasion",
-      "description": "WAF evasion observability is absent and detection layers are also failing. Evasion attempts using encoding or parser confusion succeed without generating any observable signal across any detection layer. The attack is invisible from detection through investigation.\n",
-      "controls_failing": [
-        "CTL.CLOUDTRAIL.ENABLED.001"
-      ],
-      "missing_control": "CTL.WAF.RULES.OWASP.001",
-      "severity": "critical",
-      "scope_id": "main-trail"
     }
   ],
   "issues": [
@@ -5923,7 +5024,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 2,
+        "chain_bonus": 1,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -5939,7 +5040,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 2,
+        "chain_bonus": 1,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
@@ -5971,7 +5072,7 @@
         "duration_factor": 1,
         "blast_multiplier": 1,
         "exposure_multiplier": 1,
-        "chain_bonus": 2,
+        "chain_bonus": 1.5,
         "blind_multiplier": 1.0136986301369864,
         "days_blind": 5
       },
