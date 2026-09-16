@@ -238,3 +238,57 @@ func TestWriteCSVEdges(t *testing.T) {
 		t.Errorf("unexpected edge line: %q", lines[1])
 	}
 }
+
+func TestAttackPath_DomainMethods(t *testing.T) {
+	caps := Capabilities{
+		{ID: CapabilityID("iam_credential_theft"), Label: "IAM Credentials"},
+		{ID: CapabilityID("internet_access"), Label: "Internet Access"},
+	}
+
+	if caps.Len() != 2 {
+		t.Errorf("caps.Len() = %d, want 2", caps.Len())
+	}
+	if caps.ByID(CapabilityID("iam_credential_theft")) == nil {
+		t.Error("ByID(iam_credential_theft) should not be nil")
+	}
+	if caps.ByID(CapabilityID("nonexistent")) != nil {
+		t.Error("ByID(nonexistent) should be nil")
+	}
+
+	nodes := ChainNodes{
+		{ChainID: "chain_a", Status: "active"},
+		{ChainID: "chain_b", Status: "inactive"},
+		{ChainID: "chain_c", Status: "active"},
+	}
+
+	if nodes.Len() != 3 {
+		t.Errorf("nodes.Len() = %d, want 3", nodes.Len())
+	}
+
+	active := nodes.Active()
+	if active.Len() != 2 {
+		t.Errorf("Active().Len() = %d, want 2", active.Len())
+	}
+
+	edges := Edges{
+		{FromChain: "chain_a", ToChain: "chain_b"},
+	}
+	if edges.Len() != 1 {
+		t.Errorf("edges.Len() = %d, want 1", edges.Len())
+	}
+
+	assets := AssetRefs{
+		{AssetID: "asset-1"},
+	}
+	if assets.Len() != 1 {
+		t.Errorf("assets.Len() = %d, want 1", assets.Len())
+	}
+
+	var emptyNodes ChainNodes
+	if emptyNodes.Len() != 0 {
+		t.Errorf("emptyNodes.Len() = %d, want 0", emptyNodes.Len())
+	}
+	if emptyNodes.Active() != nil {
+		t.Error("emptyNodes.Active() should return nil")
+	}
+}

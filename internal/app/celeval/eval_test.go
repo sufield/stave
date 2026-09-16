@@ -78,3 +78,42 @@ func TestEval_AssetTypeFilter(t *testing.T) {
 		t.Errorf("assets = %d, want 1 (filtered)", len(result.Assets))
 	}
 }
+
+func TestAssetResults_DomainMethods(t *testing.T) {
+	results := AssetResults{
+		{AssetID: "a1", AssetType: "s3_bucket", Result: true},
+		{AssetID: "a2", AssetType: "ec2_instance", Result: false},
+		{AssetID: "a3", AssetType: "iam_role", Result: false, Error: "eval error"},
+	}
+
+	if results.Len() != 3 {
+		t.Errorf("Len() = %d, want 3", results.Len())
+	}
+
+	firing := results.Firing()
+	if firing.Len() != 1 {
+		t.Errorf("Firing().Len() = %d, want 1", firing.Len())
+	}
+	if firing[0].AssetID != "a1" {
+		t.Errorf("Firing()[0].AssetID = %s, want a1", firing[0].AssetID)
+	}
+
+	errs := results.Errors()
+	if errs.Len() != 1 {
+		t.Errorf("Errors().Len() = %d, want 1", errs.Len())
+	}
+	if errs[0].AssetID != "a3" {
+		t.Errorf("Errors()[0].AssetID = %s, want a3", errs[0].AssetID)
+	}
+
+	var empty AssetResults
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.Firing() != nil {
+		t.Error("empty.Firing() should return nil")
+	}
+	if empty.Errors() != nil {
+		t.Error("empty.Errors() should return nil")
+	}
+}

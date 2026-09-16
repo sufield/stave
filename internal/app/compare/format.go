@@ -39,7 +39,7 @@ func WriteTable(w io.Writer, r *Result) {
 		fmt.Fprintf(w, "MARGINAL WORK — Required only for %s\n", r.Target.Profile)
 		fmt.Fprintln(w, sep)
 		for _, item := range r.TargetOnly {
-			cites := joinRequirements(item.Target, ", ")
+			cites := joinRequirements(item.Target)
 			fmt.Fprintf(w, "  %-30s %-8s  %s\n", item.ControlID, item.Severity.String(), cites)
 		}
 		fmt.Fprintln(w)
@@ -69,7 +69,7 @@ func WriteMarkdown(w io.Writer, r *Result) {
 		for _, item := range r.SharedViolations {
 			fmt.Fprintf(w, "| %s | %s | %s | %s |\n",
 				item.ControlID, item.Severity.String(),
-				joinRequirements(item.Baseline, ", "), joinRequirements(item.Target, ", "))
+				joinRequirements(item.Baseline), joinRequirements(item.Target))
 		}
 		fmt.Fprintln(w)
 	}
@@ -80,7 +80,7 @@ func WriteMarkdown(w io.Writer, r *Result) {
 		fmt.Fprintln(w, "|---------|----------|----------------|")
 		for _, item := range r.TargetOnly {
 			fmt.Fprintf(w, "| %s | %s | %s |\n",
-				item.ControlID, item.Severity.String(), joinRequirements(item.Target, ", "))
+				item.ControlID, item.Severity.String(), joinRequirements(item.Target))
 		}
 		fmt.Fprintln(w)
 	}
@@ -91,10 +91,10 @@ func WriteMarkdown(w io.Writer, r *Result) {
 	fmt.Fprintf(w, "**Phase 2** (%d findings): %s\n", r.Roadmap.Phase2.Count, r.Roadmap.Phase2.Description)
 }
 
-func joinRequirements(ids []policy.RequirementID, sep string) string {
+func joinRequirements(ids []policy.RequirementID) string {
 	s := make([]string, len(ids))
 	for i, id := range ids {
 		s[i] = string(id)
 	}
-	return strings.Join(s, sep)
+	return strings.Join(s, ", ")
 }

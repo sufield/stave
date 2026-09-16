@@ -17,6 +17,42 @@ type AssetResult struct {
 	Error     string           `json:"error,omitempty"`
 }
 
+// AssetResults is a domain collection of AssetResult items with query and filter methods.
+type AssetResults []AssetResult
+
+// Len returns the number of asset results in the collection.
+func (ar AssetResults) Len() int {
+	return len(ar)
+}
+
+// Firing returns a new AssetResults collection containing only assets where the expression fired.
+func (ar AssetResults) Firing() AssetResults {
+	if len(ar) == 0 {
+		return nil
+	}
+	var filtered AssetResults
+	for i := range ar {
+		if ar[i].Result {
+			filtered = append(filtered, ar[i])
+		}
+	}
+	return filtered
+}
+
+// Errors returns a new AssetResults collection containing only assets that encountered evaluation errors.
+func (ar AssetResults) Errors() AssetResults {
+	if len(ar) == 0 {
+		return nil
+	}
+	var filtered AssetResults
+	for i := range ar {
+		if ar[i].Error != "" {
+			filtered = append(filtered, ar[i])
+		}
+	}
+	return filtered
+}
+
 // Expression represents a raw CEL expression string.
 type Expression string
 
@@ -24,11 +60,11 @@ func (e Expression) String() string { return string(e) }
 
 // EvalResult holds the full evaluation output.
 type EvalResult struct {
-	Expression Expression    `json:"expression"`
-	Assets     []AssetResult `json:"assets"`
-	TotalFire  int           `json:"total_fire"`
-	TotalPass  int           `json:"total_pass"`
-	TotalError int           `json:"total_error"`
+	Expression Expression   `json:"expression"`
+	Assets     AssetResults `json:"assets"`
+	TotalFire  int          `json:"total_fire"`
+	TotalPass  int          `json:"total_pass"`
+	TotalError int          `json:"total_error"`
 }
 
 // PredicateEvaluator evaluates a CEL expression against an asset property map.

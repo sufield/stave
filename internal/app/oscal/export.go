@@ -43,14 +43,44 @@ type ImportAP struct {
 	Href string `json:"href"`
 }
 
+// ARFindings is a domain collection of ARFinding items with query methods.
+type ARFindings []ARFinding
+
+// Len returns the number of findings in the collection.
+func (af ARFindings) Len() int {
+	return len(af)
+}
+
+// ByControl returns a new ARFindings collection filtered by target control ID.
+func (af ARFindings) ByControl(id kernel.ControlID) ARFindings {
+	if len(af) == 0 {
+		return nil
+	}
+	var filtered ARFindings
+	for i := range af {
+		if af[i].Target.TargetID == id {
+			filtered = append(filtered, af[i])
+		}
+	}
+	return filtered
+}
+
+// ARObservations is a domain collection of ARObservation items with query methods.
+type ARObservations []ARObservation
+
+// Len returns the number of observations in the collection.
+func (ao ARObservations) Len() int {
+	return len(ao)
+}
+
 // ARResult is one assessment result.
 type ARResult struct {
-	UUID         UUID            `json:"uuid"`
-	Title        string          `json:"title"`
-	Start        string          `json:"start"`
-	End          string          `json:"end"`
-	Findings     []ARFinding     `json:"findings"`
-	Observations []ARObservation `json:"observations"`
+	UUID         UUID           `json:"uuid"`
+	Title        string         `json:"title"`
+	Start        string         `json:"start"`
+	End          string         `json:"end"`
+	Findings     ARFindings     `json:"findings"`
+	Observations ARObservations `json:"observations"`
 }
 
 // ARFinding is a single OSCAL finding.

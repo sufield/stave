@@ -17,15 +17,71 @@ import (
 // CapabilityID uniquely identifies an attacker capability.
 type CapabilityID string
 
+// Capabilities is a domain collection of Capability items with query methods.
+type Capabilities []Capability
+
+// Len returns the number of capabilities in the collection.
+func (c Capabilities) Len() int {
+	return len(c)
+}
+
+// ByID returns the capability matching the given ID, or nil if not found.
+func (c Capabilities) ByID(id CapabilityID) *Capability {
+	for i := range c {
+		if c[i].ID == id {
+			return &c[i]
+		}
+	}
+	return nil
+}
+
+// ChainNodes is a domain collection of ChainNode items with query methods.
+type ChainNodes []ChainNode
+
+// Len returns the number of chain nodes in the collection.
+func (cn ChainNodes) Len() int {
+	return len(cn)
+}
+
+// Active returns a new ChainNodes collection containing only active chain nodes.
+func (cn ChainNodes) Active() ChainNodes {
+	if len(cn) == 0 {
+		return nil
+	}
+	var filtered ChainNodes
+	for i := range cn {
+		if cn[i].Status == "active" {
+			filtered = append(filtered, cn[i])
+		}
+	}
+	return filtered
+}
+
+// Edges is a domain collection of Edge items with query methods.
+type Edges []Edge
+
+// Len returns the number of edges in the collection.
+func (e Edges) Len() int {
+	return len(e)
+}
+
+// AssetRefs is a domain collection of AssetRef items with query methods.
+type AssetRefs []AssetRef
+
+// Len returns the number of asset references in the collection.
+func (ar AssetRefs) Len() int {
+	return len(ar)
+}
+
 // Graph is the top-level attack path export.
 type Graph struct {
 	GeneratedAt  string       `json:"generated_at"`
 	Snapshot     string       `json:"snapshot"`
 	Assessment   string       `json:"assessment"`
-	Capabilities []Capability `json:"capabilities"`
-	ChainNodes   []ChainNode  `json:"chain_nodes"`
-	Edges        []Edge       `json:"edges"`
-	Assets       []AssetRef   `json:"assets"`
+	Capabilities Capabilities `json:"capabilities"`
+	ChainNodes   ChainNodes   `json:"chain_nodes"`
+	Edges        Edges        `json:"edges"`
+	Assets       AssetRefs    `json:"assets"`
 }
 
 // Capability describes a named attacker capability.
