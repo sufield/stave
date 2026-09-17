@@ -133,7 +133,13 @@ func DefaultPolicy() AirgapPolicy {
 			"pkg/stave/prove_universal.go": {
 				`"os/exec"`: {},
 			},
-			"internal/cli/ui/template.go": {
+			// tplutil uses text/template with a restricted function map
+			// and AST validation: only allowlisted functions execute,
+			// {{template}} is rejected, and no arbitrary method calls
+			// are possible. The package does not expose the template
+			// engine to callers — only the safe Execute(w, str, data)
+			// surface.
+			"internal/platform/tplutil/template.go": {
 				`"text/template"`: {},
 			},
 			// services.go has a struct tag yaml:"plugin" — not an import.
