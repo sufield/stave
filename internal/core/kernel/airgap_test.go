@@ -116,8 +116,8 @@ func TestDefaultPolicy_IsImportAllowed(t *testing.T) {
 			want:    true,
 		},
 		{
-			name:    "allowed text/template in ui",
-			relPath: "internal/cli/ui/template.go",
+			name:    "allowed text/template in tplutil",
+			relPath: "internal/platform/tplutil/template.go",
 			imp:     `"text/template"`,
 			want:    true,
 		},
