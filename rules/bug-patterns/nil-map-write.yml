@@ -1,0 +1,19 @@
+id: stave-nil-map-write
+language: go
+severity: error
+message: "Write to potentially nil map — initialize with make() first"
+note: |
+  Bug class: CLASS 7 — nil map write panic
+  Writing to a nil map panics in Go. Maps declared with var m map[K]V are nil.
+  Always initialize with m := make(map[K]V) or m = make(map[K]V) before writing.
+rule:
+  kind: assignment_statement
+  regex: '\[.*\]\s*='
+  follows:
+    kind: var_declaration
+    has:
+      kind: map_type
+      stopBy: end
+  not:
+    follows:
+      pattern: $M = make($$$)

@@ -1,0 +1,20 @@
+id: stave-negative-delta-ratio
+language: go
+severity: warning
+message: "Division of two negative deltas produces a false-positive ratio — check sign first"
+note: |
+  Bug class: CLASS 17 — Negative/negative ratio inversion
+  Bughunt Jul 4 2026: when both realized and simulated deltas were negative (posture
+  worsened), dividing them produced a positive ratio, yielding VerdictComplete for
+  remediation that actually failed. Check for non-positive deltas before computing ratios.
+rule:
+  pattern: $A / $B
+  inside:
+    stopBy: end
+    kind: function_declaration
+    regex: "[Ee]fficiency|[Rr]atio|[Ii]mpact|[Rr]emediation"
+constraints:
+  A:
+    regex: "[Dd]elta|[Rr]ealized"
+  B:
+    regex: "[Dd]elta|[Pp]redicted|[Ss]imulated"

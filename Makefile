@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover arch-lint arch-graph arch-test grit-check lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability validate-checklists validate-embed gen-contract validate-contract
+.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover arch-lint arch-graph arch-test grit-check lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability validate-checklists validate-embed gen-contract validate-contract lint-patterns lint-patterns-all
 # Binary name
 BINARY=stave
 
@@ -369,6 +369,28 @@ arch-graph:
 ## lint: Run golangci-lint (v2.8.0)
 lint:
 	$(GOLINT) run ./...
+
+## lint-patterns: Run ast-grep structural bug pattern detection
+lint-patterns:
+	@command -v ast-grep >/dev/null 2>&1 || { echo "ast-grep not installed — run: npm i -g @ast-grep/cli"; exit 1; }
+	@CHANGED=$$(git diff --name-only HEAD~1 -- '*.go' 2>/dev/null || git diff --name-only --cached -- '*.go'); \
+	if [ -z "$$CHANGED" ]; then \
+		echo "lint-patterns: no changed Go files"; \
+	else \
+		FILES=$$(echo "$$CHANGED" | grep -v '_test\.go$$' | grep -v '/tools/' | grep -v '/iam/arn\.go$$'); \
+		if [ -z "$$FILES" ]; then \
+			echo "lint-patterns: no scannable Go files (all test/tool/canonical)"; \
+		else \
+			echo "lint-patterns: scanning $$(echo "$$FILES" | wc -l | tr -d ' ') changed Go files"; \
+			echo "$$FILES" | xargs ast-grep scan -c sgconfig.yml; \
+		fi \
+	fi
+
+## lint-patterns-all: Run ast-grep against all non-test Go source
+lint-patterns-all:
+	@command -v ast-grep >/dev/null 2>&1 || { echo "ast-grep not installed — run: npm i -g @ast-grep/cli"; exit 1; }
+	@find internal/ pkg/ cmd/ -name '*.go' ! -name '*_test.go' ! -path '*/tools/*' ! -path '*/iam/arn.go' \
+		| xargs ast-grep scan -c sgconfig.yml
 
 ## lint-fix: Auto-format code (gofmt only — most lint issues require manual fixes)
 lint-fix:

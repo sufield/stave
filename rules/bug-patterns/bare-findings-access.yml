@@ -1,0 +1,17 @@
+id: stave-bare-findings-access
+language: go
+severity: warning
+message: "Bare .Findings access is mode-dependent — use .TopExposures or --include-atomic"
+note: |
+  Bug class: CLASS 3 — Mode-invariant violation
+  CompoundOnlyMode empties .Findings[] when chains fire, making the count vacuously zero.
+  Always access .TopExposures or use --include-atomic for mode-invariant results.
+  Enforced by CLAUDE.md verification conventions.
+rule:
+  kind: selector_expression
+  regex: '\.Findings$'
+  not:
+    inside:
+      stopBy: end
+      kind: function_declaration
+      regex: "(TopExposures|IncludeAtomic|includeAtomic|WithAtomic)"

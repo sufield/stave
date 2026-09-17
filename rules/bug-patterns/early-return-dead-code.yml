@@ -1,0 +1,16 @@
+id: stave-early-return-dead-code
+language: go
+severity: error
+message: "Unreachable code after unconditional return"
+note: |
+  Bug class: CLASS 5 — Dead path after early return
+  HAZOP found isCICDRoleName was a dead path. Bughunt Jun 29 2026: isSortedSequence
+  returned true on non-mapping elements, skipping all subsequent checks.
+  Code after an unconditional return/continue in the same block is dead.
+rule:
+  any:
+    - kind: expression_statement
+    - kind: short_var_declaration
+    - kind: assignment_statement
+  follows:
+    kind: return_statement

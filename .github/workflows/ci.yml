@@ -287,6 +287,22 @@ jobs:
           GORACE="halt_on_error=1 history_size=4" \
           go test -tags stavedev -race -count=1 -parallel=2 -timeout 30m $pkgs
 
+  lint-bug-patterns:
+    name: Bug pattern lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install ast-grep
+        run: npm install -g @ast-grep/cli
+      - name: Run bug pattern lint
+        run: make lint-patterns
+
   lint:
     name: Lint
     runs-on: ubuntu-latest

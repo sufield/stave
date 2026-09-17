@@ -1,0 +1,18 @@
+id: stave-map-iteration-unsorted
+language: go
+severity: warning
+message: "Map iteration produces non-deterministic output — sort the result"
+note: |
+  Bug class: CLASS 11 — Non-deterministic map iteration
+  Bughunt Jun 30, Jul 14-18 2026: 6+ bugs where map iteration fed output slices,
+  producing non-deterministic ordering in findings, requirements, chain deactivation,
+  dwell hours, and query expansion. Go map iteration order is randomized.
+  After collecting from a map, sort the result slice before returning.
+rule:
+  kind: for_statement
+  all:
+    - has:
+        kind: range_clause
+    - has:
+        pattern: $S = append($S, $$$)
+        stopBy: end

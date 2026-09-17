@@ -1,0 +1,25 @@
+id: stave-unchecked-type-assertion
+language: go
+severity: error
+message: "Unchecked type assertion panics on failure — use val, ok := x.(Type)"
+note: |
+  Bug class: CLASS 4 — Unchecked type assertions
+  Bughunt Jul 17 2026: ed25519.Verify panicked on invalid public key via unchecked assertion.
+  Go type assertions x.(Type) panic when x does not hold Type.
+  Always use the two-value form: val, ok := x.(Type)
+rule:
+  any:
+    - kind: short_var_declaration
+      all:
+        - has:
+            kind: type_assertion_expression
+            stopBy: end
+        - not:
+            regex: ','
+    - kind: assignment_statement
+      all:
+        - has:
+            kind: type_assertion_expression
+            stopBy: end
+        - not:
+            regex: ','

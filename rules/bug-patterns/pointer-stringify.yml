@@ -1,0 +1,13 @@
+id: stave-pointer-stringify
+language: go
+severity: warning
+message: "fmt.Sprintf on pointer value — dereference first or the output is an address"
+note: |
+  Bug class: CLASS 15 — Pointer stringification
+  Bughunt Jun 27 2026: *string and *int values stringified as &hello or hex addresses
+  instead of being dereferenced, breaking downstream CEL comparisons.
+  When stringifying interface{} values, handle reflect.Pointer by dereferencing.
+rule:
+  any:
+    - pattern: fmt.Sprintf("%s", &$PTR)
+    - pattern: fmt.Sprintf("%v", &$PTR)

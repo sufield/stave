@@ -1,0 +1,13 @@
+id: stave-duplicated-arn-parser
+language: go
+severity: error
+message: "Duplicated ARN parser — use internal/platform/providers/aws/iam/arn.go"
+note: |
+  Bug class: CLASS 2 — Duplicated utility functions
+  Recurring issue: sessions produce duplicate parseARN/ParseARN helpers outside their canonical location.
+  All ARN manipulation must use internal/platform/providers/aws/iam/arn.go.
+rule:
+  kind: function_declaration
+  regex: "func (parseARN|ParseARN|splitARN|SplitARN|normalizeARN|NormalizeARN)\\("
+  not:
+    regex: "(parseARNContext|ParseARNContext)"

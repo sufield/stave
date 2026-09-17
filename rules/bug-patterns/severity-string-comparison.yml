@@ -1,0 +1,12 @@
+id: stave-severity-string-comparison
+language: go
+severity: error
+message: "Alphabetical severity comparison — use severityRank or Severity.Level()"
+note: |
+  Bug class: CLASS 12 — Alphabetical severity sorting
+  Bughunt Jul 16 2026: catalog browser sorted severities alphabetically
+  (critical < info < low < medium). Severity must be compared by numeric rank.
+rule:
+  any:
+    - pattern: sort.Slice($S, func($I, $J int) bool { return $S[$I].Severity < $S[$J].Severity })
+    - pattern: sort.Slice($S, func($I, $J int) bool { return $S[$I].Severity > $S[$J].Severity })

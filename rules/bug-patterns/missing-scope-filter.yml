@@ -1,0 +1,21 @@
+id: stave-missing-scope-filter
+language: go
+severity: warning
+message: "AppliesToVendor without AppliesToAssetType — findings may leak across asset types"
+note: |
+  Bug class: CLASS 14 — Missing asset-type scope gate
+  Bughunt Jun 2 2026: risk_signals checked AppliesToVendor but NOT AppliesToAssetType.
+  EKS and AUTOSCALING controls produced risk signals on security groups and IAM roles.
+  Always pair vendor scope with asset-type scope.
+rule:
+  kind: if_statement
+  all:
+    - has:
+        kind: selector_expression
+        regex: 'AppliesToVendor'
+        stopBy: end
+    - not:
+        has:
+          kind: selector_expression
+          regex: 'AppliesToAssetType'
+          stopBy: end

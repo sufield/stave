@@ -1,0 +1,17 @@
+id: stave-case-sensitive-extension
+language: go
+severity: warning
+message: "Case-sensitive file extension check — use strings.EqualFold or strings.ToLower"
+note: |
+  Bug class: CLASS 9 — Case-sensitive extension checks
+  Bughunt Jun 28-29 2026: .JSON and .YAML files silently skipped by loader and status inspector.
+  File extensions from user input or OS may have unexpected casing.
+  Use strings.EqualFold(ext, ".json") or strings.HasSuffix(strings.ToLower(name), ".json").
+rule:
+  pattern: strings.HasSuffix($NAME, $EXT)
+constraints:
+  EXT:
+    regex: '"\.(json|yaml|yml)"'
+  NAME:
+    not:
+      regex: "(ToLower|ToUpper)"

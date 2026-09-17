@@ -1,0 +1,19 @@
+id: stave-substring-type-matching
+language: go
+severity: warning
+message: "strings.Contains on raw data for type matching — use structured field comparison"
+note: |
+  Bug class: CLASS 13 — False positive substring matching
+  Bughunt Jul 17 2026: ScanSnapshots used strings.Contains on raw JSON to detect
+  service prefixes (aws_s3). Matched in role descriptions and tag values even when
+  no actual assets of that type existed.
+  Match on structured fields (asset.Type), not raw string content.
+rule:
+  pattern: strings.Contains($RAW, $PREFIX)
+  inside:
+    stopBy: end
+    kind: function_declaration
+    regex: "[Ss]can|[Dd]etect|[Ff]ind.*[Ss]ervice|[Ff]ind.*[Aa]sset"
+constraints:
+  PREFIX:
+    regex: '"aws_|"gcp_|"azure_'

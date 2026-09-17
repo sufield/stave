@@ -1,0 +1,25 @@
+id: stave-case-sensitive-action-match
+language: go
+severity: warning
+message: "Case-sensitive IAM action/ARN comparison — use strings.EqualFold"
+note: |
+  Bug class: CLASS 10 — Case-sensitive IAM comparisons
+  Bughunt Jun 24 2026: actionMatches in resolve.go was case-sensitive, allowing uppercase
+  Allows (S3:GetObject) to bypass lowercase Denys (s3:GetObject). Security-critical.
+  Jun 26 2026: role_chain.go map lookups were case-sensitive, dropping escalation paths.
+  All IAM action and ARN comparisons must be case-insensitive.
+rule:
+  any:
+    - pattern: $A == $B
+      inside:
+        stopBy: end
+        kind: function_declaration
+        regex: "[Aa]ction|[Mm]atch|[Rr]esolve"
+    - pattern: $A != $B
+      inside:
+        stopBy: end
+        kind: function_declaration
+        regex: "[Aa]ction|[Mm]atch|[Rr]esolve"
+constraints:
+  A:
+    regex: "[Aa]ction"
