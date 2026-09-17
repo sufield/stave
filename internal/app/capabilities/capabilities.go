@@ -7,13 +7,51 @@ import (
 
 // AuditCapabilities describes the security frameworks, cloud connectors,
 // and policy versions supported by this build of Stave.
+// PolicyPacks is a domain collection of PolicyPack items with querying methods.
+type PolicyPacks []PolicyPack
+
+// Len returns the number of policy packs in the collection.
+func (pp PolicyPacks) Len() int {
+	return len(pp)
+}
+
+// ByName returns the policy pack matching the given name, or nil if not found.
+func (pp PolicyPacks) ByName(name string) *PolicyPack {
+	for i := range pp {
+		if pp[i].Name == name {
+			return &pp[i]
+		}
+	}
+	return nil
+}
+
+// Connectors is a domain collection of ConnectorSupport items with querying methods.
+type Connectors []ConnectorSupport
+
+// Len returns the number of connectors in the collection.
+func (c Connectors) Len() int {
+	return len(c)
+}
+
+// ByType returns the connector matching the given observation source type, or nil if not found.
+func (c Connectors) ByType(typ kernel.ObservationSourceType) *ConnectorSupport {
+	for i := range c {
+		if c[i].Type == typ {
+			return &c[i]
+		}
+	}
+	return nil
+}
+
+// AuditCapabilities describes the security frameworks, cloud connectors,
+// and policy versions supported by this build of Stave.
 type AuditCapabilities struct {
 	Version            string             `json:"version"`
 	Offline            bool               `json:"offline"`
 	ObservationSupport ObservationSupport `json:"observation_support"`
 	PolicySupport      PolicySupport      `json:"policy_support"`
 	DataIngress        DataIngress        `json:"data_ingress"`
-	PolicyLibrary      []PolicyPack       `json:"policy_library"`
+	PolicyLibrary      PolicyPacks        `json:"policy_library"`
 	RiskReasoning      RiskReasoning      `json:"risk_reasoning"`
 	ComplianceSupport  ComplianceSupport  `json:"compliance_support"`
 }
@@ -44,7 +82,7 @@ type PolicySupport struct {
 
 // DataIngress describes the available cloud connectors for importing resource states.
 type DataIngress struct {
-	Connectors []ConnectorSupport `json:"connectors"`
+	Connectors Connectors `json:"connectors"`
 }
 
 // ConnectorSupport describes a specific cloud provider integration.

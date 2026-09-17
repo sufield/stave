@@ -161,6 +161,14 @@ func (tcs TacticsCoverage) ByTacticID(id string) *TacticCoverage {
 	return nil
 }
 
+// StaveOnlyTactics is a domain collection of StaveOnlyTactic items with query methods.
+type StaveOnlyTactics []StaveOnlyTactic
+
+// Len returns the number of tactics in the collection.
+func (sot StaveOnlyTactics) Len() int {
+	return len(sot)
+}
+
 // CoverageReport is the full coverage analysis output.
 type CoverageReport struct {
 	Framework           string             `json:"framework"`
@@ -169,7 +177,7 @@ type CoverageReport struct {
 	ControlsUnannotated int                `json:"controls_unannotated"`
 	AssessmentOverlay   bool               `json:"assessment_overlay"`
 	Tactics             TacticsCoverage    `json:"tactics"`
-	StaveOnly           []StaveOnlyTactic  `json:"stave_only,omitempty"`
+	StaveOnly           StaveOnlyTactics   `json:"stave_only,omitempty"`
 	UnannotatedControls []kernel.ControlID `json:"unannotated_controls,omitempty"`
 	Summary             CoverageSummary    `json:"summary"`
 }

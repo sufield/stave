@@ -111,3 +111,49 @@ func TestCapabilities_ComplianceSupport(t *testing.T) {
 		t.Fatalf("compliance.report_formats missing %q", missing)
 	}
 }
+
+func TestCapabilities_CollectionDomainMethods(t *testing.T) {
+	packs := capabilities.PolicyPacks{
+		{Name: "s3", Description: "S3 Security", Version: "1.0"},
+		{Name: "iam", Description: "IAM Governance", Version: "1.0"},
+	}
+
+	if packs.Len() != 2 {
+		t.Errorf("packs.Len() = %d, want 2", packs.Len())
+	}
+	if packs.ByName("s3") == nil {
+		t.Error("ByName(s3) should not be nil")
+	}
+	if packs.ByName("nonexistent") != nil {
+		t.Error("ByName(nonexistent) should be nil")
+	}
+
+	connectors := capabilities.Connectors{
+		{Type: kernel.ObservationSourceType("aws-s3-snapshot"), Description: "S3 snapshot"},
+	}
+	if connectors.Len() != 1 {
+		t.Errorf("connectors.Len() = %d, want 1", connectors.Len())
+	}
+	if connectors.ByType(kernel.ObservationSourceType("aws-s3-snapshot")) == nil {
+		t.Error("ByType(aws-s3-snapshot) should not be nil")
+	}
+	if connectors.ByType(kernel.ObservationSourceType("unknown")) != nil {
+		t.Error("ByType(unknown) should be nil")
+	}
+
+	var emptyPacks capabilities.PolicyPacks
+	if emptyPacks.Len() != 0 {
+		t.Errorf("emptyPacks.Len() = %d, want 0", emptyPacks.Len())
+	}
+	if emptyPacks.ByName("s3") != nil {
+		t.Error("emptyPacks.ByName() should return nil")
+	}
+
+	var emptyConnectors capabilities.Connectors
+	if emptyConnectors.Len() != 0 {
+		t.Errorf("emptyConnectors.Len() = %d, want 0", emptyConnectors.Len())
+	}
+	if emptyConnectors.ByType("test") != nil {
+		t.Error("emptyConnectors.ByType() should return nil")
+	}
+}

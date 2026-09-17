@@ -18,11 +18,36 @@ type UUID string
 
 func (u UUID) String() string { return string(u) }
 
+// POAMItems is a domain collection of POAMItem entries with querying methods.
+type POAMItems []POAMItem
+
+// Len returns the number of items in the collection.
+func (pi POAMItems) Len() int {
+	return len(pi)
+}
+
+// ByControl returns a new POAMItems collection filtered by control ID.
+func (pi POAMItems) ByControl(id kernel.ControlID) POAMItems {
+	if len(pi) == 0 {
+		return nil
+	}
+	var filtered POAMItems
+	for i := range pi {
+		for _, c := range pi[i].RelatedControls {
+			if c.ControlID == id {
+				filtered = append(filtered, pi[i])
+				break
+			}
+		}
+	}
+	return filtered
+}
+
 // POAM is the top-level OSCAL POA&M document.
 type POAM struct {
 	UUID     UUID         `json:"uuid"`
 	Metadata POAMMetadata `json:"metadata"`
-	Items    []POAMItem   `json:"poam-items"`
+	Items    POAMItems    `json:"poam-items"`
 }
 
 // POAMMetadata holds document metadata.

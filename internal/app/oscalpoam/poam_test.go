@@ -63,3 +63,37 @@ func TestGenerate_DeterministicUUID(t *testing.T) {
 		t.Error("UUID should be deterministic for same inputs")
 	}
 }
+
+func TestPOAMItems_DomainMethods(t *testing.T) {
+	items := POAMItems{
+		{
+			UUID:            "i1",
+			RelatedControls: []RelatedCtl{{ControlID: "CTL.A.001"}},
+		},
+		{
+			UUID:            "i2",
+			RelatedControls: []RelatedCtl{{ControlID: "CTL.B.002"}},
+		},
+		{
+			UUID:            "i3",
+			RelatedControls: []RelatedCtl{{ControlID: "CTL.A.001"}},
+		},
+	}
+
+	if items.Len() != 3 {
+		t.Errorf("items.Len() = %d, want 3", items.Len())
+	}
+
+	ctlA := items.ByControl(kernel.ControlID("CTL.A.001"))
+	if ctlA.Len() != 2 {
+		t.Errorf("ByControl(CTL.A.001).Len() = %d, want 2", ctlA.Len())
+	}
+
+	var empty POAMItems
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.ByControl(kernel.ControlID("CTL.A.001")) != nil {
+		t.Error("empty.ByControl() should return nil")
+	}
+}

@@ -173,3 +173,18 @@ func TestTacticsCoverage_CollectionMethods(t *testing.T) {
 		t.Errorf("ByTacticID = %v, want Covered", found)
 	}
 }
+
+func TestStaveOnlyTactics_DomainMethods(t *testing.T) {
+	sot := StaveOnlyTactics{
+		{TacticID: "x_stave_resilience", TacticName: "Resilience", ControlCount: 3},
+	}
+
+	if sot.Len() != 1 {
+		t.Errorf("sot.Len() = %d, want 1", sot.Len())
+	}
+
+	var empty StaveOnlyTactics
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+}
