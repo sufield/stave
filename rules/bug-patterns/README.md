@@ -30,3 +30,6 @@ bug shape, CI fails before tests even run.
 | pointer-stringify | fmt.Sprintf on pointer value | Jun 27 2026 bughunt |
 | expiry-date-unchecked | ExpiryDate without format validation | Jun 26, Jul 19 2026 bughunt |
 | worsening-ratio-bug | Negative/negative division = false positive | Jul 4 2026 bughunt |
+| bare-time-now | `time.Now()` in app layer bypasses Clock interface | 013c9e89f5, 49680ca22b |
+| shallow-glob | `filepath.Glob` misses subdirectories | 49680ca22b |
+| os-exit-in-library | `os.Exit` in library code prevents error handling | Architecture policy |

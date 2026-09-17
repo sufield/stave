@@ -1,0 +1,14 @@
+id: stave-shallow-glob
+language: go
+severity: warning
+message: "filepath.Glob only matches one directory level — use filepath.WalkDir for recursive discovery"
+note: |
+  Bug class: CLASS 19 — Shallow file discovery
+  Fix 49680ca22b: ScanSnapshots used filepath.Glob which missed observation files
+  in subdirectories. Replaced with filepath.WalkDir for recursive discovery.
+  filepath.Glob("dir/*.json") silently ignores dir/subdir/*.json.
+rule:
+  kind: call_expression
+  has:
+    kind: selector_expression
+    regex: 'filepath\.Glob'

@@ -1,0 +1,14 @@
+id: stave-os-exit-in-library
+language: go
+severity: warning
+message: "os.Exit in library code — return an error instead so callers can handle it"
+note: |
+  Bug class: CLASS 20 — Untestable exit paths
+  os.Exit() in library code bypasses defer, prevents error handling by callers,
+  and makes functions untestable. Return errors to the caller; let cmd/ decide
+  the exit code. Acceptable only in main() or standalone tool binaries.
+rule:
+  kind: call_expression
+  has:
+    kind: selector_expression
+    regex: 'os\.Exit'

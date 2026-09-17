@@ -1,0 +1,14 @@
+id: stave-bare-time-now
+language: go
+severity: warning
+message: "Bare time.Now() in app layer — use ports.Clock interface for testability"
+note: |
+  Bug class: CLASS 18 — Hardwired side effects
+  Fix 013c9e89f5: bare time.Now() in attestation broke golden-update-all CI.
+  Fix 49680ca22b: zero time.Time{} from missing clock caused Year 1 SLA errors.
+  Architecture test TestCoreRuntimeNoHardwiredSideEffects forbids direct time.Now()
+  in internal/app. Use the ports.Clock interface (ports.RealClock{} as default).
+  Timing-only uses (start := time.Now(); time.Since(start)) are false positives —
+  review manually.
+rule:
+  pattern: time.Now()
