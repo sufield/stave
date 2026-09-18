@@ -315,6 +315,8 @@ jobs:
           node-version: '22'
       - name: Install Grit
         run: npm install -g @getgrit/cli
+      - name: Initialize Grit cache
+        run: grit init
       - name: Run GritQL control checks
         run: make grit-check
 
