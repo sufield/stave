@@ -48,7 +48,75 @@ type ComplianceFinding struct {
 	Status     string         `json:"status"`
 	Finding    OCSFFinding    `json:"finding"`
 	Compliance OCSFCompliance `json:"compliance"`
-	Resources  []OCSFResource `json:"resources,omitempty"`
+	Resources  OCSFResources  `json:"resources,omitempty"`
+}
+
+// OCSFResources is a domain collection of OCSFResource items with querying methods.
+type OCSFResources []OCSFResource
+
+// Len returns the number of resources in the collection.
+func (res OCSFResources) Len() int {
+	return len(res)
+}
+
+// ByType returns resources matching asset type t.
+func (res OCSFResources) ByType(t kernel.AssetType) OCSFResources {
+	if len(res) == 0 {
+		return nil
+	}
+	var filtered OCSFResources
+	for i := range res {
+		if res[i].Type == t {
+			filtered = append(filtered, res[i])
+		}
+	}
+	return filtered
+}
+
+// ByAssetID returns the resource matching uid, or nil if not found.
+func (res OCSFResources) ByAssetID(uid asset.ID) *OCSFResource {
+	for i := range res {
+		if res[i].UID == uid {
+			return &res[i]
+		}
+	}
+	return nil
+}
+
+// ComplianceFindings is a domain collection of ComplianceFinding events with querying methods.
+type ComplianceFindings []ComplianceFinding
+
+// Len returns the number of compliance finding events in the collection.
+func (cf ComplianceFindings) Len() int {
+	return len(cf)
+}
+
+// BySeverity returns finding events matching severityID.
+func (cf ComplianceFindings) BySeverity(sev SeverityID) ComplianceFindings {
+	if len(cf) == 0 {
+		return nil
+	}
+	var filtered ComplianceFindings
+	for i := range cf {
+		if cf[i].SeverityID == sev {
+			filtered = append(filtered, cf[i])
+		}
+	}
+	return filtered
+}
+
+// ByControl returns finding events matching controlID.
+func (cf ComplianceFindings) ByControl(controlID kernel.ControlID) ComplianceFindings {
+	if len(cf) == 0 {
+		return nil
+	}
+	var filtered ComplianceFindings
+	for i := range cf {
+		if cf[i].Compliance.Control == controlID {
+			filtered = append(filtered, cf[i])
+		}
+	}
+	return filtered
 }
 
 // OCSFFinding holds the finding details.
@@ -72,8 +140,8 @@ type OCSFResource struct {
 }
 
 // Export converts Stave findings to OCSF Compliance Finding events.
-func Export(findings []remediation.Finding) []ComplianceFinding {
-	events := make([]ComplianceFinding, 0, len(findings))
+func Export(findings []remediation.Finding) ComplianceFindings {
+	events := make(ComplianceFindings, 0, len(findings))
 	for i := range findings {
 		f := &findings[i]
 		uid := string(f.ControlID) + ":" + string(f.AssetID)
@@ -97,7 +165,7 @@ func Export(findings []remediation.Finding) []ComplianceFinding {
 				Control:      f.ControlID,
 				Status:       "FAILED",
 			},
-			Resources: []OCSFResource{
+			Resources: OCSFResources{
 				{UID: f.AssetID, Type: f.AssetType},
 			},
 		})

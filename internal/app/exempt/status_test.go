@@ -51,3 +51,36 @@ func TestComputeStatus_ResolvedFinding(t *testing.T) {
 		t.Errorf("resolved = %d, want 1", report.Resolved)
 	}
 }
+
+func TestExpiryAndResolvedItems_DomainMethods(t *testing.T) {
+	expiring := ExpiryItems{
+		{ControlID: "CTL.A.001", AssetID: "asset-1"},
+		{ControlID: "CTL.B.002", AssetID: "asset-2"},
+	}
+	if expiring.Len() != 2 {
+		t.Errorf("expiring.Len() = %d, want 2", expiring.Len())
+	}
+	if expiring.ByControl("CTL.A.001").Len() != 1 {
+		t.Errorf("ByControl(CTL.A.001) = %d, want 1", expiring.ByControl("CTL.A.001").Len())
+	}
+
+	var emptyExpiring ExpiryItems
+	if emptyExpiring.Len() != 0 || emptyExpiring.ByControl("CTL.A.001") != nil {
+		t.Errorf("emptyExpiring methods failed")
+	}
+
+	resolved := ResolvedItems{
+		{ControlID: "CTL.A.001", AssetID: "asset-1"},
+	}
+	if resolved.Len() != 1 {
+		t.Errorf("resolved.Len() = %d, want 1", resolved.Len())
+	}
+	if resolved.ByControl("CTL.A.001").Len() != 1 {
+		t.Errorf("resolved.ByControl(CTL.A.001) = %d, want 1", resolved.ByControl("CTL.A.001").Len())
+	}
+
+	var emptyResolved ResolvedItems
+	if emptyResolved.Len() != 0 || emptyResolved.ByControl("CTL.A.001") != nil {
+		t.Errorf("emptyResolved methods failed")
+	}
+}

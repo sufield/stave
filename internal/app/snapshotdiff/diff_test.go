@@ -201,3 +201,45 @@ func TestPropertyChanges_CollectionMethods(t *testing.T) {
 		t.Errorf("ByProperty(p1) len = %d, want 2", pcs.ByProperty("p1").Len())
 	}
 }
+
+func TestNewAndRemovedAssets_DomainMethods(t *testing.T) {
+	newAssets := NewAssets{
+		{AssetID: "a1", AssetType: "aws_s3_bucket"},
+		{AssetID: "a2", AssetType: "aws_iam_role"},
+		{AssetID: "a3", AssetType: "aws_s3_bucket"},
+	}
+
+	if newAssets.Len() != 3 {
+		t.Errorf("newAssets.Len() = %d, want 3", newAssets.Len())
+	}
+	if newAssets.ByType("aws_s3_bucket").Len() != 2 {
+		t.Errorf("newAssets.ByType(aws_s3_bucket).Len() = %d, want 2", newAssets.ByType("aws_s3_bucket").Len())
+	}
+
+	removedAssets := RemovedAssets{
+		{AssetID: "r1", AssetType: "aws_ec2_instance"},
+	}
+
+	if removedAssets.Len() != 1 {
+		t.Errorf("removedAssets.Len() = %d, want 1", removedAssets.Len())
+	}
+	if removedAssets.ByType("aws_ec2_instance").Len() != 1 {
+		t.Errorf("removedAssets.ByType(aws_ec2_instance).Len() = %d, want 1", removedAssets.ByType("aws_ec2_instance").Len())
+	}
+
+	var emptyNew NewAssets
+	if emptyNew.Len() != 0 {
+		t.Errorf("emptyNew.Len() = %d, want 0", emptyNew.Len())
+	}
+	if emptyNew.ByType("aws_s3_bucket") != nil {
+		t.Error("emptyNew.ByType() should return nil")
+	}
+
+	var emptyRemoved RemovedAssets
+	if emptyRemoved.Len() != 0 {
+		t.Errorf("emptyRemoved.Len() = %d, want 0", emptyRemoved.Len())
+	}
+	if emptyRemoved.ByType("aws_ec2_instance") != nil {
+		t.Error("emptyRemoved.ByType() should return nil")
+	}
+}

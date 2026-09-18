@@ -102,3 +102,61 @@ func TestExport_SeverityMapping(t *testing.T) {
 		}
 	}
 }
+
+func TestComplianceFindings_DomainMethods(t *testing.T) {
+	events := ComplianceFindings{
+		{
+			SeverityID: SeverityIDHigh,
+			Compliance: OCSFCompliance{Control: "CTL.A.001"},
+			Resources: OCSFResources{
+				{UID: asset.ID("res-1"), Type: "aws_s3_bucket"},
+			},
+		},
+		{
+			SeverityID: SeverityIDLow,
+			Compliance: OCSFCompliance{Control: "CTL.B.002"},
+			Resources: OCSFResources{
+				{UID: asset.ID("res-2"), Type: "aws_iam_user"},
+			},
+		},
+	}
+
+	if events.Len() != 2 {
+		t.Errorf("events.Len() = %d, want 2", events.Len())
+	}
+
+	if events.BySeverity(SeverityIDHigh).Len() != 1 {
+		t.Errorf("BySeverity(SeverityIDHigh) len = %d, want 1", events.BySeverity(SeverityIDHigh).Len())
+	}
+
+	if events.ByControl("CTL.A.001").Len() != 1 {
+		t.Errorf("ByControl(CTL.A.001) len = %d, want 1", events.ByControl("CTL.A.001").Len())
+	}
+
+	var emptyEvents ComplianceFindings
+	if emptyEvents.Len() != 0 || emptyEvents.BySeverity(SeverityIDHigh) != nil || emptyEvents.ByControl("CTL.A.001") != nil {
+		t.Errorf("empty ComplianceFindings methods failed")
+	}
+
+	res := events[0].Resources
+	if res.Len() != 1 {
+		t.Errorf("res.Len() = %d, want 1", res.Len())
+	}
+
+	if res.ByType("aws_s3_bucket").Len() != 1 {
+		t.Errorf("ByType(aws_s3_bucket) len = %d, want 1", res.ByType("aws_s3_bucket").Len())
+	}
+
+	if res.ByAssetID(asset.ID("res-1")) == nil {
+		t.Errorf("ByAssetID(res-1) returned nil")
+	}
+
+	if res.ByAssetID(asset.ID("nonexistent")) != nil {
+		t.Errorf("ByAssetID(nonexistent) expected nil")
+	}
+
+	var emptyRes OCSFResources
+	if emptyRes.Len() != 0 || emptyRes.ByType("aws_s3_bucket") != nil || emptyRes.ByAssetID(asset.ID("res-1")) != nil {
+		t.Errorf("empty OCSFResources methods failed")
+	}
+}

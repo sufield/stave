@@ -9,15 +9,15 @@ import (
 
 // StatusReport holds the exemption health report.
 type StatusReport struct {
-	GeneratedAt    string         `json:"generated_at"`
-	TotalActive    int            `json:"total_active"`
-	ExpiringDays30 int            `json:"expiring_within_30d"`
-	ExpiringDays60 int            `json:"expiring_within_60d"`
-	AlreadyExpired int            `json:"expired_not_revoked"`
-	Resolved       int            `json:"resolved_finding_active_exemption"`
-	ExpiringItems  []ExpiryItem   `json:"expiring,omitempty"`
-	ExpiredItems   []ExpiryItem   `json:"expired,omitempty"`
-	ResolvedItems  []ResolvedItem `json:"resolved,omitempty"`
+	GeneratedAt    string        `json:"generated_at"`
+	TotalActive    int           `json:"total_active"`
+	ExpiringDays30 int           `json:"expiring_within_30d"`
+	ExpiringDays60 int           `json:"expiring_within_60d"`
+	AlreadyExpired int           `json:"expired_not_revoked"`
+	Resolved       int           `json:"resolved_finding_active_exemption"`
+	ExpiringItems  ExpiryItems   `json:"expiring,omitempty"`
+	ExpiredItems   ExpiryItems   `json:"expired,omitempty"`
+	ResolvedItems  ResolvedItems `json:"resolved,omitempty"`
 }
 
 // ExpiryItem describes an expiring or expired exemption.
@@ -29,12 +29,56 @@ type ExpiryItem struct {
 	Reason        string           `json:"reason"`
 }
 
+// ExpiryItems is a domain collection of ExpiryItem objects with querying methods.
+type ExpiryItems []ExpiryItem
+
+// Len returns the number of expiry items in the collection.
+func (items ExpiryItems) Len() int {
+	return len(items)
+}
+
+// ByControl returns a subset of items matching the control ID.
+func (items ExpiryItems) ByControl(controlID kernel.ControlID) ExpiryItems {
+	if len(items) == 0 {
+		return nil
+	}
+	var filtered ExpiryItems
+	for i := range items {
+		if items[i].ControlID == controlID {
+			filtered = append(filtered, items[i])
+		}
+	}
+	return filtered
+}
+
 // ResolvedItem describes an exemption where the finding no longer exists.
 type ResolvedItem struct {
 	ControlID      kernel.ControlID `json:"control_id"`
 	AssetID        asset.ID         `json:"asset_id"`
 	GrantedDate    string           `json:"granted_date"`
 	Recommendation string           `json:"recommendation"`
+}
+
+// ResolvedItems is a domain collection of ResolvedItem objects with querying methods.
+type ResolvedItems []ResolvedItem
+
+// Len returns the number of resolved items in the collection.
+func (items ResolvedItems) Len() int {
+	return len(items)
+}
+
+// ByControl returns a subset of resolved items matching the control ID.
+func (items ResolvedItems) ByControl(controlID kernel.ControlID) ResolvedItems {
+	if len(items) == 0 {
+		return nil
+	}
+	var filtered ResolvedItems
+	for i := range items {
+		if items[i].ControlID == controlID {
+			filtered = append(filtered, items[i])
+		}
+	}
+	return filtered
 }
 
 // ComputeStatus analyzes exemption health.

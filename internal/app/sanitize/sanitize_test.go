@@ -205,3 +205,39 @@ func TestSanitize_AccountIDHashesCount(t *testing.T) {
 		t.Errorf("expected 2 account ID hashes, got %d", r.AccountIDHashes)
 	}
 }
+
+func TestRules_DomainMethods(t *testing.T) {
+	rules := Rules{
+		{Field: "asset_id", Method: MethodHash},
+		{Field: "properties.secret", Method: MethodRemove},
+		{Field: "properties.owner", Method: MethodPlaceholder, Placeholder: "redacted"},
+	}
+
+	if rules.Len() != 3 {
+		t.Errorf("rules.Len() = %d, want 3", rules.Len())
+	}
+
+	found := rules.ByField("asset_id")
+	if found == nil || found.Method != MethodHash {
+		t.Errorf("ByField(asset_id) = %v, want MethodHash", found)
+	}
+	if rules.ByField("nonexistent") != nil {
+		t.Error("ByField(nonexistent) should return nil")
+	}
+
+	hashRules := rules.ByMethod(MethodHash)
+	if hashRules.Len() != 1 {
+		t.Errorf("ByMethod(MethodHash).Len() = %d, want 1", hashRules.Len())
+	}
+
+	var empty Rules
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.ByField("asset_id") != nil {
+		t.Error("empty.ByField() should return nil")
+	}
+	if empty.ByMethod(MethodHash) != nil {
+		t.Error("empty.ByMethod() should return nil")
+	}
+}

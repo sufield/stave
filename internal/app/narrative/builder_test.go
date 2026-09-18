@@ -129,3 +129,37 @@ func TestSteps_CollectionMethods(t *testing.T) {
 		t.Errorf("RequiresCaution len = %d, want 1", steps.RequiresCaution().Len())
 	}
 }
+
+func TestChainMembers_CollectionMethods(t *testing.T) {
+	members := ChainMembers{
+		{ControlID: "CTL.A.001", Status: StatusPassing},
+		{ControlID: "CTL.B.002", Status: StatusThisFinding},
+		{ControlID: "CTL.C.003", Status: StatusAlsoFailing},
+	}
+
+	if members.Len() != 3 {
+		t.Errorf("members.Len() = %d, want 3", members.Len())
+	}
+
+	if members.Passing().Len() != 1 {
+		t.Errorf("Passing() len = %d, want 1", members.Passing().Len())
+	}
+
+	if members.Failing().Len() != 2 {
+		t.Errorf("Failing() len = %d, want 2", members.Failing().Len())
+	}
+
+	m := members.ByControl("CTL.A.001")
+	if m == nil || !m.IsPassing() {
+		t.Errorf("ByControl(CTL.A.001) failed")
+	}
+
+	if members.ByControl("CTL.NONEXISTENT") != nil {
+		t.Errorf("ByControl(nonexistent) expected nil")
+	}
+
+	var empty ChainMembers
+	if empty.Len() != 0 || empty.Passing() != nil || empty.Failing() != nil || empty.ByControl("CTL.A.001") != nil {
+		t.Errorf("empty ChainMembers methods failed")
+	}
+}

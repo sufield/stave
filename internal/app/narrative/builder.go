@@ -101,9 +101,55 @@ func (ss Steps) RequiresCaution() Steps {
 type ChainContext struct {
 	ChainID           kernel.ChainID     `json:"chain_id"`
 	ChainActive       bool               `json:"chain_active"`
-	MemberControls    []ChainMember      `json:"member_controls"`
+	MemberControls    ChainMembers       `json:"member_controls"`
 	ChainNarrative    string             `json:"chain_narrative"`
 	DeactivationOrder []kernel.ControlID `json:"deactivation_order,omitempty"`
+}
+
+// ChainMembers is a domain collection of ChainMember controls with querying methods.
+type ChainMembers []ChainMember
+
+// Len returns the number of chain members in the collection.
+func (cm ChainMembers) Len() int {
+	return len(cm)
+}
+
+// Passing returns only the chain members that are in a passing state.
+func (cm ChainMembers) Passing() ChainMembers {
+	if len(cm) == 0 {
+		return nil
+	}
+	var filtered ChainMembers
+	for i := range cm {
+		if cm[i].IsPassing() {
+			filtered = append(filtered, cm[i])
+		}
+	}
+	return filtered
+}
+
+// Failing returns chain members that are not passing (this_finding or also_failing).
+func (cm ChainMembers) Failing() ChainMembers {
+	if len(cm) == 0 {
+		return nil
+	}
+	var filtered ChainMembers
+	for i := range cm {
+		if !cm[i].IsPassing() {
+			filtered = append(filtered, cm[i])
+		}
+	}
+	return filtered
+}
+
+// ByControl returns the chain member matching controlID, or nil if not found.
+func (cm ChainMembers) ByControl(controlID kernel.ControlID) *ChainMember {
+	for i := range cm {
+		if cm[i].ControlID == controlID {
+			return &cm[i]
+		}
+	}
+	return nil
 }
 
 // MemberStatus classifies the status of a chain member control.

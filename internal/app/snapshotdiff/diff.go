@@ -92,6 +92,50 @@ type ScopeWarning struct {
 	Message string `json:"message"`
 }
 
+// NewAssets is a domain collection of NewAsset items with querying methods.
+type NewAssets []NewAsset
+
+// Len returns the number of new assets in the collection.
+func (na NewAssets) Len() int {
+	return len(na)
+}
+
+// ByType returns a new NewAssets collection filtered by asset type.
+func (na NewAssets) ByType(typ kernel.AssetType) NewAssets {
+	if len(na) == 0 {
+		return nil
+	}
+	var filtered NewAssets
+	for i := range na {
+		if na[i].AssetType == typ {
+			filtered = append(filtered, na[i])
+		}
+	}
+	return filtered
+}
+
+// RemovedAssets is a domain collection of RemovedAsset items with querying methods.
+type RemovedAssets []RemovedAsset
+
+// Len returns the number of removed assets in the collection.
+func (ra RemovedAssets) Len() int {
+	return len(ra)
+}
+
+// ByType returns a new RemovedAssets collection filtered by asset type.
+func (ra RemovedAssets) ByType(typ kernel.AssetType) RemovedAssets {
+	if len(ra) == 0 {
+		return nil
+	}
+	var filtered RemovedAssets
+	for i := range ra {
+		if ra[i].AssetType == typ {
+			filtered = append(filtered, ra[i])
+		}
+	}
+	return filtered
+}
+
 // DiffResult holds the structured diff between two snapshots.
 type DiffResult struct {
 	BeforeTime      time.Time       `json:"before_time"`
@@ -99,8 +143,8 @@ type DiffResult struct {
 	BeforeAssets    int             `json:"before_assets"`
 	AfterAssets     int             `json:"after_assets"`
 	PropertyChanges PropertyChanges `json:"property_changes"`
-	NewAssets       []NewAsset      `json:"new_assets"`
-	RemovedAssets   []RemovedAsset  `json:"removed_assets"`
+	NewAssets       NewAssets       `json:"new_assets"`
+	RemovedAssets   RemovedAssets   `json:"removed_assets"`
 	RiskSummary     RiskSummary     `json:"risk_summary"`
 	ScopeWarning    *ScopeWarning   `json:"scope_warning,omitempty"`
 }

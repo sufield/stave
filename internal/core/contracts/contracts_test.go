@@ -126,3 +126,36 @@ func TestLoadSnapshots_Error(t *testing.T) {
 		t.Fatalf("expected wrapped error, got: %v", err)
 	}
 }
+
+func TestExplainRules_DomainMethods(t *testing.T) {
+	rules := ExplainRules{
+		{Path: "properties.public", Op: "eq", Value: true},
+		{Path: "properties.encrypted", Op: "ne", Value: true},
+		{Path: "properties.public", Op: "present"},
+	}
+
+	if rules.Len() != 3 {
+		t.Errorf("rules.Len() = %d, want 3", rules.Len())
+	}
+
+	byPath := rules.ByPath("properties.public")
+	if byPath.Len() != 2 {
+		t.Errorf("ByPath(properties.public).Len() = %d, want 2", byPath.Len())
+	}
+
+	byOp := rules.ByOp("eq")
+	if byOp.Len() != 1 {
+		t.Errorf("ByOp(eq).Len() = %d, want 1", byOp.Len())
+	}
+
+	var empty ExplainRules
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.ByPath("properties.public") != nil {
+		t.Error("empty.ByPath() should return nil")
+	}
+	if empty.ByOp("eq") != nil {
+		t.Error("empty.ByOp() should return nil")
+	}
+}

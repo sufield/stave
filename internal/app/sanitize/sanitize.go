@@ -30,9 +30,41 @@ type Rule struct {
 	Placeholder string `yaml:"placeholder,omitempty" json:"placeholder,omitempty"`
 }
 
+// Rules is a domain collection of Rule items with querying methods.
+type Rules []Rule
+
+// Len returns the number of rules in the collection.
+func (r Rules) Len() int {
+	return len(r)
+}
+
+// ByField returns the rule matching the given field path, or nil if not found.
+func (r Rules) ByField(field string) *Rule {
+	for i := range r {
+		if r[i].Field == field {
+			return &r[i]
+		}
+	}
+	return nil
+}
+
+// ByMethod returns a new Rules collection filtered by redaction method.
+func (r Rules) ByMethod(method Method) Rules {
+	if len(r) == 0 {
+		return nil
+	}
+	var filtered Rules
+	for i := range r {
+		if r[i].Method == method {
+			filtered = append(filtered, r[i])
+		}
+	}
+	return filtered
+}
+
 // Config holds the sanitization rules.
 type Config struct {
-	Rules []Rule `yaml:"redact" json:"redact"`
+	Rules Rules `yaml:"redact" json:"redact"`
 }
 
 var accountIDRegexp = regexp.MustCompile(`\b\d{12}\b`)
