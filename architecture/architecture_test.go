@@ -7,8 +7,6 @@ import (
 	"github.com/arch-go/arch-go/api/configuration"
 )
 
-func intPtr(v int) *int { return &v }
-
 func TestArchitecture(t *testing.T) {
 	moduleInfo := configuration.Load("github.com/sufield/stave")
 
@@ -183,10 +181,10 @@ func functionRules() []*configuration.FunctionsRule {
 	return []*configuration.FunctionsRule{
 		{
 			Package:                  "**.core.evaluation.engine.**",
-			MaxLines:                 intPtr(130),
-			MaxParameters:            intPtr(5),
-			MaxReturnValues:          intPtr(3),
-			MaxPublicFunctionPerFile: intPtr(15),
+			MaxLines:                 new(130),
+			MaxParameters:            new(5),
+			MaxReturnValues:          new(3),
+			MaxPublicFunctionPerFile: new(15),
 		},
 	}
 }

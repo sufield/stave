@@ -1,4 +1,4 @@
-.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover arch-lint arch-graph arch-test grit-check lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability validate-checklists validate-embed gen-contract validate-contract lint-patterns lint-patterns-all
+.PHONY: all build build-dev test test-fast test-changed test-safe test-run test-watch test-slow test-integration test-docs test-e2e test-ci test-coverage test-compliance cover-report clean-cover arch-lint arch-graph arch-test grit-check lint lint-fix lint-debt fmt vet tidy clean install run run-now check ci e2e determinism reproduce-release release-local release-check release help sync-schemas sync-controls sync-alternatives sync-skills gofixer imports imports-check sync-public fuzz bench docker-demo demo-check verify-encoding-demos verify-encoding-controls verify-encoding-e2e regenerate-goldens-strict regenerate-goldens docs-controls docs-controls-check docs-commands docs-commands-check docs-commands-catalog docs-commands-catalog-check docs-site docs-site-check sync-guide sync-guide-check docs-coverage docs-coverage-check metrics docs-datalog docs-datalog-check golden-update-all golden-update golden-one golden-fixture attack-stage-check domain-check ctf-coverage ctf-coverage-update mcp mcp-test deadcode-check sync-iamauth sync-iamauth-diff triage quarterly-audit quarterly-save compliance-diff ttc-validate validate-universals prove-universals validate-bidirectional validate-reachability validate-checklists validate-embed gen-contract validate-contract lint-patterns lint-patterns-all check-no-dup-arn check-no-coauthor rules-status
 # Binary name
 BINARY=stave
 
@@ -559,8 +559,45 @@ core-cloud-ratchet:
 		echo "Decreased — update CORE_CLOUD_BASELINE in Makefile to $$count"; \
 	fi
 
+## check-no-dup-arn: No duplicate ARN parsers outside arn.go
+## Source rule: CLAUDE.md "Global Utilities — Do Not Duplicate"
+check-no-dup-arn:
+	@count=$$(grep -rn 'func [Pp]arse[Aa][Rr][Nn]' --include='*.go' \
+		| grep -v 'arn.go\|_test.go\|formatter.go' \
+		| wc -l); \
+	if [ "$$count" -gt 0 ]; then \
+		echo "ERROR: $$count duplicate ARN parser(s) found:"; \
+		grep -rn 'func [Pp]arse[Aa][Rr][Nn]' --include='*.go' \
+			| grep -v 'arn.go\|_test.go\|formatter.go'; \
+		exit 1; \
+	fi
+
+## check-no-coauthor: No Co-Authored-By Claude trailer in recent commits
+## Source rule: feedback/no-coauthor-tag.md
+check-no-coauthor:
+	@count=$$(git log --format='%b' -20 | grep -ci 'Co-Authored-By.*Claude' || true); \
+	if [ "$$count" -gt 0 ]; then \
+		echo "ERROR: $$count recent commits have Co-Authored-By Claude trailer"; \
+		exit 1; \
+	fi
+
+## rules-status: Dashboard of rule enforcement coverage
+## Source: docs-internal/extracted-rules.md
+rules-status:
+	@echo "=== Rule Enforcement Status ==="
+	@echo -n "TESTABLE-CODE (Go tests): "; \
+	grep -c 'func Test' architecture/rules_test.go 2>/dev/null || echo "0"
+	@echo -n "TESTABLE-CI (make targets): "; \
+	grep -c 'TESTABLE-CI' docs-internal/extracted-rules.md 2>/dev/null || echo "0"
+	@echo -n "TESTABLE-LINT (GritQL/lint): "; \
+	grep -c 'TESTABLE-LINT' docs-internal/extracted-rules.md 2>/dev/null || echo "0"
+	@echo -n "PROCESS-ONLY (human/AI): "; \
+	grep -c 'PROCESS-ONLY' docs-internal/extracted-rules.md 2>/dev/null || echo "0"
+	@echo -n "REDUNDANT (already covered): "; \
+	grep -c 'REDUNDANT' docs-internal/extracted-rules.md 2>/dev/null || echo "0"
+
 ## check: Run all checks (fmt, vet, lint, terminology, deadcode, control content, test)
-check: fmt vet lint stale-terminology-check check-unsafe-writes deadcode-check attack-stage-check domain-check core-cloud-ratchet test
+check: fmt vet lint stale-terminology-check check-unsafe-writes deadcode-check attack-stage-check domain-check core-cloud-ratchet check-no-dup-arn check-no-coauthor test
 
 ## semantic-diff: Run CEL vs reference differential on S3 controls + iam_condition_bypass chain
 ## Use ARGS for additional flags: make semantic-diff ARGS="-symbolic -v"
@@ -1321,6 +1358,10 @@ metrics:
 	@echo "" >> docs/metrics.yaml
 	@echo "updated: $$(date +%Y-%m-%d)" >> docs/metrics.yaml
 	@echo "Generated docs/metrics.yaml"
+
+## quality: Run quality metrics baseline and produce docs-internal/quality-metrics.json
+quality:
+	$(GOTEST) ./architecture/ -run 'TestMeasure|TestZWrite|TestZZPrint' -count=1 -v
 
 ## consistency-check: Verify every derived artifact matches its canonical source
 ##
