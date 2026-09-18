@@ -33,3 +33,4 @@ bug shape, CI fails before tests even run.
 | bare-time-now | `time.Now()` in app layer bypasses Clock interface | 013c9e89f5, 49680ca22b |
 | shallow-glob | `filepath.Glob` misses subdirectories | 49680ca22b |
 | os-exit-in-library | `os.Exit` in library code prevents error handling | Architecture policy |
+| cobra-missing-silence | cobra.Command with RunE but no SilenceUsage | CLAUDE.md CLI conventions |

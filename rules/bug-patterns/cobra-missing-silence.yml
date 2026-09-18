@@ -1,0 +1,22 @@
+id: stave-cobra-missing-silence
+language: go
+severity: warning
+message: "cobra.Command missing SilenceUsage — set SilenceUsage: true, SilenceErrors: true"
+note: |
+  CLAUDE.md CLI Command Conventions: every command must set SilenceUsage and
+  SilenceErrors to true. Without these, Cobra prints usage on every error,
+  which clutters output and confuses users. Group-only commands (no RunE)
+  inherit from root; leaf commands must set them explicitly.
+rule:
+  kind: composite_literal
+  regex: 'cobra\.Command'
+  all:
+    - has:
+        kind: keyed_element
+        regex: 'RunE'
+        stopBy: end
+    - not:
+        has:
+          kind: keyed_element
+          regex: 'SilenceUsage'
+          stopBy: end
