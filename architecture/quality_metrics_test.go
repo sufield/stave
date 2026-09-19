@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sufield/stave/internal/collectorcontract"
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
 
@@ -171,6 +172,125 @@ func TestMeasureSeverityDistribution(t *testing.T) {
 		bySev[ctl.Severity.String()]++
 	}
 	qmRecord(t, "severity_distribution", bySev)
+}
+
+func TestMeasureDeadChains(t *testing.T) {
+	controls, chains := loadCatalog(t)
+	ctlIndex := make(map[string]bool, len(controls))
+	for _, ctl := range controls {
+		ctlIndex[string(ctl.ID)] = true
+	}
+	dead := 0
+	for _, ch := range chains {
+		for _, cid := range ch.ControlIDs {
+			if !ctlIndex[string(cid)] {
+				dead++
+				if dead <= 5 {
+					t.Logf("  dead ref: chain %s → %s", ch.ID, cid)
+				}
+				break
+			}
+		}
+	}
+	qmRecord(t, "dead_chains", dead)
+}
+
+func TestMeasurePredicateDuplication(t *testing.T) {
+	controls, _ := loadCatalog(t)
+	// Collect full predicate signatures (sorted rule sets) per control.
+	signatures := make(map[string]int)
+	for _, ctl := range controls {
+		if ctl.UnsafePredicate.IsEmpty() {
+			continue
+		}
+		var rules []string
+		ctl.UnsafePredicate.Walk(func(r policy.PredicateRule) {
+			rules = append(rules, fmt.Sprintf("%s|%s|%v", r.Field, r.Op, r.Value))
+		})
+		sort.Strings(rules)
+		sig := strings.Join(rules, ";")
+		signatures[sig]++
+	}
+	dupes := 0
+	for _, count := range signatures {
+		if count > 1 {
+			dupes++
+		}
+	}
+	qmRecord(t, "duplicate_predicates", dupes)
+	qmRecord(t, "unique_predicates", len(signatures))
+}
+
+func TestMeasureGhostPropertyPaths(t *testing.T) {
+	controls, _ := loadCatalog(t)
+	contract, err := collectorcontract.Load()
+	if err != nil {
+		t.Skipf("collector contract not available: %v", err)
+		return
+	}
+	contracted := contract.FieldIndex()
+	ghosts := 0
+	for _, ctl := range controls {
+		ctl.UnsafePredicate.Walk(func(r policy.PredicateRule) {
+			field := r.Field.String()
+			if field == "" {
+				return
+			}
+			field = strings.TrimPrefix(field, "properties.")
+			if _, ok := contracted[field]; !ok {
+				ghosts++
+			}
+		})
+	}
+	qmRecord(t, "ghost_property_paths", ghosts)
+}
+
+func TestMeasureMagicNumbersInPredicates(t *testing.T) {
+	controls, _ := loadCatalog(t)
+	magicPattern := regexp.MustCompile(`\b(22|80|443|3306|3389|5432|8080|8443|27017)\b`)
+	magicCount := 0
+	for _, ctl := range controls {
+		ctl.UnsafePredicate.Walk(func(r policy.PredicateRule) {
+			s := fmt.Sprintf("%v", r.Value)
+			magicCount += len(magicPattern.FindAllString(s, -1))
+		})
+	}
+	qmRecord(t, "magic_numbers_in_predicates", magicCount)
+}
+
+func TestMeasureUndocumentedExports(t *testing.T) {
+	fset := token.NewFileSet()
+	undocumented := 0
+	if err := filepath.Walk("../internal/core/evaluation/engine", func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || !strings.HasSuffix(path, ".go") || strings.HasSuffix(path, "_test.go") {
+			return nil
+		}
+		f, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+		if err != nil {
+			return fmt.Errorf("parse %s: %w", path, err)
+		}
+		for _, decl := range f.Decls {
+			switch d := decl.(type) {
+			case *ast.FuncDecl:
+				if d.Name.IsExported() && d.Doc == nil {
+					undocumented++
+				}
+			case *ast.GenDecl:
+				for _, spec := range d.Specs {
+					if ts, ok := spec.(*ast.TypeSpec); ok && ts.Name.IsExported() && d.Doc == nil {
+						undocumented++
+					}
+				}
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("walk engine: %v", err)
+	}
+	qmRecord(t, "engine_undocumented_exports", undocumented)
 }
 
 // ============================================================
