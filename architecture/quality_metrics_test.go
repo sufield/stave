@@ -356,6 +356,9 @@ func TestMeasureTestTime(t *testing.T) {
 // ============================================================
 
 func TestZWriteMetrics(t *testing.T) {
+	if os.Getenv("QUALITY_WRITE") == "" {
+		t.Skip("set QUALITY_WRITE=1 to persist metrics (skipped in CI to avoid untracked file conflicts)")
+	}
 	qmMu.Lock()
 	defer qmMu.Unlock()
 	if len(qmMetrics) == 0 {

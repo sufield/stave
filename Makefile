@@ -1361,7 +1361,7 @@ metrics:
 
 ## quality: Run quality metrics baseline and produce docs-internal/quality-metrics.json
 quality:
-	$(GOTEST) ./architecture/ -run 'TestMeasure|TestZWrite|TestZZPrint' -count=1 -v
+	QUALITY_WRITE=1 $(GOTEST) ./architecture/ -run 'TestMeasure|TestZWrite|TestZZPrint' -count=1 -v
 
 ## consistency-check: Verify every derived artifact matches its canonical source
 ##
@@ -1506,6 +1506,19 @@ sync-skills:
 	@mkdir -p $(SKILLS_DST)
 	@rsync -a --delete $(SKILLS_SRC) $(SKILLS_DST)
 	@echo "Synced $$(find $(SKILLS_DST) -type f \( -name '*.md' -o -name '*.yaml' \) | wc -l | tr -d ' ') files to $(SKILLS_DST)"
+
+# ── Mutation testing ─────────────────────────────────────────────
+# Runs go-mutesting against the trust-critical evaluation engine.
+# --min-msi gates on the measured baseline; raise after killing
+# survivors, never aspirationally.
+# Install: go install github.com/jonbaldie/go-mutesting/cmd/go-mutesting@latest
+# ── Mutation testing ─────────────────────────────────────────────
+MUTATION_SCOPE ?= ./internal/core/evaluation/engine/...
+MUTATION_MSI   ?= 59
+.PHONY: mutation
+mutation:
+	@echo "Running mutation tests on $(MUTATION_SCOPE) (MSI gate: $(MUTATION_MSI)%)..."
+	@go-mutesting --quiet --workers 0 --min-msi $(MUTATION_MSI) $(MUTATION_SCOPE)
 
 # ── Check-compare baseline ──────────────────────────────────────
 # Validates Stave's IAM escalation resolver against the curated

@@ -1,0 +1,33 @@
+name: Mutation Testing
+
+# Weekly mutation testing against the trust-critical evaluation engine.
+# Opt-in (scheduled + manual) — never gates PRs.
+# See docs-internal/mutation-baseline.md for survivor analysis.
+
+on:
+  schedule:
+    - cron: '0 4 * * 3' # Wednesdays 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: Install go-mutesting
+        run: go install github.com/jonbaldie/go-mutesting/cmd/go-mutesting@latest
+
+      - name: Run mutation tests
+        run: make mutation
