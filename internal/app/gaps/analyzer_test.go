@@ -189,3 +189,31 @@ func TestFieldGaps_CollectionMethods(t *testing.T) {
 		t.Errorf("ByAssetType(aws_s3_bucket).Len() = %d, want 2", gaps.ByAssetType("aws_s3_bucket").Len())
 	}
 }
+
+func TestControlsAndChainsBlocked_CollectionMethods(t *testing.T) {
+	cb := ControlsBlocked{"CTL.A.001", "CTL.B.002"}
+	if cb.Len() != 2 {
+		t.Errorf("cb.Len() = %d, want 2", cb.Len())
+	}
+	if !cb.Contains("CTL.A.001") || cb.Contains("CTL.C.003") {
+		t.Errorf("cb.Contains() failed")
+	}
+
+	var emptyCB ControlsBlocked
+	if emptyCB.Len() != 0 || emptyCB.Contains("CTL.A.001") {
+		t.Errorf("emptyCB methods failed")
+	}
+
+	ch := ChainsBlocked{"CHAIN.A", "CHAIN.B"}
+	if ch.Len() != 2 {
+		t.Errorf("ch.Len() = %d, want 2", ch.Len())
+	}
+	if !ch.Contains("CHAIN.A") || ch.Contains("CHAIN.C") {
+		t.Errorf("ch.Contains() failed")
+	}
+
+	var emptyCH ChainsBlocked
+	if emptyCH.Len() != 0 || emptyCH.Contains("CHAIN.A") {
+		t.Errorf("emptyCH methods failed")
+	}
+}

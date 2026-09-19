@@ -27,9 +27,27 @@ type Prediction struct {
 
 // Accelerator describes a sprint-sized intervention that moves the date.
 type Accelerator struct {
-	Description string             `json:"description"`
-	ControlIDs  []kernel.ControlID `json:"control_ids"`
-	DaysSaved   int                `json:"days_saved"`
+	Description string     `json:"description"`
+	ControlIDs  ControlIDs `json:"control_ids"`
+	DaysSaved   int        `json:"days_saved"`
+}
+
+// ControlIDs is a domain collection of control IDs with domain query methods.
+type ControlIDs []kernel.ControlID
+
+// Len returns the number of control IDs in the collection.
+func (ids ControlIDs) Len() int {
+	return len(ids)
+}
+
+// Contains returns true if target control ID is in the list.
+func (ids ControlIDs) Contains(target kernel.ControlID) bool {
+	for i := range ids {
+		if ids[i] == target {
+			return true
+		}
+	}
+	return false
 }
 
 // Accelerators is a domain collection of Accelerator items with querying methods.

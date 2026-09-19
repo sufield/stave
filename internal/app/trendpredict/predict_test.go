@@ -94,3 +94,24 @@ func TestAccelerators_CollectionMethods(t *testing.T) {
 		t.Errorf("TotalDaysSaved = %d, want 15", accs.TotalDaysSaved())
 	}
 }
+
+func TestControlIDs_DomainMethods(t *testing.T) {
+	ids := ControlIDs{"CTL.A.001", "CTL.B.002"}
+
+	if ids.Len() != 2 {
+		t.Errorf("ids.Len() = %d, want 2", ids.Len())
+	}
+
+	if !ids.Contains("CTL.A.001") {
+		t.Errorf("Contains(CTL.A.001) = false, want true")
+	}
+
+	if ids.Contains("CTL.C.003") {
+		t.Errorf("Contains(CTL.C.003) = true, want false")
+	}
+
+	var empty ControlIDs
+	if empty.Len() != 0 || empty.Contains("CTL.A.001") {
+		t.Errorf("empty ControlIDs methods failed")
+	}
+}

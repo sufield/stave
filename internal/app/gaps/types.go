@@ -64,18 +64,54 @@ type Report struct {
 // gap carries the controls / chains it would unlock if fixed,
 // plus a remediation hint.
 type FieldGap struct {
-	Priority             int                `json:"priority"`
-	PropertyPath         string             `json:"property_path"`
-	AssetType            kernel.AssetType   `json:"asset_type"`
-	MissingCount         int                `json:"missing_count"`
-	TotalCount           int                `json:"total_count"`
-	ControlsBlocked      []kernel.ControlID `json:"controls_blocked"`
-	ControlsBlockedCount int                `json:"controls_blocked_count"`
-	ChainsBlocked        []kernel.ChainID   `json:"chains_blocked,omitempty"`
-	ChainsBlockedCount   int                `json:"chains_blocked_count"`
-	MaxSeverity          policy.Severity    `json:"max_severity"`
-	IsIntentProperty     bool               `json:"is_intent_property"`
-	Remediation          Remediation        `json:"remediation"`
+	Priority             int              `json:"priority"`
+	PropertyPath         string           `json:"property_path"`
+	AssetType            kernel.AssetType `json:"asset_type"`
+	MissingCount         int              `json:"missing_count"`
+	TotalCount           int              `json:"total_count"`
+	ControlsBlocked      ControlsBlocked  `json:"controls_blocked"`
+	ControlsBlockedCount int              `json:"controls_blocked_count"`
+	ChainsBlocked        ChainsBlocked    `json:"chains_blocked,omitempty"`
+	ChainsBlockedCount   int              `json:"chains_blocked_count"`
+	MaxSeverity          policy.Severity  `json:"max_severity"`
+	IsIntentProperty     bool             `json:"is_intent_property"`
+	Remediation          Remediation      `json:"remediation"`
+}
+
+// ControlsBlocked is a domain collection of control IDs blocked by a gap with querying methods.
+type ControlsBlocked []kernel.ControlID
+
+// Len returns the number of blocked controls.
+func (cb ControlsBlocked) Len() int {
+	return len(cb)
+}
+
+// Contains returns true if target is in the list of blocked controls.
+func (cb ControlsBlocked) Contains(target kernel.ControlID) bool {
+	for i := range cb {
+		if cb[i] == target {
+			return true
+		}
+	}
+	return false
+}
+
+// ChainsBlocked is a domain collection of chain IDs blocked by a gap with querying methods.
+type ChainsBlocked []kernel.ChainID
+
+// Len returns the number of blocked chains.
+func (cb ChainsBlocked) Len() int {
+	return len(cb)
+}
+
+// Contains returns true if target is in the list of blocked chains.
+func (cb ChainsBlocked) Contains(target kernel.ChainID) bool {
+	for i := range cb {
+		if cb[i] == target {
+			return true
+		}
+	}
+	return false
 }
 
 // Remediation describes how the operator closes the gap and the

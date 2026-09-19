@@ -44,12 +44,35 @@ type Ticket struct {
 	Priority    Priority         `json:"priority"`
 	DueDate     string           `json:"due_date,omitempty"`
 	Description string           `json:"description"`
-	Labels      []string         `json:"labels"`
+	Labels      TicketLabels     `json:"labels"`
 	AssetID     asset.ID         `json:"asset_id"`
 	ControlID   kernel.ControlID `json:"control_id"`
 	Team        teams.TeamID     `json:"team,omitempty"`
 	Status      TicketStatus     `json:"status"`
 	DwellDays   float64          `json:"dwell_days"`
+}
+
+// TicketLabels is a domain collection of ticket labels with domain querying methods.
+type TicketLabels []string
+
+// Len returns the number of labels.
+func (tl TicketLabels) Len() int {
+	return len(tl)
+}
+
+// Contains returns true if target label is present in the collection.
+func (tl TicketLabels) Contains(target string) bool {
+	for i := range tl {
+		if tl[i] == target {
+			return true
+		}
+	}
+	return false
+}
+
+// HasTag returns true if target label is present.
+func (tl TicketLabels) HasTag(tag string) bool {
+	return tl.Contains(tag)
 }
 
 // Tickets is a domain collection of Ticket items with domain methods.
@@ -115,7 +138,7 @@ func fromFinding(f *remediation.Finding) Ticket {
 	sev := f.SeverityLabel()
 	dwellDays := f.DwellDays()
 
-	labels := []string{"security", sev}
+	labels := TicketLabels{"security", sev}
 	if f.AssetType != "" {
 		labels = append(labels, astType)
 	}

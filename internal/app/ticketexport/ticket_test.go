@@ -101,3 +101,24 @@ func TestTickets_CollectionMethods(t *testing.T) {
 		t.Error("expected nil for empty filter")
 	}
 }
+
+func TestTicketLabels_DomainMethods(t *testing.T) {
+	labels := TicketLabels{"security", "critical", "s3_bucket"}
+
+	if labels.Len() != 3 {
+		t.Errorf("labels.Len() = %d, want 3", labels.Len())
+	}
+
+	if !labels.Contains("security") || !labels.HasTag("s3_bucket") {
+		t.Errorf("Contains / HasTag failed for present items")
+	}
+
+	if labels.Contains("nonexistent") || labels.HasTag("nonexistent") {
+		t.Errorf("Contains / HasTag returned true for nonexistent item")
+	}
+
+	var empty TicketLabels
+	if empty.Len() != 0 || empty.Contains("security") || empty.HasTag("security") {
+		t.Errorf("empty TicketLabels methods failed")
+	}
+}
