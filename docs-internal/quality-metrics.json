@@ -6,16 +6,21 @@
   "control_count": 3556,
   "control_naming_violations": 0,
   "data_to_code_ratio": "95.0",
+  "dead_chains": 1,
   "depguard_compliance": "measured_by_make_lint",
+  "duplicate_predicates": 4,
   "engine_max_func_lines": 131,
   "engine_max_func_name": "applyControl",
   "engine_max_func_params": 7,
   "engine_max_params_name": "emitViolationFinding",
+  "engine_undocumented_exports": 9,
   "evaluation_code_lines": 12734,
   "fixture_file_count": 806,
   "fixture_to_control_ratio": "0.23",
+  "ghost_property_paths": 0,
   "gritql_violations": "0",
   "kernel_code_lines": 3464,
+  "magic_numbers_in_predicates": 0,
   "orphan_controls_critical": 110,
   "orphan_controls_total": 1811,
   "service_count": 134,
@@ -25,5 +30,6 @@
     "info": 19,
     "low": 280,
     "medium": 1359
-  }
+  },
+  "unique_predicates": 3552
 }
