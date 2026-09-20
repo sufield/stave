@@ -54,13 +54,31 @@ func (scs SeverityChanges) Deescalated() SeverityChanges {
 	return filtered
 }
 
+// ControlIDs is a domain collection of ControlID objects with domain querying methods.
+type ControlIDs []kernel.ControlID
+
+// Len returns the number of control IDs in the collection.
+func (ids ControlIDs) Len() int {
+	return len(ids)
+}
+
+// Contains returns true if target control ID is in the list.
+func (ids ControlIDs) Contains(target kernel.ControlID) bool {
+	for i := range ids {
+		if ids[i] == target {
+			return true
+		}
+	}
+	return false
+}
+
 // Delta describes the difference between two catalog versions.
 type Delta struct {
-	CatalogBefore   int                `json:"catalog_before_count"`
-	CatalogAfter    int                `json:"catalog_after_count"`
-	NewControls     []kernel.ControlID `json:"new_controls"`
-	RemovedControls []kernel.ControlID `json:"removed_controls"`
-	SeverityChanges SeverityChanges    `json:"severity_changes,omitempty"`
+	CatalogBefore   int             `json:"catalog_before_count"`
+	CatalogAfter    int             `json:"catalog_after_count"`
+	NewControls     ControlIDs      `json:"new_controls"`
+	RemovedControls ControlIDs      `json:"removed_controls"`
+	SeverityChanges SeverityChanges `json:"severity_changes,omitempty"`
 }
 
 // Compute produces a Delta from two sets of control definitions.

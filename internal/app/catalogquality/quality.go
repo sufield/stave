@@ -59,13 +59,31 @@ const (
 	FieldCompliance        MetadataField = "compliance"
 )
 
+// AttackStages is a domain collection of AttackStage items with querying methods.
+type AttackStages []kernel.AttackStage
+
+// Len returns the number of attack stages in the collection.
+func (as AttackStages) Len() int {
+	return len(as)
+}
+
+// Contains returns true if stage is present in the collection.
+func (as AttackStages) Contains(stage kernel.AttackStage) bool {
+	for i := range as {
+		if as[i] == stage {
+			return true
+		}
+	}
+	return false
+}
+
 // Report summarizes catalog quality across all controls.
 type Report struct {
 	TotalControls int                         `json:"total_controls"`
 	Completeness  map[MetadataField]FieldStat `json:"completeness"`
 	OverallPct    float64                     `json:"overall_pct"`
 	BlindSpots    BlindSpots                  `json:"blind_spots"`
-	MITREGaps     []kernel.AttackStage        `json:"mitre_gaps"`
+	MITREGaps     AttackStages                `json:"mitre_gaps"`
 }
 
 // Input configures the quality analysis.

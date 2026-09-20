@@ -227,3 +227,31 @@ func TestLintResults_CollectionMethods(t *testing.T) {
 		t.Errorf("TotalWarnings() = %d, want 2", results.TotalWarnings())
 	}
 }
+
+func TestLintMessages_DomainMethods(t *testing.T) {
+	msgs := LintMessages{
+		"missing required field: id",
+		"requires at least 2 member controls",
+	}
+
+	if msgs.Len() != 2 {
+		t.Errorf("msgs.Len() = %d, want 2", msgs.Len())
+	}
+
+	if !msgs.Contains("missing required field: id") {
+		t.Errorf("Contains() = false for exact match")
+	}
+
+	if !msgs.HasSubstr("member controls") {
+		t.Errorf("HasSubstr() = false for substring match")
+	}
+
+	if msgs.Contains("nonexistent") || msgs.HasSubstr("nonexistent") {
+		t.Errorf("Contains/HasSubstr returned true for nonexistent string")
+	}
+
+	var empty LintMessages
+	if empty.Len() != 0 || empty.Contains("x") || empty.HasSubstr("x") {
+		t.Errorf("empty LintMessages methods failed")
+	}
+}

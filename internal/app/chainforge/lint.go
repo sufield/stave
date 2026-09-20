@@ -12,8 +12,36 @@ import (
 // LintResult holds chain lint output.
 type LintResult struct {
 	ChainID  kernel.ChainID `json:"chain_id"`
-	Errors   []string       `json:"errors,omitempty"`
-	Warnings []string       `json:"warnings,omitempty"`
+	Errors   LintMessages   `json:"errors,omitempty"`
+	Warnings LintMessages   `json:"warnings,omitempty"`
+}
+
+// LintMessages is a domain collection of error or warning message strings with querying methods.
+type LintMessages []string
+
+// Len returns the number of messages in the collection.
+func (lm LintMessages) Len() int {
+	return len(lm)
+}
+
+// Contains returns true if target message is present in the collection.
+func (lm LintMessages) Contains(target string) bool {
+	for i := range lm {
+		if lm[i] == target {
+			return true
+		}
+	}
+	return false
+}
+
+// HasSubstr returns true if any message contains the given substring.
+func (lm LintMessages) HasSubstr(substr string) bool {
+	for i := range lm {
+		if strings.Contains(lm[i], substr) {
+			return true
+		}
+	}
+	return false
 }
 
 // LintResults is a domain collection of LintResult items with querying methods.

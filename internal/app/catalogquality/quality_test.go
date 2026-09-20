@@ -98,3 +98,24 @@ func TestBlindSpots_CollectionMethods(t *testing.T) {
 		t.Errorf("TotalUncoveredAssets = %d, want 10", bs.TotalUncoveredAssets())
 	}
 }
+
+func TestAttackStages_DomainMethods(t *testing.T) {
+	stages := AttackStages{"initial_access", "exfiltration"}
+
+	if stages.Len() != 2 {
+		t.Errorf("stages.Len() = %d, want 2", stages.Len())
+	}
+
+	if !stages.Contains("initial_access") {
+		t.Errorf("Contains(initial_access) = false, want true")
+	}
+
+	if stages.Contains("persistence") {
+		t.Errorf("Contains(persistence) = true, want false")
+	}
+
+	var empty AttackStages
+	if empty.Len() != 0 || empty.Contains("initial_access") {
+		t.Errorf("empty AttackStages methods failed")
+	}
+}

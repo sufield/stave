@@ -37,3 +37,24 @@ func TestSeverityChanges_CollectionMethods(t *testing.T) {
 		t.Errorf("Deescalated len = %d, want 1", scs.Deescalated().Len())
 	}
 }
+
+func TestControlIDs_DomainMethods(t *testing.T) {
+	ids := ControlIDs{"CTL-1", "CTL-2"}
+
+	if ids.Len() != 2 {
+		t.Errorf("ids.Len() = %d, want 2", ids.Len())
+	}
+
+	if !ids.Contains("CTL-1") {
+		t.Errorf("Contains(CTL-1) = false, want true")
+	}
+
+	if ids.Contains("CTL-3") {
+		t.Errorf("Contains(CTL-3) = true, want false")
+	}
+
+	var empty ControlIDs
+	if empty.Len() != 0 || empty.Contains("CTL-1") {
+		t.Errorf("empty ControlIDs methods failed")
+	}
+}
