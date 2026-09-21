@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"slices"
 
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/asset"
@@ -62,12 +63,7 @@ func (tl TicketLabels) Len() int {
 
 // Contains returns true if target label is present in the collection.
 func (tl TicketLabels) Contains(target string) bool {
-	for i := range tl {
-		if tl[i] == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(tl, target)
 }
 
 // HasTag returns true if target label is present.

@@ -11,6 +11,8 @@
 package gaps
 
 import (
+	"slices"
+
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -88,12 +90,7 @@ func (cb ControlsBlocked) Len() int {
 
 // Contains returns true if target is in the list of blocked controls.
 func (cb ControlsBlocked) Contains(target kernel.ControlID) bool {
-	for i := range cb {
-		if cb[i] == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(cb, target)
 }
 
 // ChainsBlocked is a domain collection of chain IDs blocked by a gap with querying methods.
@@ -106,12 +103,7 @@ func (cb ChainsBlocked) Len() int {
 
 // Contains returns true if target is in the list of blocked chains.
 func (cb ChainsBlocked) Contains(target kernel.ChainID) bool {
-	for i := range cb {
-		if cb[i] == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(cb, target)
 }
 
 // Remediation describes how the operator closes the gap and the

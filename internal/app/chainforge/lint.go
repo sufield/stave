@@ -3,6 +3,7 @@ package chainforge
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -26,12 +27,7 @@ func (lm LintMessages) Len() int {
 
 // Contains returns true if target message is present in the collection.
 func (lm LintMessages) Contains(target string) bool {
-	for i := range lm {
-		if lm[i] == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(lm, target)
 }
 
 // HasSubstr returns true if any message contains the given substring.

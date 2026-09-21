@@ -64,12 +64,7 @@ func (ids ControlIDs) Len() int {
 
 // Contains returns true if target control ID is in the list.
 func (ids ControlIDs) Contains(target kernel.ControlID) bool {
-	for i := range ids {
-		if ids[i] == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ids, target)
 }
 
 // Delta describes the difference between two catalog versions.

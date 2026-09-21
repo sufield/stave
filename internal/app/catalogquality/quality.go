@@ -69,12 +69,7 @@ func (as AttackStages) Len() int {
 
 // Contains returns true if stage is present in the collection.
 func (as AttackStages) Contains(stage kernel.AttackStage) bool {
-	for i := range as {
-		if as[i] == stage {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(as, stage)
 }
 
 // Report summarizes catalog quality across all controls.
