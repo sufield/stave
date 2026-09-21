@@ -9,6 +9,8 @@ import (
 
 // setProcessGroup puts the child in its own process group so a SIGKILL
 // to -PID reaches any grandchildren the binary might spawn.
+//
+//nolint:unused
 func setProcessGroup(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 }
@@ -16,6 +18,8 @@ func setProcessGroup(cmd *exec.Cmd) {
 // killProcessGroup sends SIGKILL to the entire process group of cmd.
 // Used on context-deadline timeout so a wedged stave subprocess tree
 // does not keep stdout open and hang cmd.Run() past ctx cancellation.
+//
+//nolint:unused
 func killProcessGroup(cmd *exec.Cmd) {
 	if cmd.Process == nil {
 		return

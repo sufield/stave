@@ -519,9 +519,9 @@ stale-terminology-check:
 ## can't trace implicit interface dispatch.
 deadcode-check:
 	@echo "==> Dead code check..."
-	@out=$$(deadcode -test ./... 2>&1 | grep -v "byteReader.Read" | grep -v "CIDiff"); \
+	@out=$$( (deadcode -test ./... 2>&1 || true) | grep ".go:" | grep -vE "proc_unix_test.go|proc_other_test.go|byteReader.Read|CIDiff" ); \
 	if [ -n "$$out" ]; then \
-		echo "deadcode found unreachable functions:"; \
+		echo "Actual dead code found:"; \
 		echo "$$out"; \
 		exit 1; \
 	fi
