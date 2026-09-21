@@ -45,7 +45,7 @@ func TestAnalyze_StillOpenDeterministicAndDeduplicated(t *testing.T) {
 		t.Fatalf("expected Efficiency report")
 	}
 
-	wantStillOpen := []kernel.ControlID{"CTL.A", "CTL.B"}
+	wantStillOpen := ControlIDs{"CTL.A", "CTL.B"}
 	if !reflect.DeepEqual(rep.Efficiency.StillOpen, wantStillOpen) {
 		t.Errorf("expected StillOpen sorted & deduplicated %v, got %v", wantStillOpen, rep.Efficiency.StillOpen)
 	}

@@ -80,13 +80,31 @@ const (
 	VerdictIncomplete EfficiencyVerdict = "INCOMPLETE"
 )
 
+// ControlIDs represents a domain collection of kernel.ControlID items with query methods.
+type ControlIDs []kernel.ControlID
+
+// Len returns the number of control IDs in the collection.
+func (ids ControlIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether the given control ID is present in the collection.
+func (ids ControlIDs) Contains(id kernel.ControlID) bool {
+	for _, c := range ids {
+		if c == id {
+			return true
+		}
+	}
+	return false
+}
+
 // Efficiency holds the predicted-vs-realized comparison.
 type Efficiency struct {
-	PredictedDelta float64            `json:"predicted_delta"`
-	RealizedDelta  float64            `json:"realized_delta"`
-	Ratio          float64            `json:"efficiency_ratio"`
-	Verdict        EfficiencyVerdict  `json:"verdict"`
-	StillOpen      []kernel.ControlID `json:"still_open,omitempty"`
+	PredictedDelta float64           `json:"predicted_delta"`
+	RealizedDelta  float64           `json:"realized_delta"`
+	Ratio          float64           `json:"efficiency_ratio"`
+	Verdict        EfficiencyVerdict `json:"verdict"`
+	StillOpen      ControlIDs        `json:"still_open,omitempty"`
 }
 
 // Report holds the remediation impact analysis.
@@ -105,8 +123,8 @@ type Report struct {
 type Input struct {
 	Before          *report.Assessment
 	After           *report.Assessment
-	PredictedDelta  float64            // from stave simulate, 0 if not provided
-	PredictedClosed []kernel.ControlID // control IDs predicted to close
+	PredictedDelta  float64    // from stave simulate, 0 if not provided
+	PredictedClosed ControlIDs // control IDs predicted to close
 }
 
 // Analyze compares before and after assessments. Before and After must

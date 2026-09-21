@@ -72,13 +72,45 @@ func Compare(req CompareRequest) (CompareResult, error) {
 	}, nil
 }
 
+// AttestationEntries is a domain collection of report.AttestationEntry items with query methods.
+type AttestationEntries []report.AttestationEntry
+
+// Len returns the number of attestation entries in the collection.
+func (ae AttestationEntries) Len() int {
+	return len(ae)
+}
+
+// ContainsControl reports whether an entry for the given control ID exists.
+func (ae AttestationEntries) ContainsControl(id kernel.ControlID) bool {
+	for i := range ae {
+		if ae[i].ControlID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// ByControl returns a new AttestationEntries collection filtered by control ID.
+func (ae AttestationEntries) ByControl(id kernel.ControlID) AttestationEntries {
+	if len(ae) == 0 {
+		return nil
+	}
+	var filtered AttestationEntries
+	for i := range ae {
+		if ae[i].ControlID == id {
+			filtered = append(filtered, ae[i])
+		}
+	}
+	return filtered
+}
+
 // findingsToEntries transforms domain findings into attestation entries,
 // applying sanitization if configured.
-func findingsToEntries(san kernel.Sanitizer, findings []evaluation.Finding) []report.AttestationEntry {
+func findingsToEntries(san kernel.Sanitizer, findings []evaluation.Finding) AttestationEntries {
 	if len(findings) == 0 {
 		return nil
 	}
-	entries := make([]report.AttestationEntry, 0, len(findings))
+	entries := make(AttestationEntries, 0, len(findings))
 	for i := range findings {
 		f := &findings[i]
 		assetID := f.AssetID

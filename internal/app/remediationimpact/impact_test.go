@@ -165,3 +165,17 @@ func TestDeactivatedChains_DomainMethods(t *testing.T) {
 		t.Errorf("BySeverity Critical: got %d, want 1", crits.Len())
 	}
 }
+
+func TestControlIDs_DomainMethods(t *testing.T) {
+	ids := ControlIDs{"CTL.A.001", "CTL.B.001"}
+
+	if ids.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", ids.Len())
+	}
+	if !ids.Contains("CTL.A.001") {
+		t.Error("Contains CTL.A.001: got false, want true")
+	}
+	if ids.Contains("CTL.C.001") {
+		t.Error("Contains CTL.C.001: got true, want false")
+	}
+}

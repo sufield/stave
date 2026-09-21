@@ -2,6 +2,9 @@
 # Binary name
 BINARY=stave
 
+# Default to skipping slow E2E tests in local dev environments
+SKIP_E2E ?= true
+
 # Go parameters
 GOCMD=go
 GOBUILD=$(GOCMD) build
@@ -808,7 +811,11 @@ gofixer:
 	@echo "7) Validation"
 	find . -name '*.go' -not -path './vendor/*' | xargs goimports -w
 	$(MAKE) lint
-	$(GOTEST) ./...
+	@if [ "$(SKIP_E2E)" = "true" ]; then \
+		$(GOTEST) -tags=dev ./...; \
+	else \
+		$(GOTEST) -tags=e2e ./...; \
+	fi
 
 ## imports: Auto-fix import grouping and remove unused imports
 imports:

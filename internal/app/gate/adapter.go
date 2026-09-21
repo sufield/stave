@@ -23,10 +23,42 @@ type BaselineLoaderFunc func(ctx context.Context, path string, expectedKind kern
 // BaselineCompareFunc compares baseline entries against current findings.
 type BaselineCompareFunc func(san kernel.Sanitizer, baseEntries []evaluation.BaselineEntry, currentFindings []remediation.Finding) BaselineComparisonResult
 
+// BaselineEntries is a domain collection of evaluation.BaselineEntry items with query methods.
+type BaselineEntries []evaluation.BaselineEntry
+
+// Len returns the number of baseline entries in the collection.
+func (be BaselineEntries) Len() int {
+	return len(be)
+}
+
+// ContainsControl reports whether an entry for the given control ID exists.
+func (be BaselineEntries) ContainsControl(id kernel.ControlID) bool {
+	for i := range be {
+		if be[i].ControlID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// ByControl returns a new BaselineEntries collection filtered by control ID.
+func (be BaselineEntries) ByControl(id kernel.ControlID) BaselineEntries {
+	if len(be) == 0 {
+		return nil
+	}
+	var filtered BaselineEntries
+	for i := range be {
+		if be[i].ControlID == id {
+			filtered = append(filtered, be[i])
+		}
+	}
+	return filtered
+}
+
 // BaselineComparisonResult mirrors the result type from cmd/enforce/artifact
 // to avoid the import.
 type BaselineComparisonResult struct {
-	Current    []evaluation.BaselineEntry
+	Current    BaselineEntries
 	Comparison evaluation.BaselineComparisonResult
 }
 

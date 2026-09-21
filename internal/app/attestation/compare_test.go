@@ -141,3 +141,23 @@ type testSanitizer struct{}
 func (testSanitizer) ID(s string) string    { return "REDACTED-" + s }
 func (testSanitizer) Path(s string) string  { return s }
 func (testSanitizer) Value(s string) string { return s }
+
+func TestAttestationEntries_DomainMethods(t *testing.T) {
+	entries := AttestationEntries{
+		{ControlID: kernel.ControlID("CTL.TEST.001"), AssetID: asset.ID("bucket-a")},
+		{ControlID: kernel.ControlID("CTL.TEST.002"), AssetID: asset.ID("bucket-b")},
+	}
+
+	if entries.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", entries.Len())
+	}
+	if !entries.ContainsControl("CTL.TEST.001") {
+		t.Error("ContainsControl CTL.TEST.001: got false, want true")
+	}
+	if entries.ContainsControl("CTL.TEST.999") {
+		t.Error("ContainsControl CTL.TEST.999: got true, want false")
+	}
+	if filtered := entries.ByControl("CTL.TEST.001"); filtered.Len() != 1 {
+		t.Errorf("ByControl CTL.TEST.001: got %d, want 1", filtered.Len())
+	}
+}
