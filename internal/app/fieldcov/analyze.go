@@ -34,12 +34,40 @@ const (
 	NotApplicable Classification = "NOT_APPLICABLE"
 )
 
+// MissingFields represents a domain collection of missing field path strings with query methods.
+type MissingFields []string
+
+// Len returns the number of missing field paths in the collection.
+func (mf MissingFields) Len() int {
+	return len(mf)
+}
+
+// Contains reports whether the given field path is present in the collection.
+func (mf MissingFields) Contains(field string) bool {
+	for _, f := range mf {
+		if f == field {
+			return true
+		}
+	}
+	return false
+}
+
+// HasPrefix reports whether any missing field path starts with the given prefix.
+func (mf MissingFields) HasPrefix(prefix string) bool {
+	for _, f := range mf {
+		if strings.HasPrefix(f, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 // ControlResult holds the coverage analysis for a single control.
 type ControlResult struct {
 	ControlID      kernel.ControlID             `json:"control_id"`
 	Severity       policy.Severity              `json:"severity"`
 	Classification Classification               `json:"classification"`
-	MissingFields  []string                     `json:"missing_fields,omitempty"`
+	MissingFields  MissingFields                `json:"missing_fields,omitempty"`
 	AssetType      kernel.AssetType             `json:"asset_type,omitempty"`
 	Frameworks     []policy.ComplianceFramework `json:"compliance_frameworks,omitempty"`
 	Risk           string                       `json:"risk,omitempty"`

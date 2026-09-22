@@ -20,20 +20,56 @@ import (
 //   - Compound chains  (chains/*.yaml)
 //   - Operational      (hard-coded list of CLI features: readiness,
 //     gaps, drift, validate, export-sir, etc.)
+// Keywords represents a domain collection of keyword strings with query methods.
+type Keywords []string
+
+// Len returns the number of keywords in the collection.
+func (kw Keywords) Len() int {
+	return len(kw)
+}
+
+// Contains reports whether the given keyword is in the collection.
+func (kw Keywords) Contains(word string) bool {
+	for _, w := range kw {
+		if strings.EqualFold(w, word) {
+			return true
+		}
+	}
+	return false
+}
+
+// ControlIDs represents a domain collection of control ID strings with query methods.
+type ControlIDs []string
+
+// Len returns the number of control IDs in the collection.
+func (ids ControlIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether the given control ID is in the collection.
+func (ids ControlIDs) Contains(id string) bool {
+	for _, c := range ids {
+		if c == id {
+			return true
+		}
+	}
+	return false
+}
+
 type Capability struct {
-	ID          string   `json:"id"`
-	Kind        string   `json:"kind"` // "control_group" | "chain" | "operational"
-	Title       string   `json:"title"`
-	Description string   `json:"description,omitempty"`
-	UseWhen     string   `json:"use_when,omitempty"`
-	Service     string   `json:"service,omitempty"`
-	Category    string   `json:"category,omitempty"`
-	AssetTypes  []string `json:"asset_types,omitempty"`
-	Severity    string   `json:"severity,omitempty"`
-	ControlIDs  []string `json:"control_ids,omitempty"`
-	ChainIDs    []string `json:"chain_ids,omitempty"`
-	Keywords    []string `json:"keywords,omitempty"`
-	ExampleCmd  string   `json:"example_command,omitempty"`
+	ID          string     `json:"id"`
+	Kind        string     `json:"kind"` // "control_group" | "chain" | "operational"
+	Title       string     `json:"title"`
+	Description string     `json:"description,omitempty"`
+	UseWhen     string     `json:"use_when,omitempty"`
+	Service     string     `json:"service,omitempty"`
+	Category    string     `json:"category,omitempty"`
+	AssetTypes  []string   `json:"asset_types,omitempty"`
+	Severity    string     `json:"severity,omitempty"`
+	ControlIDs  ControlIDs `json:"control_ids,omitempty"`
+	ChainIDs    []string   `json:"chain_ids,omitempty"`
+	Keywords    Keywords   `json:"keywords,omitempty"`
+	ExampleCmd  string     `json:"example_command,omitempty"`
 }
 
 // Build aggregates the catalog from controls + chains + the

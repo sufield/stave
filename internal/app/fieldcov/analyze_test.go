@@ -411,3 +411,20 @@ func TestControlResults_DomainMethods(t *testing.T) {
 		t.Errorf("BySeverity High: got %d, want 2", highs.Len())
 	}
 }
+
+func TestMissingFields_DomainMethods(t *testing.T) {
+	mf := MissingFields{"properties.storage.kind", "properties.tags.env"}
+
+	if mf.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", mf.Len())
+	}
+	if !mf.Contains("properties.storage.kind") {
+		t.Error("Contains properties.storage.kind: got false, want true")
+	}
+	if mf.Contains("properties.missing") {
+		t.Error("Contains properties.missing: got true, want false")
+	}
+	if !mf.HasPrefix("properties.storage") {
+		t.Error("HasPrefix properties.storage: got false, want true")
+	}
+}

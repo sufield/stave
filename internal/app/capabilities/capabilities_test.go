@@ -157,3 +157,27 @@ func TestCapabilities_CollectionDomainMethods(t *testing.T) {
 		t.Error("emptyConnectors.ByType() should return nil")
 	}
 }
+
+func TestCatalog_KeywordsAndControlIDs_DomainMethods(t *testing.T) {
+	kw := capabilities.Keywords{"s3", "encryption"}
+	if kw.Len() != 2 {
+		t.Errorf("Keywords.Len: got %d, want 2", kw.Len())
+	}
+	if !kw.Contains("S3") {
+		t.Error("Keywords.Contains S3: got false, want true")
+	}
+	if kw.Contains("iam") {
+		t.Error("Keywords.Contains iam: got true, want false")
+	}
+
+	ids := capabilities.ControlIDs{"CTL.S3.001", "CTL.S3.002"}
+	if ids.Len() != 2 {
+		t.Errorf("ControlIDs.Len: got %d, want 2", ids.Len())
+	}
+	if !ids.Contains("CTL.S3.001") {
+		t.Error("ControlIDs.Contains CTL.S3.001: got false, want true")
+	}
+	if ids.Contains("CTL.IAM.001") {
+		t.Error("ControlIDs.Contains CTL.IAM.001: got true, want false")
+	}
+}

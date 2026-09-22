@@ -91,14 +91,32 @@ type Capability struct {
 	Description string       `json:"description"`
 }
 
+// CapabilityIDs represents a domain collection of CapabilityID items with query methods.
+type CapabilityIDs []CapabilityID
+
+// Len returns the number of capability IDs in the collection.
+func (ids CapabilityIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether the given capability ID is present in the collection.
+func (ids CapabilityIDs) Contains(id CapabilityID) bool {
+	for _, c := range ids {
+		if c == id {
+			return true
+		}
+	}
+	return false
+}
+
 // ChainNode represents a chain in the graph.
 type ChainNode struct {
 	ChainID         kernel.ChainID   `json:"chain_id"`
 	Name            string           `json:"name"`
 	Severity        policy.Severity  `json:"severity"`
 	Status          string           `json:"status"`
-	Preconditions   []CapabilityID   `json:"preconditions"`
-	Postconditions  []CapabilityID   `json:"postconditions"`
+	Preconditions   CapabilityIDs    `json:"preconditions"`
+	Postconditions  CapabilityIDs    `json:"postconditions"`
 	MemberControls  []MemberControl  `json:"member_controls"`
 	ToolAnnotations []ToolAnnotation `json:"tool_annotations,omitempty"`
 }
@@ -106,8 +124,8 @@ type ChainNode struct {
 // ToolAnnotation records an offensive tool whose prerequisites
 // overlap with this chain's capabilities.
 type ToolAnnotation struct {
-	ToolName            string         `json:"tool_name"`
-	MatchedCapabilities []CapabilityID `json:"matched_capabilities"`
+	ToolName            string        `json:"tool_name"`
+	MatchedCapabilities CapabilityIDs `json:"matched_capabilities"`
 }
 
 // MemberControl is a control within a chain node.

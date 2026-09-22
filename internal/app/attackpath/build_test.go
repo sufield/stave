@@ -292,3 +292,17 @@ func TestAttackPath_DomainMethods(t *testing.T) {
 		t.Error("emptyNodes.Active() should return nil")
 	}
 }
+
+func TestCapabilityIDs_DomainMethods(t *testing.T) {
+	ids := CapabilityIDs{"cap_a", "cap_b"}
+
+	if ids.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", ids.Len())
+	}
+	if !ids.Contains("cap_a") {
+		t.Error("Contains cap_a: got false, want true")
+	}
+	if ids.Contains("cap_c") {
+		t.Error("Contains cap_c: got true, want false")
+	}
+}
