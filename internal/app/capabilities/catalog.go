@@ -20,6 +20,7 @@ import (
 //   - Compound chains  (chains/*.yaml)
 //   - Operational      (hard-coded list of CLI features: readiness,
 //     gaps, drift, validate, export-sir, etc.)
+//
 // Keywords represents a domain collection of keyword strings with query methods.
 type Keywords []string
 
