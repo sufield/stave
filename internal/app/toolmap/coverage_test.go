@@ -214,3 +214,27 @@ func TestGaps_DomainMethods(t *testing.T) {
 		t.Error("empty.ByTool() should return nil")
 	}
 }
+
+func TestChainIDsAndControlIDs_DomainMethods(t *testing.T) {
+	chains := ChainIDs{"chain_a", "chain_b"}
+	if chains.Len() != 2 {
+		t.Errorf("ChainIDs.Len: got %d, want 2", chains.Len())
+	}
+	if !chains.Contains("chain_a") {
+		t.Error("ChainIDs.Contains chain_a: got false, want true")
+	}
+	if chains.Contains("chain_c") {
+		t.Error("ChainIDs.Contains chain_c: got true, want false")
+	}
+
+	controls := ControlIDs{"CTL.A.001", "CTL.B.002"}
+	if controls.Len() != 2 {
+		t.Errorf("ControlIDs.Len: got %d, want 2", controls.Len())
+	}
+	if !controls.Contains("CTL.A.001") {
+		t.Error("ControlIDs.Contains CTL.A.001: got false, want true")
+	}
+	if controls.Contains("CTL.C.003") {
+		t.Error("ControlIDs.Contains CTL.C.003: got true, want false")
+	}
+}

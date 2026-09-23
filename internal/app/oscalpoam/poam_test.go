@@ -97,3 +97,20 @@ func TestPOAMItems_DomainMethods(t *testing.T) {
 		t.Error("empty.ByControl() should return nil")
 	}
 }
+
+func TestRelatedControls_DomainMethods(t *testing.T) {
+	rc := RelatedControls{
+		{ControlID: kernel.ControlID("CTL.A.001")},
+		{ControlID: kernel.ControlID("CTL.B.002")},
+	}
+
+	if rc.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", rc.Len())
+	}
+	if !rc.ContainsControl("CTL.A.001") {
+		t.Error("ContainsControl CTL.A.001: got false, want true")
+	}
+	if rc.ContainsControl("CTL.C.003") {
+		t.Error("ContainsControl CTL.C.003: got true, want false")
+	}
+}

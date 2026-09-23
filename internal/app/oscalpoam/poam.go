@@ -58,15 +58,33 @@ type POAMMetadata struct {
 	OSCALVersion string `json:"oscal-version"`
 }
 
+// RelatedControls is a domain collection of RelatedCtl items with querying methods.
+type RelatedControls []RelatedCtl
+
+// Len returns the number of related controls in the collection.
+func (rc RelatedControls) Len() int {
+	return len(rc)
+}
+
+// ContainsControl reports whether the given control ID is in the collection.
+func (rc RelatedControls) ContainsControl(id kernel.ControlID) bool {
+	for i := range rc {
+		if rc[i].ControlID == id {
+			return true
+		}
+	}
+	return false
+}
+
 // POAMItem is a single action item in the POA&M.
 type POAMItem struct {
-	UUID                    UUID         `json:"uuid"`
-	Title                   string       `json:"title"`
-	Description             string       `json:"description"`
-	RelatedControls         []RelatedCtl `json:"related-controls,omitempty"`
-	Subjects                []Subject    `json:"subjects,omitempty"`
-	Risk                    *POAMRisk    `json:"risk,omitempty"`
-	ScheduledCompletionDate string       `json:"scheduled-completion-date,omitempty"`
+	UUID                    UUID            `json:"uuid"`
+	Title                   string          `json:"title"`
+	Description             string          `json:"description"`
+	RelatedControls         RelatedControls `json:"related-controls,omitempty"`
+	Subjects                []Subject       `json:"subjects,omitempty"`
+	Risk                    *POAMRisk       `json:"risk,omitempty"`
+	ScheduledCompletionDate string          `json:"scheduled-completion-date,omitempty"`
 }
 
 // RelatedCtl maps a finding to its control.

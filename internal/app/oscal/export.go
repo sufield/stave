@@ -83,13 +83,31 @@ type ARResult struct {
 	Observations ARObservations `json:"observations"`
 }
 
+// RelatedObservations represents a domain collection of RelObs items with query methods.
+type RelatedObservations []RelObs
+
+// Len returns the number of related observations in the collection.
+func (ro RelatedObservations) Len() int {
+	return len(ro)
+}
+
+// ContainsUUID reports whether an observation with the given UUID is present in the collection.
+func (ro RelatedObservations) ContainsUUID(u UUID) bool {
+	for i := range ro {
+		if ro[i].ObservationUUID == u {
+			return true
+		}
+	}
+	return false
+}
+
 // ARFinding is a single OSCAL finding.
 type ARFinding struct {
-	UUID        UUID     `json:"uuid"`
-	Title       string   `json:"title"`
-	Description string   `json:"description,omitempty"`
-	Target      ARTarget `json:"target"`
-	RelatedObs  []RelObs `json:"related-observations,omitempty"`
+	UUID        UUID                `json:"uuid"`
+	Title       string              `json:"title"`
+	Description string              `json:"description,omitempty"`
+	Target      ARTarget            `json:"target"`
+	RelatedObs  RelatedObservations `json:"related-observations,omitempty"`
 }
 
 // ARTarget describes what was evaluated.

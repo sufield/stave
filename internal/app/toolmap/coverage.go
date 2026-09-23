@@ -16,16 +16,52 @@ import (
 // ControlLoaderFunc loads all controls from a root directory.
 type ControlLoaderFunc func(rootDir string) ([]policy.ControlDefinition, error)
 
+// ChainIDs represents a domain collection of kernel.ChainID items with query methods.
+type ChainIDs []kernel.ChainID
+
+// Len returns the number of chain IDs in the collection.
+func (ids ChainIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether the given chain ID is in the collection.
+func (ids ChainIDs) Contains(id kernel.ChainID) bool {
+	for _, c := range ids {
+		if c == id {
+			return true
+		}
+	}
+	return false
+}
+
+// ControlIDs represents a domain collection of kernel.ControlID items with query methods.
+type ControlIDs []kernel.ControlID
+
+// Len returns the number of control IDs in the collection.
+func (ids ControlIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether the given control ID is in the collection.
+func (ids ControlIDs) Contains(id kernel.ControlID) bool {
+	for _, c := range ids {
+		if c == id {
+			return true
+		}
+	}
+	return false
+}
+
 // Gap describes a tool prerequisite not fully covered by
 // chains and controls.
 type Gap struct {
-	Tool       string             `json:"tool"`
-	Capability string             `json:"capability"`
-	FieldPath  string             `json:"field_path"`
-	HasChain   bool               `json:"has_chain"`
-	HasControl bool               `json:"has_control"`
-	ChainIDs   []kernel.ChainID   `json:"chain_ids,omitempty"`
-	ControlIDs []kernel.ControlID `json:"control_ids,omitempty"`
+	Tool       string     `json:"tool"`
+	Capability string     `json:"capability"`
+	FieldPath  string     `json:"field_path"`
+	HasChain   bool       `json:"has_chain"`
+	HasControl bool       `json:"has_control"`
+	ChainIDs   ChainIDs   `json:"chain_ids,omitempty"`
+	ControlIDs ControlIDs `json:"control_ids,omitempty"`
 }
 
 // Gaps is a domain collection of Gap items with query and filter methods.
