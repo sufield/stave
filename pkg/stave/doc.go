@@ -185,7 +185,7 @@
 //  3. The function is `Verb(ctx, cfg) (*Result, error)`. Adapters
 //     are wired internally — the library is responsible for
 //     instantiating loaders, evaluators, and any other ports
-//     usecase.Verb requires.
+//     the Verb requires.
 //
 //  4. Pure operations (no I/O) take only a Config and return the
 //     Result; orchestration operations (with I/O) accept a context

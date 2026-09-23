@@ -134,7 +134,7 @@ func RunGate(ctx context.Context, cfg GateRunConfig) (output []byte, warnings []
 }
 
 // gateJSONDoc is the JSON wire-format envelope. Field names + time encoding
-// match the prior usecase.GateResponse shape so CI scripts keep working.
+// match the prior gate.EvaluateResponse shape so CI scripts keep working.
 type gateJSONDoc struct {
 	Policy            string    `json:"policy"`
 	Pass              bool      `json:"pass"`

@@ -14,7 +14,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/core/usecase"
 )
 
 // GatePolicy selects the CI failure rule the gate enforces.
@@ -23,7 +22,7 @@ import (
 type GatePolicy string
 
 // Gate policy constants. Wire-compatible with the engine's policy
-// strings — passed through usecase.Gate untouched.
+// strings — passed through gate.Evaluate untouched.
 const (
 	// GateFailOnAnyViolation fails when the evaluation has any findings.
 	GateFailOnAnyViolation GatePolicy = "fail_on_any_violation"
@@ -185,7 +184,7 @@ func Gate(ctx context.Context, cfg GateConfig) (*GateResult, error) {
 		return nil, fmt.Errorf("stave.Gate: wire overdue counter: %w", err)
 	}
 
-	req := usecase.GateRequest{
+	req := infragate.EvaluateRequest{
 		Policy:            string(cfg.Policy),
 		EvaluationPath:    cfg.EvaluationPath,
 		BaselinePath:      cfg.BaselinePath,
@@ -197,13 +196,13 @@ func Gate(ctx context.Context, cfg GateConfig) (*GateResult, error) {
 		now := cfg.EvalTime
 		req.EvalTime = &now
 	}
-	deps := usecase.GateDeps{
+	deps := infragate.EvaluateDeps{
 		FindingsCounter:  findingsCounter,
 		BaselineComparer: baselineComparer,
 		OverdueCounter:   overdueCounter,
 		Clock:            ports.RealClock{},
 	}
-	resp, err := usecase.Gate(ctx, req, deps)
+	resp, err := infragate.Evaluate(ctx, req, deps)
 	if err != nil {
 		return nil, fmt.Errorf("gate: %w", err)
 	}

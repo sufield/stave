@@ -1,4 +1,4 @@
-package usecase
+package gate
 
 import (
 	"context"
@@ -8,10 +8,8 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 )
 
-// --- Gate ---
-
-// GateRequest is the input for the CI gate use case.
-type GateRequest struct {
+// EvaluateRequest is the input for the CI gate evaluation.
+type EvaluateRequest struct {
 	Policy            string        `json:"policy"`
 	EvaluationPath    string        `json:"evaluation_path,omitempty"`
 	BaselinePath      string        `json:"baseline_path,omitempty"`
@@ -21,8 +19,8 @@ type GateRequest struct {
 	EvalTime          *time.Time    `json:"eval_time,omitempty"`
 }
 
-// GateResponse is the output of the CI gate use case.
-type GateResponse struct {
+// EvaluateResponse is the output of the CI gate evaluation.
+type EvaluateResponse struct {
 	Policy            string    `json:"policy"`
 	Passed            bool      `json:"pass"`
 	Reason            string    `json:"reason"`
@@ -51,8 +49,8 @@ type OverdueCounterPort interface {
 	CountOverdue(ctx context.Context, controlsDir, observationsDir string, maxUnsafe time.Duration, now time.Time) (int, error)
 }
 
-// GateDeps groups the port interfaces for the gate use case.
-type GateDeps struct {
+// EvaluateDeps groups the port interfaces for the gate evaluation.
+type EvaluateDeps struct {
 	FindingsCounter  FindingsCounterPort
 	BaselineComparer BaselineComparerPort
 	OverdueCounter   OverdueCounterPort
@@ -60,21 +58,17 @@ type GateDeps struct {
 }
 
 const (
-	gatePolicyAny     = "fail_on_any_violation"
-	gatePolicyNew     = "fail_on_new_violation"
-	gatePolicyOverdue = "fail_on_overdue_upcoming"
+	policyAny     = "fail_on_any_violation"
+	policyNew     = "fail_on_new_violation"
+	policyOverdue = "fail_on_overdue_upcoming"
 )
 
-// Gate enforces a CI failure policy and returns the gate result.
-func Gate(ctx context.Context, req GateRequest, deps GateDeps) (GateResponse, error) {
+// Evaluate enforces a CI failure policy and returns the gate result.
+func Evaluate(ctx context.Context, req EvaluateRequest, deps EvaluateDeps) (EvaluateResponse, error) {
 	if err := ctx.Err(); err != nil {
-		return GateResponse{}, fmt.Errorf("gate: %w", err)
+		return EvaluateResponse{}, fmt.Errorf("gate: %w", err)
 	}
 
-	// req.EvalTime overrides everything (tests and reproducible runs);
-	// otherwise use the injected Clock; if neither is supplied, fall
-	// back to ports.RealClock so a nil Clock dependency doesn't panic
-	// while keeping wall-clock access behind the ports interface.
 	var now time.Time
 	switch {
 	case req.EvalTime != nil:
@@ -86,24 +80,24 @@ func Gate(ctx context.Context, req GateRequest, deps GateDeps) (GateResponse, er
 	}
 
 	switch req.Policy {
-	case gatePolicyAny:
-		return gateAny(ctx, req, deps, now)
-	case gatePolicyNew:
-		return gateNew(ctx, req, deps, now)
-	case gatePolicyOverdue:
-		return gateOverdue(ctx, req, deps, now)
+	case policyAny:
+		return evaluateAny(ctx, req, deps, now)
+	case policyNew:
+		return evaluateNew(ctx, req, deps, now)
+	case policyOverdue:
+		return evaluateOverdue(ctx, req, deps, now)
 	default:
-		return GateResponse{}, fmt.Errorf("gate: unsupported policy %q", req.Policy)
+		return EvaluateResponse{}, fmt.Errorf("gate: unsupported policy %q", req.Policy)
 	}
 }
 
-func gateAny(ctx context.Context, req GateRequest, deps GateDeps, now time.Time) (GateResponse, error) {
+func evaluateAny(ctx context.Context, req EvaluateRequest, deps EvaluateDeps, now time.Time) (EvaluateResponse, error) {
 	if deps.FindingsCounter == nil {
-		return GateResponse{}, fmt.Errorf("gate: %s policy requires %s dependency", req.Policy, "FindingsCounter")
+		return EvaluateResponse{}, fmt.Errorf("gate: %s policy requires %s dependency", req.Policy, "FindingsCounter")
 	}
 	count, err := deps.FindingsCounter.CountFindings(ctx, req.EvaluationPath)
 	if err != nil {
-		return GateResponse{}, fmt.Errorf("gate: load evaluation %s: %w", req.EvaluationPath, err)
+		return EvaluateResponse{}, fmt.Errorf("gate: load evaluation %s: %w", req.EvaluationPath, err)
 	}
 
 	pass := count == 0
@@ -112,7 +106,7 @@ func gateAny(ctx context.Context, req GateRequest, deps GateDeps, now time.Time)
 		reason = "no current findings"
 	}
 
-	return GateResponse{
+	return EvaluateResponse{
 		Policy:            req.Policy,
 		Passed:            pass,
 		Reason:            reason,
@@ -122,13 +116,13 @@ func gateAny(ctx context.Context, req GateRequest, deps GateDeps, now time.Time)
 	}, nil
 }
 
-func gateNew(ctx context.Context, req GateRequest, deps GateDeps, now time.Time) (GateResponse, error) {
+func evaluateNew(ctx context.Context, req EvaluateRequest, deps EvaluateDeps, now time.Time) (EvaluateResponse, error) {
 	if deps.BaselineComparer == nil {
-		return GateResponse{}, fmt.Errorf("gate: %s policy requires %s dependency", req.Policy, "BaselineComparer")
+		return EvaluateResponse{}, fmt.Errorf("gate: %s policy requires %s dependency", req.Policy, "BaselineComparer")
 	}
 	currentCount, newCount, err := deps.BaselineComparer.CompareAgainstBaseline(ctx, req.EvaluationPath, req.BaselinePath)
 	if err != nil {
-		return GateResponse{}, fmt.Errorf("gate: compare against baseline: %w", err)
+		return EvaluateResponse{}, fmt.Errorf("gate: compare against baseline: %w", err)
 	}
 
 	pass := newCount == 0
@@ -137,7 +131,7 @@ func gateNew(ctx context.Context, req GateRequest, deps GateDeps, now time.Time)
 		reason = "no new findings compared to baseline"
 	}
 
-	return GateResponse{
+	return EvaluateResponse{
 		Policy:            req.Policy,
 		Passed:            pass,
 		Reason:            reason,
@@ -149,13 +143,13 @@ func gateNew(ctx context.Context, req GateRequest, deps GateDeps, now time.Time)
 	}, nil
 }
 
-func gateOverdue(ctx context.Context, req GateRequest, deps GateDeps, now time.Time) (GateResponse, error) {
+func evaluateOverdue(ctx context.Context, req EvaluateRequest, deps EvaluateDeps, now time.Time) (EvaluateResponse, error) {
 	if deps.OverdueCounter == nil {
-		return GateResponse{}, fmt.Errorf("gate: %s policy requires %s dependency", req.Policy, "OverdueCounter")
+		return EvaluateResponse{}, fmt.Errorf("gate: %s policy requires %s dependency", req.Policy, "OverdueCounter")
 	}
 	overdueCount, err := deps.OverdueCounter.CountOverdue(ctx, req.ControlsDir, req.ObservationsDir, req.MaxUnsafeDuration, now)
 	if err != nil {
-		return GateResponse{}, fmt.Errorf("gate: count overdue: %w", err)
+		return EvaluateResponse{}, fmt.Errorf("gate: count overdue: %w", err)
 	}
 
 	pass := overdueCount == 0
@@ -164,7 +158,7 @@ func gateOverdue(ctx context.Context, req GateRequest, deps GateDeps, now time.T
 		reason = "no overdue upcoming actions"
 	}
 
-	return GateResponse{
+	return EvaluateResponse{
 		Policy:           req.Policy,
 		Passed:           pass,
 		Reason:           reason,

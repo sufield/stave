@@ -17,7 +17,6 @@ import (
 	appfix "github.com/sufield/stave/internal/app/fix"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
-	"github.com/sufield/stave/internal/core/usecase"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/sanitize"
 	"github.com/sufield/stave/internal/util/jsonutil"
@@ -38,15 +37,18 @@ func FixFinding(ctx context.Context, inputPath, findingRef string) ([]byte, erro
 	if err != nil {
 		return nil, fmt.Errorf("init finding loader: %w", err)
 	}
-	resp, err := usecase.Fix(ctx, usecase.FixRequest{
-		InputPath:  inputPath,
-		FindingRef: findingRef,
-	}, usecase.FixDeps{Loader: loader})
+	if inputPath == "" {
+		return nil, errors.New("fix: input path cannot be empty")
+	}
+	if findingRef == "" {
+		return nil, errors.New("fix: finding selector cannot be empty")
+	}
+	data, err := loader.LoadFindingWithPlan(ctx, inputPath, findingRef)
 	if err != nil {
-		return nil, fmt.Errorf("run fix: %w", err)
+		return nil, fmt.Errorf("fix: %w", err)
 	}
 	var buf bytes.Buffer
-	if err := jsonutil.WriteIndented(&buf, resp.Data); err != nil {
+	if err := jsonutil.WriteIndented(&buf, data); err != nil {
 		return nil, fmt.Errorf("write output: %w", err)
 	}
 	return buf.Bytes(), nil
