@@ -1,0 +1,28 @@
+id: eks_sg_tag_confusion_path
+description: >
+  EKS ALB Controller tag confusion: a developer with K8s namespace
+  access and broad ec2:CreateTags permission tags a victim security
+  group with controller-owned prefixes, then creates an Ingress
+  resource that causes the controller to open the SG to 0.0.0.0/0.
+  HackerOne #1238482. The attack requires all three preconditions
+  simultaneously: wildcard RBAC (Ingress creation), broad CreateTags
+  (tag manipulation), and the resulting unrestricted SG (outcome).
+  Fixing any one member breaks the chain.
+controls:
+  - CTL.K8S.RBAC.WILDCARD.001
+  - CTL.IAM.ESCALATE.EC2CREATETAGS.001
+  - CTL.VPC.SG.UNRESTRICTED.001
+escalation_threshold: 2
+compound_severity: critical
+scope: global
+preconditions:
+  - eks_namespace_access
+  - internet_access
+postconditions:
+  - network_access_eks
+  - lateral_movement
+implicit_dependencies:
+  - source: observation.k8s_cluster
+    fallback: fail_closed
+    diagnostic: >
+      Cannot determine K8s RBAC permissiveness without cluster observation.

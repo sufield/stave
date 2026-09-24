@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -26,12 +27,7 @@ func (ids ChainIDs) Len() int {
 
 // Contains reports whether the given chain ID is in the collection.
 func (ids ChainIDs) Contains(id kernel.ChainID) bool {
-	for _, c := range ids {
-		if c == id {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ids, id)
 }
 
 // ControlIDs represents a domain collection of kernel.ControlID items with query methods.
@@ -44,12 +40,7 @@ func (ids ControlIDs) Len() int {
 
 // Contains reports whether the given control ID is in the collection.
 func (ids ControlIDs) Contains(id kernel.ControlID) bool {
-	for _, c := range ids {
-		if c == id {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ids, id)
 }
 
 // Gap describes a tool prerequisite not fully covered by

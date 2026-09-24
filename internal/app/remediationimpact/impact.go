@@ -90,12 +90,7 @@ func (ids ControlIDs) Len() int {
 
 // Contains reports whether the given control ID is present in the collection.
 func (ids ControlIDs) Contains(id kernel.ControlID) bool {
-	for _, c := range ids {
-		if c == id {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ids, id)
 }
 
 // Efficiency holds the predicted-vs-realized comparison.

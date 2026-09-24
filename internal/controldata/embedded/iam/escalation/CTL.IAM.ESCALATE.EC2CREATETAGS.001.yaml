@@ -1,0 +1,96 @@
+dsl_version: ctrl.v1
+id: CTL.IAM.ESCALATE.EC2CREATETAGS.001
+name: Principal Must Not Have Broad ec2:CreateTags on Security Groups
+description: >
+  Principals with ec2:CreateTags on security groups without condition
+  key restrictions can tag any security group with controller-owned
+  prefixes (elbv2.k8s.aws/*, ingress.k8s.aws/*). The AWS Load Balancer
+  Controller uses these tags to identify which security groups it
+  manages. An attacker who can apply these tags to an arbitrary SG can
+  cause the controller to modify that SG's inbound rules via a crafted
+  Ingress resource. HackerOne #1238482 demonstrated this tag confusion
+  attack on EKS clusters.
+domain: identity
+severity: high
+scope: compound
+corpus_reference: MITRE:T1098
+compliance:
+  owasp_nhi: "NHI5"
+  soc2: "CC6.1"
+  nist_800_53_r5: "AC-6(5)"
+  ccm_v4: ["IAM-05"]
+scope_tags:
+  - aws
+  - iam
+  - ec2
+  - eks
+taxonomy:
+  - compliance-mapping
+  - network-perimeter
+subtractive_category:
+  - S02
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types: [aws_iam_user, aws_iam_role]
+params:
+  attack_stage: privilege_escalation
+  base_impact: 8
+  blast_radius:
+    type: prevention
+    scope: account
+    multiplier: 2.0
+observation_fields:
+  - identity.kind
+  - identity.escalation.ec2_createtags_sg.present
+remediation:
+  description: >
+    Principal can apply arbitrary tags to EC2 security groups. Combined
+    with the AWS Load Balancer Controller on EKS, this enables tag
+    confusion attacks that modify security group rules on unrelated SGs.
+  action: >
+    Restrict ec2:CreateTags via SCP to deny tagging security groups
+    with controller-owned prefixes (elbv2.k8s.aws/*, ingress.k8s.aws/*)
+    for all principals except the controller's IAM role.
+  example: |
+    {
+      "identity": {
+        "kind": "role",
+        "escalation": {
+          "ec2_createtags_sg": {
+            "present": false
+          }
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.identity.escalation.ec2_createtags_sg.present
+      op: present
+    - field: properties.identity.escalation.ec2_createtags_sg.present
+      op: eq
+      value: true
+tests:
+  - name: role with broad ec2:CreateTags on security groups fires
+    verdict: VIOLATION
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/dev-team-role
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          escalation:
+            ec2_createtags_sg:
+              present: true
+  - name: role without broad ec2:CreateTags passes
+    verdict: PASS
+    asset:
+      asset_id: arn:aws:iam::111122223333:role/restricted-role
+      asset_type: aws_iam_role
+      vendor: aws
+      properties:
+        identity:
+          kind: role
+          escalation:
+            ec2_createtags_sg:
+              present: false

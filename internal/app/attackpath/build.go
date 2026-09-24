@@ -101,12 +101,7 @@ func (ids CapabilityIDs) Len() int {
 
 // Contains reports whether the given capability ID is present in the collection.
 func (ids CapabilityIDs) Contains(id CapabilityID) bool {
-	for _, c := range ids {
-		if c == id {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ids, id)
 }
 
 // ChainNode represents a chain in the graph.

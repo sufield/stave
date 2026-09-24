@@ -1,0 +1,47 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-09-01T12:00:00Z",
+  "source": "deployed",
+  "assets": [
+    {
+      "id": "k8s/prod/clusterrole/dev-team",
+      "type": "k8s_cluster",
+      "vendor": "aws",
+      "properties": {
+        "rbac": {
+          "kind": "cluster_role",
+          "has_wildcard_resources": true,
+          "has_wildcard_verbs": false
+        }
+      }
+    },
+    {
+      "id": "arn:aws:iam::111122223333:role/dev-team-role",
+      "type": "aws_iam_role",
+      "vendor": "aws",
+      "properties": {
+        "identity": {
+          "kind": "role",
+          "escalation": {
+            "ec2_createtags_sg": {
+              "present": true
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "sg-0abc123def456prod",
+      "type": "aws_ec2_security_group",
+      "vendor": "aws",
+      "properties": {
+        "network": {
+          "kind": "security_group",
+          "security_group": {
+            "has_unrestricted_ingress": true
+          }
+        }
+      }
+    }
+  ]
+}

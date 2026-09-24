@@ -158,3 +158,34 @@ func TestTopFindings_DomainMethods(t *testing.T) {
 		t.Error("empty.Breached() should return nil")
 	}
 }
+
+func TestFrameworkReadinesses_DomainMethods(t *testing.T) {
+	frs := FrameworkReadinesses{
+		{Framework: policy.ComplianceFramework("soc2"), Total: 10, Passing: 9, Failing: 1, ReadinessPct: 90.0},
+		{Framework: policy.ComplianceFramework("iso27001"), Total: 20, Passing: 20, Failing: 0, ReadinessPct: 100.0},
+	}
+
+	if frs.Len() != 2 {
+		t.Errorf("Len() = %d, want 2", frs.Len())
+	}
+
+	soc2 := frs.ByFramework(policy.ComplianceFramework("soc2"))
+	if soc2 == nil || soc2.Failing != 1 {
+		t.Errorf("ByFramework(soc2) = %v, want Failing=1", soc2)
+	}
+
+	missing := frs.ByFramework(policy.ComplianceFramework("hipaa"))
+	if missing != nil {
+		t.Errorf("ByFramework(hipaa) = %v, want nil", missing)
+	}
+
+	var empty FrameworkReadinesses
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.ByFramework(policy.ComplianceFramework("soc2")) != nil {
+		t.Error("empty.ByFramework() should return nil")
+	}
+}
+
+

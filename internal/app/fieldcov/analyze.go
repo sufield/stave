@@ -44,12 +44,7 @@ func (mf MissingFields) Len() int {
 
 // Contains reports whether the given field path is present in the collection.
 func (mf MissingFields) Contains(field string) bool {
-	for _, f := range mf {
-		if f == field {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(mf, field)
 }
 
 // HasPrefix reports whether any missing field path starts with the given prefix.

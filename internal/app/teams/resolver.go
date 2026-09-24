@@ -24,11 +24,47 @@ type Manifest struct {
 // HierarchyGroupID uniquely identifies a team hierarchy group.
 type HierarchyGroupID string
 
+// TeamIDs is a domain collection of TeamID items with query methods.
+type TeamIDs []TeamID
+
+// Len returns the number of team IDs in the collection.
+func (ids TeamIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether the given team ID is in the collection.
+func (ids TeamIDs) Contains(id TeamID) bool {
+	for _, t := range ids {
+		if t == id {
+			return true
+		}
+	}
+	return false
+}
+
+// ControlIDs is a domain collection of kernel.ControlID items with query methods.
+type ControlIDs []kernel.ControlID
+
+// Len returns the number of control IDs in the collection.
+func (ids ControlIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether the given control ID is in the collection.
+func (ids ControlIDs) Contains(id kernel.ControlID) bool {
+	for _, c := range ids {
+		if c == id {
+			return true
+		}
+	}
+	return false
+}
+
 // HierarchyGroup defines a named group of teams for rollup reporting.
 type HierarchyGroup struct {
 	Name  string           `yaml:"name"  json:"name"`
 	ID    HierarchyGroupID `yaml:"id"    json:"id"`
-	Teams []TeamID         `yaml:"teams" json:"teams"`
+	Teams TeamIDs          `yaml:"teams" json:"teams"`
 }
 
 // HierarchyByID returns the hierarchy group with the given ID, or nil.
@@ -48,13 +84,13 @@ func (id TeamID) String() string { return string(id) }
 
 // Team defines a team identity and its resource ownership.
 type Team struct {
-	ID               TeamID             `yaml:"id"              json:"id"`
-	DisplayName      string             `yaml:"display_name"    json:"display_name"`
-	Contact          string             `yaml:"contact"         json:"contact,omitempty"`
-	ResourcePatterns []string           `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
-	ControlOwnership []kernel.ControlID `yaml:"control_ownership" json:"control_ownership,omitempty"`
-	IsDefault        bool               `yaml:"is_default"      json:"is_default,omitempty"`
-	Routing          Routing            `yaml:"routing"         json:"routing"`
+	ID               TeamID          `yaml:"id"              json:"id"`
+	DisplayName      string          `yaml:"display_name"    json:"display_name"`
+	Contact          string          `yaml:"contact"         json:"contact,omitempty"`
+	ResourcePatterns []string        `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
+	ControlOwnership ControlIDs      `yaml:"control_ownership" json:"control_ownership,omitempty"`
+	IsDefault        bool            `yaml:"is_default"      json:"is_default,omitempty"`
+	Routing          Routing         `yaml:"routing"         json:"routing"`
 }
 
 // Routing holds alert destination configuration.

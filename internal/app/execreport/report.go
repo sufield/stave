@@ -27,7 +27,7 @@ type Report struct {
 	TopFindings      TopFindings           `json:"top_findings"`
 	Chains           ChainsSection         `json:"chains"`
 	AttackCoverage   AttackCoverageSection `json:"attack_coverage"`
-	FrameworkReady   []FrameworkReadiness  `json:"framework_readiness,omitempty"`
+	FrameworkReady   FrameworkReadinesses  `json:"framework_readiness,omitempty"`
 	Teams            []TeamSection         `json:"teams,omitempty"`
 	Catalog          CatalogSection        `json:"catalog"`
 	ExecutiveSummary ExecutiveSummary      `json:"executive_summary"`
@@ -187,6 +187,24 @@ type FrameworkReadiness struct {
 	Passing      int                        `json:"controls_passing"`
 	Failing      int                        `json:"controls_failing"`
 	ReadinessPct float64                    `json:"readiness_pct"`
+}
+
+// FrameworkReadinesses is a domain collection of FrameworkReadiness items with query methods.
+type FrameworkReadinesses []FrameworkReadiness
+
+// Len returns the number of framework readiness items in the collection.
+func (fr FrameworkReadinesses) Len() int {
+	return len(fr)
+}
+
+// ByFramework returns the FrameworkReadiness item matching the given framework, or nil if not found.
+func (fr FrameworkReadinesses) ByFramework(fw policy.ComplianceFramework) *FrameworkReadiness {
+	for i := range fr {
+		if fr[i].Framework == fw {
+			return &fr[i]
+		}
+	}
+	return nil
 }
 
 // TeamSection holds per-team data.

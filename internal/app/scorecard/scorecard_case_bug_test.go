@@ -29,3 +29,17 @@ func TestCompute_CaseInsensitiveFrameworkMatching(t *testing.T) {
 		t.Errorf("expected 1 control matching NIST-800-53, got %d", rep.Frameworks[0].ControlsTotal)
 	}
 }
+
+func TestComplianceFrameworks_DomainMethods(t *testing.T) {
+	cfs := ComplianceFrameworks{"HIPAA", "NIST-800-53"}
+
+	if cfs.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", cfs.Len())
+	}
+	if !cfs.Contains("HIPAA") {
+		t.Error("Contains HIPAA: got false, want true")
+	}
+	if cfs.Contains("SOC2") {
+		t.Error("Contains SOC2: got true, want false")
+	}
+}

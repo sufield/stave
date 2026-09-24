@@ -984,6 +984,21 @@ Principals with iam:DeleteRolePermissionsBoundary can remove permission boundari
 
 ---
 
+### CTL.IAM.ESCALATE.EC2CREATETAGS.001
+
+**Principal Must Not Have Broad ec2:CreateTags on Security Groups**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** identity
+- **Compliance:** nist_800_53_r5: AC-6(5); owasp_nhi: NHI5; soc2: CC6.1;
+
+Principals with ec2:CreateTags on security groups without condition key restrictions can tag any security group with controller-owned prefixes (elbv2.k8s.aws/*, ingress.k8s.aws/*). The AWS Load Balancer Controller uses these tags to identify which security groups it manages. An attacker who can apply these tags to an arbitrary SG can cause the controller to modify that SG's inbound rules via a crafted Ingress resource. HackerOne #1238482 demonstrated this tag confusion attack on EKS clusters.
+
+**Remediation:** Restrict ec2:CreateTags via SCP to deny tagging security groups with controller-owned prefixes (elbv2.k8s.aws/*, ingress.k8s.aws/*) for all principals except the controller's IAM role.
+
+---
+
 ### CTL.IAM.ESCALATE.ECRTOKEN.001
 
 **Principal Must Not Escalate via ECR GetAuthorizationToken**

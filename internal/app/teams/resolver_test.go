@@ -153,3 +153,27 @@ func TestGlobMatch(t *testing.T) {
 		}
 	}
 }
+
+func TestTeamIDsAndControlIDs_DomainMethods(t *testing.T) {
+	tids := TeamIDs{"payments", "data"}
+	if tids.Len() != 2 {
+		t.Errorf("TeamIDs.Len: got %d, want 2", tids.Len())
+	}
+	if !tids.Contains("payments") {
+		t.Error("TeamIDs.Contains payments: got false, want true")
+	}
+	if tids.Contains("infra") {
+		t.Error("TeamIDs.Contains infra: got true, want false")
+	}
+
+	cids := ControlIDs{"CTL.A.001", "CTL.B.002"}
+	if cids.Len() != 2 {
+		t.Errorf("ControlIDs.Len: got %d, want 2", cids.Len())
+	}
+	if !cids.Contains("CTL.A.001") {
+		t.Error("ControlIDs.Contains CTL.A.001: got false, want true")
+	}
+	if cids.Contains("CTL.C.003") {
+		t.Error("ControlIDs.Contains CTL.C.003: got true, want false")
+	}
+}

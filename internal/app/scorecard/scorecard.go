@@ -54,6 +54,24 @@ func (fs FrameworkScores) ByFramework(fw policy.ComplianceFramework) *FrameworkS
 	return nil
 }
 
+// ComplianceFrameworks is a domain collection of policy.ComplianceFramework items with query methods.
+type ComplianceFrameworks []policy.ComplianceFramework
+
+// Len returns the number of frameworks in the collection.
+func (cfs ComplianceFrameworks) Len() int {
+	return len(cfs)
+}
+
+// Contains reports whether the given framework is present in the collection.
+func (cfs ComplianceFrameworks) Contains(fw policy.ComplianceFramework) bool {
+	for _, f := range cfs {
+		if f == fw {
+			return true
+		}
+	}
+	return false
+}
+
 // Report holds the full scorecard.
 type Report struct {
 	GeneratedAt string          `json:"generated_at"`
@@ -61,7 +79,7 @@ type Report struct {
 }
 
 // Compute builds a scorecard across multiple frameworks.
-func Compute(findings []remediation.Finding, frameworks []policy.ComplianceFramework) *Report {
+func Compute(findings []remediation.Finding, frameworks ComplianceFrameworks) *Report {
 	report := &Report{}
 
 	for _, fw := range frameworks {

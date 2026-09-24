@@ -58,6 +58,7 @@ var builtinNames = []string{
 	"domain_suspension",
 	"domain_takeover",
 	"ec2_code_execution",
+	"eks_namespace_access",
 	"encryption_bypass",
 	"financial_loss",
 	"iam_credential_theft",
