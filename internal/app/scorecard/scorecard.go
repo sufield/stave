@@ -64,12 +64,7 @@ func (cfs ComplianceFrameworks) Len() int {
 
 // Contains reports whether the given framework is present in the collection.
 func (cfs ComplianceFrameworks) Contains(fw policy.ComplianceFramework) bool {
-	for _, f := range cfs {
-		if f == fw {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(cfs, fw)
 }
 
 // Report holds the full scorecard.

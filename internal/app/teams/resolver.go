@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/kernel"
@@ -34,12 +35,7 @@ func (ids TeamIDs) Len() int {
 
 // Contains reports whether the given team ID is in the collection.
 func (ids TeamIDs) Contains(id TeamID) bool {
-	for _, t := range ids {
-		if t == id {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ids, id)
 }
 
 // ControlIDs is a domain collection of kernel.ControlID items with query methods.
@@ -52,12 +48,7 @@ func (ids ControlIDs) Len() int {
 
 // Contains reports whether the given control ID is in the collection.
 func (ids ControlIDs) Contains(id kernel.ControlID) bool {
-	for _, c := range ids {
-		if c == id {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ids, id)
 }
 
 // HierarchyGroup defines a named group of teams for rollup reporting.
@@ -84,13 +75,13 @@ func (id TeamID) String() string { return string(id) }
 
 // Team defines a team identity and its resource ownership.
 type Team struct {
-	ID               TeamID          `yaml:"id"              json:"id"`
-	DisplayName      string          `yaml:"display_name"    json:"display_name"`
-	Contact          string          `yaml:"contact"         json:"contact,omitempty"`
-	ResourcePatterns []string        `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
-	ControlOwnership ControlIDs      `yaml:"control_ownership" json:"control_ownership,omitempty"`
-	IsDefault        bool            `yaml:"is_default"      json:"is_default,omitempty"`
-	Routing          Routing         `yaml:"routing"         json:"routing"`
+	ID               TeamID     `yaml:"id"              json:"id"`
+	DisplayName      string     `yaml:"display_name"    json:"display_name"`
+	Contact          string     `yaml:"contact"         json:"contact,omitempty"`
+	ResourcePatterns []string   `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
+	ControlOwnership ControlIDs `yaml:"control_ownership" json:"control_ownership,omitempty"`
+	IsDefault        bool       `yaml:"is_default"      json:"is_default,omitempty"`
+	Routing          Routing    `yaml:"routing"         json:"routing"`
 }
 
 // Routing holds alert destination configuration.

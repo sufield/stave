@@ -210,6 +210,7 @@ func TestPreconditionsSatisfiable(t *testing.T) {
 		"cloudfront_origin_configured":           true,
 		"cross_account_access":                   true,
 		"cross_account_destination_configured":   true,
+		"eks_namespace_access":                   true,
 		"internet_access":                        true,
 		"kms_encryption_configured":              true,
 		"network_access_eks":                     true,

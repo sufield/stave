@@ -12746,6 +12746,11 @@ contracts:
     consumers:
       - CTL.IAM.ESCALATE.DELETEBOUNDARY.001
 
+  - field: identity.escalation.ec2_createtags_sg.present
+    type: boolean
+    consumers:
+      - CTL.IAM.ESCALATE.EC2CREATETAGS.001
+
   - field: identity.escalation.ec2_getpassworddata.present
     type: boolean
     consumers:

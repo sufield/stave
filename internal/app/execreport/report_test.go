@@ -187,5 +187,3 @@ func TestFrameworkReadinesses_DomainMethods(t *testing.T) {
 		t.Error("empty.ByFramework() should return nil")
 	}
 }
-
-
