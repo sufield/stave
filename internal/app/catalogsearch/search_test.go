@@ -64,3 +64,31 @@ func TestSearchResults_DomainMethods(t *testing.T) {
 		t.Errorf("ByDomain s3_bucket: got %d, want 2", s3s.Len())
 	}
 }
+
+func TestComplianceFrameworks_DomainMethods(t *testing.T) {
+	cfs := ComplianceFrameworks{
+		policy.ComplianceFramework("soc2"),
+		policy.ComplianceFramework("iso27001"),
+	}
+
+	if cfs.Len() != 2 {
+		t.Errorf("cfs.Len() = %d, want 2", cfs.Len())
+	}
+
+	if !cfs.Contains(policy.ComplianceFramework("soc2")) {
+		t.Error("cfs.Contains(soc2) should be true")
+	}
+
+	if cfs.Contains(policy.ComplianceFramework("hipaa")) {
+		t.Error("cfs.Contains(hipaa) should be false")
+	}
+
+	var empty ComplianceFrameworks
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.Contains(policy.ComplianceFramework("soc2")) {
+		t.Error("empty.Contains(soc2) should be false")
+	}
+}
+

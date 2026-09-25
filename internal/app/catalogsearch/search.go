@@ -11,15 +11,29 @@ import (
 	"github.com/sufield/stave/internal/util/strutil"
 )
 
+// ComplianceFrameworks is a domain collection of policy.ComplianceFramework items with query methods.
+type ComplianceFrameworks []policy.ComplianceFramework
+
+// Len returns the number of compliance frameworks in the collection.
+func (cf ComplianceFrameworks) Len() int {
+	return len(cf)
+}
+
+// Contains reports whether the target framework is present in the collection.
+func (cf ComplianceFrameworks) Contains(target policy.ComplianceFramework) bool {
+	return slices.Contains(cf, target)
+}
+
 // SearchResult holds one matching control.
 type SearchResult struct {
-	ControlID   kernel.ControlID             `json:"control_id"`
-	Name        string                       `json:"name"`
-	Severity    policy.Severity              `json:"severity"`
-	Domain      kernel.AssetType             `json:"domain"`
-	Frameworks  []policy.ComplianceFramework `json:"frameworks,omitempty"`
-	AttackStage kernel.AttackStage           `json:"attack_stage,omitempty"`
+	ControlID   kernel.ControlID     `json:"control_id"`
+	Name        string               `json:"name"`
+	Severity    policy.Severity      `json:"severity"`
+	Domain      kernel.AssetType     `json:"domain"`
+	Frameworks  ComplianceFrameworks `json:"frameworks,omitempty"`
+	AttackStage kernel.AttackStage   `json:"attack_stage,omitempty"`
 }
+
 
 // SearchResults represents a collection of SearchResult items with query methods.
 type SearchResults []SearchResult

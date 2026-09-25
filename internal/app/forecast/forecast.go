@@ -155,13 +155,42 @@ func (s *SLAProjection) StatusMarker() string {
 	}
 }
 
+// ScoreHistory is a domain collection of daily posture scores.
+type ScoreHistory []float64
+
+// Len returns the number of days in the score history.
+func (sh ScoreHistory) Len() int {
+	return len(sh)
+}
+
+// Latest returns the most recent score in the history, or 0 if empty.
+func (sh ScoreHistory) Latest() float64 {
+	if len(sh) == 0 {
+		return 0
+	}
+	return sh[len(sh)-1]
+}
+
+// Average returns the mean posture score across the history.
+func (sh ScoreHistory) Average() float64 {
+	if len(sh) == 0 {
+		return 0
+	}
+	var sum float64
+	for _, s := range sh {
+		sum += s
+	}
+	return sum / float64(len(sh))
+}
+
 // Input holds data for forecasting.
 type Input struct {
-	ScoreHistory []float64 // one per day
+	ScoreHistory ScoreHistory // one per day
 	HorizonDays  int
 	SLADeadlines map[policy.Severity]float64   // severity → hours
 	MTTRHistory  map[policy.Severity][]float64 // severity → MTTR per day
 }
+
 
 // Compute produces a linear forecast.
 func Compute(input Input) (*Result, error) {

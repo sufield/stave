@@ -100,3 +100,31 @@ func TestSLAProjections_CollectionMethods(t *testing.T) {
 		t.Errorf("BySeverity(Critical) = %v, want breaching", found)
 	}
 }
+
+func TestScoreHistory_DomainMethods(t *testing.T) {
+	sh := ScoreHistory{10.0, 20.0, 30.0}
+
+	if sh.Len() != 3 {
+		t.Errorf("sh.Len() = %d, want 3", sh.Len())
+	}
+
+	if sh.Latest() != 30.0 {
+		t.Errorf("sh.Latest() = %f, want 30.0", sh.Latest())
+	}
+
+	if sh.Average() != 20.0 {
+		t.Errorf("sh.Average() = %f, want 20.0", sh.Average())
+	}
+
+	var empty ScoreHistory
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.Latest() != 0 {
+		t.Errorf("empty.Latest() = %f, want 0", empty.Latest())
+	}
+	if empty.Average() != 0 {
+		t.Errorf("empty.Average() = %f, want 0", empty.Average())
+	}
+}
+

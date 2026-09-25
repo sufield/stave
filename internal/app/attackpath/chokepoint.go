@@ -14,7 +14,7 @@ import (
 type ChokePointAnalysis struct {
 	ControlID        kernel.ControlID `json:"control_id"`
 	SharedChainCount int              `json:"shared_chain_count"`
-	ChainIDs         []kernel.ChainID `json:"chain_ids"`
+	ChainIDs         ChainIDs         `json:"chain_ids"`
 }
 
 // FindChokePoints identifies controls shared across multiple compound

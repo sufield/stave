@@ -137,13 +137,27 @@ type Edge struct {
 	Description   string         `json:"description"`
 }
 
+// ChainIDs is a domain collection of kernel.ChainID items with query methods.
+type ChainIDs []kernel.ChainID
+
+// Len returns the number of chain IDs in the collection.
+func (ids ChainIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether the target chain ID is present in the collection.
+func (ids ChainIDs) Contains(target kernel.ChainID) bool {
+	return slices.Contains(ids, target)
+}
+
 // AssetRef describes an asset touched by active chains.
 type AssetRef struct {
 	AssetID        asset.ID         `json:"asset_id"`
 	AssetType      kernel.AssetType `json:"asset_type"`
 	Classification string           `json:"classification"`
-	ActiveChains   []kernel.ChainID `json:"active_chains"`
+	ActiveChains   ChainIDs         `json:"active_chains"`
 }
+
 
 // ActiveFinding is a minimal representation of an active compound finding.
 type ActiveFinding struct {

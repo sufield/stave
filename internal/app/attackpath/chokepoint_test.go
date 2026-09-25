@@ -100,3 +100,28 @@ func TestFindChokePoints_ChainIDsDeterministic(t *testing.T) {
 		}
 	}
 }
+
+func TestChainIDs_DomainMethods(t *testing.T) {
+	ids := ChainIDs{"chain_a", "chain_b"}
+
+	if ids.Len() != 2 {
+		t.Errorf("ids.Len() = %d, want 2", ids.Len())
+	}
+
+	if !ids.Contains("chain_a") {
+		t.Error("ids.Contains(chain_a) should be true")
+	}
+
+	if ids.Contains("chain_c") {
+		t.Error("ids.Contains(chain_c) should be false")
+	}
+
+	var empty ChainIDs
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.Contains("chain_a") {
+		t.Error("empty.Contains(chain_a) should be false")
+	}
+}
+
