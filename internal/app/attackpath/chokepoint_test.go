@@ -124,4 +124,3 @@ func TestChainIDs_DomainMethods(t *testing.T) {
 		t.Error("empty.Contains(chain_a) should be false")
 	}
 }
-

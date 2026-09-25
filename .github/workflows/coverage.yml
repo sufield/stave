@@ -118,7 +118,7 @@ jobs:
           exit $failed
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@046562be8d17331600874a09d2c2062c27752c20 # v7.1.0
+        uses: codecov/codecov-action@0b35c9ecc4f0529d0eb674914510c22f85b196b4 # v7.1.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.out

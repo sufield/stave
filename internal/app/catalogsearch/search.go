@@ -34,7 +34,6 @@ type SearchResult struct {
 	AttackStage kernel.AttackStage   `json:"attack_stage,omitempty"`
 }
 
-
 // SearchResults represents a collection of SearchResult items with query methods.
 type SearchResults []SearchResult
 

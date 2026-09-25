@@ -127,4 +127,3 @@ func TestScoreHistory_DomainMethods(t *testing.T) {
 		t.Errorf("empty.Average() = %f, want 0", empty.Average())
 	}
 }
-

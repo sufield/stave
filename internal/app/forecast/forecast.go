@@ -191,7 +191,6 @@ type Input struct {
 	MTTRHistory  map[policy.Severity][]float64 // severity → MTTR per day
 }
 
-
 // Compute produces a linear forecast.
 func Compute(input Input) (*Result, error) {
 	if input.HorizonDays < 0 {

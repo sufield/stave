@@ -158,7 +158,6 @@ type AssetRef struct {
 	ActiveChains   ChainIDs         `json:"active_chains"`
 }
 
-
 // ActiveFinding is a minimal representation of an active compound finding.
 type ActiveFinding struct {
 	ChainID         kernel.ChainID

@@ -91,4 +91,3 @@ func TestComplianceFrameworks_DomainMethods(t *testing.T) {
 		t.Error("empty.Contains(soc2) should be false")
 	}
 }
-
