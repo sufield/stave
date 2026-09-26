@@ -143,4 +143,3 @@ func TestSubjects_DomainMethods(t *testing.T) {
 		t.Error("empty.BySubjectUUID() should return nil")
 	}
 }
-

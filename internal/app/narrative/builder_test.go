@@ -192,4 +192,3 @@ func TestStateEntries_DomainMethods(t *testing.T) {
 		t.Error("empty.ByPropertyPath() should return nil")
 	}
 }
-
