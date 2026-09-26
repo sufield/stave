@@ -163,3 +163,33 @@ func TestChainMembers_CollectionMethods(t *testing.T) {
 		t.Errorf("empty ChainMembers methods failed")
 	}
 }
+
+func TestStateEntries_DomainMethods(t *testing.T) {
+	entries := StateEntries{
+		{PropertyPath: "s3.public", CurrentValue: "true", RequiredValue: "false"},
+		{PropertyPath: "s3.ssl", CurrentValue: "false", RequiredValue: "true"},
+	}
+
+	if entries.Len() != 2 {
+		t.Errorf("entries.Len() = %d, want 2", entries.Len())
+	}
+
+	pub := entries.ByPropertyPath("s3.public")
+	if pub == nil || pub.CurrentValue != "true" {
+		t.Errorf("ByPropertyPath(s3.public) = %v, want true", pub)
+	}
+
+	missing := entries.ByPropertyPath("s3.encryption")
+	if missing != nil {
+		t.Errorf("ByPropertyPath(s3.encryption) = %v, want nil", missing)
+	}
+
+	var empty StateEntries
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.ByPropertyPath("s3.public") != nil {
+		t.Error("empty.ByPropertyPath() should return nil")
+	}
+}
+

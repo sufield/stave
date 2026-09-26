@@ -114,3 +114,33 @@ func TestRelatedControls_DomainMethods(t *testing.T) {
 		t.Error("ContainsControl CTL.C.003: got true, want false")
 	}
 }
+
+func TestSubjects_DomainMethods(t *testing.T) {
+	subjs := Subjects{
+		{SubjectUUID: asset.ID("s1"), Title: "subj 1"},
+		{SubjectUUID: asset.ID("s2"), Title: "subj 2"},
+	}
+
+	if subjs.Len() != 2 {
+		t.Errorf("subjs.Len() = %d, want 2", subjs.Len())
+	}
+
+	s1 := subjs.BySubjectUUID(asset.ID("s1"))
+	if s1 == nil || s1.Title != "subj 1" {
+		t.Errorf("BySubjectUUID(s1) = %v, want subj 1", s1)
+	}
+
+	missing := subjs.BySubjectUUID(asset.ID("s3"))
+	if missing != nil {
+		t.Errorf("BySubjectUUID(s3) = %v, want nil", missing)
+	}
+
+	var empty Subjects
+	if empty.Len() != 0 {
+		t.Errorf("empty.Len() = %d, want 0", empty.Len())
+	}
+	if empty.BySubjectUUID(asset.ID("s1")) != nil {
+		t.Error("empty.BySubjectUUID() should return nil")
+	}
+}
+

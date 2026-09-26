@@ -76,13 +76,31 @@ func (rc RelatedControls) ContainsControl(id kernel.ControlID) bool {
 	return false
 }
 
+// Subjects is a domain collection of Subject items with querying methods.
+type Subjects []Subject
+
+// Len returns the number of subjects in the collection.
+func (s Subjects) Len() int {
+	return len(s)
+}
+
+// BySubjectUUID returns the Subject matching the given UUID, or nil if not found.
+func (s Subjects) BySubjectUUID(id asset.ID) *Subject {
+	for i := range s {
+		if s[i].SubjectUUID == id {
+			return &s[i]
+		}
+	}
+	return nil
+}
+
 // POAMItem is a single action item in the POA&M.
 type POAMItem struct {
 	UUID                    UUID            `json:"uuid"`
 	Title                   string          `json:"title"`
 	Description             string          `json:"description"`
 	RelatedControls         RelatedControls `json:"related-controls,omitempty"`
-	Subjects                []Subject       `json:"subjects,omitempty"`
+	Subjects                Subjects        `json:"subjects,omitempty"`
 	Risk                    *POAMRisk       `json:"risk,omitempty"`
 	ScheduledCompletionDate string          `json:"scheduled-completion-date,omitempty"`
 }

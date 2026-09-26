@@ -25,11 +25,29 @@ type Playbook struct {
 	Narrative   NarrativeSections `json:"narrative"`
 }
 
+// StateEntries is a domain collection of StateEntry items with query methods.
+type StateEntries []StateEntry
+
+// Len returns the number of state entries in the collection.
+func (se StateEntries) Len() int {
+	return len(se)
+}
+
+// ByPropertyPath returns the StateEntry matching the given property path, or nil if not found.
+func (se StateEntries) ByPropertyPath(path string) *StateEntry {
+	for i := range se {
+		if se[i].PropertyPath == path {
+			return &se[i]
+		}
+	}
+	return nil
+}
+
 // NarrativeSections holds the five narrative sections.
 type NarrativeSections struct {
 	WhyThisMatters string             `json:"why_this_matters,omitempty"`
 	AttackStage    kernel.AttackStage `json:"attack_stage,omitempty"`
-	CurrentState   []StateEntry       `json:"current_state,omitempty"`
+	CurrentState   StateEntries       `json:"current_state,omitempty"`
 	Steps          Steps              `json:"steps"`
 	ChainContext   *ChainContext      `json:"chain_context,omitempty"`
 }

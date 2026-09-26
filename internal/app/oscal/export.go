@@ -127,12 +127,52 @@ type RelObs struct {
 	ObservationUUID UUID `json:"observation-uuid"`
 }
 
+// Methods represents a domain collection of OSCAL examination method strings.
+type Methods []string
+
+// Len returns the number of methods.
+func (m Methods) Len() int {
+	return len(m)
+}
+
+// Contains reports whether the target method string is present in the collection.
+func (m Methods) Contains(target string) bool {
+	for _, item := range m {
+		if item == target {
+			return true
+		}
+	}
+	return false
+}
+
+// ARSubjects is a domain collection of ARSubject items with query methods.
+type ARSubjects []ARSubject
+
+// Len returns the number of subjects in the collection.
+func (as ARSubjects) Len() int {
+	return len(as)
+}
+
+// ByAssetType returns a new ARSubjects collection filtered by target asset type.
+func (as ARSubjects) ByAssetType(at kernel.AssetType) ARSubjects {
+	if len(as) == 0 {
+		return nil
+	}
+	var filtered ARSubjects
+	for i := range as {
+		if as[i].Type == at {
+			filtered = append(filtered, as[i])
+		}
+	}
+	return filtered
+}
+
 // ARObservation describes an observed asset.
 type ARObservation struct {
-	UUID        UUID        `json:"uuid"`
-	Description string      `json:"description"`
-	Methods     []string    `json:"methods"`
-	Subjects    []ARSubject `json:"subjects,omitempty"`
+	UUID        UUID       `json:"uuid"`
+	Description string     `json:"description"`
+	Methods     Methods    `json:"methods"`
+	Subjects    ARSubjects `json:"subjects,omitempty"`
 }
 
 // ARSubject identifies the observed component.
