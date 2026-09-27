@@ -428,3 +428,16 @@ func TestMissingFields_DomainMethods(t *testing.T) {
 		t.Error("HasPrefix properties.storage: got false, want true")
 	}
 }
+
+func TestComplianceFrameworks_DomainMethods(t *testing.T) {
+	cfs := ComplianceFrameworks{"soc2", "hipaa"}
+	if cfs.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", cfs.Len())
+	}
+	if !cfs.Contains("soc2") {
+		t.Error("Contains soc2: got false, want true")
+	}
+	if cfs.Contains("pci_dss") {
+		t.Error("Contains pci_dss: got true, want false")
+	}
+}

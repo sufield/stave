@@ -188,3 +188,16 @@ func TestStaveOnlyTactics_DomainMethods(t *testing.T) {
 		t.Errorf("empty.Len() = %d, want 0", empty.Len())
 	}
 }
+
+func TestControlIDs_DomainMethods(t *testing.T) {
+	cids := ControlIDs{"CTL.A", "CTL.B"}
+	if cids.Len() != 2 {
+		t.Errorf("cids.Len() = %d, want 2", cids.Len())
+	}
+	if !cids.Contains("CTL.A") {
+		t.Error("Contains CTL.A: got false, want true")
+	}
+	if cids.Contains("CTL.Z") {
+		t.Error("Contains CTL.Z: got true, want false")
+	}
+}

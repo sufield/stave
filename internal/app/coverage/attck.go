@@ -47,16 +47,29 @@ const (
 	StatusNoCoverage TacticStatus = "no_coverage"
 )
 
+// ControlIDs is a domain collection of kernel.ControlID items with query methods.
+type ControlIDs []kernel.ControlID
+
+// Len returns the count of control IDs in the collection.
+func (ids ControlIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether target control ID is present in the collection.
+func (ids ControlIDs) Contains(target kernel.ControlID) bool {
+	return slices.Contains(ids, target)
+}
+
 // TacticCoverage holds coverage data for a single tactic.
 type TacticCoverage struct {
-	TacticID        string             `json:"tactic_id"`
-	TacticName      string             `json:"tactic_name"`
-	ControlCount    int                `json:"control_count"`
-	Controls        []kernel.ControlID `json:"controls"`
-	PassingCount    *int               `json:"passing_count"`    // nil when no assessment overlay
-	FailingCount    *int               `json:"failing_count"`    // nil when no assessment overlay
-	CoveragePercent *float64           `json:"coverage_percent"` // nil when no controls
-	Status          TacticStatus       `json:"status"`           // covered | thin | no_coverage
+	TacticID        string       `json:"tactic_id"`
+	TacticName      string       `json:"tactic_name"`
+	ControlCount    int          `json:"control_count"`
+	Controls        ControlIDs   `json:"controls"`
+	PassingCount    *int         `json:"passing_count"`    // nil when no assessment overlay
+	FailingCount    *int         `json:"failing_count"`    // nil when no assessment overlay
+	CoveragePercent *float64     `json:"coverage_percent"` // nil when no controls
+	Status          TacticStatus `json:"status"`           // covered | thin | no_coverage
 }
 
 // IsCovered reports whether this tactic has at least the "thin"
@@ -171,15 +184,15 @@ func (sot StaveOnlyTactics) Len() int {
 
 // CoverageReport is the full coverage analysis output.
 type CoverageReport struct {
-	Framework           string             `json:"framework"`
-	ControlsAnalyzed    int                `json:"controls_analyzed"`
-	ControlsAnnotated   int                `json:"controls_annotated"`
-	ControlsUnannotated int                `json:"controls_unannotated"`
-	AssessmentOverlay   bool               `json:"assessment_overlay"`
-	Tactics             TacticsCoverage    `json:"tactics"`
-	StaveOnly           StaveOnlyTactics   `json:"stave_only,omitempty"`
-	UnannotatedControls []kernel.ControlID `json:"unannotated_controls,omitempty"`
-	Summary             CoverageSummary    `json:"summary"`
+	Framework           string           `json:"framework"`
+	ControlsAnalyzed    int              `json:"controls_analyzed"`
+	ControlsAnnotated   int              `json:"controls_annotated"`
+	ControlsUnannotated int              `json:"controls_unannotated"`
+	AssessmentOverlay   bool             `json:"assessment_overlay"`
+	Tactics             TacticsCoverage  `json:"tactics"`
+	StaveOnly           StaveOnlyTactics `json:"stave_only,omitempty"`
+	UnannotatedControls ControlIDs       `json:"unannotated_controls,omitempty"`
+	Summary             CoverageSummary  `json:"summary"`
 }
 
 // CoverageSummary holds aggregate metrics.

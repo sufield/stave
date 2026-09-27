@@ -57,15 +57,28 @@ func (mf MissingFields) HasPrefix(prefix string) bool {
 	return false
 }
 
+// ComplianceFrameworks is a domain collection of policy.ComplianceFramework items with query methods.
+type ComplianceFrameworks []policy.ComplianceFramework
+
+// Len returns the count of compliance frameworks in the collection.
+func (cf ComplianceFrameworks) Len() int {
+	return len(cf)
+}
+
+// Contains reports whether the given framework is present in the collection.
+func (cf ComplianceFrameworks) Contains(target policy.ComplianceFramework) bool {
+	return slices.Contains(cf, target)
+}
+
 // ControlResult holds the coverage analysis for a single control.
 type ControlResult struct {
-	ControlID      kernel.ControlID             `json:"control_id"`
-	Severity       policy.Severity              `json:"severity"`
-	Classification Classification               `json:"classification"`
-	MissingFields  MissingFields                `json:"missing_fields,omitempty"`
-	AssetType      kernel.AssetType             `json:"asset_type,omitempty"`
-	Frameworks     []policy.ComplianceFramework `json:"compliance_frameworks,omitempty"`
-	Risk           string                       `json:"risk,omitempty"`
+	ControlID      kernel.ControlID     `json:"control_id"`
+	Severity       policy.Severity      `json:"severity"`
+	Classification Classification       `json:"classification"`
+	MissingFields  MissingFields        `json:"missing_fields,omitempty"`
+	AssetType      kernel.AssetType     `json:"asset_type,omitempty"`
+	Frameworks     ComplianceFrameworks `json:"compliance_frameworks,omitempty"`
+	Risk           string               `json:"risk,omitempty"`
 }
 
 // ControlResults represents a collection of ControlResult items with query methods.

@@ -146,3 +146,29 @@ func TestCompareItems_DomainMethods(t *testing.T) {
 		t.Error("empty.BySeverity() should return nil")
 	}
 }
+
+func TestRequirementIDs_DomainMethods(t *testing.T) {
+	reqs := RequirementIDs{"AU-2", "164.312(b)"}
+	if reqs.Len() != 2 {
+		t.Errorf("Len() = %d, want 2", reqs.Len())
+	}
+	if !reqs.Contains("AU-2") {
+		t.Error("Contains(AU-2) = false, want true")
+	}
+	if reqs.Contains("AC-1") {
+		t.Error("Contains(AC-1) = true, want false")
+	}
+}
+
+func TestControlIDs_DomainMethods(t *testing.T) {
+	cids := ControlIDs{"CTL.A.001", "CTL.B.002"}
+	if cids.Len() != 2 {
+		t.Errorf("Len() = %d, want 2", cids.Len())
+	}
+	if !cids.Contains("CTL.A.001") {
+		t.Error("Contains(CTL.A.001) = false, want true")
+	}
+	if cids.Contains("CTL.C.003") {
+		t.Error("Contains(CTL.C.003) = true, want false")
+	}
+}

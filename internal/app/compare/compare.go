@@ -44,13 +44,26 @@ type AdoptionReadiness struct {
 	FreeCoverage     int     `json:"free_coverage"`
 }
 
+// RequirementIDs is a domain collection of policy.RequirementID items with query methods.
+type RequirementIDs []policy.RequirementID
+
+// Len returns the count of requirement IDs in the collection.
+func (r RequirementIDs) Len() int {
+	return len(r)
+}
+
+// Contains reports whether the target requirement ID is in the collection.
+func (r RequirementIDs) Contains(target policy.RequirementID) bool {
+	return slices.Contains(r, target)
+}
+
 // CompareItem is a finding in the gap analysis.
 type CompareItem struct {
-	ControlID  kernel.ControlID       `json:"control_id"`
-	Severity   policy.Severity        `json:"severity"`
-	DwellHours float64                `json:"dwell_hours,omitempty"`
-	Baseline   []policy.RequirementID `json:"satisfies_baseline,omitempty"`
-	Target     []policy.RequirementID `json:"satisfies_target,omitempty"`
+	ControlID  kernel.ControlID `json:"control_id"`
+	Severity   policy.Severity  `json:"severity"`
+	DwellHours float64          `json:"dwell_hours,omitempty"`
+	Baseline   RequirementIDs   `json:"satisfies_baseline,omitempty"`
+	Target     RequirementIDs   `json:"satisfies_target,omitempty"`
 }
 
 // CompareItems is a domain collection of CompareItem entries with query and filtering methods.
@@ -81,11 +94,24 @@ type Roadmap struct {
 	Phase2 Phase `json:"phase_2"`
 }
 
+// ControlIDs is a domain collection of kernel.ControlID items with query methods.
+type ControlIDs []kernel.ControlID
+
+// Len returns the count of control IDs in the collection.
+func (ids ControlIDs) Len() int {
+	return len(ids)
+}
+
+// Contains reports whether the target control ID is in the collection.
+func (ids ControlIDs) Contains(target kernel.ControlID) bool {
+	return slices.Contains(ids, target)
+}
+
 // Phase is one phase of the roadmap.
 type Phase struct {
-	Description string             `json:"description"`
-	Controls    []kernel.ControlID `json:"findings"`
-	Count       int                `json:"count"`
+	Description string     `json:"description"`
+	Controls    ControlIDs `json:"findings"`
+	Count       int        `json:"count"`
 }
 
 // Input holds the data for gap analysis.
