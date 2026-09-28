@@ -223,3 +223,21 @@ func TestCaseResults_CollectionMethods(t *testing.T) {
 		t.Errorf("Failing len = %d, want 1", trs.Failing().Len())
 	}
 }
+
+func TestControlDefinitions_DomainMethods(t *testing.T) {
+	cds := ControlDefinitions{
+		{ID: "CTL.S3.001"},
+		{ID: "CTL.EC2.001"},
+	}
+
+	if cds.Len() != 2 {
+		t.Errorf("cds.Len() = %d, want 2", cds.Len())
+	}
+
+	if found := cds.ByID("CTL.S3.001"); found == nil || found.ID != "CTL.S3.001" {
+		t.Errorf("ByID(CTL.S3.001) = %v, want CTL.S3.001", found)
+	}
+	if found := cds.ByID("CTL.ABSENT"); found != nil {
+		t.Errorf("ByID(CTL.ABSENT) = %v, want nil", found)
+	}
+}

@@ -129,9 +129,27 @@ type Summary struct {
 	Skipped        int `json:"skipped"`
 }
 
+// ControlDefinitions is a domain collection of policy.ControlDefinition items with query methods.
+type ControlDefinitions []policy.ControlDefinition
+
+// Len returns the count of control definitions in the collection.
+func (cds ControlDefinitions) Len() int {
+	return len(cds)
+}
+
+// ByID returns the control definition matching the given ID, or nil if not found.
+func (cds ControlDefinitions) ByID(id kernel.ControlID) *policy.ControlDefinition {
+	for i := range cds {
+		if cds[i].ID == id {
+			return &cds[i]
+		}
+	}
+	return nil
+}
+
 // RunInput holds the inputs for a test run.
 type RunInput struct {
-	Controls  []policy.ControlDefinition
+	Controls  ControlDefinitions
 	Evaluator policy.PredicateEval
 	Filter    string
 	FailFast  bool

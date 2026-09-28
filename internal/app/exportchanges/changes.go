@@ -84,9 +84,31 @@ type Report struct {
 	Changes     Changes `json:"changes"`
 }
 
+// FindingList is a domain collection of remediation.Finding items with query methods.
+type FindingList []remediation.Finding
+
+// Len returns the count of findings in the collection.
+func (fl FindingList) Len() int {
+	return len(fl)
+}
+
+// ByControl returns a new FindingList collection filtered by control ID.
+func (fl FindingList) ByControl(id kernel.ControlID) FindingList {
+	if len(fl) == 0 {
+		return nil
+	}
+	var filtered FindingList
+	for i := range fl {
+		if fl[i].ControlID == id {
+			filtered = append(filtered, fl[i])
+		}
+	}
+	return filtered
+}
+
 // Input configures the export.
 type Input struct {
-	Findings      []remediation.Finding
+	Findings      FindingList
 	MinConfidence float64
 	GeneratedAt   string
 }

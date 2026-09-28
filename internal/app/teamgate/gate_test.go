@@ -99,3 +99,25 @@ func TestEvaluate_GatePassesWithinThreshold(t *testing.T) {
 		t.Error("gate should pass — 1 high finding within threshold of 5")
 	}
 }
+
+func TestFindingList_DomainMethods(t *testing.T) {
+	fl := FindingList{
+		finding("CTL.A", "ast1", policy.SeverityCritical),
+		finding("CTL.B", "ast2", policy.SeverityHigh),
+		finding("CTL.C", "ast3", policy.SeverityCritical),
+	}
+
+	if fl.Len() != 3 {
+		t.Errorf("fl.Len() = %d, want 3", fl.Len())
+	}
+
+	crit := fl.BySeverity(policy.SeverityCritical)
+	if crit.Len() != 2 {
+		t.Errorf("crit.Len() = %d, want 2", crit.Len())
+	}
+
+	med := fl.BySeverity(policy.SeverityMedium)
+	if med.Len() != 0 {
+		t.Errorf("med.Len() = %d, want 0", med.Len())
+	}
+}

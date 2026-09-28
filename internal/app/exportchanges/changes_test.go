@@ -81,3 +81,22 @@ func TestChanges_CollectionMethods(t *testing.T) {
 		t.Errorf("ByControl(CTL-1) len = %d, want 2", cs.ByControl("CTL-1").Len())
 	}
 }
+
+func TestFindingList_DomainMethods(t *testing.T) {
+	fl := FindingList{
+		{ControlID: "CTL.S3.PUBLIC.001"},
+		{ControlID: "CTL.S3.ENCRYPT.001"},
+		{ControlID: "CTL.S3.PUBLIC.001"},
+	}
+
+	if fl.Len() != 3 {
+		t.Errorf("fl.Len() = %d, want 3", fl.Len())
+	}
+
+	if fl.ByControl("CTL.S3.PUBLIC.001").Len() != 2 {
+		t.Errorf("ByControl(CTL.S3.PUBLIC.001) len = %d, want 2", fl.ByControl("CTL.S3.PUBLIC.001").Len())
+	}
+	if fl.ByControl("CTL.S3.ABSENT.001").Len() != 0 {
+		t.Errorf("ByControl(CTL.S3.ABSENT.001) len = %d, want 0", fl.ByControl("CTL.S3.ABSENT.001").Len())
+	}
+}

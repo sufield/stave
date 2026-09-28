@@ -6,6 +6,7 @@ package teamgate
 
 import (
 	"github.com/sufield/stave/internal/app/teams"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	corereport "github.com/sufield/stave/internal/core/report"
 )
@@ -55,9 +56,31 @@ type GateResult struct {
 	Reason        GateReason   `json:"reason,omitempty"`
 }
 
+// FindingList is a domain collection of remediation.Finding items with query methods.
+type FindingList []remediation.Finding
+
+// Len returns the count of findings in the collection.
+func (fl FindingList) Len() int {
+	return len(fl)
+}
+
+// BySeverity returns a new FindingList collection filtered by policy severity.
+func (fl FindingList) BySeverity(sev policy.Severity) FindingList {
+	if len(fl) == 0 {
+		return nil
+	}
+	var filtered FindingList
+	for i := range fl {
+		if fl[i].ControlSeverity == sev {
+			filtered = append(filtered, fl[i])
+		}
+	}
+	return filtered
+}
+
 // Input configures the gate evaluation.
 type Input struct {
-	Findings   []remediation.Finding
+	Findings   FindingList
 	Manifest   *teams.Manifest
 	TeamID     teams.TeamID
 	Thresholds Thresholds
