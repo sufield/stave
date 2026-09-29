@@ -50,7 +50,7 @@ type AcknowledgmentEntry struct {
 	ExpiryDate           string           `yaml:"expiry_date" json:"expiry_date"`
 	ReviewBy             string           `yaml:"review_by,omitempty" json:"review_by,omitempty"`
 	ReviewCadence        string           `yaml:"review_cadence,omitempty" json:"review_cadence,omitempty"`
-	CompensatingControls []string         `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
+	CompensatingControls []kernel.ControlID `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
 	Status               AckStatus        `yaml:"status" json:"status"`
 	AuditTrail           []AuditEvent     `yaml:"audit_trail" json:"audit_trail"`
 }
@@ -373,7 +373,7 @@ func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[kernel.ControlID]struc
 			}
 		}
 		for _, cc := range a.CompensatingControls {
-			if _, ok := knownIDs[kernel.ControlID(cc)]; !ok {
+			if _, ok := knownIDs[cc]; !ok {
 				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: compensating control %q not found in catalog", i, cc))
 			}
 		}

@@ -252,7 +252,7 @@ func TestValidateWithCatalog_UnknownCompensating(t *testing.T) {
 				Reason:               "test",
 				Approver:             "alice",
 				ExpiryDate:           "2026-09-01",
-				CompensatingControls: []string{"CTL.KNOWN.001", "CTL.FAKE.999"},
+				CompensatingControls: []kernel.ControlID{"CTL.KNOWN.001", "CTL.FAKE.999"},
 			},
 		},
 	}
@@ -281,7 +281,7 @@ func TestValidateWithCatalog_AllKnown(t *testing.T) {
 				Reason:               "test",
 				Approver:             "alice",
 				ExpiryDate:           "2026-09-01",
-				CompensatingControls: []string{"CTL.B"},
+				CompensatingControls: []kernel.ControlID{"CTL.B"},
 			},
 		},
 	}

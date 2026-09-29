@@ -11,6 +11,7 @@ import (
 	appexempt "github.com/sufield/stave/internal/app/exempt"
 	"github.com/sufield/stave/internal/controldata"
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // AcknowledgmentInput parameterizes [AddAcknowledgment]. Compensating is a
@@ -41,12 +42,12 @@ func AddAcknowledgment(file string, in AcknowledgmentInput) error {
 	if err != nil {
 		return fmt.Errorf("load acceptance file: %w", err)
 	}
-	var comps []string
+	var comps []kernel.ControlID
 	p := in.Compensating
 	for p != "" {
 		var seg string
 		seg, p, _ = strings.Cut(p, ",")
-		comps = append(comps, seg)
+		comps = append(comps, kernel.ControlID(seg))
 	}
 	reviewBy := computeReviewBy(in.ReviewCadence, time.Now().UTC())
 	if addErr := f.AddAcknowledgment(appexempt.AcknowledgmentEntry{

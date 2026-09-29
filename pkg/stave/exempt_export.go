@@ -101,8 +101,12 @@ func exemptBuildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment
 			{"name": "stave-status", "value": string(a.Status)},
 		}
 		if len(a.CompensatingControls) > 0 {
+			comps := make([]string, len(a.CompensatingControls))
+			for i, c := range a.CompensatingControls {
+				comps[i] = string(c)
+			}
 			props = append(props, map[string]string{
-				"name": "stave-compensating-controls", "value": strings.Join(a.CompensatingControls, ","),
+				"name": "stave-compensating-controls", "value": strings.Join(comps, ","),
 			})
 		}
 

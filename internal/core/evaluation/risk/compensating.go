@@ -19,8 +19,7 @@ func ApplyCompensatingControls(
 	passingControls map[kernel.ControlID]bool,
 ) {
 	for _, cc := range chain.CompensatingControls {
-		cid := kernel.ControlID(cc.ControlID)
-		if !passingControls[cid] {
+		if !passingControls[cc.ControlID] {
 			continue
 		}
 		switch cc.Effect {

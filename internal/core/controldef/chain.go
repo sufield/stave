@@ -128,7 +128,7 @@ func (c ChainComplexity) IsValid() bool {
 // CompensatingControl declares a control that, when passing, reduces
 // the chain's exploitability.
 type CompensatingControl struct {
-	ControlID string             `yaml:"control_id" json:"control_id"`
+	ControlID kernel.ControlID   `yaml:"control_id" json:"control_id"`
 	Effect    CompensatingEffect `yaml:"effect"     json:"effect"`
 	Rationale string             `yaml:"rationale"  json:"rationale"`
 }
