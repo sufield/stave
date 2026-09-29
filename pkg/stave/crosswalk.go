@@ -5,6 +5,7 @@ import (
 	"time"
 
 	comp "github.com/sufield/stave/internal/compliance"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // ResolveCrosswalk validates the requested compliance frameworks,
@@ -24,7 +25,11 @@ func ResolveCrosswalk(raw []byte, frameworks, checkIDs []string, now time.Time) 
 			return nil, fmt.Errorf("invalid framework: %w", err)
 		}
 	}
-	resolution, err := comp.ResolveControlCrosswalk(raw, frameworks, checkIDs, now)
+	typedIDs := make([]kernel.ControlID, len(checkIDs))
+	for i, id := range checkIDs {
+		typedIDs[i] = kernel.ControlID(id)
+	}
+	resolution, err := comp.ResolveControlCrosswalk(raw, frameworks, typedIDs, now)
 	if err != nil {
 		return nil, fmt.Errorf("resolve crosswalk: %w", err)
 	}

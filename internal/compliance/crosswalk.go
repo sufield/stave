@@ -127,7 +127,7 @@ type CrosswalkResolution struct {
 func ResolveControlCrosswalk(
 	raw []byte,
 	frameworkFilter []string,
-	expectedCheckIDs []string,
+	expectedCheckIDs []kernel.ControlID,
 	now time.Time,
 ) (CrosswalkResolution, error) {
 	var parsed struct {
@@ -159,10 +159,9 @@ func ResolveControlCrosswalk(
 	var missing []kernel.ControlID
 	var filtered []kernel.ControlID
 
-	for _, id := range expectedCheckIDs {
-		cid := kernel.ControlID(id)
-		rawRefs := parsed.Checks[id]
-		refs, filterErr := filterAndNormalizeRefs(id, rawRefs, allowedSet)
+	for _, cid := range expectedCheckIDs {
+		rawRefs := parsed.Checks[string(cid)]
+		refs, filterErr := filterAndNormalizeRefs(string(cid), rawRefs, allowedSet)
 		if filterErr != nil {
 			return CrosswalkResolution{}, filterErr
 		}

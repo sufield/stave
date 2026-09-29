@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestResolveControlCrosswalk_UnsupportedFramework(t *testing.T) {
@@ -16,7 +18,7 @@ checks:
       rationale: build metadata supports evidence
 `)
 	// Use a name that is not a real framework and not aliased.
-	_, err := ResolveControlCrosswalk(raw, []string{"made_up_framework"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
+	_, err := ResolveControlCrosswalk(raw, []string{"made_up_framework"}, []kernel.ControlID{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
 	if err == nil || !strings.Contains(err.Error(), "unsupported compliance framework") {
 		t.Fatalf("expected unsupported framework error, got %v", err)
 	}
@@ -35,7 +37,7 @@ checks:
       control_id: BOGUS.1
       rationale: typo in the crosswalk yaml
 `)
-	_, err := ResolveControlCrosswalk(raw, []string{"soc2"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
+	_, err := ResolveControlCrosswalk(raw, []string{"soc2"}, []kernel.ControlID{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
 	if err == nil {
 		t.Fatal("expected error for unknown framework in yaml, got nil")
 	}
@@ -53,7 +55,7 @@ checks:
       control_id: CC7.1
       rationale: "   "
 `)
-	_, err := ResolveControlCrosswalk(raw, []string{"soc2"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
+	_, err := ResolveControlCrosswalk(raw, []string{"soc2"}, []kernel.ControlID{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
 	if err == nil || !strings.Contains(err.Error(), "empty control_id or rationale") {
 		t.Fatalf("expected empty control_id or rationale error, got %v", err)
 	}
@@ -75,7 +77,7 @@ checks:
       control_id: CC7.1
       rationale: build metadata supports evidence
 `)
-	res, err := ResolveControlCrosswalk(raw, []string{"hipaa"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
+	res, err := ResolveControlCrosswalk(raw, []string{"hipaa"}, []kernel.ControlID{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("ResolveControlCrosswalk: %v", err)
 	}

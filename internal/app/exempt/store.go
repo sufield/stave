@@ -41,18 +41,18 @@ const (
 // YAML tags match controldef.AcknowledgmentRule so the produced file
 // is consumable by stave apply --acknowledgment-file without modification.
 type AcknowledgmentEntry struct {
-	ID                   string           `yaml:"id" json:"id"`
-	ControlID            kernel.ControlID `yaml:"control_id" json:"control_id"`
-	AssetID              asset.ID         `yaml:"asset_id" json:"asset_id"`
-	Reason               string           `yaml:"rationale" json:"rationale"`
-	Approver             string           `yaml:"acknowledged_by" json:"acknowledged_by"`
-	AcknowledgedDate     string           `yaml:"acknowledged_date" json:"acknowledged_date"`
-	ExpiryDate           string           `yaml:"expiry_date" json:"expiry_date"`
-	ReviewBy             string           `yaml:"review_by,omitempty" json:"review_by,omitempty"`
-	ReviewCadence        string           `yaml:"review_cadence,omitempty" json:"review_cadence,omitempty"`
+	ID                   string             `yaml:"id" json:"id"`
+	ControlID            kernel.ControlID   `yaml:"control_id" json:"control_id"`
+	AssetID              asset.ID           `yaml:"asset_id" json:"asset_id"`
+	Reason               string             `yaml:"rationale" json:"rationale"`
+	Approver             string             `yaml:"acknowledged_by" json:"acknowledged_by"`
+	AcknowledgedDate     string             `yaml:"acknowledged_date" json:"acknowledged_date"`
+	ExpiryDate           string             `yaml:"expiry_date" json:"expiry_date"`
+	ReviewBy             string             `yaml:"review_by,omitempty" json:"review_by,omitempty"`
+	ReviewCadence        string             `yaml:"review_cadence,omitempty" json:"review_cadence,omitempty"`
 	CompensatingControls []kernel.ControlID `yaml:"compensating_controls,omitempty" json:"compensating_controls,omitempty"`
-	Status               AckStatus        `yaml:"status" json:"status"`
-	AuditTrail           []AuditEvent     `yaml:"audit_trail" json:"audit_trail"`
+	Status               AckStatus          `yaml:"status" json:"status"`
+	AuditTrail           []AuditEvent       `yaml:"audit_trail" json:"audit_trail"`
 }
 
 // IsActive reports whether the entry's status is the canonical

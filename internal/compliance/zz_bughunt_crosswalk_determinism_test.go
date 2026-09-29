@@ -3,6 +3,8 @@ package compliance
 import (
 	"testing"
 	"time"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestBugHunt_ResolveControlCrosswalk_Determinism(t *testing.T) {
@@ -21,7 +23,7 @@ checks:
       rationale: rationale A
 `)
 
-	res, err := ResolveControlCrosswalk(raw, []string{"soc2"}, []string{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
+	res, err := ResolveControlCrosswalk(raw, []string{"soc2"}, []kernel.ControlID{"SC.BUILDINFO.PRESENT"}, time.Now().UTC())
 	if err != nil {
 		t.Fatalf("ResolveControlCrosswalk failed: %v", err)
 	}
