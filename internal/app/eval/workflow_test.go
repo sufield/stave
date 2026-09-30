@@ -131,15 +131,13 @@ func TestAuditWorkflowPerformAssessment(t *testing.T) {
 		}
 
 		status, err := run.ExecuteAndWrite(context.Background(), AssessmentConfig{
-			ObservationConfig: ObservationConfig{
-				PolicySource:      "ctl",
-				ObservationSource: "obs",
-			},
-			SLAThreshold:    30 * time.Minute,
-			Clock:           clockadp.FixedClock(now),
-			Output:          &bytes.Buffer{},
-			PredicateParser: noopPredicateParser,
-			PredicateEval:   mustPredicateEval(),
+			PolicySource:      "ctl",
+			ObservationSource: "obs",
+			SLAThreshold:      30 * time.Minute,
+			Clock:             clockadp.FixedClock(now),
+			Output:            &bytes.Buffer{},
+			PredicateParser:   noopPredicateParser,
+			PredicateEval:     mustPredicateEval(),
 		})
 		if err != nil {
 			t.Fatalf("unexpected err: %v", err)
@@ -170,15 +168,13 @@ func TestAuditWorkflowPerformAssessment(t *testing.T) {
 		}
 
 		_, err = run.ExecuteAndWrite(context.Background(), AssessmentConfig{
-			ObservationConfig: ObservationConfig{
-				PolicySource:      "ctl",
-				ObservationSource: "obs",
-			},
-			SLAThreshold:    30 * time.Minute,
-			Clock:           clockadp.FixedClock(now),
-			Output:          &bytes.Buffer{},
-			PredicateParser: noopPredicateParser,
-			PredicateEval:   mustPredicateEval(),
+			PolicySource:      "ctl",
+			ObservationSource: "obs",
+			SLAThreshold:      30 * time.Minute,
+			Clock:             clockadp.FixedClock(now),
+			Output:            &bytes.Buffer{},
+			PredicateParser:   noopPredicateParser,
+			PredicateEval:     mustPredicateEval(),
 		})
 		if err == nil || !strings.Contains(err.Error(), "marshal") {
 			t.Fatalf("unexpected err: %v", err)

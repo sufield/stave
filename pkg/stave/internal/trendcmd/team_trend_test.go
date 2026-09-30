@@ -38,13 +38,11 @@ func makeManifest() *teams.Manifest {
 
 func makeFinding(ctlID, assetID string, sev policy.Severity, dwell float64, breached bool) remediation.Finding {
 	f := remediation.Finding{
-		Finding: evaluation.Finding{
-			ControlID:       kernel.ControlID(ctlID),
-			AssetID:         asset.ID(assetID),
-			ControlSeverity: sev,
-			Evidence: evaluation.Evidence{
-				UnsafeDurationHours: dwell,
-			},
+		ControlID:       kernel.ControlID(ctlID),
+		AssetID:         asset.ID(assetID),
+		ControlSeverity: sev,
+		Evidence: evaluation.Evidence{
+			UnsafeDurationHours: dwell,
 		},
 	}
 	if breached {

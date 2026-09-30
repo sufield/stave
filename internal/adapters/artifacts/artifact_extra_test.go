@@ -38,7 +38,7 @@ func TestCompareAgainstBaseline_NilSanitizer(t *testing.T) {
 		{ControlID: "CTL.A", AssetID: "res-1"},
 	}
 	current := []remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "res-1"}},
+		{ControlID: "CTL.A", AssetID: "res-1"},
 	}
 	result := CompareAgainstBaseline(nil, base, current)
 	if len(result.Comparison.New) != 0 {
@@ -52,7 +52,7 @@ func TestCompareAgainstBaseline_WithSanitizer(t *testing.T) {
 		{ControlID: "CTL.A", AssetID: "res-1"},
 	}
 	current := []remediation.Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.B", AssetID: "res-2"}},
+		{ControlID: "CTL.B", AssetID: "res-2"},
 	}
 	result := CompareAgainstBaseline(san, base, current)
 	if len(result.Comparison.New) != 1 {

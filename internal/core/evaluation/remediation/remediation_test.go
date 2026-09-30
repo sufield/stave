@@ -118,11 +118,9 @@ func TestPlannerEnrichFindings(t *testing.T) {
 func TestPlannerPlanFor_PublicExposure(t *testing.T) {
 	p := NewPlanner()
 	f := Finding{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.S3.PUBLIC.001",
-			AssetID:   "bucket-1",
-			AssetType: "aws_s3_bucket",
-		},
+		ControlID: "CTL.S3.PUBLIC.001",
+		AssetID:   "bucket-1",
+		AssetType: "aws_s3_bucket",
 	}
 	plan := p.PlanFor(&f)
 	if plan == nil {
@@ -139,10 +137,8 @@ func TestPlannerPlanFor_PublicExposure(t *testing.T) {
 func TestPlannerPlanFor_UnknownClass(t *testing.T) {
 	p := NewPlanner()
 	f := Finding{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.CUSTOM.UNKNOWN.001",
-			AssetID:   "res-1",
-		},
+		ControlID: "CTL.CUSTOM.UNKNOWN.001",
+		AssetID:   "res-1",
 	}
 	plan := p.PlanFor(&f)
 	if plan != nil {
@@ -157,11 +153,9 @@ func TestPlannerPlanFor_UnknownClass(t *testing.T) {
 func TestPublicExposurePlannerPlan(t *testing.T) {
 	p := publicExposurePlanner{}
 	f := Finding{
-		Finding: evaluation.Finding{
-			ControlID: "CTL.S3.PUBLIC.001",
-			AssetID:   "bucket-1",
-			AssetType: "aws_s3_bucket",
-		},
+		ControlID: "CTL.S3.PUBLIC.001",
+		AssetID:   "bucket-1",
+		AssetType: "aws_s3_bucket",
 	}
 	plan := p.Plan(&f)
 	if plan == nil {
@@ -212,9 +206,9 @@ func TestGroupStats(t *testing.T) {
 
 func TestBaselineEntriesFromFindings(t *testing.T) {
 	findings := []Finding{
-		{Finding: evaluation.Finding{ControlID: "CTL.B.001", ControlName: "B", AssetID: "res-2", AssetType: "bucket"}},
-		{Finding: evaluation.Finding{ControlID: "CTL.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"}},
-		{Finding: evaluation.Finding{ControlID: "CTL.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"}}, // duplicate
+		{ControlID: "CTL.B.001", ControlName: "B", AssetID: "res-2", AssetType: "bucket"},
+		{ControlID: "CTL.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"},
+		{ControlID: "CTL.A.001", ControlName: "A", AssetID: "res-1", AssetType: "bucket"}, // duplicate
 	}
 
 	entries := BaselineEntriesFromFindings(findings)

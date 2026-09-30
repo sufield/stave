@@ -25,11 +25,9 @@ func TestBuildGroups_EmptyFingerprintDoesNotWarn(t *testing.T) {
 	defer slog.SetDefault(prev)
 
 	f := Finding{
-		Finding: evaluation.Finding{
-			FindingID: "f-1",
-			ControlID: "CTL.X.001",
-			AssetID:   "asset-1",
-		},
+		FindingID:       "f-1",
+		ControlID:       "CTL.X.001",
+		AssetID:         "asset-1",
 		RemediationPlan: &evaluation.RemediationPlan{}, // empty ActionsFingerprint
 	}
 	groups := BuildGroups([]Finding{f})
