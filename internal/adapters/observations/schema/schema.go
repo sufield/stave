@@ -31,7 +31,6 @@ package schema
 
 import (
 	"log/slog"
-	"maps"
 	"strings"
 	"sync"
 
@@ -84,22 +83,6 @@ func (r *schemaRegistry) lookup(t kernel.AssetType) (Schema, bool) {
 	defer r.mu.RUnlock()
 	s, ok := r.entries[t]
 	return s, ok
-}
-
-// remove deletes t's entry. Used by tests that install a temporary schema.
-func (r *schemaRegistry) remove(t kernel.AssetType) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	delete(r.entries, t)
-}
-
-// all returns a snapshot copy of the registered schemas for iteration.
-func (r *schemaRegistry) all() map[kernel.AssetType]Schema {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	out := make(map[kernel.AssetType]Schema, len(r.entries))
-	maps.Copy(out, r.entries)
-	return out
 }
 
 // schemas is the process-wide schema registry — one cohesive instance rather

@@ -12,7 +12,6 @@ import (
 
 	"github.com/sufield/stave/internal/adapters/output"
 	"github.com/sufield/stave/internal/adapters/output/dto"
-	"github.com/sufield/stave/internal/env"
 
 	schemas "github.com/sufield/stave/internal/contracts/schema"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
@@ -97,10 +96,6 @@ func encodeJSON(out io.Writer, indent bool, result dto.ResultDTO) error {
 		return fmt.Errorf("failed to encode findings: %w", err)
 	}
 	return nil
-}
-
-func shouldValidateFindingContract() bool {
-	return env.DevValidateFindings.IsTrue() || env.Debug.IsTrue()
 }
 
 func validateFindings(v *contractvalidator.Validator, findings []remediation.Finding) error {

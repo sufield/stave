@@ -154,12 +154,6 @@ func emitViolationFinding(
 	return finalizeRow(observation, evaluation.VerdictViolation, confidence), findings
 }
 
-// strategyFor returns the appropriate evaluator based on the control type.
-// The Assessor version is used by tests; the session version adds the trace span.
-func (a *Assessor) strategyFor(ctl *policy.ControlDefinition) strategy {
-	return buildStrategy(&sessionDeps{Assessor: a, span: nopSpan{}}, ctl)
-}
-
 // strategyFor returns the appropriate evaluator for ctl, with span
 // carried as a per-call parameter. The span is the live control×asset
 // trace span the strategy will record its decision steps into; passing
@@ -517,22 +511,6 @@ func (s *prefixExposureStrategy) Evaluate(t *asset.ExposureLifecycle, _ time.Tim
 	// which orphaned the pool pointers and fed slice-backing addresses into
 	// the pool — a sync.Pool contract violation (see findingPool).
 	return EvaluatePrefixExposureForRow(t, s.ctl)
-}
-
-// wrapInPointers builds a []*Finding from a value slice by taking the
-// address of each element. NOTE: the resulting pointers alias one shared
-// backing array, so they MUST NOT be handed to ReturnFindings (that would
-// poison findingPool with non-pool addresses). Retained as a test helper
-// only — production strategies now carry pool-borrowed pointers end to end.
-func wrapInPointers(findings []evaluation.Finding) []*evaluation.Finding {
-	if len(findings) == 0 {
-		return nil
-	}
-	evaluatedFindings := make([]*evaluation.Finding, len(findings))
-	for i := range findings {
-		evaluatedFindings[i] = &findings[i]
-	}
-	return evaluatedFindings
 }
 
 type unsupportedStrategy struct {

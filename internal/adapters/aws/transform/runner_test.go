@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+func runJQ(program string, input any) ([]json.RawMessage, error) {
+	return runJQWithArgs(program, input, nil)
+}
+
 // Confirms gojq (the new production dependency) compiles and runs a filter that
 // reshapes a raw `aws iam list-roles`-style document into obs.v0.1 asset objects
 // {id,type,vendor,properties} — the shape Iteration 1's filters emit.

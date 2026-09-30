@@ -13,6 +13,10 @@ import (
 	"github.com/sufield/stave/internal/env"
 )
 
+func shouldValidateFindingContract() bool {
+	return env.DevValidateFindings.IsTrue() || env.Debug.IsTrue()
+}
+
 func TestWriteFindings_BareJSON(t *testing.T) {
 	w := NewFindingWriter(false)
 	enricher := remediation.NewPlanner()

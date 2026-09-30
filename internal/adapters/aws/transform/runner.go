@@ -236,13 +236,6 @@ func runFilter(filterName string, parsed map[string]any, opts Options) ([]json.R
 	return assets, nil
 }
 
-// runJQ compiles a jq program and runs it over a single decoded JSON document,
-// returning every emitted value as raw JSON. A jq runtime error (e.g. indexing a
-// string) surfaces as an error rather than a partial result — fail loud.
-func runJQ(program string, input any) ([]json.RawMessage, error) {
-	return runJQWithArgs(program, input, nil)
-}
-
 // runJQWithArgs is runJQ with named jq variables ($name) bound from args — used
 // for capture-time parameters that aren't in the raw AWS output (e.g. the account
 // ID, which aws-snapshot.sh supplies at capture time). Keys are bare names; the

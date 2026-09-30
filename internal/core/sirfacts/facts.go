@@ -2145,22 +2145,6 @@ func allDeclaredPredicates(facts []Fact) []string {
 	return out
 }
 
-// uniquePredicates returns the sorted unique set of predicate
-// names appearing in the facts slice. Used by tests to enumerate
-// the per-fixture predicate set.
-func uniquePredicates(facts []Fact) []string {
-	seen := make(map[string]struct{}, len(facts))
-	for _, f := range facts {
-		seen[f.Predicate] = struct{}{}
-	}
-	out := make([]string, 0, len(seen))
-	for p := range seen {
-		out = append(out, p)
-	}
-	slices.Sort(out)
-	return out
-}
-
 // factsByPredicate filters the slice to the facts whose predicate
 // matches. Order is preserved from the input slice.
 func factsByPredicate(facts []Fact, predicate string) []Fact {
