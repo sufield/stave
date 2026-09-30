@@ -220,8 +220,8 @@ func TestPrepareFindings_NilEnricher(t *testing.T) {
 
 func TestSanitizeFindings_WithSanitizer(t *testing.T) {
 	findings := []remediation.Finding{
-		{AssetID: "res-1"},
-		{AssetID: "res-2"},
+		{Finding: evaluation.Finding{AssetID: "res-1"}},
+		{Finding: evaluation.Finding{AssetID: "res-2"}},
 	}
 	s := sanitize.New(sanitize.WithIDSanitization(true))
 	result := SanitizeFindings(s, findings)

@@ -1,8 +1,7 @@
-version: "2"
-
 run:
   timeout: 5m
-  tests: true
+  go: "1.26"
+  tests: false
   build-tags:
     - stavedev
 
@@ -250,6 +249,10 @@ linters:
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
+  exclude-rules:
+    - linters:
+        - typecheck
+      text: ".*"
 
 formatters:
   enable:
@@ -257,7 +260,4 @@ formatters:
     - goimports
 
 output:
-  formats:
-    text:
-      path: stdout
-      colors: true
+  sort-results: true

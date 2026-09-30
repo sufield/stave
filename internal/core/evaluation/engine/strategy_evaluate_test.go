@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -283,6 +284,73 @@ func TestUnsafeRecurrenceStrategy_DisabledPolicy(t *testing.T) {
 		t.Fatalf("expected 0 findings, got %d", len(findings))
 	}
 }
+
+func TestUnsafeRecurrenceStrategy_InsufficientCoverage(t *testing.T) {
+	base := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	now := base.Add(time.Hour)
+
+	// Single safe observation — coverage span (0) is less than the
+	// 7-day recurrence window, so the strategy must downgrade to
+	// INCONCLUSIVE and MarkInconclusive on the observation.
+	tl := buildLifecycle(t, []struct {
+		at     time.Time
+		unsafe bool
+	}{
+		{base, false},
+	})
+
+	ctl := testControl("CTL.REC.001", policy.TypeUnsafeRecurrence)
+	ctl.Params = policy.NewParams(map[string]any{
+		"recurrence_threshold": 3,
+		"window_days":          7,
+	})
+	if err := ctl.Prepare(); err != nil {
+		t.Fatalf("Prepare: %v", err)
+	}
+
+	span := &recordingSpan{}
+	deps := &stubDeps{
+		Assessor: testAssessor(168*time.Hour, now),
+		span:     span,
+	}
+
+	s := &unsafeRecurrenceStrategy{deps: deps, ctl: ctl}
+
+	row, findings := s.Evaluate(tl, now, IdentityIndex{})
+	if row.Verdict != evaluation.VerdictInconclusive {
+		t.Fatalf("expected Inconclusive (insufficient coverage), got %v", row.Verdict)
+	}
+	if row.Reason == "" {
+		t.Fatal("expected non-empty reason for insufficient coverage")
+	}
+	if len(findings) != 0 {
+		t.Fatalf("expected 0 findings, got %d", len(findings))
+	}
+
+	// Verify the strategy recorded the coverage_check trace step.
+	found := slices.Contains(span.steps, "coverage_check")
+	if !found {
+		t.Fatal("expected coverage_check trace step to be recorded")
+	}
+}
+
+// recordingSpan captures step names for assertion.
+type recordingSpan struct {
+	steps []string
+}
+
+func (s *recordingSpan) RecordStep(name string, _ any, _ any) { s.steps = append(s.steps, name) }
+func (s *recordingSpan) SetVerdict(string, string)            {}
+func (s *recordingSpan) SetFindingID(string)                  {}
+func (s *recordingSpan) End()                                 {}
+
+// stubDeps wraps an Assessor but returns a custom span.
+type stubDeps struct {
+	*Assessor
+	span ports.AssessmentSpan
+}
+
+func (d *stubDeps) currentSpan() ports.AssessmentSpan { return d.span }
 
 // ---------------------------------------------------------------------------
 // unsupportedStrategy

@@ -12,8 +12,10 @@ type Option func(*AssessmentConfig)
 // All resolution and validation must happen before calling NewConfig.
 func NewConfig(plan EvaluationPlan, opts ...Option) AssessmentConfig {
 	cfg := AssessmentConfig{
-		PolicySource:      plan.ControlsPath,
-		ObservationSource: plan.ObservationsPath,
+		ObservationConfig: ObservationConfig{
+			PolicySource:      plan.ControlsPath,
+			ObservationSource: plan.ObservationsPath,
+		},
 		Metadata: evaluation.Metadata{
 			ControlSource: evaluation.ControlSourceInfo{Source: evaluation.ControlSourceDir},
 			ContextName:   plan.ContextName,

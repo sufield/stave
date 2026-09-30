@@ -139,14 +139,16 @@ func Test_RedGate_CacheHitMetadata(t *testing.T) {
 	}
 
 	cfg := AssessmentConfig{
-		PolicySource:      "ctl",
-		ObservationSource: "obs",
-		SLAThreshold:      30 * time.Minute,
-		Clock:             clockadp.FixedClock(now),
-		PredicateParser:   noopPredicateParser,
-		PredicateEval:     mustPredicateEval(),
-		BuildVersion:      "test-version",
-		Metadata:          meta,
+		ObservationConfig: ObservationConfig{
+			PolicySource:      "ctl",
+			ObservationSource: "obs",
+		},
+		SLAThreshold:    30 * time.Minute,
+		Clock:           clockadp.FixedClock(now),
+		PredicateParser: noopPredicateParser,
+		PredicateEval:   mustPredicateEval(),
+		BuildVersion:    "test-version",
+		Metadata:        meta,
 	}
 
 	// Cold run: cache miss, persists the report.

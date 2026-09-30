@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 )
 
 func TestBugHunt_ViolatedRequirements_Determinism(t *testing.T) {
@@ -12,13 +13,17 @@ func TestBugHunt_ViolatedRequirements_Determinism(t *testing.T) {
 	// the output slice order is non-deterministic in the original code.
 	set := FindingSet{
 		{
-			ControlCompliance: policy.ComplianceMapping{
-				"framework-a": "REQ-Z",
+			Finding: evaluation.Finding{
+				ControlCompliance: policy.ComplianceMapping{
+					"framework-a": "REQ-Z",
+				},
 			},
 		},
 		{
-			ControlCompliance: policy.ComplianceMapping{
-				"framework-a": "REQ-A",
+			Finding: evaluation.Finding{
+				ControlCompliance: policy.ComplianceMapping{
+					"framework-a": "REQ-A",
+				},
 			},
 		},
 	}

@@ -29,9 +29,11 @@ func TestBuildGroups_Empty(t *testing.T) {
 func TestBuildGroups_SingleFinding(t *testing.T) {
 	findings := []Finding{
 		{
-			ControlID: "CTL.A.001",
-			AssetID:   "bucket-1",
-			AssetType: "s3_bucket",
+			Finding: evaluation.Finding{
+				ControlID: "CTL.A.001",
+				AssetID:   "bucket-1",
+				AssetType: "s3_bucket",
+			},
 			RemediationPlan: &evaluation.RemediationPlan{
 				ID: "plan-1",
 				Target: evaluation.RemediationTarget{
@@ -71,15 +73,19 @@ func TestBuildGroups_MultipleFindingsSameAsset(t *testing.T) {
 
 	findings := []Finding{
 		{
-			ControlID:       "CTL.A.001",
-			AssetID:         "bucket-1",
-			AssetType:       "s3_bucket",
+			Finding: evaluation.Finding{
+				ControlID: "CTL.A.001",
+				AssetID:   "bucket-1",
+				AssetType: "s3_bucket",
+			},
 			RemediationPlan: plan,
 		},
 		{
-			ControlID:       "CTL.B.001",
-			AssetID:         "bucket-1",
-			AssetType:       "s3_bucket",
+			Finding: evaluation.Finding{
+				ControlID: "CTL.B.001",
+				AssetID:   "bucket-1",
+				AssetType: "s3_bucket",
+			},
 			RemediationPlan: plan,
 		},
 	}
@@ -99,8 +105,10 @@ func TestBuildGroups_MultipleFindingsSameAsset(t *testing.T) {
 func TestBuildGroups_NilPlanSkipped(t *testing.T) {
 	findings := []Finding{
 		{
-			ControlID:       "CTL.A.001",
-			AssetID:         "bucket-1",
+			Finding: evaluation.Finding{
+				ControlID: "CTL.A.001",
+				AssetID:   "bucket-1",
+			},
 			RemediationPlan: nil,
 		},
 	}

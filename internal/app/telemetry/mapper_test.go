@@ -27,11 +27,13 @@ func makeAssessment(findings []remediation.Finding) *report.Assessment {
 func TestMapper_ViolationFinding(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
 		{
-			ControlID:       "CTL.S3.PUBLIC.001",
-			ControlName:     "Public Bucket Access",
-			ControlSeverity: policy.SeverityCritical,
-			AssetID:         asset.ID("arn:aws:s3:::prod-phi"),
-			AssetType:       "aws_s3_bucket",
+			Finding: evaluation.Finding{
+				ControlID:       "CTL.S3.PUBLIC.001",
+				ControlName:     "Public Bucket Access",
+				ControlSeverity: policy.SeverityCritical,
+				AssetID:         asset.ID("arn:aws:s3:::prod-phi"),
+				AssetType:       "aws_s3_bucket",
+			},
 		},
 	})
 
@@ -67,9 +69,9 @@ func TestMapper_EmptyFindings(t *testing.T) {
 
 func TestMapper_SeverityFilter(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{ControlID: "CTL.A", ControlSeverity: policy.SeverityCritical, AssetID: "a"},
-		{ControlID: "CTL.B", ControlSeverity: policy.SeverityHigh, AssetID: "b"},
-		{ControlID: "CTL.C", ControlSeverity: policy.SeverityMedium, AssetID: "c"},
+		{Finding: evaluation.Finding{ControlID: "CTL.A", ControlSeverity: policy.SeverityCritical, AssetID: "a"}},
+		{Finding: evaluation.Finding{ControlID: "CTL.B", ControlSeverity: policy.SeverityHigh, AssetID: "b"}},
+		{Finding: evaluation.Finding{ControlID: "CTL.C", ControlSeverity: policy.SeverityMedium, AssetID: "c"}},
 	})
 
 	filter := Filter{Severities: map[string]struct{}{"critical": {}}}

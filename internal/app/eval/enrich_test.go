@@ -38,13 +38,16 @@ func TestEnrich_SanitizesReasoningTraceAndDelta(t *testing.T) {
 	enricher := &stubEnricher{
 		findings: []remediation.Finding{
 			{
-				AssetID: asset.ID("arn:aws:s3:::bucket"),
-				ReasoningTrace: []evaluation.MatchedClause{
-					{ObservedValue: "arn:aws:iam::123:role/admin"},
+				Finding: evaluation.Finding{
+					AssetID: asset.ID("arn:aws:s3:::bucket"),
+					ReasoningTrace: []evaluation.MatchedClause{
+						{ObservedValue: "arn:aws:iam::123:role/admin"},
+					},
+					Delta: []policy.DeltaPath{
+						{CurrentValue: "arn:aws:s3:::secret-bucket"},
+					},
 				},
-				Delta: []policy.DeltaPath{
-					{CurrentValue: "arn:aws:s3:::secret-bucket"},
-				}},
+			},
 		},
 	}
 	res := &evaluation.ComplianceReport{}

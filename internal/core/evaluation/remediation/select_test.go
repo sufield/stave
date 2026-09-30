@@ -5,13 +5,16 @@ import (
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func makeTestFinding(controlID, assetID string) Finding {
 	return Finding{
-		ControlID: kernel.ControlID(controlID),
-		AssetID:   asset.ID(assetID),
+		Finding: evaluation.Finding{
+			ControlID: kernel.ControlID(controlID),
+			AssetID:   asset.ID(assetID),
+		},
 	}
 }
 

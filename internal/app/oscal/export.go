@@ -5,6 +5,7 @@ package oscal
 import (
 	"crypto/sha256"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -137,12 +138,7 @@ func (m Methods) Len() int {
 
 // Contains reports whether the target method string is present in the collection.
 func (m Methods) Contains(target string) bool {
-	for _, item := range m {
-		if item == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(m, target)
 }
 
 // ARSubjects is a domain collection of ARSubject items with query methods.

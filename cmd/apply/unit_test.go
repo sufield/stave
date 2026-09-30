@@ -47,9 +47,11 @@ func TestResolveApplyOptions(t *testing.T) {
 	// resolves paths + project config, so these assert the resolved dirs.
 	t.Run("valid flags with defaults", func(t *testing.T) {
 		opts := &Options{
-			ControlsDir:       filepath.Join(fixture, "controls"),
-			ObservationsDir:   filepath.Join(fixture, "observations"),
-			MaxUnsafeDuration: "168h",
+			SharedOptions: SharedOptions{
+				ControlsDir:       filepath.Join(fixture, "controls"),
+				ObservationsDir:   filepath.Join(fixture, "observations"),
+				MaxUnsafeDuration: "168h",
+			},
 		}
 		cfg, err := Resolve(opts, cs)
 		if err != nil {
@@ -65,10 +67,12 @@ func TestResolveApplyOptions(t *testing.T) {
 
 	t.Run("valid flags with --eval-time", func(t *testing.T) {
 		opts := &Options{
-			ControlsDir:       filepath.Join(fixture, "controls"),
-			ObservationsDir:   filepath.Join(fixture, "observations"),
-			MaxUnsafeDuration: "7d",
-			EvalTimeRaw:       "2026-01-15T00:00:00Z",
+			SharedOptions: SharedOptions{
+				ControlsDir:       filepath.Join(fixture, "controls"),
+				ObservationsDir:   filepath.Join(fixture, "observations"),
+				MaxUnsafeDuration: "7d",
+				EvalTimeRaw:       "2026-01-15T00:00:00Z",
+			},
 		}
 		if _, err := Resolve(opts, cs); err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -77,9 +81,11 @@ func TestResolveApplyOptions(t *testing.T) {
 
 	t.Run("stdin mode", func(t *testing.T) {
 		opts := &Options{
-			ControlsDir:       filepath.Join(fixture, "controls"),
-			ObservationsDir:   "-",
-			MaxUnsafeDuration: "168h",
+			SharedOptions: SharedOptions{
+				ControlsDir:       filepath.Join(fixture, "controls"),
+				ObservationsDir:   "-",
+				MaxUnsafeDuration: "168h",
+			},
 		}
 		cfg, err := Resolve(opts, cs)
 		if err != nil {
@@ -172,9 +178,11 @@ func TestResolveApplyOptions(t *testing.T) {
 			t.Fatal("no control YAML files in fixture: e2e-01-violation/controls must contain at least one *.yaml file")
 		}
 		opts := &Options{
-			ControlsDir:       files[0],
-			ObservationsDir:   filepath.Join(fixture, "observations"),
-			MaxUnsafeDuration: "168h",
+			SharedOptions: SharedOptions{
+				ControlsDir:       files[0],
+				ObservationsDir:   filepath.Join(fixture, "observations"),
+				MaxUnsafeDuration: "168h",
+			},
 		}
 
 		_, err := Resolve(opts, cs)
