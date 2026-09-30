@@ -20,7 +20,7 @@ import (
 func TestMarshalRemediationFieldPresent(t *testing.T) {
 	t.Parallel()
 	rf := Finding{
-		Finding: evaluation.Finding{ControlID: "X", AssetID: "Y"},
+		Finding:         evaluation.Finding{ControlID: "X", AssetID: "Y"},
 		RemediationSpec: policy.RemediationSpec{Description: "do thing", Action: "run cmd"},
 	}
 	out, err := json.Marshal(&rf)
@@ -41,7 +41,7 @@ func TestRemediationFindingRoundtrip(t *testing.T) {
 	t.Parallel()
 	deadline := 24.0
 	original := Finding{
-		Finding: evaluation.Finding{ControlID: "C.1", AssetID: "A.1"},
+		Finding:         evaluation.Finding{ControlID: "C.1", AssetID: "A.1"},
 		RemediationSpec: policy.RemediationSpec{Description: "d", Action: "a"},
 	}
 	original.RehydrateSLA(evaluation.SLAState{
