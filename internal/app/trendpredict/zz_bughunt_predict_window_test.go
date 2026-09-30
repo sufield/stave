@@ -22,9 +22,11 @@ func TestPredict_ZeroWindowUsesAllHistory(t *testing.T) {
 			Summary: evaluation.ComplianceSummary{TotalAssets: 10, Violations: 1},
 			Findings: []remediation.Finding{
 				{
-					ControlID:       kernel.ControlID("CTL.A"),
-					AssetID:         "asset1",
-					ControlSeverity: policy.SeverityCritical,
+					Finding: evaluation.Finding{
+						ControlID:       kernel.ControlID("CTL.A"),
+						AssetID:         "asset1",
+						ControlSeverity: policy.SeverityCritical,
+					},
 				},
 			},
 		},
@@ -39,9 +41,11 @@ func TestPredict_ZeroWindowUsesAllHistory(t *testing.T) {
 			Summary: evaluation.ComplianceSummary{TotalAssets: 10, Violations: 1},
 			Findings: []remediation.Finding{
 				{
-					ControlID:       kernel.ControlID("CTL.B"),
-					AssetID:         "asset1",
-					ControlSeverity: policy.SeverityCritical,
+					Finding: evaluation.Finding{
+						ControlID:       kernel.ControlID("CTL.B"),
+						AssetID:         "asset1",
+						ControlSeverity: policy.SeverityCritical,
+					},
 				},
 			},
 		},

@@ -69,7 +69,7 @@ func TestBugHunt_Predict_NegativeReadinessAndCeilLimit(t *testing.T) {
 
 	// We calculate how many controls we need to fix.
 	// Since we only have 8 findings, we should never need to fix more than 8 findings.
-	gap := 90.0 - p.CurrentReadiness
+	gap := 90.0 - p.CurrentReadiness.Value()
 	controlsToFix := int(math.Ceil(float64(len(assessments[1].Findings)) * gap / 100))
 	if controlsToFix > len(assessments[1].Findings) {
 		t.Errorf("controlsToFix (%d) should not exceed total findings (%d)", controlsToFix, len(assessments[1].Findings))

@@ -14,11 +14,41 @@ import (
 	"github.com/sufield/stave/internal/core/report"
 )
 
+// ReadinessPercentage encapsulates a compliance readiness percentage level in [0, 100].
+type ReadinessPercentage float64
+
+// Value returns the raw float64 readiness percentage.
+func (r ReadinessPercentage) Value() float64 { return float64(r) }
+
+// Clamp ensures the readiness percentage is bounded within [0, 100].
+func (r ReadinessPercentage) Clamp() ReadinessPercentage {
+	if r < 0 {
+		return 0
+	}
+	if r > 100 {
+		return 100
+	}
+	return r
+}
+
+// IsAchieved returns true if current readiness meets or exceeds the target.
+func (r ReadinessPercentage) IsAchieved(target ReadinessPercentage) bool {
+	return r >= target
+}
+
+// GapTo returns the percentage gap remaining to reach the target. Returns 0 if target is met.
+func (r ReadinessPercentage) GapTo(target ReadinessPercentage) float64 {
+	if r >= target {
+		return 0
+	}
+	return float64(target - r)
+}
+
 // Prediction holds the readiness timeline projection.
 type Prediction struct {
 	Profile          policy.ComplianceFramework `json:"profile"`
-	TargetReadiness  float64                    `json:"target_readiness_pct"`
-	CurrentReadiness float64                    `json:"current_readiness_pct"`
+	TargetReadiness  ReadinessPercentage        `json:"target_readiness_pct"`
+	CurrentReadiness ReadinessPercentage        `json:"current_readiness_pct"`
 	ProjectedDate    time.Time                  `json:"projected_date"`
 	OptimisticDate   time.Time                  `json:"optimistic_date"`
 	PessimisticDate  time.Time                  `json:"pessimistic_date"`
@@ -66,7 +96,7 @@ func (as Accelerators) TotalDaysSaved() int {
 type Input struct {
 	Assessments     []*report.Assessment
 	Profile         policy.ComplianceFramework
-	TargetReadiness float64
+	TargetReadiness ReadinessPercentage
 	Window          time.Duration
 	EvalTime        time.Time
 }
@@ -111,11 +141,8 @@ func Predict(in Input) *Prediction {
 	}
 
 	totalControls := max(latest.Summary.TotalAssets, 1)
-	currentReadiness := (1.0 - float64(latest.Summary.Violations)/float64(totalControls)) * 100
-	if currentReadiness < 0 {
-		currentReadiness = 0
-	}
-	gap := in.TargetReadiness - currentReadiness
+	currentReadiness := ReadinessPercentage((1.0 - float64(latest.Summary.Violations)/float64(totalControls)) * 100).Clamp()
+	gap := currentReadiness.GapTo(in.TargetReadiness)
 	if gap <= 0 {
 		return &Prediction{
 			Profile:          in.Profile,
@@ -156,7 +183,7 @@ func Predict(in Input) *Prediction {
 	return &Prediction{
 		Profile:          in.Profile,
 		TargetReadiness:  in.TargetReadiness,
-		CurrentReadiness: math.Round(currentReadiness*10) / 10,
+		CurrentReadiness: ReadinessPercentage(math.Round(currentReadiness.Value()*10) / 10),
 		ProjectedDate:    projected,
 		OptimisticDate:   optimistic,
 		PessimisticDate:  pessimistic,

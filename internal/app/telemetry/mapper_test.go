@@ -84,8 +84,8 @@ func TestMapper_SeverityFilter(t *testing.T) {
 
 func TestMapper_ResourceFilter(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{ControlID: "CTL.A", AssetID: "arn:aws:s3:::bucket-a"},
-		{ControlID: "CTL.B", AssetID: "arn:aws:s3:::bucket-b"},
+		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "arn:aws:s3:::bucket-a"}},
+		{Finding: evaluation.Finding{ControlID: "CTL.B", AssetID: "arn:aws:s3:::bucket-b"}},
 	})
 
 	filter := Filter{ResourceARN: "arn:aws:s3:::bucket-a"}
@@ -100,7 +100,7 @@ func TestMapper_ResourceFilter(t *testing.T) {
 
 func TestMapper_ControlFingerprint(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{ControlID: "CTL.A", AssetID: "a"},
+		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "a"}},
 	})
 	fps := ControlFingerprints{"CTL.A": "sha256:per-control-hash"}
 	events := MapAssessment(a, Filter{}, fps)
@@ -114,7 +114,7 @@ func TestMapper_ControlFingerprint(t *testing.T) {
 
 func TestMapper_EnvironmentalScore(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{ControlID: "CTL.A", AssetID: "a"},
+		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "a"}},
 	})
 	events := MapAssessment(a, Filter{}, nil)
 	if len(events) != 1 {
@@ -128,7 +128,7 @@ func TestMapper_EnvironmentalScore(t *testing.T) {
 
 func TestMapper_WithWindows(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{ControlID: "CTL.A", AssetID: "bucket-a"},
+		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "bucket-a"}},
 	})
 	tracker := NewWindowTracker()
 	events := MapAssessmentWithWindows(a, Filter{}, nil, tracker)

@@ -17,12 +17,24 @@ type findingKey struct {
 	AssetID   asset.ID
 }
 
+// DwellDays encapsulates finding resolution dwell duration in days.
+type DwellDays float64
+
+// Days returns the raw float64 value in days.
+func (d DwellDays) Days() float64 { return float64(d) }
+
+// Hours returns the dwell duration converted to hours.
+func (d DwellDays) Hours() float64 { return float64(d) * 24.0 }
+
+// IsChronic reports whether finding remained unaddressed for 14 days or longer.
+func (d DwellDays) IsChronic() bool { return float64(d) >= 14.0 }
+
 // ClosedFinding is a finding present in before but absent in after.
 type ClosedFinding struct {
 	ControlID kernel.ControlID `json:"control_id"`
 	AssetID   asset.ID         `json:"asset_id"`
 	Severity  policy.Severity  `json:"severity"`
-	DwellDays float64          `json:"dwell_days,omitempty"`
+	DwellDays DwellDays        `json:"dwell_days,omitempty"`
 }
 
 // ClosedFindings represents a collection of ClosedFinding items with query methods.
@@ -31,6 +43,15 @@ type ClosedFindings []ClosedFinding
 // Len returns the count of closed findings.
 func (cf ClosedFindings) Len() int {
 	return len(cf)
+}
+
+// TotalDwellDays returns aggregate dwell duration across all closed findings.
+func (cf ClosedFindings) TotalDwellDays() DwellDays {
+	var total float64
+	for _, f := range cf {
+		total += f.DwellDays.Days()
+	}
+	return DwellDays(total)
 }
 
 // BySeverity returns a filtered slice of ClosedFinding items matching the given severity.
@@ -146,7 +167,7 @@ func Analyze(in Input) (*Report, error) {
 				ControlID: k.ControlID,
 				AssetID:   k.AssetID,
 				Severity:  f.ControlSeverity,
-				DwellDays: f.DwellDays(),
+				DwellDays: DwellDays(f.DwellDays()),
 			})
 		}
 	}

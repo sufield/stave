@@ -45,7 +45,7 @@ func PredictReadiness(ctx context.Context, cfg PredictConfig) ([]byte, []string,
 	prediction := trendpredict.Predict(trendpredict.Input{
 		Assessments:     assessments,
 		Profile:         policy.ComplianceFramework(cfg.Profile),
-		TargetReadiness: cfg.TargetReadiness,
+		TargetReadiness: trendpredict.ReadinessPercentage(cfg.TargetReadiness),
 		Window:          window,
 		EvalTime:        now,
 	})

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
 )
@@ -18,9 +19,11 @@ func TestEvaluate_NilManifestHandledSafely(t *testing.T) {
 	in := Input{
 		Findings: []remediation.Finding{
 			{
-				ControlID:       kernel.ControlID("CTL.S3.001"),
-				ControlSeverity: policy.SeverityCritical,
-				OwnerTeamID:     "team-alpha",
+				Finding: evaluation.Finding{
+					ControlID:        kernel.ControlID("CTL.S3.001"),
+					ControlSeverity:  policy.SeverityCritical,
+					FindingOwnership: evaluation.FindingOwnership{OwnerTeamID: "team-alpha"},
+				},
 			},
 		},
 		Manifest:   nil, // nil manifest

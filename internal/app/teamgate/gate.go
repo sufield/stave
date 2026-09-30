@@ -11,6 +11,35 @@ import (
 	corereport "github.com/sufield/stave/internal/core/report"
 )
 
+// Threshold encapsulates a finding count limit rule.
+// Negative values (e.g. -1) represent a disabled check.
+type Threshold int
+
+const (
+	DisabledThreshold      Threshold = -1
+	ZeroToleranceThreshold Threshold = 0
+)
+
+// NewThreshold constructs a Threshold value object.
+func NewThreshold(limit int) Threshold {
+	return Threshold(limit)
+}
+
+// IsDisabled reports whether threshold check is disabled (-1).
+func (t Threshold) IsDisabled() bool {
+	return t < 0
+}
+
+// IsExceeded reports whether finding count exceeds this threshold.
+func (t Threshold) IsExceeded(count int) bool {
+	return !t.IsDisabled() && count > int(t)
+}
+
+// Value returns the raw integer threshold limit.
+func (t Threshold) Value() int {
+	return int(t)
+}
+
 // Thresholds defines the maximum allowed findings per severity.
 //
 // A value of -1 disables the check for that severity. The zero value
@@ -18,9 +47,9 @@ import (
 // Callers wanting CLI-typical behavior — block on critical/high,
 // inform on medium — should construct via DefaultThresholds().
 type Thresholds struct {
-	MaxCritical int
-	MaxHigh     int
-	MaxMedium   int
+	MaxCritical Threshold `json:"max_critical"`
+	MaxHigh     Threshold `json:"max_high"`
+	MaxMedium   Threshold `json:"max_medium"`
 }
 
 // DefaultThresholds returns the recommended CLI defaults: zero
@@ -30,9 +59,9 @@ type Thresholds struct {
 // high or critical findings.
 func DefaultThresholds() Thresholds {
 	return Thresholds{
-		MaxCritical: 0,
-		MaxHigh:     0,
-		MaxMedium:   -1,
+		MaxCritical: ZeroToleranceThreshold,
+		MaxHigh:     ZeroToleranceThreshold,
+		MaxMedium:   DisabledThreshold,
 	}
 }
 
@@ -115,17 +144,14 @@ func Evaluate(in Input) GateResult {
 		Passed:        true,
 	}
 
-	// A negative threshold (-1) disables the check for that severity,
-	// matching the documented sentinel. Apply consistently across
-	// critical/high/medium so callers don't need a different pattern
-	// per tier.
-	if in.Thresholds.MaxCritical >= 0 && counts.Critical > in.Thresholds.MaxCritical {
+	// Apply thresholds via Threshold domain methods.
+	if in.Thresholds.MaxCritical.IsExceeded(counts.Critical) {
 		result.Passed = false
 		result.Reason = ReasonCriticalThresholdExceeded
-	} else if in.Thresholds.MaxHigh >= 0 && counts.High > in.Thresholds.MaxHigh {
+	} else if in.Thresholds.MaxHigh.IsExceeded(counts.High) {
 		result.Passed = false
 		result.Reason = ReasonHighThresholdExceeded
-	} else if in.Thresholds.MaxMedium >= 0 && counts.Medium > in.Thresholds.MaxMedium {
+	} else if in.Thresholds.MaxMedium.IsExceeded(counts.Medium) {
 		result.Passed = false
 		result.Reason = ReasonMediumThresholdExceeded
 	}
