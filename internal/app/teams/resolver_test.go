@@ -14,7 +14,7 @@ func testManifest() *Manifest {
 		FallbackTagKey: "owner",
 		Teams: []Team{
 			{ID: "payments", DisplayName: "Payments Team", Contact: "pay@example.com",
-				ResourcePatterns: []string{"arn:aws:s3:::payments-*"}},
+				ResourcePatterns: ResourcePatterns{"arn:aws:s3:::payments-*"}},
 			{ID: "data", DisplayName: "Data Team", Contact: "data@example.com",
 				ControlOwnership: []kernel.ControlID{"CTL.IAM.NEP.*"}},
 			{ID: "platform", DisplayName: "Platform Team", IsDefault: true},
@@ -79,7 +79,7 @@ func TestResolveOwner_Default(t *testing.T) {
 
 func TestResolveOwner_Unassigned(t *testing.T) {
 	m := &Manifest{OwnerTagKey: "team", FallbackTagKey: "owner", Teams: []Team{
-		{ID: "only-team", ResourcePatterns: []string{"arn:specific"}},
+		{ID: "only-team", ResourcePatterns: ResourcePatterns{"arn:specific"}},
 	}}
 	result := m.ResolveOwner(nil, "arn:other", kernel.ControlID("CTL.X"))
 	if result.TeamID != "unassigned" {
@@ -175,5 +175,26 @@ func TestTeamIDsAndControlIDs_DomainMethods(t *testing.T) {
 	}
 	if cids.Contains("CTL.C.003") {
 		t.Error("ControlIDs.Contains CTL.C.003: got true, want false")
+	}
+}
+
+func TestResourcePatterns_DomainMethods(t *testing.T) {
+	rp := ResourcePattern("arn:aws:s3:::pay-*")
+	if rp.String() != "arn:aws:s3:::pay-*" {
+		t.Errorf("String() = %q, want arn:aws:s3:::pay-*", rp.String())
+	}
+	if !rp.Matches("arn:aws:s3:::pay-checkout") {
+		t.Error("Matches: got false, want true")
+	}
+
+	rps := ResourcePatterns{"arn:aws:s3:::pay-*", "arn:aws:sqs:::orders-*"}
+	if rps.Len() != 2 {
+		t.Errorf("Len() = %d, want 2", rps.Len())
+	}
+	if !rps.MatchesAny("arn:aws:sqs:::orders-queue") {
+		t.Error("MatchesAny orders-queue: got false, want true")
+	}
+	if rps.MatchesAny("arn:aws:dynamodb:::users") {
+		t.Error("MatchesAny users: got true, want false")
 	}
 }

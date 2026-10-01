@@ -43,3 +43,29 @@ func TestComplianceFrameworks_DomainMethods(t *testing.T) {
 		t.Error("Contains SOC2: got true, want false")
 	}
 }
+
+func TestReadinessPercentage_DomainMethods(t *testing.T) {
+	rp := ReadinessPercentage(95.5)
+
+	if rp.Value() != 95.5 {
+		t.Errorf("Value() = %f, want 95.5", rp.Value())
+	}
+	if !rp.IsAuditReady() {
+		t.Errorf("IsAuditReady() = false, want true for 95.5")
+	}
+	if ReadinessPercentage(85.0).IsAuditReady() {
+		t.Errorf("IsAuditReady() = true, want false for 85.0")
+	}
+	if gap := rp.Gap(); gap != 4.5 {
+		t.Errorf("Gap() = %f, want 4.5", gap)
+	}
+	if gap := ReadinessPercentage(100.0).Gap(); gap != 0.0 {
+		t.Errorf("Gap() for 100%% = %f, want 0.0", gap)
+	}
+	if clamped := ReadinessPercentage(-10.0).Clamp(); clamped != 0.0 {
+		t.Errorf("Clamp(-10) = %f, want 0.0", clamped)
+	}
+	if clamped := ReadinessPercentage(150.0).Clamp(); clamped != 100.0 {
+		t.Errorf("Clamp(150) = %f, want 100.0", clamped)
+	}
+}

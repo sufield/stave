@@ -229,7 +229,7 @@ func buildTrend(results []stave.ScoreResult) []stave.TrendPoint {
 	for i := range results {
 		points[i] = stave.TrendPoint{
 			Timestamp: results[i].GeneratedAt,
-			Score:     results[i].Score,
+			Score:     results[i].Score.Value(),
 		}
 	}
 	return points

@@ -68,6 +68,34 @@ func (m *Manifest) HierarchyByID(id HierarchyGroupID) *HierarchyGroup {
 	return nil
 }
 
+// ResourcePattern defines a glob pattern for matching resource IDs or ARNs.
+type ResourcePattern string
+
+func (rp ResourcePattern) String() string { return string(rp) }
+
+// Matches reports whether the resource pattern matches the given resource ID or ARN.
+func (rp ResourcePattern) Matches(resourceID string) bool {
+	return globMatch(string(rp), resourceID)
+}
+
+// ResourcePatterns is a domain collection of ResourcePattern items with query and matching methods.
+type ResourcePatterns []ResourcePattern
+
+// Len returns the number of resource patterns in the collection.
+func (rp ResourcePatterns) Len() int {
+	return len(rp)
+}
+
+// MatchesAny reports whether any pattern in the collection matches the given resource ID or ARN.
+func (rp ResourcePatterns) MatchesAny(resourceID string) bool {
+	for _, pattern := range rp {
+		if pattern.Matches(resourceID) {
+			return true
+		}
+	}
+	return false
+}
+
 // TeamID uniquely identifies a team in the governance manifest.
 type TeamID string
 
@@ -75,13 +103,13 @@ func (id TeamID) String() string { return string(id) }
 
 // Team defines a team identity and its resource ownership.
 type Team struct {
-	ID               TeamID     `yaml:"id"              json:"id"`
-	DisplayName      string     `yaml:"display_name"    json:"display_name"`
-	Contact          string     `yaml:"contact"         json:"contact,omitempty"`
-	ResourcePatterns []string   `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
-	ControlOwnership ControlIDs `yaml:"control_ownership" json:"control_ownership,omitempty"`
-	IsDefault        bool       `yaml:"is_default"      json:"is_default,omitempty"`
-	Routing          Routing    `yaml:"routing"         json:"routing"`
+	ID               TeamID           `yaml:"id"              json:"id"`
+	DisplayName      string           `yaml:"display_name"    json:"display_name"`
+	Contact          string           `yaml:"contact"         json:"contact,omitempty"`
+	ResourcePatterns ResourcePatterns `yaml:"resource_patterns" json:"resource_patterns,omitempty"`
+	ControlOwnership ControlIDs       `yaml:"control_ownership" json:"control_ownership,omitempty"`
+	IsDefault        bool             `yaml:"is_default"      json:"is_default,omitempty"`
+	Routing          Routing          `yaml:"routing"         json:"routing"`
 }
 
 // Routing holds alert destination configuration.
@@ -148,12 +176,10 @@ func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN string, cont
 
 	// 3. ARN pattern match.
 	for i := range m.Teams {
-		for _, pattern := range m.Teams[i].ResourcePatterns {
-			if globMatch(pattern, resourceARN) {
-				return OwnerResult{
-					TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
-					Contact: m.Teams[i].Contact, ResolutionPath: "arn_pattern",
-				}
+		if m.Teams[i].ResourcePatterns.MatchesAny(resourceARN) {
+			return OwnerResult{
+				TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
+				Contact: m.Teams[i].Contact, ResolutionPath: "arn_pattern",
 			}
 		}
 	}

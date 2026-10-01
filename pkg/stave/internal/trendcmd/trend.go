@@ -104,6 +104,7 @@ func TrendReport(ctx context.Context, cfg TrendConfig) (output []byte, warnings 
 	latestAssessment := assessments[len(assessments)-1]
 	scoreResult := computePostureScore(latestAssessment, slaTrend, chainDefs, maxChainWeight)
 
+	scoreVal := scoreResult.Score.Value()
 	rep := trendReport{
 		GeneratedAt: time.Now().UTC(),
 		Period: period{
@@ -121,7 +122,7 @@ func TrendReport(ctx context.Context, cfg TrendConfig) (output []byte, warnings 
 		Velocity:        velocity,
 		Projection:      projection,
 		SLATrend:        slaTrend,
-		PostureScore:    &scoreResult.Score,
+		PostureScore:    &scoreVal,
 		PostureRubric:   string(scoreResult.RubricBand),
 	}
 

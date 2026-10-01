@@ -25,7 +25,7 @@ func testManifest() *teams.Manifest {
 	return &teams.Manifest{
 		OwnerTagKey: "team",
 		Teams: []teams.Team{
-			{ID: "payments", DisplayName: "Payments", ResourcePatterns: []string{"arn:aws:s3:::payments-*"}},
+			{ID: "payments", DisplayName: "Payments", ResourcePatterns: teams.ResourcePatterns{"arn:aws:s3:::payments-*"}},
 			{ID: "platform", DisplayName: "Platform", IsDefault: true},
 		},
 	}

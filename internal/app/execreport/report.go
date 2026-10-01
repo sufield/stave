@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/app/teams"
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -58,7 +59,7 @@ const (
 
 // PostureSection holds posture score data.
 type PostureSection struct {
-	Score           float64            `json:"score"`
+	Score           appscore.PostureScore `json:"score"`
 	Band            PostureBand        `json:"band"`
 	BandDescription string             `json:"band_description"`
 	Delta30d        float64            `json:"delta_30d"`

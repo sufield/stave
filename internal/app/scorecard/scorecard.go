@@ -11,10 +11,42 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// ReadinessPercentage represents a compliance readiness score between 0.0 and 100.0 percent.
+type ReadinessPercentage float64
+
+// Value returns the raw float64 value of the readiness percentage.
+func (r ReadinessPercentage) Value() float64 {
+	return float64(r)
+}
+
+// IsAuditReady reports whether the readiness percentage meets or exceeds the standard audit readiness threshold (90%).
+func (r ReadinessPercentage) IsAuditReady() bool {
+	return r >= 90.0
+}
+
+// Gap returns the percentage gap required to reach 100% full compliance readiness.
+func (r ReadinessPercentage) Gap() float64 {
+	if r >= 100.0 {
+		return 0.0
+	}
+	return 100.0 - float64(r)
+}
+
+// Clamp returns the readiness percentage constrained to the valid range [0.0, 100.0].
+func (r ReadinessPercentage) Clamp() ReadinessPercentage {
+	if r < 0 {
+		return 0
+	}
+	if r > 100 {
+		return 100
+	}
+	return r
+}
+
 // FrameworkScore holds readiness data for one framework.
 type FrameworkScore struct {
 	Framework        policy.ComplianceFramework `json:"framework"`
-	ReadinessPct     float64                    `json:"readiness_pct"`
+	ReadinessPct     ReadinessPercentage        `json:"readiness_pct"`
 	ControlsTotal    int                        `json:"controls_total"`
 	ControlsPassing  int                        `json:"controls_passing"`
 	ControlsFailing  int                        `json:"controls_failing"`
@@ -122,9 +154,9 @@ func Compute(findings []remediation.Finding, frameworks ComplianceFrameworks) *R
 			passing = 0 // all observed controls are failing
 		}
 
-		readiness := 100.0
+		readiness := ReadinessPercentage(100.0)
 		if total > 0 {
-			readiness = float64(passing) / float64(total) * 100
+			readiness = ReadinessPercentage(float64(passing) / float64(total) * 100)
 		}
 
 		report.Frameworks = append(report.Frameworks, FrameworkScore{

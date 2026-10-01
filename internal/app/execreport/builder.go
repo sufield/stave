@@ -111,7 +111,7 @@ func (b *Builder) Build(ctx context.Context, in BuilderInput) (*Report, error) {
 	var delta float64
 	if earlier, ok := assessmentClosestTo(assessments, now.AddDate(0, 0, -30)); ok {
 		earlierScore := computeScore(earlier, len(chains), maxChainWeight)
-		delta = scoreResult.Score - earlierScore.Score
+		delta = scoreResult.Score.Value() - earlierScore.Score.Value()
 	}
 	trajectory := TrajectoryStable
 	if delta >= 5 {
@@ -121,7 +121,7 @@ func (b *Builder) Build(ctx context.Context, in BuilderInput) (*Report, error) {
 	}
 	sparkline := buildSparkline(assessments, scoreResult.Score, len(chains), maxChainWeight)
 
-	band, bandDesc := Band(scoreResult.Score)
+	band, bandDesc := Band(scoreResult.Score.Value())
 
 	period := in.Period
 	if period == "" {
@@ -224,15 +224,15 @@ func countControls(ctx context.Context, repo appcontracts.ControlRepository, dir
 	return len(loaded), nil
 }
 
-func buildSparkline(assessments []*corereport.Assessment, latestScore float64, chainDefs int, maxChainWeight float64) []float64 {
+func buildSparkline(assessments []*corereport.Assessment, latestScore appscore.PostureScore, chainDefs int, maxChainWeight float64) []float64 {
 	var sparkline []float64
 	step := max(1, len(assessments)/7)
 	for i := 0; i < len(assessments); i += step {
 		s := computeScore(assessments[i], chainDefs, maxChainWeight)
-		sparkline = append(sparkline, s.Score)
+		sparkline = append(sparkline, s.Score.Value())
 	}
-	if len(sparkline) > 0 && sparkline[len(sparkline)-1] != latestScore {
-		sparkline = append(sparkline, latestScore)
+	if len(sparkline) > 0 && sparkline[len(sparkline)-1] != latestScore.Value() {
+		sparkline = append(sparkline, latestScore.Value())
 	}
 	return sparkline
 }

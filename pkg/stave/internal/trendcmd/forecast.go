@@ -92,7 +92,7 @@ func computeForecastScore(a *report.Assessment) float64 {
 		ChainFindings: a.ChainFindings,
 		Weights:       appscore.DefaultWeights(),
 		GeneratedAt:   a.Run.EvalTime,
-	}).Score
+	}).Score.Value()
 }
 
 func buildMTTRHistory(assessments []*report.Assessment) map[policy.Severity][]float64 {

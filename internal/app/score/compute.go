@@ -187,11 +187,34 @@ const (
 	BandCritical       RubricBand = "critical"
 )
 
+// PostureScore encapsulates a 0-100 security posture score value.
+type PostureScore float64
+
+// Value returns the raw float64 posture score.
+func (s PostureScore) Value() float64 { return float64(s) }
+
+// ScoreInt returns the rounded integer score value.
+func (s PostureScore) ScoreInt() int { return int(math.Round(float64(s))) }
+
+// Clamp bounds the posture score within [0.0, 100.0].
+func (s PostureScore) Clamp() PostureScore {
+	if s < 0 {
+		return 0
+	}
+	if s > 100 {
+		return 100
+	}
+	return s
+}
+
+// IsPassing reports whether score meets or exceeds the passing threshold (70.0).
+func (s PostureScore) IsPassing() bool { return s >= 70.0 }
+
 // Result is the complete posture score output.
 type Result struct {
 	GeneratedAt time.Time         `json:"generated_at"`
 	SnapshotID  string            `json:"snapshot_id,omitempty"`
-	Score       float64           `json:"score"`
+	Score       PostureScore      `json:"score"`
 	ScoreInt    int               `json:"score_int"`
 	RubricBand  RubricBand        `json:"rubric_band"`
 	RubricDesc  string            `json:"rubric_description"`
@@ -484,8 +507,8 @@ func Compute(input Input) Result {
 	return Result{
 		GeneratedAt: genAt,
 		SnapshotID:  input.SnapshotID,
-		Score:       finalScore,
-		ScoreInt:    int(finalScore),
+		Score:       PostureScore(finalScore),
+		ScoreInt:    PostureScore(finalScore).ScoreInt(),
 		RubricBand:  band,
 		RubricDesc:  desc,
 		Severity: SeverityComponent{

@@ -24,13 +24,13 @@ func makeManifest() *teams.Manifest {
 				ID:               "alpha",
 				DisplayName:      "Team Alpha",
 				Contact:          "alpha@test.com",
-				ResourcePatterns: []string{"arn:aws:s3:::alpha-*"},
+				ResourcePatterns: teams.ResourcePatterns{"arn:aws:s3:::alpha-*"},
 			},
 			{
 				ID:               "beta",
 				DisplayName:      "Team Beta",
 				Contact:          "beta@test.com",
-				ResourcePatterns: []string{"arn:aws:s3:::beta-*"},
+				ResourcePatterns: teams.ResourcePatterns{"arn:aws:s3:::beta-*"},
 			},
 		},
 	}
