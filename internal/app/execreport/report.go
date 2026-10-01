@@ -60,12 +60,12 @@ const (
 // PostureSection holds posture score data.
 type PostureSection struct {
 	Score           appscore.PostureScore `json:"score"`
-	Band            PostureBand        `json:"band"`
-	BandDescription string             `json:"band_description"`
-	Delta30d        float64            `json:"delta_30d"`
-	Trajectory      Trajectory         `json:"trajectory"`
-	Dimensions      map[string]float64 `json:"dimensions,omitempty"`
-	Sparkline       []float64          `json:"sparkline,omitempty"`
+	Band            PostureBand           `json:"band"`
+	BandDescription string                `json:"band_description"`
+	Delta30d        float64               `json:"delta_30d"`
+	Trajectory      Trajectory            `json:"trajectory"`
+	Dimensions      map[string]float64    `json:"dimensions,omitempty"`
+	Sparkline       []float64             `json:"sparkline,omitempty"`
 }
 
 // FindingsSummary holds finding counts.
