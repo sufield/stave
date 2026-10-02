@@ -89,11 +89,34 @@ func (c *CurrentState) SetMTTRHigh(d time.Duration) {
 	}
 }
 
+// HorizonDays encapsulates a forecast projection time window in days.
+type HorizonDays int
+
+// Int returns the raw integer number of days.
+func (h HorizonDays) Int() int {
+	return int(h)
+}
+
+// Duration returns the horizon time duration (days * 24 hours).
+func (h HorizonDays) Duration() time.Duration {
+	return time.Duration(h) * 24 * time.Hour
+}
+
+// IsShortTerm reports whether the horizon is 30 days or fewer.
+func (h HorizonDays) IsShortTerm() bool {
+	return h <= 30
+}
+
+// IsValid reports whether the horizon is non-negative.
+func (h HorizonDays) IsValid() bool {
+	return h >= 0
+}
+
 // ProjectedState holds projected metrics.
 type ProjectedState struct {
-	HorizonDays  int     `json:"horizon_days"`
-	PostureScore float64 `json:"posture_score"`
-	ScoreSlope   float64 `json:"score_slope_per_day"`
+	HorizonDays  HorizonDays `json:"horizon_days"`
+	PostureScore float64     `json:"posture_score"`
+	ScoreSlope   float64     `json:"score_slope_per_day"`
 }
 
 // SLAStatus classifies the SLA projection status.
@@ -186,14 +209,14 @@ func (sh ScoreHistory) Average() float64 {
 // Input holds data for forecasting.
 type Input struct {
 	ScoreHistory ScoreHistory // one per day
-	HorizonDays  int
+	HorizonDays  HorizonDays
 	SLADeadlines map[policy.Severity]float64   // severity → hours
 	MTTRHistory  map[policy.Severity][]float64 // severity → MTTR per day
 }
 
 // Compute produces a linear forecast.
 func Compute(input Input) (*Result, error) {
-	if input.HorizonDays < 0 {
+	if !input.HorizonDays.IsValid() {
 		return nil, fmt.Errorf("invalid horizon: %d days (must be non-negative)", input.HorizonDays)
 	}
 	if len(input.ScoreHistory) < 7 {
@@ -204,7 +227,7 @@ func Compute(input Input) (*Result, error) {
 	n := len(input.ScoreHistory)
 	slope, intercept := linearFit(input.ScoreHistory)
 	currentScore := input.ScoreHistory[n-1]
-	projectedScore := intercept + slope*float64(n+input.HorizonDays-1)
+	projectedScore := intercept + slope*float64(n+input.HorizonDays.Int()-1)
 
 	// Clamp to 0-100.
 	if projectedScore > 100 {
@@ -235,7 +258,7 @@ func Compute(input Input) (*Result, error) {
 		}
 		mttrSlope, mttrIntercept := linearFit(history)
 		currentMTTR := history[len(history)-1]
-		projectedMTTR := mttrIntercept + mttrSlope*float64(len(history)+input.HorizonDays-1)
+		projectedMTTR := mttrIntercept + mttrSlope*float64(len(history)+input.HorizonDays.Int()-1)
 		if projectedMTTR < 0 {
 			projectedMTTR = 0
 		}

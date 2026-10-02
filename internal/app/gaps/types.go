@@ -12,10 +12,34 @@ package gaps
 
 import (
 	"slices"
+	"strings"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
 )
+
+// PropertyPath represents a dot-separated resource property path string (e.g., "properties.tags.environment").
+type PropertyPath string
+
+// String returns the underlying string representation of the property path.
+func (p PropertyPath) String() string {
+	return string(p)
+}
+
+// IsTag reports whether the property path represents a tag property.
+func (p PropertyPath) IsTag() bool {
+	str := string(p)
+	return strings.HasPrefix(str, "tags.") || strings.HasPrefix(str, "properties.tags.")
+}
+
+// BaseName returns the final element of the dot-delimited property path.
+func (p PropertyPath) BaseName() string {
+	str := string(p)
+	if idx := strings.LastIndex(str, "."); idx >= 0 {
+		return str[idx+1:]
+	}
+	return str
+}
 
 // FieldGaps is a domain collection of FieldGap items with domain querying and filtering methods.
 type FieldGaps []FieldGap
@@ -67,7 +91,7 @@ type Report struct {
 // plus a remediation hint.
 type FieldGap struct {
 	Priority             int              `json:"priority"`
-	PropertyPath         string           `json:"property_path"`
+	PropertyPath         PropertyPath     `json:"property_path"`
 	AssetType            kernel.AssetType `json:"asset_type"`
 	MissingCount         int              `json:"missing_count"`
 	TotalCount           int              `json:"total_count"`

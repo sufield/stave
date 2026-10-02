@@ -126,7 +126,7 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 		}
 		_, isIntent := intentSet[k.p]
 		gaps = append(gaps, FieldGap{
-			PropertyPath:         k.p,
+			PropertyPath:         PropertyPath(k.p),
 			AssetType:            k.t,
 			MissingCount:         count,
 			TotalCount:           totals[k.t],

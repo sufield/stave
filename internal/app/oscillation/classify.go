@@ -20,13 +20,36 @@ const (
 	PatternSeasonal   Pattern = "seasonal"
 )
 
+// FailureRate represents the ratio of failing assessments over total assessments evaluated (0.0 to 1.0).
+type FailureRate float64
+
+// Value returns the raw float64 ratio value (between 0.0 and 1.0).
+func (fr FailureRate) Value() float64 {
+	return float64(fr)
+}
+
+// Percentage returns the failure rate expressed as a percentage value (between 0.0 and 100.0).
+func (fr FailureRate) Percentage() float64 {
+	return float64(fr) * 100.0
+}
+
+// IsChronic reports whether the failure rate exceeds the chronic threshold (80%).
+func (fr FailureRate) IsChronic() bool {
+	return fr > 0.8
+}
+
+// IsClean reports whether there were zero observed failures.
+func (fr FailureRate) IsClean() bool {
+	return fr == 0.0
+}
+
 // Classification describes the oscillation pattern for a control-asset pair.
 type Classification struct {
 	ControlID   kernel.ControlID `json:"control_id"`
 	AssetID     asset.ID         `json:"asset_id"`
 	Pattern     Pattern          `json:"pattern"`
 	Confidence  float64          `json:"confidence"`
-	FailureRate float64          `json:"failure_rate"`
+	FailureRate FailureRate      `json:"failure_rate"`
 	Cycles      int              `json:"cycles"`
 }
 
@@ -124,18 +147,18 @@ func Classify(input Input) Classification {
 		prevFailing = &failing
 	}
 
-	failureRate := 0.0
+	failureRate := FailureRate(0.0)
 	if totalAssessments > 0 {
-		failureRate = float64(failCount) / float64(totalAssessments)
+		failureRate = FailureRate(float64(failCount) / float64(totalAssessments))
 	}
 
 	pattern := PatternRandom
 	confidence := 0.5
 
 	switch {
-	case failureRate > 0.8:
+	case failureRate.IsChronic():
 		pattern = PatternChronic
-		confidence = failureRate
+		confidence = failureRate.Value()
 	case cycles >= minOsc:
 		pattern = PatternDeployTime
 		confidence = float64(cycles) / float64(totalAssessments)

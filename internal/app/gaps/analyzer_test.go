@@ -217,3 +217,23 @@ func TestControlsAndChainsBlocked_CollectionMethods(t *testing.T) {
 		t.Errorf("emptyCH methods failed")
 	}
 }
+
+func TestPropertyPath_DomainMethods(t *testing.T) {
+	p := PropertyPath("properties.tags.environment")
+
+	if p.String() != "properties.tags.environment" {
+		t.Errorf("String() = %q, want properties.tags.environment", p.String())
+	}
+	if !p.IsTag() {
+		t.Error("IsTag() = false, want true for properties.tags.environment")
+	}
+	if PropertyPath("data_classification").IsTag() {
+		t.Error("IsTag() = true, want false for data_classification")
+	}
+	if p.BaseName() != "environment" {
+		t.Errorf("BaseName() = %q, want environment", p.BaseName())
+	}
+	if PropertyPath("role").BaseName() != "role" {
+		t.Errorf("BaseName() = %q, want role", PropertyPath("role").BaseName())
+	}
+}

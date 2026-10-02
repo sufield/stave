@@ -3,6 +3,7 @@ package forecast
 import (
 	"math"
 	"testing"
+	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 )
@@ -125,5 +126,28 @@ func TestScoreHistory_DomainMethods(t *testing.T) {
 	}
 	if empty.Average() != 0 {
 		t.Errorf("empty.Average() = %f, want 0", empty.Average())
+	}
+}
+
+func TestHorizonDays_DomainMethods(t *testing.T) {
+	h := HorizonDays(30)
+
+	if h.Int() != 30 {
+		t.Errorf("Int() = %d, want 30", h.Int())
+	}
+	if h.Duration() != 30*24*time.Hour {
+		t.Errorf("Duration() = %v, want %v", h.Duration(), 30*24*time.Hour)
+	}
+	if !h.IsShortTerm() {
+		t.Error("IsShortTerm() = false, want true for 30 days")
+	}
+	if HorizonDays(90).IsShortTerm() {
+		t.Error("IsShortTerm() = true, want false for 90 days")
+	}
+	if !h.IsValid() {
+		t.Error("IsValid() = false, want true for 30 days")
+	}
+	if HorizonDays(-5).IsValid() {
+		t.Error("IsValid() = true, want false for -5 days")
 	}
 }

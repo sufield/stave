@@ -68,7 +68,7 @@ func ForecastPosture(ctx context.Context, cfg ForecastConfig) ([]byte, []string,
 
 	result, err := forecast.Compute(forecast.Input{
 		ScoreHistory: scoreHistory,
-		HorizonDays:  cfg.HorizonDays,
+		HorizonDays:  forecast.HorizonDays(cfg.HorizonDays),
 		SLADeadlines: slaDeadlines,
 		MTTRHistory:  mttrHistory,
 	})

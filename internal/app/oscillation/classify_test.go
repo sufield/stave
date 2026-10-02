@@ -56,6 +56,26 @@ func TestClassify_ChronicAtHighFailureRate(t *testing.T) {
 	}
 }
 
+func TestFailureRate_DomainMethods(t *testing.T) {
+	fr := FailureRate(0.85)
+
+	if fr.Value() != 0.85 {
+		t.Errorf("Value() = %f, want 0.85", fr.Value())
+	}
+	if fr.Percentage() != 85.0 {
+		t.Errorf("Percentage() = %f, want 85.0", fr.Percentage())
+	}
+	if !fr.IsChronic() {
+		t.Error("IsChronic() = false, want true for 0.85")
+	}
+	if FailureRate(0.5).IsChronic() {
+		t.Error("IsChronic() = true, want false for 0.5")
+	}
+	if !FailureRate(0.0).IsClean() {
+		t.Error("IsClean() = false, want true for 0.0")
+	}
+}
+
 func TestClassify_DeployTimeDetected(t *testing.T) {
 	// Alternating pass/fail pattern with enough cycles.
 	assessments := []report.Assessment{
