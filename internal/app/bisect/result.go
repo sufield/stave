@@ -83,13 +83,34 @@ func (vws ViolationWindows) PatientZero() *ViolationWindow {
 	return &vws[0]
 }
 
+// SnapshotCount encapsulates a count of snapshots or assessments evaluated during bisect/scan operations.
+type SnapshotCount int
+
+// Int returns the raw integer count.
+func (c SnapshotCount) Int() int {
+	return int(c)
+}
+
+// IsEmpty reports whether the count is zero.
+func (c SnapshotCount) IsEmpty() bool {
+	return c == 0
+}
+
+// EfficiencyRatio calculates the proportion of total snapshots evaluated (assessments run / total snapshots).
+func (c SnapshotCount) EfficiencyRatio(total SnapshotCount) float64 {
+	if total <= 0 {
+		return 0.0
+	}
+	return float64(c) / float64(total)
+}
+
 // Result holds the output of a bisect or scan operation.
 type Result struct {
 	Mode           Mode                       `json:"mode"`
 	ControlID      kernel.ControlID           `json:"control_id"`
 	ResourceARN    asset.ID                   `json:"resource_arn,omitempty"`
-	SnapshotsTotal int                        `json:"snapshots_total"`
-	AssessmentsRun int                        `json:"assessments_run"`
+	SnapshotsTotal SnapshotCount              `json:"snapshots_total"`
+	AssessmentsRun SnapshotCount              `json:"assessments_run"`
 	Windows        ViolationWindows           `json:"windows,omitempty"`
 	IsMonotonic    bool                       `json:"is_monotonic"`
 	Delta          *asset.InfrastructureDrift `json:"delta,omitempty"`

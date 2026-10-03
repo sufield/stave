@@ -67,10 +67,28 @@ func (ids ControlIDs) Contains(target kernel.ControlID) bool {
 	return slices.Contains(ids, target)
 }
 
+// CatalogCount encapsulates a count of control definitions in a catalog.
+type CatalogCount int
+
+// Int returns the raw integer count value.
+func (c CatalogCount) Int() int {
+	return int(c)
+}
+
+// IsEmpty reports whether the catalog control count is zero.
+func (c CatalogCount) IsEmpty() bool {
+	return c == 0
+}
+
+// Delta returns the net change in control count relative to another catalog count.
+func (c CatalogCount) Delta(other CatalogCount) int {
+	return int(c) - int(other)
+}
+
 // Delta describes the difference between two catalog versions.
 type Delta struct {
-	CatalogBefore   int             `json:"catalog_before_count"`
-	CatalogAfter    int             `json:"catalog_after_count"`
+	CatalogBefore   CatalogCount    `json:"catalog_before_count"`
+	CatalogAfter    CatalogCount    `json:"catalog_after_count"`
 	NewControls     ControlIDs      `json:"new_controls"`
 	RemovedControls ControlIDs      `json:"removed_controls"`
 	SeverityChanges SeverityChanges `json:"severity_changes,omitempty"`
@@ -124,8 +142,8 @@ func Compute(before, after []policy.ControlDefinition) *Delta {
 	})
 
 	return &Delta{
-		CatalogBefore:   len(before),
-		CatalogAfter:    len(after),
+		CatalogBefore:   CatalogCount(len(before)),
+		CatalogAfter:    CatalogCount(len(after)),
 		NewControls:     newControls,
 		RemovedControls: removedControls,
 		SeverityChanges: sevChanges,

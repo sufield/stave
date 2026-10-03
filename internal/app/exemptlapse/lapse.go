@@ -27,6 +27,24 @@ const (
 	FindingTypeExemptionLapsed FindingType = "EXEMPTION_LAPSED"
 )
 
+// DaysSinceExpiry encapsulates the elapsed time in days since an exemption expired.
+type DaysSinceExpiry int
+
+// Int returns the raw integer number of days.
+func (d DaysSinceExpiry) Int() int {
+	return int(d)
+}
+
+// IsSeverityBumped reports whether the elapsed days exceed the severity bump threshold (30 days).
+func (d DaysSinceExpiry) IsSeverityBumped() bool {
+	return d > severityBumpThresholdDays
+}
+
+// Duration returns the elapsed time as a time.Duration.
+func (d DaysSinceExpiry) Duration() time.Duration {
+	return time.Duration(d) * 24 * time.Hour
+}
+
 // LapsedFinding represents an exemption that has expired.
 type LapsedFinding struct {
 	FindingType        FindingType      `json:"finding_type"`
@@ -37,7 +55,7 @@ type LapsedFinding struct {
 	ExemptionID        string           `json:"exemption_id"`
 	GrantedAt          string           `json:"exemption_granted_at"`
 	ExpiredAt          string           `json:"exemption_expired_at"`
-	DaysSinceExpiry    int              `json:"days_since_expiry"`
+	DaysSinceExpiry    DaysSinceExpiry  `json:"days_since_expiry"`
 	SeverityBumpReason string           `json:"severity_bump_reason,omitempty"`
 	CompensatingNote   string           `json:"compensating_note,omitempty"`
 }
@@ -105,9 +123,9 @@ func Detect(in Input) LapsedFindings {
 			continue
 		}
 
-		daysSince := 0
+		daysSince := DaysSinceExpiry(0)
 		if !expiry.IsZero() {
-			daysSince = max(0, int(evalTime.Sub(expiry).Hours()/24))
+			daysSince = DaysSinceExpiry(max(0, int(evalTime.Sub(expiry).Hours()/24)))
 		}
 
 		originalSev := f.ControlSeverity
@@ -117,7 +135,7 @@ func Detect(in Input) LapsedFindings {
 		effectiveSev := originalSev
 
 		var bumpReason string
-		if daysSince > severityBumpThresholdDays {
+		if daysSince.IsSeverityBumped() {
 			effectiveSev = originalSev.Bump(1)
 			bumpReason = "Known risk allowed to expire unreviewed"
 		}

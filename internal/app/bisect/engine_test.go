@@ -229,3 +229,23 @@ func TestViolationWindows_CollectionMethods(t *testing.T) {
 		t.Errorf("PatientZero = %v, want ongoing window", pz)
 	}
 }
+
+func TestSnapshotCount_DomainMethods(t *testing.T) {
+	c := SnapshotCount(5)
+
+	if c.Int() != 5 {
+		t.Errorf("Int() = %d, want 5", c.Int())
+	}
+	if c.IsEmpty() {
+		t.Error("IsEmpty() = true, want false for 5")
+	}
+	if !SnapshotCount(0).IsEmpty() {
+		t.Error("IsEmpty() = false, want true for 0")
+	}
+	if ratio := c.EfficiencyRatio(SnapshotCount(20)); ratio != 0.25 {
+		t.Errorf("EfficiencyRatio() = %f, want 0.25", ratio)
+	}
+	if ratio := c.EfficiencyRatio(SnapshotCount(0)); ratio != 0.0 {
+		t.Errorf("EfficiencyRatio(0) = %f, want 0.0", ratio)
+	}
+}

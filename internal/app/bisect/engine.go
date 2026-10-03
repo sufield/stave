@@ -41,7 +41,7 @@ func (e *Engine) Run(ctx context.Context, snapshots []asset.Snapshot, mode Mode,
 		Mode:           mode,
 		ControlID:      controlID,
 		ResourceARN:    resourceARN,
-		SnapshotsTotal: len(sorted),
+		SnapshotsTotal: SnapshotCount(len(sorted)),
 	}
 
 	switch mode {

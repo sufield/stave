@@ -58,3 +58,20 @@ func TestControlIDs_DomainMethods(t *testing.T) {
 		t.Errorf("empty ControlIDs methods failed")
 	}
 }
+
+func TestCatalogCount_DomainMethods(t *testing.T) {
+	c := CatalogCount(150)
+
+	if c.Int() != 150 {
+		t.Errorf("Int() = %d, want 150", c.Int())
+	}
+	if c.IsEmpty() {
+		t.Error("IsEmpty() = true, want false for 150")
+	}
+	if !CatalogCount(0).IsEmpty() {
+		t.Error("IsEmpty() = false, want true for 0")
+	}
+	if d := CatalogCount(150).Delta(CatalogCount(120)); d != 30 {
+		t.Errorf("Delta() = %d, want 30", d)
+	}
+}

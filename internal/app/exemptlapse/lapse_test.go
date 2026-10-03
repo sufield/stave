@@ -132,3 +132,20 @@ func TestLapsedFindings_DomainMethods(t *testing.T) {
 		t.Errorf("BySeverity High: got %d, want 2", highs.Len())
 	}
 }
+
+func TestDaysSinceExpiry_DomainMethods(t *testing.T) {
+	d := DaysSinceExpiry(45)
+
+	if d.Int() != 45 {
+		t.Errorf("Int() = %d, want 45", d.Int())
+	}
+	if !d.IsSeverityBumped() {
+		t.Error("IsSeverityBumped() = false, want true for 45 days")
+	}
+	if DaysSinceExpiry(15).IsSeverityBumped() {
+		t.Error("IsSeverityBumped() = true, want false for 15 days")
+	}
+	if d.Duration() != 45*24*time.Hour {
+		t.Errorf("Duration() = %v, want %v", d.Duration(), 45*24*time.Hour)
+	}
+}
