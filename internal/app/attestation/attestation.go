@@ -82,8 +82,8 @@ func PerformAttestation(ctx context.Context, deps WorkflowDeps, req Request) err
 	comparison, err := Compare(CompareRequest{
 		BaselineFindings:  baseline.report.Findings,
 		TargetFindings:    target.report.Findings,
-		BaselineSnapshots: baseline.snapshotCount,
-		TargetSnapshots:   target.snapshotCount,
+		BaselineSnapshots: SnapshotCount(baseline.snapshotCount),
+		TargetSnapshots:   SnapshotCount(target.snapshotCount),
 		SLAThreshold:      req.SLAThreshold,
 		EvalTime:          evalTime,
 		Sanitizer:         req.Sanitizer,

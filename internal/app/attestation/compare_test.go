@@ -161,3 +161,20 @@ func TestAttestationEntries_DomainMethods(t *testing.T) {
 		t.Errorf("ByControl CTL.TEST.001: got %d, want 1", filtered.Len())
 	}
 }
+
+func TestSnapshotCount_DomainMethods(t *testing.T) {
+	c := SnapshotCount(10)
+
+	if c.Int() != 10 {
+		t.Errorf("Int() = %d, want 10", c.Int())
+	}
+	if c.IsEmpty() {
+		t.Error("IsEmpty() = true, want false for 10")
+	}
+	if !SnapshotCount(0).IsEmpty() {
+		t.Error("IsEmpty() = false, want true for 0")
+	}
+	if delta := SnapshotCount(15).Delta(SnapshotCount(10)); delta != 5 {
+		t.Errorf("Delta() = %d, want 5", delta)
+	}
+}

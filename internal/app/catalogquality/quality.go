@@ -72,11 +72,32 @@ func (as AttackStages) Contains(stage kernel.AttackStage) bool {
 	return slices.Contains(as, stage)
 }
 
+// QualityPercentage encapsulates a catalog metadata completeness percentage score (0.0 to 100.0).
+type QualityPercentage float64
+
+// Value returns the raw float64 percentage value.
+func (qp QualityPercentage) Value() float64 {
+	return float64(qp)
+}
+
+// IsHighQuality reports whether the completeness score meets or exceeds the standard catalog quality threshold (80%).
+func (qp QualityPercentage) IsHighQuality() bool {
+	return qp >= 80.0
+}
+
+// Gap returns the percentage gap required to reach 100% full catalog metadata completeness.
+func (qp QualityPercentage) Gap() float64 {
+	if qp >= 100.0 {
+		return 0.0
+	}
+	return 100.0 - float64(qp)
+}
+
 // Report summarizes catalog quality across all controls.
 type Report struct {
 	TotalControls int                         `json:"total_controls"`
 	Completeness  map[MetadataField]FieldStat `json:"completeness"`
-	OverallPct    float64                     `json:"overall_pct"`
+	OverallPct    QualityPercentage           `json:"overall_pct"`
 	BlindSpots    BlindSpots                  `json:"blind_spots"`
 	MITREGaps     AttackStages                `json:"mitre_gaps"`
 }
@@ -140,7 +161,7 @@ func Analyze(input Input) Report {
 	}
 
 	// Compute overall percentage.
-	overallPct := 0.0
+	overallPct := QualityPercentage(0.0)
 	if total > 0 {
 		totalFields := 0
 		presentFields := 0
@@ -149,7 +170,7 @@ func Analyze(input Input) Report {
 			presentFields += fs.Present
 		}
 		if totalFields > 0 {
-			overallPct = float64(presentFields) / float64(totalFields) * 100
+			overallPct = QualityPercentage(float64(presentFields) / float64(totalFields) * 100)
 		}
 	}
 

@@ -81,8 +81,8 @@ Exit Codes:
 				return fmt.Errorf("render quality output: %w", err)
 			}
 
-			if minCompleteness > 0 && report.OverallPct < minCompleteness {
-				return fmt.Errorf("overall completeness %.1f%% is below threshold %.1f%%", report.OverallPct, minCompleteness)
+			if minCompleteness > 0 && report.OverallPct.Value() < minCompleteness {
+				return fmt.Errorf("overall completeness %.1f%% is below threshold %.1f%%", report.OverallPct.Value(), minCompleteness)
 			}
 
 			return nil

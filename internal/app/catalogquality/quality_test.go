@@ -119,3 +119,23 @@ func TestAttackStages_DomainMethods(t *testing.T) {
 		t.Errorf("empty AttackStages methods failed")
 	}
 }
+
+func TestQualityPercentage_DomainMethods(t *testing.T) {
+	qp := QualityPercentage(85.5)
+
+	if qp.Value() != 85.5 {
+		t.Errorf("Value() = %f, want 85.5", qp.Value())
+	}
+	if !qp.IsHighQuality() {
+		t.Error("IsHighQuality() = false, want true for 85.5%")
+	}
+	if QualityPercentage(65.0).IsHighQuality() {
+		t.Error("IsHighQuality() = true, want false for 65.0%")
+	}
+	if gap := qp.Gap(); gap != 14.5 {
+		t.Errorf("Gap() = %f, want 14.5", gap)
+	}
+	if gap := QualityPercentage(100.0).Gap(); gap != 0.0 {
+		t.Errorf("Gap() for 100%% = %f, want 0.0", gap)
+	}
+}

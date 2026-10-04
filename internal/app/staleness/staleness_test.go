@@ -42,3 +42,26 @@ func TestCheck_NoSnapshots(t *testing.T) {
 		t.Error("expected stale with no snapshots")
 	}
 }
+
+func TestStalenessHours_DomainMethods(t *testing.T) {
+	sh := StalenessHours(72.0)
+
+	if sh.Value() != 72.0 {
+		t.Errorf("Value() = %f, want 72.0", sh.Value())
+	}
+	if sh.Days() != 3.0 {
+		t.Errorf("Days() = %f, want 3.0", sh.Days())
+	}
+	if !sh.IsStale(StalenessHours(48.0)) {
+		t.Error("IsStale() = false, want true for 72h > 48h")
+	}
+	if sh.IsStale(StalenessHours(96.0)) {
+		t.Error("IsStale() = true, want false for 72h < 96h")
+	}
+	if gap := sh.Gap(StalenessHours(48.0)); gap != 24.0 {
+		t.Errorf("Gap() = %f, want 24.0", gap.Value())
+	}
+	if gap := sh.Gap(StalenessHours(96.0)); gap != 0.0 {
+		t.Errorf("Gap() for non-stale = %f, want 0.0", gap.Value())
+	}
+}

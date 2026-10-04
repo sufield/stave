@@ -12,12 +12,30 @@ import (
 	staveversion "github.com/sufield/stave/internal/version"
 )
 
+// SnapshotCount encapsulates a count of snapshots evaluated during attestation comparisons.
+type SnapshotCount int
+
+// Int returns the raw integer count value.
+func (c SnapshotCount) Int() int {
+	return int(c)
+}
+
+// IsEmpty reports whether the snapshot count is zero.
+func (c SnapshotCount) IsEmpty() bool {
+	return c == 0
+}
+
+// Delta returns the net snapshot count change relative to another snapshot count.
+func (c SnapshotCount) Delta(other SnapshotCount) int {
+	return int(c) - int(other)
+}
+
 // CompareRequest defines the inputs for a baseline/target comparison.
 type CompareRequest struct {
 	BaselineFindings  []evaluation.Finding
 	TargetFindings    []evaluation.Finding
-	BaselineSnapshots int
-	TargetSnapshots   int
+	BaselineSnapshots SnapshotCount
+	TargetSnapshots   SnapshotCount
 	SLAThreshold      time.Duration
 	EvalTime          time.Time
 	Sanitizer         kernel.Sanitizer
@@ -46,8 +64,8 @@ func Compare(req CompareRequest) (CompareResult, error) {
 			Offline:         true,
 			EvalTime:        req.EvalTime,
 			SLAThreshold:    req.SLAThreshold,
-			BeforeSnapshots: req.BaselineSnapshots,
-			AfterSnapshots:  req.TargetSnapshots,
+			BeforeSnapshots: req.BaselineSnapshots.Int(),
+			AfterSnapshots:  req.TargetSnapshots.Int(),
 		},
 		Summary: report.AttestationSummary{
 			PreviousViolations: len(req.BaselineFindings),

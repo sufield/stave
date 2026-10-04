@@ -100,8 +100,8 @@ func (s *Service) Loop(ctx context.Context, req LoopRequest, deps LoopDeps, am *
 	cmp, err := appattest.Compare(appattest.CompareRequest{
 		BaselineFindings:  before.Result.Findings,
 		TargetFindings:    after.Result.Findings,
-		BaselineSnapshots: before.Snapshots,
-		TargetSnapshots:   after.Snapshots,
+		BaselineSnapshots: appattest.SnapshotCount(before.Snapshots),
+		TargetSnapshots:   appattest.SnapshotCount(after.Snapshots),
 		SLAThreshold:      req.MaxUnsafeDuration,
 		EvalTime:          s.Clock.Now().UTC(),
 		Sanitizer:         s.Sanitizer,

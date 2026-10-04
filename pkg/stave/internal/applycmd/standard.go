@@ -565,8 +565,8 @@ func annotateFreshness(report *evaluation.ComplianceReport, obsDir string, thres
 
 	report.InputFreshness = &evaluation.InputFreshness{
 		MostRecent:     sr.MostRecent.Format(time.RFC3339),
-		AgeHours:       sr.StalenessHrs,
-		ThresholdHours: sr.ThresholdHrs,
+		AgeHours:       sr.StalenessHrs.Value(),
+		ThresholdHours: sr.ThresholdHrs.Value(),
 		Stale:          sr.Stale,
 		StaleFindings:  staleCount,
 	}
