@@ -372,3 +372,23 @@ func TestActions_DomainMethods(t *testing.T) {
 		t.Errorf("TotalChainsUnblocked: got %d, want 3", actions.TotalChainsUnblocked())
 	}
 }
+
+func TestReadinessScore_DomainMethods(t *testing.T) {
+	rs := ReadinessScore(0.85)
+
+	if rs.Value() != 0.85 {
+		t.Errorf("Value() = %f, want 0.85", rs.Value())
+	}
+	if rs.Percentage() != 85.0 {
+		t.Errorf("Percentage() = %f, want 85.0", rs.Percentage())
+	}
+	if !ReadinessScore(1.0).IsFullReadiness() {
+		t.Error("IsFullReadiness() = false, want true for 1.0")
+	}
+	if rs.IsFullReadiness() {
+		t.Error("IsFullReadiness() = true, want false for 0.85")
+	}
+	if !ReadinessScore(0.0).IsZero() {
+		t.Error("IsZero() = false, want true for 0.0")
+	}
+}

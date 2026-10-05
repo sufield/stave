@@ -283,12 +283,12 @@ func describeAction(t kernel.AssetType) string {
 // pure input completeness, not security posture: 100% means
 // "every classifiable control can be evaluated against this
 // snapshot," not "everything is safe."
-func readinessScore(f ControlForecast) float64 {
+func readinessScore(f ControlForecast) ReadinessScore {
 	denom := f.CanFire + f.Blocked
 	if denom == 0 {
 		return 0
 	}
-	return float64(f.CanFire) / float64(denom)
+	return ReadinessScore(float64(f.CanFire) / float64(denom))
 }
 
 // annotateForecastPercentages fills the *Pct fields on a forecast

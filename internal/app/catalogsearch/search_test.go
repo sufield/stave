@@ -91,3 +91,33 @@ func TestComplianceFrameworks_DomainMethods(t *testing.T) {
 		t.Error("empty.Contains(soc2) should be false")
 	}
 }
+
+func TestSearchQuery_DomainMethods(t *testing.T) {
+	q := SearchQuery("  EnCrYpTiOn  ")
+	if q.String() != "  EnCrYpTiOn  " {
+		t.Errorf("String() = %q, want %q", q.String(), "  EnCrYpTiOn  ")
+	}
+	if q.IsEmpty() {
+		t.Errorf("IsEmpty() for non-empty query returned true")
+	}
+	if q.Lower() != "  encryption  " {
+		t.Errorf("Lower() = %q, want %q", q.Lower(), "  encryption  ")
+	}
+	if q.Normalized() != "encryption" {
+		t.Errorf("Normalized() = %q, want %q", q.Normalized(), "encryption")
+	}
+	if !q.Matches("S3 Bucket Encryption at rest") {
+		t.Errorf("Matches() returned false for matching target")
+	}
+	if q.Matches("Public S3 bucket without KMS") {
+		t.Errorf("Matches() returned true for non-matching target")
+	}
+
+	emptyQ := SearchQuery("   ")
+	if !emptyQ.IsEmpty() {
+		t.Errorf("IsEmpty() for whitespace query returned false")
+	}
+	if !emptyQ.Matches("any text") {
+		t.Errorf("Matches() for empty query returned false")
+	}
+}

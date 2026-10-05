@@ -64,9 +64,40 @@ func (sr SearchResults) ByDomain(domain kernel.AssetType) SearchResults {
 	return filtered
 }
 
+// SearchQuery represents a catalog search keyword query.
+type SearchQuery string
+
+// String returns the raw string value of the search query.
+func (q SearchQuery) String() string {
+	return string(q)
+}
+
+// IsEmpty reports whether the search query is blank or empty.
+func (q SearchQuery) IsEmpty() bool {
+	return strings.TrimSpace(string(q)) == ""
+}
+
+// Lower returns the search query converted to lower case.
+func (q SearchQuery) Lower() string {
+	return toLower(string(q))
+}
+
+// Normalized returns the search query trimmed of whitespace and converted to lower case.
+func (q SearchQuery) Normalized() string {
+	return toLower(strings.TrimSpace(string(q)))
+}
+
+// Matches reports whether the query matches target text using case-insensitive substring search.
+func (q SearchQuery) Matches(target string) bool {
+	if q.IsEmpty() {
+		return true
+	}
+	return strutil.ContainsFold(target, q.Normalized())
+}
+
 // Filter constrains the search.
 type Filter struct {
-	Query       string
+	Query       SearchQuery
 	Domain      kernel.AssetType
 	Severity    policy.Severity
 	AttackStage kernel.AttackStage
@@ -75,7 +106,7 @@ type Filter struct {
 
 // Search finds controls matching the filter criteria.
 func Search(controls []policy.ControlDefinition, f Filter) SearchResults {
-	query := toLower(f.Query)
+	query := f.Query.Normalized()
 	domainFilter := toLower(string(f.Domain))
 	profileFilter := toLower(f.Profile)
 	var results SearchResults
@@ -83,7 +114,7 @@ func Search(controls []policy.ControlDefinition, f Filter) SearchResults {
 	for i := range controls {
 		ctl := &controls[i]
 
-		if query != "" && !matchesQuery(ctl, query) {
+		if !f.Query.IsEmpty() && !matchesQuery(ctl, query) {
 			continue
 		}
 		if domainFilter != "" && getDomain(ctl) != domainFilter {

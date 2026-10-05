@@ -77,9 +77,12 @@ func TestAssemble_NilComponentsSkipped(t *testing.T) {
 }
 
 func TestComponents_CollectionMethods(t *testing.T) {
+	validSHA1 := Checksum("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+	validSHA2 := Checksum("ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb")
+
 	cs := Components{
-		{Filename: "01-executive-summary.md", SHA256: "abc123"},
-		{Filename: "02-posture-report.json", SHA256: "def456"},
+		{Filename: "01-executive-summary.md", SHA256: validSHA1},
+		{Filename: "02-posture-report.json", SHA256: validSHA2},
 	}
 
 	if cs.Len() != 2 {
@@ -87,8 +90,8 @@ func TestComponents_CollectionMethods(t *testing.T) {
 	}
 
 	found := cs.ByFilename("01-executive-summary.md")
-	if found == nil || found.SHA256 != "abc123" {
-		t.Errorf("ByFilename = %v, want sha abc123", found)
+	if found == nil || found.SHA256 != validSHA1 {
+		t.Errorf("ByFilename = %v, want sha %s", found, validSHA1)
 	}
 
 	if !cs.HasIntegrityHashes() {
@@ -100,5 +103,22 @@ func TestComponents_CollectionMethods(t *testing.T) {
 	}
 	if incomplete.HasIntegrityHashes() {
 		t.Error("expected HasIntegrityHashes = false for empty sha")
+	}
+}
+
+func TestChecksum_DomainMethods(t *testing.T) {
+	c := Checksum("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+
+	if c.String() != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" {
+		t.Errorf("String() = %q", c.String())
+	}
+	if !c.IsValid() {
+		t.Error("IsValid() = false, want true for valid 64-char hex")
+	}
+	if Checksum("short").IsValid() {
+		t.Error("IsValid() = true, want false for short string")
+	}
+	if c.Short() != "e3b0c442" {
+		t.Errorf("Short() = %q, want e3b0c442", c.Short())
 	}
 }

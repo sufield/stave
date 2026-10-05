@@ -259,7 +259,7 @@ Exit Codes:
 			}
 
 			results := catalogsearch.Search(controls, catalogsearch.Filter{
-				Query:       query,
+				Query:       catalogsearch.SearchQuery(query),
 				Domain:      kernel.AssetType(domain),
 				Severity:    sevFilter,
 				AttackStage: kernel.AttackStage(attackStage),

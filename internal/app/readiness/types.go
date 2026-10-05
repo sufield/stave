@@ -22,6 +22,29 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// ReadinessScore encapsulates a readiness capability score (0.0 to 1.0).
+type ReadinessScore float64
+
+// Value returns the raw float64 readiness score ratio (between 0.0 and 1.0).
+func (rs ReadinessScore) Value() float64 {
+	return float64(rs)
+}
+
+// Percentage returns the readiness score expressed as a percentage value (0.0 to 100.0).
+func (rs ReadinessScore) Percentage() float64 {
+	return float64(rs) * 100.0
+}
+
+// IsFullReadiness reports whether the readiness score is 1.0 (100% ready).
+func (rs ReadinessScore) IsFullReadiness() bool {
+	return rs >= 1.0
+}
+
+// IsZero reports whether the readiness score is zero.
+func (rs ReadinessScore) IsZero() bool {
+	return rs == 0.0
+}
+
 // Report is the analyzer's output: a snapshot of what the
 // catalog can evaluate against the supplied observations.
 type Report struct {
@@ -46,7 +69,7 @@ type Report struct {
 	// names the bucket set explicitly so a consumer reading this
 	// number alongside Controls.Total / Controls.Indeterminate cannot
 	// mistake it for a whole-catalog fraction.
-	ReadinessScore float64 `json:"readiness_score"`
+	ReadinessScore ReadinessScore `json:"readiness_score"`
 
 	// ReadinessDenominator self-documents what the score divides
 	// by. Constant string; the analyzer always sets it the same

@@ -18,6 +18,33 @@ import (
 // Checksum represents a SHA-256 hex digest.
 type Checksum string
 
+// String returns the underlying SHA-256 hex digest string.
+func (c Checksum) String() string {
+	return string(c)
+}
+
+// IsValid reports whether the checksum string is a non-empty, 64-character SHA-256 hex digest.
+func (c Checksum) IsValid() bool {
+	if len(c) != 64 {
+		return false
+	}
+	for i := 0; i < len(c); i++ {
+		b := c[i]
+		if !((b >= '0' && b <= '9') || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F')) {
+			return false
+		}
+	}
+	return true
+}
+
+// Short returns the abbreviated 8-character prefix of the hex digest.
+func (c Checksum) Short() string {
+	if len(c) < 8 {
+		return string(c)
+	}
+	return string(c[:8])
+}
+
 // Component is one file in the evidence package.
 type Component struct {
 	Filename    string   `json:"filename"`
@@ -43,13 +70,13 @@ func (cs Components) ByFilename(filename string) *Component {
 	return nil
 }
 
-// HasIntegrityHashes reports whether all components have non-empty SHA256 hashes.
+// HasIntegrityHashes reports whether all components have valid SHA256 checksums.
 func (cs Components) HasIntegrityHashes() bool {
 	if len(cs) == 0 {
 		return false
 	}
 	for i := range cs {
-		if cs[i].SHA256 == "" {
+		if !cs[i].SHA256.IsValid() {
 			return false
 		}
 	}
