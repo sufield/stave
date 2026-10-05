@@ -30,7 +30,7 @@ func (c Checksum) IsValid() bool {
 	}
 	for i := 0; i < len(c); i++ {
 		b := c[i]
-		if !((b >= '0' && b <= '9') || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F')) {
+		if (b < '0' || b > '9') && (b < 'a' || b > 'f') && (b < 'A' || b > 'F') {
 			return false
 		}
 	}
