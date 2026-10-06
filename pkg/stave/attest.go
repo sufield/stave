@@ -45,7 +45,7 @@ func SignSnapshot(snapData []byte, privateKey ed25519.PrivateKey, keyID, hostnam
 		return nil, fmt.Errorf("sign assets: %w", err)
 	}
 	if keyID != "" {
-		attestation.PublicKeyFingerprint = keyID
+		attestation.PublicKeyFingerprint = appatt.KeyFingerprint(keyID)
 	}
 
 	attested := appatt.AttestedSnapshot{
@@ -90,6 +90,61 @@ func GenerateAttestKeyPair() (ed25519.PublicKey, ed25519.PrivateKey, error) {
 		return nil, nil, fmt.Errorf("generate key pair: %w", err)
 	}
 	return pub, priv, nil
+}
+
+// LoadPrivateKeyPEM reads an Ed25519 private key from a PEM file.
+func LoadPrivateKeyPEM(path string) (ed25519.PrivateKey, error) {
+	keyData, err := fsutil.ReadFileLimited(path)
+	if err != nil {
+		return nil, fmt.Errorf("read private key: %w", err)
+	}
+	block, _ := pem.Decode(keyData)
+	if block == nil {
+		return nil, fmt.Errorf("no PEM block found in %s", path)
+	}
+	parsed, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("parse private key: %w", err)
+	}
+	privateKey, ok := parsed.(ed25519.PrivateKey)
+	if !ok {
+		return nil, errors.New("key is not Ed25519")
+	}
+	return privateKey, nil
+}
+
+// SaveAttestKeyPair writes private and public keys to PEM files using outPrefix.
+// Returns the private key path, public key path, and error.
+func SaveAttestKeyPair(outPrefix string, pub ed25519.PublicKey, priv ed25519.PrivateKey) (string, string, error) {
+	privBytes, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		return "", "", fmt.Errorf("marshal private key: %w", err)
+	}
+	privPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "PRIVATE KEY",
+		Bytes: privBytes,
+	})
+
+	pubBytes, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		return "", "", fmt.Errorf("marshal public key: %w", err)
+	}
+	pubPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "PUBLIC KEY",
+		Bytes: pubBytes,
+	})
+
+	privPath := outPrefix + ".pem"
+	pubPath := outPrefix + ".pub"
+
+	if err := fsutil.SafeWriteFile(privPath, privPEM, fsutil.WriteOptions{Perm: 0o600, Overwrite: false, AllowSymlink: false}); err != nil {
+		return "", "", fmt.Errorf("write private key: %w", err)
+	}
+	if err := fsutil.SafeWriteFile(pubPath, pubPEM, fsutil.WriteOptions{Perm: 0o644, Overwrite: false, AllowSymlink: false}); err != nil {
+		return "", "", fmt.Errorf("write public key: %w", err)
+	}
+
+	return privPath, pubPath, nil
 }
 
 // LoadPublicKeyPEM reads an Ed25519 public key from a PEM file.
@@ -158,7 +213,7 @@ func VerifyObservationsDir(dir string, publicKey ed25519.PublicKey) (*evaluation
 
 		attestedCount++
 		lastSignedAt = att.SignedAt
-		lastFingerprint = att.PublicKeyFingerprint
+		lastFingerprint = att.PublicKeyFingerprint.String()
 	}
 
 	if attestedCount == 0 {

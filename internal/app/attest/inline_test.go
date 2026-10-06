@@ -62,3 +62,32 @@ func TestVerifyAssets_NoAttestation(t *testing.T) {
 		t.Error("expected error for nil attestation")
 	}
 }
+
+func TestKeyFingerprint_DomainMethods(t *testing.T) {
+	pub, _, err := GenerateKeyPair()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fp := KeyFingerprint("sha256:1234567890abcdef")
+	if fp.String() != "sha256:1234567890abcdef" {
+		t.Errorf("String() = %q, want %q", fp.String(), "sha256:1234567890abcdef")
+	}
+	if fp.IsEmpty() {
+		t.Errorf("IsEmpty() returned true for non-empty fingerprint")
+	}
+	if !fp.HasPrefix("sha256:") {
+		t.Errorf("HasPrefix(\"sha256:\") returned false")
+	}
+	if fp.Digest() != "1234567890abcdef" {
+		t.Errorf("Digest() = %q, want %q", fp.Digest(), "1234567890abcdef")
+	}
+
+	emptyFp := KeyFingerprint("   ")
+	if !emptyFp.IsEmpty() {
+		t.Errorf("IsEmpty() returned false for whitespace fingerprint")
+	}
+	if !emptyFp.MatchesPublicKey(pub) {
+		t.Errorf("MatchesPublicKey() returned false for empty fingerprint")
+	}
+}

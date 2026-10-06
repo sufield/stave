@@ -181,3 +181,32 @@ func TestControlIDs_DomainMethods(t *testing.T) {
 		t.Error("Contains CTL.C.001: got true, want false")
 	}
 }
+
+func TestEfficiencyVerdict_DomainMethods(t *testing.T) {
+	vComplete := VerdictComplete
+	if vComplete.String() != "COMPLETE" {
+		t.Errorf("String() = %q, want COMPLETE", vComplete.String())
+	}
+	if !vComplete.IsComplete() {
+		t.Error("IsComplete() = false, want true")
+	}
+	if !vComplete.IsSuccessful() {
+		t.Error("IsSuccessful() = false, want true")
+	}
+
+	vPartial := VerdictPartial
+	if !vPartial.IsPartial() {
+		t.Error("IsPartial() = false, want true")
+	}
+	if !vPartial.IsSuccessful() {
+		t.Error("IsSuccessful() = false, want true for partial")
+	}
+
+	vIncomplete := VerdictIncomplete
+	if !vIncomplete.IsIncomplete() {
+		t.Error("IsIncomplete() = false, want true")
+	}
+	if vIncomplete.IsSuccessful() {
+		t.Error("IsSuccessful() = true, want false for incomplete")
+	}
+}

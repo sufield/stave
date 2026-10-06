@@ -3,10 +3,6 @@
 package attest
 
 import (
-	"crypto/ed25519"
-	"crypto/x509"
-	"encoding/pem"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -160,39 +156,16 @@ Exit Codes:
 }
 
 func runSign(stdout io.Writer, snapshotPath, keyPath, keyID, outPath string) error {
-	// Load private key.
-	keyData, err := fsutil.ReadFileLimited(keyPath)
+	privateKey, err := stave.LoadPrivateKeyPEM(keyPath)
 	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("read private key: %w", err)}
-	}
-	block, _ := pem.Decode(keyData)
-	if block == nil {
-		return &ui.UserError{Err: fmt.Errorf("no PEM block found in %s", keyPath)}
-	}
-	parsed, err := x509.ParsePKCS8PrivateKey(block.Bytes)
-	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse private key: %w", err)}
-	}
-	privateKey, ok := parsed.(ed25519.PrivateKey)
-	if !ok {
-		return &ui.UserError{Err: errors.New("key is not Ed25519")}
+		return &ui.UserError{Err: err}
 	}
 
-	// Load the snapshot. The asset parse + Ed25519 sign + attestation
-	// encode happen in stave.SignSnapshot, so this command keeps only the
-	// key handling and depends on pkg/stave for the domain work.
 	snapData, err := fsutil.ReadFileLimited(snapshotPath)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read snapshot: %w", err)}
 	}
 
-	// A failed Hostname lookup is rare (typically only hits in
-	// stripped-down sandboxes / sealed containers) but the attestation
-	// must still record SOMETHING in the host slot so the audit trail can
-	// be reconstructed. Use the explicit "unknown" sentinel + a stderr
-	// warning rather than silently signing with an empty hostname — the
-	// attestation consumer reading "" cannot tell apart "real failure"
-	// from "the host was named ''".
 	hostname, hostErr := os.Hostname()
 	if hostErr != nil {
 		fmt.Fprintf(os.Stderr,
@@ -215,26 +188,11 @@ func runSign(stdout io.Writer, snapshotPath, keyPath, keyID, outPath string) err
 }
 
 func runVerify(stdout io.Writer, snapshotPath, keyPath string) error {
-	// Load public key.
-	keyData, err := fsutil.ReadFileLimited(keyPath)
+	publicKey, err := stave.LoadPublicKeyPEM(keyPath)
 	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("read public key: %w", err)}
-	}
-	block, _ := pem.Decode(keyData)
-	if block == nil {
-		return &ui.UserError{Err: fmt.Errorf("no PEM block found in %s", keyPath)}
-	}
-	parsed, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return &ui.UserError{Err: fmt.Errorf("parse public key: %w", err)}
-	}
-	publicKey, ok := parsed.(ed25519.PublicKey)
-	if !ok {
-		return &ui.UserError{Err: errors.New("key is not Ed25519")}
+		return &ui.UserError{Err: err}
 	}
 
-	// Load the snapshot. Parsing + Ed25519 verification happen in
-	// stave.VerifySnapshot.
 	snapData, err := fsutil.ReadFileLimited(snapshotPath)
 	if err != nil {
 		return &ui.UserError{Err: fmt.Errorf("read snapshot: %w", err)}
@@ -259,36 +217,9 @@ func runKeygen(stdout io.Writer, outPrefix string) error {
 		return err //nolint:wrapcheck // stave.GenerateAttestKeyPair already wraps ("generate key pair")
 	}
 
-	// Marshal private key.
-	privBytes, err := x509.MarshalPKCS8PrivateKey(priv)
+	privPath, pubPath, err := stave.SaveAttestKeyPair(outPrefix, pub, priv)
 	if err != nil {
-		return fmt.Errorf("marshal private key: %w", err)
-	}
-	privPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: privBytes,
-	})
-
-	// Marshal public key.
-	pubBytes, err := x509.MarshalPKIXPublicKey(pub)
-	if err != nil {
-		return fmt.Errorf("marshal public key: %w", err)
-	}
-	pubPEM := pem.EncodeToMemory(&pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: pubBytes,
-	})
-
-	privPath := outPrefix + ".pem"
-	pubPath := outPrefix + ".pub"
-
-	// Keys must never clobber: Overwrite=false => O_EXCL (errors if the path
-	// already exists). User must delete an existing key pair explicitly.
-	if err := fsutil.SafeWriteFile(privPath, privPEM, fsutil.WriteOptions{Perm: 0o600, Overwrite: false, AllowSymlink: false}); err != nil {
-		return fmt.Errorf("write private key: %w", err)
-	}
-	if err := fsutil.SafeWriteFile(pubPath, pubPEM, fsutil.WriteOptions{Perm: 0o644, Overwrite: false, AllowSymlink: false}); err != nil {
-		return fmt.Errorf("write public key: %w", err)
+		return fmt.Errorf("failed to save attest key pair: %w", err)
 	}
 
 	fmt.Fprintf(stdout, "Generated Ed25519 key pair:\n  Private: %s\n  Public:  %s\n", privPath, pubPath)

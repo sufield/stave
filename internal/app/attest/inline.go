@@ -23,13 +23,50 @@ const (
 	AlgorithmEd25519 SignatureAlgorithm = "Ed25519"
 )
 
+// KeyFingerprint represents a SHA-256 public key fingerprint.
+type KeyFingerprint string
+
+// String returns the raw string representation of the fingerprint.
+func (f KeyFingerprint) String() string {
+	return string(f)
+}
+
+// IsEmpty reports whether the fingerprint string is empty or contains only whitespace.
+func (f KeyFingerprint) IsEmpty() bool {
+	return strings.TrimSpace(string(f)) == ""
+}
+
+// HasPrefix reports whether the fingerprint starts with the given prefix (e.g. "sha256:").
+func (f KeyFingerprint) HasPrefix(prefix string) bool {
+	return strings.HasPrefix(strings.ToLower(string(f)), strings.ToLower(prefix))
+}
+
+// Digest returns the hex digest portion after the algorithm prefix (e.g. "sha256:").
+func (f KeyFingerprint) Digest() string {
+	str := string(f)
+	if idx := strings.Index(str, ":"); idx >= 0 {
+		return str[idx+1:]
+	}
+	return str
+}
+
+// MatchesPublicKey reports whether this fingerprint matches the given Ed25519 public key.
+func (f KeyFingerprint) MatchesPublicKey(pubKey ed25519.PublicKey) bool {
+	if f.IsEmpty() {
+		return true
+	}
+	fp := sha256.Sum256(pubKey)
+	expectedFp := "sha256:" + hex.EncodeToString(fp[:])
+	return strings.EqualFold(string(f), expectedFp)
+}
+
 // InlineAttestation is the attestation field embedded in observation JSON.
 type InlineAttestation struct {
 	SignedAt             string             `json:"signed_at"`
 	CollectorHostname    string             `json:"collector_hostname,omitempty"`
 	CollectorVersion     string             `json:"collector_version,omitempty"`
 	SignatureAlgorithm   SignatureAlgorithm `json:"signature_algorithm"`
-	PublicKeyFingerprint string             `json:"public_key_fingerprint"`
+	PublicKeyFingerprint KeyFingerprint     `json:"public_key_fingerprint"`
 	Signature            string             `json:"signature"`
 }
 
@@ -70,7 +107,7 @@ func SignAssets(assets []asset.Asset, privateKey ed25519.PrivateKey, hostname, v
 		CollectorHostname:    hostname,
 		CollectorVersion:     version,
 		SignatureAlgorithm:   AlgorithmEd25519,
-		PublicKeyFingerprint: "sha256:" + hex.EncodeToString(fingerprint[:]),
+		PublicKeyFingerprint: KeyFingerprint("sha256:" + hex.EncodeToString(fingerprint[:])),
 		Signature:            base64.StdEncoding.EncodeToString(sig),
 	}, nil
 }
@@ -84,10 +121,10 @@ func VerifyAssets(assets []asset.Asset, attestation *InlineAttestation, publicKe
 		return errors.New("no attestation present")
 	}
 
-	if attestation.PublicKeyFingerprint != "" {
-		fp := sha256.Sum256(publicKey)
-		expectedFp := "sha256:" + hex.EncodeToString(fp[:])
-		if !strings.EqualFold(attestation.PublicKeyFingerprint, expectedFp) {
+	if !attestation.PublicKeyFingerprint.IsEmpty() {
+		if !attestation.PublicKeyFingerprint.MatchesPublicKey(publicKey) {
+			fp := sha256.Sum256(publicKey)
+			expectedFp := "sha256:" + hex.EncodeToString(fp[:])
 			return fmt.Errorf("public key fingerprint mismatch: expected %s, got %s", expectedFp, attestation.PublicKeyFingerprint)
 		}
 	}

@@ -5,6 +5,7 @@
 package exemptlapse
 
 import (
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -45,6 +46,45 @@ func (d DaysSinceExpiry) Duration() time.Duration {
 	return time.Duration(d) * 24 * time.Hour
 }
 
+// ExemptionID represents a unique exemption identifier composed of control, asset type, and asset ID.
+type ExemptionID string
+
+// String returns the raw string value of the exemption ID.
+func (id ExemptionID) String() string {
+	return string(id)
+}
+
+// IsEmpty reports whether the exemption ID is empty.
+func (id ExemptionID) IsEmpty() bool {
+	return strings.TrimSpace(string(id)) == ""
+}
+
+// ControlID returns the control ID portion of the exemption ID (before the first '@').
+func (id ExemptionID) ControlID() string {
+	parts := strings.Split(string(id), "@")
+	if len(parts) > 0 {
+		return parts[0]
+	}
+	return ""
+}
+
+// AssetID returns the asset ID portion of the exemption ID (after the last '@').
+func (id ExemptionID) AssetID() string {
+	parts := strings.Split(string(id), "@")
+	if len(parts) > 1 {
+		return parts[len(parts)-1]
+	}
+	return ""
+}
+
+// NewExemptionID constructs an ExemptionID from control ID, asset type, and asset ID.
+func NewExemptionID(ctlID kernel.ControlID, assetType kernel.AssetType, assetID asset.ID) ExemptionID {
+	if assetType != "" {
+		return ExemptionID(string(ctlID) + "@" + string(assetType) + "@" + string(assetID))
+	}
+	return ExemptionID(string(ctlID) + "@" + string(assetID))
+}
+
 // LapsedFinding represents an exemption that has expired.
 type LapsedFinding struct {
 	FindingType        FindingType      `json:"finding_type"`
@@ -52,7 +92,7 @@ type LapsedFinding struct {
 	AssetID            asset.ID         `json:"asset_id"`
 	Severity           policy.Severity  `json:"severity"`
 	OriginalSeverity   policy.Severity  `json:"original_severity"`
-	ExemptionID        string           `json:"exemption_id"`
+	ExemptionID        ExemptionID      `json:"exemption_id"`
 	GrantedAt          string           `json:"exemption_granted_at"`
 	ExpiredAt          string           `json:"exemption_expired_at"`
 	DaysSinceExpiry    DaysSinceExpiry  `json:"days_since_expiry"`
@@ -145,10 +185,7 @@ func Detect(in Input) LapsedFindings {
 			compensatingNote = "Compensating control is failing"
 		}
 
-		exemptionID := string(f.ControlID) + "@" + string(f.AssetID)
-		if f.AssetType != "" {
-			exemptionID = string(f.ControlID) + "@" + string(f.AssetType) + "@" + string(f.AssetID)
-		}
+		exemptionID := NewExemptionID(f.ControlID, f.AssetType, f.AssetID)
 
 		lf := LapsedFinding{
 			FindingType:        FindingTypeExemptionLapsed,

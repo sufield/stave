@@ -149,3 +149,35 @@ func TestDaysSinceExpiry_DomainMethods(t *testing.T) {
 		t.Errorf("Duration() = %v, want %v", d.Duration(), 45*24*time.Hour)
 	}
 }
+
+func TestExemptionID_DomainMethods(t *testing.T) {
+	id := NewExemptionID("CTL.S3.PUBLIC.001", "aws_s3_bucket", "arn:aws:s3:::my-bucket")
+	if id.String() != "CTL.S3.PUBLIC.001@aws_s3_bucket@arn:aws:s3:::my-bucket" {
+		t.Errorf("String() = %q", id.String())
+	}
+	if id.IsEmpty() {
+		t.Error("IsEmpty() returned true for non-empty ID")
+	}
+	if id.ControlID() != "CTL.S3.PUBLIC.001" {
+		t.Errorf("ControlID() = %q, want %q", id.ControlID(), "CTL.S3.PUBLIC.001")
+	}
+	if id.AssetID() != "arn:aws:s3:::my-bucket" {
+		t.Errorf("AssetID() = %q, want %q", id.AssetID(), "arn:aws:s3:::my-bucket")
+	}
+
+	simpleID := NewExemptionID("CTL.EC2.001", "", "arn:aws:ec2:::instance-1")
+	if simpleID.String() != "CTL.EC2.001@arn:aws:ec2:::instance-1" {
+		t.Errorf("String() = %q", simpleID.String())
+	}
+	if simpleID.ControlID() != "CTL.EC2.001" {
+		t.Errorf("ControlID() = %q, want %q", simpleID.ControlID(), "CTL.EC2.001")
+	}
+	if simpleID.AssetID() != "arn:aws:ec2:::instance-1" {
+		t.Errorf("AssetID() = %q, want %q", simpleID.AssetID(), "arn:aws:ec2:::instance-1")
+	}
+
+	emptyID := ExemptionID("   ")
+	if !emptyID.IsEmpty() {
+		t.Error("IsEmpty() returned false for whitespace ID")
+	}
+}

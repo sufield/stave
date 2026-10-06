@@ -101,6 +101,31 @@ const (
 	VerdictIncomplete EfficiencyVerdict = "INCOMPLETE"
 )
 
+// String returns the string representation of the efficiency verdict.
+func (v EfficiencyVerdict) String() string {
+	return string(v)
+}
+
+// IsComplete reports whether the verdict represents complete remediation.
+func (v EfficiencyVerdict) IsComplete() bool {
+	return v == VerdictComplete
+}
+
+// IsPartial reports whether the verdict represents partial remediation.
+func (v EfficiencyVerdict) IsPartial() bool {
+	return v == VerdictPartial
+}
+
+// IsIncomplete reports whether the verdict represents incomplete remediation.
+func (v EfficiencyVerdict) IsIncomplete() bool {
+	return v == VerdictIncomplete
+}
+
+// IsSuccessful reports whether the remediation was complete or partial.
+func (v EfficiencyVerdict) IsSuccessful() bool {
+	return v == VerdictComplete || v == VerdictPartial
+}
+
 // ControlIDs represents a domain collection of kernel.ControlID items with query methods.
 type ControlIDs []kernel.ControlID
 
