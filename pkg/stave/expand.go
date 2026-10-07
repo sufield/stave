@@ -285,7 +285,7 @@ func archetypeCounts(controls []policy.ControlDefinition) map[string]int {
 func groupByService(ctls []policy.ControlDefinition) map[string][]policy.ControlDefinition {
 	out := make(map[string][]policy.ControlDefinition)
 	for i := range ctls {
-		svc := expand.ServiceFromControlID(ctls[i].ID)
+		svc := expand.ServiceFromControlID(ctls[i].ID).String()
 		out[svc] = append(out[svc], ctls[i])
 	}
 	return out

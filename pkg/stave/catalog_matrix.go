@@ -49,7 +49,7 @@ func RenderMatrix(ctx context.Context, opts MatrixOptions) ([]byte, error) {
 
 	entries := make([]taxonomy.ControlEntry, 0, len(controls))
 	for i := range controls {
-		svc := strings.ToLower(expand.ServiceFromControlID(controls[i].ID))
+		svc := strings.ToLower(expand.ServiceFromControlID(controls[i].ID).String())
 		if svc == "unknown" || svc == "" {
 			continue
 		}

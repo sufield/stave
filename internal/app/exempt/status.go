@@ -97,7 +97,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 		daysRemaining, ok := ack.DaysRemaining(now)
 		if ok {
 			switch ack.ExpiryClassification(now) {
-			case "expired":
+			case ExpiryClassExpired:
 				report.AlreadyExpired++
 				report.ExpiredItems = append(report.ExpiredItems, ExpiryItem{
 					ControlID:     ack.ControlID,
@@ -106,7 +106,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 					DaysRemaining: daysRemaining,
 					Reason:        ack.Reason,
 				})
-			case "expiring_soon":
+			case ExpiryClassExpiringSoon:
 				report.ExpiringDays30++
 				report.ExpiringDays60++
 				report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
@@ -116,7 +116,7 @@ func ComputeStatus(file *AcceptanceFile, now time.Time, activeFindings map[strin
 					DaysRemaining: daysRemaining,
 					Reason:        ack.Reason,
 				})
-			case "expiring_60d":
+			case ExpiryClassExpiring60d:
 				report.ExpiringDays60++
 				report.ExpiringItems = append(report.ExpiringItems, ExpiryItem{
 					ControlID:     ack.ControlID,

@@ -102,32 +102,48 @@ func (a *AcknowledgmentEntry) DaysRemaining(now time.Time) (int, bool) {
 	return int(expiryDay.Sub(nowDay).Hours() / 24), true
 }
 
+// ExpiryClass represents the lifetime classification of an exemption entry.
+type ExpiryClass string
+
+const (
+	ExpiryClassExpired      ExpiryClass = "expired"
+	ExpiryClassExpiringSoon ExpiryClass = "expiring_soon"
+	ExpiryClassExpiring60d  ExpiryClass = "expiring_60d"
+	ExpiryClassActive       ExpiryClass = "active"
+	ExpiryClassNone         ExpiryClass = ""
+)
+
+// String returns the raw string representation of the expiry classification.
+func (c ExpiryClass) String() string {
+	return string(c)
+}
+
 // ExpiryClassification labels the entry's lifetime against the
 // expiry-status thresholds the exempt status report uses:
-//   - "expired"        — DaysRemaining < 0
-//   - "expiring_soon"  — 0 ≤ DaysRemaining ≤ 30
-//   - "expiring_60d"   — 30 < DaysRemaining ≤ 60
-//   - "active"         — DaysRemaining > 60
-//   - ""               — ExpiryDate missing / unparseable
+//   - ExpiryClassExpired      — DaysRemaining < 0
+//   - ExpiryClassExpiringSoon — 0 ≤ DaysRemaining ≤ 30
+//   - ExpiryClassExpiring60d  — 30 < DaysRemaining ≤ 60
+//   - ExpiryClassActive       — DaysRemaining > 60
+//   - ExpiryClassNone         — ExpiryDate missing / unparseable
 //
 // Replaces the cascade of inline arithmetic in ComputeStatus. The
 // 60-day bucket lets the report distinguish near-term renewals (the
 // exempt-renewal cohort) from healthy long-lived entries without
 // the caller post-processing on a separate `<=60` branch.
-func (a *AcknowledgmentEntry) ExpiryClassification(now time.Time) string {
+func (a *AcknowledgmentEntry) ExpiryClassification(now time.Time) ExpiryClass {
 	days, ok := a.DaysRemaining(now)
 	if !ok {
-		return ""
+		return ExpiryClassNone
 	}
 	switch {
 	case days < 0:
-		return "expired"
+		return ExpiryClassExpired
 	case days <= 30:
-		return "expiring_soon"
+		return ExpiryClassExpiringSoon
 	case days <= 60:
-		return "expiring_60d"
+		return ExpiryClassExpiring60d
 	default:
-		return "active"
+		return ExpiryClassActive
 	}
 }
 

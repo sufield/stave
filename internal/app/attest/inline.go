@@ -60,6 +60,31 @@ func (f KeyFingerprint) MatchesPublicKey(pubKey ed25519.PublicKey) bool {
 	return strings.EqualFold(string(f), expectedFp)
 }
 
+// Signature represents a base64-encoded cryptographic signature string.
+type Signature string
+
+// String returns the raw string representation of the signature.
+func (s Signature) String() string {
+	return string(s)
+}
+
+// IsEmpty reports whether the signature is empty or contains only whitespace.
+func (s Signature) IsEmpty() bool {
+	return strings.TrimSpace(string(s)) == ""
+}
+
+// Decode base64-decodes the signature into raw bytes.
+func (s Signature) Decode() ([]byte, error) {
+	if s.IsEmpty() {
+		return nil, errors.New("empty signature")
+	}
+	bytes, err := base64.StdEncoding.DecodeString(string(s))
+	if err != nil {
+		return nil, fmt.Errorf("decode signature: %w", err)
+	}
+	return bytes, nil
+}
+
 // InlineAttestation is the attestation field embedded in observation JSON.
 type InlineAttestation struct {
 	SignedAt             string             `json:"signed_at"`
@@ -67,7 +92,7 @@ type InlineAttestation struct {
 	CollectorVersion     string             `json:"collector_version,omitempty"`
 	SignatureAlgorithm   SignatureAlgorithm `json:"signature_algorithm"`
 	PublicKeyFingerprint KeyFingerprint     `json:"public_key_fingerprint"`
-	Signature            string             `json:"signature"`
+	Signature            Signature          `json:"signature"`
 }
 
 // AttestedSnapshot wraps a snapshot with its attestation.
@@ -108,7 +133,7 @@ func SignAssets(assets []asset.Asset, privateKey ed25519.PrivateKey, hostname, v
 		CollectorVersion:     version,
 		SignatureAlgorithm:   AlgorithmEd25519,
 		PublicKeyFingerprint: KeyFingerprint("sha256:" + hex.EncodeToString(fingerprint[:])),
-		Signature:            base64.StdEncoding.EncodeToString(sig),
+		Signature:            Signature(base64.StdEncoding.EncodeToString(sig)),
 	}, nil
 }
 
@@ -134,9 +159,9 @@ func VerifyAssets(assets []asset.Asset, attestation *InlineAttestation, publicKe
 		return fmt.Errorf("marshal assets for verification: %w", err)
 	}
 
-	sigBytes, decErr := base64.StdEncoding.DecodeString(attestation.Signature)
+	sigBytes, decErr := attestation.Signature.Decode()
 	if decErr != nil {
-		return fmt.Errorf("decode signature: %w", decErr)
+		return decErr
 	}
 
 	if !ed25519.Verify(publicKey, canonical, sigBytes) {

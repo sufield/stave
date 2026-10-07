@@ -39,6 +39,19 @@ func FilterByArchetype(controls []policy.ControlDefinition, id kernel.ArchetypeI
 	return out
 }
 
+// ServiceID represents a canonical cloud service identifier (e.g. "s3", "secretsmanager", "iam").
+type ServiceID string
+
+// String returns the raw string representation of the service ID.
+func (s ServiceID) String() string {
+	return string(s)
+}
+
+// IsUnknown reports whether the service ID is unresolvable ("unknown").
+func (s ServiceID) IsUnknown() bool {
+	return s == "unknown" || strings.TrimSpace(string(s)) == ""
+}
+
 // ServiceFromControlID derives a lowercase service tag from the
 // control ID's second segment. CTL.SECRETS.* and CTL.SECRETSMANAGER.*
 // both collapse to "secretsmanager" so expand grouping matches the
@@ -47,7 +60,7 @@ func FilterByArchetype(controls []policy.ControlDefinition, id kernel.ArchetypeI
 // Returns "unknown" for malformed IDs (fewer than two dot-separated
 // segments) so callers can handle that as a single bucket rather
 // than being forced into nil-checks.
-func ServiceFromControlID(id kernel.ControlID) string {
+func ServiceFromControlID(id kernel.ControlID) ServiceID {
 	s := string(id)
 	// Skip the first segment (e.g. "ctl")
 	_, after, ok := strings.Cut(s, ".")
@@ -75,7 +88,7 @@ func ServiceFromControlID(id kernel.ControlID) string {
 	if svc == "secrets" {
 		return "secretsmanager"
 	}
-	return svc
+	return ServiceID(svc)
 }
 
 // SnapshotStatus reports which of the archetype's services have at
