@@ -66,18 +66,18 @@ func TestAnalyze_EfficiencyMetrics(t *testing.T) {
 			r, err := Analyze(Input{
 				Before:         assessmentWith(100, 50),
 				After:          assessmentWith(100, c.afterViol),
-				PredictedDelta: c.predicted,
+				PredictedDelta: ScoreDelta(c.predicted),
 			})
 			if err != nil {
 				t.Fatalf("Analyze: %v", err)
 			}
-			if math.Abs(r.ScoreDelta-c.wantRealized) > 1e-9 {
+			if math.Abs(r.ScoreDelta.Float64()-c.wantRealized) > 1e-9 {
 				t.Errorf("ScoreDelta = %.4f, want %.4f", r.ScoreDelta, c.wantRealized)
 			}
 			if r.Efficiency == nil {
 				t.Fatal("Efficiency should be set when PredictedDelta != 0")
 			}
-			if math.Abs(r.Efficiency.RealizedDelta-c.wantRealized) > 1e-9 {
+			if math.Abs(r.Efficiency.RealizedDelta.Float64()-c.wantRealized) > 1e-9 {
 				t.Errorf("RealizedDelta = %.4f, want %.4f", r.Efficiency.RealizedDelta, c.wantRealized)
 			}
 			if math.Abs(r.Efficiency.Ratio-c.wantRatio) > 1e-9 {

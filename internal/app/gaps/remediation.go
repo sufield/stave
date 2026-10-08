@@ -62,7 +62,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 			Type:           RemediationAPI,
 			FixableByAgent: false,
 			Guidance:       "Requires a secondary cloud API call (Access Advisor / service-last-accessed) not exposed by the standard inventory. Collector must call the API and stamp the result.",
-			Command:        fmt.Sprintf("Collector must compute %s from iam:GenerateServiceLastAccessedDetails (or equivalent); see docs/extractor-*.md.", rel),
+			Command:        RemediationCommand(fmt.Sprintf("Collector must compute %s from iam:GenerateServiceLastAccessedDetails (or equivalent); see docs/extractor-*.md.", rel)),
 			Effort:         EffortSecondaryAPI,
 		}
 	}
@@ -79,7 +79,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 			Type:           RemediationCollector,
 			FixableByAgent: false,
 			Guidance:       "Requires a collector-side analysis (cross-inventory or relational walk). The collector code must grow to cover it.",
-			Command:        fmt.Sprintf("Collector must compute %s; see docs/extractor-*.md for the property-derivation guide.", rel),
+			Command:        RemediationCommand(fmt.Sprintf("Collector must compute %s; see docs/extractor-*.md for the property-derivation guide.", rel)),
 			Effort:         EffortCollectorAnalysis,
 		}
 	}
@@ -92,7 +92,7 @@ func classifyRemediation(path string, at kernel.AssetType, isIntent bool) Remedi
 		Type:           RemediationDerived,
 		FixableByAgent: true,
 		Guidance:       "Add this property to the Steampipe → Stave mapping; the source row likely carries the value.",
-		Command:        fmt.Sprintf("Add %s to the field map for %s in contracts/steampipe/%s.yaml; see docs/extractor-prompt.md.", rel, at, at),
+		Command:        RemediationCommand(fmt.Sprintf("Add %s to the field map for %s in contracts/steampipe/%s.yaml; see docs/extractor-prompt.md.", rel, at, at)),
 		Effort:         EffortMappingChange,
 	}
 }
@@ -130,30 +130,30 @@ func matchesAnySegment(rel string, segs ...string) bool {
 // (s3api put-bucket-tagging vs iam tag-role vs ec2 create-tags
 // vs kms tag-resource); the template picks the right verb so the
 // operator copies a runnable shape, not a generic skeleton.
-func tagCommand(at kernel.AssetType, key string) string {
+func tagCommand(at kernel.AssetType, key string) RemediationCommand {
 	switch at {
 	case "aws_s3_bucket":
-		return fmt.Sprintf("aws s3api put-bucket-tagging --bucket <name> --tagging 'TagSet=[{Key=%s,Value=<value>}]'", key)
+		return RemediationCommand(fmt.Sprintf("aws s3api put-bucket-tagging --bucket <name> --tagging 'TagSet=[{Key=%s,Value=<value>}]'", key))
 	case "aws_iam_role":
-		return fmt.Sprintf("aws iam tag-role --role-name <name> --tags Key=%s,Value=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws iam tag-role --role-name <name> --tags Key=%s,Value=<value>", key))
 	case "aws_iam_user":
-		return fmt.Sprintf("aws iam tag-user --user-name <name> --tags Key=%s,Value=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws iam tag-user --user-name <name> --tags Key=%s,Value=<value>", key))
 	case "aws_kms_key":
-		return fmt.Sprintf("aws kms tag-resource --key-id <id> --tags TagKey=%s,TagValue=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws kms tag-resource --key-id <id> --tags TagKey=%s,TagValue=<value>", key))
 	case "aws_ec2_instance", "aws_ec2_security_group", "aws_ebs_snapshot", "aws_ebs_volume", "aws_vpc", "aws_ec2_subnet":
-		return fmt.Sprintf("aws ec2 create-tags --resources <id> --tags Key=%s,Value=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws ec2 create-tags --resources <id> --tags Key=%s,Value=<value>", key))
 	case "aws_lambda_function":
-		return fmt.Sprintf("aws lambda tag-resource --resource <arn> --tags %s=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws lambda tag-resource --resource <arn> --tags %s=<value>", key))
 	case "aws_sns_topic":
-		return fmt.Sprintf("aws sns tag-resource --resource-arn <arn> --tags Key=%s,Value=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws sns tag-resource --resource-arn <arn> --tags Key=%s,Value=<value>", key))
 	case "aws_sqs_queue":
-		return fmt.Sprintf("aws sqs tag-queue --queue-url <url> --tags %s=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws sqs tag-queue --queue-url <url> --tags %s=<value>", key))
 	case "aws_cognito_user_pool", "aws_cognito_identity_pool":
-		return fmt.Sprintf("aws cognito-idp tag-resource --resource-arn <arn> --tags %s=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws cognito-idp tag-resource --resource-arn <arn> --tags %s=<value>", key))
 	case "aws_cloudtrail_trail":
-		return fmt.Sprintf("aws cloudtrail add-tags --resource-id <arn> --tags-list Key=%s,Value=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws cloudtrail add-tags --resource-id <arn> --tags-list Key=%s,Value=<value>", key))
 	case "aws_bedrock_agent":
-		return fmt.Sprintf("aws bedrock-agent tag-resource --resource-arn <arn> --tags %s=<value>", key)
+		return RemediationCommand(fmt.Sprintf("aws bedrock-agent tag-resource --resource-arn <arn> --tags %s=<value>", key))
 	}
-	return fmt.Sprintf("# Tag %s on %s with key=%s (consult provider tagging API).", at, at, key)
+	return RemediationCommand(fmt.Sprintf("# Tag %s on %s with key=%s (consult provider tagging API).", at, at, key))
 }

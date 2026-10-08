@@ -55,11 +55,25 @@ type Prediction struct {
 	Accelerators     Accelerators               `json:"accelerators,omitempty"`
 }
 
+// DaysSaved encapsulates an estimated days-saved duration for an accelerator intervention.
+type DaysSaved int
+
+// Int returns the raw integer number of days saved.
+func (d DaysSaved) Int() int { return int(d) }
+
+// Duration converts the days saved to a time.Duration.
+func (d DaysSaved) Duration() time.Duration {
+	return time.Duration(int(d)) * 24 * time.Hour
+}
+
+// IsSignificant reports whether days saved is a week or longer (>= 7 days).
+func (d DaysSaved) IsSignificant() bool { return d >= 7 }
+
 // Accelerator describes a sprint-sized intervention that moves the date.
 type Accelerator struct {
 	Description string     `json:"description"`
 	ControlIDs  ControlIDs `json:"control_ids"`
-	DaysSaved   int        `json:"days_saved"`
+	DaysSaved   DaysSaved  `json:"days_saved"`
 }
 
 // ControlIDs is a domain collection of control IDs with domain query methods.
@@ -84,12 +98,12 @@ func (as Accelerators) Len() int {
 }
 
 // TotalDaysSaved returns the aggregate days saved across all accelerators.
-func (as Accelerators) TotalDaysSaved() int {
-	total := 0
+func (as Accelerators) TotalDaysSaved() DaysSaved {
+	var total int
 	for i := range as {
-		total += as[i].DaysSaved
+		total += as[i].DaysSaved.Int()
 	}
-	return total
+	return DaysSaved(total)
 }
 
 // Input configures the prediction.
@@ -176,7 +190,7 @@ func Predict(in Input) *Prediction {
 		accelerators = append(accelerators, Accelerator{
 			Description: "Fix critical findings this sprint",
 			ControlIDs:  ids,
-			DaysSaved:   saved,
+			DaysSaved:   DaysSaved(saved),
 		})
 	}
 

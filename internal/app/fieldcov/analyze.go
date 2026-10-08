@@ -34,8 +34,43 @@ const (
 	NotApplicable Classification = "NOT_APPLICABLE"
 )
 
-// MissingFields represents a domain collection of missing field path strings with query methods.
-type MissingFields []string
+// FieldPath represents a resource property field path string.
+type FieldPath string
+
+// String returns the underlying string representation of the field path.
+func (f FieldPath) String() string {
+	return string(f)
+}
+
+// IsTag reports whether the field path represents a tag property.
+func (f FieldPath) IsTag() bool {
+	str := string(f)
+	return strings.HasPrefix(str, "tags.") || strings.HasPrefix(str, "properties.tags.")
+}
+
+// BaseName returns the final element of the dot-delimited field path.
+func (f FieldPath) BaseName() string {
+	str := string(f)
+	if idx := strings.LastIndex(str, "."); idx >= 0 {
+		return str[idx+1:]
+	}
+	return str
+}
+
+// MissingFields represents a domain collection of FieldPath items with query methods.
+type MissingFields []FieldPath
+
+// Strings returns the raw string slice representation of missing fields.
+func (mf MissingFields) Strings() []string {
+	if len(mf) == 0 {
+		return nil
+	}
+	out := make([]string, len(mf))
+	for i, f := range mf {
+		out[i] = string(f)
+	}
+	return out
+}
 
 // Len returns the number of missing field paths in the collection.
 func (mf MissingFields) Len() int {
@@ -43,14 +78,14 @@ func (mf MissingFields) Len() int {
 }
 
 // Contains reports whether the given field path is present in the collection.
-func (mf MissingFields) Contains(field string) bool {
+func (mf MissingFields) Contains(field FieldPath) bool {
 	return slices.Contains(mf, field)
 }
 
 // HasPrefix reports whether any missing field path starts with the given prefix.
 func (mf MissingFields) HasPrefix(prefix string) bool {
 	for _, f := range mf {
-		if strings.HasPrefix(f, prefix) {
+		if strings.HasPrefix(string(f), prefix) {
 			return true
 		}
 	}
@@ -300,11 +335,11 @@ func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]str
 	}
 
 	// Check which fields are missing.
-	var missing []string
+	var missing MissingFields
 	var silentRiskFields []string
 	for _, ref := range refs {
 		if !fieldPresent(ref.path, presentFields) {
-			missing = append(missing, ref.path)
+			missing = append(missing, FieldPath(ref.path))
 			if ref.silentRisk {
 				silentRiskFields = append(silentRiskFields, ref.path)
 			}
@@ -619,9 +654,10 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	for i := range combined {
 		r := &combined[i]
 		for _, f := range r.MissingFields {
-			fieldToControls[f] = append(fieldToControls[f], r.ControlID)
-			if current, ok := fieldToSeverity[f]; !ok || sevOrder(r.Severity.String()) < sevOrder(current.String()) {
-				fieldToSeverity[f] = r.Severity
+			strF := f.String()
+			fieldToControls[strF] = append(fieldToControls[strF], r.ControlID)
+			if current, ok := fieldToSeverity[strF]; !ok || sevOrder(r.Severity.String()) < sevOrder(current.String()) {
+				fieldToSeverity[strF] = r.Severity
 			}
 		}
 	}

@@ -142,7 +142,7 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 
 	Prioritize(gaps)
 	for i := range gaps {
-		gaps[i].Priority = i + 1
+		gaps[i].Priority = GapPriority(i + 1)
 	}
 
 	return Report{

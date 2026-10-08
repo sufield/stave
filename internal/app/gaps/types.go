@@ -87,10 +87,38 @@ type Report struct {
 
 // FieldGap is one (asset_type, property_path) pair where at least
 // one observed asset of the type doesn't carry the property. Each
+// GapPriority represents a gap's prioritization rank.
+type GapPriority int
+
+// Int returns the raw integer value of the gap priority.
+func (p GapPriority) Int() int {
+	return int(p)
+}
+
+// IsHighPriority reports whether the gap is ranked within top priority tier (rank <= 10).
+func (p GapPriority) IsHighPriority() bool {
+	return p > 0 && p <= 10
+}
+
+// RemediationCommand represents a CLI command hint for gap remediation.
+type RemediationCommand string
+
+// String returns the raw string command.
+func (c RemediationCommand) String() string {
+	return string(c)
+}
+
+// IsEmpty reports whether the command string is empty or whitespace.
+func (c RemediationCommand) IsEmpty() bool {
+	return strings.TrimSpace(string(c)) == ""
+}
+
+// FieldGap is one (asset_type, property_path) pair where at least
+// one observed asset of the type doesn't carry the property. Each
 // gap carries the controls / chains it would unlock if fixed,
 // plus a remediation hint.
 type FieldGap struct {
-	Priority             int              `json:"priority"`
+	Priority             GapPriority      `json:"priority"`
 	PropertyPath         PropertyPath     `json:"property_path"`
 	AssetType            kernel.AssetType `json:"asset_type"`
 	MissingCount         int              `json:"missing_count"`
@@ -177,11 +205,11 @@ const (
 )
 
 type Remediation struct {
-	Type           RemediationType   `json:"type"`
-	FixableByAgent bool              `json:"fixable_by_agent"`
-	Guidance       string            `json:"guidance,omitempty"`
-	Command        string            `json:"command,omitempty"`
-	Effort         RemediationEffort `json:"effort"`
+	Type           RemediationType    `json:"type"`
+	FixableByAgent bool               `json:"fixable_by_agent"`
+	Guidance       string             `json:"guidance,omitempty"`
+	Command        RemediationCommand `json:"command,omitempty"`
+	Effort         RemediationEffort  `json:"effort"`
 }
 
 // Summary aggregates counts and a "quick wins" estimate so the

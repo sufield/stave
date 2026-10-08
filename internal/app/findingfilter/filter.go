@@ -27,6 +27,24 @@ const (
 	ClassReturned Classification = "returned"
 )
 
+// DwellDays represents the age/dwell time of a finding in fractional calendar days.
+type DwellDays float64
+
+// Float64 returns the raw float64 value of dwell days.
+func (d DwellDays) Float64() float64 {
+	return float64(d)
+}
+
+// Duration converts the dwell days to a time.Duration.
+func (d DwellDays) Duration() time.Duration {
+	return time.Duration(float64(d) * float64(24*time.Hour))
+}
+
+// IsLongStanding reports whether the finding has been active longer than thresholdDays.
+func (d DwellDays) IsLongStanding(thresholdDays float64) bool {
+	return float64(d) >= thresholdDays
+}
+
 // findingKey uniquely identifies a finding across assessments.
 type findingKey struct {
 	ControlID kernel.ControlID
@@ -40,7 +58,7 @@ type ClassifiedFinding struct {
 	Class     Classification      `json:"classification"`
 	FirstSeen *time.Time          `json:"first_seen,omitempty"`
 	LastSeen  *time.Time          `json:"last_seen,omitempty"`
-	DwellDays float64             `json:"dwell_days,omitempty"`
+	DwellDays DwellDays           `json:"dwell_days,omitempty"`
 	Cycles    int                 `json:"cycles,omitempty"`
 }
 
@@ -69,7 +87,7 @@ type ResolvedFinding struct {
 	ControlID kernel.ControlID `json:"control_id"`
 	AssetID   asset.ID         `json:"asset_id"`
 	Severity  policy.Severity  `json:"severity"`
-	DwellDays float64          `json:"dwell_days,omitempty"`
+	DwellDays DwellDays        `json:"dwell_days,omitempty"`
 }
 
 // ResolvedFindings represents a collection of ResolvedFinding items with query methods.
@@ -148,11 +166,11 @@ func (a *appearance) IsChronic() bool {
 // by the per-finding "how long has this been an issue?" rendering;
 // callers stop computing the (Now.Sub(firstSeen).Hours()/24)
 // arithmetic at every site.
-func (a *appearance) DwellDays(now time.Time) float64 {
+func (a *appearance) DwellDays(now time.Time) DwellDays {
 	if a == nil {
 		return 0
 	}
-	return now.Sub(a.firstSeen).Hours() / 24
+	return DwellDays(now.Sub(a.firstSeen).Hours() / 24)
 }
 
 // Classify compares current findings against historical assessments and

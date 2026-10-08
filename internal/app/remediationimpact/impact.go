@@ -139,10 +139,25 @@ func (ids ControlIDs) Contains(id kernel.ControlID) bool {
 	return slices.Contains(ids, id)
 }
 
+// ScoreDelta encapsulates a posture score change delta (+/- float64 points).
+type ScoreDelta float64
+
+// Float64 returns the raw float64 value of the score delta.
+func (d ScoreDelta) Float64() float64 { return float64(d) }
+
+// IsPositive reports whether the posture score improved (> 0).
+func (d ScoreDelta) IsPositive() bool { return d > 0 }
+
+// IsNegative reports whether the posture score degraded (< 0).
+func (d ScoreDelta) IsNegative() bool { return d < 0 }
+
+// IsZero reports whether there was no change in posture score (== 0).
+func (d ScoreDelta) IsZero() bool { return d == 0 }
+
 // Efficiency holds the predicted-vs-realized comparison.
 type Efficiency struct {
-	PredictedDelta float64           `json:"predicted_delta"`
-	RealizedDelta  float64           `json:"realized_delta"`
+	PredictedDelta ScoreDelta        `json:"predicted_delta"`
+	RealizedDelta  ScoreDelta        `json:"realized_delta"`
 	Ratio          float64           `json:"efficiency_ratio"`
 	Verdict        EfficiencyVerdict `json:"verdict"`
 	StillOpen      ControlIDs        `json:"still_open,omitempty"`
@@ -156,7 +171,7 @@ type Report struct {
 	ChainsDeactivated DeactivatedChains `json:"chains_deactivated,omitempty"`
 	ScoreBefore       float64           `json:"score_before"`
 	ScoreAfter        float64           `json:"score_after"`
-	ScoreDelta        float64           `json:"score_delta"`
+	ScoreDelta        ScoreDelta        `json:"score_delta"`
 	Efficiency        *Efficiency       `json:"efficiency,omitempty"`
 }
 
@@ -164,7 +179,7 @@ type Report struct {
 type Input struct {
 	Before          *report.Assessment
 	After           *report.Assessment
-	PredictedDelta  float64    // from stave simulate, 0 if not provided
+	PredictedDelta  ScoreDelta // from stave simulate, 0 if not provided
 	PredictedClosed ControlIDs // control IDs predicted to close
 }
 
@@ -255,17 +270,17 @@ func Analyze(in Input) (*Report, error) {
 		ChainsDeactivated: deactivated,
 		ScoreBefore:       scoreBefore,
 		ScoreAfter:        scoreAfter,
-		ScoreDelta:        scoreAfter - scoreBefore,
+		ScoreDelta:        ScoreDelta(scoreAfter - scoreBefore),
 	}
 
 	if in.PredictedDelta != 0 || len(in.PredictedClosed) > 0 {
-		r.Efficiency = computeEfficiency(in, scoreAfter-scoreBefore, afterKeys)
+		r.Efficiency = computeEfficiency(in, ScoreDelta(scoreAfter-scoreBefore), afterKeys)
 	}
 
 	return r, nil
 }
 
-func computeEfficiency(in Input, realized float64, afterKeys map[findingKey]*remediation.Finding) *Efficiency {
+func computeEfficiency(in Input, realized ScoreDelta, afterKeys map[findingKey]*remediation.Finding) *Efficiency {
 	ratio, verdict := classifyEfficiency(in.PredictedDelta, realized)
 
 	var stillOpen []kernel.ControlID
@@ -291,14 +306,14 @@ func computeEfficiency(in Input, realized float64, afterKeys map[findingKey]*rem
 	}
 }
 
-func classifyEfficiency(predicted, realized float64) (float64, EfficiencyVerdict) {
+func classifyEfficiency(predicted, realized ScoreDelta) (float64, EfficiencyVerdict) {
 	if predicted == 0 {
 		return 0, ""
 	}
 	if realized <= 0 {
 		return 0, VerdictIncomplete
 	}
-	ratio := max(realized/predicted, 0)
+	ratio := max(realized.Float64()/predicted.Float64(), 0)
 	switch {
 	case ratio < 0.5:
 		return ratio, VerdictIncomplete
