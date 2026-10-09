@@ -119,11 +119,24 @@ func (cf ComplianceFindings) ByControl(controlID kernel.ControlID) ComplianceFin
 	return filtered
 }
 
+// EventUID represents an OCSF event unique identifier.
+type EventUID string
+
+// String returns the raw string representation of the event UID.
+func (u EventUID) String() string {
+	return string(u)
+}
+
+// IsEmpty reports whether the event UID is empty.
+func (u EventUID) IsEmpty() bool {
+	return strings.TrimSpace(string(u)) == ""
+}
+
 // OCSFFinding holds the finding details.
 type OCSFFinding struct {
-	UID   string `json:"uid"`
-	Title string `json:"title"`
-	Desc  string `json:"desc,omitempty"`
+	UID   EventUID `json:"uid"`
+	Title string   `json:"title"`
+	Desc  string   `json:"desc,omitempty"`
 }
 
 // OCSFCompliance holds compliance context.
@@ -144,9 +157,9 @@ func Export(findings []remediation.Finding) ComplianceFindings {
 	events := make(ComplianceFindings, 0, len(findings))
 	for i := range findings {
 		f := &findings[i]
-		uid := string(f.ControlID) + ":" + string(f.AssetID)
+		uid := EventUID(string(f.ControlID) + ":" + string(f.AssetID))
 		if f.AssetType != "" {
-			uid = string(f.ControlID) + ":" + string(f.AssetType) + ":" + string(f.AssetID)
+			uid = EventUID(string(f.ControlID) + ":" + string(f.AssetType) + ":" + string(f.AssetID))
 		}
 		events = append(events, ComplianceFinding{
 			ClassUID:   ClassComplianceFinding,

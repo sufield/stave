@@ -43,6 +43,24 @@ func (cn ChainNodes) Len() int {
 	return len(cn)
 }
 
+// NodeStatus classifies the status of an attack path chain node.
+type NodeStatus string
+
+const (
+	NodeStatusActive   NodeStatus = "active"
+	NodeStatusInactive NodeStatus = "inactive"
+)
+
+// String returns the raw string representation of the node status.
+func (s NodeStatus) String() string {
+	return string(s)
+}
+
+// IsActive reports whether the node status is active.
+func (s NodeStatus) IsActive() bool {
+	return s == NodeStatusActive
+}
+
 // Active returns a new ChainNodes collection containing only active chain nodes.
 func (cn ChainNodes) Active() ChainNodes {
 	if len(cn) == 0 {
@@ -50,7 +68,7 @@ func (cn ChainNodes) Active() ChainNodes {
 	}
 	var filtered ChainNodes
 	for i := range cn {
-		if cn[i].Status == "active" {
+		if cn[i].Status.IsActive() {
 			filtered = append(filtered, cn[i])
 		}
 	}
@@ -109,7 +127,7 @@ type ChainNode struct {
 	ChainID         kernel.ChainID   `json:"chain_id"`
 	Name            string           `json:"name"`
 	Severity        policy.Severity  `json:"severity"`
-	Status          string           `json:"status"`
+	Status          NodeStatus       `json:"status"`
 	Preconditions   CapabilityIDs    `json:"preconditions"`
 	Postconditions  CapabilityIDs    `json:"postconditions"`
 	MemberControls  []MemberControl  `json:"member_controls"`
@@ -194,9 +212,9 @@ func Build(input BuildInput) *Graph {
 	var nodes []ChainNode
 	for i := range input.Chains {
 		ch := &input.Chains[i]
-		status := "inactive"
+		status := NodeStatusInactive
 		if _, ok := activeChains[ch.ID]; ok {
-			status = "active"
+			status = NodeStatusActive
 		}
 
 		var members []MemberControl
@@ -228,7 +246,7 @@ func Build(input BuildInput) *Graph {
 		}
 		nodes = append(nodes, node)
 
-		if status == "active" {
+		if status.IsActive() {
 			for _, c := range ch.Preconditions {
 				capSet[CapabilityID(c)] = struct{}{}
 			}

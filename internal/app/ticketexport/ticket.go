@@ -37,6 +37,17 @@ const (
 	PriorityP4 Priority = "P4"
 )
 
+// DwellDays encapsulates finding resolution dwell duration in fractional calendar days.
+type DwellDays float64
+
+// Float64 returns the raw float64 value in days.
+func (d DwellDays) Float64() float64 { return float64(d) }
+
+// IsLongStanding reports whether finding remained unaddressed for threshold days or longer.
+func (d DwellDays) IsLongStanding(threshold float64) bool {
+	return float64(d) >= threshold
+}
+
 // Ticket is the canonical ticketing schema for a finding.
 type Ticket struct {
 	TicketID    TicketID         `json:"ticket_id"`
@@ -50,7 +61,7 @@ type Ticket struct {
 	ControlID   kernel.ControlID `json:"control_id"`
 	Team        teams.TeamID     `json:"team,omitempty"`
 	Status      TicketStatus     `json:"status"`
-	DwellDays   float64          `json:"dwell_days"`
+	DwellDays   DwellDays        `json:"dwell_days"`
 }
 
 // TicketLabels is a domain collection of ticket labels with domain querying methods.
@@ -157,6 +168,6 @@ func fromFinding(f *remediation.Finding) Ticket {
 		ControlID:   f.ControlID,
 		Team:        teams.TeamID(team),
 		Status:      StatusOpen,
-		DwellDays:   dwellDays,
+		DwellDays:   DwellDays(dwellDays),
 	}
 }
