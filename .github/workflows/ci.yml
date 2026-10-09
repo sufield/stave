@@ -101,7 +101,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
       - name: Regenerate goldens and sync
@@ -160,7 +160,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
       - name: Sync embeds
@@ -204,7 +204,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
 
@@ -263,7 +263,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
       - name: Download regenerated goldens
@@ -329,7 +329,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
       - name: Install golangci-lint from source
@@ -351,22 +351,22 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
       - name: Verify Go version
         # Positive assertion: setup-go must install exactly the
         # patch release `go.mod`'s toolchain directive specifies
-        # (currently go1.27.0). A negative-only check
+        # (currently go1.27.2). A negative-only check
         # would silently pass on any other patch — including an
         # older vulnerable one — so we assert intent here.
         run: |
           go version
-          go version | grep -q 'go1.27.0'
+          go version | grep -q 'go1.27.2'
       - name: Install govulncheck
         # Run govulncheck directly instead of golang/govulncheck-action
         # so we use the Go installed by the explicit setup-go above
-        # (1.27.0). The wrapper action invokes its own internal
+        # (1.27.2). The wrapper action invokes its own internal
         # setup-go with `go-version: stable` and silently overrides
         # any `go-version-file` we pass.
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
@@ -382,7 +382,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
       - name: Install go-licenses
@@ -435,7 +435,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
       - name: Download regenerated goldens
@@ -475,7 +475,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
       - name: Verify documentation commands
@@ -496,7 +496,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version: '1.27.0'
+          go-version: '1.27.2'
           check-latest: true
           cache: true
       - name: Install go-arch-lint
