@@ -63,9 +63,34 @@ type Result struct {
 	ModelNote string         `json:"model_note"`
 }
 
+// PostureScore encapsulates a security posture score level in [0.0, 100.0].
+type PostureScore float64
+
+// Float64 returns the raw float64 value.
+func (p PostureScore) Float64() float64 { return float64(p) }
+
+// Value returns the raw float64 value.
+func (p PostureScore) Value() float64 { return float64(p) }
+
+// Clamp constrains the posture score within [0.0, 100.0].
+func (p PostureScore) Clamp() PostureScore {
+	if p < 0 {
+		return 0
+	}
+	if p > 100 {
+		return 100
+	}
+	return p
+}
+
+// IsPassing reports whether posture score meets or exceeds the standard passing threshold (80.0).
+func (p PostureScore) IsPassing() bool {
+	return p >= 80.0
+}
+
 // CurrentState holds current metrics.
 type CurrentState struct {
-	PostureScore      float64       `json:"posture_score"`
+	PostureScore      PostureScore  `json:"posture_score"`
 	OpenFindings      int           `json:"open_findings"`
 	MTTRCritical      time.Duration `json:"-"`
 	MTTRHigh          time.Duration `json:"-"`
@@ -114,9 +139,9 @@ func (h HorizonDays) IsValid() bool {
 
 // ProjectedState holds projected metrics.
 type ProjectedState struct {
-	HorizonDays  HorizonDays `json:"horizon_days"`
-	PostureScore float64     `json:"posture_score"`
-	ScoreSlope   float64     `json:"score_slope_per_day"`
+	HorizonDays  HorizonDays  `json:"horizon_days"`
+	PostureScore PostureScore `json:"posture_score"`
+	ScoreSlope   float64      `json:"score_slope_per_day"`
 }
 
 // SLAStatus classifies the SLA projection status.
@@ -179,7 +204,7 @@ func (s *SLAProjection) StatusMarker() string {
 }
 
 // ScoreHistory is a domain collection of daily posture scores.
-type ScoreHistory []float64
+type ScoreHistory []PostureScore
 
 // Len returns the number of days in the score history.
 func (sh ScoreHistory) Len() int {
@@ -187,7 +212,7 @@ func (sh ScoreHistory) Len() int {
 }
 
 // Latest returns the most recent score in the history, or 0 if empty.
-func (sh ScoreHistory) Latest() float64 {
+func (sh ScoreHistory) Latest() PostureScore {
 	if len(sh) == 0 {
 		return 0
 	}
@@ -195,15 +220,15 @@ func (sh ScoreHistory) Latest() float64 {
 }
 
 // Average returns the mean posture score across the history.
-func (sh ScoreHistory) Average() float64 {
+func (sh ScoreHistory) Average() PostureScore {
 	if len(sh) == 0 {
 		return 0
 	}
 	var sum float64
 	for _, s := range sh {
-		sum += s
+		sum += float64(s)
 	}
-	return sum / float64(len(sh))
+	return PostureScore(sum / float64(len(sh)))
 }
 
 // Input holds data for forecasting.
@@ -225,17 +250,9 @@ func Compute(input Input) (*Result, error) {
 
 	// Linear regression on score history.
 	n := len(input.ScoreHistory)
-	slope, intercept := linearFit(input.ScoreHistory)
+	slope, intercept := linearFitScores(input.ScoreHistory)
 	currentScore := input.ScoreHistory[n-1]
-	projectedScore := intercept + slope*float64(n+input.HorizonDays.Int()-1)
-
-	// Clamp to 0-100.
-	if projectedScore > 100 {
-		projectedScore = 100
-	}
-	if projectedScore < 0 {
-		projectedScore = 0
-	}
+	projectedScore := PostureScore(intercept + slope*float64(n+input.HorizonDays.Int()-1)).Clamp()
 
 	result := &Result{
 		Current: CurrentState{
@@ -306,4 +323,12 @@ func linearFit(ys []float64) (slope, intercept float64) {
 	slope = (n*sumXY - sumX*sumY) / denom
 	intercept = (sumY - slope*sumX) / n
 	return slope, intercept
+}
+
+func linearFitScores(sh ScoreHistory) (slope, intercept float64) {
+	ys := make([]float64, len(sh))
+	for i, s := range sh {
+		ys[i] = float64(s)
+	}
+	return linearFit(ys)
 }

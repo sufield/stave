@@ -167,11 +167,9 @@ func Predict(in Input) *Prediction {
 			PessimisticDate:  in.EvalTime,
 		}
 	}
-
-	// Estimate days to close gap based on MTTR.
 	avgMTTRDays := weightedMTTR(latest.Findings, mttr)
 	controlsToFix := min(int(math.Ceil(float64(totalFindings)*gap/100)), totalFindings)
-	projectedDays := int(float64(controlsToFix) * avgMTTRDays)
+	projectedDays := int(float64(controlsToFix) * avgMTTRDays.Float64())
 
 	projected := in.EvalTime.AddDate(0, 0, projectedDays)
 	optimistic := in.EvalTime.AddDate(0, 0, int(float64(projectedDays)*0.6))
@@ -186,7 +184,7 @@ func Predict(in Input) *Prediction {
 		for i := range limit {
 			ids[i] = criticals[i].ControlID
 		}
-		saved := int(float64(limit) * avgMTTRDays)
+		saved := int(float64(limit) * avgMTTRDays.Float64())
 		accelerators = append(accelerators, Accelerator{
 			Description: "Fix critical findings this sprint",
 			ControlIDs:  ids,
@@ -205,7 +203,29 @@ func Predict(in Input) *Prediction {
 	}
 }
 
-func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.Time) map[policy.Severity]float64 {
+// MTTRDays encapsulates mean-time-to-remediate measured in fractional calendar days.
+type MTTRDays float64
+
+// Float64 returns the raw float64 value in days.
+func (m MTTRDays) Float64() float64 { return float64(m) }
+
+// Duration converts MTTR days to a time.Duration.
+func (m MTTRDays) Duration() time.Duration {
+	return time.Duration(float64(m) * float64(24*time.Hour))
+}
+
+// IsZero reports whether MTTR is 0.
+func (m MTTRDays) IsZero() bool { return m == 0 }
+
+// DefaultIfZero returns fallback if m is zero.
+func (m MTTRDays) DefaultIfZero(fallback MTTRDays) MTTRDays {
+	if m == 0 {
+		return fallback
+	}
+	return m
+}
+
+func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.Time) map[policy.Severity]MTTRDays {
 	var cutoff time.Time
 	if lookback > 0 {
 		cutoff = now.Add(-lookback)
@@ -264,28 +284,28 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 		a.count++
 	}
 
-	result := make(map[policy.Severity]float64, len(bySeV))
+	result := make(map[policy.Severity]MTTRDays, len(bySeV))
 	for sev, a := range bySeV {
 		if a.count > 0 {
-			result[sev] = a.totalDays / float64(a.count)
+			result[sev] = MTTRDays(a.totalDays / float64(a.count))
 		}
 	}
 	return result
 }
 
-func weightedMTTR(findings []remediation.Finding, mttr map[policy.Severity]float64) float64 {
+func weightedMTTR(findings []remediation.Finding, mttr map[policy.Severity]MTTRDays) MTTRDays {
 	if len(findings) == 0 {
-		return 14 // default 14 days
+		return MTTRDays(14) // default 14 days
 	}
 	total := 0.0
 	for i := range findings {
 		if days, ok := mttr[findings[i].ControlSeverity]; ok {
-			total += days
+			total += days.Float64()
 		} else {
 			total += 14
 		}
 	}
-	return total / float64(len(findings))
+	return MTTRDays(total / float64(len(findings)))
 }
 
 func findBySeverity(findings []remediation.Finding, sev policy.Severity) []remediation.Finding {

@@ -26,16 +26,16 @@ func TestLinearFit_Flat(t *testing.T) {
 }
 
 func TestCompute_InsufficientHistory(t *testing.T) {
-	_, err := Compute(Input{ScoreHistory: []float64{80, 81, 82}})
+	_, err := Compute(Input{ScoreHistory: ScoreHistory{80, 81, 82}})
 	if err == nil {
 		t.Fatal("expected error for < 7 days")
 	}
 }
 
 func TestCompute_ProjectionExtends(t *testing.T) {
-	history := make([]float64, 30)
+	history := make(ScoreHistory, 30)
 	for i := range history {
-		history[i] = 70 + float64(i)*0.2 // improving trend
+		history[i] = PostureScore(70 + float64(i)*0.2) // improving trend
 	}
 
 	result, err := Compute(Input{
@@ -55,9 +55,9 @@ func TestCompute_ProjectionExtends(t *testing.T) {
 }
 
 func TestCompute_SLAProjection(t *testing.T) {
-	history := make([]float64, 14)
+	history := make(ScoreHistory, 14)
 	for i := range history {
-		history[i] = 70 + float64(i)*0.1
+		history[i] = PostureScore(70 + float64(i)*0.1)
 	}
 	mttrHistory := map[policy.Severity][]float64{
 		policy.SeverityCritical: {48, 45, 42, 40, 38, 36, 34},

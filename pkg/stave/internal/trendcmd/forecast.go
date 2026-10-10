@@ -47,9 +47,9 @@ func ForecastPosture(ctx context.Context, cfg ForecastConfig) ([]byte, []string,
 		return a.Run.EvalTime.Compare(b.Run.EvalTime)
 	})
 
-	scoreHistory := make([]float64, len(assessments))
+	scoreHistory := make(forecast.ScoreHistory, len(assessments))
 	for i, a := range assessments {
-		scoreHistory[i] = computeForecastScore(a)
+		scoreHistory[i] = forecast.PostureScore(computeForecastScore(a))
 	}
 
 	mttrHistory := buildMTTRHistory(assessments)

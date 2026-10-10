@@ -43,12 +43,36 @@ func (fr FailureRate) IsClean() bool {
 	return fr == 0.0
 }
 
+// ConfidenceScore represents statistical confidence score in [0.0, 1.0].
+type ConfidenceScore float64
+
+// Value returns the raw float64 value.
+func (c ConfidenceScore) Value() float64 { return float64(c) }
+
+// Float64 returns the raw float64 value.
+func (c ConfidenceScore) Float64() float64 { return float64(c) }
+
+// Percentage returns the confidence score expressed as a percentage (between 0.0 and 100.0).
+func (c ConfidenceScore) Percentage() float64 {
+	return float64(c) * 100.0
+}
+
+// IsHigh reports whether the confidence score meets or exceeds the given threshold.
+func (c ConfidenceScore) IsHigh(threshold ConfidenceScore) bool {
+	return c >= threshold
+}
+
+// IsLow reports whether the confidence score is below 0.5.
+func (c ConfidenceScore) IsLow() bool {
+	return c < 0.5
+}
+
 // Classification describes the oscillation pattern for a control-asset pair.
 type Classification struct {
 	ControlID   kernel.ControlID `json:"control_id"`
 	AssetID     asset.ID         `json:"asset_id"`
 	Pattern     Pattern          `json:"pattern"`
-	Confidence  float64          `json:"confidence"`
+	Confidence  ConfidenceScore  `json:"confidence"`
 	FailureRate FailureRate      `json:"failure_rate"`
 	Cycles      int              `json:"cycles"`
 }
@@ -76,13 +100,13 @@ func (cs Classifications) FilterByPattern(p Pattern) Classifications {
 }
 
 // HighConfidence returns a new Classifications collection filtered by confidence threshold.
-func (cs Classifications) HighConfidence(minConfidence float64) Classifications {
+func (cs Classifications) HighConfidence(minConfidence ConfidenceScore) Classifications {
 	if len(cs) == 0 {
 		return nil
 	}
 	var filtered Classifications
 	for i := range cs {
-		if cs[i].Confidence >= minConfidence {
+		if cs[i].Confidence.IsHigh(minConfidence) {
 			filtered = append(filtered, cs[i])
 		}
 	}
@@ -153,15 +177,15 @@ func Classify(input Input) Classification {
 	}
 
 	pattern := PatternRandom
-	confidence := 0.5
+	confidence := ConfidenceScore(0.5)
 
 	switch {
 	case failureRate.IsChronic():
 		pattern = PatternChronic
-		confidence = failureRate.Value()
+		confidence = ConfidenceScore(failureRate.Value())
 	case cycles >= minOsc:
 		pattern = PatternDeployTime
-		confidence = float64(cycles) / float64(totalAssessments)
+		confidence = ConfidenceScore(float64(cycles) / float64(totalAssessments))
 		if confidence > 1 {
 			confidence = 1
 		}
