@@ -185,7 +185,7 @@ func Gate(ctx context.Context, cfg GateConfig) (*GateResult, error) {
 	}
 
 	req := infragate.EvaluateRequest{
-		Policy:            string(cfg.Policy),
+		Policy:            infragate.Policy(cfg.Policy),
 		EvaluationPath:    cfg.EvaluationPath,
 		BaselinePath:      cfg.BaselinePath,
 		ControlsDir:       cfg.ControlsDir,
