@@ -100,3 +100,42 @@ func TestFindingList_DomainMethods(t *testing.T) {
 		t.Errorf("ByControl(CTL.S3.ABSENT.001) len = %d, want 0", fl.ByControl("CTL.S3.ABSENT.001").Len())
 	}
 }
+
+func TestConfidenceScore_DomainMethods(t *testing.T) {
+	c := ConfidenceScore(0.85)
+	if c.Float64() != 0.85 {
+		t.Errorf("Float64() = %v, want 0.85", c.Float64())
+	}
+	if c.Percentage() != 85.0 {
+		t.Errorf("Percentage() = %v, want 85.0", c.Percentage())
+	}
+	if !c.IsHigh() {
+		t.Error("IsHigh() = false for 0.85, want true")
+	}
+	if c.IsLow() {
+		t.Error("IsLow() = true for 0.85, want false")
+	}
+	if !c.IsSufficient(0.8) {
+		t.Error("IsSufficient(0.8) = false for 0.85, want true")
+	}
+	if c.IsSufficient(0.9) {
+		t.Error("IsSufficient(0.9) = true for 0.85, want false")
+	}
+	if c.IsZero() {
+		t.Error("IsZero() = true for 0.85, want false")
+	}
+
+	low := ConfidenceScore(0.3)
+	if low.IsHigh() {
+		t.Error("IsHigh() = true for 0.3, want false")
+	}
+	if !low.IsLow() {
+		t.Error("IsLow() = false for 0.3, want true")
+	}
+
+	zero := ConfidenceScore(0)
+	if !zero.IsZero() {
+		t.Error("IsZero() = false for 0, want true")
+	}
+}
+

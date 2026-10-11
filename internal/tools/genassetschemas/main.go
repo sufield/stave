@@ -261,7 +261,7 @@ func inferType(r *policy.PredicateRule) string {
 		// which makes the field a SCALAR matched against a
 		// list — emitting array here was the original bug:
 		// the field's own type was being read off the list
-		// of allowed values. Returning "" is the honest
+		// of allowed values. Returning "" is the
 		// answer: we know the path exists, not its scalar
 		// shape.
 		return ""

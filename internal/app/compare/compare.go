@@ -36,12 +36,76 @@ type ProfileSummary struct {
 	Failing int    `json:"controls_failing"`
 }
 
+// DwellHours encapsulates finding dwell duration in fractional hours.
+type DwellHours float64
+
+// Float64 returns the raw float64 value in hours.
+func (d DwellHours) Float64() float64 {
+	return float64(d)
+}
+
+// Hours returns the dwell duration in hours.
+func (d DwellHours) Hours() float64 {
+	return float64(d)
+}
+
+// Duration converts dwell hours to a time.Duration.
+func (d DwellHours) Duration() time.Duration {
+	return time.Duration(float64(d) * float64(time.Hour))
+}
+
+// Days returns the duration in fractional calendar days.
+func (d DwellHours) Days() float64 {
+	return float64(d) / 24.0
+}
+
+// IsZero reports whether dwell hours is zero.
+func (d DwellHours) IsZero() bool {
+	return d == 0
+}
+
+// IsLongStanding reports whether finding remained unaddressed for threshold hours or longer.
+func (d DwellHours) IsLongStanding(thresholdHours float64) bool {
+	return float64(d) >= thresholdHours
+}
+
+// AdoptionPercentage represents framework adoption readiness percentage in [0.0, 100.0].
+type AdoptionPercentage float64
+
+// Float64 returns the raw float64 percentage value.
+func (a AdoptionPercentage) Float64() float64 {
+	return float64(a)
+}
+
+// Ratio returns the percentage expressed as a ratio between 0.0 and 1.0.
+func (a AdoptionPercentage) Ratio() float64 {
+	return float64(a) / 100.0
+}
+
+// IsComplete reports whether adoption has reached 100%.
+func (a AdoptionPercentage) IsComplete() bool {
+	return a >= 100.0
+}
+
+// Gap returns the percentage gap required to reach 100%.
+func (a AdoptionPercentage) Gap() float64 {
+	if a >= 100.0 {
+		return 0.0
+	}
+	return 100.0 - float64(a)
+}
+
+// IsAuditReady reports whether readiness meets or exceeds the standard threshold (90%).
+func (a AdoptionPercentage) IsAuditReady() bool {
+	return a >= 90.0
+}
+
 // AdoptionReadiness holds the marginal cost metrics.
 type AdoptionReadiness struct {
-	ReadinessPct     float64 `json:"readiness_pct"`
-	MarginalFindings int     `json:"marginal_findings"`
-	SharedViolations int     `json:"shared_violations"`
-	FreeCoverage     int     `json:"free_coverage"`
+	ReadinessPct     AdoptionPercentage `json:"readiness_pct"`
+	MarginalFindings int                `json:"marginal_findings"`
+	SharedViolations int                `json:"shared_violations"`
+	FreeCoverage     int                `json:"free_coverage"`
 }
 
 // RequirementIDs is a domain collection of policy.RequirementID items with query methods.
@@ -61,7 +125,7 @@ func (r RequirementIDs) Contains(target policy.RequirementID) bool {
 type CompareItem struct {
 	ControlID  kernel.ControlID `json:"control_id"`
 	Severity   policy.Severity  `json:"severity"`
-	DwellHours float64          `json:"dwell_hours,omitempty"`
+	DwellHours DwellHours       `json:"dwell_hours,omitempty"`
 	Baseline   RequirementIDs   `json:"satisfies_baseline,omitempty"`
 	Target     RequirementIDs   `json:"satisfies_target,omitempty"`
 }
@@ -167,7 +231,7 @@ func Analyze(input Input) *Result {
 		item := CompareItem{
 			ControlID:  cid,
 			Severity:   c.finding.ControlSeverity,
-			DwellHours: c.finding.DwellHours(),
+			DwellHours: DwellHours(c.finding.DwellHours()),
 		}
 		if c.inBaseline {
 			item.Baseline = extractCitations(c.finding.ControlCompliance, input.BaselineKey)
@@ -208,9 +272,9 @@ func Analyze(input Input) *Result {
 	// Readiness: controls in target that are not failing.
 	// Since we only see failures, we can't know passing count precisely.
 	// Readiness = 1 - (target_only_violations / target_total_estimated).
-	readinessPct := 100.0
+	readinessPct := AdoptionPercentage(100.0)
 	if targetTotal > 0 {
-		readinessPct = (1.0 - float64(len(targetOnly))/float64(targetTotal)) * 100
+		readinessPct = AdoptionPercentage((1.0 - float64(len(targetOnly))/float64(targetTotal)) * 100)
 	}
 
 	// Roadmap.

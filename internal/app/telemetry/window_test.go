@@ -53,3 +53,48 @@ func TestWindowTracker_WindowReopens(t *testing.T) {
 		t.Fatalf("unexpected reopened window_id: %s", wid2)
 	}
 }
+
+func TestWindowID_DomainMethods(t *testing.T) {
+	wid := WindowID("bucket-a/CTL.S3.001/2026-01-01T00:00:00Z")
+	if wid.String() != "bucket-a/CTL.S3.001/2026-01-01T00:00:00Z" {
+		t.Errorf("String() = %v", wid.String())
+	}
+	if wid.IsEmpty() {
+		t.Errorf("IsEmpty() = true, want false")
+	}
+
+	empty := WindowID("   ")
+	if !empty.IsEmpty() {
+		t.Errorf("empty.IsEmpty() = false, want true")
+	}
+}
+
+func TestClosedWindowIDs_DomainMethods(t *testing.T) {
+	ids := ClosedWindowIDs{"win-1", "win-2"}
+	if ids.Len() != 2 {
+		t.Errorf("Len() = %d, want 2", ids.Len())
+	}
+	if !ids.Contains("win-1") {
+		t.Errorf("Contains(win-1) = false, want true")
+	}
+	if ids.Contains("win-3") {
+		t.Errorf("Contains(win-3) = true, want false")
+	}
+}
+
+func TestUnsafeDurationDays_DomainMethods(t *testing.T) {
+	u := UnsafeDurationDays(5.5)
+	if u.Float64() != 5.5 {
+		t.Errorf("Float64() = %v, want 5.5", u.Float64())
+	}
+	if u.IsZero() {
+		t.Errorf("IsZero() = true, want false for 5.5")
+	}
+	if !UnsafeDurationDays(0).IsZero() {
+		t.Errorf("IsZero() = false, want true for 0")
+	}
+	if u.Duration() != time.Duration(5.5*float64(24*time.Hour)) {
+		t.Errorf("Duration() = %v, want %v", u.Duration(), time.Duration(5.5*float64(24*time.Hour)))
+	}
+}
+

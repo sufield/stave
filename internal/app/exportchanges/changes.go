@@ -12,13 +12,46 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
+// ConfidenceScore represents remediation confidence score in [0.0, 1.0].
+type ConfidenceScore float64
+
+// Float64 returns the raw float64 value.
+func (c ConfidenceScore) Float64() float64 {
+	return float64(c)
+}
+
+// Percentage returns the confidence score expressed as a percentage (between 0.0 and 100.0).
+func (c ConfidenceScore) Percentage() float64 {
+	return float64(c) * 100.0
+}
+
+// IsHigh reports whether the confidence score meets or exceeds 0.8.
+func (c ConfidenceScore) IsHigh() bool {
+	return c >= 0.8
+}
+
+// IsLow reports whether the confidence score is below 0.5.
+func (c ConfidenceScore) IsLow() bool {
+	return c < 0.5
+}
+
+// IsSufficient reports whether the confidence score meets or exceeds the required threshold.
+func (c ConfidenceScore) IsSufficient(threshold ConfidenceScore) bool {
+	return c >= threshold
+}
+
+// IsZero reports whether confidence score is zero.
+func (c ConfidenceScore) IsZero() bool {
+	return c == 0
+}
+
 // Change represents a single property change needed for remediation.
 type Change struct {
 	ControlID      kernel.ControlID `json:"control_id"`
 	AssetID        asset.ID         `json:"asset_id"`
 	AssetType      kernel.AssetType `json:"asset_type"`
 	Severity       policy.Severity  `json:"severity"`
-	Confidence     float64          `json:"confidence"`
+	Confidence     ConfidenceScore  `json:"confidence"`
 	PropertyPath   string           `json:"property_path"`
 	CurrentValue   any              `json:"current_value"`
 	RequiredValue  any              `json:"required_value"`
@@ -37,7 +70,7 @@ func (cs Changes) Len() int {
 }
 
 // FilterByMinConfidence returns a new Changes collection with items having at least minConfidence.
-func (cs Changes) FilterByMinConfidence(minConfidence float64) Changes {
+func (cs Changes) FilterByMinConfidence(minConfidence ConfidenceScore) Changes {
 	if len(cs) == 0 {
 		return nil
 	}
@@ -109,7 +142,7 @@ func (fl FindingList) ByControl(id kernel.ControlID) FindingList {
 // Input configures the export.
 type Input struct {
 	Findings      FindingList
-	MinConfidence float64
+	MinConfidence ConfidenceScore
 	GeneratedAt   string
 }
 
@@ -120,8 +153,8 @@ func Export(in Input) *Report {
 	for i := range in.Findings {
 		f := &in.Findings[i]
 		for _, pc := range f.RemediationSpec.Changes {
-			confidence := f.RemediationSpec.Confidence
-			if confidence < in.MinConfidence {
+			confidence := ConfidenceScore(f.RemediationSpec.Confidence)
+			if !confidence.IsSufficient(in.MinConfidence) {
 				continue
 			}
 

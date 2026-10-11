@@ -84,32 +84,55 @@ type Report struct {
 // them on any asset, but the analyzer cannot predict whether
 // they will produce findings.
 //
+// ForecastPercentage represents a bucket-share percentage between 0.0 and 100.0.
+type ForecastPercentage float64
+
+// Float64 returns the raw float64 percentage value.
+func (p ForecastPercentage) Float64() float64 {
+	return float64(p)
+}
+
+// Ratio returns the percentage expressed as a ratio between 0.0 and 1.0.
+func (p ForecastPercentage) Ratio() float64 {
+	return float64(p) / 100.0
+}
+
+// IsZero reports whether the percentage is zero.
+func (p ForecastPercentage) IsZero() bool {
+	return p == 0.0
+}
+
+// IsComplete reports whether the percentage represents 100% full coverage.
+func (p ForecastPercentage) IsComplete() bool {
+	return p >= 100.0
+}
+
 // The three *Pct fields are bucket-share-of-Total, scaled 0..100
 // (so 41.4 reads as 41.4%, not 0.414). They are derived from the
 // integer counts at Analyze time so JSON consumers can render
 // percentages without recomputing the math — and so the text
 // renderer can show the same numbers a JSON consumer sees.
 type ControlForecast struct {
-	Total            int     `json:"total"`
-	CanFire          int     `json:"can_fire"`
-	Blocked          int     `json:"blocked"`
-	Indeterminate    int     `json:"indeterminate"`
-	CanFirePct       float64 `json:"can_fire_pct"`
-	BlockedPct       float64 `json:"blocked_pct"`
-	IndeterminatePct float64 `json:"indeterminate_pct"`
+	Total            int                `json:"total"`
+	CanFire          int                `json:"can_fire"`
+	Blocked          int                `json:"blocked"`
+	Indeterminate    int                `json:"indeterminate"`
+	CanFirePct       ForecastPercentage `json:"can_fire_pct"`
+	BlockedPct       ForecastPercentage `json:"blocked_pct"`
+	IndeterminatePct ForecastPercentage `json:"indeterminate_pct"`
 }
 
 // ChainForecast classifies every chain. A chain can fire only
 // if every member control can fire — one blocked member breaks
 // the compound. *Pct fields use the same scale as ControlForecast.
 type ChainForecast struct {
-	Total            int     `json:"total"`
-	CanFire          int     `json:"can_fire"`
-	Blocked          int     `json:"blocked"`
-	Indeterminate    int     `json:"indeterminate"`
-	CanFirePct       float64 `json:"can_fire_pct"`
-	BlockedPct       float64 `json:"blocked_pct"`
-	IndeterminatePct float64 `json:"indeterminate_pct"`
+	Total            int                `json:"total"`
+	CanFire          int                `json:"can_fire"`
+	Blocked          int                `json:"blocked"`
+	Indeterminate    int                `json:"indeterminate"`
+	CanFirePct       ForecastPercentage `json:"can_fire_pct"`
+	BlockedPct       ForecastPercentage `json:"blocked_pct"`
+	IndeterminatePct ForecastPercentage `json:"indeterminate_pct"`
 }
 
 // Action is one unblocking step the operator can take. Ordered

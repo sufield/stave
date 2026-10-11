@@ -333,9 +333,9 @@ func (c *ControlForecast) canFireCount() int       { return c.CanFire }
 func (c *ControlForecast) blockedCount() int       { return c.Blocked }
 func (c *ControlForecast) indeterminateCount() int { return c.Indeterminate }
 func (c *ControlForecast) setPct(canFire, blocked, indet float64) {
-	c.CanFirePct = canFire
-	c.BlockedPct = blocked
-	c.IndeterminatePct = indet
+	c.CanFirePct = ForecastPercentage(canFire)
+	c.BlockedPct = ForecastPercentage(blocked)
+	c.IndeterminatePct = ForecastPercentage(indet)
 }
 
 func (c *ChainForecast) totalCount() int         { return c.Total }
@@ -343,9 +343,9 @@ func (c *ChainForecast) canFireCount() int       { return c.CanFire }
 func (c *ChainForecast) blockedCount() int       { return c.Blocked }
 func (c *ChainForecast) indeterminateCount() int { return c.Indeterminate }
 func (c *ChainForecast) setPct(canFire, blocked, indet float64) {
-	c.CanFirePct = canFire
-	c.BlockedPct = blocked
-	c.IndeterminatePct = indet
+	c.CanFirePct = ForecastPercentage(canFire)
+	c.BlockedPct = ForecastPercentage(blocked)
+	c.IndeterminatePct = ForecastPercentage(indet)
 }
 
 func indexControls(controls []policy.ControlDefinition) map[kernel.ControlID]*policy.ControlDefinition {

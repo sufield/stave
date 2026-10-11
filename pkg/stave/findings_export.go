@@ -94,7 +94,7 @@ func ExportChanges(assessmentData []byte, minConfidence float64, now time.Time) 
 	}
 	report := exportchanges.Export(exportchanges.Input{
 		Findings:      findings,
-		MinConfidence: minConfidence,
+		MinConfidence: exportchanges.ConfidenceScore(minConfidence),
 		GeneratedAt:   now.Format(time.RFC3339),
 	})
 	var buf bytes.Buffer

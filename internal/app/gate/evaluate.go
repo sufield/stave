@@ -8,9 +8,52 @@ import (
 	"github.com/sufield/stave/internal/core/ports"
 )
 
+// Policy represents a CI gate failure policy rule.
+type Policy string
+
+const (
+	PolicyAny     Policy = "fail_on_any_violation"
+	PolicyNew     Policy = "fail_on_new_violation"
+	PolicyOverdue Policy = "fail_on_overdue_upcoming"
+
+	policyAny     = PolicyAny
+	policyNew     = PolicyNew
+	policyOverdue = PolicyOverdue
+)
+
+// String returns the raw string value of the policy.
+func (p Policy) String() string {
+	return string(p)
+}
+
+// IsValid reports whether the policy is a recognized gate policy.
+func (p Policy) IsValid() bool {
+	switch p {
+	case PolicyAny, PolicyNew, PolicyOverdue:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsAny reports whether the policy fails on any violation.
+func (p Policy) IsAny() bool {
+	return p == PolicyAny
+}
+
+// IsNew reports whether the policy fails on new violations compared to baseline.
+func (p Policy) IsNew() bool {
+	return p == PolicyNew
+}
+
+// IsOverdue reports whether the policy fails on overdue upcoming actions.
+func (p Policy) IsOverdue() bool {
+	return p == PolicyOverdue
+}
+
 // EvaluateRequest is the input for the CI gate evaluation.
 type EvaluateRequest struct {
-	Policy            string        `json:"policy"`
+	Policy            Policy        `json:"policy"`
 	EvaluationPath    string        `json:"evaluation_path,omitempty"`
 	BaselinePath      string        `json:"baseline_path,omitempty"`
 	ControlsDir       string        `json:"controls_dir,omitempty"`
@@ -21,7 +64,7 @@ type EvaluateRequest struct {
 
 // EvaluateResponse is the output of the CI gate evaluation.
 type EvaluateResponse struct {
-	Policy            string    `json:"policy"`
+	Policy            Policy    `json:"policy"`
 	Passed            bool      `json:"pass"`
 	Reason            string    `json:"reason"`
 	CheckedAt         time.Time `json:"checked_at"`
@@ -56,12 +99,6 @@ type EvaluateDeps struct {
 	OverdueCounter   OverdueCounterPort
 	Clock            ports.Clock
 }
-
-const (
-	policyAny     = "fail_on_any_violation"
-	policyNew     = "fail_on_new_violation"
-	policyOverdue = "fail_on_overdue_upcoming"
-)
 
 // Evaluate enforces a CI failure policy and returns the gate result.
 func Evaluate(ctx context.Context, req EvaluateRequest, deps EvaluateDeps) (EvaluateResponse, error) {

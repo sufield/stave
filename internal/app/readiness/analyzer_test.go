@@ -352,7 +352,7 @@ func TestAnalyze_EmptyForecast_NoPercentageDivisionByZero(t *testing.T) {
 	r := Analyze(nil, nil, nil, 0)
 	if r.Controls.CanFirePct != 0 || r.Controls.BlockedPct != 0 || r.Controls.IndeterminatePct != 0 {
 		t.Errorf("empty forecast must have zero percentages; got %v",
-			[]float64{r.Controls.CanFirePct, r.Controls.BlockedPct, r.Controls.IndeterminatePct})
+			[]float64{r.Controls.CanFirePct.Float64(), r.Controls.BlockedPct.Float64(), r.Controls.IndeterminatePct.Float64()})
 	}
 }
 
@@ -390,5 +390,28 @@ func TestReadinessScore_DomainMethods(t *testing.T) {
 	}
 	if !ReadinessScore(0.0).IsZero() {
 		t.Error("IsZero() = false, want true for 0.0")
+	}
+}
+
+func TestForecastPercentage_DomainMethods(t *testing.T) {
+	fp := ForecastPercentage(45.5)
+
+	if fp.Float64() != 45.5 {
+		t.Errorf("Float64() = %v, want 45.5", fp.Float64())
+	}
+	if fp.Ratio() != 0.455 {
+		t.Errorf("Ratio() = %v, want 0.455", fp.Ratio())
+	}
+	if fp.IsZero() {
+		t.Errorf("IsZero() = true, want false for 45.5")
+	}
+	if !ForecastPercentage(0).IsZero() {
+		t.Errorf("IsZero() = false, want true for 0")
+	}
+	if fp.IsComplete() {
+		t.Errorf("IsComplete() = true, want false for 45.5")
+	}
+	if !ForecastPercentage(100.0).IsComplete() {
+		t.Errorf("IsComplete() = false, want true for 100.0")
 	}
 }

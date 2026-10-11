@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/sufield/stave/internal/app/teams"
@@ -31,6 +32,42 @@ const (
 	PatternChronic Pattern = "chronic"
 )
 
+// DwellDays encapsulates finding dwell duration in fractional calendar days.
+type DwellDays float64
+
+// Float64 returns the raw float64 value in days.
+func (d DwellDays) Float64() float64 {
+	return float64(d)
+}
+
+// DaysInt returns the integer number of days.
+func (d DwellDays) DaysInt() int {
+	return int(d)
+}
+
+// IsLongStanding reports whether finding remained unaddressed for threshold days or longer.
+func (d DwellDays) IsLongStanding(threshold float64) bool {
+	return float64(d) >= threshold
+}
+
+// Duration converts dwell days to a time.Duration.
+func (d DwellDays) Duration() time.Duration {
+	return time.Duration(float64(d) * float64(24*time.Hour))
+}
+
+// ExemptCommand encapsulates the CLI command string to acknowledge or exempt a finding.
+type ExemptCommand string
+
+// String returns the raw string value of the command.
+func (cmd ExemptCommand) String() string {
+	return string(cmd)
+}
+
+// IsEmpty reports whether the command is empty.
+func (cmd ExemptCommand) IsEmpty() bool {
+	return strings.TrimSpace(string(cmd)) == ""
+}
+
 // Candidate is a finding that needs a governance decision.
 type Candidate struct {
 	ControlID   kernel.ControlID `json:"control_id"`
@@ -38,10 +75,10 @@ type Candidate struct {
 	AssetType   kernel.AssetType `json:"asset_type,omitempty"`
 	Severity    policy.Severity  `json:"severity"`
 	Pattern     Pattern          `json:"pattern"`
-	DwellDays   float64          `json:"dwell_days"`
+	DwellDays   DwellDays        `json:"dwell_days"`
 	Cycles      int              `json:"cycles,omitempty"`
 	OwnerTeamID teams.TeamID     `json:"owner_team_id,omitempty"`
-	ExemptCmd   string           `json:"exempt_command"`
+	ExemptCmd   ExemptCommand    `json:"exempt_command"`
 }
 
 // Candidates is a domain collection of Candidate items with querying and filtering methods.
@@ -233,13 +270,13 @@ func Suggest(in Input) *Result {
 			continue
 		}
 
-		dwellDays := in.EvalTime.Sub(m.firstSeen).Hours() / 24
+		dwellDays := DwellDays(in.EvalTime.Sub(m.firstSeen).Hours() / 24)
 
 		// Count oscillation cycles (gaps where finding disappeared then returned).
 		cycles := countCycles(m.appearances)
 
-		cmd := fmt.Sprintf("stave exempt acknowledge --control-id %s --asset-id %s --reason \"<reason>\" --approver \"<approver>\" --expires %s",
-			k.ControlID, k.AssetID, in.EvalTime.AddDate(0, 0, 30).Format("2006-01-02"))
+		cmd := ExemptCommand(fmt.Sprintf("stave exempt acknowledge --control-id %s --asset-id %s --reason \"<reason>\" --approver \"<approver>\" --expires %s",
+			k.ControlID, k.AssetID, in.EvalTime.AddDate(0, 0, 30).Format("2006-01-02")))
 
 		if cycles >= 2 {
 			oscillating = append(oscillating, Candidate{
@@ -257,7 +294,7 @@ func Suggest(in Input) *Result {
 		}
 
 		// Chronic: open longer than min-dwell threshold.
-		if dwellDays >= in.MinDwell.Hours()/24 {
+		if dwellDays.IsLongStanding(in.MinDwell.Hours() / 24) {
 			chronic = append(chronic, Candidate{
 				ControlID:   k.ControlID,
 				AssetID:     k.AssetID,

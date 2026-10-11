@@ -49,7 +49,7 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 			e.EnvironmentalScore = &score
 		}
 		if dwell := f.DwellDays(); dwell > 0 {
-			e.UnsafeDurationDays = dwell
+			e.UnsafeDurationDays = UnsafeDurationDays(dwell)
 		}
 		for _, cm := range f.ChainMembership {
 			e.CompoundChains = append(e.CompoundChains, cm.ChainID)

@@ -200,3 +200,37 @@ func TestCandidates_CollectionMethods(t *testing.T) {
 		t.Errorf("ByOwner len = %d, want 2", cs.ByOwner("team-a").Len())
 	}
 }
+
+func TestDwellDays_DomainMethods(t *testing.T) {
+	d := DwellDays(14.5)
+	if d.Float64() != 14.5 {
+		t.Errorf("Float64() = %v, want 14.5", d.Float64())
+	}
+	if d.DaysInt() != 14 {
+		t.Errorf("DaysInt() = %v, want 14", d.DaysInt())
+	}
+	if !d.IsLongStanding(14.0) {
+		t.Errorf("IsLongStanding(14.0) = false, want true")
+	}
+	if d.IsLongStanding(15.0) {
+		t.Errorf("IsLongStanding(15.0) = true, want false")
+	}
+	if d.Duration() != time.Duration(14.5*float64(24*time.Hour)) {
+		t.Errorf("Duration() = %v, want %v", d.Duration(), time.Duration(14.5*float64(24*time.Hour)))
+	}
+}
+
+func TestExemptCommand_DomainMethods(t *testing.T) {
+	cmd := ExemptCommand("stave exempt acknowledge")
+	if cmd.String() != "stave exempt acknowledge" {
+		t.Errorf("String() = %v, want stave exempt acknowledge", cmd.String())
+	}
+	if cmd.IsEmpty() {
+		t.Errorf("IsEmpty() = true, want false")
+	}
+
+	empty := ExemptCommand("   ")
+	if !empty.IsEmpty() {
+		t.Errorf("empty.IsEmpty() = false, want true")
+	}
+}

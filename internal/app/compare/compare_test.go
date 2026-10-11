@@ -2,6 +2,7 @@ package compare
 
 import (
 	"testing"
+	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
@@ -172,3 +173,62 @@ func TestControlIDs_DomainMethods(t *testing.T) {
 		t.Error("Contains(CTL.C.003) = true, want false")
 	}
 }
+
+func TestDwellHours_DomainMethods(t *testing.T) {
+	dh := DwellHours(48.0)
+	if dh.Float64() != 48.0 {
+		t.Errorf("Float64() = %v, want 48.0", dh.Float64())
+	}
+	if dh.Hours() != 48.0 {
+		t.Errorf("Hours() = %v, want 48.0", dh.Hours())
+	}
+	if dh.Days() != 2.0 {
+		t.Errorf("Days() = %v, want 2.0", dh.Days())
+	}
+	if dh.Duration() != 48*time.Hour {
+		t.Errorf("Duration() = %v, want %v", dh.Duration(), 48*time.Hour)
+	}
+	if dh.IsZero() {
+		t.Error("IsZero() = true for 48.0, want false")
+	}
+	if !DwellHours(0).IsZero() {
+		t.Error("IsZero() = false for 0, want true")
+	}
+	if !dh.IsLongStanding(24.0) {
+		t.Error("IsLongStanding(24.0) = false, want true")
+	}
+	if dh.IsLongStanding(72.0) {
+		t.Error("IsLongStanding(72.0) = true, want false")
+	}
+}
+
+func TestAdoptionPercentage_DomainMethods(t *testing.T) {
+	ap := AdoptionPercentage(85.0)
+	if ap.Float64() != 85.0 {
+		t.Errorf("Float64() = %v, want 85.0", ap.Float64())
+	}
+	if ap.Ratio() != 0.85 {
+		t.Errorf("Ratio() = %v, want 0.85", ap.Ratio())
+	}
+	if ap.IsComplete() {
+		t.Error("IsComplete() = true for 85.0, want false")
+	}
+	if ap.Gap() != 15.0 {
+		t.Errorf("Gap() = %v, want 15.0", ap.Gap())
+	}
+	if ap.IsAuditReady() {
+		t.Error("IsAuditReady() = true for 85.0, want false")
+	}
+
+	full := AdoptionPercentage(100.0)
+	if !full.IsComplete() {
+		t.Error("IsComplete() = false for 100.0, want true")
+	}
+	if full.Gap() != 0.0 {
+		t.Errorf("Gap() = %v, want 0.0", full.Gap())
+	}
+	if !full.IsAuditReady() {
+		t.Error("IsAuditReady() = false for 100.0, want true")
+	}
+}
+
