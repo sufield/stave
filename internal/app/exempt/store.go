@@ -75,6 +75,54 @@ func (a *AcknowledgmentEntry) IsInactive() bool {
 	return a != nil && (a.IsRevoked() || a.IsExpired())
 }
 
+// DaysRemaining represents the whole number of calendar days remaining until
+// an exemption expires. Negative values indicate that the exemption has expired.
+type DaysRemaining int
+
+// Int returns the raw integer number of days remaining.
+func (d DaysRemaining) Int() int {
+	return int(d)
+}
+
+// IsExpired reports whether the exemption has already lapsed (days < 0).
+func (d DaysRemaining) IsExpired() bool {
+	return d < 0
+}
+
+// IsExpiringSoon reports whether the exemption expires within 30 days (0 <= days <= 30).
+func (d DaysRemaining) IsExpiringSoon() bool {
+	return d >= 0 && d <= 30
+}
+
+// IsExpiring60d reports whether the exemption expires within 31 to 60 days (30 < days <= 60).
+func (d DaysRemaining) IsExpiring60d() bool {
+	return d > 30 && d <= 60
+}
+
+// IsActive reports whether the exemption has more than 60 days remaining (days > 60).
+func (d DaysRemaining) IsActive() bool {
+	return d > 60
+}
+
+// Duration returns the remaining time as a time.Duration.
+func (d DaysRemaining) Duration() time.Duration {
+	return time.Duration(d) * 24 * time.Hour
+}
+
+// Classification returns the ExpiryClass corresponding to this remaining duration.
+func (d DaysRemaining) Classification() ExpiryClass {
+	switch {
+	case d.IsExpired():
+		return ExpiryClassExpired
+	case d.IsExpiringSoon():
+		return ExpiryClassExpiringSoon
+	case d.IsExpiring60d():
+		return ExpiryClassExpiring60d
+	default:
+		return ExpiryClassActive
+	}
+}
+
 // DaysRemaining parses the entry's ExpiryDate (YYYY-MM-DD) and
 // returns the number of whole days from now until expiry. Negative
 // values indicate the entry has already lapsed. Returns (0, false)
@@ -83,7 +131,7 @@ func (a *AcknowledgmentEntry) IsInactive() bool {
 //
 // Replaces the inline time.Parse + Hours()/24 arithmetic in
 // internal/app/exempt/status.go's ComputeStatus loop.
-func (a *AcknowledgmentEntry) DaysRemaining(now time.Time) (int, bool) {
+func (a *AcknowledgmentEntry) DaysRemaining(now time.Time) (DaysRemaining, bool) {
 	if a == nil || a.ExpiryDate == "" {
 		return 0, false
 	}
@@ -99,7 +147,7 @@ func (a *AcknowledgmentEntry) DaysRemaining(now time.Time) (int, bool) {
 	// "expired" — `int()` truncates toward zero for negative floats.
 	expiryDay := expiry.Truncate(24 * time.Hour)
 	nowDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	return int(expiryDay.Sub(nowDay).Hours() / 24), true
+	return DaysRemaining(expiryDay.Sub(nowDay).Hours() / 24), true
 }
 
 // ExpiryClass represents the lifetime classification of an exemption entry.
@@ -135,16 +183,7 @@ func (a *AcknowledgmentEntry) ExpiryClassification(now time.Time) ExpiryClass {
 	if !ok {
 		return ExpiryClassNone
 	}
-	switch {
-	case days < 0:
-		return ExpiryClassExpired
-	case days <= 30:
-		return ExpiryClassExpiringSoon
-	case days <= 60:
-		return ExpiryClassExpiring60d
-	default:
-		return ExpiryClassActive
-	}
+	return days.Classification()
 }
 
 // IsExportable reports whether the acknowledgment should appear in

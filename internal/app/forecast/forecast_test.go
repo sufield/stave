@@ -151,3 +151,58 @@ func TestHorizonDays_DomainMethods(t *testing.T) {
 		t.Error("IsValid() = true, want false for -5 days")
 	}
 }
+
+func TestMTTRHours_DomainMethods(t *testing.T) {
+	m := MTTRHours(48.0)
+	if m.Float64() != 48.0 {
+		t.Errorf("Float64() = %v, want 48.0", m.Float64())
+	}
+	if m.Days() != 2.0 {
+		t.Errorf("Days() = %v, want 2.0", m.Days())
+	}
+	if m.Duration() != 48*time.Hour {
+		t.Errorf("Duration() = %v, want %v", m.Duration(), 48*time.Hour)
+	}
+	if m.IsZero() {
+		t.Error("IsZero() = true for 48.0, want false")
+	}
+	if !MTTRHours(0).IsZero() {
+		t.Error("IsZero() = false for 0, want true")
+	}
+	if !m.IsWithinDeadline(72.0) {
+		t.Error("IsWithinDeadline(72.0) = false, want true")
+	}
+	if m.IsWithinDeadline(24.0) {
+		t.Error("IsWithinDeadline(24.0) = true, want false")
+	}
+}
+
+func TestScoreSlope_DomainMethods(t *testing.T) {
+	pos := ScoreSlope(0.25)
+	if pos.Float64() != 0.25 {
+		t.Errorf("Float64() = %v, want 0.25", pos.Float64())
+	}
+	if !pos.IsImproving() {
+		t.Error("IsImproving() = false for 0.25, want true")
+	}
+	if pos.IsDeclining() || pos.IsFlat() {
+		t.Error("pos should only be IsImproving")
+	}
+
+	neg := ScoreSlope(-0.15)
+	if !neg.IsDeclining() {
+		t.Error("IsDeclining() = false for -0.15, want true")
+	}
+	if neg.IsImproving() || neg.IsFlat() {
+		t.Error("neg should only be IsDeclining")
+	}
+
+	flat := ScoreSlope(0)
+	if !flat.IsFlat() {
+		t.Error("IsFlat() = false for 0, want true")
+	}
+	if flat.IsImproving() || flat.IsDeclining() {
+		t.Error("flat should only be IsFlat")
+	}
+}
+

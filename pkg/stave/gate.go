@@ -25,15 +25,15 @@ type GatePolicy string
 // strings — passed through gate.Evaluate untouched.
 const (
 	// GateFailOnAnyViolation fails when the evaluation has any findings.
-	GateFailOnAnyViolation GatePolicy = "fail_on_any_violation"
+	GateFailOnAnyViolation GatePolicy = GatePolicy(infragate.PolicyAny)
 
 	// GateFailOnNewViolation fails when current findings include any
 	// not present in the baseline.
-	GateFailOnNewViolation GatePolicy = "fail_on_new_violation"
+	GateFailOnNewViolation GatePolicy = GatePolicy(infragate.PolicyNew)
 
 	// GateFailOnOverdueUpcoming fails when the controls + observations
 	// would surface any upcoming actions whose deadline has passed.
-	GateFailOnOverdueUpcoming GatePolicy = "fail_on_overdue_upcoming"
+	GateFailOnOverdueUpcoming GatePolicy = GatePolicy(infragate.PolicyOverdue)
 )
 
 // GateConfig parameterizes a [Gate] call.

@@ -434,7 +434,114 @@ func TestDaysRemaining_SameDayInLocalTimezoneWithNegativeOffset(t *testing.T) {
 	if !ok {
 		t.Fatal("expected ok to be true")
 	}
-	if days != 1 {
+	if days.Int() != 1 {
 		t.Errorf("expected 1 day remaining, got %d", days)
+	}
+}
+
+func TestDaysRemaining_DomainMethods(t *testing.T) {
+	tests := []struct {
+		name          string
+		days          DaysRemaining
+		intVal        int
+		isExpired     bool
+		isSoon        bool
+		is60d         bool
+		isActive      bool
+		wantClass     ExpiryClass
+		wantDuration  time.Duration
+	}{
+		{
+			name:         "negative days (expired)",
+			days:         DaysRemaining(-5),
+			intVal:       -5,
+			isExpired:    true,
+			isSoon:       false,
+			is60d:        false,
+			isActive:     false,
+			wantClass:    ExpiryClassExpired,
+			wantDuration: -5 * 24 * time.Hour,
+		},
+		{
+			name:         "zero days (expiring today / soon)",
+			days:         DaysRemaining(0),
+			intVal:       0,
+			isExpired:    false,
+			isSoon:       true,
+			is60d:        false,
+			isActive:     false,
+			wantClass:    ExpiryClassExpiringSoon,
+			wantDuration: 0,
+		},
+		{
+			name:         "30 days boundary (expiring soon)",
+			days:         DaysRemaining(30),
+			intVal:       30,
+			isExpired:    false,
+			isSoon:       true,
+			is60d:        false,
+			isActive:     false,
+			wantClass:    ExpiryClassExpiringSoon,
+			wantDuration: 30 * 24 * time.Hour,
+		},
+		{
+			name:         "31 days (expiring 60d)",
+			days:         DaysRemaining(31),
+			intVal:       31,
+			isExpired:    false,
+			isSoon:       false,
+			is60d:        true,
+			isActive:     false,
+			wantClass:    ExpiryClassExpiring60d,
+			wantDuration: 31 * 24 * time.Hour,
+		},
+		{
+			name:         "60 days boundary (expiring 60d)",
+			days:         DaysRemaining(60),
+			intVal:       60,
+			isExpired:    false,
+			isSoon:       false,
+			is60d:        true,
+			isActive:     false,
+			wantClass:    ExpiryClassExpiring60d,
+			wantDuration: 60 * 24 * time.Hour,
+		},
+		{
+			name:         "61 days (active)",
+			days:         DaysRemaining(61),
+			intVal:       61,
+			isExpired:    false,
+			isSoon:       false,
+			is60d:        false,
+			isActive:     true,
+			wantClass:    ExpiryClassActive,
+			wantDuration: 61 * 24 * time.Hour,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.days.Int() != tc.intVal {
+				t.Errorf("Int() = %d, want %d", tc.days.Int(), tc.intVal)
+			}
+			if tc.days.IsExpired() != tc.isExpired {
+				t.Errorf("IsExpired() = %v, want %v", tc.days.IsExpired(), tc.isExpired)
+			}
+			if tc.days.IsExpiringSoon() != tc.isSoon {
+				t.Errorf("IsExpiringSoon() = %v, want %v", tc.days.IsExpiringSoon(), tc.isSoon)
+			}
+			if tc.days.IsExpiring60d() != tc.is60d {
+				t.Errorf("IsExpiring60d() = %v, want %v", tc.days.IsExpiring60d(), tc.is60d)
+			}
+			if tc.days.IsActive() != tc.isActive {
+				t.Errorf("IsActive() = %v, want %v", tc.days.IsActive(), tc.isActive)
+			}
+			if tc.days.Classification() != tc.wantClass {
+				t.Errorf("Classification() = %v, want %v", tc.days.Classification(), tc.wantClass)
+			}
+			if tc.days.Duration() != tc.wantDuration {
+				t.Errorf("Duration() = %v, want %v", tc.days.Duration(), tc.wantDuration)
+			}
+		})
 	}
 }

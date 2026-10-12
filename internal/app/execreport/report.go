@@ -5,6 +5,7 @@ package execreport
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	appscore "github.com/sufield/stave/internal/app/score"
 	"github.com/sufield/stave/internal/app/teams"
@@ -93,6 +94,67 @@ type SLASev struct {
 	Pct      float64 `json:"pct"`
 }
 
+// DwellHours encapsulates finding dwell duration in fractional hours.
+type DwellHours float64
+
+// Float64 returns the raw float64 value in hours.
+func (d DwellHours) Float64() float64 {
+	return float64(d)
+}
+
+// Hours returns the dwell duration in hours.
+func (d DwellHours) Hours() float64 {
+	return float64(d)
+}
+
+// Duration converts dwell hours to a time.Duration.
+func (d DwellHours) Duration() time.Duration {
+	return time.Duration(float64(d) * float64(time.Hour))
+}
+
+// Days returns the duration in fractional calendar days.
+func (d DwellHours) Days() float64 {
+	return float64(d) / 24.0
+}
+
+// IsZero reports whether dwell hours is zero.
+func (d DwellHours) IsZero() bool {
+	return d == 0
+}
+
+// IsLongStanding reports whether finding remained unaddressed for threshold hours or longer.
+func (d DwellHours) IsLongStanding(thresholdHours float64) bool {
+	return float64(d) >= thresholdHours
+}
+
+// SLABurnRate encapsulates the rate of SLA consumption (dwell hours / deadline hours).
+type SLABurnRate float64
+
+// Float64 returns the raw float64 value.
+func (r SLABurnRate) Float64() float64 {
+	return float64(r)
+}
+
+// Percentage returns the burn rate expressed as a percentage of deadline.
+func (r SLABurnRate) Percentage() float64 {
+	return float64(r) * 100.0
+}
+
+// IsBreached reports whether the burn rate meets or exceeds 1.0 (deadline passed).
+func (r SLABurnRate) IsBreached() bool {
+	return r >= 1.0
+}
+
+// IsWarning reports whether the burn rate has consumed at least 75% of deadline.
+func (r SLABurnRate) IsWarning() bool {
+	return r >= 0.75
+}
+
+// IsZero reports whether the burn rate is zero.
+func (r SLABurnRate) IsZero() bool {
+	return r == 0
+}
+
 // TopFinding is a ranked finding for the report.
 type TopFinding struct {
 	Rank              int                          `json:"rank"`
@@ -100,8 +162,8 @@ type TopFinding struct {
 	Severity          policy.Severity              `json:"severity"`
 	AssetID           asset.ID                     `json:"asset_id,omitempty"`
 	Team              string                       `json:"team,omitempty"`
-	DwellHours        float64                      `json:"dwell_hours"`
-	SLABurnRate       float64                      `json:"sla_burn_rate,omitempty"`
+	DwellHours        DwellHours                   `json:"dwell_hours"`
+	SLABurnRate       SLABurnRate                  `json:"sla_burn_rate,omitempty"`
 	SLABreached       bool                         `json:"sla_breached,omitempty"`
 	RemediationAction string                       `json:"remediation_action,omitempty"`
 	Frameworks        []policy.ComplianceFramework `json:"compliance_frameworks,omitempty"`

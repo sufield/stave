@@ -116,11 +116,11 @@ func buildTopFindings(a *corereport.Assessment, n int) []TopFinding {
 			ControlID:   f.ControlID,
 			Severity:    f.ControlSeverity,
 			AssetID:     f.AssetID,
-			DwellHours:  f.DwellHours(),
+			DwellHours:  DwellHours(f.DwellHours()),
 			SLABreached: f.IsAnyBreach(),
 		}
 		if dl, ok := f.SLADeadlineValue(); ok && dl > 0 {
-			tf.SLABurnRate = f.DwellHours() / dl
+			tf.SLABurnRate = SLABurnRate(f.DwellHours() / dl)
 		}
 		result = append(result, tf)
 	}

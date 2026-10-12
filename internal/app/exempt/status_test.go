@@ -54,8 +54,8 @@ func TestComputeStatus_ResolvedFinding(t *testing.T) {
 
 func TestExpiryAndResolvedItems_DomainMethods(t *testing.T) {
 	expiring := ExpiryItems{
-		{ControlID: "CTL.A.001", AssetID: "asset-1"},
-		{ControlID: "CTL.B.002", AssetID: "asset-2"},
+		{ControlID: "CTL.A.001", AssetID: "asset-1", DaysRemaining: DaysRemaining(10)},
+		{ControlID: "CTL.B.002", AssetID: "asset-2", DaysRemaining: DaysRemaining(-3)},
 	}
 	if expiring.Len() != 2 {
 		t.Errorf("expiring.Len() = %d, want 2", expiring.Len())
@@ -63,9 +63,16 @@ func TestExpiryAndResolvedItems_DomainMethods(t *testing.T) {
 	if expiring.ByControl("CTL.A.001").Len() != 1 {
 		t.Errorf("ByControl(CTL.A.001) = %d, want 1", expiring.ByControl("CTL.A.001").Len())
 	}
+	if expiring.Expired().Len() != 1 {
+		t.Errorf("expiring.Expired().Len() = %d, want 1", expiring.Expired().Len())
+	}
+	if expiring.ExpiringSoon().Len() != 1 {
+		t.Errorf("expiring.ExpiringSoon().Len() = %d, want 1", expiring.ExpiringSoon().Len())
+	}
 
 	var emptyExpiring ExpiryItems
-	if emptyExpiring.Len() != 0 || emptyExpiring.ByControl("CTL.A.001") != nil {
+	if emptyExpiring.Len() != 0 || emptyExpiring.ByControl("CTL.A.001") != nil ||
+		emptyExpiring.Expired() != nil || emptyExpiring.ExpiringSoon() != nil {
 		t.Errorf("emptyExpiring methods failed")
 	}
 

@@ -88,21 +88,45 @@ func (p PostureScore) IsPassing() bool {
 	return p >= 80.0
 }
 
+// MTTRHours encapsulates mean-time-to-remediate measured in fractional hours.
+type MTTRHours float64
+
+// Float64 returns the raw float64 hours value.
+func (m MTTRHours) Float64() float64 { return float64(m) }
+
+// Duration converts MTTR hours to a time.Duration.
+func (m MTTRHours) Duration() time.Duration {
+	return time.Duration(float64(m) * float64(time.Hour))
+}
+
+// Days returns MTTR measured in fractional calendar days.
+func (m MTTRHours) Days() float64 {
+	return float64(m) / 24.0
+}
+
+// IsZero reports whether MTTR hours is zero.
+func (m MTTRHours) IsZero() bool { return m == 0 }
+
+// IsWithinDeadline reports whether MTTR satisfies the deadline.
+func (m MTTRHours) IsWithinDeadline(deadline MTTRHours) bool {
+	return m <= deadline
+}
+
 // CurrentState holds current metrics.
 type CurrentState struct {
 	PostureScore      PostureScore  `json:"posture_score"`
 	OpenFindings      int           `json:"open_findings"`
 	MTTRCritical      time.Duration `json:"-"`
 	MTTRHigh          time.Duration `json:"-"`
-	MTTRCriticalHours float64       `json:"mttr_critical_hours"`
-	MTTRHighHours     float64       `json:"mttr_high_hours"`
+	MTTRCriticalHours MTTRHours     `json:"mttr_critical_hours"`
+	MTTRHighHours     MTTRHours     `json:"mttr_high_hours"`
 }
 
 // SetMTTRCritical sets both the time.Duration and float64 hours representation.
 func (c *CurrentState) SetMTTRCritical(d time.Duration) {
 	if c != nil {
 		c.MTTRCritical = d
-		c.MTTRCriticalHours = d.Hours()
+		c.MTTRCriticalHours = MTTRHours(d.Hours())
 	}
 }
 
@@ -110,7 +134,7 @@ func (c *CurrentState) SetMTTRCritical(d time.Duration) {
 func (c *CurrentState) SetMTTRHigh(d time.Duration) {
 	if c != nil {
 		c.MTTRHigh = d
-		c.MTTRHighHours = d.Hours()
+		c.MTTRHighHours = MTTRHours(d.Hours())
 	}
 }
 
@@ -137,11 +161,26 @@ func (h HorizonDays) IsValid() bool {
 	return h >= 0
 }
 
+// ScoreSlope encapsulates the daily trajectory slope in score points per day.
+type ScoreSlope float64
+
+// Float64 returns the raw float64 value.
+func (s ScoreSlope) Float64() float64 { return float64(s) }
+
+// IsImproving reports whether the score trend is positive.
+func (s ScoreSlope) IsImproving() bool { return s > 0 }
+
+// IsDeclining reports whether the score trend is negative.
+func (s ScoreSlope) IsDeclining() bool { return s < 0 }
+
+// IsFlat reports whether the score trend is zero.
+func (s ScoreSlope) IsFlat() bool { return s == 0 }
+
 // ProjectedState holds projected metrics.
 type ProjectedState struct {
 	HorizonDays  HorizonDays  `json:"horizon_days"`
 	PostureScore PostureScore `json:"posture_score"`
-	ScoreSlope   float64      `json:"score_slope_per_day"`
+	ScoreSlope   ScoreSlope   `json:"score_slope_per_day"`
 }
 
 // SLAStatus classifies the SLA projection status.
@@ -160,9 +199,9 @@ const (
 // SLAProjection holds SLA forecast per severity.
 type SLAProjection struct {
 	Severity      policy.Severity `json:"severity"`
-	CurrentMTTR   float64         `json:"current_mttr_hours"`
-	ProjectedMTTR float64         `json:"projected_mttr_hours"`
-	Deadline      float64         `json:"sla_deadline_hours"`
+	CurrentMTTR   MTTRHours       `json:"current_mttr_hours"`
+	ProjectedMTTR MTTRHours       `json:"projected_mttr_hours"`
+	Deadline      MTTRHours       `json:"sla_deadline_hours"`
 	Status        SLAStatus       `json:"status"` // see Status* constants above
 }
 
@@ -261,7 +300,7 @@ func Compute(input Input) (*Result, error) {
 		Projected: ProjectedState{
 			HorizonDays:  input.HorizonDays,
 			PostureScore: projectedScore,
-			ScoreSlope:   slope,
+			ScoreSlope:   ScoreSlope(slope),
 		},
 		ModelNote: fmt.Sprintf("Linear projection from %d days of history. Accuracy decreases beyond 30-day horizon. Rerun weekly for updated projections.", n),
 	}
@@ -289,9 +328,9 @@ func Compute(input Input) (*Result, error) {
 
 		result.SLAProj = append(result.SLAProj, SLAProjection{
 			Severity:      sev,
-			CurrentMTTR:   currentMTTR,
-			ProjectedMTTR: projectedMTTR,
-			Deadline:      deadline,
+			CurrentMTTR:   MTTRHours(currentMTTR),
+			ProjectedMTTR: MTTRHours(projectedMTTR),
+			Deadline:      MTTRHours(deadline),
 			Status:        status,
 		})
 	}

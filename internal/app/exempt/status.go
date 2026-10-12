@@ -25,7 +25,7 @@ type ExpiryItem struct {
 	ControlID     kernel.ControlID `json:"control_id"`
 	AssetID       asset.ID         `json:"asset_id"`
 	ExpiryDate    string           `json:"expiry_date"`
-	DaysRemaining int              `json:"days_remaining"`
+	DaysRemaining DaysRemaining    `json:"days_remaining"`
 	Reason        string           `json:"reason"`
 }
 
@@ -45,6 +45,34 @@ func (items ExpiryItems) ByControl(controlID kernel.ControlID) ExpiryItems {
 	var filtered ExpiryItems
 	for i := range items {
 		if items[i].ControlID == controlID {
+			filtered = append(filtered, items[i])
+		}
+	}
+	return filtered
+}
+
+// Expired returns only the items that have already expired.
+func (items ExpiryItems) Expired() ExpiryItems {
+	if len(items) == 0 {
+		return nil
+	}
+	var filtered ExpiryItems
+	for i := range items {
+		if items[i].DaysRemaining.IsExpired() {
+			filtered = append(filtered, items[i])
+		}
+	}
+	return filtered
+}
+
+// ExpiringSoon returns only the items expiring within 30 days.
+func (items ExpiryItems) ExpiringSoon() ExpiryItems {
+	if len(items) == 0 {
+		return nil
+	}
+	var filtered ExpiryItems
+	for i := range items {
+		if items[i].DaysRemaining.IsExpiringSoon() {
 			filtered = append(filtered, items[i])
 		}
 	}

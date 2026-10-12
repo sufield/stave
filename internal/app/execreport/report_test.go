@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"strings"
 	"testing"
+	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -187,3 +188,67 @@ func TestFrameworkReadinesses_DomainMethods(t *testing.T) {
 		t.Error("empty.ByFramework() should return nil")
 	}
 }
+
+func TestDwellHours_DomainMethods(t *testing.T) {
+	dh := DwellHours(72.0)
+	if dh.Float64() != 72.0 {
+		t.Errorf("Float64() = %v, want 72.0", dh.Float64())
+	}
+	if dh.Hours() != 72.0 {
+		t.Errorf("Hours() = %v, want 72.0", dh.Hours())
+	}
+	if dh.Days() != 3.0 {
+		t.Errorf("Days() = %v, want 3.0", dh.Days())
+	}
+	if dh.Duration() != 72*time.Hour {
+		t.Errorf("Duration() = %v, want %v", dh.Duration(), 72*time.Hour)
+	}
+	if dh.IsZero() {
+		t.Error("IsZero() = true for 72.0, want false")
+	}
+	if !DwellHours(0).IsZero() {
+		t.Error("IsZero() = false for 0, want true")
+	}
+	if !dh.IsLongStanding(48.0) {
+		t.Error("IsLongStanding(48.0) = false, want true")
+	}
+	if dh.IsLongStanding(96.0) {
+		t.Error("IsLongStanding(96.0) = true, want false")
+	}
+}
+
+func TestSLABurnRate_DomainMethods(t *testing.T) {
+	br := SLABurnRate(0.8)
+	if br.Float64() != 0.8 {
+		t.Errorf("Float64() = %v, want 0.8", br.Float64())
+	}
+	if br.Percentage() != 80.0 {
+		t.Errorf("Percentage() = %v, want 80.0", br.Percentage())
+	}
+	if br.IsBreached() {
+		t.Error("IsBreached() = true for 0.8, want false")
+	}
+	if !br.IsWarning() {
+		t.Error("IsWarning() = false for 0.8, want true")
+	}
+	if br.IsZero() {
+		t.Error("IsZero() = true for 0.8, want false")
+	}
+
+	breached := SLABurnRate(1.2)
+	if !breached.IsBreached() {
+		t.Error("IsBreached() = false for 1.2, want true")
+	}
+	if !breached.IsWarning() {
+		t.Error("IsWarning() = false for 1.2, want true")
+	}
+
+	zero := SLABurnRate(0)
+	if !zero.IsZero() {
+		t.Error("IsZero() = false for 0, want true")
+	}
+	if zero.IsWarning() {
+		t.Error("IsWarning() = true for 0, want false")
+	}
+}
+

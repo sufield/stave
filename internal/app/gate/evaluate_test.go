@@ -123,3 +123,41 @@ func TestEvaluate(t *testing.T) {
 		}
 	})
 }
+
+func TestPolicy_DomainMethods(t *testing.T) {
+	pAny := PolicyAny
+	if pAny.String() != "fail_on_any_violation" {
+		t.Errorf("String() = %v, want fail_on_any_violation", pAny.String())
+	}
+	if !pAny.IsValid() {
+		t.Error("PolicyAny.IsValid() = false, want true")
+	}
+	if !pAny.IsAny() {
+		t.Error("PolicyAny.IsAny() = false, want true")
+	}
+	if pAny.IsNew() || pAny.IsOverdue() {
+		t.Error("PolicyAny should only be IsAny")
+	}
+
+	pNew := PolicyNew
+	if !pNew.IsValid() || !pNew.IsNew() {
+		t.Error("PolicyNew.IsNew() = false, want true")
+	}
+	if pNew.IsAny() || pNew.IsOverdue() {
+		t.Error("PolicyNew should only be IsNew")
+	}
+
+	pOverdue := PolicyOverdue
+	if !pOverdue.IsValid() || !pOverdue.IsOverdue() {
+		t.Error("PolicyOverdue.IsOverdue() = false, want true")
+	}
+	if pOverdue.IsAny() || pOverdue.IsNew() {
+		t.Error("PolicyOverdue should only be IsOverdue")
+	}
+
+	invalid := Policy("unsupported_policy")
+	if invalid.IsValid() {
+		t.Error("invalid.IsValid() = true, want false")
+	}
+}
+
