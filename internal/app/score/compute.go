@@ -172,8 +172,40 @@ type CoverageComponent struct {
 
 // TrendPoint captures a single score observation for trend display.
 type TrendPoint struct {
-	Timestamp time.Time `json:"timestamp"`
-	Score     float64   `json:"score"`
+	Timestamp time.Time    `json:"timestamp"`
+	Score     PostureScore `json:"score"`
+}
+
+// TrendPoints is a domain collection of TrendPoint items with querying methods.
+type TrendPoints []TrendPoint
+
+// Len returns the number of trend points.
+func (tp TrendPoints) Len() int {
+	return len(tp)
+}
+
+// Latest returns the most recent trend point in the collection, or nil if empty.
+func (tp TrendPoints) Latest() *TrendPoint {
+	if len(tp) == 0 {
+		return nil
+	}
+	return &tp[len(tp)-1]
+}
+
+// Earliest returns the earliest trend point in the collection, or nil if empty.
+func (tp TrendPoints) Earliest() *TrendPoint {
+	if len(tp) == 0 {
+		return nil
+	}
+	return &tp[0]
+}
+
+// NetChange returns the score delta between the latest and earliest observations (latest - earliest).
+func (tp TrendPoints) NetChange() float64 {
+	if len(tp) < 2 {
+		return 0
+	}
+	return (tp[len(tp)-1].Score - tp[0].Score).Value()
 }
 
 // RubricBand classifies the posture score into five qualitative bands.
@@ -223,7 +255,7 @@ type Result struct {
 	Chain       ChainComponent    `json:"chain"`
 	Coverage    CoverageComponent `json:"coverage"`
 	WeightsUsed Weights           `json:"weights_used"`
-	Trend       []TrendPoint      `json:"trend,omitempty"`
+	Trend       TrendPoints       `json:"trend,omitempty"`
 }
 
 // ScoreMover names a sub-score component that is currently
@@ -240,6 +272,18 @@ const (
 	MoverCoverage MoverComponent = "coverage"
 )
 
+// PointsLost encapsulates the contribution gap in score points (max contribution - actual contribution).
+type PointsLost float64
+
+// Float64 returns the raw float64 value of points lost.
+func (p PointsLost) Float64() float64 { return float64(p) }
+
+// IsZero reports whether no points were lost.
+func (p PointsLost) IsZero() bool { return p == 0 }
+
+// IsSignificant reports whether the points lost meet or exceed the given threshold.
+func (p PointsLost) IsSignificant(threshold float64) bool { return float64(p) >= threshold }
+
 // ScoreMover names a sub-score component that is currently
 // dragging the posture score below its maximum, with the count of
 // findings driving the impact and the points lost. Centralised on
@@ -255,7 +299,53 @@ type ScoreMover struct {
 	Count int
 	// PointsLost is the contribution gap (max - actual) in score
 	// points.
-	PointsLost float64
+	PointsLost PointsLost
+}
+
+// ScoreMovers is a domain collection of ScoreMover items with querying methods.
+type ScoreMovers []ScoreMover
+
+// Len returns the number of score movers in the collection.
+func (sm ScoreMovers) Len() int {
+	return len(sm)
+}
+
+// TotalPointsLost returns the sum of points lost across all movers.
+func (sm ScoreMovers) TotalPointsLost() PointsLost {
+	var total float64
+	for _, m := range sm {
+		total += m.PointsLost.Float64()
+	}
+	return PointsLost(total)
+}
+
+// ByComponent returns the mover corresponding to the specified component, or nil if not present.
+func (sm ScoreMovers) ByComponent(comp MoverComponent) *ScoreMover {
+	for i := range sm {
+		if sm[i].Component == comp {
+			return &sm[i]
+		}
+	}
+	return nil
+}
+
+// HasLoss reports whether any mover in the collection lost points.
+func (sm ScoreMovers) HasLoss() bool {
+	return sm.TotalPointsLost() > 0
+}
+
+// Worst returns the score mover that lost the most points, or nil if empty.
+func (sm ScoreMovers) Worst() *ScoreMover {
+	if len(sm) == 0 {
+		return nil
+	}
+	worst := &sm[0]
+	for i := 1; i < len(sm); i++ {
+		if sm[i].PointsLost > worst.PointsLost {
+			worst = &sm[i]
+		}
+	}
+	return worst
 }
 
 // Label returns the human-readable mover-row label the score CLI
@@ -287,34 +377,34 @@ func (m ScoreMover) Label() string {
 // coverage) order. Each entry carries the structured numbers the
 // renderer needs so display layers can format them without
 // reaching into Severity.Detail / SLA.Detail / etc. directly.
-func (r Result) Movers() []ScoreMover {
-	movers := make([]ScoreMover, 0, 4)
+func (r Result) Movers() ScoreMovers {
+	movers := make(ScoreMovers, 0, 4)
 	if r.Severity.Detail.FailingFindings > 0 {
 		movers = append(movers, ScoreMover{
 			Component:  MoverSeverity,
 			Count:      r.Severity.Detail.FailingFindings,
-			PointsLost: r.Severity.MaxContribution - r.Severity.Contribution,
+			PointsLost: PointsLost(r.Severity.MaxContribution - r.Severity.Contribution),
 		})
 	}
 	if r.SLA.Detail.FindingsBreached > 0 {
 		movers = append(movers, ScoreMover{
 			Component:  MoverSLA,
 			Count:      r.SLA.Detail.FindingsBreached,
-			PointsLost: r.SLA.MaxContribution - r.SLA.Contribution,
+			PointsLost: PointsLost(r.SLA.MaxContribution - r.SLA.Contribution),
 		})
 	}
 	if r.Chain.Detail.ActiveChains > 0 {
 		movers = append(movers, ScoreMover{
 			Component:  MoverChain,
 			Count:      r.Chain.Detail.ActiveChains,
-			PointsLost: r.Chain.MaxContribution - r.Chain.Contribution,
+			PointsLost: PointsLost(r.Chain.MaxContribution - r.Chain.Contribution),
 		})
 	}
 	if r.Coverage.SubScore < 1.0 {
 		movers = append(movers, ScoreMover{
 			Component:  MoverCoverage,
 			Count:      int(r.Coverage.Detail.CoveragePct),
-			PointsLost: r.Coverage.MaxContribution - r.Coverage.Contribution,
+			PointsLost: PointsLost(r.Coverage.MaxContribution - r.Coverage.Contribution),
 		})
 	}
 	return movers
@@ -331,10 +421,10 @@ func (r Result) Movers() []ScoreMover {
 // Returns "STABLE" with a zero net-change when no trend is recorded
 // so callers can render unconditionally.
 func (r Result) TrendDirection() (direction string, netChange float64) {
-	if len(r.Trend) < 2 {
+	if r.Trend.Len() < 2 {
 		return "STABLE", 0
 	}
-	netChange = r.Trend[len(r.Trend)-1].Score - r.Trend[0].Score
+	netChange = r.Trend.NetChange()
 	switch {
 	case netChange > 1:
 		return "IMPROVING", netChange

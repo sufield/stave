@@ -18,10 +18,10 @@ type Filter struct {
 // Populated by the CLI layer using ControlDefinition.Fingerprint().
 type ControlFingerprints map[kernel.ControlID]kernel.Digest
 
-// MapAssessment converts an Assessment into a slice of telemetry Events.
+// MapAssessment converts an Assessment into a collection of telemetry Events.
 // One event per finding. controlFPs is optional (nil = no per-control fingerprints).
-func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFingerprints) []Event {
-	var events []Event
+func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFingerprints) Events {
+	var events Events
 	for i := range a.Findings {
 		f := &a.Findings[i]
 		if !matchesFilter(f, filter) {
@@ -38,7 +38,7 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 			ResourceType:      f.AssetType,
 			Verdict:           evaluation.VerdictViolation,
 			PolicyFingerprint: string(a.Run.PolicyFingerprint),
-			ExposureScore:     float64(f.ExposureScore),
+			ExposureScore:     ExposureScore(f.ExposureScore),
 			Exploitability:    string(f.Exploitability),
 			Status:            string(a.Status),
 		}
@@ -64,7 +64,7 @@ func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFinger
 
 // MapAssessmentWithWindows converts an Assessment into events with window tracking.
 // The tracker is updated in place — call CloseAbsent after processing each assessment.
-func MapAssessmentWithWindows(a *report.Assessment, filter Filter, controlFPs ControlFingerprints, tracker *WindowTracker) []Event {
+func MapAssessmentWithWindows(a *report.Assessment, filter Filter, controlFPs ControlFingerprints, tracker *WindowTracker) Events {
 	events := MapAssessment(a, filter, controlFPs)
 	for i := range events {
 		wid := tracker.Track(events[i].ResourceID, events[i].ControlID, events[i].CapturedAt)

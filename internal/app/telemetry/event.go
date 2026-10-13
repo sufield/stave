@@ -58,6 +58,31 @@ func (c ClosedWindowIDs) Contains(wid WindowID) bool {
 	return slices.Contains(c, wid)
 }
 
+// ChainIDs is a domain collection of compound attack chain identifiers.
+type ChainIDs []kernel.ChainID
+
+// Len returns the number of chain IDs in the collection.
+func (c ChainIDs) Len() int {
+	return len(c)
+}
+
+// Contains reports whether the target chain ID is present in the collection.
+func (c ChainIDs) Contains(id kernel.ChainID) bool {
+	return slices.Contains(c, id)
+}
+
+// ExposureScore encapsulates the exposure score of a telemetry finding.
+type ExposureScore float64
+
+// Float64 returns the raw float64 exposure score value.
+func (e ExposureScore) Float64() float64 { return float64(e) }
+
+// IsZero reports whether the exposure score is zero.
+func (e ExposureScore) IsZero() bool { return e == 0 }
+
+// IsHigh reports whether the exposure score meets or exceeds the given threshold.
+func (e ExposureScore) IsHigh(threshold float64) bool { return float64(e) >= threshold }
+
 // Event represents a single telemetry record for one finding.
 // One JSON object per line in NDJSON output.
 type Event struct {
@@ -73,13 +98,77 @@ type Event struct {
 	PolicyFingerprint  string             `json:"policy_fingerprint"`
 	ControlFingerprint string             `json:"control_fingerprint,omitempty"`
 	EnvironmentalScore *float64           `json:"environmental_score,omitempty"`
-	ExposureScore      float64            `json:"exposure_score,omitempty"`
-	CompoundChains     []kernel.ChainID   `json:"compound_chains,omitempty"`
+	ExposureScore      ExposureScore      `json:"exposure_score,omitempty"`
+	CompoundChains     ChainIDs           `json:"compound_chains,omitempty"`
 	AttackStage        string             `json:"attack_stage,omitempty"`
 	Exploitability     string             `json:"exploitability,omitempty"`
 	UnsafeDurationDays UnsafeDurationDays `json:"unsafe_duration_days,omitempty"`
 	WindowID           *WindowID          `json:"window_id,omitempty"`
 	Status             string             `json:"status"`
+}
+
+// Events is a domain collection of telemetry Event records with query and filtering methods.
+type Events []Event
+
+// Len returns the count of telemetry events.
+func (ev Events) Len() int {
+	return len(ev)
+}
+
+// ByControl returns a new Events collection filtered by control ID.
+func (ev Events) ByControl(id kernel.ControlID) Events {
+	if len(ev) == 0 {
+		return nil
+	}
+	var filtered Events
+	for i := range ev {
+		if ev[i].ControlID == id {
+			filtered = append(filtered, ev[i])
+		}
+	}
+	return filtered
+}
+
+// BySeverity returns a new Events collection filtered by severity.
+func (ev Events) BySeverity(sev policy.Severity) Events {
+	if len(ev) == 0 {
+		return nil
+	}
+	var filtered Events
+	for i := range ev {
+		if ev[i].Severity == sev {
+			filtered = append(filtered, ev[i])
+		}
+	}
+	return filtered
+}
+
+// ByResource returns a new Events collection filtered by resource ID.
+func (ev Events) ByResource(id asset.ID) Events {
+	if len(ev) == 0 {
+		return nil
+	}
+	var filtered Events
+	for i := range ev {
+		if ev[i].ResourceID == id {
+			filtered = append(filtered, ev[i])
+		}
+	}
+	return filtered
+}
+
+// Violations returns a new Events collection containing only violation verdicts.
+func (ev Events) Violations() Events {
+	if len(ev) == 0 {
+		return nil
+	}
+	var filtered Events
+	for i := range ev {
+		if ev[i].Verdict == evaluation.VerdictViolation {
+			filtered = append(filtered, ev[i])
+		}
+	}
+	return filtered
 }
 
 const schemaVersion = "telemetry.v2"

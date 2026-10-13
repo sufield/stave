@@ -47,7 +47,7 @@ func writeTable(w io.Writer, r stave.ScoreResult) {
 	if len(r.Trend) > 0 {
 		fmt.Fprintln(w, "\nTREND (last runs):")
 		for _, tp := range r.Trend {
-			bar := scoreBar(tp.Score)
+			bar := scoreBar(tp.Score.Value())
 			fmt.Fprintf(w, "  %s  %5.1f  %s\n",
 				tp.Timestamp.Format("2006-01-02"), tp.Score, bar)
 		}

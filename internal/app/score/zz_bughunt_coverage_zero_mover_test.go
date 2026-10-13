@@ -55,8 +55,8 @@ func TestBugHunt_CoverageZeroPctMover(t *testing.T) {
 			"by the `&& CoveragePct > 0` gate at compute.go:265", wantPointsLost)
 	}
 
-	if coverageMover.PointsLost != wantPointsLost {
+	if coverageMover.PointsLost.Float64() != wantPointsLost {
 		t.Fatalf("coverage mover PointsLost = %f, want %f (MaxContribution - Contribution)",
-			coverageMover.PointsLost, wantPointsLost)
+			coverageMover.PointsLost.Float64(), wantPointsLost)
 	}
 }

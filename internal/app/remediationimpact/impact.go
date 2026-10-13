@@ -154,11 +154,58 @@ func (d ScoreDelta) IsNegative() bool { return d < 0 }
 // IsZero reports whether there was no change in posture score (== 0).
 func (d ScoreDelta) IsZero() bool { return d == 0 }
 
+// EfficiencyRatio encapsulates the predicted-vs-realized remediation efficiency ratio.
+type EfficiencyRatio float64
+
+// Float64 returns the raw float64 ratio value.
+func (r EfficiencyRatio) Float64() float64 { return float64(r) }
+
+// Percentage returns the efficiency ratio as a percentage (ratio * 100).
+func (r EfficiencyRatio) Percentage() float64 { return float64(r) * 100.0 }
+
+// Verdict returns the EfficiencyVerdict corresponding to this ratio.
+func (r EfficiencyRatio) Verdict() EfficiencyVerdict {
+	switch {
+	case r < 0.5:
+		return VerdictIncomplete
+	case r < 0.9:
+		return VerdictPartial
+	default:
+		return VerdictComplete
+	}
+}
+
+// IsComplete reports whether the ratio achieved complete remediation (>= 0.9).
+func (r EfficiencyRatio) IsComplete() bool { return r >= 0.9 }
+
+// IsPartial reports whether the ratio achieved partial remediation (0.5 <= ratio < 0.9).
+func (r EfficiencyRatio) IsPartial() bool { return r >= 0.5 && r < 0.9 }
+
+// IsIncomplete reports whether the ratio is incomplete (< 0.5).
+func (r EfficiencyRatio) IsIncomplete() bool { return r < 0.5 }
+
+// SimpleScore encapsulates a 0-100 simple posture score computed from violations-to-assets ratio.
+type SimpleScore float64
+
+// Float64 returns the raw float64 posture score value.
+func (s SimpleScore) Float64() float64 { return float64(s) }
+
+// Delta returns the score change delta relative to an after score (after - s).
+func (s SimpleScore) Delta(after SimpleScore) ScoreDelta {
+	return ScoreDelta(after - s)
+}
+
+// IsClean reports whether the score indicates zero violations (100.0).
+func (s SimpleScore) IsClean() bool { return s >= 100.0 }
+
+// IsZero reports whether the score is zero.
+func (s SimpleScore) IsZero() bool { return s == 0 }
+
 // Efficiency holds the predicted-vs-realized comparison.
 type Efficiency struct {
 	PredictedDelta ScoreDelta        `json:"predicted_delta"`
 	RealizedDelta  ScoreDelta        `json:"realized_delta"`
-	Ratio          float64           `json:"efficiency_ratio"`
+	Ratio          EfficiencyRatio   `json:"efficiency_ratio"`
 	Verdict        EfficiencyVerdict `json:"verdict"`
 	StillOpen      ControlIDs        `json:"still_open,omitempty"`
 }
@@ -169,8 +216,8 @@ type Report struct {
 	AfterFindings     int               `json:"after_findings"`
 	Closed            ClosedFindings    `json:"findings_closed"`
 	ChainsDeactivated DeactivatedChains `json:"chains_deactivated,omitempty"`
-	ScoreBefore       float64           `json:"score_before"`
-	ScoreAfter        float64           `json:"score_after"`
+	ScoreBefore       SimpleScore       `json:"score_before"`
+	ScoreAfter        SimpleScore       `json:"score_after"`
 	ScoreDelta        ScoreDelta        `json:"score_delta"`
 	Efficiency        *Efficiency       `json:"efficiency,omitempty"`
 }
@@ -270,11 +317,11 @@ func Analyze(in Input) (*Report, error) {
 		ChainsDeactivated: deactivated,
 		ScoreBefore:       scoreBefore,
 		ScoreAfter:        scoreAfter,
-		ScoreDelta:        ScoreDelta(scoreAfter - scoreBefore),
+		ScoreDelta:        scoreBefore.Delta(scoreAfter),
 	}
 
 	if in.PredictedDelta != 0 || len(in.PredictedClosed) > 0 {
-		r.Efficiency = computeEfficiency(in, ScoreDelta(scoreAfter-scoreBefore), afterKeys)
+		r.Efficiency = computeEfficiency(in, scoreBefore.Delta(scoreAfter), afterKeys)
 	}
 
 	return r, nil
@@ -306,22 +353,15 @@ func computeEfficiency(in Input, realized ScoreDelta, afterKeys map[findingKey]*
 	}
 }
 
-func classifyEfficiency(predicted, realized ScoreDelta) (float64, EfficiencyVerdict) {
+func classifyEfficiency(predicted, realized ScoreDelta) (EfficiencyRatio, EfficiencyVerdict) {
 	if predicted == 0 {
 		return 0, ""
 	}
 	if realized <= 0 {
 		return 0, VerdictIncomplete
 	}
-	ratio := max(realized.Float64()/predicted.Float64(), 0)
-	switch {
-	case ratio < 0.5:
-		return ratio, VerdictIncomplete
-	case ratio < 0.9:
-		return ratio, VerdictPartial
-	default:
-		return ratio, VerdictComplete
-	}
+	ratio := EfficiencyRatio(max(realized.Float64()/predicted.Float64(), 0))
+	return ratio, ratio.Verdict()
 }
 
 func buildKeySet(findings []remediation.Finding) map[findingKey]*remediation.Finding {
@@ -333,7 +373,7 @@ func buildKeySet(findings []remediation.Finding) map[findingKey]*remediation.Fin
 	return m
 }
 
-func computeSimpleScore(a *report.Assessment) float64 {
+func computeSimpleScore(a *report.Assessment) SimpleScore {
 	if a == nil {
 		// No assessment to score. Return 0 (a sentinel "no data" value)
 		// rather than dereferencing a.Summary and panicking; Analyze
@@ -351,5 +391,5 @@ func computeSimpleScore(a *report.Assessment) float64 {
 	if score < 0 {
 		return 0
 	}
-	return score
+	return SimpleScore(score)
 }

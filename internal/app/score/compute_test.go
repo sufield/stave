@@ -377,3 +377,95 @@ func TestCompute_SeverityScore_WeightLessThanExposure_ClampsToZero(t *testing.T)
 		t.Errorf("under-counted weight severity = %.3f, want 0", r.Severity.SubScore)
 	}
 }
+
+func TestPointsLost_DomainMethods(t *testing.T) {
+	zero := PointsLost(0)
+	if !zero.IsZero() {
+		t.Error("PointsLost(0).IsZero() = false, want true")
+	}
+	if zero.Float64() != 0 {
+		t.Errorf("PointsLost(0).Float64() = %v, want 0", zero.Float64())
+	}
+	if zero.IsSignificant(5.0) {
+		t.Error("PointsLost(0).IsSignificant(5.0) = true, want false")
+	}
+
+	loss := PointsLost(12.5)
+	if loss.IsZero() {
+		t.Error("PointsLost(12.5).IsZero() = true, want false")
+	}
+	if loss.Float64() != 12.5 {
+		t.Errorf("PointsLost(12.5).Float64() = %v, want 12.5", loss.Float64())
+	}
+	if !loss.IsSignificant(10.0) {
+		t.Error("PointsLost(12.5).IsSignificant(10.0) = false, want true")
+	}
+	if loss.IsSignificant(15.0) {
+		t.Error("PointsLost(12.5).IsSignificant(15.0) = true, want false")
+	}
+}
+
+func TestScoreMovers_DomainMethods(t *testing.T) {
+	movers := ScoreMovers{
+		{Component: MoverSeverity, Count: 3, PointsLost: PointsLost(15.0)},
+		{Component: MoverSLA, Count: 1, PointsLost: PointsLost(5.0)},
+	}
+
+	if movers.Len() != 2 {
+		t.Errorf("movers.Len() = %d, want 2", movers.Len())
+	}
+	if movers.TotalPointsLost().Float64() != 20.0 {
+		t.Errorf("movers.TotalPointsLost() = %v, want 20.0", movers.TotalPointsLost())
+	}
+	if !movers.HasLoss() {
+		t.Error("movers.HasLoss() = false, want true")
+	}
+	if movers.ByComponent(MoverSeverity) == nil || movers.ByComponent(MoverSeverity).Count != 3 {
+		t.Errorf("ByComponent(MoverSeverity) unexpected: %+v", movers.ByComponent(MoverSeverity))
+	}
+	if movers.ByComponent(MoverCoverage) != nil {
+		t.Errorf("ByComponent(MoverCoverage) = %+v, want nil", movers.ByComponent(MoverCoverage))
+	}
+	worst := movers.Worst()
+	if worst == nil || worst.Component != MoverSeverity {
+		t.Errorf("movers.Worst() = %+v, want MoverSeverity", worst)
+	}
+
+	var empty ScoreMovers
+	if empty.Len() != 0 || empty.TotalPointsLost() != 0 || empty.HasLoss() || empty.Worst() != nil || empty.ByComponent(MoverSLA) != nil {
+		t.Error("empty ScoreMovers methods failed")
+	}
+}
+
+func TestTrendPoints_DomainMethods(t *testing.T) {
+	t1 := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	t2 := time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC)
+	points := TrendPoints{
+		{Timestamp: t1, Score: PostureScore(75.0)},
+		{Timestamp: t2, Score: PostureScore(82.5)},
+	}
+
+	if points.Len() != 2 {
+		t.Errorf("points.Len() = %d, want 2", points.Len())
+	}
+	if points.Earliest() == nil || points.Earliest().Score != 75.0 {
+		t.Errorf("Earliest() = %+v, want score 75.0", points.Earliest())
+	}
+	if points.Latest() == nil || points.Latest().Score != 82.5 {
+		t.Errorf("Latest() = %+v, want score 82.5", points.Latest())
+	}
+	if points.NetChange() != 7.5 {
+		t.Errorf("NetChange() = %v, want 7.5", points.NetChange())
+	}
+
+	var empty TrendPoints
+	if empty.Len() != 0 || empty.Earliest() != nil || empty.Latest() != nil || empty.NetChange() != 0 {
+		t.Error("empty TrendPoints methods failed")
+	}
+
+	r := Result{Trend: points}
+	dir, change := r.TrendDirection()
+	if dir != "IMPROVING" || change != 7.5 {
+		t.Errorf("TrendDirection() = (%q, %v), want (IMPROVING, 7.5)", dir, change)
+	}
+}

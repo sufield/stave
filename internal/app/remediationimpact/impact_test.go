@@ -210,3 +210,47 @@ func TestEfficiencyVerdict_DomainMethods(t *testing.T) {
 		t.Error("IsSuccessful() = true, want false for incomplete")
 	}
 }
+
+func TestEfficiencyRatio_DomainMethods(t *testing.T) {
+	complete := EfficiencyRatio(0.95)
+	if complete.Float64() != 0.95 {
+		t.Errorf("Float64() = %v, want 0.95", complete.Float64())
+	}
+	if complete.Percentage() != 95.0 {
+		t.Errorf("Percentage() = %v, want 95.0", complete.Percentage())
+	}
+	if !complete.IsComplete() || complete.Verdict() != VerdictComplete {
+		t.Errorf("complete ratio methods failed: %+v", complete)
+	}
+
+	partial := EfficiencyRatio(0.75)
+	if !partial.IsPartial() || partial.Verdict() != VerdictPartial {
+		t.Errorf("partial ratio methods failed: %+v", partial)
+	}
+
+	incomplete := EfficiencyRatio(0.3)
+	if !incomplete.IsIncomplete() || incomplete.Verdict() != VerdictIncomplete {
+		t.Errorf("incomplete ratio methods failed: %+v", incomplete)
+	}
+}
+
+func TestSimpleScore_DomainMethods(t *testing.T) {
+	s1 := SimpleScore(80.0)
+	s2 := SimpleScore(95.0)
+
+	if s1.Float64() != 80.0 {
+		t.Errorf("Float64() = %v, want 80.0", s1.Float64())
+	}
+	if s1.Delta(s2) != ScoreDelta(15.0) {
+		t.Errorf("Delta = %v, want 15.0", s1.Delta(s2))
+	}
+	if s1.IsClean() {
+		t.Error("IsClean() = true for 80.0, want false")
+	}
+	if !SimpleScore(100.0).IsClean() {
+		t.Error("IsClean() = false for 100.0, want true")
+	}
+	if !SimpleScore(0).IsZero() {
+		t.Error("IsZero() = false for 0, want true")
+	}
+}
