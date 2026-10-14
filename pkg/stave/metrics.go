@@ -25,12 +25,7 @@ func RenderMetrics(ctx context.Context, historyDir string) ([]byte, error) {
 	}
 
 	// Compute posture score from violation rate.
-	var postureScore float64
-	if latest.Summary.TotalAssets > 0 {
-		postureScore = (1.0 - float64(latest.Summary.Violations)/float64(latest.Summary.TotalAssets)) * 100
-	} else {
-		postureScore = 100
-	}
+	postureScore := appmetrics.PostureScoreFromViolations(latest.Summary.Violations, latest.Summary.TotalAssets)
 
 	// Group findings by team from OwnerTeamID (populated by
 	// `stave apply --team-manifest`).

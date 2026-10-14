@@ -146,20 +146,106 @@ func (cr ControlResults) BySeverity(sev policy.Severity) ControlResults {
 	return filtered
 }
 
+// ControlIDs represents a domain collection of kernel.ControlID elements.
+type ControlIDs []kernel.ControlID
+
+// Len returns the number of control IDs.
+func (c ControlIDs) Len() int {
+	return len(c)
+}
+
+// Contains reports whether the control ID is present.
+func (c ControlIDs) Contains(id kernel.ControlID) bool {
+	return slices.Contains(c, id)
+}
+
+// Strings returns a slice of string representations of control IDs.
+func (c ControlIDs) Strings() []string {
+	if len(c) == 0 {
+		return nil
+	}
+	out := make([]string, len(c))
+	for i, id := range c {
+		out[i] = string(id)
+	}
+	return out
+}
+
 // ShoppingItem is a missing field grouped by asset type.
 type ShoppingItem struct {
-	Field       string             `json:"field"`
-	RequiredBy  []kernel.ControlID `json:"required_by"`
-	MaxSeverity policy.Severity    `json:"max_severity"`
+	Field       string          `json:"field"`
+	RequiredBy  ControlIDs      `json:"required_by"`
+	MaxSeverity policy.Severity `json:"max_severity"`
+}
+
+// ShoppingItems is a domain collection of ShoppingItem values.
+type ShoppingItems []ShoppingItem
+
+// Len returns the count of shopping items.
+func (si ShoppingItems) Len() int {
+	return len(si)
+}
+
+// Fields returns a slice of field path strings for the shopping items.
+func (si ShoppingItems) Fields() []string {
+	out := make([]string, len(si))
+	for i, item := range si {
+		out[i] = item.Field
+	}
+	return out
+}
+
+// BySeverity returns a filtered slice of ShoppingItem matching the given severity.
+func (si ShoppingItems) BySeverity(sev policy.Severity) ShoppingItems {
+	var filtered ShoppingItems
+	for _, item := range si {
+		if item.MaxSeverity == sev {
+			filtered = append(filtered, item)
+		}
+	}
+	return filtered
+}
+
+// ByField returns the ShoppingItem matching the field name, if present.
+func (si ShoppingItems) ByField(field string) (ShoppingItem, bool) {
+	for _, item := range si {
+		if item.Field == field {
+			return item, true
+		}
+	}
+	return ShoppingItem{}, false
+}
+
+// CoveragePercentage represents a compliance coverage percentage (0.0 to 100.0).
+type CoveragePercentage float64
+
+// Float64 returns the underlying float64 value.
+func (c CoveragePercentage) Float64() float64 {
+	return float64(c)
+}
+
+// Ratio returns the coverage as a fractional ratio between 0.0 and 1.0.
+func (c CoveragePercentage) Ratio() float64 {
+	return float64(c) / 100.0
+}
+
+// IsComplete reports whether coverage has reached 100%.
+func (c CoveragePercentage) IsComplete() bool {
+	return float64(c) >= 100.0
+}
+
+// IsPassing reports whether coverage is at or above the given threshold percentage.
+func (c CoveragePercentage) IsPassing(threshold float64) bool {
+	return float64(c) >= threshold
 }
 
 // FrameworkCoverage holds coverage stats for a compliance framework.
 type FrameworkCoverage struct {
-	Evaluable   int     `json:"evaluable"`
-	Total       int     `json:"total"`
-	Incomplete  int     `json:"incomplete"`
-	SilentRisk  int     `json:"silent_risk"`
-	CoveragePct float64 `json:"coverage_pct"`
+	Evaluable   int                `json:"evaluable"`
+	Total       int                `json:"total"`
+	Incomplete  int                `json:"incomplete"`
+	SilentRisk  int                `json:"silent_risk"`
+	CoveragePct CoveragePercentage `json:"coverage_pct"`
 }
 
 // Report is the full coverage analysis output.
@@ -169,7 +255,7 @@ type Report struct {
 	Summary           Summary                                           `json:"summary"`
 	SilentRisk        ControlResults                                    `json:"silent_risk"`
 	IncompleteResults ControlResults                                    `json:"incomplete"`
-	ShoppingList      map[kernel.AssetType][]ShoppingItem               `json:"extractor_shopping_list"`
+	ShoppingList      map[kernel.AssetType]ShoppingItems                `json:"extractor_shopping_list"`
 	FrameworkCoverage map[policy.ComplianceFramework]*FrameworkCoverage `json:"framework_coverage"`
 }
 
@@ -578,7 +664,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	report := &Report{
 		Snapshot:          input.SnapshotPath,
 		GeneratedAt:       input.GeneratedAt,
-		ShoppingList:      make(map[kernel.AssetType][]ShoppingItem),
+		ShoppingList:      make(map[kernel.AssetType]ShoppingItems),
 		FrameworkCoverage: make(map[policy.ComplianceFramework]*FrameworkCoverage),
 	}
 
@@ -623,7 +709,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	// Compute coverage percentages.
 	for _, fc := range report.FrameworkCoverage {
 		if fc.Total > 0 {
-			fc.CoveragePct = float64(fc.Evaluable) / float64(fc.Total) * 100
+			fc.CoveragePct = CoveragePercentage(float64(fc.Evaluable) / float64(fc.Total) * 100)
 		}
 	}
 
@@ -646,7 +732,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	report.IncompleteResults = incomplete
 
 	// Build shopping list grouped by asset type — use first field prefix.
-	fieldToControls := make(map[string][]kernel.ControlID)
+	fieldToControls := make(map[string]ControlIDs)
 	fieldToSeverity := make(map[string]policy.Severity)
 	combined := make([]ControlResult, 0, len(silentRisk)+len(incomplete))
 	combined = append(combined, silentRisk...)

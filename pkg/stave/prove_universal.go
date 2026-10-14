@@ -26,6 +26,15 @@ type UniversalSummary = universals.Summary
 // UniversalResult is a single universal's evaluation result.
 type UniversalResult = universals.Result
 
+// UniversalViolations is a collection of universal formula violations.
+type UniversalViolations = universals.Violations
+
+// UniversalResults is a collection of universal evaluation results.
+type UniversalResults = universals.Results
+
+// UniversalSolveTimeMs is the SMT solve time in milliseconds.
+type UniversalSolveTimeMs = universals.SolveTimeMs
+
 // ProveUniversal evaluates all universal statements against observations
 // via Z3 subprocess. Does not require CGO — the Z3 binary must be on PATH.
 func ProveUniversal(_ context.Context, cfg ProveUniversalConfig) (*UniversalSummary, error) {
