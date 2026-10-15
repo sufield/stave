@@ -124,12 +124,12 @@ func (ids CapabilityIDs) Contains(id CapabilityID) bool {
 
 // ChainNode represents a chain in the graph.
 type ChainNode struct {
-	ChainID         kernel.ChainID   `json:"chain_id"`
-	Name            string           `json:"name"`
-	Severity        policy.Severity  `json:"severity"`
-	Status          NodeStatus       `json:"status"`
-	Preconditions   CapabilityIDs    `json:"preconditions"`
-	Postconditions  CapabilityIDs    `json:"postconditions"`
+	ChainID         kernel.ChainID  `json:"chain_id"`
+	Name            string          `json:"name"`
+	Severity        policy.Severity `json:"severity"`
+	Status          NodeStatus      `json:"status"`
+	Preconditions   CapabilityIDs   `json:"preconditions"`
+	Postconditions  CapabilityIDs   `json:"postconditions"`
 	MemberControls  MemberControls  `json:"member_controls"`
 	ToolAnnotations ToolAnnotations `json:"tool_annotations,omitempty"`
 }
