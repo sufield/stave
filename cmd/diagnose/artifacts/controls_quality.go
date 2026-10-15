@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -113,15 +112,9 @@ func writeQualityTable(w io.Writer, r catalogquality.Report) {
 	fmt.Fprintf(w, "  %-25s %8s %8s\n", "Field", "Present", "Missing")
 	fmt.Fprintf(w, "  %-25s %8s %8s\n", strings.Repeat("-", 25), strings.Repeat("-", 8), strings.Repeat("-", 8))
 
-	// Sort fields for deterministic output.
-	fields := make([]catalogquality.MetadataField, 0, len(r.Completeness))
-	for f := range r.Completeness {
-		fields = append(fields, f)
-	}
-	slices.Sort(fields)
-
-	for _, f := range fields {
-		fs := r.Completeness[f]
+	// Sort fields for deterministic output using domain collection method.
+	for _, f := range r.Completeness.SortedFields() {
+		fs := r.Completeness.ForField(f)
 		fmt.Fprintf(w, "  %-25s %8d %8d\n", string(f), fs.Present, fs.Missing)
 	}
 

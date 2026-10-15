@@ -139,3 +139,117 @@ func TestQualityPercentage_DomainMethods(t *testing.T) {
 		t.Errorf("Gap() for 100%% = %f, want 0.0", gap)
 	}
 }
+
+func TestFieldStat_DomainMethods(t *testing.T) {
+	// Zero/empty
+	var empty FieldStat
+	if empty.Total() != 0 {
+		t.Errorf("empty.Total() = %d, want 0", empty.Total())
+	}
+	if empty.Percentage() != 0.0 {
+		t.Errorf("empty.Percentage() = %f, want 0.0", empty.Percentage())
+	}
+	if empty.IsComplete() {
+		t.Errorf("empty.IsComplete() = true, want false")
+	}
+	if empty.HasMissing() {
+		t.Errorf("empty.HasMissing() = true, want false")
+	}
+
+	// Complete
+	complete := FieldStat{Present: 10, Missing: 0}
+	if complete.Total() != 10 {
+		t.Errorf("complete.Total() = %d, want 10", complete.Total())
+	}
+	if complete.Percentage() != 100.0 {
+		t.Errorf("complete.Percentage() = %f, want 100.0", complete.Percentage())
+	}
+	if !complete.IsComplete() {
+		t.Errorf("complete.IsComplete() = false, want true")
+	}
+	if complete.HasMissing() {
+		t.Errorf("complete.HasMissing() = true, want false")
+	}
+
+	// Partial
+	partial := FieldStat{Present: 3, Missing: 1}
+	if partial.Total() != 4 {
+		t.Errorf("partial.Total() = %d, want 4", partial.Total())
+	}
+	if partial.Percentage() != 75.0 {
+		t.Errorf("partial.Percentage() = %f, want 75.0", partial.Percentage())
+	}
+	if partial.IsComplete() {
+		t.Errorf("partial.IsComplete() = true, want false")
+	}
+	if !partial.HasMissing() {
+		t.Errorf("partial.HasMissing() = false, want true")
+	}
+}
+
+func TestFieldCompleteness_DomainMethods(t *testing.T) {
+	fc := FieldCompleteness{
+		FieldSeverity:          FieldStat{Present: 4, Missing: 0},
+		FieldCompliance:        FieldStat{Present: 2, Missing: 2},
+		FieldAttackStage:       FieldStat{Present: 0, Missing: 4},
+		FieldRemediationAction: FieldStat{Present: 4, Missing: 0},
+	}
+
+	// ForField
+	sev := fc.ForField(FieldSeverity)
+	if sev.Present != 4 || sev.Missing != 0 {
+		t.Errorf("ForField(FieldSeverity) = %+v, want 4/0", sev)
+	}
+	unknown := fc.ForField("unknown_field")
+	if unknown.Total() != 0 {
+		t.Errorf("ForField(unknown) = %+v, want empty", unknown)
+	}
+	var nilFC FieldCompleteness
+	if nilFC.ForField(FieldSeverity).Total() != 0 {
+		t.Errorf("nilFC.ForField() should return empty stat")
+	}
+
+	// SortedFields
+	sorted := fc.SortedFields()
+	expectedOrder := []MetadataField{
+		FieldAttackStage,
+		FieldCompliance,
+		FieldRemediationAction,
+		FieldSeverity,
+	}
+	if len(sorted) != len(expectedOrder) {
+		t.Fatalf("SortedFields len = %d, want %d", len(sorted), len(expectedOrder))
+	}
+	for i, f := range expectedOrder {
+		if sorted[i] != f {
+			t.Errorf("SortedFields[%d] = %q, want %q", i, sorted[i], f)
+		}
+	}
+	if nilFC.SortedFields() != nil {
+		t.Error("nilFC.SortedFields() should return nil")
+	}
+
+	// AllComplete
+	if fc.AllComplete() {
+		t.Error("fc.AllComplete() = true, want false")
+	}
+	allGood := FieldCompleteness{
+		FieldSeverity:   FieldStat{Present: 5, Missing: 0},
+		FieldCompliance: FieldStat{Present: 5, Missing: 0},
+	}
+	if !allGood.AllComplete() {
+		t.Error("allGood.AllComplete() = false, want true")
+	}
+	if nilFC.AllComplete() {
+		t.Error("nilFC.AllComplete() = true, want false")
+	}
+
+	// CompletenessPercentage: 10 present out of 16 total = 62.5%
+	pct := fc.CompletenessPercentage()
+	if pct.Value() != 62.5 {
+		t.Errorf("CompletenessPercentage() = %f, want 62.5", pct.Value())
+	}
+	if nilFC.CompletenessPercentage().Value() != 0.0 {
+		t.Errorf("nilFC.CompletenessPercentage() = %f, want 0.0", nilFC.CompletenessPercentage().Value())
+	}
+}

@@ -306,3 +306,56 @@ func TestCapabilityIDs_DomainMethods(t *testing.T) {
 		t.Error("Contains cap_c: got true, want false")
 	}
 }
+
+func TestMemberControls_DomainMethods(t *testing.T) {
+	mcs := MemberControls{
+		{ControlID: "CTL.1", Remediation: "fix 1"},
+		{ControlID: "CTL.2", Remediation: "fix 2"},
+	}
+
+	if mcs.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", mcs.Len())
+	}
+	if !mcs.Contains("CTL.1") {
+		t.Error("Contains CTL.1: got false, want true")
+	}
+	if mcs.Contains("CTL.3") {
+		t.Error("Contains CTL.3: got true, want false")
+	}
+
+	cids := mcs.ControlIDs()
+	if len(cids) != 2 || cids[0] != "CTL.1" || cids[1] != "CTL.2" {
+		t.Errorf("ControlIDs: got %v", cids)
+	}
+
+	m1 := mcs.ByControl("CTL.1")
+	if m1 == nil || m1.Remediation != "fix 1" {
+		t.Errorf("ByControl CTL.1: got %v", m1)
+	}
+	if mcs.ByControl("CTL.NONEXISTENT") != nil {
+		t.Error("ByControl nonexistent should be nil")
+	}
+}
+
+func TestToolAnnotations_DomainMethods(t *testing.T) {
+	tas := ToolAnnotations{
+		{ToolName: "Pacu", MatchedCapabilities: CapabilityIDs{"iam_creds"}},
+		{ToolName: "StratusRedTeam", MatchedCapabilities: CapabilityIDs{"priv_esc"}},
+	}
+
+	if tas.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", tas.Len())
+	}
+
+	names := tas.ToolNames()
+	if len(names) != 2 || names[0] != "Pacu" || names[1] != "StratusRedTeam" {
+		t.Errorf("ToolNames: got %v", names)
+	}
+
+	if !tas.ContainsTool("pacu") {
+		t.Error("ContainsTool pacu (case-insensitive): got false, want true")
+	}
+	if tas.ContainsTool("Metasploit") {
+		t.Error("ContainsTool Metasploit: got true, want false")
+	}
+}

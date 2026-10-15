@@ -124,3 +124,51 @@ func TestChainIDs_DomainMethods(t *testing.T) {
 		t.Error("empty.Contains(chain_a) should be false")
 	}
 }
+
+func TestChokePointAnalyses_DomainMethods(t *testing.T) {
+	analyses := ChokePointAnalyses{
+		{
+			ControlID:        "CTL.1",
+			SharedChainCount: 3,
+			ChainIDs:         ChainIDs{"chain_a", "chain_b", "chain_c"},
+		},
+		{
+			ControlID:        "CTL.2",
+			SharedChainCount: 2,
+			ChainIDs:         ChainIDs{"chain_a", "chain_b"},
+		},
+	}
+
+	if analyses.Len() != 2 {
+		t.Errorf("Len: got %d, want 2", analyses.Len())
+	}
+	if analyses.MaxSharedChains() != 3 {
+		t.Errorf("MaxSharedChains: got %d, want 3", analyses.MaxSharedChains())
+	}
+
+	c1 := analyses.ByControl("CTL.1")
+	if c1 == nil || c1.SharedChainCount != 3 {
+		t.Errorf("ByControl CTL.1: got %v", c1)
+	}
+	if analyses.ByControl("CTL.NONEXISTENT") != nil {
+		t.Error("ByControl nonexistent should be nil")
+	}
+
+	top1 := analyses.Top(1)
+	if top1.Len() != 1 || top1[0].ControlID != "CTL.1" {
+		t.Errorf("Top(1): got %v", top1)
+	}
+	if analyses.Top(0) != nil {
+		t.Error("Top(0) should be nil")
+	}
+
+	cids := analyses.ControlIDs()
+	if len(cids) != 2 || cids[0] != "CTL.1" || cids[1] != "CTL.2" {
+		t.Errorf("ControlIDs: got %v", cids)
+	}
+
+	var empty ChokePointAnalyses
+	if empty.Len() != 0 || empty.MaxSharedChains() != 0 {
+		t.Error("empty ChokePointAnalyses failed")
+	}
+}

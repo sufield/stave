@@ -28,7 +28,7 @@ type ARContent struct {
 	UUID     UUID       `json:"uuid"`
 	Metadata ARMetadata `json:"metadata"`
 	ImportAP ImportAP   `json:"import-ap"`
-	Results  []ARResult `json:"results"`
+	Results  ARResults  `json:"results"`
 }
 
 // ARMetadata holds OSCAL metadata.
@@ -84,6 +84,42 @@ type ARResult struct {
 	Observations ARObservations `json:"observations"`
 }
 
+// ARResults is a domain collection of ARResult items with query methods.
+type ARResults []ARResult
+
+// Len returns the number of results in the collection.
+func (ar ARResults) Len() int {
+	return len(ar)
+}
+
+// ByUUID returns the ARResult matching the given UUID, or nil if not found.
+func (ar ARResults) ByUUID(u UUID) *ARResult {
+	for i := range ar {
+		if ar[i].UUID == u {
+			return &ar[i]
+		}
+	}
+	return nil
+}
+
+// TotalFindings returns the total number of findings across all results.
+func (ar ARResults) TotalFindings() int {
+	total := 0
+	for i := range ar {
+		total += ar[i].Findings.Len()
+	}
+	return total
+}
+
+// TotalObservations returns the total number of observations across all results.
+func (ar ARResults) TotalObservations() int {
+	total := 0
+	for i := range ar {
+		total += ar[i].Observations.Len()
+	}
+	return total
+}
+
 // RelatedObservations represents a domain collection of RelObs items with query methods.
 type RelatedObservations []RelObs
 
@@ -118,9 +154,27 @@ type ARTarget struct {
 	Status   ARStatus         `json:"status"`
 }
 
+// FindingState represents an OSCAL finding target status state (e.g. satisfied or not-satisfied).
+type FindingState string
+
+const (
+	StateSatisfied    FindingState = "satisfied"
+	StateNotSatisfied FindingState = "not-satisfied"
+)
+
+// IsSatisfied reports whether the finding target is satisfied.
+func (s FindingState) IsSatisfied() bool {
+	return s == StateSatisfied
+}
+
+// IsNotSatisfied reports whether the finding target is not satisfied.
+func (s FindingState) IsNotSatisfied() bool {
+	return s == StateNotSatisfied
+}
+
 // ARStatus holds the finding status.
 type ARStatus struct {
-	State string `json:"state"`
+	State FindingState `json:"state"`
 }
 
 // RelObs references a related observation.
@@ -195,7 +249,7 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 		findingUUID := uuidV5("finding", findingID)
 		obsUUID := uuidV5("observation", findingID)
 
-		state := "not-satisfied"
+		state := StateNotSatisfied
 
 		oscalFindings = append(oscalFindings, ARFinding{
 			UUID:        findingUUID,
@@ -231,7 +285,7 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 				OSCALVersion: "1.1.2",
 			},
 			ImportAP: ImportAP{Href: "#"},
-			Results: []ARResult{{
+			Results: ARResults{{
 				UUID:         resultUUID,
 				Title:        "Assessment",
 				Start:        now,

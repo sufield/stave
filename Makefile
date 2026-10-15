@@ -41,6 +41,9 @@ VERSION=$(shell cat VERSION)
 
 # Go version from go.mod (single source of truth for CI, Dockerfile, etc.)
 GO_VERSION=$(shell grep '^toolchain' go.mod | sed 's/toolchain go//')
+ifeq ($(GO_VERSION),)
+GO_VERSION=$(shell grep '^go ' go.mod | sed 's/go //')
+endif
 
 # Build flags
 LDFLAGS=-ldflags "-s -w -X github.com/sufield/stave/internal/version.String=$(VERSION)"

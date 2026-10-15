@@ -130,8 +130,8 @@ type ChainNode struct {
 	Status          NodeStatus       `json:"status"`
 	Preconditions   CapabilityIDs    `json:"preconditions"`
 	Postconditions  CapabilityIDs    `json:"postconditions"`
-	MemberControls  []MemberControl  `json:"member_controls"`
-	ToolAnnotations []ToolAnnotation `json:"tool_annotations,omitempty"`
+	MemberControls  MemberControls  `json:"member_controls"`
+	ToolAnnotations ToolAnnotations `json:"tool_annotations,omitempty"`
 }
 
 // ToolAnnotation records an offensive tool whose prerequisites
@@ -141,10 +141,74 @@ type ToolAnnotation struct {
 	MatchedCapabilities CapabilityIDs `json:"matched_capabilities"`
 }
 
+// ToolAnnotations represents a domain collection of ToolAnnotation items.
+type ToolAnnotations []ToolAnnotation
+
+// Len returns the number of tool annotations.
+func (ta ToolAnnotations) Len() int {
+	return len(ta)
+}
+
+// ToolNames returns a slice of tool names.
+func (ta ToolAnnotations) ToolNames() []string {
+	out := make([]string, len(ta))
+	for i := range ta {
+		out[i] = ta[i].ToolName
+	}
+	return out
+}
+
+// ContainsTool reports whether a tool with the given name is annotated.
+func (ta ToolAnnotations) ContainsTool(name string) bool {
+	for i := range ta {
+		if strings.EqualFold(ta[i].ToolName, name) {
+			return true
+		}
+	}
+	return false
+}
+
 // MemberControl is a control within a chain node.
 type MemberControl struct {
 	ControlID   kernel.ControlID `json:"control_id"`
 	Remediation string           `json:"remediation"`
+}
+
+// MemberControls represents a domain collection of MemberControl items in a chain node.
+type MemberControls []MemberControl
+
+// Len returns the number of member controls.
+func (mc MemberControls) Len() int {
+	return len(mc)
+}
+
+// ControlIDs returns a slice of control IDs for all member controls.
+func (mc MemberControls) ControlIDs() []kernel.ControlID {
+	out := make([]kernel.ControlID, len(mc))
+	for i := range mc {
+		out[i] = mc[i].ControlID
+	}
+	return out
+}
+
+// Contains reports whether the given control ID is in the member controls.
+func (mc MemberControls) Contains(id kernel.ControlID) bool {
+	for i := range mc {
+		if mc[i].ControlID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// ByControl returns the MemberControl for the given control ID, or nil if not found.
+func (mc MemberControls) ByControl(id kernel.ControlID) *MemberControl {
+	for i := range mc {
+		if mc[i].ControlID == id {
+			return &mc[i]
+		}
+	}
+	return nil
 }
 
 // Edge connects two chains via a shared capability.
