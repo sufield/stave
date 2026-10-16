@@ -92,33 +92,35 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 		return appcontracts.LoadResult{}, err
 	}
 
-	// Read all files and partition into obs.v0.1 vs raw.
+	// Read all files. When a raw transformer is configured, partition
+	// into obs.v0.1 vs raw; otherwise send everything through the
+	// normal validator (which rejects missing schema_version).
 	type fileData struct {
 		name string
 		path string
 		data []byte
 	}
-	var obsFiles, rawFiles []fileData
+	var obsFiles []fileData
+	var rawBatch map[string][]byte
 	for _, entry := range entries {
 		path := filepath.Join(dir, entry.Name())
 		data, err := fsutil.ReadFileLimited(path)
 		if err != nil {
 			return appcontracts.LoadResult{}, fmt.Errorf("load snapshot %s: %w", path, err)
 		}
-		if hasSchemaVersion(data) {
-			obsFiles = append(obsFiles, fileData{entry.Name(), path, data})
+		if l.rawTransform != nil && !hasSchemaVersion(data) {
+			if rawBatch == nil {
+				rawBatch = make(map[string][]byte)
+			}
+			rawBatch[entry.Name()] = data
 		} else {
-			rawFiles = append(rawFiles, fileData{entry.Name(), path, data})
+			obsFiles = append(obsFiles, fileData{entry.Name(), path, data})
 		}
 	}
 
 	// Auto-transform raw files if a transformer is configured.
-	if len(rawFiles) > 0 && l.rawTransform != nil {
-		batch := make(map[string][]byte, len(rawFiles))
-		for _, f := range rawFiles {
-			batch[f.name] = f.data
-		}
-		transformed, err := l.rawTransform(batch, l.evalTime)
+	if len(rawBatch) > 0 {
+		transformed, err := l.rawTransform(rawBatch, l.evalTime)
 		if err != nil {
 			return appcontracts.LoadResult{}, fmt.Errorf("auto-transform raw input: %w", err)
 		}

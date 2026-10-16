@@ -1,7 +1,8 @@
-> **Most users don't need this.** For common AWS resources, the built-in
-> `stave transform -i raw/ -o observations/` (jq filters) converts raw snapshots
-> to `obs.v0.1` with no code to write. Reach for a custom extractor when you need
-> a data source or resource type the built-in filters don't cover yet.
+> **Most users don't need this.** `stave apply` auto-transforms raw AWS CLI
+> JSON in-memory — just point `--observations` at the raw directory. Use
+> `stave transform` to inspect intermediate output. Reach for a custom
+> extractor only when you need a data source or resource type the built-in
+> filters don't cover yet.
 
 This is the ultimate way to leverage Contract-First architecture. Since the obs.v0.1 schema is the only thing the engine cares about, you can use a "Meta-Prompt" that turns any LLM to generate code for an Extractor.
 

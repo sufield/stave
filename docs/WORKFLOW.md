@@ -56,19 +56,24 @@ aws s3api list-buckets --output json > snapshots/s3-buckets.json
 
 ## Step 4 — Convert (extractor): snapshots → observations
 
-Snapshots are raw API shapes; Stave reads the standardized `obs.v0.1` form. An **extractor**
-transforms them, computing the observation signals from Step 1. This is **not** Stave — it's
-your collector/extractor (`aws + jq`, Steampipe transforms, or a provided adapter):
+Snapshots are raw API shapes; Stave reads the standardized `obs.v0.1` form.
+
+**Default path:** `stave apply` auto-transforms raw AWS CLI JSON in-memory —
+no separate conversion step needed. Point `--observations` at the raw
+snapshot directory.
+
+**Explicit path:** use `stave transform` when you need to inspect or persist
+the intermediate `obs.v0.1` output, or use an external extractor (`aws + jq`,
+Steampipe transforms, or a custom adapter):
 
 ```bash
-# e.g. the repo's collector: collects raw AWS CLI JSON into ./acct/raw, then
-# runs `stave transform` to write obs.v0.1 into ./acct/observations
-bash scripts/aws-snapshot.sh ./acct
-# or convert pre-collected raw snapshots yourself: stave transform -i raw/ -o observations/
-```
+# auto-transform (default): stave apply handles raw input directly
+stave apply --observations ./acct/raw
 
-The boundary: Stave reads `observations/*.json`. How those files get there is the extractor's
-job, never Stave's.
+# explicit: convert separately, then evaluate
+stave transform -i raw/ -o observations/
+stave apply --observations observations/
+```
 
 ## Step 5 — Apply: evaluate per service group, get findings fast
 

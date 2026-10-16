@@ -3,25 +3,30 @@
 ## Getting data into Stave
 
 Stave evaluates `obs.v0.1` observations and never calls cloud APIs itself.
-Getting your data into that format is two steps, and **collection stays
-external** — only conversion has a built-in default:
+**Collection stays external** — you use your tools and your credentials
+(the AWS CLI, [Steampipe](https://steampipe.io), Pulumi, Terraform state,
+etc.) to produce raw configuration snapshots.
 
-1. **Collect** raw configuration (this calls cloud APIs, so it uses your
-   tools and your credentials): the AWS CLI, [Steampipe](https://steampipe.io),
-   Pulumi, Terraform state, etc.
-2. **Convert** the raw snapshots into `obs.v0.1`. The default is built in —
-   **`stave transform`** runs jq filters in-process to reshape common AWS
-   resources, no extractor to write:
+**`stave apply` auto-transforms raw AWS CLI JSON** in-memory, so the
+default path is one step — no separate conversion needed:
 
-   ```bash
-   # doctest:skip — requires raw AWS CLI output
-   stave transform -i raw/ -o observations/
-   ```
+```bash
+# doctest:skip — requires raw AWS CLI output
+stave apply --observations raw/ --format text
+```
 
-You can still skip `stave transform` and use an **external extractor** that
-emits `obs.v0.1` directly — a Steampipe SQL query piped through `jq`,
-CloudQuery, or your own. See [Building an Extractor](extractor-prompt.md) when
-you need breadth beyond the built-in filters or a custom data source.
+To inspect the intermediate `obs.v0.1` output or run the conversion
+separately, use **`stave transform`**:
+
+```bash
+# doctest:skip — requires raw AWS CLI output
+stave transform -i raw/ -o observations/
+```
+
+You can also use an **external extractor** that emits `obs.v0.1`
+directly — a Steampipe SQL query piped through `jq`, CloudQuery, or your
+own. See [Building an Extractor](extractor-prompt.md) when you need breadth
+beyond the built-in filters or a custom data source.
 
 **`validate`** checks that observations are schema-compliant. Run it whenever
 observations come from an external extractor to catch mistakes before `apply`.
@@ -30,16 +35,16 @@ observations come from an external extractor to catch mistakes before `apply`.
 
 ```bash
 # doctest:skip — requires raw AWS CLI output and external extractor
-# Built-in path: collect raw snapshots, then convert
-stave transform -i raw/ -o my-obs/
+# Default: point apply at raw snapshots directly
+stave apply --observations raw/ --max-unsafe 168h
 
 # Or an external extractor produces obs.v0.1 JSON directly
 ./my-extractor.sh > my-obs/2026-03-15T000000Z.json
 
-# Validate catches schema mistakes before evaluation
+# Validate catches schema mistakes for external extractors
 stave lint --controls internal/controls/s3 --observations ./my-obs
 
-# Evaluate
+# Evaluate external-extractor output
 stave apply --controls internal/controls/s3 --observations ./my-obs --max-unsafe 168h
 ```
 
