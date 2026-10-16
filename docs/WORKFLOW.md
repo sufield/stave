@@ -67,6 +67,7 @@ the intermediate `obs.v0.1` output, or use an external extractor (`aws + jq`,
 Steampipe transforms, or a custom adapter):
 
 ```bash
+# doctest:skip — illustrative; raw/ and acct/raw do not exist in the repo
 # auto-transform (default): stave apply handles raw input directly
 stave apply --observations ./acct/raw
 
