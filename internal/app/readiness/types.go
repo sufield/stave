@@ -211,22 +211,22 @@ type ControlForecast struct {
 }
 
 // ActiveTotal returns the total count of classifiable controls (CanFire + Blocked).
-func (cf ControlForecast) ActiveTotal() int {
+func (cf *ControlForecast) ActiveTotal() int {
 	return cf.CanFire + cf.Blocked
 }
 
 // HasBlocked reports whether any controls are blocked.
-func (cf ControlForecast) HasBlocked() bool {
+func (cf *ControlForecast) HasBlocked() bool {
 	return cf.Blocked > 0
 }
 
 // HasIndeterminate reports whether any controls have indeterminate applicability.
-func (cf ControlForecast) HasIndeterminate() bool {
+func (cf *ControlForecast) HasIndeterminate() bool {
 	return cf.Indeterminate > 0
 }
 
 // IsFullyReady reports whether all classifiable controls can fire and at least one can fire.
-func (cf ControlForecast) IsFullyReady() bool {
+func (cf *ControlForecast) IsFullyReady() bool {
 	return cf.Blocked == 0 && cf.CanFire > 0
 }
 
@@ -244,22 +244,22 @@ type ChainForecast struct {
 }
 
 // ActiveTotal returns the total count of classifiable chains (CanFire + Blocked).
-func (cf ChainForecast) ActiveTotal() int {
+func (cf *ChainForecast) ActiveTotal() int {
 	return cf.CanFire + cf.Blocked
 }
 
 // HasBlocked reports whether any chains are blocked.
-func (cf ChainForecast) HasBlocked() bool {
+func (cf *ChainForecast) HasBlocked() bool {
 	return cf.Blocked > 0
 }
 
 // HasIndeterminate reports whether any chains have indeterminate applicability.
-func (cf ChainForecast) HasIndeterminate() bool {
+func (cf *ChainForecast) HasIndeterminate() bool {
 	return cf.Indeterminate > 0
 }
 
 // IsFullyReady reports whether all classifiable chains can fire and at least one can fire.
-func (cf ChainForecast) IsFullyReady() bool {
+func (cf *ChainForecast) IsFullyReady() bool {
 	return cf.Blocked == 0 && cf.CanFire > 0
 }
 
