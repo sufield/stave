@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/sufield/stave/internal/core/asset"
 
@@ -23,12 +24,19 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
+// RawTransformer converts a batch of unrecognized files (no schema_version)
+// into a single obs.v0.1 JSON document. The loader calls it when the
+// observations directory contains files that are not obs.v0.1 snapshots.
+type RawTransformer func(files map[string][]byte, evalTime time.Time) ([]byte, error)
+
 // ObservationLoader loads snapshots from JSON files.
 type ObservationLoader struct {
 	validator              contractvalidator.ObservationJSONValidator
 	integrityManifestPath  string
 	integrityPublicKeyPath string
 	onProgress             func(processed, total int)
+	rawTransform           RawTransformer
+	evalTime               time.Time
 }
 
 // LoaderOption configures an ObservationLoader.
@@ -44,6 +52,15 @@ func WithIntegrityCheck(manifestPath, publicKeyPath string) LoaderOption {
 	return func(l *ObservationLoader) {
 		l.integrityManifestPath = manifestPath
 		l.integrityPublicKeyPath = publicKeyPath
+	}
+}
+
+// WithRawTransform sets the fallback transformer for raw (non-obs.v0.1)
+// files found in the observations directory.
+func WithRawTransform(fn RawTransformer, evalTime time.Time) LoaderOption {
+	return func(l *ObservationLoader) {
+		l.rawTransform = fn
+		l.evalTime = evalTime
 	}
 }
 
@@ -75,27 +92,56 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 		return appcontracts.LoadResult{}, err
 	}
 
-	var snapshots []asset.Snapshot
-	fileHashes := make(map[string]string, len(entries))
-	total := len(entries)
-
-	for i, entry := range entries {
-		if err := ctx.Err(); err != nil {
-			return appcontracts.LoadResult{}, fmt.Errorf("load snapshots: %w", err)
-		}
-
+	// Read all files and partition into obs.v0.1 vs raw.
+	type fileData struct {
+		name string
+		path string
+		data []byte
+	}
+	var obsFiles, rawFiles []fileData
+	for _, entry := range entries {
 		path := filepath.Join(dir, entry.Name())
 		data, err := fsutil.ReadFileLimited(path)
 		if err != nil {
 			return appcontracts.LoadResult{}, fmt.Errorf("load snapshot %s: %w", path, err)
 		}
+		if hasSchemaVersion(data) {
+			obsFiles = append(obsFiles, fileData{entry.Name(), path, data})
+		} else {
+			rawFiles = append(rawFiles, fileData{entry.Name(), path, data})
+		}
+	}
 
-		snaps, hash, err := l.process(data, path)
+	// Auto-transform raw files if a transformer is configured.
+	if len(rawFiles) > 0 && l.rawTransform != nil {
+		batch := make(map[string][]byte, len(rawFiles))
+		for _, f := range rawFiles {
+			batch[f.name] = f.data
+		}
+		transformed, err := l.rawTransform(batch, l.evalTime)
 		if err != nil {
-			return appcontracts.LoadResult{}, fmt.Errorf("load snapshot %s: %w", path, err)
+			return appcontracts.LoadResult{}, fmt.Errorf("auto-transform raw input: %w", err)
+		}
+		if len(transformed) > 0 {
+			obsFiles = append(obsFiles, fileData{"_auto_transformed.json", "auto-transform", transformed})
+		}
+	}
+
+	var snapshots []asset.Snapshot
+	fileHashes := make(map[string]string, len(obsFiles))
+	total := len(obsFiles)
+
+	for i, f := range obsFiles {
+		if err := ctx.Err(); err != nil {
+			return appcontracts.LoadResult{}, fmt.Errorf("load snapshots: %w", err)
+		}
+
+		snaps, hash, err := l.process(f.data, f.path)
+		if err != nil {
+			return appcontracts.LoadResult{}, fmt.Errorf("load snapshot %s: %w", f.path, err)
 		}
 		snapshots = append(snapshots, snaps...)
-		fileHashes[entry.Name()] = hash
+		fileHashes[f.name] = hash
 
 		l.onProgress(i+1, total)
 	}
@@ -192,6 +238,19 @@ func isBundleFormat(data []byte) bool {
 		return false
 	}
 	return len(probe.Snapshots) > 0 && !bytes.Equal(bytes.TrimSpace(probe.Snapshots), []byte("null")) && len(probe.Assets) == 0
+}
+
+// hasSchemaVersion probes whether data is an obs.v0.1 or bundle document
+// by checking for a top-level "schema_version" key. Raw AWS CLI output
+// never contains this key.
+func hasSchemaVersion(data []byte) bool {
+	var probe struct {
+		SchemaVersion json.RawMessage `json:"schema_version"`
+	}
+	if err := json.Unmarshal(data, &probe); err != nil {
+		return false
+	}
+	return len(probe.SchemaVersion) > 0 && !bytes.Equal(bytes.TrimSpace(probe.SchemaVersion), []byte("null"))
 }
 
 func buildInputHashes(fileHashes map[string]string) *evaluation.InputHashes {

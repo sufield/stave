@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	awstransform "github.com/sufield/stave/internal/adapters/aws/transform"
 	stavecel "github.com/sufield/stave/internal/adapters/cel"
 	ctlbuiltin "github.com/sufield/stave/internal/adapters/controls/builtin"
 	"github.com/sufield/stave/internal/adapters/controls/pack"
@@ -265,6 +266,19 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 		if in.IntegrityManifest != "" {
 			obsOpts = append(obsOpts, observations.WithIntegrityCheck(in.IntegrityManifest, in.IntegrityPublicKey))
 		}
+		obsOpts = append(obsOpts, observations.WithRawTransform(
+			func(files map[string][]byte, evalTime time.Time) ([]byte, error) {
+				out, stats, tErr := awstransform.TransformFiles(files, awstransform.Options{
+					CapturedAt: evalTime.Format(time.RFC3339),
+				})
+				if tErr != nil {
+					return nil, fmt.Errorf("aws transform: %w", tErr)
+				}
+				slog.Info("auto-transformed raw input",
+					"files", stats.Files, "skipped", stats.Skipped, "assets", stats.Assets)
+				return out, nil
+			}, in.EvalTime,
+		))
 		obsRepo = observations.NewObservationLoader(obsOpts...)
 	}
 	wf := &appeval.AuditWorkflow{
