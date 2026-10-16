@@ -1957,6 +1957,11 @@ contracts:
     consumers:
       - CTL.CLOUDTRAIL.DATA.LAMBDA.001
 
+  - field: audit_trail.elasticache_endpoint_coverage.all_endpoints_logged
+    type: boolean
+    consumers:
+      - CTL.CLOUDTRAIL.ELASTICACHE.ENDPOINT.BLIND.001
+
   - field: audit_trail.encryption.encrypted
     type: boolean
     consumers:
@@ -2007,6 +2012,7 @@ contracts:
       - CTL.CLOUDTRAIL.DATA.LAMBDA.001
       - CTL.CLOUDTRAIL.DATAREAD.001
       - CTL.CLOUDTRAIL.DATAWRITE.001
+      - CTL.CLOUDTRAIL.ELASTICACHE.ENDPOINT.BLIND.001
       - CTL.CLOUDTRAIL.ENABLED.001
       - CTL.CLOUDTRAIL.ENCRYPT.001
       - CTL.CLOUDTRAIL.EVENTSELECTORS.001

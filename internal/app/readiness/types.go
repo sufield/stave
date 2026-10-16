@@ -19,6 +19,8 @@
 package readiness
 
 import (
+	"slices"
+
 	"github.com/sufield/stave/internal/core/kernel"
 )
 
@@ -45,13 +47,99 @@ func (rs ReadinessScore) IsZero() bool {
 	return rs == 0.0
 }
 
+// ObservedAssetTypes is a domain collection mapping observed asset types to their occurrence counts.
+type ObservedAssetTypes map[kernel.AssetType]int
+
+// Len returns the number of distinct observed asset types.
+func (o ObservedAssetTypes) Len() int {
+	return len(o)
+}
+
+// TotalAssets returns the sum of occurrence counts across all observed asset types.
+func (o ObservedAssetTypes) TotalAssets() int {
+	total := 0
+	for _, count := range o {
+		total += count
+	}
+	return total
+}
+
+// SortedTypes returns the list of observed asset types sorted alphabetically.
+func (o ObservedAssetTypes) SortedTypes() []kernel.AssetType {
+	if len(o) == 0 {
+		return nil
+	}
+	types := make([]kernel.AssetType, 0, len(o))
+	for t := range o {
+		types = append(types, t)
+	}
+	slices.Sort(types)
+	return types
+}
+
+// CountFor returns the occurrence count for a specific asset type, or 0 if not present.
+func (o ObservedAssetTypes) CountFor(at kernel.AssetType) int {
+	if o == nil {
+		return 0
+	}
+	return o[at]
+}
+
+// Contains reports whether the given asset type is present in observed asset types.
+func (o ObservedAssetTypes) Contains(at kernel.AssetType) bool {
+	if o == nil {
+		return false
+	}
+	_, ok := o[at]
+	return ok
+}
+
+// AnyObserved reports whether any of the given asset types has observed resources.
+func (o ObservedAssetTypes) AnyObserved(types []kernel.AssetType) bool {
+	for _, t := range types {
+		if o[t] > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// CatalogAssetTypes is a domain collection of asset types declared in the control catalog.
+type CatalogAssetTypes map[kernel.AssetType]bool
+
+// Len returns the number of catalog asset types.
+func (c CatalogAssetTypes) Len() int {
+	return len(c)
+}
+
+// SortedTypes returns the catalog asset types sorted alphabetically.
+func (c CatalogAssetTypes) SortedTypes() []kernel.AssetType {
+	if len(c) == 0 {
+		return nil
+	}
+	types := make([]kernel.AssetType, 0, len(c))
+	for t := range c {
+		types = append(types, t)
+	}
+	slices.Sort(types)
+	return types
+}
+
+// Contains reports whether the given asset type is declared in the catalog.
+func (c CatalogAssetTypes) Contains(at kernel.AssetType) bool {
+	if c == nil {
+		return false
+	}
+	return c[at]
+}
+
 // Report is the analyzer's output: a snapshot of what the
 // catalog can evaluate against the supplied observations.
 type Report struct {
 	// Snapshot summary.
-	ObservationCount int                       `json:"observation_count"`
-	ObservedTypes    map[kernel.AssetType]int  `json:"observed_asset_types"`
-	CatalogTypes     map[kernel.AssetType]bool `json:"catalog_asset_types"`
+	ObservationCount int                `json:"observation_count"`
+	ObservedTypes    ObservedAssetTypes `json:"observed_asset_types"`
+	CatalogTypes     CatalogAssetTypes  `json:"catalog_asset_types"`
 
 	// Per-control verdict counts.
 	Controls ControlForecast `json:"controls"`
@@ -122,6 +210,26 @@ type ControlForecast struct {
 	IndeterminatePct ForecastPercentage `json:"indeterminate_pct"`
 }
 
+// ActiveTotal returns the total count of classifiable controls (CanFire + Blocked).
+func (cf ControlForecast) ActiveTotal() int {
+	return cf.CanFire + cf.Blocked
+}
+
+// HasBlocked reports whether any controls are blocked.
+func (cf ControlForecast) HasBlocked() bool {
+	return cf.Blocked > 0
+}
+
+// HasIndeterminate reports whether any controls have indeterminate applicability.
+func (cf ControlForecast) HasIndeterminate() bool {
+	return cf.Indeterminate > 0
+}
+
+// IsFullyReady reports whether all classifiable controls can fire and at least one can fire.
+func (cf ControlForecast) IsFullyReady() bool {
+	return cf.Blocked == 0 && cf.CanFire > 0
+}
+
 // ChainForecast classifies every chain. A chain can fire only
 // if every member control can fire — one blocked member breaks
 // the compound. *Pct fields use the same scale as ControlForecast.
@@ -133,6 +241,26 @@ type ChainForecast struct {
 	CanFirePct       ForecastPercentage `json:"can_fire_pct"`
 	BlockedPct       ForecastPercentage `json:"blocked_pct"`
 	IndeterminatePct ForecastPercentage `json:"indeterminate_pct"`
+}
+
+// ActiveTotal returns the total count of classifiable chains (CanFire + Blocked).
+func (cf ChainForecast) ActiveTotal() int {
+	return cf.CanFire + cf.Blocked
+}
+
+// HasBlocked reports whether any chains are blocked.
+func (cf ChainForecast) HasBlocked() bool {
+	return cf.Blocked > 0
+}
+
+// HasIndeterminate reports whether any chains have indeterminate applicability.
+func (cf ChainForecast) HasIndeterminate() bool {
+	return cf.Indeterminate > 0
+}
+
+// IsFullyReady reports whether all classifiable chains can fire and at least one can fire.
+func (cf ChainForecast) IsFullyReady() bool {
+	return cf.Blocked == 0 && cf.CanFire > 0
 }
 
 // Action is one unblocking step the operator can take. Ordered

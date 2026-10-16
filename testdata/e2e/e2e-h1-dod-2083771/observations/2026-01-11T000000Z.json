@@ -1,0 +1,24 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-11T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.case-study-dod-2083771"
+  },
+  "assets": [
+    {
+      "id": "i-0a1b2c3d4e5f",
+      "type": "aws_ec2_instance",
+      "vendor": "aws",
+      "properties": {
+        "compute": {
+          "kind": "instance",
+          "ec2": {
+            "imds_hop_limit": 2,
+            "imds_hop_limit_excessive": true
+          }
+        }
+      }
+    }
+  ]
+}

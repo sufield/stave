@@ -3,8 +3,6 @@ package readiness
 import (
 	"fmt"
 	"io"
-	"maps"
-	"slices"
 
 	"github.com/sufield/stave/pkg/stave"
 )
@@ -46,23 +44,23 @@ func writeHeader(w io.Writer, _ stave.ReadinessReport) error {
 
 func writeSnapshotSummary(w io.Writer, r stave.ReadinessReport) error {
 	if _, err := fmt.Fprintf(w, "\nObservations:        %d assets across %d asset types\n",
-		r.ObservationCount, len(r.ObservedTypes)); err != nil {
+		r.ObservationCount, r.ObservedTypes.Len()); err != nil {
 		return err
 	}
 	_, err := fmt.Fprintf(w, "Catalog asset types: %d declared by controls\n",
-		len(r.CatalogTypes))
+		r.CatalogTypes.Len())
 	return err
 }
 
 func writeObservedTypes(w io.Writer, r stave.ReadinessReport) error {
-	if len(r.ObservedTypes) == 0 {
+	if r.ObservedTypes.Len() == 0 {
 		return nil
 	}
 	if _, err := fmt.Fprintln(w, "\nObserved asset types:"); err != nil {
 		return err
 	}
-	for _, t := range slices.Sorted(maps.Keys(r.ObservedTypes)) {
-		if _, err := fmt.Fprintf(w, "  %-40s %d\n", t, r.ObservedTypes[t]); err != nil {
+	for _, t := range r.ObservedTypes.SortedTypes() {
+		if _, err := fmt.Fprintf(w, "  %-40s %d\n", t, r.ObservedTypes.CountFor(t)); err != nil {
 			return err
 		}
 	}

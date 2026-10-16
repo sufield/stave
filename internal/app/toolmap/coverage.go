@@ -55,6 +55,30 @@ type Gap struct {
 	ControlIDs ControlIDs `json:"control_ids,omitempty"`
 }
 
+// Reason returns a human-readable explanation of what is missing for this gap.
+func (g Gap) Reason() string {
+	if g.HasChain && !g.HasControl {
+		return "no control"
+	}
+	if !g.HasChain && g.HasControl {
+		return "no chain"
+	}
+	if g.HasChain && g.HasControl {
+		return "covered"
+	}
+	return "no chain, no control"
+}
+
+// IsCovered reports whether both a chain and a control cover this prerequisite.
+func (g Gap) IsCovered() bool {
+	return g.HasChain && g.HasControl
+}
+
+// IsUncovered reports whether neither chain nor control covers this prerequisite.
+func (g Gap) IsUncovered() bool {
+	return !g.HasChain && !g.HasControl
+}
+
 // Gaps is a domain collection of Gap items with query and filter methods.
 type Gaps []Gap
 
@@ -81,6 +105,28 @@ func (g Gaps) ByTool(tool string) Gaps {
 type CoverageResult struct {
 	Covered Gaps `json:"covered"`
 	Gaps    Gaps `json:"gaps"`
+}
+
+// Total returns the total number of evaluated prerequisites (covered + gaps).
+func (cr *CoverageResult) Total() int {
+	if cr == nil {
+		return 0
+	}
+	return cr.Covered.Len() + cr.Gaps.Len()
+}
+
+// CoveragePercentage returns the percentage of prerequisites that are covered (0.0 to 100.0).
+func (cr *CoverageResult) CoveragePercentage() float64 {
+	total := cr.Total()
+	if total == 0 {
+		return 0.0
+	}
+	return float64(cr.Covered.Len()) / float64(total) * 100.0
+}
+
+// IsFullyCovered reports whether all prerequisites are covered (zero gaps).
+func (cr *CoverageResult) IsFullyCovered() bool {
+	return cr != nil && cr.Gaps.Len() == 0
 }
 
 // Analyze performs the three-way join:

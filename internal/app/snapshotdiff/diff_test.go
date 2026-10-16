@@ -243,3 +243,98 @@ func TestNewAndRemovedAssets_DomainMethods(t *testing.T) {
 		t.Error("emptyRemoved.ByType() should return nil")
 	}
 }
+
+func TestRiskSummary_DomainMethods(t *testing.T) {
+	// Zero/empty
+	var empty RiskSummary
+	if empty.Total() != 0 {
+		t.Errorf("empty.Total() = %d, want 0", empty.Total())
+	}
+	if empty.HasRiskChanges() {
+		t.Error("empty.HasRiskChanges() = true, want false")
+	}
+	if empty.NetRisk() != 0 {
+		t.Errorf("empty.NetRisk() = %d, want 0", empty.NetRisk())
+	}
+	if !empty.IsRiskNeutral() {
+		t.Error("empty.IsRiskNeutral() = false, want true")
+	}
+
+	// Net increasing
+	inc := RiskSummary{Increasing: 5, Decreasing: 2, Neutral: 3}
+	if inc.Total() != 10 {
+		t.Errorf("inc.Total() = %d, want 10", inc.Total())
+	}
+	if !inc.HasRiskChanges() {
+		t.Error("inc.HasRiskChanges() = false, want true")
+	}
+	if inc.NetRisk() != 3 {
+		t.Errorf("inc.NetRisk() = %d, want 3", inc.NetRisk())
+	}
+	if !inc.IsNetRiskIncreasing() {
+		t.Error("inc.IsNetRiskIncreasing() = false, want true")
+	}
+	if inc.IsNetRiskDecreasing() {
+		t.Error("inc.IsNetRiskDecreasing() = true, want false")
+	}
+	if inc.IsRiskNeutral() {
+		t.Error("inc.IsRiskNeutral() = true, want false")
+	}
+
+	// Net decreasing
+	dec := RiskSummary{Increasing: 1, Decreasing: 4, Neutral: 0}
+	if dec.NetRisk() != -3 {
+		t.Errorf("dec.NetRisk() = %d, want -3", dec.NetRisk())
+	}
+	if !dec.IsNetRiskDecreasing() {
+		t.Error("dec.IsNetRiskDecreasing() = false, want true")
+	}
+	if dec.IsNetRiskIncreasing() {
+		t.Error("dec.IsNetRiskIncreasing() = true, want false")
+	}
+}
+
+func TestDiffResult_DomainMethods(t *testing.T) {
+	var nilResult *DiffResult
+	if nilResult.HasDifferences() {
+		t.Error("nilResult.HasDifferences() = true, want false")
+	}
+	if nilResult.TotalDifferences() != 0 {
+		t.Errorf("nilResult.TotalDifferences() = %d, want 0", nilResult.TotalDifferences())
+	}
+	if nilResult.AssetCountDelta() != 0 {
+		t.Errorf("nilResult.AssetCountDelta() = %d, want 0", nilResult.AssetCountDelta())
+	}
+
+	empty := &DiffResult{BeforeAssets: 5, AfterAssets: 5}
+	if empty.HasDifferences() {
+		t.Error("empty.HasDifferences() = true, want false")
+	}
+	if empty.TotalDifferences() != 0 {
+		t.Errorf("empty.TotalDifferences() = %d, want 0", empty.TotalDifferences())
+	}
+	if empty.AssetCountDelta() != 0 {
+		t.Errorf("empty.AssetCountDelta() = %d, want 0", empty.AssetCountDelta())
+	}
+
+	withDiffs := &DiffResult{
+		BeforeAssets: 10,
+		AfterAssets:  12,
+		PropertyChanges: PropertyChanges{
+			{AssetID: "a1", Property: "p1"},
+		},
+		NewAssets: NewAssets{
+			{AssetID: "a2"},
+			{AssetID: "a3"},
+		},
+	}
+	if !withDiffs.HasDifferences() {
+		t.Error("withDiffs.HasDifferences() = false, want true")
+	}
+	if withDiffs.TotalDifferences() != 3 {
+		t.Errorf("withDiffs.TotalDifferences() = %d, want 3", withDiffs.TotalDifferences())
+	}
+	if withDiffs.AssetCountDelta() != 2 {
+		t.Errorf("withDiffs.AssetCountDelta() = %d, want 2", withDiffs.AssetCountDelta())
+	}
+}

@@ -238,3 +238,72 @@ func TestChainIDsAndControlIDs_DomainMethods(t *testing.T) {
 		t.Error("ControlIDs.Contains CTL.C.003: got true, want false")
 	}
 }
+
+func TestGapAndCoverageResult_DomainMethods(t *testing.T) {
+	// Gap reasons and status
+	gNoBoth := Gap{HasChain: false, HasControl: false}
+	if gNoBoth.Reason() != "no chain, no control" {
+		t.Errorf("gNoBoth.Reason() = %q, want 'no chain, no control'", gNoBoth.Reason())
+	}
+	if !gNoBoth.IsUncovered() {
+		t.Error("gNoBoth.IsUncovered() = false, want true")
+	}
+	if gNoBoth.IsCovered() {
+		t.Error("gNoBoth.IsCovered() = true, want false")
+	}
+
+	gChainOnly := Gap{HasChain: true, HasControl: false}
+	if gChainOnly.Reason() != "no control" {
+		t.Errorf("gChainOnly.Reason() = %q, want 'no control'", gChainOnly.Reason())
+	}
+	if gChainOnly.IsCovered() || gChainOnly.IsUncovered() {
+		t.Error("gChainOnly should be neither covered nor fully uncovered")
+	}
+
+	gControlOnly := Gap{HasChain: false, HasControl: true}
+	if gControlOnly.Reason() != "no chain" {
+		t.Errorf("gControlOnly.Reason() = %q, want 'no chain'", gControlOnly.Reason())
+	}
+
+	gCovered := Gap{HasChain: true, HasControl: true}
+	if gCovered.Reason() != "covered" {
+		t.Errorf("gCovered.Reason() = %q, want 'covered'", gCovered.Reason())
+	}
+	if !gCovered.IsCovered() {
+		t.Error("gCovered.IsCovered() = false, want true")
+	}
+
+	// CoverageResult
+	res := &CoverageResult{
+		Covered: Gaps{gCovered, gCovered, gCovered},
+		Gaps:    Gaps{gNoBoth},
+	}
+	if res.Total() != 4 {
+		t.Errorf("Total() = %d, want 4", res.Total())
+	}
+	if pct := res.CoveragePercentage(); pct != 75.0 {
+		t.Errorf("CoveragePercentage() = %f, want 75.0", pct)
+	}
+	if res.IsFullyCovered() {
+		t.Error("IsFullyCovered() = true, want false")
+	}
+
+	fullyCovered := &CoverageResult{
+		Covered: Gaps{gCovered},
+		Gaps:    nil,
+	}
+	if !fullyCovered.IsFullyCovered() {
+		t.Error("fullyCovered.IsFullyCovered() = false, want true")
+	}
+
+	var nilRes *CoverageResult
+	if nilRes.Total() != 0 {
+		t.Errorf("nilRes.Total() = %d, want 0", nilRes.Total())
+	}
+	if nilRes.CoveragePercentage() != 0.0 {
+		t.Errorf("nilRes.CoveragePercentage() = %f, want 0.0", nilRes.CoveragePercentage())
+	}
+	if nilRes.IsFullyCovered() {
+		t.Error("nilRes.IsFullyCovered() = true, want false")
+	}
+}

@@ -28,11 +28,11 @@ func TestBugHunt_Predict_MTTRNotCappedByLookback(t *testing.T) {
 	history := []*report.Assessment{
 		{
 			Run:      evaluation.RunInfo{EvalTime: t0},
-			Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "asset-1", ControlSeverity: policy.SeverityHigh}}},
+			Findings: []remediation.Finding{{ControlID: "CTL.A", AssetID: "asset-1", ControlSeverity: policy.SeverityHigh}},
 		},
 		{
 			Run:      evaluation.RunInfo{EvalTime: t70},
-			Findings: []remediation.Finding{{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "asset-1", ControlSeverity: policy.SeverityHigh}}},
+			Findings: []remediation.Finding{{ControlID: "CTL.A", AssetID: "asset-1", ControlSeverity: policy.SeverityHigh}},
 		},
 		{
 			Run:      evaluation.RunInfo{EvalTime: t80},

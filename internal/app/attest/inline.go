@@ -44,8 +44,8 @@ func (f KeyFingerprint) HasPrefix(prefix string) bool {
 // Digest returns the hex digest portion after the algorithm prefix (e.g. "sha256:").
 func (f KeyFingerprint) Digest() string {
 	str := string(f)
-	if idx := strings.Index(str, ":"); idx >= 0 {
-		return str[idx+1:]
+	if _, after, ok := strings.Cut(str, ":"); ok {
+		return after
 	}
 	return str
 }

@@ -1,0 +1,95 @@
+dsl_version: ctrl.v1
+id: CTL.CLOUDTRAIL.ELASTICACHE.ENDPOINT.BLIND.001
+name: CloudTrail Does Not Cover All ElastiCache API Endpoints
+description: >
+  CloudTrail does not log ElastiCache events from all reachable API
+  endpoints. ElastiCache exposes a non-production endpoint
+  (elasticache.<region>.api.aws) through which API calls bypass
+  CloudTrail entirely, creating an unaudited channel for cache
+  cluster manipulation, data exfiltration, and detection evasion.
+  A trail reporting full coverage via the standard endpoint masks
+  this blind spot.
+domain: exposure
+severity: high
+compliance:
+  nist_800_53_r5: "AU-2"
+  soc2: "CC7.1"
+  ccm_v4: ["LOG-01"]
+scope_tags:
+  - aws
+  - cloudtrail
+taxonomy:
+  - logging
+  - detection-evasion
+  - resource-sprawl
+subtractive_category:
+  - S07
+  - S09
+type: unsafe_state
+classification: state_assertion
+applicable_asset_types:
+  - aws_cloudtrail_trail
+params:
+  attack_stage: detection_evasion
+observation_fields:
+  - audit_trail.kind
+  - audit_trail.elasticache_endpoint_coverage.all_endpoints_logged
+remediation:
+  description: >
+    CloudTrail trail does not cover ElastiCache calls through the
+    non-production API endpoint.
+  action: >
+    Monitor network traffic for connections to the non-production
+    ElastiCache endpoint (elasticache.<region>.api.aws) using VPC
+    Flow Logs and Route 53 Resolver query logs. Alert on any
+    ElastiCache API activity routed through this endpoint until AWS
+    extends CloudTrail coverage to include it.
+  example: |
+    {
+      "audit_trail": {
+        "kind": "trail",
+        "elasticache_endpoint_coverage": {
+          "all_endpoints_logged": true
+        }
+      }
+    }
+unsafe_predicate:
+  all:
+    - field: properties.audit_trail.kind
+      op: eq
+      value: trail
+    - field: properties.audit_trail.elasticache_endpoint_coverage.all_endpoints_logged
+      op: ne
+      value: true
+tests:
+  - name: "trail not covering all ElastiCache endpoints fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:111122223333:trail/main-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          elasticache_endpoint_coverage:
+            all_endpoints_logged: false
+  - name: "trail covering all ElastiCache endpoints passes"
+    verdict: PASS
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:444455556666:trail/full-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail
+          elasticache_endpoint_coverage:
+            all_endpoints_logged: true
+  - name: "trail missing ElastiCache endpoint coverage field fires"
+    verdict: VIOLATION
+    asset:
+      asset_id: "arn:aws:cloudtrail:us-east-1:777788889999:trail/partial-trail"
+      asset_type: aws_cloudtrail_trail
+      vendor: aws
+      properties:
+        audit_trail:
+          kind: trail

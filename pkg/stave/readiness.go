@@ -15,6 +15,12 @@ import (
 // aliased in ids.go) for the map keys.
 type ReadinessReport = readiness.Report
 
+// ObservedAssetTypes maps observed asset types to occurrence counts.
+type ObservedAssetTypes = readiness.ObservedAssetTypes
+
+// CatalogAssetTypes tracks asset types declared by the control catalog.
+type CatalogAssetTypes = readiness.CatalogAssetTypes
+
 // ReadinessOptions configures [Readiness]. SnapshotsDir is required;
 // the rest have sensible defaults.
 //

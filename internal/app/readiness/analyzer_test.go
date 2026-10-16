@@ -415,3 +415,149 @@ func TestForecastPercentage_DomainMethods(t *testing.T) {
 		t.Errorf("IsComplete() = false, want true for 100.0")
 	}
 }
+
+func TestObservedAssetTypes_DomainMethods(t *testing.T) {
+	o := ObservedAssetTypes{
+		"aws_s3_bucket":       5,
+		"aws_iam_role":        2,
+		"aws_lambda_function": 8,
+	}
+
+	if o.Len() != 3 {
+		t.Errorf("Len() = %d, want 3", o.Len())
+	}
+	if o.TotalAssets() != 15 {
+		t.Errorf("TotalAssets() = %d, want 15", o.TotalAssets())
+	}
+
+	sorted := o.SortedTypes()
+	expected := []kernel.AssetType{"aws_iam_role", "aws_lambda_function", "aws_s3_bucket"}
+	if len(sorted) != len(expected) {
+		t.Fatalf("SortedTypes len = %d, want %d", len(sorted), len(expected))
+	}
+	for i, e := range expected {
+		if sorted[i] != e {
+			t.Errorf("SortedTypes[%d] = %s, want %s", i, sorted[i], e)
+		}
+	}
+
+	if o.CountFor("aws_s3_bucket") != 5 {
+		t.Errorf("CountFor(aws_s3_bucket) = %d, want 5", o.CountFor("aws_s3_bucket"))
+	}
+	if o.CountFor("unknown") != 0 {
+		t.Errorf("CountFor(unknown) = %d, want 0", o.CountFor("unknown"))
+	}
+
+	if !o.Contains("aws_iam_role") {
+		t.Error("Contains(aws_iam_role) = false, want true")
+	}
+	if o.Contains("unknown") {
+		t.Error("Contains(unknown) = true, want false")
+	}
+
+	if !o.AnyObserved([]kernel.AssetType{"unknown", "aws_iam_role"}) {
+		t.Error("AnyObserved([unknown, aws_iam_role]) = false, want true")
+	}
+	if o.AnyObserved([]kernel.AssetType{"unknown_a", "unknown_b"}) {
+		t.Error("AnyObserved([unknown_a, unknown_b]) = true, want false")
+	}
+
+	var nilObs ObservedAssetTypes
+	if nilObs.Len() != 0 {
+		t.Errorf("nilObs.Len() = %d, want 0", nilObs.Len())
+	}
+	if nilObs.TotalAssets() != 0 {
+		t.Errorf("nilObs.TotalAssets() = %d, want 0", nilObs.TotalAssets())
+	}
+	if nilObs.SortedTypes() != nil {
+		t.Error("nilObs.SortedTypes() should return nil")
+	}
+	if nilObs.CountFor("aws_s3_bucket") != 0 {
+		t.Errorf("nilObs.CountFor() = %d, want 0", nilObs.CountFor("aws_s3_bucket"))
+	}
+	if nilObs.Contains("aws_s3_bucket") {
+		t.Error("nilObs.Contains() should return false")
+	}
+	if nilObs.AnyObserved([]kernel.AssetType{"aws_s3_bucket"}) {
+		t.Error("nilObs.AnyObserved() should return false")
+	}
+}
+
+func TestCatalogAssetTypes_DomainMethods(t *testing.T) {
+	c := CatalogAssetTypes{
+		"aws_s3_bucket": true,
+		"aws_iam_role":  true,
+	}
+
+	if c.Len() != 2 {
+		t.Errorf("Len() = %d, want 2", c.Len())
+	}
+
+	sorted := c.SortedTypes()
+	if len(sorted) != 2 || sorted[0] != "aws_iam_role" || sorted[1] != "aws_s3_bucket" {
+		t.Errorf("SortedTypes() = %v, want [aws_iam_role, aws_s3_bucket]", sorted)
+	}
+
+	if !c.Contains("aws_s3_bucket") {
+		t.Error("Contains(aws_s3_bucket) = false, want true")
+	}
+	if c.Contains("unknown") {
+		t.Error("Contains(unknown) = true, want false")
+	}
+
+	var nilCat CatalogAssetTypes
+	if nilCat.Len() != 0 {
+		t.Errorf("nilCat.Len() = %d, want 0", nilCat.Len())
+	}
+	if nilCat.SortedTypes() != nil {
+		t.Error("nilCat.SortedTypes() should return nil")
+	}
+	if nilCat.Contains("aws_s3_bucket") {
+		t.Error("nilCat.Contains() should return false")
+	}
+}
+
+func TestForecast_DomainMethods(t *testing.T) {
+	cf := ControlForecast{
+		Total:         10,
+		CanFire:       6,
+		Blocked:       3,
+		Indeterminate: 1,
+	}
+	if cf.ActiveTotal() != 9 {
+		t.Errorf("ActiveTotal() = %d, want 9", cf.ActiveTotal())
+	}
+	if !cf.HasBlocked() {
+		t.Error("HasBlocked() = false, want true")
+	}
+	if !cf.HasIndeterminate() {
+		t.Error("HasIndeterminate() = false, want true")
+	}
+	if cf.IsFullyReady() {
+		t.Error("IsFullyReady() = true, want false")
+	}
+
+	readyCF := ControlForecast{Total: 5, CanFire: 5, Blocked: 0}
+	if !readyCF.IsFullyReady() {
+		t.Error("readyCF.IsFullyReady() = false, want true")
+	}
+
+	chainF := ChainForecast{
+		Total:         4,
+		CanFire:       2,
+		Blocked:       2,
+		Indeterminate: 0,
+	}
+	if chainF.ActiveTotal() != 4 {
+		t.Errorf("chainF.ActiveTotal() = %d, want 4", chainF.ActiveTotal())
+	}
+	if !chainF.HasBlocked() {
+		t.Error("chainF.HasBlocked() = false, want true")
+	}
+	if chainF.HasIndeterminate() {
+		t.Error("chainF.HasIndeterminate() = true, want false")
+	}
+	if chainF.IsFullyReady() {
+		t.Error("chainF.IsFullyReady() = true, want false")
+	}
+}

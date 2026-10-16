@@ -140,7 +140,7 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 		fmt.Fprintln(w)
 	}
 
-	if len(r.PropertyChanges) == 0 && len(r.NewAssets) == 0 && len(r.RemovedAssets) == 0 {
+	if !r.HasDifferences() {
 		fmt.Fprintln(w, "No differences found.")
 		return
 	}
@@ -150,7 +150,7 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 	}
 
 	// Risk summary.
-	if r.RiskSummary.Increasing > 0 || r.RiskSummary.Decreasing > 0 {
+	if r.RiskSummary.HasRiskChanges() {
 		fmt.Fprintln(w, "RISK SUMMARY")
 		fmt.Fprintln(w, strings.Repeat("─", 55))
 		fmt.Fprintf(w, "  Risk-increasing changes: %d\n", r.RiskSummary.Increasing)

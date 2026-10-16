@@ -163,13 +163,7 @@ func writeText(w io.Writer, result *toolmap.CoverageResult) error {
 	if len(result.Gaps) > 0 {
 		fmt.Fprintf(w, "GAPS:\n")
 		for _, g := range result.Gaps {
-			reason := "no chain, no control"
-			if g.HasChain {
-				reason = "no control"
-			} else if g.HasControl {
-				reason = "no chain"
-			}
-			fmt.Fprintf(w, "  %-20s %-28s %s (%s)\n", g.Tool, g.Capability, g.FieldPath, reason)
+			fmt.Fprintf(w, "  %-20s %-28s %s (%s)\n", g.Tool, g.Capability, g.FieldPath, g.Reason())
 		}
 		fmt.Fprintln(w)
 	}
@@ -181,7 +175,7 @@ func writeText(w io.Writer, result *toolmap.CoverageResult) error {
 		}
 	}
 
-	if len(result.Gaps) > 0 {
+	if !result.IsFullyCovered() {
 		return ui.ErrViolationsFound
 	}
 	return nil

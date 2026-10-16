@@ -1,0 +1,381 @@
+{
+  "schema_version": "out.v0.1",
+  "kind": "ASSESSMENT",
+  "run": {
+    "tool_version": "edge",
+    "offline": true,
+    "eval_time": "2026-01-11T00:00:00Z",
+    "sla_threshold": "7d",
+    "snapshots": 2,
+    "input_hashes": {
+      "files": {
+        "2026-01-01T000000Z.json": "4b2eb1175a3f39f2facd9da12c81ee1674336a19f2fecd9eb7cd19fd94745ee9",
+        "2026-01-11T000000Z.json": "e7644577a291536131f59e4afcf7f3ed2b047e28a07c5372d7f8ee20aef18f5c"
+      },
+      "overall": "ed5adbd782abc369cbd97dc9275d59480ca01d9bc7e607e62fbc264312afd8fc"
+    },
+    "policy_fingerprint": "7ef9140dce59dcf897376794b124bf26382cc3e6b338c587195157607a0b7ce8",
+    "evaluated_state": "deployed"
+  },
+  "summary": {
+    "total_assets": 1,
+    "exposed_resources": 1,
+    "violations": 1
+  },
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.EC2.IMDS.HOPLIMIT.001",
+      "asset_id": "i-0a1b2c3d4e5f",
+      "asset_type": "aws_ec2_instance",
+      "status": "OVERDUE",
+      "due_at": "2026-01-08T00:00:00Z",
+      "remaining_hours": -72,
+      "first_unsafe_at": "2026-01-01T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:42fcbec31f77259c",
+      "control_id": "CTL.EC2.IMDS.HOPLIMIT.001",
+      "control_name": "IMDS Hop Limit Greater Than 1",
+      "control_description": "Instance metadata service hop limit (`HttpPutResponseHopLimit`) is greater than 1. The hop limit is the TTL applied to HTTP responses from the metadata endpoint at 169.254.169.254. With a hop limit of 1, only the instance itself can reach the metadata service — single-hop, direct access. With a hop limit of 2 or more, the metadata response can traverse additional network hops: containers attached via Docker bridge networking, in-process proxies, sidecar containers, NAT-style routing inside the host. Each added hop is a new SSRF surface — a vulnerable application that proxies a metadata request from a containerized client reaches the host's IAM role credentials. AWS sets the default to 1 for new instances; the broader value is a deliberate operator choice that warrants a corresponding awareness of the attack surface it opens. The higher-confidence container-aware check (`CTL.EC2.IMDSV2.002`) fires when containers are detected; this control is the fallback signal when container detection is not available from the observation source.\n",
+      "asset_id": "i-0a1b2c3d4e5f",
+      "asset_type": "aws_ec2_instance",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2026-01-01T00:00:00Z",
+        "last_seen_unsafe_at": "2026-01-11T00:00:00Z",
+        "unsafe_duration_hours": 240,
+        "misconfigurations": [
+          {
+            "property": "compute.ec2.imds_hop_limit_excessive",
+            "actual_value": true,
+            "operator": "eq",
+            "unsafe_value": true
+          },
+          {
+            "property": "compute.kind",
+            "actual_value": "instance",
+            "operator": "eq",
+            "unsafe_value": "instance"
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 240 hours (SLA: 0 hours). Exposed since 2026-01-01T00:00:00Z."
+      },
+      "control_severity": "medium",
+      "control_compliance": {
+        "cis_aws_v3.0": "5.6",
+        "fedramp_moderate": "AC-3",
+        "nist_800_53_r5": "AC-3",
+        "owasp_subtractive": "S01",
+        "pci_dss_v4.0": "2.2.1",
+        "soc2": "CC6.1",
+        "subtractive_tier": "deletion"
+      },
+      "control_compliance_ccm_v4": [
+        "IVS-03",
+        "IVS-04"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "Instance has IMDS hop limit set above 1. Multi-hop metadata access is permitted, expanding the SSRF attack surface.",
+        "action": "Set `HttpPutResponseHopLimit` to 1: `aws ec2 modify-instance-metadata-options --instance-id \u003cid\u003e --http-put-response-hop-limit 1 --http-tokens required --http-endpoint enabled`. If the workload requires hop limit 2 (specific bridge- networked containers that need IMDS), document the requirement and pair it with strict per-container network segmentation (e.g., use the EKS pod identity agent so containers do not reach IMDS at all).",
+        "example": "{\n  \"compute\": {\n    \"kind\": \"instance\",\n    \"ec2\": {\n      \"imds_hop_limit_excessive\": false\n    }\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-85950be6f944a2df",
+        "target": {
+          "asset_id": "i-0a1b2c3d4e5f",
+          "asset_type": "aws_ec2_instance"
+        },
+        "action": "Set `HttpPutResponseHopLimit` to 1: `aws ec2 modify-instance-metadata-options --instance-id i-0a1b2c3d4e5f --http-put-response-hop-limit 1 --http-tokens required --http-endpoint enabled`. If the workload requires hop limit 2 (specific bridge- networked containers that need IMDS), document the requirement and pair it with strict per-container network segmentation (e.g., use the EKS pod identity agent so containers do not reach IMDS at all)."
+      },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "ec2_imds_container_escalation",
+          "chain_severity": "high",
+          "missing_control": "CTL.EC2.IMDSV2.001",
+          "controls_failing": [
+            "CTL.EC2.IMDS.HOPLIMIT.001"
+          ],
+          "description": "Container-aware IMDS bypass is detected (CTL.EC2.IMDSV2.002 — host-network or bridge+hop\u003e1 containers reach the metadata endpoint) AND either the hop limit alone is excessive or IMDSv2 is not enforced at all. Multiple credential-theft preconditions stack: containers can reach IMDS, the hop allowance is generous, and the basic IMDSv1 protections may not even be in place. A compromised container retrieves the host's IAM role credentials and operates with host-level permissions across the account.\n"
+        },
+        {
+          "chain_id": "ec2_imds_container_escalation",
+          "chain_severity": "high",
+          "missing_control": "CTL.EC2.IMDSV2.002",
+          "controls_failing": [
+            "CTL.EC2.IMDS.HOPLIMIT.001"
+          ],
+          "description": "Container-aware IMDS bypass is detected (CTL.EC2.IMDSV2.002 — host-network or bridge+hop\u003e1 containers reach the metadata endpoint) AND either the hop limit alone is excessive or IMDSv2 is not enforced at all. Multiple credential-theft preconditions stack: containers can reach IMDS, the hop allowance is generous, and the basic IMDSv1 protections may not even be in place. A compromised container retrieves the host's IAM role credentials and operates with host-level permissions across the account.\n"
+        }
+      ],
+      "sla_deadline_hours": 1440,
+      "sla_breached": false,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 51.369863013698634,
+      "score_breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "compute.ec2.imds_hop_limit_excessive eq true",
+          "observation_key": "compute.ec2.imds_hop_limit_excessive",
+          "operator": "eq",
+          "expected_value": true,
+          "observed_value": true
+        },
+        {
+          "predicate_expr": "compute.kind eq \"instance\"",
+          "observation_key": "compute.kind",
+          "operator": "eq",
+          "expected_value": "instance",
+          "observed_value": "instance"
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "i-0a1b2c3d4e5f",
+          "type": "aws_ec2_instance",
+          "vendor": "aws"
+        },
+        "violation": {
+          "control_id": "CTL.EC2.IMDS.HOPLIMIT.001",
+          "control_name": "IMDS Hop Limit Greater Than 1",
+          "severity": "medium",
+          "reasoning": [
+            {
+              "clause": "compute.ec2.imds_hop_limit_excessive = true",
+              "observation_key": "compute.ec2.imds_hop_limit_excessive",
+              "observed_value": true
+            },
+            {
+              "clause": "compute.kind = \"instance\"",
+              "observation_key": "compute.kind",
+              "observed_value": "instance"
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "compute.ec2.imds_hop_limit_excessive",
+            "current_value": "true",
+            "required_value": "false",
+            "has_safe_default": true,
+            "description": "Set compute.ec2.imds_hop_limit_excessive to false"
+          },
+          {
+            "path": "compute.kind",
+            "current_value": "instance",
+            "required_value": "any value other than instance",
+            "has_safe_default": false,
+            "description": "Change compute.kind away from instance"
+          }
+        ],
+        "action": "Set `HttpPutResponseHopLimit` to 1: `aws ec2 modify-instance-metadata-options --instance-id i-0a1b2c3d4e5f --http-put-response-hop-limit 1 --http-tokens required --http-endpoint enabled`. If the workload requires hop limit 2 (specific bridge- networked containers that need IMDS), document the requirement and pair it with strict per-container network segmentation (e.g., use the EKS pod identity agent so containers do not reach IMDS at all)."
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "ec2"
+      ],
+      "delta": [
+        {
+          "property_label": "EC2 imds hop limit excessive",
+          "property_path": "compute.ec2.imds_hop_limit_excessive",
+          "current_value": "true",
+          "fix_action": "set to false (disable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "583027a2fe0f",
+        "52d28c8738b0",
+        "0b5e705b52ae",
+        "95c7d1957e10",
+        "e71c3ff3b5fe",
+        "0992c1e5dcab"
+      ]
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "ec2_imds_container_escalation",
+      "description": "Container-aware IMDS bypass is detected (CTL.EC2.IMDSV2.002 — host-network or bridge+hop\u003e1 containers reach the metadata endpoint) AND either the hop limit alone is excessive or IMDSv2 is not enforced at all. Multiple credential-theft preconditions stack: containers can reach IMDS, the hop allowance is generous, and the basic IMDSv1 protections may not even be in place. A compromised container retrieves the host's IAM role credentials and operates with host-level permissions across the account.\n",
+      "controls_failing": [
+        "CTL.EC2.IMDS.HOPLIMIT.001"
+      ],
+      "missing_control": "CTL.EC2.IMDSV2.001",
+      "severity": "high",
+      "scope_id": "i-0a1b2c3d4e5f"
+    },
+    {
+      "chain": "ec2_imds_container_escalation",
+      "description": "Container-aware IMDS bypass is detected (CTL.EC2.IMDSV2.002 — host-network or bridge+hop\u003e1 containers reach the metadata endpoint) AND either the hop limit alone is excessive or IMDSv2 is not enforced at all. Multiple credential-theft preconditions stack: containers can reach IMDS, the hop allowance is generous, and the basic IMDSv1 protections may not even be in place. A compromised container retrieves the host's IAM role credentials and operates with host-level permissions across the account.\n",
+      "controls_failing": [
+        "CTL.EC2.IMDS.HOPLIMIT.001"
+      ],
+      "missing_control": "CTL.EC2.IMDSV2.002",
+      "severity": "high",
+      "scope_id": "i-0a1b2c3d4e5f"
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:31f9bcedddf267f2",
+      "asset_id": "i-0a1b2c3d4e5f",
+      "shared_keys": [
+        "compute.ec2",
+        "compute.ec2.imds_hop_limit_excessive"
+      ],
+      "headline_finding_id": "sha256:42fcbec31f77259c",
+      "member_finding_ids": [
+        "sha256:42fcbec31f77259c"
+      ],
+      "consolidated_score": 51.369863013698634,
+      "consolidated_blast_radius": 1
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "i-0a1b2c3d4e5f",
+      "asset_type": "aws_ec2_instance",
+      "fix_plan": {
+        "id": "fix-85950be6f944a2df",
+        "target": {
+          "asset_id": "i-0a1b2c3d4e5f",
+          "asset_type": "aws_ec2_instance"
+        },
+        "action": "Set `HttpPutResponseHopLimit` to 1: `aws ec2 modify-instance-metadata-options --instance-id i-0a1b2c3d4e5f --http-put-response-hop-limit 1 --http-tokens required --http-endpoint enabled`. If the workload requires hop limit 2 (specific bridge- networked containers that need IMDS), document the requirement and pair it with strict per-container network segmentation (e.g., use the EKS pod identity agent so containers do not reach IMDS at all)."
+      },
+      "contributing_controls": [
+        "CTL.EC2.IMDS.HOPLIMIT.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.EC2.IMDS.HOPLIMIT.001",
+      "asset_id": "i-0a1b2c3d4e5f",
+      "exposure_score": 51.369863013698634,
+      "breakdown": {
+        "base_score": 50,
+        "duration_factor": 1,
+        "blast_multiplier": 1,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.0273972602739727,
+        "days_blind": 10
+      },
+      "silent_killer": false
+    }
+  ],
+  "coverage_posture": {
+    "prowler": {
+      "iam": {
+        "covered": 0,
+        "total": 47,
+        "not_covered_checks": [
+          "iam_administrator_access_with_mfa",
+          "iam_avoid_root_usage",
+          "iam_aws_attached_policy_no_administrative_privileges",
+          "iam_check_saml_providers_sts",
+          "iam_customer_attached_policy_no_administrative_privileges",
+          "iam_customer_unattached_policy_no_administrative_privileges",
+          "iam_group_administrator_access_policy",
+          "iam_inline_policy_allows_privilege_escalation",
+          "iam_inline_policy_no_administrative_privileges",
+          "iam_inline_policy_no_full_access_to_cloudtrail",
+          "iam_inline_policy_no_full_access_to_kms",
+          "iam_inline_policy_no_wildcard_marketplace_subscribe",
+          "iam_no_custom_policy_permissive_role_assumption",
+          "iam_no_expired_server_certificates_stored",
+          "iam_no_root_access_key",
+          "iam_password_policy_expires_passwords_within_90_days_or_less",
+          "iam_password_policy_lowercase",
+          "iam_password_policy_minimum_length_14",
+          "iam_password_policy_number",
+          "iam_password_policy_reuse_24",
+          "iam_password_policy_symbol",
+          "iam_password_policy_uppercase",
+          "iam_policy_allows_privilege_escalation",
+          "iam_policy_attached_only_to_group_or_roles",
+          "iam_policy_cloudshell_admin_not_attached",
+          "iam_policy_no_full_access_to_cloudtrail",
+          "iam_policy_no_full_access_to_kms",
+          "iam_policy_no_wildcard_marketplace_subscribe",
+          "iam_role_access_not_stale_to_bedrock",
+          "iam_role_administratoraccess_policy",
+          "iam_role_cross_account_readonlyaccess_policy",
+          "iam_role_cross_service_confused_deputy_prevention",
+          "iam_root_credentials_management_enabled",
+          "iam_root_hardware_mfa_enabled",
+          "iam_root_mfa_enabled",
+          "iam_rotate_access_key_90_days",
+          "iam_securityaudit_role_created",
+          "iam_support_role_created",
+          "iam_user_access_not_stale_to_bedrock",
+          "iam_user_accesskey_unused",
+          "iam_user_administrator_access_policy",
+          "iam_user_console_access_unused",
+          "iam_user_hardware_mfa_enabled",
+          "iam_user_mfa_enabled_console_access",
+          "iam_user_no_setup_initial_access_key",
+          "iam_user_two_active_access_key",
+          "iam_user_with_temporary_credentials"
+        ]
+      },
+      "s3": {
+        "covered": 0,
+        "total": 21,
+        "not_covered_checks": [
+          "s3_access_point_public_access_block",
+          "s3_account_level_public_access_blocks",
+          "s3_bucket_acl_prohibited",
+          "s3_bucket_cross_account_access",
+          "s3_bucket_cross_region_replication",
+          "s3_bucket_default_encryption",
+          "s3_bucket_event_notifications_enabled",
+          "s3_bucket_kms_encryption",
+          "s3_bucket_level_public_access_block",
+          "s3_bucket_lifecycle_enabled",
+          "s3_bucket_no_mfa_delete",
+          "s3_bucket_object_lock",
+          "s3_bucket_object_versioning",
+          "s3_bucket_policy_public_write_access",
+          "s3_bucket_public_access",
+          "s3_bucket_public_list_acl",
+          "s3_bucket_public_write_acl",
+          "s3_bucket_secure_transport_policy",
+          "s3_bucket_server_access_logging_enabled",
+          "s3_bucket_shadow_resource_vulnerability",
+          "s3_multi_region_access_point_public_access_block"
+        ]
+      }
+    }
+  },
+  "extensions": {
+    "selected_controls_source": "dir",
+    "context_name": "stave",
+    "resolved_paths": {
+      "controls": "controls",
+      "observations": "observations"
+    }
+  }
+}

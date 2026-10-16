@@ -417,6 +417,21 @@ CloudTrail trail has been stopped and restarted more than once in 30 days. Stopp
 
 ---
 
+### CTL.CLOUDTRAIL.ELASTICACHE.ENDPOINT.BLIND.001
+
+**CloudTrail Does Not Cover All ElastiCache API Endpoints**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** exposure
+- **Compliance:** nist_800_53_r5: AU-2; soc2: CC7.1;
+
+CloudTrail does not log ElastiCache events from all reachable API endpoints. ElastiCache exposes a non-production endpoint (elasticache.<region>.api.aws) through which API calls bypass CloudTrail entirely, creating an unaudited channel for cache cluster manipulation, data exfiltration, and detection evasion. A trail reporting full coverage via the standard endpoint masks this blind spot.
+
+**Remediation:** Monitor network traffic for connections to the non-production ElastiCache endpoint (elasticache.<region>.api.aws) using VPC Flow Logs and Route 53 Resolver query logs. Alert on any ElastiCache API activity routed through this endpoint until AWS extends CloudTrail coverage to include it.
+
+---
+
 ### CTL.CLOUDTRAIL.ENABLED.001
 
 **CloudTrail Must Be Enabled in All Regions**

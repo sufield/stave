@@ -1,0 +1,26 @@
+{
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-01-01T00:00:00Z",
+  "source": "deployed",
+  "generated_by": {
+    "source_type": "synthetic.case-study-kubernetes-1238482"
+  },
+  "assets": [
+    {
+      "id": "arn:aws:eks:us-east-1:111122223333:cluster/shared-eks#aws-auth-mapRoles[0]",
+      "type": "aws_eks_aws_auth_mapping",
+      "vendor": "aws",
+      "properties": {
+        "k8s": {
+          "cluster": {
+            "aws_auth": {
+              "role_arn": "arn:aws:iam::111122223333:role/TenantB-IngressController",
+              "groups_include_masters": true,
+              "is_break_glass_admin": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

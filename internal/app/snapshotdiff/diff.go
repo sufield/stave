@@ -149,11 +149,65 @@ type DiffResult struct {
 	ScopeWarning    *ScopeWarning   `json:"scope_warning,omitempty"`
 }
 
+// HasDifferences reports whether there are any property changes, new assets, or removed assets.
+func (dr *DiffResult) HasDifferences() bool {
+	if dr == nil {
+		return false
+	}
+	return dr.PropertyChanges.Len() > 0 || dr.NewAssets.Len() > 0 || dr.RemovedAssets.Len() > 0
+}
+
+// TotalDifferences returns the sum of property changes, new assets, and removed assets.
+func (dr *DiffResult) TotalDifferences() int {
+	if dr == nil {
+		return 0
+	}
+	return dr.PropertyChanges.Len() + dr.NewAssets.Len() + dr.RemovedAssets.Len()
+}
+
+// AssetCountDelta returns the change in total asset count (AfterAssets - BeforeAssets).
+func (dr *DiffResult) AssetCountDelta() int {
+	if dr == nil {
+		return 0
+	}
+	return dr.AfterAssets - dr.BeforeAssets
+}
+
 // RiskSummary aggregates risk direction counts from property changes.
 type RiskSummary struct {
 	Increasing int `json:"increasing"`
 	Decreasing int `json:"decreasing"`
 	Neutral    int `json:"neutral"`
+}
+
+// Total returns the total count of property changes evaluated for risk.
+func (rs RiskSummary) Total() int {
+	return rs.Increasing + rs.Decreasing + rs.Neutral
+}
+
+// HasRiskChanges reports whether any risk-increasing or risk-decreasing changes exist.
+func (rs RiskSummary) HasRiskChanges() bool {
+	return rs.Increasing > 0 || rs.Decreasing > 0
+}
+
+// NetRisk returns the net risk change (increasing - decreasing).
+func (rs RiskSummary) NetRisk() int {
+	return rs.Increasing - rs.Decreasing
+}
+
+// IsNetRiskIncreasing reports whether risk-increasing changes outnumber risk-decreasing ones.
+func (rs RiskSummary) IsNetRiskIncreasing() bool {
+	return rs.NetRisk() > 0
+}
+
+// IsNetRiskDecreasing reports whether risk-decreasing changes outnumber risk-increasing ones.
+func (rs RiskSummary) IsNetRiskDecreasing() bool {
+	return rs.NetRisk() < 0
+}
+
+// IsRiskNeutral reports whether there are no risk-increasing or risk-decreasing changes.
+func (rs RiskSummary) IsRiskNeutral() bool {
+	return !rs.HasRiskChanges()
 }
 
 // Diff compares two snapshots and returns the structured differences.

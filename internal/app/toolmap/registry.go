@@ -11,10 +11,97 @@ import (
 // Tool describes an offensive security tool and the
 // capabilities it requires to operate.
 type Tool struct {
-	Name          string         `json:"name"`
-	Description   string         `json:"description"`
-	Reference     string         `json:"reference"`
-	Prerequisites []Prerequisite `json:"prerequisites"`
+	Name          string        `json:"name"`
+	Description   string        `json:"description"`
+	Reference     string        `json:"reference"`
+	Prerequisites Prerequisites `json:"prerequisites"`
+}
+
+// Tools is a domain collection of Tool entries with query and lookup methods.
+type Tools []Tool
+
+// Len returns the number of tools in the collection.
+func (ts Tools) Len() int {
+	return len(ts)
+}
+
+// Names returns the list of names for all tools in the collection.
+func (ts Tools) Names() []string {
+	if len(ts) == 0 {
+		return nil
+	}
+	names := make([]string, len(ts))
+	for i := range ts {
+		names[i] = ts[i].Name
+	}
+	return names
+}
+
+// ByName returns the tool matching the given name, or nil if not found.
+func (ts Tools) ByName(name string) *Tool {
+	for i := range ts {
+		if ts[i].Name == name {
+			return &ts[i]
+		}
+	}
+	return nil
+}
+
+// Prerequisites represents a domain collection of Prerequisite items with query methods.
+type Prerequisites []Prerequisite
+
+// Len returns the number of prerequisites.
+func (ps Prerequisites) Len() int {
+	return len(ps)
+}
+
+// Capabilities returns the unique list of capability tokens required across all prerequisites.
+func (ps Prerequisites) Capabilities() []string {
+	if len(ps) == 0 {
+		return nil
+	}
+	seen := make(map[string]struct{}, len(ps))
+	var caps []string
+	for _, p := range ps {
+		if _, dup := seen[p.Capability]; !dup {
+			seen[p.Capability] = struct{}{}
+			caps = append(caps, p.Capability)
+		}
+	}
+	return caps
+}
+
+// HasCapability reports whether any prerequisite matches the given capability token.
+func (ps Prerequisites) HasCapability(capability string) bool {
+	for _, p := range ps {
+		if p.Capability == capability {
+			return true
+		}
+	}
+	return false
+}
+
+// ByCapability returns a filtered Prerequisites collection for a specific capability.
+func (ps Prerequisites) ByCapability(capability string) Prerequisites {
+	var filtered Prerequisites
+	for _, p := range ps {
+		if p.Capability == capability {
+			filtered = append(filtered, p)
+		}
+	}
+	return filtered
+}
+
+// FieldPaths returns the list of field paths referenced across all prerequisites.
+func (ps Prerequisites) FieldPaths() []string {
+	if len(ps) == 0 {
+		return nil
+	}
+	paths := make([]string, len(ps))
+	for i := range ps {
+		paths[i] = ps[i].FieldPath
+	}
+	return paths
 }
 
 // Prerequisite is a (capability, field path) pair describing
@@ -69,11 +156,8 @@ func (r *Registry) ToolsForCapability(capability string) []Tool {
 	}
 	var out []Tool
 	for _, t := range r.tools {
-		for _, p := range t.Prerequisites {
-			if p.Capability == capability {
-				out = append(out, t)
-				break
-			}
+		if t.Prerequisites.HasCapability(capability) {
+			out = append(out, t)
 		}
 	}
 	sortTools(out)
@@ -87,15 +171,7 @@ func (r *Registry) CapabilitiesForTool(name string) []string {
 	if !ok {
 		return nil
 	}
-	seen := make(map[string]struct{}, len(t.Prerequisites))
-	var caps []string
-	for _, p := range t.Prerequisites {
-		if _, dup := seen[p.Capability]; !dup {
-			seen[p.Capability] = struct{}{}
-			caps = append(caps, p.Capability)
-		}
-	}
-	return caps
+	return t.Prerequisites.Capabilities()
 }
 
 var builtinTools = []Tool{
