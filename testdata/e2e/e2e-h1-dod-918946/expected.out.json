@@ -9,12 +9,12 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2020-07-01T000000Z.json": "ac60a3bac07e44388b8be1595b559509283ecee325c1406df506964dca29e335",
-        "2020-07-09T000000Z.json": "192d0818734f9ea8a8833c0151ea339641e15b864b92d6e84eb598fe6f1efe54"
+        "2020-07-01T000000Z.json": "5ac33fa284407a564562c9fcbc60dacb0dfb502a2e27f74319e95bca3b86a15f",
+        "2020-07-09T000000Z.json": "da5599f6004e55c0c00cd5be305b3221a0b80d0a6d039b3f09a25cd1142cb04b"
       },
-      "overall": "e27cc26afad468c79d8c423f5b35d39d6c216176790bfbd11023eefbf6be57f1"
+      "overall": "cb27449bf44201f4925297268cd4180659c68fbceb77886f8c036983831e0f3a"
     },
-    "policy_fingerprint": "fb3a03fbeba6b8830d92f136ca2ae63f78c8fc8e0d8172994448543b9bfe7f24",
+    "policy_fingerprint": "dcf78a89ad160b55f2514e727bb5a242bb1fb0f9951f2fffa25d815065b559e8",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -214,7 +214,7 @@
         }
       ],
       "contributing_fact_ids": [
-        "b1ff05247ec9",
+        "93f3829b9f78",
         "7d6dcbc06456",
         "49ada3e2be21",
         "89311be91721",

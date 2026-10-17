@@ -9,12 +9,12 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2022-06-15T000000Z.json": "781917b03cb4eb4ad00a049f825cd5283b419935ed784d94391f92afa6af8016",
-        "2022-06-23T000000Z.json": "9e56050dcd174a2c39026dbb4ad786126c11111b38079e766e6da2fe43f45a60"
+        "2022-06-15T000000Z.json": "bd806550c8debb5956b57be68697c5c42ca4be95f674564fd6fc4a433c17b6a4",
+        "2022-06-23T000000Z.json": "9925377f38268f466396254166ca5dfdf6e88c92795ae734c332364524e7262f"
       },
-      "overall": "370fa527fe4010809a0f1b88c7d6bcbf8b9b22d2217852210c021533ce3107e0"
+      "overall": "cdc6739bbfcf00edfdc9fe9e8834ed4dbcb41f7a59d2ccf276387d3c779d2f9a"
     },
-    "policy_fingerprint": "fb3a03fbeba6b8830d92f136ca2ae63f78c8fc8e0d8172994448543b9bfe7f24",
+    "policy_fingerprint": "dcf78a89ad160b55f2514e727bb5a242bb1fb0f9951f2fffa25d815065b559e8",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -214,7 +214,7 @@
         }
       ],
       "contributing_fact_ids": [
-        "82fdc2b4a5ca",
+        "bbd402642227",
         "2ebea417f719",
         "42a3a327b106",
         "d48c1ad91c11",

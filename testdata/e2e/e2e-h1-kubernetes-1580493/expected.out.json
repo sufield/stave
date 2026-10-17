@@ -4,21 +4,21 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2022-05-24T000000Z.json": "2d85eef6950a7f9534ff285124c02afd642855190d463d03c652ceceb3879ee4",
-        "2022-06-01T000000Z.json": "21367fa79be58d0c00b9ef4d647e9bfe7fcf9b725f68a602349388829375ca0d"
+        "2022-05-24T000000Z.json": "6d1587ab01e134de23af753eb0f77362d9a5eb7131d7fad76ccfa8c0d7d58730",
+        "2022-06-01T000000Z.json": "e84dccea5c6550849f490ae18ce31eab86ae57fde70c9769699e24fc5ca687d2"
       },
-      "overall": "f6a4f60cd9464cd2d5d54fd0b4d41d520e74383aed4bc8172e69c5e2f1a36013"
+      "overall": "762df2a89b766795b5b1d3833c3a0a5c5b9eda52af1bc463194e956fc8ca3954"
     },
-    "policy_fingerprint": "9e8b599883dba9cebd2a79c74bfd9c0c13345eaac4c2e21ec251f9e78dc72f06",
+    "policy_fingerprint": "77b40b0c8d5134ca241cdec9cdc353a114df17a5bef8bba5a8d31d4240f49f8a",
     "evaluated_state": "deployed"
   },
   "summary": {
-    "total_assets": 1,
+    "total_assets": 0,
     "exposed_resources": 0,
     "violations": 0
   },

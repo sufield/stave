@@ -9,12 +9,12 @@
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2016-03-10T000000Z.json": "a7cde32ffa219eb57e4da2933f2874fa54a2fd6d26024ae9fdabde7d96443fe4",
-        "2016-03-18T000000Z.json": "dd39a896039d43d2dc9d82eb5452eabf4012961eac57980d35834e76bba9a6f3"
+        "2016-03-10T000000Z.json": "e77ab686c5e4d27efe3c688acf4879df5aaf85bd71c971ca54adc0aeab868bce",
+        "2016-03-18T000000Z.json": "c75f667dbce446317b6b1e29c0cb6985ea08f1227e736767962f745acc6d2c44"
       },
-      "overall": "ffa7a7501015033b9457407f4622f246d439e321d41d041a0e955a687c2c4ec6"
+      "overall": "7a4c7ac5f6d086d5ba667b8b28ba075a2aad5356cff4b07cf05b04e86ba7d273"
     },
-    "policy_fingerprint": "fb3a03fbeba6b8830d92f136ca2ae63f78c8fc8e0d8172994448543b9bfe7f24",
+    "policy_fingerprint": "dcf78a89ad160b55f2514e727bb5a242bb1fb0f9951f2fffa25d815065b559e8",
     "evaluated_state": "deployed"
   },
   "summary": {
@@ -214,7 +214,7 @@
         }
       ],
       "contributing_fact_ids": [
-        "aac7da6721db",
+        "cdf26295a403",
         "0f281c40bd9f",
         "16df82ad9c1d",
         "e5668ef6230c",

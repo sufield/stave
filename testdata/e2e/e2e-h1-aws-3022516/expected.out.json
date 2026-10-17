@@ -4,26 +4,371 @@
   "run": {
     "tool_version": "edge",
     "offline": true,
-    "eval_time": "0001-01-01T00:00:00Z",
+    "eval_time": "2026-01-11T00:00:00Z",
     "sla_threshold": "7d",
     "snapshots": 2,
     "input_hashes": {
       "files": {
-        "2025-03-04T000000Z.json": "10a50ca4420318a6edb234baf98ba7182032f5e595764fbb373445eb569dc215",
-        "2025-03-15T000000Z.json": "8ea4bc9b3cbf61151f0c12af45f3189ebd07fd90f715e8663500ff859b9d6cb3"
+        "2025-03-04T000000Z.json": "4bd17e533d0d1d7c8afe82b7a6d10bee6ef4345aa1aeee45cf0e22cbd9a397cf",
+        "2025-03-15T000000Z.json": "3ef3a90f66c01abef6bc302710c621db88e7e2b87ca73bc9f8a42d1185a86c37"
       },
-      "overall": "6e34394d6257e5ec59f98e91673279db5bdf467b4288728a36e930ff124d2167"
+      "overall": "96cc4081531724cdbae76e58a5b24fad596f1e979a3b9e493a3e343f18965c14"
     },
-    "policy_fingerprint": "58cf7ad13f5cca6c9cd0148cac1181d9e5541b9ae5d29eaec46d10f91cb3ecee",
+    "policy_fingerprint": "d06bb99f2c65e50b7427e3706eb8d81f6366f8ff10f5020281b49086480d9b7d",
     "evaluated_state": "deployed"
   },
   "summary": {
     "total_assets": 1,
-    "exposed_resources": 0,
-    "violations": 0
+    "exposed_resources": 1,
+    "violations": 1
   },
-  "status": "COMPLIANT",
-  "findings": [],
+  "status": "NON_COMPLIANT",
+  "risk_signals": [
+    {
+      "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "status": "OVERDUE",
+      "due_at": "2025-03-11T00:00:00Z",
+      "remaining_hours": -7344,
+      "first_unsafe_at": "2025-03-04T00:00:00Z",
+      "threshold_hours": 168
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "sha256:b67b590df41dc3f9",
+      "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
+      "control_name": "CloudTrail Must Be Enabled in All Regions",
+      "control_description": "CloudTrail must be configured as a multi-region trail. A single-region trail misses API activity in other regions, leaving gaps in the audit record that prevent forensic investigation of unauthorized access.\n",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "asset_vendor": "aws",
+      "evidence": {
+        "first_unsafe_at": "2025-03-04T00:00:00Z",
+        "last_seen_unsafe_at": "2025-03-15T00:00:00Z",
+        "unsafe_duration_hours": 7512,
+        "misconfigurations": [
+          {
+            "property": "audit_trail.kind",
+            "actual_value": "trail",
+            "operator": "eq",
+            "unsafe_value": "trail"
+          },
+          {
+            "property": "audit_trail.multi_region_enabled",
+            "actual_value": false,
+            "operator": "eq",
+            "unsafe_value": false
+          }
+        ],
+        "root_causes": [
+          "general"
+        ],
+        "temporal_risk": "Asset non-compliant for 7512 hours (SLA: 0 hours). Exposed since 2025-03-04T00:00:00Z."
+      },
+      "control_severity": "critical",
+      "control_compliance": {
+        "cis_aws_v1.4.0": "3.1",
+        "cis_aws_v3.0": "3.1",
+        "fedramp_moderate": "AU-2",
+        "ffiec": "ISH-4",
+        "gdpr": "Art.30",
+        "hipaa": "164.312(b)",
+        "iso_27001_2022": "A.8.15",
+        "nist_800_53_r5": "AU-2",
+        "nist_csf_2.0": "DE.CM",
+        "pci_dss_v4.0": "10.2.1",
+        "soc2": "CC7.1"
+      },
+      "control_compliance_ccm_v4": [
+        "LOG-05",
+        "LOG-12"
+      ],
+      "posture_drift": {
+        "pattern": "persistent",
+        "exposure_window_count": 1
+      },
+      "remediation": {
+        "description": "CloudTrail trail is not configured for multi-region logging. API activity in other regions is not recorded.",
+        "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail",
+        "example": "{\n  \"audit_trail\": {\n    \"kind\": \"trail\",\n    \"multi_region_enabled\": true\n  }\n}\n"
+      },
+      "fix_plan": {
+        "id": "fix-eb3cbbf058097429",
+        "target": {
+          "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+          "asset_type": "aws_cloudtrail_trail"
+        },
+        "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
+      },
+      "exploitability": "one_away",
+      "near_miss_chains": [
+        {
+          "chain_id": "acm_wildcard_issuance_unaudited",
+          "chain_severity": "critical",
+          "missing_control": "CTL.ACM.ACME.WILDCARD.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "ACM ACME endpoint allows wildcard certificate issuance AND CloudTrail is not enabled. A wildcard certificate (*.example.com) covers every subdomain — one compromised private key or one leaked certificate enables impersonation of any service under the domain. With ACME wildcard issuance enabled, any authorized ACME client can request wildcard certificates programmatically. Without CloudTrail, the RequestCertificate and IssueCertificate API calls are not logged — unauthorized wildcard certificate issuance leaves no audit trail. The combination is unrestricted wildcard cert issuance with invisible certificate operations. Either control alone mitigates: disabling wildcard issuance limits certificates to specific subdomains; enabling CloudTrail records all certificate issuance for detection and forensics.\n"
+        },
+        {
+          "chain_id": "cloudformation_template_injection_unaudited",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CLOUDFORMATION.TEMPLATE.S3.INJECTION.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "S3 bucket hosting CloudFormation templates allows untrusted write access AND CloudTrail is not enabled. The Pacu cfn__resource_injection module exploits exactly this: an attacker with PutObject on the template bucket injects a malicious resource (IAM role, Lambda function, EC2 instance) into the template. On the next stack update, CloudFormation deploys the injected resource with the stack's service role permissions. Without CloudTrail, the PutObject call to the template bucket AND the UpdateStack API call are both invisible — the supply chain compromise leaves no audit trail. Either control alone mitigates: restricting template bucket write access blocks the injection; enabling CloudTrail records the suspicious PutObject and UpdateStack calls.\n"
+        },
+        {
+          "chain_id": "elasticache_broad_access_no_audit",
+          "chain_severity": "critical",
+          "missing_control": "CTL.ELASTICACHE.SG.BROAD.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "ElastiCache cluster security group allows broad ingress (0.0.0.0/0 on cache ports) AND CloudTrail is not enabled. Broad ingress means any host with network connectivity can reach the cache endpoint. Without CloudTrail, API calls that modify the cluster configuration (ModifyReplicationGroup, CreateSnapshot, DeleteCacheCluster) leave no audit record. The combination is a wide-open cache endpoint with invisible control-plane activity — an attacker can snapshot the cluster for offline data extraction and the API call is never logged. Either control alone mitigates: restricting the security group limits who can reach the endpoint; enabling CloudTrail records configuration changes for detection and forensics.\n"
+        },
+        {
+          "chain_id": "shadow_account_invisible",
+          "chain_severity": "critical",
+          "missing_control": "CTL.CONFIG.ENABLED.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n"
+        },
+        {
+          "chain_id": "shadow_account_invisible",
+          "chain_severity": "critical",
+          "missing_control": "CTL.ORG.MEMBERSHIP.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n"
+        },
+        {
+          "chain_id": "shadow_account_invisible",
+          "chain_severity": "critical",
+          "missing_control": "CTL.ORG.TAGPOLICY.ENFORCED.001",
+          "controls_failing": [
+            "CTL.CLOUDTRAIL.ENABLED.001"
+          ],
+          "description": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n"
+        }
+      ],
+      "sla_deadline_hours": 72,
+      "sla_breached": true,
+      "sla_overdue_hours": 7440,
+      "sla_policy_source": "profile:default",
+      "exposure_score": 100,
+      "score_breakdown": {
+        "base_score": 100,
+        "duration_factor": 2,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.8575342465753426,
+        "days_blind": 313
+      },
+      "reasoning_trace": [
+        {
+          "predicate_expr": "audit_trail.kind eq \"trail\"",
+          "observation_key": "audit_trail.kind",
+          "operator": "eq",
+          "expected_value": "trail",
+          "observed_value": "trail"
+        },
+        {
+          "predicate_expr": "audit_trail.multi_region_enabled eq false",
+          "observation_key": "audit_trail.multi_region_enabled",
+          "operator": "eq",
+          "expected_value": false,
+          "observed_value": false
+        }
+      ],
+      "remediation_context": {
+        "asset": {
+          "id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+          "type": "aws_cloudtrail_trail",
+          "vendor": "aws",
+          "arn": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+          "region": "us-east-1"
+        },
+        "violation": {
+          "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
+          "control_name": "CloudTrail Must Be Enabled in All Regions",
+          "severity": "critical",
+          "reasoning": [
+            {
+              "clause": "audit_trail.kind = \"trail\"",
+              "observation_key": "audit_trail.kind",
+              "observed_value": "trail"
+            },
+            {
+              "clause": "the audit trail is multi-region = false",
+              "observation_key": "audit_trail.multi_region_enabled",
+              "observed_value": false
+            }
+          ]
+        },
+        "changes": [
+          {
+            "path": "audit_trail.kind",
+            "current_value": "trail",
+            "required_value": "any value other than trail",
+            "has_safe_default": false,
+            "description": "Change audit_trail.kind away from trail"
+          },
+          {
+            "path": "audit_trail.multi_region_enabled",
+            "current_value": "false",
+            "required_value": "true",
+            "has_safe_default": true,
+            "description": "Set audit_trail.multi_region_enabled to true"
+          }
+        ],
+        "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
+      },
+      "classification": "state_assertion",
+      "scope_tags": [
+        "aws",
+        "cloudtrail"
+      ],
+      "delta": [
+        {
+          "property_label": "multi region",
+          "property_path": "audit_trail.multi_region_enabled",
+          "current_value": "false",
+          "fix_action": "set to true (enable)"
+        }
+      ],
+      "contributing_fact_ids": [
+        "9266063a08c7",
+        "dac204e8d473",
+        "c8fc3dc17690",
+        "0e6311f5333a",
+        "2fdf93f16296",
+        "c68d6d06a433"
+      ]
+    }
+  ],
+  "near_miss_chains": [
+    {
+      "chain": "acm_wildcard_issuance_unaudited",
+      "description": "ACM ACME endpoint allows wildcard certificate issuance AND CloudTrail is not enabled. A wildcard certificate (*.example.com) covers every subdomain — one compromised private key or one leaked certificate enables impersonation of any service under the domain. With ACME wildcard issuance enabled, any authorized ACME client can request wildcard certificates programmatically. Without CloudTrail, the RequestCertificate and IssueCertificate API calls are not logged — unauthorized wildcard certificate issuance leaves no audit trail. The combination is unrestricted wildcard cert issuance with invisible certificate operations. Either control alone mitigates: disabling wildcard issuance limits certificates to specific subdomains; enabling CloudTrail records all certificate issuance for detection and forensics.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.ACM.ACME.WILDCARD.001",
+      "severity": "critical",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "cloudformation_template_injection_unaudited",
+      "description": "S3 bucket hosting CloudFormation templates allows untrusted write access AND CloudTrail is not enabled. The Pacu cfn__resource_injection module exploits exactly this: an attacker with PutObject on the template bucket injects a malicious resource (IAM role, Lambda function, EC2 instance) into the template. On the next stack update, CloudFormation deploys the injected resource with the stack's service role permissions. Without CloudTrail, the PutObject call to the template bucket AND the UpdateStack API call are both invisible — the supply chain compromise leaves no audit trail. Either control alone mitigates: restricting template bucket write access blocks the injection; enabling CloudTrail records the suspicious PutObject and UpdateStack calls.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.CLOUDFORMATION.TEMPLATE.S3.INJECTION.001",
+      "severity": "critical",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "elasticache_broad_access_no_audit",
+      "description": "ElastiCache cluster security group allows broad ingress (0.0.0.0/0 on cache ports) AND CloudTrail is not enabled. Broad ingress means any host with network connectivity can reach the cache endpoint. Without CloudTrail, API calls that modify the cluster configuration (ModifyReplicationGroup, CreateSnapshot, DeleteCacheCluster) leave no audit record. The combination is a wide-open cache endpoint with invisible control-plane activity — an attacker can snapshot the cluster for offline data extraction and the API call is never logged. Either control alone mitigates: restricting the security group limits who can reach the endpoint; enabling CloudTrail records configuration changes for detection and forensics.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.ELASTICACHE.SG.BROAD.001",
+      "severity": "critical",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "shadow_account_invisible",
+      "description": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.CONFIG.ENABLED.001",
+      "severity": "critical",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "shadow_account_invisible",
+      "description": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.ORG.MEMBERSHIP.001",
+      "severity": "critical",
+      "scope_id": "__global__"
+    },
+    {
+      "chain": "shadow_account_invisible",
+      "description": "An AWS account where all four governance pillars are absent: no CloudTrail (no API audit trail), no Config recording (no configuration change history), no tag policy enforcement (no resource classification), and not a member of an organization (no SCP guardrails). Any two missing creates a meaningful blind spot. All four missing is a completely ungoverned account where any resource can be created, any action can be taken, and nobody will know.\n",
+      "controls_failing": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "missing_control": "CTL.ORG.TAGPOLICY.ENFORCED.001",
+      "severity": "critical",
+      "scope_id": "__global__"
+    }
+  ],
+  "issues": [
+    {
+      "issue_id": "sha256:a162674c10c34690",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+      "shared_keys": [
+        "audit_trail.kind",
+        "audit_trail.multi_region_enabled"
+      ],
+      "headline_finding_id": "sha256:b67b590df41dc3f9",
+      "member_finding_ids": [
+        "sha256:b67b590df41dc3f9"
+      ],
+      "consolidated_score": 100,
+      "consolidated_blast_radius": 2.5
+    }
+  ],
+  "remediation_groups": [
+    {
+      "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+      "asset_type": "aws_cloudtrail_trail",
+      "fix_plan": {
+        "id": "fix-eb3cbbf058097429",
+        "target": {
+          "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+          "asset_type": "aws_cloudtrail_trail"
+        },
+        "action": "Update the trail to enable multi-region logging. Run: aws cloudtrail update-trail --name xxx --is-multi-region-trail"
+      },
+      "contributing_controls": [
+        "CTL.CLOUDTRAIL.ENABLED.001"
+      ],
+      "finding_count": 1
+    }
+  ],
+  "top_exposures": [
+    {
+      "finding_index": 0,
+      "control_id": "CTL.CLOUDTRAIL.ENABLED.001",
+      "asset_id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+      "exposure_score": 100,
+      "breakdown": {
+        "base_score": 100,
+        "duration_factor": 2,
+        "blast_multiplier": 2.5,
+        "exposure_multiplier": 1,
+        "chain_bonus": 1,
+        "blind_multiplier": 1.8575342465753426,
+        "days_blind": 313
+      },
+      "silent_killer": true
+    }
+  ],
   "coverage_posture": {
     "prowler": {
       "iam": {
