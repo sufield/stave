@@ -74,11 +74,11 @@ func TestJSONRenderer_SinglePlaybookEmitsObject(t *testing.T) {
 	r := ExplainNarrativeJSONRenderer{}
 	cases := []struct {
 		name      string
-		playbooks []narrative.Playbook
+		playbooks narrative.Playbooks
 		wantStart string
 	}{
-		{"one", []narrative.Playbook{{ControlID: "CTL.A.001"}}, "{"},
-		{"two", []narrative.Playbook{{ControlID: "CTL.A.001"}, {ControlID: "CTL.B.002"}}, "["},
+		{"one", narrative.Playbooks{{ControlID: "CTL.A.001"}}, "{"},
+		{"two", narrative.Playbooks{{ControlID: "CTL.A.001"}, {ControlID: "CTL.B.002"}}, "["},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

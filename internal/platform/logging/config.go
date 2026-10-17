@@ -81,6 +81,11 @@ type Config struct {
 	// control, bucket, arn, account) from log attributes. Enabled when
 	// the --sanitize CLI flag is active.
 	SanitizeInfraKeys bool
+
+	// SuppressWarnings counts Warn-level records instead of emitting
+	// them. A summary line is printed at exit. Enabled by default when
+	// neither --verbose nor --log-level is given.
+	SuppressWarnings bool
 }
 
 // suppressTimestamps reports whether timestamps should be stripped for deterministic output.

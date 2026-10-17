@@ -237,3 +237,78 @@ func TestPropertyPath_DomainMethods(t *testing.T) {
 		t.Errorf("BaseName() = %q, want role", PropertyPath("role").BaseName())
 	}
 }
+
+func TestFieldGap_DomainMethods(t *testing.T) {
+	fg := FieldGap{
+		MissingCount: 2,
+		TotalCount:   10,
+	}
+
+	if ratio := fg.MissingRatio(); ratio != 0.2 {
+		t.Errorf("MissingRatio() = %f, want 0.2", ratio)
+	}
+	if cov := fg.CoveragePercentage(); cov != 80.0 {
+		t.Errorf("CoveragePercentage() = %f, want 80.0", cov)
+	}
+	if fg.IsComplete() {
+		t.Error("IsComplete() = true, want false")
+	}
+	if fg.IsFullyMissing() {
+		t.Error("IsFullyMissing() = true, want false")
+	}
+
+	complete := FieldGap{MissingCount: 0, TotalCount: 5}
+	if !complete.IsComplete() {
+		t.Error("complete.IsComplete() = false, want true")
+	}
+	if complete.CoveragePercentage() != 100.0 {
+		t.Errorf("complete.CoveragePercentage() = %f, want 100.0", complete.CoveragePercentage())
+	}
+
+	fullyMissing := FieldGap{MissingCount: 5, TotalCount: 5}
+	if !fullyMissing.IsFullyMissing() {
+		t.Error("fullyMissing.IsFullyMissing() = false, want true")
+	}
+
+	zero := FieldGap{}
+	if zero.MissingRatio() != 0.0 || zero.CoveragePercentage() != 100.0 || !zero.IsComplete() || zero.IsFullyMissing() {
+		t.Error("zero FieldGap domain methods failed")
+	}
+}
+
+func TestSummary_DomainMethods(t *testing.T) {
+	s := Summary{
+		TotalGaps:             10,
+		TagGaps:               3,
+		DerivedGaps:           2,
+		ApiGaps:               1,
+		CollectorGaps:         4,
+		FixableByAgentGaps:    5,
+		NotFixableByAgentGaps: 5,
+		ChainsBlockedTotal:    2,
+	}
+
+	if s.AgentFixableCount() != 5 {
+		t.Errorf("AgentFixableCount() = %d, want 5", s.AgentFixableCount())
+	}
+	if s.OperatorRequiredCount() != 5 {
+		t.Errorf("OperatorRequiredCount() = %d, want 5", s.OperatorRequiredCount())
+	}
+	if !s.HasFixableGaps() {
+		t.Error("HasFixableGaps() = false, want true")
+	}
+	if !s.HasBlockedChains() {
+		t.Error("HasBlockedChains() = false, want true")
+	}
+	if !s.HasGaps() {
+		t.Error("HasGaps() = false, want true")
+	}
+	if ratio := s.FixableRatio(); ratio != 0.5 {
+		t.Errorf("FixableRatio() = %f, want 0.5", ratio)
+	}
+
+	empty := Summary{}
+	if empty.AgentFixableCount() != 0 || empty.OperatorRequiredCount() != 0 || empty.HasFixableGaps() || empty.HasBlockedChains() || empty.HasGaps() || empty.FixableRatio() != 0.0 {
+		t.Error("empty Summary domain methods failed")
+	}
+}

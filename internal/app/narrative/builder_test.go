@@ -192,3 +192,97 @@ func TestStateEntries_DomainMethods(t *testing.T) {
 		t.Error("empty.ByPropertyPath() should return nil")
 	}
 }
+
+func TestConfidenceLevel_DomainMethods(t *testing.T) {
+	if ConfidenceHigh.String() != "high" || ConfidenceHigh.Display() != "HIGH" {
+		t.Errorf("ConfidenceHigh string/display mismatch")
+	}
+	if !ConfidenceHigh.IsHigh() || ConfidenceHigh.IsMedium() || ConfidenceHigh.IsLow() {
+		t.Errorf("ConfidenceHigh boolean checks failed")
+	}
+	if ConfidenceMedium.Display() != "MEDIUM" || !ConfidenceMedium.IsMedium() {
+		t.Errorf("ConfidenceMedium checks failed")
+	}
+	if ConfidenceLow.Display() != "LOW" || !ConfidenceLow.IsLow() {
+		t.Errorf("ConfidenceLow checks failed")
+	}
+}
+
+func TestDeactivationOrder_DomainMethods(t *testing.T) {
+	order := DeactivationOrder{"CTL.A.001", "CTL.B.002"}
+	if order.Len() != 2 {
+		t.Errorf("order.Len() = %d, want 2", order.Len())
+	}
+	if !order.Contains("CTL.A.001") || order.Contains("CTL.C.003") {
+		t.Errorf("order.Contains failed")
+	}
+	if order.First() != "CTL.A.001" {
+		t.Errorf("order.First() = %q, want CTL.A.001", order.First())
+	}
+
+	var empty DeactivationOrder
+	if empty.Len() != 0 || empty.Contains("CTL.A.001") || empty.First() != "" {
+		t.Errorf("empty DeactivationOrder methods failed")
+	}
+}
+
+func TestPlaybooks_CollectionMethods(t *testing.T) {
+	pbs := Playbooks{
+		{
+			FindingID: "f-1",
+			ControlID: "CTL.A.001",
+			AssetID:   "arn:aws:s3:::bucket-1",
+			Narrative: NarrativeSections{
+				Steps: Steps{
+					{StepNumber: 1, Title: "Step 1"},
+					{StepNumber: 2, Title: "Step 2"},
+				},
+			},
+		},
+		{
+			FindingID: "f-2",
+			ControlID: "CTL.B.002",
+			AssetID:   "arn:aws:s3:::bucket-1",
+			Narrative: NarrativeSections{
+				Steps: Steps{
+					{StepNumber: 1, Title: "Step 1"},
+				},
+			},
+		},
+		{
+			FindingID: "f-3",
+			ControlID: "CTL.A.001",
+			AssetID:   "arn:aws:s3:::bucket-2",
+		},
+	}
+
+	if pbs.Len() != 3 {
+		t.Errorf("pbs.Len() = %d, want 3", pbs.Len())
+	}
+	if pbs.TotalSteps() != 3 {
+		t.Errorf("pbs.TotalSteps() = %d, want 3", pbs.TotalSteps())
+	}
+
+	f1 := pbs.ByFindingID("f-1")
+	if f1 == nil || f1.FindingID != "f-1" {
+		t.Errorf("pbs.ByFindingID(f-1) failed")
+	}
+	if pbs.ByFindingID("f-missing") != nil {
+		t.Errorf("pbs.ByFindingID(f-missing) want nil")
+	}
+
+	byCtlA := pbs.ByControlID("CTL.A.001")
+	if byCtlA.Len() != 2 {
+		t.Errorf("pbs.ByControlID(CTL.A.001) len = %d, want 2", byCtlA.Len())
+	}
+
+	byBucket1 := pbs.ByAssetID("arn:aws:s3:::bucket-1")
+	if byBucket1.Len() != 2 {
+		t.Errorf("pbs.ByAssetID(bucket-1) len = %d, want 2", byBucket1.Len())
+	}
+
+	var empty Playbooks
+	if empty.Len() != 0 || empty.TotalSteps() != 0 || empty.ByFindingID("f-1") != nil || empty.ByControlID("CTL.A.001") != nil || empty.ByAssetID("arn") != nil {
+		t.Errorf("empty Playbooks methods failed")
+	}
+}

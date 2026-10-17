@@ -133,7 +133,7 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 	}
 
 	// Build playbooks.
-	playbooks := make([]narrative.Playbook, len(selected))
+	playbooks := make(narrative.Playbooks, len(selected))
 	for i, idx := range selected {
 		f := assessment.Findings[idx]
 		ctl := controlMap[f.ControlID]
@@ -155,7 +155,7 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 	return nil
 }
 
-func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth string) {
+func writeNarrativePlaybooks(w io.Writer, playbooks narrative.Playbooks, depth string) {
 	if len(playbooks) > 1 {
 		fmt.Fprintf(w, "ASSET REMEDIATION PLAYBOOK\nFailing controls: %d\n\n", len(playbooks))
 	}
@@ -212,7 +212,7 @@ func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth 
 			if cc.ChainNarrative != "" {
 				fmt.Fprintf(w, "\n%s\n", cc.ChainNarrative)
 			}
-			if len(cc.DeactivationOrder) > 0 {
+			if cc.DeactivationOrder.Len() > 0 {
 				fmt.Fprintln(w, "\nRecommended deactivation order:")
 				for i, id := range cc.DeactivationOrder {
 					fmt.Fprintf(w, "  %d. %s\n", i+1, id)
@@ -243,12 +243,12 @@ func writeNarrativeSteps(w io.Writer, steps []narrative.Step) {
 			fmt.Fprintf(w, "  %s\n", s.Action)
 		}
 		if s.Confidence != "" {
-			fmt.Fprintf(w, "  Confidence: %s\n", strings.ToUpper(string(s.Confidence)))
+			fmt.Fprintf(w, "  Confidence: %s\n", s.Confidence.Display())
 		}
 	}
 }
 
-func writeMarkdownPlaybooks(w io.Writer, playbooks []narrative.Playbook, depth string) {
+func writeMarkdownPlaybooks(w io.Writer, playbooks narrative.Playbooks, depth string) {
 	for pi := range playbooks {
 		pb := &playbooks[pi]
 

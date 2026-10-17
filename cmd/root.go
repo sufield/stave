@@ -42,6 +42,9 @@ func (g *globalFlagsType) LoggingConfig() logging.Config {
 		cfg.Level = logging.ParseLevel(string(g.LogLevel))
 	} else {
 		cfg.Level = logging.LevelFromVerbosity(g.Verbosity)
+		// ponytail: suppress warnings by default when user didn't ask
+		// for verbosity; accumulate count and show summary at exit.
+		cfg.SuppressWarnings = g.Verbosity == 0
 	}
 	cfg.Format = logging.ParseFormat(string(g.LogFormat))
 	cfg.LogFile = fsutil.CleanUserPath(g.LogFile)

@@ -46,7 +46,7 @@ func TestResolvePredicate(t *testing.T) {
 func TestGroundAssets(t *testing.T) {
 	ug := UniversalGrounding{
 		Sort:       "Resource",
-		Predicates: []string{"generates_security_events", "logging_enabled"},
+		Predicates: Predicates{"generates_security_events", "logging_enabled"},
 		Groundings: map[string]AssetTypeGrounding{
 			"aws_s3_bucket": {
 				"generates_security_events": true,
@@ -77,7 +77,7 @@ func TestGroundAssets(t *testing.T) {
 func TestGroundAssetsWithWhen(t *testing.T) {
 	ug := UniversalGrounding{
 		Sort:       "Endpoint",
-		Predicates: []string{"accepts_requests", "requires_auth"},
+		Predicates: Predicates{"accepts_requests", "requires_auth"},
 		Groundings: map[string]AssetTypeGrounding{
 			"aws_lambda_function": {
 				"when":             ".compute.function_url",
@@ -114,7 +114,7 @@ func TestGroundAssetsWithWhen(t *testing.T) {
 }
 
 func TestGenerateGroundingEmpty(t *testing.T) {
-	out := GenerateGrounding("Resource", []string{"stores_data"}, nil)
+	out := GenerateGrounding("Resource", Predicates{"stores_data"}, nil)
 	if !strings.Contains(out, "forall") {
 		t.Error("empty grounding should close universe with forall")
 	}
@@ -125,7 +125,7 @@ func TestGenerateGroundingSingle(t *testing.T) {
 		"stores_data": true,
 		"encrypted":   false,
 	}}}
-	out := GenerateGrounding("Resource", []string{"stores_data", "encrypted"}, gs)
+	out := GenerateGrounding("Resource", Predicates{"stores_data", "encrypted"}, gs)
 	if !strings.Contains(out, "(declare-const c_bucket Resource)") {
 		t.Error("should declare constant")
 	}
@@ -263,5 +263,68 @@ func TestResults_DomainMethods(t *testing.T) {
 	totalTime := res.TotalSolveTime()
 	if totalTime != 850*time.Millisecond {
 		t.Errorf("TotalSolveTime: got %v, want 850ms", totalTime)
+	}
+}
+
+func TestPredicates_DomainMethods(t *testing.T) {
+	preds := Predicates{"stores_data", "encrypted", "logging_enabled"}
+
+	if preds.Len() != 3 {
+		t.Errorf("preds.Len() = %d, want 3", preds.Len())
+	}
+	if !preds.Contains("stores_data") || !preds.Contains("encrypted") {
+		t.Error("preds.Contains expected true for existing predicates")
+	}
+	if preds.Contains("nonexistent") {
+		t.Error("preds.Contains expected false for nonexistent predicate")
+	}
+
+	var empty Predicates
+	if empty.Len() != 0 || empty.Contains("stores_data") {
+		t.Error("empty Predicates domain methods failed")
+	}
+}
+
+func TestSummary_DomainMethods(t *testing.T) {
+	s := Summary{
+		Total:    10,
+		Hold:     8,
+		Violated: 1,
+		Errored:  1,
+	}
+
+	if s.AllHold() {
+		t.Error("AllHold() = true, want false")
+	}
+	if !s.HasViolations() {
+		t.Error("HasViolations() = false, want true")
+	}
+	if !s.HasErrors() {
+		t.Error("HasErrors() = false, want true")
+	}
+	if rate := s.PassRate(); rate != 80.0 {
+		t.Errorf("PassRate() = %f, want 80.0", rate)
+	}
+	if s.NonHoldingCount() != 2 {
+		t.Errorf("NonHoldingCount() = %d, want 2", s.NonHoldingCount())
+	}
+
+	allHold := Summary{Total: 5, Hold: 5, Violated: 0, Errored: 0}
+	if !allHold.AllHold() {
+		t.Error("allHold.AllHold() = false, want true")
+	}
+	if allHold.HasViolations() || allHold.HasErrors() {
+		t.Error("allHold should not have violations or errors")
+	}
+	if allHold.PassRate() != 100.0 {
+		t.Errorf("allHold.PassRate() = %f, want 100.0", allHold.PassRate())
+	}
+	if allHold.NonHoldingCount() != 0 {
+		t.Errorf("allHold.NonHoldingCount() = %d, want 0", allHold.NonHoldingCount())
+	}
+
+	empty := Summary{}
+	if empty.AllHold() || empty.HasViolations() || empty.HasErrors() || empty.PassRate() != 100.0 || empty.NonHoldingCount() != 0 {
+		t.Error("empty Summary domain methods failed")
 	}
 }

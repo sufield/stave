@@ -81,12 +81,14 @@ func (a *App) execute() {
 	// pair handleExecutionError and recoverExecutePanic share, so a
 	// SIGINT exit path matches the other two for log/profile fidelity.
 	if a.Root.Context() != nil && a.Root.Context().Err() != nil {
+		a.printWarningSummary()
 		a.cleanupBeforeExit()
 		a.exit(ui.ExitInterrupted)
 		return
 	}
 
 	a.finalizeExecute(args)
+	a.printWarningSummary()
 	a.releaseResources(a.Root)
 }
 
@@ -288,6 +290,8 @@ func (a *App) handleExecutionError(err error) {
 		a.writeCommandError(err)
 	}
 
+	a.printWarningSummary()
+
 	// postRun is skipped on the error-exit path (Cobra's RunE returned
 	// non-nil before postRun could fire), so stop the CPU profile and
 	// close the log file ourselves. Mirrors recoverExecutePanic's
@@ -400,6 +404,30 @@ func (a *App) finalizeExecute(args []string) {
 	projectRoot := persistSessionStateIfApplicable(resolver, args)
 	a.printWorkflowHandoff(args, projectRoot)
 	a.releaseResources(a.Root)
+}
+
+// printWarningSummary emits a single stderr line when the default
+// warning-suppression mode accumulated any Warn-level records.
+// Skipped in quiet mode (exit-code-only) and when no LogCloser exists.
+func (a *App) printWarningSummary() {
+	if a.Flags.Quiet {
+		return
+	}
+	a.bootstrapMu.Lock()
+	closer := a.LogCloser
+	a.bootstrapMu.Unlock()
+	if closer == nil {
+		return
+	}
+	n := closer.SuppressedWarnings()
+	if n == 0 {
+		return
+	}
+	s := "s"
+	if n == 1 {
+		s = ""
+	}
+	fmt.Fprintf(os.Stderr, "⚠ %d warning%s suppressed. Run with --verbose to view.\n", n, s)
 }
 
 func (a *App) exit(code int) {

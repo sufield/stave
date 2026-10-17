@@ -132,6 +132,36 @@ type FieldGap struct {
 	Remediation          Remediation      `json:"remediation"`
 }
 
+// MissingRatio returns the fraction of observed assets missing this property (0.0 to 1.0).
+func (fg FieldGap) MissingRatio() float64 {
+	if fg.TotalCount <= 0 {
+		return 0.0
+	}
+	return float64(fg.MissingCount) / float64(fg.TotalCount)
+}
+
+// CoveragePercentage returns the percentage of observed assets carrying this property (0.0 to 100.0).
+func (fg FieldGap) CoveragePercentage() float64 {
+	if fg.TotalCount <= 0 {
+		return 100.0
+	}
+	ratio := float64(fg.TotalCount-fg.MissingCount) / float64(fg.TotalCount) * 100.0
+	if ratio < 0 {
+		return 0.0
+	}
+	return ratio
+}
+
+// IsComplete reports whether every observed asset carries this property (no missing assets).
+func (fg FieldGap) IsComplete() bool {
+	return fg.MissingCount == 0
+}
+
+// IsFullyMissing reports whether all observed assets are missing this property.
+func (fg FieldGap) IsFullyMissing() bool {
+	return fg.TotalCount > 0 && fg.MissingCount >= fg.TotalCount
+}
+
 // ControlsBlocked is a domain collection of control IDs blocked by a gap with querying methods.
 type ControlsBlocked []kernel.ControlID
 
@@ -237,4 +267,37 @@ type Summary struct {
 	QuickWinTimeEstimate    string `json:"quick_win_time_estimate,omitempty"`
 	IndeterminateControls   int    `json:"indeterminate_controls"`
 	IndeterminateDisclaimer string `json:"indeterminate_disclaimer,omitempty"`
+}
+
+// AgentFixableCount returns the total number of gaps that can be fixed by an agent loop (tag + derived).
+func (s Summary) AgentFixableCount() int {
+	return s.TagGaps + s.DerivedGaps
+}
+
+// OperatorRequiredCount returns the total number of gaps requiring operator or collector code changes (api + collector).
+func (s Summary) OperatorRequiredCount() int {
+	return s.ApiGaps + s.CollectorGaps
+}
+
+// HasFixableGaps reports whether there are any gaps fixable by an agent loop.
+func (s Summary) HasFixableGaps() bool {
+	return s.FixableByAgentGaps > 0
+}
+
+// HasBlockedChains reports whether any compound chains are blocked by observation gaps.
+func (s Summary) HasBlockedChains() bool {
+	return s.ChainsBlockedTotal > 0
+}
+
+// HasGaps reports whether any gaps were detected.
+func (s Summary) HasGaps() bool {
+	return s.TotalGaps > 0
+}
+
+// FixableRatio returns the fraction of total gaps that are fixable by an agent (0.0 to 1.0).
+func (s Summary) FixableRatio() float64 {
+	if s.TotalGaps <= 0 {
+		return 0.0
+	}
+	return float64(s.FixableByAgentGaps) / float64(s.TotalGaps)
 }

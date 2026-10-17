@@ -25,6 +25,61 @@ type Playbook struct {
 	Narrative   NarrativeSections `json:"narrative"`
 }
 
+// Playbooks is a domain collection of Playbook items with querying and aggregation methods.
+type Playbooks []Playbook
+
+// Len returns the number of playbooks in the collection.
+func (p Playbooks) Len() int {
+	return len(p)
+}
+
+// ByFindingID returns the playbook with the matching finding ID, or nil if not found.
+func (p Playbooks) ByFindingID(id string) *Playbook {
+	for i := range p {
+		if p[i].FindingID == id {
+			return &p[i]
+		}
+	}
+	return nil
+}
+
+// ByControlID returns a new Playbooks collection filtered by control ID.
+func (p Playbooks) ByControlID(id kernel.ControlID) Playbooks {
+	if len(p) == 0 {
+		return nil
+	}
+	var filtered Playbooks
+	for i := range p {
+		if p[i].ControlID == id {
+			filtered = append(filtered, p[i])
+		}
+	}
+	return filtered
+}
+
+// ByAssetID returns a new Playbooks collection filtered by asset ID.
+func (p Playbooks) ByAssetID(id asset.ID) Playbooks {
+	if len(p) == 0 {
+		return nil
+	}
+	var filtered Playbooks
+	for i := range p {
+		if p[i].AssetID == id {
+			filtered = append(filtered, p[i])
+		}
+	}
+	return filtered
+}
+
+// TotalSteps returns the total number of remediation steps across all playbooks.
+func (p Playbooks) TotalSteps() int {
+	total := 0
+	for i := range p {
+		total += p[i].Narrative.Steps.Len()
+	}
+	return total
+}
+
 // StateEntries is a domain collection of StateEntry items with query methods.
 type StateEntries []StateEntry
 
@@ -68,6 +123,31 @@ const (
 	ConfidenceMedium ConfidenceLevel = "medium"
 	ConfidenceLow    ConfidenceLevel = "low"
 )
+
+// String returns the raw string value of the confidence level.
+func (c ConfidenceLevel) String() string {
+	return string(c)
+}
+
+// Display returns the uppercase display representation (e.g. "HIGH", "MEDIUM", "LOW").
+func (c ConfidenceLevel) Display() string {
+	return strings.ToUpper(string(c))
+}
+
+// IsHigh reports whether the confidence level is high.
+func (c ConfidenceLevel) IsHigh() bool {
+	return c == ConfidenceHigh
+}
+
+// IsMedium reports whether the confidence level is medium.
+func (c ConfidenceLevel) IsMedium() bool {
+	return c == ConfidenceMedium
+}
+
+// IsLow reports whether the confidence level is low.
+func (c ConfidenceLevel) IsLow() bool {
+	return c == ConfidenceLow
+}
 
 // Step is a single remediation action.
 type Step struct {
@@ -115,13 +195,34 @@ func (ss Steps) RequiresCaution() Steps {
 	return filtered
 }
 
+// DeactivationOrder represents an ordered sequence of control IDs to deactivate safely.
+type DeactivationOrder []kernel.ControlID
+
+// Len returns the count of controls in the deactivation order.
+func (d DeactivationOrder) Len() int {
+	return len(d)
+}
+
+// Contains reports whether the control ID is present in the deactivation order.
+func (d DeactivationOrder) Contains(id kernel.ControlID) bool {
+	return slices.Contains(d, id)
+}
+
+// First returns the first control in the deactivation order, or empty if empty.
+func (d DeactivationOrder) First() kernel.ControlID {
+	if len(d) == 0 {
+		return ""
+	}
+	return d[0]
+}
+
 // ChainContext describes the compound chain membership.
 type ChainContext struct {
-	ChainID           kernel.ChainID     `json:"chain_id"`
-	ChainActive       bool               `json:"chain_active"`
-	MemberControls    ChainMembers       `json:"member_controls"`
-	ChainNarrative    string             `json:"chain_narrative"`
-	DeactivationOrder []kernel.ControlID `json:"deactivation_order,omitempty"`
+	ChainID           kernel.ChainID    `json:"chain_id"`
+	ChainActive       bool              `json:"chain_active"`
+	MemberControls    ChainMembers      `json:"member_controls"`
+	ChainNarrative    string            `json:"chain_narrative"`
+	DeactivationOrder DeactivationOrder `json:"deactivation_order,omitempty"`
 }
 
 // ChainMembers is a domain collection of ChainMember controls with querying methods.
@@ -458,8 +559,8 @@ func buildChainContext(f *remediation.Finding, chainDefs []policy.ChainDefinitio
 // chainDeactivationOrder sorts control IDs by the recommended
 // remediation order: restore detection first, then crypto, then
 // remove exposure. Based on attack stage conventions.
-func chainDeactivationOrder(controlIDs []kernel.ControlID) []kernel.ControlID {
-	order := make([]kernel.ControlID, len(controlIDs))
+func chainDeactivationOrder(controlIDs []kernel.ControlID) DeactivationOrder {
+	order := make(DeactivationOrder, len(controlIDs))
 	copy(order, controlIDs)
 	slices.SortFunc(order, func(a, b kernel.ControlID) int {
 		if n := stageOrder(a) - stageOrder(b); n != 0 {

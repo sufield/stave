@@ -1,6 +1,7 @@
 package universals
 
 import (
+	"slices"
 	"time"
 )
 
@@ -111,9 +112,9 @@ func (v Violations) ByConstant(c string) Violations {
 }
 
 // Predicates returns the deduplicated list of violated predicate names.
-func (v Violations) Predicates() []string {
+func (v Violations) Predicates() Predicates {
 	seen := make(map[string]bool)
-	var out []string
+	var out Predicates
 	for _, item := range v {
 		if !seen[item.Predicate] {
 			seen[item.Predicate] = true
@@ -192,6 +193,47 @@ type Summary struct {
 	Results  Results `json:"results"`
 }
 
+// AllHold reports whether all evaluated universals hold without violation or error.
+func (s Summary) AllHold() bool {
+	return s.Total > 0 && s.Hold == s.Total && s.Violated == 0 && s.Errored == 0
+}
+
+// HasViolations reports whether any universal formula was violated.
+func (s Summary) HasViolations() bool {
+	return s.Violated > 0
+}
+
+// HasErrors reports whether any universal formula evaluation encountered an error.
+func (s Summary) HasErrors() bool {
+	return s.Errored > 0
+}
+
+// PassRate returns the percentage of evaluated universals that hold (0.0 to 100.0).
+func (s Summary) PassRate() float64 {
+	if s.Total <= 0 {
+		return 100.0
+	}
+	return (float64(s.Hold) / float64(s.Total)) * 100.0
+}
+
+// NonHoldingCount returns the count of universals that either were violated or errored.
+func (s Summary) NonHoldingCount() int {
+	return s.Violated + s.Errored
+}
+
+// Predicates is a domain collection of SMT-LIB predicate names with domain query methods.
+type Predicates []string
+
+// Len returns the count of predicates.
+func (p Predicates) Len() int {
+	return len(p)
+}
+
+// Contains reports whether the predicate is present in the collection.
+func (p Predicates) Contains(predicate string) bool {
+	return slices.Contains(p, predicate)
+}
+
 // GroundingMap is the deserialized grounding-map.yaml.
 type GroundingMap struct {
 	Universals map[UniversalID]UniversalGrounding `yaml:"universals"`
@@ -200,7 +242,7 @@ type GroundingMap struct {
 // UniversalGrounding defines how to ground observations for one universal.
 type UniversalGrounding struct {
 	Sort       string                        `yaml:"sort"`
-	Predicates []string                      `yaml:"predicates"`
+	Predicates Predicates                    `yaml:"predicates"`
 	Groundings map[string]AssetTypeGrounding `yaml:"groundings"`
 }
 

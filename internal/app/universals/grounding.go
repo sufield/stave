@@ -120,7 +120,7 @@ func getMap(props map[string]any, path ...string) map[string]any {
 
 // GenerateGrounding produces SMT-LIB assertions from grounded constants,
 // including universe closure (finite domain).
-func GenerateGrounding(sortName string, preds []string, gs []grounded) string {
+func GenerateGrounding(sortName string, preds Predicates, gs []grounded) string {
 	var buf strings.Builder
 
 	if len(gs) == 0 {

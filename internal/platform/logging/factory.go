@@ -12,10 +12,11 @@ import (
 
 // LogCloser wraps a logger with an optional closer for file handles.
 type LogCloser struct {
-	logger *slog.Logger
-	closer io.Closer
-	once   sync.Once
-	err    error
+	logger      *slog.Logger
+	closer      io.Closer
+	accumulator *WarnAccumulator
+	once        sync.Once
+	err         error
 }
 
 // Logger returns the underlying *slog.Logger. Always returns a
@@ -34,6 +35,15 @@ func (lc *LogCloser) Close() error {
 	return lc.err
 }
 
+// SuppressedWarnings returns the number of Warn-level records that were
+// counted instead of emitted. Zero when warning suppression is off.
+func (lc *LogCloser) SuppressedWarnings() int64 {
+	if lc.accumulator == nil {
+		return 0
+	}
+	return lc.accumulator.Suppressed()
+}
+
 // NewLogger creates a new logger based on configuration.
 // Returns a LogCloser that should be closed when done.
 func NewLogger(cfg Config) (*LogCloser, error) {
@@ -42,11 +52,17 @@ func NewLogger(cfg Config) (*LogCloser, error) {
 		return nil, err
 	}
 
-	logger := slog.New(newHandler(cfg, wc))
+	h := newHandler(cfg, wc)
+	var acc *WarnAccumulator
+	if cfg.SuppressWarnings {
+		acc = NewWarnAccumulator(h)
+		h = acc
+	}
 
 	return &LogCloser{
-		logger: logger,
-		closer: wc,
+		logger:      slog.New(h),
+		closer:      wc,
+		accumulator: acc,
 	}, nil
 }
 
