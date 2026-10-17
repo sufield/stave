@@ -3,19 +3,17 @@
   "captured_at": "2022-06-01T00:00:00Z",
   "assets": [
     {
-      "id": "gaf-cluster",
-      "type": "k8s_cluster",
-      "vendor": "kubernetes",
+      "id": "arn:aws:eks:us-east-1:111122223333:cluster/gaf-cluster#aws-auth-mapUsers[0]",
+      "type": "aws_eks_aws_auth_mapping",
+      "vendor": "aws",
       "properties": {
-        "auth": {
-          "kind": "cluster",
-          "webhook": {
-            "provider": "aws-iam-authenticator",
-            "identity_mapping": {
-              "uses_access_key_id": false,
-              "templates": [
-                "user:{{SessionName}}"
-              ]
+        "k8s": {
+          "cluster": {
+            "aws_auth": {
+              "role_arn": "arn:aws:iam::111122223333:user/gaf-user",
+              "groups_include_masters": true,
+              "is_break_glass_admin": false,
+              "username_template": "{{AccessKeyID}}"
             }
           }
         }

@@ -3,30 +3,16 @@
   "captured_at": "2025-03-15T00:00:00Z",
   "assets": [
     {
-      "id": "acct-123456789012",
-      "type": "aws_account",
+      "id": "arn:aws:cloudtrail:us-east-1:123456789012:trail/org-trail",
+      "type": "aws_cloudtrail_trail",
       "vendor": "aws",
       "properties": {
         "audit_trail": {
           "kind": "trail",
-          "multi_region_enabled": true
-        },
-        "monitoring": {
-          "kind": "account",
-          "metric_filters": {
-            "unauthorized_api_calls": {
-              "exists": true
-            }
-          },
-          "alarms": {
-            "unauthorized_api_calls": {
-              "exists": true,
-              "sns_topic_arn": "arn:aws:sns:us-east-1:123456789012:security-alerts"
-            }
+          "multi_region_enabled": false,
+          "forecast_endpoint_coverage": {
+            "all_endpoints_logged": false
           }
-        },
-        "threat_detection": {
-          "enabled": true
         }
       }
     }

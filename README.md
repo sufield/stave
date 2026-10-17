@@ -57,23 +57,32 @@ method is your choice based on your risk posture:
 
 ### Quick Start
 
-**1. Capture raw AWS data and transform it:**
+**1. Capture raw AWS data:**
+
+```bash
+mkdir -p my-snapshot
+aws s3api list-buckets > my-snapshot/s3-buckets.json
+aws iam list-roles    > my-snapshot/iam-roles.json
+# ... any read-only AWS CLI call
+```
+
+Requires AWS CLI and `SecurityAudit` credentials.
+[Full IAM policy details →](docs/trust/collector-policy.md)
+
+Or use the bundled collector for broader coverage:
 
 ```bash
 bash scripts/aws-snapshot.sh ./my-snapshot
 ```
 
-This runs read-only AWS CLI calls (`Get*`, `List*`, `Describe*`),
-saves raw JSON to `my-snapshot/raw/`, then calls `stave transform`
-to produce `obs.v0.1` observations in `my-snapshot/observations/`.
-Requires AWS CLI, jq, and `SecurityAudit` credentials.
-[Full IAM policy details →](docs/trust/collector-policy.md)
-
 **2. Evaluate:**
 
 ```bash
-stave apply --observations ./my-snapshot/observations/
+stave apply --observations ./my-snapshot/
 ```
+
+`stave apply` auto-detects raw AWS CLI JSON and transforms it
+in-memory — no separate `stave transform` step needed.
 
 **3. Read your findings.**
 

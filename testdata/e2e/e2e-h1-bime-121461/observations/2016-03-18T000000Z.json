@@ -4,7 +4,7 @@
   "assets": [
     {
       "id": "bime-a2-cname-ref",
-      "type": "s3_bucket_reference",
+      "type": "aws_s3_bucket",
       "vendor": "aws",
       "properties": {
         "s3_ref": {
