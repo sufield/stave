@@ -43,7 +43,7 @@ func renderForecast(format string, w io.Writer, r *forecast.Result) error {
 }
 
 // renderOscillation dispatches the oscillation results. Unknown format → InputError (exit 2).
-func renderOscillation(format string, w io.Writer, results []oscillation.Classification) error {
+func renderOscillation(format string, w io.Writer, results oscillation.Classifications) error {
 	switch format {
 	case "json":
 		enc := json.NewEncoder(w)

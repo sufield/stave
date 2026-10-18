@@ -61,7 +61,7 @@ func TestRenderForecast_UnknownFormatIsInputError(t *testing.T) {
 func TestRenderOscillation_KnownFormats(t *testing.T) {
 	for _, format := range []string{"json", "table", ""} {
 		var buf bytes.Buffer
-		if err := renderOscillation(format, &buf, []oscillation.Classification{}); err != nil {
+		if err := renderOscillation(format, &buf, oscillation.Classifications{}); err != nil {
 			t.Errorf("renderOscillation(%q): %v", format, err)
 			continue
 		}

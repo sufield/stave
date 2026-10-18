@@ -20,11 +20,6 @@ const (
 	ZeroToleranceThreshold Threshold = 0
 )
 
-// NewThreshold constructs a Threshold value object.
-func NewThreshold(limit int) Threshold {
-	return Threshold(limit)
-}
-
 // IsDisabled reports whether threshold check is disabled (-1).
 func (t Threshold) IsDisabled() bool {
 	return t < 0
@@ -33,11 +28,6 @@ func (t Threshold) IsDisabled() bool {
 // IsExceeded reports whether finding count exceeds this threshold.
 func (t Threshold) IsExceeded(count int) bool {
 	return !t.IsDisabled() && count > int(t)
-}
-
-// Value returns the raw integer threshold limit.
-func (t Threshold) Value() int {
-	return int(t)
 }
 
 // Thresholds defines the maximum allowed findings per severity.

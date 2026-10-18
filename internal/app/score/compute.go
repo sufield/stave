@@ -308,6 +308,11 @@ func (b RubricBand) String() string {
 	return string(b)
 }
 
+// Display returns the uppercase display representation of the rubric band (e.g. "STRONG", "NEEDS_ATTENTION").
+func (b RubricBand) Display() string {
+	return strings.ToUpper(string(b))
+}
+
 // IsStrong reports whether the posture band is strong.
 func (b RubricBand) IsStrong() bool {
 	return b == BandStrong

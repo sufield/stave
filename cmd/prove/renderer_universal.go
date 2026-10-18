@@ -46,7 +46,7 @@ func (universalTextRenderer) RenderUniversal(w io.Writer, s *stave.UniversalSumm
 		case r.Error != "":
 			mark = "ERR "
 			label = r.Error
-		case r.Holds:
+		case r.Verdict.IsHolds():
 			mark = "UNSAT"
 			label = "holds"
 		default:
@@ -70,7 +70,7 @@ func (universalTextRenderer) RenderUniversal(w io.Writer, s *stave.UniversalSumm
 
 	fmt.Fprintln(w)
 	fmt.Fprintf(w, "Summary: %d/%d hold, %d violated", s.Hold, s.Total, s.Violated)
-	if s.Errored > 0 {
+	if s.HasErrors() {
 		fmt.Fprintf(w, ", %d error", s.Errored)
 	}
 	fmt.Fprintln(w, ".")

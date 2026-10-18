@@ -123,7 +123,7 @@ func RunGate(ctx context.Context, cfg GateRunConfig) (output []byte, warnings []
 			TeamID:     teams.TeamID(cfg.Team),
 			Thresholds: teamgate.DefaultThresholds(),
 		})
-		result.MergeTeamVerdict(string(teamResult.TeamID), teamResult.Passed, string(teamResult.Reason))
+		result.MergeTeamVerdict(string(teamResult.TeamID), teamResult.Passed, teamResult.Reason.String())
 	}
 
 	out, err := gateRenderResult(format, cfg.Quiet, result)

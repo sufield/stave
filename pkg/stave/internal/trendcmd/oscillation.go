@@ -60,7 +60,7 @@ func ClassifyOscillation(ctx context.Context, cfg OscillationConfig) ([]byte, []
 		}
 	}
 
-	var results []oscillation.Classification
+	var results oscillation.Classifications
 	for k := range pairs {
 		c := oscillation.Classify(oscillation.Input{
 			Assessments:     vals,
@@ -90,8 +90,8 @@ func ClassifyOscillation(ctx context.Context, cfg OscillationConfig) ([]byte, []
 	return buf.Bytes(), warnings, nil
 }
 
-func writeOscillationTable(w io.Writer, results []oscillation.Classification) {
-	if len(results) == 0 {
+func writeOscillationTable(w io.Writer, results oscillation.Classifications) {
+	if results.Len() == 0 {
 		fmt.Fprintln(w, "No oscillation patterns detected.")
 		return
 	}

@@ -190,10 +190,10 @@ func evaluateOne(f formula, assets []asset, gm *GroundingMap, solve Solver) Resu
 	r.SolveTimeMs = SolveTimeMs(time.Since(start).Milliseconds())
 	r.Verdict = Verdict(verdict)
 
-	switch verdict {
-	case "unsat":
+	switch r.Verdict {
+	case VerdictHolds:
 		r.Holds = true
-	case "sat":
+	case VerdictViolated:
 		r.Holds = false
 		r.Violations = extractViolations(gs, ug)
 	default:

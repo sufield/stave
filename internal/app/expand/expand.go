@@ -47,11 +47,6 @@ func (s ServiceID) String() string {
 	return string(s)
 }
 
-// IsUnknown reports whether the service ID is unresolvable ("unknown").
-func (s ServiceID) IsUnknown() bool {
-	return s == "unknown" || strings.TrimSpace(string(s)) == ""
-}
-
 // ServiceFromControlID derives a lowercase service tag from the
 // control ID's second segment. CTL.SECRETS.* and CTL.SECRETSMANAGER.*
 // both collapse to "secretsmanager" so expand grouping matches the
