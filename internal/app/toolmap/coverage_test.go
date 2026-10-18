@@ -210,8 +210,20 @@ func TestGaps_DomainMethods(t *testing.T) {
 	if empty.Len() != 0 {
 		t.Errorf("empty.Len() = %d, want 0", empty.Len())
 	}
+	if !empty.IsEmpty() {
+		t.Error("empty.IsEmpty() = false, want true")
+	}
+	if empty.HasGaps() {
+		t.Error("empty.HasGaps() = true, want false")
+	}
 	if empty.ByTool("pacu") != nil {
 		t.Error("empty.ByTool() should return nil")
+	}
+	if gaps.IsEmpty() {
+		t.Error("gaps.IsEmpty() = true, want false")
+	}
+	if !gaps.HasGaps() {
+		t.Error("gaps.HasGaps() = false, want true")
 	}
 }
 
@@ -287,6 +299,9 @@ func TestGapAndCoverageResult_DomainMethods(t *testing.T) {
 	if res.IsFullyCovered() {
 		t.Error("IsFullyCovered() = true, want false")
 	}
+	if !res.HasGaps() {
+		t.Error("res.HasGaps() = false, want true")
+	}
 
 	fullyCovered := &CoverageResult{
 		Covered: Gaps{gCovered},
@@ -294,6 +309,9 @@ func TestGapAndCoverageResult_DomainMethods(t *testing.T) {
 	}
 	if !fullyCovered.IsFullyCovered() {
 		t.Error("fullyCovered.IsFullyCovered() = false, want true")
+	}
+	if fullyCovered.HasGaps() {
+		t.Error("fullyCovered.HasGaps() = true, want false")
 	}
 
 	var nilRes *CoverageResult
@@ -305,5 +323,8 @@ func TestGapAndCoverageResult_DomainMethods(t *testing.T) {
 	}
 	if nilRes.IsFullyCovered() {
 		t.Error("nilRes.IsFullyCovered() = true, want false")
+	}
+	if nilRes.HasGaps() {
+		t.Error("nilRes.HasGaps() = true, want false")
 	}
 }

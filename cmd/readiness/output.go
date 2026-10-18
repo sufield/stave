@@ -53,7 +53,7 @@ func writeSnapshotSummary(w io.Writer, r stave.ReadinessReport) error {
 }
 
 func writeObservedTypes(w io.Writer, r stave.ReadinessReport) error {
-	if r.ObservedTypes.Len() == 0 {
+	if !r.HasObservedTypes() {
 		return nil
 	}
 	if _, err := fmt.Fprintln(w, "\nObserved asset types:"); err != nil {

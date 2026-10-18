@@ -130,6 +130,16 @@ func (cs Classifications) Len() int {
 	return len(cs)
 }
 
+// IsEmpty reports whether the collection contains no classifications.
+func (cs Classifications) IsEmpty() bool {
+	return len(cs) == 0
+}
+
+// HasClassifications reports whether the collection contains at least one classification.
+func (cs Classifications) HasClassifications() bool {
+	return len(cs) > 0
+}
+
 // FilterByPattern returns a new Classifications collection filtered by pattern.
 func (cs Classifications) FilterByPattern(p Pattern) Classifications {
 	if len(cs) == 0 {

@@ -55,6 +55,16 @@ func (o ObservedAssetTypes) Len() int {
 	return len(o)
 }
 
+// IsEmpty reports whether there are no observed asset types.
+func (o ObservedAssetTypes) IsEmpty() bool {
+	return len(o) == 0
+}
+
+// HasTypes reports whether there is at least one observed asset type.
+func (o ObservedAssetTypes) HasTypes() bool {
+	return len(o) > 0
+}
+
 // TotalAssets returns the sum of occurrence counts across all observed asset types.
 func (o ObservedAssetTypes) TotalAssets() int {
 	total := 0
@@ -164,6 +174,11 @@ type Report struct {
 	// way. Present so JSON consumers don't need to read this file's
 	// godoc to know what 0.41 means.
 	ReadinessDenominator string `json:"readiness_denominator"`
+}
+
+// HasObservedTypes reports whether any observed asset types are present in the report.
+func (r Report) HasObservedTypes() bool {
+	return r.ObservedTypes.HasTypes()
 }
 
 // ControlForecast classifies every control into one of three

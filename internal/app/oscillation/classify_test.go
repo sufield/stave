@@ -186,3 +186,23 @@ func TestClassification_DomainMethods(t *testing.T) {
 		t.Error("c2 domain checks failed")
 	}
 }
+
+func TestClassifications_DomainMethods(t *testing.T) {
+	var empty Classifications
+	if !empty.IsEmpty() {
+		t.Error("empty.IsEmpty() = false, want true")
+	}
+	if empty.HasClassifications() {
+		t.Error("empty.HasClassifications() = true, want false")
+	}
+
+	cs := Classifications{
+		{Pattern: PatternChronic},
+	}
+	if cs.IsEmpty() {
+		t.Error("cs.IsEmpty() = true, want false")
+	}
+	if !cs.HasClassifications() {
+		t.Error("cs.HasClassifications() = false, want true")
+	}
+}

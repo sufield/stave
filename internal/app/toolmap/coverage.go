@@ -87,6 +87,16 @@ func (g Gaps) Len() int {
 	return len(g)
 }
 
+// IsEmpty reports whether the collection contains no gaps.
+func (g Gaps) IsEmpty() bool {
+	return len(g) == 0
+}
+
+// HasGaps reports whether the collection contains at least one gap.
+func (g Gaps) HasGaps() bool {
+	return len(g) > 0
+}
+
 // ByTool returns a new Gaps collection filtered by tool name.
 func (g Gaps) ByTool(tool string) Gaps {
 	if len(g) == 0 {
@@ -124,9 +134,14 @@ func (cr *CoverageResult) CoveragePercentage() float64 {
 	return float64(cr.Covered.Len()) / float64(total) * 100.0
 }
 
+// HasGaps reports whether there are any uncovered prerequisites.
+func (cr *CoverageResult) HasGaps() bool {
+	return cr != nil && cr.Gaps.HasGaps()
+}
+
 // IsFullyCovered reports whether all prerequisites are covered (zero gaps).
 func (cr *CoverageResult) IsFullyCovered() bool {
-	return cr != nil && cr.Gaps.Len() == 0
+	return cr != nil && !cr.HasGaps()
 }
 
 // Analyze performs the three-way join:

@@ -561,3 +561,31 @@ func TestForecast_DomainMethods(t *testing.T) {
 		t.Error("chainF.IsFullyReady() = true, want false")
 	}
 }
+
+func TestObservedAssetTypesAndReport_DomainMethods(t *testing.T) {
+	var empty ObservedAssetTypes
+	if !empty.IsEmpty() {
+		t.Error("empty.IsEmpty() = false, want true")
+	}
+	if empty.HasTypes() {
+		t.Error("empty.HasTypes() = true, want false")
+	}
+
+	types := ObservedAssetTypes{"aws_s3_bucket": 2}
+	if types.IsEmpty() {
+		t.Error("types.IsEmpty() = true, want false")
+	}
+	if !types.HasTypes() {
+		t.Error("types.HasTypes() = false, want true")
+	}
+
+	emptyReport := Report{}
+	if emptyReport.HasObservedTypes() {
+		t.Error("emptyReport.HasObservedTypes() = true, want false")
+	}
+
+	reportWithTypes := Report{ObservedTypes: types}
+	if !reportWithTypes.HasObservedTypes() {
+		t.Error("reportWithTypes.HasObservedTypes() = false, want true")
+	}
+}

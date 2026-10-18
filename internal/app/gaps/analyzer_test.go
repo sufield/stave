@@ -312,3 +312,39 @@ func TestSummary_DomainMethods(t *testing.T) {
 		t.Error("empty Summary domain methods failed")
 	}
 }
+
+func TestFieldGapsAndReport_DomainMethods(t *testing.T) {
+	var empty FieldGaps
+	if !empty.IsEmpty() {
+		t.Error("empty.IsEmpty() = false, want true")
+	}
+	if empty.HasGaps() {
+		t.Error("empty.HasGaps() = true, want false")
+	}
+
+	gaps := FieldGaps{
+		{PropertyPath: "properties.tags.env"},
+	}
+	if gaps.IsEmpty() {
+		t.Error("gaps.IsEmpty() = true, want false")
+	}
+	if !gaps.HasGaps() {
+		t.Error("gaps.HasGaps() = false, want true")
+	}
+
+	emptyReport := Report{}
+	if emptyReport.HasGaps() {
+		t.Error("emptyReport.HasGaps() = true, want false")
+	}
+	if !emptyReport.IsEmpty() {
+		t.Error("emptyReport.IsEmpty() = false, want true")
+	}
+
+	reportWithGaps := Report{Gaps: gaps}
+	if !reportWithGaps.HasGaps() {
+		t.Error("reportWithGaps.HasGaps() = false, want true")
+	}
+	if reportWithGaps.IsEmpty() {
+		t.Error("reportWithGaps.IsEmpty() = true, want false")
+	}
+}

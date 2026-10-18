@@ -49,6 +49,16 @@ func (fg FieldGaps) Len() int {
 	return len(fg)
 }
 
+// IsEmpty reports whether the collection contains no gaps.
+func (fg FieldGaps) IsEmpty() bool {
+	return len(fg) == 0
+}
+
+// HasGaps reports whether the collection contains at least one gap.
+func (fg FieldGaps) HasGaps() bool {
+	return len(fg) > 0
+}
+
 // FixableByAgent returns a new FieldGaps collection containing only gaps fixable by an agent loop.
 func (fg FieldGaps) FixableByAgent() FieldGaps {
 	if len(fg) == 0 {
@@ -83,6 +93,16 @@ func (fg FieldGaps) ByAssetType(at kernel.AssetType) FieldGaps {
 type Report struct {
 	Gaps    FieldGaps `json:"gaps"`
 	Summary Summary   `json:"summary"`
+}
+
+// HasGaps reports whether the report contains any observation gaps.
+func (r Report) HasGaps() bool {
+	return r.Gaps.HasGaps()
+}
+
+// IsEmpty reports whether the report has no observation gaps.
+func (r Report) IsEmpty() bool {
+	return r.Gaps.IsEmpty()
 }
 
 // FieldGap is one (asset_type, property_path) pair where at least

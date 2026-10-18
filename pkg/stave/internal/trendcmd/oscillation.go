@@ -91,7 +91,7 @@ func ClassifyOscillation(ctx context.Context, cfg OscillationConfig) ([]byte, []
 }
 
 func writeOscillationTable(w io.Writer, results oscillation.Classifications) {
-	if results.Len() == 0 {
+	if results.IsEmpty() {
 		fmt.Fprintln(w, "No oscillation patterns detected.")
 		return
 	}
