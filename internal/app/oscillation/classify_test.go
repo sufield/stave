@@ -107,9 +107,9 @@ func TestClassify_DeployTimeDetected(t *testing.T) {
 
 func TestClassifications_CollectionMethods(t *testing.T) {
 	cs := Classifications{
-		{Pattern: PatternChronic, Confidence: 0.9},
-		{Pattern: PatternDeployTime, Confidence: 0.4},
-		{Pattern: PatternChronic, Confidence: 0.85},
+		{ControlID: "ctl-1", AssetID: "ast-1", Pattern: PatternChronic, Confidence: 0.9, Cycles: 0},
+		{ControlID: "ctl-2", AssetID: "ast-1", Pattern: PatternDeployTime, Confidence: 0.4, Cycles: 4},
+		{ControlID: "ctl-1", AssetID: "ast-2", Pattern: PatternChronic, Confidence: 0.85, Cycles: 0},
 	}
 
 	if cs.Len() != 3 {
@@ -120,7 +120,69 @@ func TestClassifications_CollectionMethods(t *testing.T) {
 		t.Errorf("FilterByPattern len = %d, want 2", cs.FilterByPattern(PatternChronic).Len())
 	}
 
+	if cs.Chronic().Len() != 2 {
+		t.Errorf("Chronic len = %d, want 2", cs.Chronic().Len())
+	}
+
+	if cs.DeployTime().Len() != 1 {
+		t.Errorf("DeployTime len = %d, want 1", cs.DeployTime().Len())
+	}
+
+	if cs.ByControlID("ctl-1").Len() != 2 {
+		t.Errorf("ByControlID(ctl-1) len = %d, want 2", cs.ByControlID("ctl-1").Len())
+	}
+
+	if cs.ByAssetID("ast-1").Len() != 2 {
+		t.Errorf("ByAssetID(ast-1) len = %d, want 2", cs.ByAssetID("ast-1").Len())
+	}
+
 	if cs.HighConfidence(0.8).Len() != 2 {
 		t.Errorf("HighConfidence len = %d, want 2", cs.HighConfidence(0.8).Len())
+	}
+
+	var empty Classifications
+	if empty.Len() != 0 || empty.Chronic() != nil || empty.DeployTime() != nil || empty.ByControlID("ctl-1") != nil || empty.ByAssetID("ast-1") != nil {
+		t.Error("empty Classifications methods failed")
+	}
+}
+
+func TestPattern_DomainMethods(t *testing.T) {
+	if !PatternDeployTime.IsDeployTime() || PatternDeployTime.IsChronic() || PatternDeployTime.IsRandom() || PatternDeployTime.IsSeasonal() {
+		t.Error("PatternDeployTime checks failed")
+	}
+	if !PatternRandom.IsRandom() || PatternRandom.IsDeployTime() {
+		t.Error("PatternRandom checks failed")
+	}
+	if !PatternChronic.IsChronic() || PatternChronic.IsSeasonal() {
+		t.Error("PatternChronic checks failed")
+	}
+	if !PatternSeasonal.IsSeasonal() || PatternSeasonal.IsChronic() {
+		t.Error("PatternSeasonal checks failed")
+	}
+	if PatternDeployTime.String() != "deploy-time" {
+		t.Errorf("String() = %q, want deploy-time", PatternDeployTime.String())
+	}
+}
+
+func TestClassification_DomainMethods(t *testing.T) {
+	c1 := Classification{
+		Pattern:    PatternChronic,
+		Confidence: 0.85,
+		Cycles:     0,
+	}
+	if !c1.IsChronic() || c1.IsDeployTime() || c1.HasOscillations() {
+		t.Error("c1 domain checks failed")
+	}
+	if !c1.IsHighConfidence(0.8) || c1.IsHighConfidence(0.9) {
+		t.Error("c1 IsHighConfidence failed")
+	}
+
+	c2 := Classification{
+		Pattern:    PatternDeployTime,
+		Confidence: 0.6,
+		Cycles:     4,
+	}
+	if c2.IsChronic() || !c2.IsDeployTime() || !c2.HasOscillations() {
+		t.Error("c2 domain checks failed")
 	}
 }

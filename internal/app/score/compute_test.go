@@ -469,3 +469,128 @@ func TestTrendPoints_DomainMethods(t *testing.T) {
 		t.Errorf("TrendDirection() = (%q, %v), want (IMPROVING, 7.5)", dir, change)
 	}
 }
+
+func TestDetailStructs_DomainMethods(t *testing.T) {
+	// SeverityDetail
+	sev := SeverityDetail{
+		TotalViolations: 4,
+		FailingFindings: 4,
+		MaxRiskExposure: 100.0,
+		ActualExposure:  45.0,
+	}
+	if !sev.HasViolations() {
+		t.Error("sev.HasViolations() = false, want true")
+	}
+	if ratio := sev.ExposureRatio(); ratio != 0.45 {
+		t.Errorf("sev.ExposureRatio() = %f, want 0.45", ratio)
+	}
+	emptySev := SeverityDetail{}
+	if emptySev.HasViolations() || emptySev.ExposureRatio() != 0.0 {
+		t.Error("emptySev domain methods failed")
+	}
+
+	// SLADetail
+	sla := SLADetail{
+		FindingsWithSLA:  10,
+		FindingsBreached: 2,
+		BreachRatePct:    20.0,
+	}
+	if !sla.HasBreaches() || !sla.HasSLAFindings() {
+		t.Error("sla HasBreaches / HasSLAFindings expected true")
+	}
+	if sla.CompliantFindings() != 8 {
+		t.Errorf("sla.CompliantFindings() = %d, want 8", sla.CompliantFindings())
+	}
+	if rate := sla.ComplianceRatePct(); rate != 80.0 {
+		t.Errorf("sla.ComplianceRatePct() = %f, want 80.0", rate)
+	}
+	emptySLA := SLADetail{}
+	if emptySLA.HasBreaches() || emptySLA.HasSLAFindings() || emptySLA.ComplianceRatePct() != 100.0 || emptySLA.CompliantFindings() != 0 {
+		t.Error("emptySLA domain methods failed")
+	}
+
+	// ChainDetail
+	chain := ChainDetail{
+		TotalChains:       5,
+		ActiveChains:      2,
+		MaxChainWeight:    10.0,
+		ActiveChainWeight: 4.0,
+	}
+	if !chain.HasActiveChains() {
+		t.Error("chain.HasActiveChains() = false, want true")
+	}
+	if chain.InactiveChains() != 3 {
+		t.Errorf("chain.InactiveChains() = %d, want 3", chain.InactiveChains())
+	}
+	if ratio := chain.ActiveRatio(); ratio != 0.4 {
+		t.Errorf("chain.ActiveRatio() = %f, want 0.4", ratio)
+	}
+	if util := chain.WeightUtilization(); util != 0.4 {
+		t.Errorf("chain.WeightUtilization() = %f, want 0.4", util)
+	}
+	emptyChain := ChainDetail{}
+	if emptyChain.HasActiveChains() || emptyChain.InactiveChains() != 0 || emptyChain.ActiveRatio() != 0.0 || emptyChain.WeightUtilization() != 0.0 {
+		t.Error("emptyChain domain methods failed")
+	}
+
+	// CoverageDetail
+	cov := CoverageDetail{
+		RequirementsSatisfied: 8,
+		RequirementsTotal:     10,
+		CoveragePct:           80.0,
+	}
+	if cov.IsComplete() {
+		t.Error("cov.IsComplete() = true, want false")
+	}
+	if cov.UnsatisfiedRequirements() != 2 {
+		t.Errorf("cov.UnsatisfiedRequirements() = %d, want 2", cov.UnsatisfiedRequirements())
+	}
+	if ratio := cov.SatisfiedRatio(); ratio != 0.8 {
+		t.Errorf("cov.SatisfiedRatio() = %f, want 0.8", ratio)
+	}
+	fullCov := CoverageDetail{RequirementsSatisfied: 10, RequirementsTotal: 10}
+	if !fullCov.IsComplete() || fullCov.UnsatisfiedRequirements() != 0 || fullCov.SatisfiedRatio() != 1.0 {
+		t.Error("fullCov domain methods failed")
+	}
+	emptyCov := CoverageDetail{}
+	if emptyCov.IsComplete() || emptyCov.UnsatisfiedRequirements() != 0 || emptyCov.SatisfiedRatio() != 0.0 {
+		t.Error("emptyCov domain methods failed")
+	}
+}
+
+func TestRubricBandAndResult_DomainMethods(t *testing.T) {
+	if !BandStrong.IsStrong() || !BandStrong.IsHealthy() || BandStrong.RequiresAction() || BandStrong.String() != "strong" {
+		t.Error("BandStrong domain checks failed")
+	}
+	if !BandAdequate.IsAdequate() || !BandAdequate.IsHealthy() || BandAdequate.RequiresAction() {
+		t.Error("BandAdequate domain checks failed")
+	}
+	if !BandNeedsAttention.IsNeedsAttention() || BandNeedsAttention.IsHealthy() || !BandNeedsAttention.RequiresAction() {
+		t.Error("BandNeedsAttention domain checks failed")
+	}
+	if !BandAtRisk.IsAtRisk() || BandAtRisk.IsHealthy() || !BandAtRisk.RequiresAction() {
+		t.Error("BandAtRisk domain checks failed")
+	}
+	if !BandCritical.IsCritical() || BandCritical.IsHealthy() || !BandCritical.RequiresAction() {
+		t.Error("BandCritical domain checks failed")
+	}
+
+	res := Result{
+		RubricBand: BandStrong,
+		Score:      PostureScore(92.0),
+		Trend: TrendPoints{
+			{Timestamp: time.Now(), Score: PostureScore(90.0)},
+		},
+	}
+	if !res.IsHealthy() {
+		t.Error("res.IsHealthy() = false, want true")
+	}
+	if !res.HasTrend() {
+		t.Error("res.HasTrend() = false, want true")
+	}
+
+	emptyRes := Result{}
+	if emptyRes.IsHealthy() || emptyRes.HasTrend() {
+		t.Error("emptyRes domain methods failed")
+	}
+}

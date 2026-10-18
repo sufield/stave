@@ -20,6 +20,31 @@ const (
 	PatternSeasonal   Pattern = "seasonal"
 )
 
+// String returns the raw string representation of the pattern.
+func (p Pattern) String() string {
+	return string(p)
+}
+
+// IsDeployTime reports whether the pattern is deploy-time oscillation.
+func (p Pattern) IsDeployTime() bool {
+	return p == PatternDeployTime
+}
+
+// IsRandom reports whether the pattern is random oscillation.
+func (p Pattern) IsRandom() bool {
+	return p == PatternRandom
+}
+
+// IsChronic reports whether the pattern is chronic violation.
+func (p Pattern) IsChronic() bool {
+	return p == PatternChronic
+}
+
+// IsSeasonal reports whether the pattern is seasonal oscillation.
+func (p Pattern) IsSeasonal() bool {
+	return p == PatternSeasonal
+}
+
 // FailureRate represents the ratio of failing assessments over total assessments evaluated (0.0 to 1.0).
 type FailureRate float64
 
@@ -77,6 +102,26 @@ type Classification struct {
 	Cycles      int              `json:"cycles"`
 }
 
+// IsChronic reports whether the classification is chronic.
+func (c Classification) IsChronic() bool {
+	return c.Pattern.IsChronic()
+}
+
+// IsDeployTime reports whether the classification is deploy-time.
+func (c Classification) IsDeployTime() bool {
+	return c.Pattern.IsDeployTime()
+}
+
+// HasOscillations reports whether state transitions were observed.
+func (c Classification) HasOscillations() bool {
+	return c.Cycles > 0
+}
+
+// IsHighConfidence reports whether the confidence score meets or exceeds the threshold.
+func (c Classification) IsHighConfidence(threshold ConfidenceScore) bool {
+	return c.Confidence.IsHigh(threshold)
+}
+
 // Classifications is a domain collection of Classification items with domain methods.
 type Classifications []Classification
 
@@ -93,6 +138,44 @@ func (cs Classifications) FilterByPattern(p Pattern) Classifications {
 	var filtered Classifications
 	for i := range cs {
 		if cs[i].Pattern == p {
+			filtered = append(filtered, cs[i])
+		}
+	}
+	return filtered
+}
+
+// Chronic returns all classifications with chronic patterns.
+func (cs Classifications) Chronic() Classifications {
+	return cs.FilterByPattern(PatternChronic)
+}
+
+// DeployTime returns all classifications with deploy-time patterns.
+func (cs Classifications) DeployTime() Classifications {
+	return cs.FilterByPattern(PatternDeployTime)
+}
+
+// ByControlID returns a new Classifications collection filtered by control ID.
+func (cs Classifications) ByControlID(id kernel.ControlID) Classifications {
+	if len(cs) == 0 {
+		return nil
+	}
+	var filtered Classifications
+	for i := range cs {
+		if cs[i].ControlID == id {
+			filtered = append(filtered, cs[i])
+		}
+	}
+	return filtered
+}
+
+// ByAssetID returns a new Classifications collection filtered by asset ID.
+func (cs Classifications) ByAssetID(id asset.ID) Classifications {
+	if len(cs) == 0 {
+		return nil
+	}
+	var filtered Classifications
+	for i := range cs {
+		if cs[i].AssetID == id {
 			filtered = append(filtered, cs[i])
 		}
 	}

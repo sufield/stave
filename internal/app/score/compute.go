@@ -115,11 +115,51 @@ type SeverityDetail struct {
 	ActualExposure  float64 `json:"actual_exposure"`
 }
 
+// HasViolations reports whether any violations were recorded.
+func (sd SeverityDetail) HasViolations() bool {
+	return sd.TotalViolations > 0
+}
+
+// ExposureRatio returns the fraction of actual exposure over max risk exposure (0.0 to 1.0).
+func (sd SeverityDetail) ExposureRatio() float64 {
+	if sd.MaxRiskExposure <= 0 {
+		return 0.0
+	}
+	return sd.ActualExposure / sd.MaxRiskExposure
+}
+
 // SLADetail holds breakdown data for the SLA component.
 type SLADetail struct {
 	FindingsWithSLA  int     `json:"findings_with_sla"`
 	FindingsBreached int     `json:"findings_breached"`
 	BreachRatePct    float64 `json:"breach_rate_percent"`
+}
+
+// HasBreaches reports whether any findings breached SLA thresholds.
+func (sd SLADetail) HasBreaches() bool {
+	return sd.FindingsBreached > 0
+}
+
+// HasSLAFindings reports whether any findings have applicable SLA definitions.
+func (sd SLADetail) HasSLAFindings() bool {
+	return sd.FindingsWithSLA > 0
+}
+
+// CompliantFindings returns the count of findings within SLA compliance.
+func (sd SLADetail) CompliantFindings() int {
+	return sd.FindingsWithSLA - sd.FindingsBreached
+}
+
+// ComplianceRatePct returns the SLA compliance percentage (0.0 to 100.0).
+func (sd SLADetail) ComplianceRatePct() float64 {
+	if sd.FindingsWithSLA <= 0 {
+		return 100.0
+	}
+	rate := 100.0 - sd.BreachRatePct
+	if rate < 0 {
+		return 0.0
+	}
+	return rate
 }
 
 // ChainDetail holds breakdown data for the chain component.
@@ -130,12 +170,56 @@ type ChainDetail struct {
 	ActiveChainWeight float64 `json:"active_chain_weight"`
 }
 
+// HasActiveChains reports whether any compound attack chains are currently active.
+func (cd ChainDetail) HasActiveChains() bool {
+	return cd.ActiveChains > 0
+}
+
+// InactiveChains returns the number of non-active compound chains.
+func (cd ChainDetail) InactiveChains() int {
+	return cd.TotalChains - cd.ActiveChains
+}
+
+// ActiveRatio returns the fraction of total chains that are active (0.0 to 1.0).
+func (cd ChainDetail) ActiveRatio() float64 {
+	if cd.TotalChains <= 0 {
+		return 0.0
+	}
+	return float64(cd.ActiveChains) / float64(cd.TotalChains)
+}
+
+// WeightUtilization returns the ratio of active chain weight over max chain weight (0.0 to 1.0).
+func (cd ChainDetail) WeightUtilization() float64 {
+	if cd.MaxChainWeight <= 0 {
+		return 0.0
+	}
+	return cd.ActiveChainWeight / cd.MaxChainWeight
+}
+
 // CoverageDetail holds breakdown data for the coverage component.
 type CoverageDetail struct {
 	Framework             policy.ComplianceFramework `json:"framework,omitempty"`
 	RequirementsSatisfied int                        `json:"requirements_satisfied"`
 	RequirementsTotal     int                        `json:"requirements_total"`
 	CoveragePct           float64                    `json:"coverage_percent"`
+}
+
+// IsComplete reports whether all compliance requirements are satisfied.
+func (cd CoverageDetail) IsComplete() bool {
+	return cd.RequirementsTotal > 0 && cd.RequirementsSatisfied >= cd.RequirementsTotal
+}
+
+// UnsatisfiedRequirements returns the count of unfulfilled requirements.
+func (cd CoverageDetail) UnsatisfiedRequirements() int {
+	return cd.RequirementsTotal - cd.RequirementsSatisfied
+}
+
+// SatisfiedRatio returns the fraction of satisfied requirements (0.0 to 1.0).
+func (cd CoverageDetail) SatisfiedRatio() float64 {
+	if cd.RequirementsTotal <= 0 {
+		return 0.0
+	}
+	return float64(cd.RequirementsSatisfied) / float64(cd.RequirementsTotal)
 }
 
 // Component holds a single score dimension.
@@ -219,6 +303,46 @@ const (
 	BandCritical       RubricBand = "critical"
 )
 
+// String returns the raw string value of the rubric band.
+func (b RubricBand) String() string {
+	return string(b)
+}
+
+// IsStrong reports whether the posture band is strong.
+func (b RubricBand) IsStrong() bool {
+	return b == BandStrong
+}
+
+// IsAdequate reports whether the posture band is adequate.
+func (b RubricBand) IsAdequate() bool {
+	return b == BandAdequate
+}
+
+// IsNeedsAttention reports whether the posture band needs attention.
+func (b RubricBand) IsNeedsAttention() bool {
+	return b == BandNeedsAttention
+}
+
+// IsAtRisk reports whether the posture band is at risk.
+func (b RubricBand) IsAtRisk() bool {
+	return b == BandAtRisk
+}
+
+// IsCritical reports whether the posture band is critical.
+func (b RubricBand) IsCritical() bool {
+	return b == BandCritical
+}
+
+// IsHealthy reports whether the posture band is strong or adequate.
+func (b RubricBand) IsHealthy() bool {
+	return b == BandStrong || b == BandAdequate
+}
+
+// RequiresAction reports whether the posture band requires remedial attention or is at risk/critical.
+func (b RubricBand) RequiresAction() bool {
+	return b == BandNeedsAttention || b == BandAtRisk || b == BandCritical
+}
+
 // PostureScore encapsulates a 0-100 security posture score value.
 type PostureScore float64
 
@@ -256,6 +380,16 @@ type Result struct {
 	Coverage    CoverageComponent `json:"coverage"`
 	WeightsUsed Weights           `json:"weights_used"`
 	Trend       TrendPoints       `json:"trend,omitempty"`
+}
+
+// IsHealthy reports whether the posture band reflects a healthy posture (strong or adequate).
+func (r Result) IsHealthy() bool {
+	return r.RubricBand.IsHealthy()
+}
+
+// HasTrend reports whether the result contains historical trend observations.
+func (r Result) HasTrend() bool {
+	return r.Trend.Len() > 0
 }
 
 // ScoreMover names a sub-score component that is currently

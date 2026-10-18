@@ -121,3 +121,60 @@ func TestFindingList_DomainMethods(t *testing.T) {
 		t.Errorf("med.Len() = %d, want 0", med.Len())
 	}
 }
+
+func TestGateReason_DomainMethods(t *testing.T) {
+	if !ReasonCriticalThresholdExceeded.IsCritical() || ReasonCriticalThresholdExceeded.IsHigh() || ReasonCriticalThresholdExceeded.IsMedium() {
+		t.Error("ReasonCriticalThresholdExceeded checks failed")
+	}
+	if !ReasonHighThresholdExceeded.IsHigh() || ReasonHighThresholdExceeded.IsCritical() {
+		t.Error("ReasonHighThresholdExceeded checks failed")
+	}
+	if !ReasonMediumThresholdExceeded.IsMedium() || ReasonMediumThresholdExceeded.IsHigh() {
+		t.Error("ReasonMediumThresholdExceeded checks failed")
+	}
+	if ReasonCriticalThresholdExceeded.String() != "critical findings exceed threshold" {
+		t.Errorf("String() = %q, want expected message", ReasonCriticalThresholdExceeded.String())
+	}
+}
+
+func TestGateResult_DomainMethods(t *testing.T) {
+	clean := GateResult{
+		TeamID:        "platform",
+		Passed:        true,
+		TotalFindings: 0,
+	}
+	if !clean.IsClean() {
+		t.Error("clean.IsClean() = false, want true")
+	}
+	if clean.HasBreaches() {
+		t.Error("clean.HasBreaches() = true, want false")
+	}
+	if clean.HasCritical() || clean.HasHigh() || clean.HasMedium() {
+		t.Error("clean should have 0 critical/high/medium")
+	}
+
+	breached := GateResult{
+		TeamID:        "payments",
+		Passed:        false,
+		CriticalCount: 2,
+		HighCount:     3,
+		MediumCount:   1,
+		TotalFindings: 8,
+		Reason:        ReasonCriticalThresholdExceeded,
+	}
+	if breached.IsClean() {
+		t.Error("breached.IsClean() = true, want false")
+	}
+	if !breached.HasBreaches() {
+		t.Error("breached.HasBreaches() = false, want true")
+	}
+	if !breached.HasCritical() || !breached.HasHigh() || !breached.HasMedium() {
+		t.Error("breached should report true for has critical/high/medium")
+	}
+	if breached.HighOrCriticalCount() != 5 {
+		t.Errorf("HighOrCriticalCount() = %d, want 5", breached.HighOrCriticalCount())
+	}
+	if breached.LowOrInfoCount() != 2 {
+		t.Errorf("LowOrInfoCount() = %d, want 2 (8 - 2 - 3 - 1)", breached.LowOrInfoCount())
+	}
+}

@@ -74,6 +74,26 @@ const (
 	ReasonMediumThresholdExceeded   GateReason = "medium findings exceed threshold"
 )
 
+// String returns the raw string explanation of the gate failure reason.
+func (r GateReason) String() string {
+	return string(r)
+}
+
+// IsCritical reports whether the reason corresponds to critical threshold breach.
+func (r GateReason) IsCritical() bool {
+	return r == ReasonCriticalThresholdExceeded
+}
+
+// IsHigh reports whether the reason corresponds to high threshold breach.
+func (r GateReason) IsHigh() bool {
+	return r == ReasonHighThresholdExceeded
+}
+
+// IsMedium reports whether the reason corresponds to medium threshold breach.
+func (r GateReason) IsMedium() bool {
+	return r == ReasonMediumThresholdExceeded
+}
+
 // GateResult holds the per-team gate evaluation.
 type GateResult struct {
 	TeamID        teams.TeamID `json:"team_id"`
@@ -83,6 +103,45 @@ type GateResult struct {
 	MediumCount   int          `json:"medium_count"`
 	TotalFindings int          `json:"total_findings"`
 	Reason        GateReason   `json:"reason,omitempty"`
+}
+
+// IsClean reports whether there are zero findings for this team.
+func (gr GateResult) IsClean() bool {
+	return gr.TotalFindings == 0
+}
+
+// HasBreaches reports whether the team failed the gate evaluation.
+func (gr GateResult) HasBreaches() bool {
+	return !gr.Passed
+}
+
+// HasCritical reports whether any critical findings were evaluated for this team.
+func (gr GateResult) HasCritical() bool {
+	return gr.CriticalCount > 0
+}
+
+// HasHigh reports whether any high findings were evaluated for this team.
+func (gr GateResult) HasHigh() bool {
+	return gr.HighCount > 0
+}
+
+// HasMedium reports whether any medium findings were evaluated for this team.
+func (gr GateResult) HasMedium() bool {
+	return gr.MediumCount > 0
+}
+
+// HighOrCriticalCount returns the combined count of high and critical findings.
+func (gr GateResult) HighOrCriticalCount() int {
+	return gr.CriticalCount + gr.HighCount
+}
+
+// LowOrInfoCount returns findings below medium severity.
+func (gr GateResult) LowOrInfoCount() int {
+	count := gr.TotalFindings - (gr.CriticalCount + gr.HighCount + gr.MediumCount)
+	if count < 0 {
+		return 0
+	}
+	return count
 }
 
 // FindingList is a domain collection of remediation.Finding items with query methods.
