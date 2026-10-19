@@ -141,20 +141,14 @@ func renderExpandText(w io.Writer, arch archetype.Archetype, matched []policy.Co
 	if snap != nil {
 		fmt.Fprintln(w, "Snapshot coverage:")
 		fmt.Fprintln(w)
-		all := append(append([]string{}, snap.Found...), snap.Missing...)
-		slices.Sort(all)
-		foundSet := make(map[string]struct{}, len(snap.Found))
-		for _, s := range snap.Found {
-			foundSet[s] = struct{}{}
-		}
-		for _, svc := range all {
-			if _, ok := foundSet[svc]; ok {
+		for _, svc := range snap.AllServices() {
+			if snap.IsFound(svc) {
 				fmt.Fprintf(w, "  ✓ %-15s snapshot found\n", svc)
 			} else {
 				fmt.Fprintf(w, "  ✗ %-15s no snapshot — run: stave snapshot %s\n", svc, svc)
 			}
 		}
-		if len(snap.Missing) > 0 {
+		if snap.HasMissing() {
 			fmt.Fprintln(w)
 			fmt.Fprintln(w, "Generate missing snapshots, then re-run:")
 			fmt.Fprintln(w, "  stave verify")
@@ -210,9 +204,7 @@ func renderExpandJSON(w io.Writer, arch archetype.Archetype, matched []policy.Co
 
 	if snap != nil {
 		out.SnapshotStatus = snap
-		for _, svc := range snap.Missing {
-			out.SnapshotCommands = append(out.SnapshotCommands, "stave snapshot "+svc)
-		}
+		out.SnapshotCommands = snap.SnapshotCommands()
 	}
 
 	enc := json.NewEncoder(w)

@@ -281,3 +281,92 @@ func TestEvaluate_NoPermsPublic_NoFinding(t *testing.T) {
 		t.Errorf("public no-perms: expected no findings, got %d", len(res.Findings))
 	}
 }
+
+func TestScore_DomainMethods(t *testing.T) {
+	if ScoreSafe.Int() != 0 {
+		t.Errorf("ScoreSafe.Int() = %d, want 0", ScoreSafe.Int())
+	}
+	if !ScoreSafe.IsSafe() || ScoreSafe.IsInfo() || ScoreSafe.IsWarning() || ScoreSafe.IsCritical() || ScoreSafe.IsCatastrophic() {
+		t.Error("ScoreSafe checks failed")
+	}
+	if ScoreSafe.SeverityBand() != "SAFE" {
+		t.Errorf("ScoreSafe.SeverityBand() = %q, want SAFE", ScoreSafe.SeverityBand())
+	}
+
+	if ScoreInfo.IsSafe() || !ScoreInfo.IsInfo() || ScoreInfo.IsWarning() || ScoreInfo.IsCritical() || ScoreInfo.IsCatastrophic() {
+		t.Error("ScoreInfo checks failed")
+	}
+	if ScoreInfo.SeverityBand() != "INFO" {
+		t.Errorf("ScoreInfo.SeverityBand() = %q, want INFO", ScoreInfo.SeverityBand())
+	}
+
+	if ScoreWarning.IsSafe() || ScoreWarning.IsInfo() || !ScoreWarning.IsWarning() || ScoreWarning.IsCritical() || ScoreWarning.IsCatastrophic() {
+		t.Error("ScoreWarning checks failed")
+	}
+	if ScoreWarning.SeverityBand() != "WARNING" {
+		t.Errorf("ScoreWarning.SeverityBand() = %q, want WARNING", ScoreWarning.SeverityBand())
+	}
+
+	if ScoreCritical.IsSafe() || ScoreCritical.IsInfo() || ScoreCritical.IsWarning() || !ScoreCritical.IsCritical() || ScoreCritical.IsCatastrophic() {
+		t.Error("ScoreCritical checks failed")
+	}
+	if ScoreCritical.SeverityBand() != "CRITICAL" {
+		t.Errorf("ScoreCritical.SeverityBand() = %q, want CRITICAL", ScoreCritical.SeverityBand())
+	}
+
+	if ScoreCatastrophic.IsSafe() || ScoreCatastrophic.IsInfo() || ScoreCatastrophic.IsWarning() || ScoreCatastrophic.IsCritical() || !ScoreCatastrophic.IsCatastrophic() {
+		t.Error("ScoreCatastrophic checks failed")
+	}
+	if ScoreCatastrophic.SeverityBand() != "CATASTROPHIC" {
+		t.Errorf("ScoreCatastrophic.SeverityBand() = %q, want CATASTROPHIC", ScoreCatastrophic.SeverityBand())
+	}
+
+	if clamped := Score(-10).Clamp(); clamped != ScoreSafe {
+		t.Errorf("Score(-10).Clamp() = %d, want %d", clamped, ScoreSafe)
+	}
+	if clamped := Score(150).Clamp(); clamped != ScoreCatastrophic {
+		t.Errorf("Score(150).Clamp() = %d, want %d", clamped, ScoreCatastrophic)
+	}
+	if clamped := Score(50).Clamp(); clamped != Score(50) {
+		t.Errorf("Score(50).Clamp() = %d, want 50", clamped)
+	}
+}
+
+func TestRiskFindingsAndReport_DomainMethods(t *testing.T) {
+	var emptyFindings RiskFindings
+	if emptyFindings.Len() != 0 || !emptyFindings.IsEmpty() || emptyFindings.HasFindings() {
+		t.Error("empty findings checks failed")
+	}
+	if emptyFindings.Contains("Write") {
+		t.Error("emptyFindings.Contains should be false")
+	}
+
+	findings := RiskFindings{"Unrestricted Public Write/Admin Access"}
+	if findings.Len() != 1 || findings.IsEmpty() || !findings.HasFindings() {
+		t.Error("findings checks failed")
+	}
+	if !findings.Contains("Write") || findings.Contains("NonExistent") {
+		t.Error("findings.Contains checks failed")
+	}
+
+	safeReport := &Report{Score: ScoreSafe}
+	if !safeReport.IsSafe() || safeReport.IsCritical() || safeReport.HasFindings() {
+		t.Error("safeReport checks failed")
+	}
+
+	critReport := &Report{
+		Score:    ScoreCritical,
+		Findings: findings,
+	}
+	if critReport.IsSafe() || !critReport.IsCritical() || !critReport.HasFindings() {
+		t.Error("critReport checks failed")
+	}
+
+	sa := StatementAssessment{
+		Score:    ScoreWarning,
+		Findings: findings,
+	}
+	if !sa.HasFindings() {
+		t.Error("sa.HasFindings() should be true")
+	}
+}

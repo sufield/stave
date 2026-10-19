@@ -133,3 +133,113 @@ func TestLoad_UnknownFramework(t *testing.T) {
 		t.Fatal("expected error for unknown framework")
 	}
 }
+
+func TestDomainMethods(t *testing.T) {
+	// CoveragePercent
+	var zeroPct CoveragePercent = 0.0
+	if !zeroPct.IsZero() {
+		t.Error("zeroPct.IsZero() = false, want true")
+	}
+	if zeroPct.IsComplete() {
+		t.Error("zeroPct.IsComplete() = true, want false")
+	}
+	if zeroPct.Ratio() != 0.0 {
+		t.Errorf("zeroPct.Ratio() = %f, want 0.0", zeroPct.Ratio())
+	}
+
+	fullPct := CoveragePercent(100.0)
+	if fullPct.IsZero() {
+		t.Error("fullPct.IsZero() = true, want false")
+	}
+	if !fullPct.IsComplete() {
+		t.Error("fullPct.IsComplete() = false, want true")
+	}
+	if fullPct.Ratio() != 1.0 {
+		t.Errorf("fullPct.Ratio() = %f, want 1.0", fullPct.Ratio())
+	}
+
+	// ControlResult
+	passCtl := ControlResult{
+		ID:            "C-01",
+		Status:        StatusPass,
+		StaveControls: []string{"CTL.001"},
+		Confidence:    "direct",
+	}
+	if !passCtl.IsPassing() || passCtl.IsFailing() || passCtl.IsNotVerified() || passCtl.IsOutOfScope() {
+		t.Error("passCtl status methods failed")
+	}
+	if detail := passCtl.CoveredDetail(); detail != "1 Stave control(s) verified [direct]" {
+		t.Errorf("passCtl.CoveredDetail() = %q, want '1 Stave control(s) verified [direct]'", detail)
+	}
+
+	failCtl := ControlResult{
+		ID:             "C-02",
+		Status:         StatusFail,
+		FailedControls: []string{"CTL.002"},
+	}
+	if failCtl.IsPassing() || !failCtl.IsFailing() {
+		t.Error("failCtl status methods failed")
+	}
+	if detail := failCtl.CoveredDetail(); detail != "1 Stave control(s) failed" {
+		t.Errorf("failCtl.CoveredDetail() = %q, want '1 Stave control(s) failed'", detail)
+	}
+
+	gapCtl := ControlResult{
+		ID:     "C-03",
+		Status: StatusNotVerified,
+	}
+	if !gapCtl.IsNotVerified() {
+		t.Error("gapCtl.IsNotVerified() = false, want true")
+	}
+
+	oosCtl := ControlResult{
+		ID:     "C-04",
+		Status: StatusOutOfScope,
+	}
+	if !oosCtl.IsOutOfScope() {
+		t.Error("oosCtl.IsOutOfScope() = false, want true")
+	}
+
+	// ControlResults collection
+	var emptyResults ControlResults
+	if emptyResults.Len() != 0 || !emptyResults.IsEmpty() || emptyResults.HasControls() {
+		t.Error("emptyResults checks failed")
+	}
+	if emptyResults.Passing() != nil || emptyResults.Failing() != nil || emptyResults.Partial() != nil {
+		t.Error("emptyResults filtering should return nil")
+	}
+
+	results := ControlResults{passCtl, failCtl}
+	if results.Len() != 2 || results.IsEmpty() || !results.HasControls() {
+		t.Error("results checks failed")
+	}
+	if results.Passing().Len() != 1 || results.Failing().Len() != 1 {
+		t.Error("results passing/failing filter count mismatch")
+	}
+
+	// Report
+	rep := Report{
+		InScope:         2,
+		CoveragePercent: 100.0,
+		Covered:         results,
+		Gaps:            nil,
+	}
+	if rep.HasGaps() {
+		t.Error("rep.HasGaps() = true, want false")
+	}
+	if !rep.IsFullyCovered() {
+		t.Error("rep.IsFullyCovered() = false, want true")
+	}
+
+	repWithGaps := Report{
+		InScope:         2,
+		CoveragePercent: 50.0,
+		Gaps:            ControlResults{gapCtl},
+	}
+	if !repWithGaps.HasGaps() {
+		t.Error("repWithGaps.HasGaps() = false, want true")
+	}
+	if repWithGaps.IsFullyCovered() {
+		t.Error("repWithGaps.IsFullyCovered() = true, want false")
+	}
+}

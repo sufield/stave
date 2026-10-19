@@ -86,11 +86,88 @@ func ServiceFromControlID(id kernel.ControlID) ServiceID {
 	return ServiceID(svc)
 }
 
+// ServiceIDs is a domain collection of ServiceID items with query and formatting methods.
+type ServiceIDs []ServiceID
+
+// Len returns the number of service IDs in the collection.
+func (ids ServiceIDs) Len() int {
+	return len(ids)
+}
+
+// IsEmpty reports whether the collection contains no service IDs.
+func (ids ServiceIDs) IsEmpty() bool {
+	return len(ids) == 0
+}
+
+// Contains reports whether the given service ID is present.
+func (ids ServiceIDs) Contains(id ServiceID) bool {
+	return slices.Contains(ids, id)
+}
+
+// Strings returns the service IDs as raw strings.
+func (ids ServiceIDs) Strings() []string {
+	if len(ids) == 0 {
+		return nil
+	}
+	out := make([]string, len(ids))
+	for i, id := range ids {
+		out[i] = string(id)
+	}
+	return out
+}
+
+// SnapshotCommands returns the list of CLI commands to capture missing snapshots.
+func (ids ServiceIDs) SnapshotCommands() []string {
+	if len(ids) == 0 {
+		return nil
+	}
+	out := make([]string, len(ids))
+	for i, id := range ids {
+		out[i] = "stave snapshot " + string(id)
+	}
+	return out
+}
+
 // SnapshotStatus reports which of the archetype's services have at
 // least one matching observation file in the snapshots directory.
 type SnapshotStatus struct {
-	Found   []string `json:"found"`
-	Missing []string `json:"missing"`
+	Found   ServiceIDs `json:"found"`
+	Missing ServiceIDs `json:"missing"`
+}
+
+// HasMissing reports whether any required service snapshots are missing.
+func (s *SnapshotStatus) HasMissing() bool {
+	return s != nil && !s.Missing.IsEmpty()
+}
+
+// IsComplete reports whether all required service snapshots are present (and non-empty).
+func (s *SnapshotStatus) IsComplete() bool {
+	return s != nil && !s.Found.IsEmpty() && s.Missing.IsEmpty()
+}
+
+// IsFound reports whether the specified service has a snapshot present.
+func (s *SnapshotStatus) IsFound(svc ServiceID) bool {
+	return s != nil && s.Found.Contains(svc)
+}
+
+// AllServices returns all evaluated services (found + missing) sorted alphabetically.
+func (s *SnapshotStatus) AllServices() ServiceIDs {
+	if s == nil {
+		return nil
+	}
+	all := make(ServiceIDs, 0, s.Found.Len()+s.Missing.Len())
+	all = append(all, s.Found...)
+	all = append(all, s.Missing...)
+	slices.Sort(all)
+	return all
+}
+
+// SnapshotCommands returns the recommended snapshot commands for missing services.
+func (s *SnapshotStatus) SnapshotCommands() []string {
+	if s == nil {
+		return nil
+	}
+	return s.Missing.SnapshotCommands()
 }
 
 // ScanSnapshots walks the observations directory looking for
@@ -113,7 +190,11 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 		return nil
 	})
 	if len(files) == 0 {
-		return &SnapshotStatus{Missing: append([]string{}, services...)}
+		missing := make(ServiceIDs, len(services))
+		for i, svc := range services {
+			missing[i] = ServiceID(svc)
+		}
+		return &SnapshotStatus{Missing: missing}
 	}
 
 	have := make(map[string]struct{})
@@ -174,9 +255,9 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 	out := &SnapshotStatus{}
 	for _, svc := range services {
 		if _, ok := have[svc]; ok {
-			out.Found = append(out.Found, svc)
+			out.Found = append(out.Found, ServiceID(svc))
 		} else {
-			out.Missing = append(out.Missing, svc)
+			out.Missing = append(out.Missing, ServiceID(svc))
 		}
 	}
 	return out

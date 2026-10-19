@@ -54,19 +54,19 @@ func (TextRenderer) Render(w io.Writer, r *cm.Report) error {
 	}
 	fmt.Fprintf(w, "%s %s — compliance coverage\n\n", r.Framework, r.FrameworkVersion)
 
-	fmt.Fprintf(w, "✅ COVERED (%d controls)\n", len(r.Covered))
+	fmt.Fprintf(w, "✅ COVERED (%d controls)\n", r.Covered.Len())
 	for i := range r.Covered {
 		c := &r.Covered[i]
-		fmt.Fprintf(w, "  %-8s %-44s %s (%s)\n", c.ID, truncate(c.Title, 44), c.Status, coveredDetail(c))
+		fmt.Fprintf(w, "  %-8s %-44s %s (%s)\n", c.ID, truncate(c.Title, 44), c.Status, c.CoveredDetail())
 	}
 
-	fmt.Fprintf(w, "\n⚠️  GAPS (%d controls in scope, no Stave control yet)\n", len(r.Gaps))
+	fmt.Fprintf(w, "\n⚠️  GAPS (%d controls in scope, no Stave control yet)\n", r.Gaps.Len())
 	for i := range r.Gaps {
 		c := &r.Gaps[i]
 		fmt.Fprintf(w, "  %-8s %-44s NOT VERIFIED (no control in catalog)\n", c.ID, truncate(c.Title, 44))
 	}
 
-	fmt.Fprintf(w, "\n⬜ OUT OF SCOPE (%d controls — organizational/runtime/physical)\n", len(r.OutOfScope))
+	fmt.Fprintf(w, "\n⬜ OUT OF SCOPE (%d controls — organizational/runtime/physical)\n", r.OutOfScope.Len())
 	for i := range r.OutOfScope {
 		c := &r.OutOfScope[i]
 		fmt.Fprintf(w, "  %-8s %-44s %s\n", c.ID, truncate(c.Title, 44), c.OutOfScopeKind)
@@ -74,7 +74,7 @@ func (TextRenderer) Render(w io.Writer, r *cm.Report) error {
 
 	fmt.Fprintf(w, "\nCoverage: %d of %d in-scope controls have Stave verification (%.0f%%)\n",
 		r.Verified, r.InScope, r.CoveragePercent)
-	if r.Failed > 0 {
+	if r.HasFailures() {
 		fmt.Fprintf(w, "Failures: %d covered control(s) FAIL — fix these findings first.\n", r.Failed)
 	}
 	renderIntegrityText(w, r.Integrity)
@@ -82,22 +82,7 @@ func (TextRenderer) Render(w io.Writer, r *cm.Report) error {
 }
 
 func coveredDetail(c *cm.ControlResult) string {
-	var base string
-	switch {
-	case c.Status == cm.StatusFail:
-		base = fmt.Sprintf("%d Stave control(s) failed", len(c.FailedControls))
-	case c.Partial:
-		base = fmt.Sprintf("%d control(s) verified, partial mapping", len(c.StaveControls))
-	default:
-		base = fmt.Sprintf("%d Stave control(s) verified", len(c.StaveControls))
-	}
-	if c.Confidence != "" {
-		base += " [" + c.Confidence + "]"
-	}
-	if c.Partial && c.Uncovered != "" {
-		base += ": " + c.Uncovered
-	}
-	return base
+	return c.CoveredDetail()
 }
 
 // renderIntegrityText prints the mapping self-check. Shared by the coverage
@@ -144,7 +129,7 @@ func (MarkdownRenderer) Render(w io.Writer, r *cm.Report) error {
 	fmt.Fprintf(w, "**Coverage: %d of %d in-scope controls verified (%.0f%%)** — %d passed, %d failed.\n\n",
 		r.Verified, r.InScope, r.CoveragePercent, r.Passed, r.Failed)
 
-	fmt.Fprintf(w, "## ✅ Covered (%d)\n\n", len(r.Covered))
+	fmt.Fprintf(w, "## ✅ Covered (%d)\n\n", r.Covered.Len())
 	fmt.Fprintln(w, "| Control | Title | Status | Stave controls |")
 	fmt.Fprintln(w, "|---|---|---|---|")
 	for i := range r.Covered {
@@ -159,7 +144,7 @@ func (MarkdownRenderer) Render(w io.Writer, r *cm.Report) error {
 		fmt.Fprintf(w, "| %s | %s | %s | %s |\n", c.ID, mdEsc(c.Title), status, mdControls(c))
 	}
 
-	fmt.Fprintf(w, "\n## ⚠️ Gaps — in scope, no Stave control yet (%d)\n\n", len(r.Gaps))
+	fmt.Fprintf(w, "\n## ⚠️ Gaps — in scope, no Stave control yet (%d)\n\n", r.Gaps.Len())
 	fmt.Fprintln(w, "| Control | Title | What a Stave control should check |")
 	fmt.Fprintln(w, "|---|---|---|")
 	for i := range r.Gaps {
@@ -167,7 +152,7 @@ func (MarkdownRenderer) Render(w io.Writer, r *cm.Report) error {
 		fmt.Fprintf(w, "| %s | %s | %s |\n", c.ID, mdEsc(c.Title), mdEsc(c.Detail))
 	}
 
-	fmt.Fprintf(w, "\n## ⬜ Out of scope (%d)\n\n", len(r.OutOfScope))
+	fmt.Fprintf(w, "\n## ⬜ Out of scope (%d)\n\n", r.OutOfScope.Len())
 	fmt.Fprintln(w, "| Control | Title | Kind |")
 	fmt.Fprintln(w, "|---|---|---|")
 	for i := range r.OutOfScope {

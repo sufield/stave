@@ -22,6 +22,63 @@ const (
 	ScoreCatastrophic Score = 100
 )
 
+// Int returns the raw integer score.
+func (s Score) Int() int {
+	return int(s)
+}
+
+// IsSafe reports whether the score indicates safe posture (< ScoreInfo).
+func (s Score) IsSafe() bool {
+	return s < ScoreInfo
+}
+
+// IsInfo reports whether the score is within informational range [ScoreInfo, ScoreWarning).
+func (s Score) IsInfo() bool {
+	return s >= ScoreInfo && s < ScoreWarning
+}
+
+// IsWarning reports whether the score is within warning range [ScoreWarning, ScoreCritical).
+func (s Score) IsWarning() bool {
+	return s >= ScoreWarning && s < ScoreCritical
+}
+
+// IsCritical reports whether the score is within critical range [ScoreCritical, ScoreCatastrophic).
+func (s Score) IsCritical() bool {
+	return s >= ScoreCritical && s < ScoreCatastrophic
+}
+
+// IsCatastrophic reports whether the score reaches the catastrophic ceiling (>= ScoreCatastrophic).
+func (s Score) IsCatastrophic() bool {
+	return s >= ScoreCatastrophic
+}
+
+// SeverityBand returns the severity tier name for this score.
+func (s Score) SeverityBand() string {
+	switch {
+	case s.IsCatastrophic():
+		return "CATASTROPHIC"
+	case s.IsCritical():
+		return "CRITICAL"
+	case s.IsWarning():
+		return "WARNING"
+	case s.IsInfo():
+		return "INFO"
+	default:
+		return "SAFE"
+	}
+}
+
+// Clamp constrains the score to the valid range [0, ScoreCatastrophic].
+func (s Score) Clamp() Score {
+	if s < ScoreSafe {
+		return ScoreSafe
+	}
+	if s > ScoreCatastrophic {
+		return ScoreCatastrophic
+	}
+	return s
+}
+
 // Permission is a bitmask representing generic resource capabilities.
 type Permission uint32
 
@@ -48,12 +105,55 @@ func (p Permission) Overlap(target Permission) bool {
 	return p&target != 0
 }
 
+// RiskFindings is a domain collection of finding message strings.
+type RiskFindings []string
+
+// Len returns the number of findings in the collection.
+func (rf RiskFindings) Len() int {
+	return len(rf)
+}
+
+// IsEmpty reports whether there are no findings in the collection.
+func (rf RiskFindings) IsEmpty() bool {
+	return len(rf) == 0
+}
+
+// HasFindings reports whether there is at least one finding in the collection.
+func (rf RiskFindings) HasFindings() bool {
+	return len(rf) > 0
+}
+
+// Contains reports whether any finding message contains the specified substring.
+func (rf RiskFindings) Contains(substr string) bool {
+	for _, f := range rf {
+		if strings.Contains(f, substr) {
+			return true
+		}
+	}
+	return false
+}
+
 // Report represents the aggregated security posture of a policy.
 type Report struct {
-	Score       Score      `json:"score"`
-	Findings    []string   `json:"findings"`
-	IsPublic    bool       `json:"is_public"`
-	Permissions Permission `json:"permissions"`
+	Score       Score        `json:"score"`
+	Findings    RiskFindings `json:"findings"`
+	IsPublic    bool         `json:"is_public"`
+	Permissions Permission   `json:"permissions"`
+}
+
+// IsSafe reports whether the report indicates a safe security posture.
+func (r *Report) IsSafe() bool {
+	return r != nil && r.Score.IsSafe()
+}
+
+// IsCritical reports whether the report has critical or catastrophic risk.
+func (r *Report) IsCritical() bool {
+	return r != nil && (r.Score.IsCritical() || r.Score.IsCatastrophic())
+}
+
+// HasFindings reports whether any policy findings were recorded.
+func (r *Report) HasFindings() bool {
+	return r != nil && r.Findings.HasFindings()
 }
 
 // StatementContext contains the attributes of a single policy statement.
@@ -89,8 +189,13 @@ func ResolveActions(actions []string, resolver PermissionResolver) Permission {
 // StatementAssessment represents the risk contribution of a single statement.
 type StatementAssessment struct {
 	Score    Score
-	Findings []string
+	Findings RiskFindings
 	IsPublic bool
+}
+
+// HasFindings reports whether the statement assessment generated any findings.
+func (sa StatementAssessment) HasFindings() bool {
+	return sa.Findings.HasFindings()
 }
 
 // Evaluate analyzes the context to determine the risk level.
