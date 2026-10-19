@@ -146,6 +146,28 @@ func applyDevVisibility(c *cobra.Command, showDev bool) func() {
 	}
 }
 
+// overrideHelpRun replaces Cobra's default help command so that
+// `stave help <unknown>` prints only an error line, not the full root usage.
+func overrideHelpRun(root *cobra.Command) {
+	root.SetHelpCommand(&cobra.Command{
+		Use:           "help [command]",
+		Short:         "Help about any command",
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Run: func(c *cobra.Command, args []string) {
+			cmd, _, e := c.Root().Find(args)
+			if cmd == nil || e != nil {
+				fmt.Fprintf(os.Stderr, "Unknown command: %s\n", strings.Join(args, " "))
+				os.Exit(2)
+			}
+			cmd.SetContext(c.Context())
+			cmd.InitDefaultHelpFlag()
+			cmd.InitDefaultVersionFlag()
+			cobra.CheckErr(cmd.Help())
+		},
+	})
+}
+
 // NewGenManCmd generates real man pages (stave.1, stave-apply.1, …) into DIR.
 // Wired onto root as hidden: `stave gen-man ./man && man ./man/stave-apply.1`.
 func NewGenManCmd(root *cobra.Command, version string) *cobra.Command {

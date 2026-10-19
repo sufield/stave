@@ -283,6 +283,7 @@ func NewApp(opts ...AppOption) (*App, error) {
 	// group-aware template renders them) + a hidden gen-man that emits real *.1
 	// pages.
 	ApplyManStyle(app.Root)
+	overrideHelpRun(app.Root)
 	app.Root.AddCommand(NewGenManCmd(app.Root, Version()))
 	return app, nil
 }

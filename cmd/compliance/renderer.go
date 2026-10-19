@@ -81,10 +81,6 @@ func (TextRenderer) Render(w io.Writer, r *cm.Report) error {
 	return nil
 }
 
-func coveredDetail(c *cm.ControlResult) string {
-	return c.CoveredDetail()
-}
-
 // renderIntegrityText prints the mapping self-check. Shared by the coverage
 // report (appended) and --verify-mapping (standalone).
 func renderIntegrityText(w io.Writer, ir *cm.IntegrityReport) {
