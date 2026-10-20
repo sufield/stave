@@ -94,11 +94,58 @@ type GateResult struct {
 	OverdueCount int
 }
 
+// IsPassing reports whether the gate allowed the change.
+func (r *GateResult) IsPassing() bool {
+	return r != nil && r.Passed
+}
+
+// IsFailing reports whether the gate rejected the change.
+func (r *GateResult) IsFailing() bool {
+	return r != nil && !r.Passed
+}
+
+// HasViolations reports whether any current violations were found in the evaluation.
+func (r *GateResult) HasViolations() bool {
+	return r != nil && r.CurrentViolations > 0
+}
+
+// HasNewViolations reports whether any new violations were introduced compared to baseline.
+func (r *GateResult) HasNewViolations() bool {
+	return r != nil && r.NewViolations > 0
+}
+
+// HasOverdue reports whether any upcoming actions are overdue.
+func (r *GateResult) HasOverdue() bool {
+	return r != nil && r.OverdueCount > 0
+}
+
+// TotalBreaches returns the primary count of violations or overdue items driving the verdict.
+func (r *GateResult) TotalBreaches() int {
+	if r == nil {
+		return 0
+	}
+	switch r.Policy {
+	case GateFailOnAnyViolation:
+		return r.CurrentViolations
+	case GateFailOnNewViolation:
+		return r.NewViolations
+	case GateFailOnOverdueUpcoming:
+		return r.OverdueCount
+	default:
+		return r.CurrentViolations + r.NewViolations + r.OverdueCount
+	}
+}
+
+// IsClean reports whether the gate passed and has zero violations across all metrics.
+func (r *GateResult) IsClean() bool {
+	return r != nil && r.Passed && r.CurrentViolations == 0 && r.NewViolations == 0 && r.OverdueCount == 0
+}
+
 // PassLabel returns the canonical "PASS" / "FAIL" string used by CLI
 // renderers. Centralised so cmd/enforce/gate doesn't open-code the
 // ternary at every render site.
 func (r *GateResult) PassLabel() string {
-	if r.Passed {
+	if r != nil && r.Passed {
 		return "PASS"
 	}
 	return "FAIL"

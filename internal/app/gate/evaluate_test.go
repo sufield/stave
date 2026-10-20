@@ -161,3 +161,115 @@ func TestPolicy_DomainMethods(t *testing.T) {
 	}
 }
 
+func TestEvaluateRequest_DomainMethods(t *testing.T) {
+	now := time.Now()
+	req := EvaluateRequest{
+		EvaluationPath:    "eval.json",
+		BaselinePath:      "base.json",
+		ControlsDir:       "controls",
+		ObservationsDir:   "obs",
+		MaxUnsafeDuration: 24 * time.Hour,
+		EvalTime:          &now,
+	}
+
+	if !req.HasEvaluationPath() {
+		t.Error("HasEvaluationPath() = false, want true")
+	}
+	if !req.HasBaselinePath() {
+		t.Error("HasBaselinePath() = false, want true")
+	}
+	if !req.HasControlsDir() {
+		t.Error("HasControlsDir() = false, want true")
+	}
+	if !req.HasObservationsDir() {
+		t.Error("HasObservationsDir() = false, want true")
+	}
+	if !req.HasMaxUnsafeDuration() {
+		t.Error("HasMaxUnsafeDuration() = false, want true")
+	}
+	if !req.HasEvalTime() {
+		t.Error("HasEvalTime() = false, want true")
+	}
+
+	empty := EvaluateRequest{}
+	if empty.HasEvaluationPath() || empty.HasBaselinePath() || empty.HasControlsDir() ||
+		empty.HasObservationsDir() || empty.HasMaxUnsafeDuration() || empty.HasEvalTime() {
+		t.Error("empty request should return false for all Has* methods")
+	}
+}
+
+func TestEvaluateResponse_DomainMethods(t *testing.T) {
+	passingClean := EvaluateResponse{
+		Policy:            PolicyAny,
+		Passed:            true,
+		CurrentViolations: 0,
+		NewViolations:     0,
+		OverdueUpcoming:   0,
+	}
+
+	if !passingClean.IsPassing() {
+		t.Error("IsPassing() = false, want true")
+	}
+	if passingClean.IsFailing() {
+		t.Error("IsFailing() = true, want false")
+	}
+	if !passingClean.IsClean() {
+		t.Error("IsClean() = false, want true")
+	}
+	if passingClean.HasCurrentViolations() || passingClean.HasNewViolations() || passingClean.HasOverdueUpcoming() {
+		t.Error("expected zero violations")
+	}
+	if passingClean.TotalBreaches() != 0 {
+		t.Errorf("TotalBreaches() = %d, want 0", passingClean.TotalBreaches())
+	}
+	if passingClean.PassLabel() != "PASS" {
+		t.Errorf("PassLabel() = %q, want PASS", passingClean.PassLabel())
+	}
+
+	failingAny := EvaluateResponse{
+		Policy:            PolicyAny,
+		Passed:            false,
+		CurrentViolations: 4,
+	}
+	if !failingAny.IsFailing() || failingAny.IsPassing() {
+		t.Error("failingAny IsFailing / IsPassing failed")
+	}
+	if !failingAny.HasCurrentViolations() {
+		t.Error("HasCurrentViolations() = false, want true")
+	}
+	if failingAny.IsClean() {
+		t.Error("IsClean() = true, want false")
+	}
+	if failingAny.TotalBreaches() != 4 {
+		t.Errorf("TotalBreaches() = %d, want 4", failingAny.TotalBreaches())
+	}
+	if failingAny.PassLabel() != "FAIL" {
+		t.Errorf("PassLabel() = %q, want FAIL", failingAny.PassLabel())
+	}
+
+	failingNew := EvaluateResponse{
+		Policy:            PolicyNew,
+		Passed:            false,
+		CurrentViolations: 10,
+		NewViolations:     2,
+	}
+	if !failingNew.HasNewViolations() {
+		t.Error("HasNewViolations() = false, want true")
+	}
+	if failingNew.TotalBreaches() != 2 {
+		t.Errorf("TotalBreaches() = %d, want 2 for PolicyNew", failingNew.TotalBreaches())
+	}
+
+	failingOverdue := EvaluateResponse{
+		Policy:          PolicyOverdue,
+		Passed:          false,
+		OverdueUpcoming: 3,
+	}
+	if !failingOverdue.HasOverdueUpcoming() {
+		t.Error("HasOverdueUpcoming() = false, want true")
+	}
+	if failingOverdue.TotalBreaches() != 3 {
+		t.Errorf("TotalBreaches() = %d, want 3 for PolicyOverdue", failingOverdue.TotalBreaches())
+	}
+}
+

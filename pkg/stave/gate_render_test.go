@@ -83,3 +83,81 @@ func TestGateRenderResult_JSONAlwaysEmits(t *testing.T) {
 		t.Error("json render should always emit, even when quiet")
 	}
 }
+
+func TestGateResult_DomainMethods(t *testing.T) {
+	var nilResult *GateResult
+	if nilResult.IsPassing() || nilResult.IsFailing() || nilResult.HasViolations() ||
+		nilResult.HasNewViolations() || nilResult.HasOverdue() || nilResult.TotalBreaches() != 0 ||
+		nilResult.IsClean() || nilResult.PassLabel() != "FAIL" {
+		t.Error("nil GateResult should safely return false/zero/FAIL")
+	}
+
+	clean := &GateResult{
+		Policy:            GateFailOnAnyViolation,
+		Passed:            true,
+		CurrentViolations: 0,
+		NewViolations:     0,
+		OverdueCount:      0,
+	}
+	if !clean.IsPassing() || clean.IsFailing() {
+		t.Error("clean result should be passing and not failing")
+	}
+	if !clean.IsClean() {
+		t.Error("clean result should be clean")
+	}
+	if clean.HasViolations() || clean.HasNewViolations() || clean.HasOverdue() {
+		t.Error("clean result should have no violations")
+	}
+	if clean.TotalBreaches() != 0 {
+		t.Errorf("TotalBreaches() = %d, want 0", clean.TotalBreaches())
+	}
+	if clean.PassLabel() != "PASS" {
+		t.Errorf("PassLabel() = %q, want PASS", clean.PassLabel())
+	}
+
+	failAny := &GateResult{
+		Policy:            GateFailOnAnyViolation,
+		Passed:            false,
+		CurrentViolations: 5,
+	}
+	if !failAny.IsFailing() || failAny.IsPassing() {
+		t.Error("failAny check failed")
+	}
+	if !failAny.HasViolations() {
+		t.Error("HasViolations() = false, want true")
+	}
+	if failAny.IsClean() {
+		t.Error("failAny should not be clean")
+	}
+	if failAny.TotalBreaches() != 5 {
+		t.Errorf("TotalBreaches() = %d, want 5", failAny.TotalBreaches())
+	}
+	if failAny.PassLabel() != "FAIL" {
+		t.Errorf("PassLabel() = %q, want FAIL", failAny.PassLabel())
+	}
+
+	failNew := &GateResult{
+		Policy:            GateFailOnNewViolation,
+		Passed:            false,
+		CurrentViolations: 10,
+		NewViolations:     3,
+	}
+	if !failNew.HasNewViolations() {
+		t.Error("HasNewViolations() = false, want true")
+	}
+	if failNew.TotalBreaches() != 3 {
+		t.Errorf("TotalBreaches() = %d, want 3 for GateFailOnNewViolation", failNew.TotalBreaches())
+	}
+
+	failOverdue := &GateResult{
+		Policy:       GateFailOnOverdueUpcoming,
+		Passed:       false,
+		OverdueCount: 2,
+	}
+	if !failOverdue.HasOverdue() {
+		t.Error("HasOverdue() = false, want true")
+	}
+	if failOverdue.TotalBreaches() != 2 {
+		t.Errorf("TotalBreaches() = %d, want 2 for GateFailOnOverdueUpcoming", failOverdue.TotalBreaches())
+	}
+}
