@@ -89,7 +89,7 @@ func validateObservationContent(v contractvalidator.SchemaValidator, data []byte
 		return nil, fmt.Errorf("validate observation j s o n: %w", err)
 	}
 	validationReport := &Report{Diagnostics: issues}
-	if issues.IsClean() {
+	if issues.HasNoIssues() {
 		validationReport.Summary.SnapshotsLoaded = 1
 	}
 	return validationReport, nil
@@ -104,7 +104,7 @@ func validateControlContent(v contractvalidator.SchemaValidator, data []byte) (*
 		issues = diag.NewAssessment()
 	}
 	validationReport := &Report{Diagnostics: issues}
-	if issues.IsClean() {
+	if issues.HasNoIssues() {
 		validationReport.Summary.ControlsLoaded = 1
 	}
 	return validationReport, nil

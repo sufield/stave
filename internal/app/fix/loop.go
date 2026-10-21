@@ -194,7 +194,7 @@ func (s *Service) evaluateState(
 
 // BuildReport creates a LoopReport from the verification results.
 func BuildReport(req LoopRequest, _ interface{ Now() time.Time }, v *report.Attestation, artifacts LoopArtifacts) LoopReport {
-	pass := v.Summary.Open == 0 && v.Summary.Regressions == 0
+	pass := !v.HasViolations()
 	reason := "all previously violating resources are now resolved"
 	if !pass {
 		reason = fmt.Sprintf("remaining=%d introduced=%d", v.Summary.Open, v.Summary.Regressions)

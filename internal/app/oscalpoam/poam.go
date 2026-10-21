@@ -26,23 +26,6 @@ func (pi POAMItems) Len() int {
 	return len(pi)
 }
 
-// ByControl returns a new POAMItems collection filtered by control ID.
-func (pi POAMItems) ByControl(id kernel.ControlID) POAMItems {
-	if len(pi) == 0 {
-		return nil
-	}
-	var filtered POAMItems
-	for i := range pi {
-		for _, c := range pi[i].RelatedControls {
-			if c.ControlID == id {
-				filtered = append(filtered, pi[i])
-				break
-			}
-		}
-	}
-	return filtered
-}
-
 // POAM is the top-level OSCAL POA&M document.
 type POAM struct {
 	UUID     UUID         `json:"uuid"`
@@ -66,32 +49,12 @@ func (rc RelatedControls) Len() int {
 	return len(rc)
 }
 
-// ContainsControl reports whether the given control ID is in the collection.
-func (rc RelatedControls) ContainsControl(id kernel.ControlID) bool {
-	for i := range rc {
-		if rc[i].ControlID == id {
-			return true
-		}
-	}
-	return false
-}
-
 // Subjects is a domain collection of Subject items with querying methods.
 type Subjects []Subject
 
 // Len returns the number of subjects in the collection.
 func (s Subjects) Len() int {
 	return len(s)
-}
-
-// BySubjectUUID returns the Subject matching the given UUID, or nil if not found.
-func (s Subjects) BySubjectUUID(id asset.ID) *Subject {
-	for i := range s {
-		if s[i].SubjectUUID == id {
-			return &s[i]
-		}
-	}
-	return nil
 }
 
 // POAMItem is a single action item in the POA&M.

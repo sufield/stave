@@ -16,84 +16,6 @@ type FieldStat struct {
 	Missing int `json:"missing"`
 }
 
-// Total returns the total number of controls evaluated for this field.
-func (fs FieldStat) Total() int {
-	return fs.Present + fs.Missing
-}
-
-// Percentage returns the percentage of controls where this field is present (0.0 to 100.0).
-func (fs FieldStat) Percentage() float64 {
-	total := fs.Total()
-	if total == 0 {
-		return 0.0
-	}
-	return float64(fs.Present) / float64(total) * 100.0
-}
-
-// IsComplete returns true if all evaluated controls have this field present (and at least one control was evaluated).
-func (fs FieldStat) IsComplete() bool {
-	return fs.Present > 0 && fs.Missing == 0
-}
-
-// HasMissing returns true if any evaluated controls are missing this field.
-func (fs FieldStat) HasMissing() bool {
-	return fs.Missing > 0
-}
-
-// FieldCompleteness maps metadata fields to their presence/absence statistics.
-type FieldCompleteness map[MetadataField]FieldStat
-
-// ForField returns the FieldStat for a specific field, or a zero FieldStat if not present.
-func (fc FieldCompleteness) ForField(f MetadataField) FieldStat {
-	if fc == nil {
-		return FieldStat{}
-	}
-	return fc[f]
-}
-
-// SortedFields returns all metadata fields present in the completeness map sorted alphabetically.
-func (fc FieldCompleteness) SortedFields() []MetadataField {
-	if len(fc) == 0 {
-		return nil
-	}
-	fields := make([]MetadataField, 0, len(fc))
-	for f := range fc {
-		fields = append(fields, f)
-	}
-	slices.Sort(fields)
-	return fields
-}
-
-// AllComplete returns true if every field tracked in the map is 100% complete (none missing).
-func (fc FieldCompleteness) AllComplete() bool {
-	if len(fc) == 0 {
-		return false
-	}
-	for _, fs := range fc {
-		if fs.HasMissing() || fs.Present == 0 {
-			return false
-		}
-	}
-	return true
-}
-
-// CompletenessPercentage calculates the overall metadata completeness percentage across all fields.
-func (fc FieldCompleteness) CompletenessPercentage() QualityPercentage {
-	if len(fc) == 0 {
-		return QualityPercentage(0.0)
-	}
-	totalFields := 0
-	presentFields := 0
-	for _, fs := range fc {
-		totalFields += fs.Total()
-		presentFields += fs.Present
-	}
-	if totalFields == 0 {
-		return QualityPercentage(0.0)
-	}
-	return QualityPercentage(float64(presentFields) / float64(totalFields) * 100.0)
-}
-
 // BlindSpot identifies an asset type with observed resources but zero controls.
 type BlindSpot struct {
 	AssetType  kernel.AssetType `json:"asset_type"`
@@ -106,25 +28,6 @@ type BlindSpots []BlindSpot
 // Len returns the number of blind spots in the collection.
 func (bs BlindSpots) Len() int {
 	return len(bs)
-}
-
-// ByAssetType returns the blind spot matching the given asset type, or nil if not found.
-func (bs BlindSpots) ByAssetType(at kernel.AssetType) *BlindSpot {
-	for i := range bs {
-		if bs[i].AssetType == at {
-			return &bs[i]
-		}
-	}
-	return nil
-}
-
-// TotalUncoveredAssets returns the sum of asset counts across all blind spots.
-func (bs BlindSpots) TotalUncoveredAssets() int {
-	total := 0
-	for i := range bs {
-		total += bs[i].AssetCount
-	}
-	return total
 }
 
 // MetadataField identifies a control metadata field for completeness analysis.
@@ -158,26 +61,13 @@ func (qp QualityPercentage) Value() float64 {
 	return float64(qp)
 }
 
-// IsHighQuality reports whether the completeness score meets or exceeds the standard catalog quality threshold (80%).
-func (qp QualityPercentage) IsHighQuality() bool {
-	return qp >= 80.0
-}
-
-// Gap returns the percentage gap required to reach 100% full catalog metadata completeness.
-func (qp QualityPercentage) Gap() float64 {
-	if qp >= 100.0 {
-		return 0.0
-	}
-	return 100.0 - float64(qp)
-}
-
 // Report summarizes catalog quality across all controls.
 type Report struct {
-	TotalControls int               `json:"total_controls"`
-	Completeness  FieldCompleteness `json:"completeness"`
-	OverallPct    QualityPercentage `json:"overall_pct"`
-	BlindSpots    BlindSpots        `json:"blind_spots"`
-	MITREGaps     AttackStages      `json:"mitre_gaps"`
+	TotalControls int                         `json:"total_controls"`
+	Completeness  map[MetadataField]FieldStat `json:"completeness"`
+	OverallPct    QualityPercentage           `json:"overall_pct"`
+	BlindSpots    BlindSpots                  `json:"blind_spots"`
+	MITREGaps     AttackStages                `json:"mitre_gaps"`
 }
 
 // Input configures the quality analysis.
@@ -189,7 +79,7 @@ type Input struct {
 // Analyze evaluates catalog metadata completeness and coverage gaps.
 func Analyze(input Input) Report {
 	total := len(input.Controls)
-	completeness := FieldCompleteness{
+	completeness := map[MetadataField]FieldStat{
 		FieldSeverity:          {},
 		FieldRemediationAction: {},
 		FieldAttackStage:       {},
@@ -238,8 +128,19 @@ func Analyze(input Input) Report {
 		}
 	}
 
-	// Compute overall percentage using domain collection method.
-	overallPct := completeness.CompletenessPercentage()
+	// Compute overall percentage.
+	overallPct := QualityPercentage(0.0)
+	if total > 0 {
+		totalFields := 0
+		presentFields := 0
+		for _, fs := range completeness {
+			totalFields += fs.Present + fs.Missing
+			presentFields += fs.Present
+		}
+		if totalFields > 0 {
+			overallPct = QualityPercentage(float64(presentFields) / float64(totalFields) * 100)
+		}
+	}
 
 	// Identify blind spots: asset types with resources but no controls.
 	var blindSpots []BlindSpot
@@ -276,7 +177,7 @@ func Analyze(input Input) Report {
 	}
 }
 
-func inc(m FieldCompleteness, key MetadataField, present bool) {
+func inc(m map[MetadataField]FieldStat, key MetadataField, present bool) {
 	fs := m[key]
 	if present {
 		fs.Present++

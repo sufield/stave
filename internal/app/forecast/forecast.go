@@ -17,44 +17,6 @@ func (sp SLAProjections) Len() int {
 	return len(sp)
 }
 
-// Breaching returns SLA projections that breach deadline.
-func (sp SLAProjections) Breaching() SLAProjections {
-	if len(sp) == 0 {
-		return nil
-	}
-	var filtered SLAProjections
-	for i := range sp {
-		if sp[i].IsBreaching() {
-			filtered = append(filtered, sp[i])
-		}
-	}
-	return filtered
-}
-
-// AtRisk returns SLA projections that are at risk of breaching.
-func (sp SLAProjections) AtRisk() SLAProjections {
-	if len(sp) == 0 {
-		return nil
-	}
-	var filtered SLAProjections
-	for i := range sp {
-		if sp[i].IsAtRisk() {
-			filtered = append(filtered, sp[i])
-		}
-	}
-	return filtered
-}
-
-// BySeverity returns the projection for a specific policy severity, or nil if not found.
-func (sp SLAProjections) BySeverity(sev policy.Severity) *SLAProjection {
-	for i := range sp {
-		if sp[i].Severity == sev {
-			return &sp[i]
-		}
-	}
-	return nil
-}
-
 // Result holds forecast output.
 type Result struct {
 	Current   CurrentState   `json:"current"`
@@ -107,11 +69,6 @@ func (m MTTRHours) Days() float64 {
 // IsZero reports whether MTTR hours is zero.
 func (m MTTRHours) IsZero() bool { return m == 0 }
 
-// IsWithinDeadline reports whether MTTR satisfies the deadline.
-func (m MTTRHours) IsWithinDeadline(deadline MTTRHours) bool {
-	return m <= deadline
-}
-
 // CurrentState holds current metrics.
 type CurrentState struct {
 	PostureScore      PostureScore  `json:"posture_score"`
@@ -120,22 +77,6 @@ type CurrentState struct {
 	MTTRHigh          time.Duration `json:"-"`
 	MTTRCriticalHours MTTRHours     `json:"mttr_critical_hours"`
 	MTTRHighHours     MTTRHours     `json:"mttr_high_hours"`
-}
-
-// SetMTTRCritical sets both the time.Duration and float64 hours representation.
-func (c *CurrentState) SetMTTRCritical(d time.Duration) {
-	if c != nil {
-		c.MTTRCritical = d
-		c.MTTRCriticalHours = MTTRHours(d.Hours())
-	}
-}
-
-// SetMTTRHigh sets both the time.Duration and float64 hours representation.
-func (c *CurrentState) SetMTTRHigh(d time.Duration) {
-	if c != nil {
-		c.MTTRHigh = d
-		c.MTTRHighHours = MTTRHours(d.Hours())
-	}
 }
 
 // HorizonDays encapsulates a forecast projection time window in days.
@@ -151,11 +92,6 @@ func (h HorizonDays) Duration() time.Duration {
 	return time.Duration(h) * 24 * time.Hour
 }
 
-// IsShortTerm reports whether the horizon is 30 days or fewer.
-func (h HorizonDays) IsShortTerm() bool {
-	return h <= 30
-}
-
 // IsValid reports whether the horizon is non-negative.
 func (h HorizonDays) IsValid() bool {
 	return h >= 0
@@ -169,12 +105,6 @@ func (s ScoreSlope) Float64() float64 { return float64(s) }
 
 // IsImproving reports whether the score trend is positive.
 func (s ScoreSlope) IsImproving() bool { return s > 0 }
-
-// IsDeclining reports whether the score trend is negative.
-func (s ScoreSlope) IsDeclining() bool { return s < 0 }
-
-// IsFlat reports whether the score trend is zero.
-func (s ScoreSlope) IsFlat() bool { return s == 0 }
 
 // ProjectedState holds projected metrics.
 type ProjectedState struct {
@@ -203,11 +133,6 @@ type SLAProjection struct {
 	ProjectedMTTR MTTRHours       `json:"projected_mttr_hours"`
 	Deadline      MTTRHours       `json:"sla_deadline_hours"`
 	Status        SLAStatus       `json:"status"` // see Status* constants above
-}
-
-// IsOnTrack reports whether the projection has the SLA-met status.
-func (s *SLAProjection) IsOnTrack() bool {
-	return s != nil && s.Status == StatusOnTrack
 }
 
 // IsAtRisk reports whether the projection is approaching the SLA
@@ -248,26 +173,6 @@ type ScoreHistory []PostureScore
 // Len returns the number of days in the score history.
 func (sh ScoreHistory) Len() int {
 	return len(sh)
-}
-
-// Latest returns the most recent score in the history, or 0 if empty.
-func (sh ScoreHistory) Latest() PostureScore {
-	if len(sh) == 0 {
-		return 0
-	}
-	return sh[len(sh)-1]
-}
-
-// Average returns the mean posture score across the history.
-func (sh ScoreHistory) Average() PostureScore {
-	if len(sh) == 0 {
-		return 0
-	}
-	var sum float64
-	for _, s := range sh {
-		sum += float64(s)
-	}
-	return PostureScore(sum / float64(len(sh)))
 }
 
 // Input holds data for forecasting.

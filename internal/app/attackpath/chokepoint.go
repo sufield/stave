@@ -17,58 +17,12 @@ type ChokePointAnalysis struct {
 	ChainIDs         ChainIDs         `json:"chain_ids"`
 }
 
-// ChokePointAnalyses represents a domain collection of ChokePointAnalysis items.
-type ChokePointAnalyses []ChokePointAnalysis
-
-// Len returns the count of choke point analysis items.
-func (ca ChokePointAnalyses) Len() int {
-	return len(ca)
-}
-
-// ByControl returns the analysis for a given control ID, or nil if not present.
-func (ca ChokePointAnalyses) ByControl(id kernel.ControlID) *ChokePointAnalysis {
-	for i := range ca {
-		if ca[i].ControlID == id {
-			return &ca[i]
-		}
-	}
-	return nil
-}
-
-// Top returns the top n choke points.
-func (ca ChokePointAnalyses) Top(n int) ChokePointAnalyses {
-	if n <= 0 || len(ca) == 0 {
-		return nil
-	}
-	if n >= len(ca) {
-		return ca
-	}
-	return ca[:n]
-}
-
-// ControlIDs returns the slice of control IDs identified as choke points.
-func (ca ChokePointAnalyses) ControlIDs() []kernel.ControlID {
-	out := make([]kernel.ControlID, len(ca))
-	for i := range ca {
-		out[i] = ca[i].ControlID
-	}
-	return out
-}
-
-// MaxSharedChains returns the highest shared chain count among all choke points (0 if empty).
-func (ca ChokePointAnalyses) MaxSharedChains() int {
-	if len(ca) == 0 {
-		return 0
-	}
-	return ca[0].SharedChainCount
-}
-
 // FindChokePoints identifies controls shared across multiple compound
 // findings. A control appearing in N findings has choke score N.
 // Returns controls sorted by choke score descending, then by control
 // ID for determinism. Controls appearing in fewer than 2 findings
 // are excluded.
-func FindChokePoints(cfs []findings.CompoundFinding) ChokePointAnalyses {
+func FindChokePoints(cfs []findings.CompoundFinding) []ChokePointAnalysis {
 	if len(cfs) == 0 {
 		return nil
 	}
@@ -83,7 +37,7 @@ func FindChokePoints(cfs []findings.CompoundFinding) ChokePointAnalyses {
 		}
 	}
 
-	var result ChokePointAnalyses
+	var result []ChokePointAnalysis
 	for cid, chains := range controlChains {
 		if len(chains) < 2 {
 			continue

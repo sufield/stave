@@ -3,7 +3,6 @@ package universals
 import (
 	"strings"
 	"testing"
-	"time"
 )
 
 func TestResolvePredicate(t *testing.T) {
@@ -46,7 +45,7 @@ func TestResolvePredicate(t *testing.T) {
 func TestGroundAssets(t *testing.T) {
 	ug := UniversalGrounding{
 		Sort:       "Resource",
-		Predicates: Predicates{"generates_security_events", "logging_enabled"},
+		Predicates: []string{"generates_security_events", "logging_enabled"},
 		Groundings: map[string]AssetTypeGrounding{
 			"aws_s3_bucket": {
 				"generates_security_events": true,
@@ -77,7 +76,7 @@ func TestGroundAssets(t *testing.T) {
 func TestGroundAssetsWithWhen(t *testing.T) {
 	ug := UniversalGrounding{
 		Sort:       "Endpoint",
-		Predicates: Predicates{"accepts_requests", "requires_auth"},
+		Predicates: []string{"accepts_requests", "requires_auth"},
 		Groundings: map[string]AssetTypeGrounding{
 			"aws_lambda_function": {
 				"when":             ".compute.function_url",
@@ -114,7 +113,7 @@ func TestGroundAssetsWithWhen(t *testing.T) {
 }
 
 func TestGenerateGroundingEmpty(t *testing.T) {
-	out := GenerateGrounding("Resource", Predicates{"stores_data"}, nil)
+	out := GenerateGrounding("Resource", []string{"stores_data"}, nil)
 	if !strings.Contains(out, "forall") {
 		t.Error("empty grounding should close universe with forall")
 	}
@@ -125,7 +124,7 @@ func TestGenerateGroundingSingle(t *testing.T) {
 		"stores_data": true,
 		"encrypted":   false,
 	}}}
-	out := GenerateGrounding("Resource", Predicates{"stores_data", "encrypted"}, gs)
+	out := GenerateGrounding("Resource", []string{"stores_data", "encrypted"}, gs)
 	if !strings.Contains(out, "(declare-const c_bucket Resource)") {
 		t.Error("should declare constant")
 	}
@@ -134,197 +133,5 @@ func TestGenerateGroundingSingle(t *testing.T) {
 	}
 	if !strings.Contains(out, "(assert (not (encrypted c_bucket)))") {
 		t.Error("should assert negated false predicate")
-	}
-}
-
-func TestVerdict_DomainMethods(t *testing.T) {
-	if !VerdictHolds.IsHolds() {
-		t.Error("VerdictHolds.IsHolds(): got false, want true")
-	}
-	if VerdictHolds.IsViolated() || VerdictHolds.IsError() || VerdictHolds.IsUnknown() {
-		t.Error("VerdictHolds returned true for other states")
-	}
-
-	if !VerdictViolated.IsViolated() {
-		t.Error("VerdictViolated.IsViolated(): got false, want true")
-	}
-	if !VerdictError.IsError() {
-		t.Error("VerdictError.IsError(): got false, want true")
-	}
-	if !VerdictUnknown.IsUnknown() {
-		t.Error("VerdictUnknown.IsUnknown(): got false, want true")
-	}
-}
-
-func TestSolveTimeMs_DomainMethods(t *testing.T) {
-	st := SolveTimeMs(1500)
-	if st.Int64() != 1500 {
-		t.Errorf("Int64: got %d, want 1500", st.Int64())
-	}
-	if st.Duration() != 1500*time.Millisecond {
-		t.Errorf("Duration: got %v, want 1.5s", st.Duration())
-	}
-	if st.Seconds() != 1.5 {
-		t.Errorf("Seconds: got %f, want 1.5", st.Seconds())
-	}
-	if !st.IsSlow(time.Second) {
-		t.Error("IsSlow(1s): got false, want true")
-	}
-	if st.IsSlow(2 * time.Second) {
-		t.Error("IsSlow(2s): got true, want false")
-	}
-}
-
-func TestViolations_DomainMethods(t *testing.T) {
-	viols := Violations{
-		{Constant: "c_bucket1", Predicate: "encrypted", Value: false},
-		{Constant: "c_bucket2", Predicate: "encrypted", Value: false},
-		{Constant: "c_fn1", Predicate: "requires_auth", Value: false},
-	}
-
-	if viols.Len() != 3 {
-		t.Errorf("Len: got %d, want 3", viols.Len())
-	}
-
-	enc := viols.ByPredicate("encrypted")
-	if enc.Len() != 2 {
-		t.Errorf("ByPredicate encrypted: got %d, want 2", enc.Len())
-	}
-
-	fn := viols.ByConstant("c_fn1")
-	if fn.Len() != 1 || fn[0].Predicate != "requires_auth" {
-		t.Errorf("ByConstant c_fn1: got %v", fn)
-	}
-
-	preds := viols.Predicates()
-	if len(preds) != 2 || preds[0] != "encrypted" || preds[1] != "requires_auth" {
-		t.Errorf("Predicates: got %v, want [encrypted, requires_auth]", preds)
-	}
-}
-
-func TestResults_DomainMethods(t *testing.T) {
-	res := Results{
-		{
-			ID:          "U26",
-			Name:        "Service-level logging enabled",
-			Verdict:     VerdictHolds,
-			Holds:       true,
-			SolveTimeMs: 100,
-		},
-		{
-			ID:          "U27",
-			Name:        "Endpoint authentication required",
-			Verdict:     VerdictViolated,
-			Holds:       false,
-			SolveTimeMs: 250,
-			Violations: Violations{
-				{Constant: "c_fn1", Predicate: "requires_auth", Value: false},
-			},
-		},
-		{
-			ID:          "U28",
-			Name:        "Deletion protection enabled",
-			Verdict:     VerdictError,
-			Holds:       false,
-			Error:       "z3 timeout",
-			SolveTimeMs: 500,
-		},
-	}
-
-	if res.Len() != 3 {
-		t.Errorf("Len: got %d, want 3", res.Len())
-	}
-
-	holding := res.Holding()
-	if holding.Len() != 1 || holding[0].ID != "U26" {
-		t.Errorf("Holding: got %v", holding)
-	}
-
-	violated := res.Violated()
-	if violated.Len() != 1 || violated[0].ID != "U27" {
-		t.Errorf("Violated: got %v", violated)
-	}
-
-	errored := res.Errored()
-	if errored.Len() != 1 || errored[0].ID != "U28" {
-		t.Errorf("Errored: got %v", errored)
-	}
-
-	u27, found := res.ByID("U27")
-	if !found || u27.Name != "Endpoint authentication required" {
-		t.Errorf("ByID U27: got (%v, %v)", u27, found)
-	}
-
-	_, notFound := res.ByID("U99")
-	if notFound {
-		t.Error("ByID U99: got true, want false")
-	}
-
-	totalTime := res.TotalSolveTime()
-	if totalTime != 850*time.Millisecond {
-		t.Errorf("TotalSolveTime: got %v, want 850ms", totalTime)
-	}
-}
-
-func TestPredicates_DomainMethods(t *testing.T) {
-	preds := Predicates{"stores_data", "encrypted", "logging_enabled"}
-
-	if preds.Len() != 3 {
-		t.Errorf("preds.Len() = %d, want 3", preds.Len())
-	}
-	if !preds.Contains("stores_data") || !preds.Contains("encrypted") {
-		t.Error("preds.Contains expected true for existing predicates")
-	}
-	if preds.Contains("nonexistent") {
-		t.Error("preds.Contains expected false for nonexistent predicate")
-	}
-
-	var empty Predicates
-	if empty.Len() != 0 || empty.Contains("stores_data") {
-		t.Error("empty Predicates domain methods failed")
-	}
-}
-
-func TestSummary_DomainMethods(t *testing.T) {
-	s := Summary{
-		Total:    10,
-		Hold:     8,
-		Violated: 1,
-		Errored:  1,
-	}
-
-	if s.AllHold() {
-		t.Error("AllHold() = true, want false")
-	}
-	if !s.HasViolations() {
-		t.Error("HasViolations() = false, want true")
-	}
-	if !s.HasErrors() {
-		t.Error("HasErrors() = false, want true")
-	}
-	if rate := s.PassRate(); rate != 80.0 {
-		t.Errorf("PassRate() = %f, want 80.0", rate)
-	}
-	if s.NonHoldingCount() != 2 {
-		t.Errorf("NonHoldingCount() = %d, want 2", s.NonHoldingCount())
-	}
-
-	allHold := Summary{Total: 5, Hold: 5, Violated: 0, Errored: 0}
-	if !allHold.AllHold() {
-		t.Error("allHold.AllHold() = false, want true")
-	}
-	if allHold.HasViolations() || allHold.HasErrors() {
-		t.Error("allHold should not have violations or errors")
-	}
-	if allHold.PassRate() != 100.0 {
-		t.Errorf("allHold.PassRate() = %f, want 100.0", allHold.PassRate())
-	}
-	if allHold.NonHoldingCount() != 0 {
-		t.Errorf("allHold.NonHoldingCount() = %d, want 0", allHold.NonHoldingCount())
-	}
-
-	empty := Summary{}
-	if empty.AllHold() || empty.HasViolations() || empty.HasErrors() || empty.PassRate() != 100.0 || empty.NonHoldingCount() != 0 {
-		t.Error("empty Summary domain methods failed")
 	}
 }

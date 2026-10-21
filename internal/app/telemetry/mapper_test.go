@@ -84,8 +84,8 @@ func TestMapper_SeverityFilter(t *testing.T) {
 
 func TestMapper_ResourceFilter(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{ControlID: "CTL.A", AssetID: "arn:aws:s3:::bucket-a"},
-		{ControlID: "CTL.B", AssetID: "arn:aws:s3:::bucket-b"},
+		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "arn:aws:s3:::bucket-a"}},
+		{Finding: evaluation.Finding{ControlID: "CTL.B", AssetID: "arn:aws:s3:::bucket-b"}},
 	})
 
 	filter := Filter{ResourceARN: "arn:aws:s3:::bucket-a"}
@@ -100,7 +100,7 @@ func TestMapper_ResourceFilter(t *testing.T) {
 
 func TestMapper_ControlFingerprint(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{ControlID: "CTL.A", AssetID: "a"},
+		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "a"}},
 	})
 	fps := ControlFingerprints{"CTL.A": "sha256:per-control-hash"}
 	events := MapAssessment(a, Filter{}, fps)
@@ -114,7 +114,7 @@ func TestMapper_ControlFingerprint(t *testing.T) {
 
 func TestMapper_EnvironmentalScore(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{ControlID: "CTL.A", AssetID: "a"},
+		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "a"}},
 	})
 	events := MapAssessment(a, Filter{}, nil)
 	if len(events) != 1 {
@@ -128,7 +128,7 @@ func TestMapper_EnvironmentalScore(t *testing.T) {
 
 func TestMapper_WithWindows(t *testing.T) {
 	a := makeAssessment([]remediation.Finding{
-		{ControlID: "CTL.A", AssetID: "bucket-a"},
+		{Finding: evaluation.Finding{ControlID: "CTL.A", AssetID: "bucket-a"}},
 	})
 	tracker := NewWindowTracker()
 	events := MapAssessmentWithWindows(a, Filter{}, nil, tracker)
@@ -140,67 +140,5 @@ func TestMapper_WithWindows(t *testing.T) {
 	}
 	if *events[0].WindowID != "bucket-a/CTL.A/2026-01-11T00:00:00Z" {
 		t.Errorf("window_id = %q", *events[0].WindowID)
-	}
-}
-
-func TestChainIDs_DomainMethods(t *testing.T) {
-	c := ChainIDs{"CHAIN.001", "CHAIN.002"}
-	if c.Len() != 2 {
-		t.Errorf("Len() = %d, want 2", c.Len())
-	}
-	if !c.Contains("CHAIN.001") {
-		t.Error("Contains(CHAIN.001) = false, want true")
-	}
-	if c.Contains("CHAIN.003") {
-		t.Error("Contains(CHAIN.003) = true, want false")
-	}
-}
-
-func TestExposureScore_DomainMethods(t *testing.T) {
-	zero := ExposureScore(0)
-	if !zero.IsZero() {
-		t.Error("IsZero() = false for 0, want true")
-	}
-	if zero.Float64() != 0 {
-		t.Errorf("Float64() = %v, want 0", zero.Float64())
-	}
-
-	high := ExposureScore(8.5)
-	if high.IsZero() {
-		t.Error("IsZero() = true for 8.5, want false")
-	}
-	if !high.IsHigh(7.0) {
-		t.Error("IsHigh(7.0) = false for 8.5, want true")
-	}
-	if high.IsHigh(9.0) {
-		t.Error("IsHigh(9.0) = true for 8.5, want false")
-	}
-}
-
-func TestEvents_DomainMethods(t *testing.T) {
-	ev := Events{
-		{ControlID: "CTL.A", Severity: policy.SeverityCritical, ResourceID: "res-1", Verdict: evaluation.VerdictViolation},
-		{ControlID: "CTL.B", Severity: policy.SeverityHigh, ResourceID: "res-2", Verdict: evaluation.VerdictPass},
-	}
-
-	if ev.Len() != 2 {
-		t.Errorf("Len() = %d, want 2", ev.Len())
-	}
-	if ev.ByControl("CTL.A").Len() != 1 {
-		t.Errorf("ByControl(CTL.A) = %d, want 1", ev.ByControl("CTL.A").Len())
-	}
-	if ev.BySeverity(policy.SeverityCritical).Len() != 1 {
-		t.Errorf("BySeverity(Critical) = %d, want 1", ev.BySeverity(policy.SeverityCritical).Len())
-	}
-	if ev.ByResource("res-1").Len() != 1 {
-		t.Errorf("ByResource(res-1) = %d, want 1", ev.ByResource("res-1").Len())
-	}
-	if ev.Violations().Len() != 1 {
-		t.Errorf("Violations() = %d, want 1", ev.Violations().Len())
-	}
-
-	var empty Events
-	if empty.Len() != 0 || empty.ByControl("CTL.A") != nil || empty.BySeverity(policy.SeverityLow) != nil || empty.ByResource("res") != nil || empty.Violations() != nil {
-		t.Error("empty Events methods failed")
 	}
 }

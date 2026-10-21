@@ -129,10 +129,10 @@ func conductAssessment(ctx context.Context, deps WorkflowDeps, req Request, cont
 }
 
 func evaluateSuccess(outcome CompareResult) error {
-	if outcome.OpenCount == 0 && outcome.RegressionCount == 0 {
-		return nil
+	if outcome.HasRegressions() {
+		return appcontracts.ErrViolationsFound
 	}
-	return appcontracts.ErrViolationsFound
+	return nil
 }
 
 func executeStage[T any](beginStage func(string) func(), label string, fn func() (T, error)) (T, error) {

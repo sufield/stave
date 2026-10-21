@@ -55,13 +55,13 @@ type capabilityRecord struct {
 }
 
 type controlYAML struct {
-	ID                   string            `yaml:"id"`
-	Severity             string            `yaml:"severity"`
-	Type                 string            `yaml:"type"`
-	Classification       string            `yaml:"classification"`
-	ApplicableAssetTypes []string          `yaml:"applicable_asset_types"`
-	ObservationFields    []string          `yaml:"observation_fields"`
-	UnsafePredicate      predicateYAML     `yaml:"unsafe_predicate"`
+	ID                   string        `yaml:"id"`
+	Severity             string        `yaml:"severity"`
+	Type                 string        `yaml:"type"`
+	Classification       string        `yaml:"classification"`
+	ApplicableAssetTypes []string      `yaml:"applicable_asset_types"`
+	ObservationFields    []string      `yaml:"observation_fields"`
+	UnsafePredicate      predicateYAML `yaml:"unsafe_predicate"`
 }
 
 type predicateYAML struct {

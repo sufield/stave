@@ -32,16 +32,6 @@ func (rs ReadinessScore) Value() float64 {
 	return float64(rs)
 }
 
-// Percentage returns the readiness score expressed as a percentage value (0.0 to 100.0).
-func (rs ReadinessScore) Percentage() float64 {
-	return float64(rs) * 100.0
-}
-
-// IsFullReadiness reports whether the readiness score is 1.0 (100% ready).
-func (rs ReadinessScore) IsFullReadiness() bool {
-	return rs >= 1.0
-}
-
 // IsZero reports whether the readiness score is zero.
 func (rs ReadinessScore) IsZero() bool {
 	return rs == 0.0
@@ -63,15 +53,6 @@ func (o ObservedAssetTypes) IsEmpty() bool {
 // HasTypes reports whether there is at least one observed asset type.
 func (o ObservedAssetTypes) HasTypes() bool {
 	return len(o) > 0
-}
-
-// TotalAssets returns the sum of occurrence counts across all observed asset types.
-func (o ObservedAssetTypes) TotalAssets() int {
-	total := 0
-	for _, count := range o {
-		total += count
-	}
-	return total
 }
 
 // SortedTypes returns the list of observed asset types sorted alphabetically.
@@ -102,16 +83,6 @@ func (o ObservedAssetTypes) Contains(at kernel.AssetType) bool {
 	}
 	_, ok := o[at]
 	return ok
-}
-
-// AnyObserved reports whether any of the given asset types has observed resources.
-func (o ObservedAssetTypes) AnyObserved(types []kernel.AssetType) bool {
-	for _, t := range types {
-		if o[t] > 0 {
-			return true
-		}
-	}
-	return false
 }
 
 // CatalogAssetTypes is a domain collection of asset types declared in the control catalog.
@@ -181,6 +152,11 @@ func (r Report) HasObservedTypes() bool {
 	return r.ObservedTypes.HasTypes()
 }
 
+// HasActions reports whether the report contains recommended remediation actions.
+func (r Report) HasActions() bool {
+	return r.Actions.HasActions()
+}
+
 // ControlForecast classifies every control into one of three
 // buckets. "Indeterminate" is the honest bucket for controls
 // that declare no applicable_asset_types — the engine fires
@@ -195,19 +171,9 @@ func (p ForecastPercentage) Float64() float64 {
 	return float64(p)
 }
 
-// Ratio returns the percentage expressed as a ratio between 0.0 and 1.0.
-func (p ForecastPercentage) Ratio() float64 {
-	return float64(p) / 100.0
-}
-
 // IsZero reports whether the percentage is zero.
 func (p ForecastPercentage) IsZero() bool {
 	return p == 0.0
-}
-
-// IsComplete reports whether the percentage represents 100% full coverage.
-func (p ForecastPercentage) IsComplete() bool {
-	return p >= 100.0
 }
 
 // The three *Pct fields are bucket-share-of-Total, scaled 0..100
@@ -225,26 +191,6 @@ type ControlForecast struct {
 	IndeterminatePct ForecastPercentage `json:"indeterminate_pct"`
 }
 
-// ActiveTotal returns the total count of classifiable controls (CanFire + Blocked).
-func (cf *ControlForecast) ActiveTotal() int {
-	return cf.CanFire + cf.Blocked
-}
-
-// HasBlocked reports whether any controls are blocked.
-func (cf *ControlForecast) HasBlocked() bool {
-	return cf.Blocked > 0
-}
-
-// HasIndeterminate reports whether any controls have indeterminate applicability.
-func (cf *ControlForecast) HasIndeterminate() bool {
-	return cf.Indeterminate > 0
-}
-
-// IsFullyReady reports whether all classifiable controls can fire and at least one can fire.
-func (cf *ControlForecast) IsFullyReady() bool {
-	return cf.Blocked == 0 && cf.CanFire > 0
-}
-
 // ChainForecast classifies every chain. A chain can fire only
 // if every member control can fire — one blocked member breaks
 // the compound. *Pct fields use the same scale as ControlForecast.
@@ -256,26 +202,6 @@ type ChainForecast struct {
 	CanFirePct       ForecastPercentage `json:"can_fire_pct"`
 	BlockedPct       ForecastPercentage `json:"blocked_pct"`
 	IndeterminatePct ForecastPercentage `json:"indeterminate_pct"`
-}
-
-// ActiveTotal returns the total count of classifiable chains (CanFire + Blocked).
-func (cf *ChainForecast) ActiveTotal() int {
-	return cf.CanFire + cf.Blocked
-}
-
-// HasBlocked reports whether any chains are blocked.
-func (cf *ChainForecast) HasBlocked() bool {
-	return cf.Blocked > 0
-}
-
-// HasIndeterminate reports whether any chains have indeterminate applicability.
-func (cf *ChainForecast) HasIndeterminate() bool {
-	return cf.Indeterminate > 0
-}
-
-// IsFullyReady reports whether all classifiable chains can fire and at least one can fire.
-func (cf *ChainForecast) IsFullyReady() bool {
-	return cf.Blocked == 0 && cf.CanFire > 0
 }
 
 // Action is one unblocking step the operator can take. Ordered
@@ -299,20 +225,12 @@ func (a Actions) Len() int {
 	return len(a)
 }
 
-// TotalControlsUnblocked returns the sum of controls unblocked across all actions.
-func (a Actions) TotalControlsUnblocked() int {
-	total := 0
-	for _, act := range a {
-		total += act.ControlsUnblocked
-	}
-	return total
+// IsEmpty reports whether there are no actions.
+func (a Actions) IsEmpty() bool {
+	return len(a) == 0
 }
 
-// TotalChainsUnblocked returns the sum of chains unblocked across all actions.
-func (a Actions) TotalChainsUnblocked() int {
-	total := 0
-	for _, act := range a {
-		total += act.ChainsUnblocked
-	}
-	return total
+// HasActions reports whether there is at least one action.
+func (a Actions) HasActions() bool {
+	return len(a) > 0
 }

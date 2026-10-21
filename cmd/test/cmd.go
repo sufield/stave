@@ -125,7 +125,7 @@ func writeTable(w io.Writer, results []stave.TestResult, summary stave.TestSumma
 	fmt.Fprintf(w, "STAVE CONTROL TEST\n")
 	fmt.Fprintf(w, "Controls with tests: %d  (%d test cases)\n\n", summary.ControlsTested, summary.TotalCases)
 
-	if summary.TotalCases == 0 {
+	if summary.IsEmpty() {
 		fmt.Fprintln(w, "No test cases found. Add tests: block to control YAML files.")
 		return nil
 	}
@@ -163,7 +163,7 @@ func writeTable(w io.Writer, results []stave.TestResult, summary stave.TestSumma
 	fmt.Fprintf(w, "  Passed:  %d\n", summary.Passed)
 	fmt.Fprintf(w, "  Failed:  %d\n", summary.Failed)
 
-	if summary.Failed == 0 && summary.TotalCases > 0 {
+	if summary.AllPassed() {
 		fmt.Fprintf(w, "\nAll %d tests passed.\n", summary.TotalCases)
 	}
 	return nil

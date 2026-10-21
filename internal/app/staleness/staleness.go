@@ -23,19 +23,6 @@ func (sh StalenessHours) Days() float64 {
 	return float64(sh) / 24.0
 }
 
-// IsStale reports whether staleness hours exceeds the given threshold hours.
-func (sh StalenessHours) IsStale(threshold StalenessHours) bool {
-	return sh > threshold
-}
-
-// Gap returns the positive staleness gap past threshold hours (0 if not stale).
-func (sh StalenessHours) Gap(threshold StalenessHours) StalenessHours {
-	if sh <= threshold {
-		return 0
-	}
-	return sh - threshold
-}
-
 // Result holds the staleness check outcome.
 type Result struct {
 	MostRecent   time.Time      `json:"most_recent_snapshot"`
@@ -47,6 +34,69 @@ type Result struct {
 	GapHrs       StalenessHours `json:"gap_hours"`
 	Stale        bool           `json:"stale"`
 	Message      string         `json:"message"`
+}
+
+// IsStale reports whether the staleness check detected stale observations.
+func (r *Result) IsStale() bool {
+	return r != nil && r.Stale
+}
+
+// IsFresh reports whether the observations are within the freshness threshold.
+func (r *Result) IsFresh() bool {
+	return r != nil && !r.Stale
+}
+
+// HasGap reports whether the staleness gap exceeds zero.
+func (r *Result) HasGap() bool {
+	return r != nil && r.GapHrs > 0
+}
+
+// HasSnapshot reports whether a valid non-zero snapshot capture timestamp was found.
+func (r *Result) HasSnapshot() bool {
+	return r != nil && !r.MostRecent.IsZero()
+}
+
+// GapHours returns the staleness gap in hours (0 if not stale or nil).
+func (r *Result) GapHours() StalenessHours {
+	if r == nil {
+		return 0
+	}
+	return r.GapHrs
+}
+
+// AgeHours returns the observation staleness age in hours (0 if nil).
+func (r *Result) AgeHours() StalenessHours {
+	if r == nil {
+		return 0
+	}
+	return r.StalenessHrs
+}
+
+// ThresholdHours returns the configured freshness threshold in hours (0 if nil).
+func (r *Result) ThresholdHours() StalenessHours {
+	if r == nil {
+		return 0
+	}
+	return r.ThresholdHrs
+}
+
+// AgeDays returns the observation staleness age in days (0.0 if nil).
+func (r *Result) AgeDays() float64 {
+	if r == nil {
+		return 0
+	}
+	return r.StalenessHrs.Days()
+}
+
+// Status returns a human-readable status description: "stale", "fresh", or "unknown".
+func (r *Result) Status() string {
+	if r == nil {
+		return "unknown"
+	}
+	if r.Stale {
+		return "stale"
+	}
+	return "fresh"
 }
 
 // Check compares the most recent snapshot against the threshold.

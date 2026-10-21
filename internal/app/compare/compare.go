@@ -77,29 +77,6 @@ func (a AdoptionPercentage) Float64() float64 {
 	return float64(a)
 }
 
-// Ratio returns the percentage expressed as a ratio between 0.0 and 1.0.
-func (a AdoptionPercentage) Ratio() float64 {
-	return float64(a) / 100.0
-}
-
-// IsComplete reports whether adoption has reached 100%.
-func (a AdoptionPercentage) IsComplete() bool {
-	return a >= 100.0
-}
-
-// Gap returns the percentage gap required to reach 100%.
-func (a AdoptionPercentage) Gap() float64 {
-	if a >= 100.0 {
-		return 0.0
-	}
-	return 100.0 - float64(a)
-}
-
-// IsAuditReady reports whether readiness meets or exceeds the standard threshold (90%).
-func (a AdoptionPercentage) IsAuditReady() bool {
-	return a >= 90.0
-}
-
 // AdoptionReadiness holds the marginal cost metrics.
 type AdoptionReadiness struct {
 	ReadinessPct     AdoptionPercentage `json:"readiness_pct"`
@@ -136,20 +113,6 @@ type CompareItems []CompareItem
 // Len returns the number of items in the collection.
 func (ci CompareItems) Len() int {
 	return len(ci)
-}
-
-// BySeverity returns a new CompareItems collection filtered by policy severity.
-func (ci CompareItems) BySeverity(sev policy.Severity) CompareItems {
-	if len(ci) == 0 {
-		return nil
-	}
-	var filtered CompareItems
-	for i := range ci {
-		if ci[i].Severity == sev {
-			filtered = append(filtered, ci[i])
-		}
-	}
-	return filtered
 }
 
 // Roadmap describes the upgrade phases.

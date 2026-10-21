@@ -59,15 +59,6 @@ func (f OutputFormat) IsMarkdown() bool { return f == FormatMarkdown }
 // machine render".
 func (f OutputFormat) IsText() bool { return f == FormatText }
 
-// IsSARIF reports whether the format is SARIF v2.1.0.
-func (f OutputFormat) IsSARIF() bool { return f == FormatSARIF }
-
-// IsTable reports whether the format is column-aligned table output.
-func (f OutputFormat) IsTable() bool { return f == FormatTable }
-
-// IsCSV reports whether the format is CSV.
-func (f OutputFormat) IsCSV() bool { return f == FormatCSV }
-
 // IsMachineReadable reports whether the format is intended for machine
 // consumption (JSON or SARIF). When true, stdout output should be
 // preserved even in quiet mode.

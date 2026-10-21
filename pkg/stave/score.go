@@ -32,15 +32,6 @@ type ScoreMover = appscore.ScoreMover
 // type without bypassing the facade.
 type TrendPoint = appscore.TrendPoint
 
-// TrendPoints is a domain collection of trend points.
-type TrendPoints = appscore.TrendPoints
-
-// ScoreMovers is a domain collection of score movers.
-type ScoreMovers = appscore.ScoreMovers
-
-// PointsLost encapsulates points lost from max contribution.
-type PointsLost = appscore.PointsLost
-
 // ParseWeights parses the `--weights` CLI flag value into a
 // [Weights] struct. The wire format is the same one the score
 // command has accepted since the beginning

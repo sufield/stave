@@ -68,12 +68,14 @@ func (a *Assessment) HasWarnings() bool {
 	return false
 }
 
-// IsClean reports whether the assessment carries neither errors nor
-// warnings. Encapsulates the (!Failed() && !HasWarnings()) pair the
-// content-validation service used to ask, so callers stop joining
-// the two questions at every site.
-func (a *Assessment) IsClean() bool {
-	return !a.Failed() && !a.HasWarnings()
+// HasNoIssues reports whether the assessment carries neither errors nor warnings.
+func (a *Assessment) HasNoIssues() bool {
+	return a != nil && !a.Failed() && !a.HasWarnings()
+}
+
+// IsValid reports whether the assessment carries no errors.
+func (a *Assessment) IsValid() bool {
+	return a != nil && !a.Failed()
 }
 
 // Errors returns a subset of findings that have Error-level severity.

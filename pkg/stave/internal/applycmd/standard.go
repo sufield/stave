@@ -341,7 +341,7 @@ func checkStaleness(ctx context.Context, obsDir, assertRecent string, now time.T
 		return "", false, fmt.Errorf("load snapshots for staleness check: %w", err)
 	}
 	sr := staleness.Check(loaded.Snapshots, threshold, now)
-	if sr.Stale {
+	if sr.IsStale() {
 		return sr.Message, true, nil
 	}
 	return "", false, nil
@@ -540,7 +540,7 @@ func annotateFreshness(report *evaluation.ComplianceReport, obsDir string, thres
 	sr := staleness.Check(loaded.Snapshots, threshold, now)
 
 	staleCount := 0
-	if sr.Stale {
+	if sr.IsStale() {
 		for i := range report.Findings {
 			report.Findings[i].Confidence = evaluation.ConfidenceLow
 			report.Findings[i].FreshnessReason = sr.Message

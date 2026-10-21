@@ -76,7 +76,7 @@ func WriteTable(w io.Writer, r *Report) {
 			fmt.Fprintf(w, "\n  Asset type: %s\n", at)
 			for _, item := range r.ShoppingList[at] {
 				fmt.Fprintf(w, "    + %-40s (%s — %s)\n",
-					item.Field, strings.Join(item.RequiredBy.Strings(), ", "), strings.ToUpper(item.MaxSeverity.String()))
+					item.Field, strings.Join(controlIDStrings(item.RequiredBy), ", "), strings.ToUpper(item.MaxSeverity.String()))
 			}
 		}
 		fmt.Fprintln(w)
@@ -120,6 +120,14 @@ func shortFrameworks(fws []policy.ComplianceFramework) []string {
 		out[i] = shortFramework(fw)
 	}
 	return out
+}
+
+func controlIDStrings(ids []kernel.ControlID) []string {
+	s := make([]string, len(ids))
+	for i, id := range ids {
+		s[i] = string(id)
+	}
+	return s
 }
 
 func shortFramework(fw policy.ComplianceFramework) string {

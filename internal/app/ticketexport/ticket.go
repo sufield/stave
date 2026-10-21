@@ -77,11 +77,6 @@ func (tl TicketLabels) Contains(target string) bool {
 	return slices.Contains(tl, target)
 }
 
-// HasTag returns true if target label is present.
-func (tl TicketLabels) HasTag(tag string) bool {
-	return tl.Contains(tag)
-}
-
 // Tickets is a domain collection of Ticket items with domain methods.
 type Tickets []Ticket
 

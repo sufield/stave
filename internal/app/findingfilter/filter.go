@@ -70,17 +70,6 @@ func (cf ClassifiedFindings) Len() int {
 	return len(cf)
 }
 
-// ByClass returns a filtered slice of ClassifiedFinding items matching the specified classification.
-func (cf ClassifiedFindings) ByClass(class Classification) ClassifiedFindings {
-	var filtered ClassifiedFindings
-	for i := range cf {
-		if cf[i].Class == class {
-			filtered = append(filtered, cf[i])
-		}
-	}
-	return filtered
-}
-
 // ResolvedFinding is a finding present in a previous assessment but
 // absent from the current one.
 type ResolvedFinding struct {
@@ -96,17 +85,6 @@ type ResolvedFindings []ResolvedFinding
 // Len returns the count of resolved findings.
 func (rf ResolvedFindings) Len() int {
 	return len(rf)
-}
-
-// BySeverity returns a filtered slice of ResolvedFinding items matching the given severity.
-func (rf ResolvedFindings) BySeverity(sev policy.Severity) ResolvedFindings {
-	var filtered ResolvedFindings
-	for _, r := range rf {
-		if r.Severity == sev {
-			filtered = append(filtered, r)
-		}
-	}
-	return filtered
 }
 
 // SeverityLabel returns the canonical severity string for this

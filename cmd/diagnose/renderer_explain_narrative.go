@@ -20,7 +20,7 @@ import (
 // otherwise it emits an array. That special case is preserved
 // inside the renderer's Render method rather than at the call site.
 type ExplainNarrativeRenderer interface {
-	Render(w io.Writer, playbooks narrative.Playbooks) error
+	Render(w io.Writer, playbooks []narrative.Playbook) error
 }
 
 // ExplainNarrativeJSONRenderer emits indented JSON. Single-playbook
@@ -28,7 +28,7 @@ type ExplainNarrativeRenderer interface {
 type ExplainNarrativeJSONRenderer struct{}
 
 // Render implements ExplainNarrativeRenderer.
-func (ExplainNarrativeJSONRenderer) Render(w io.Writer, playbooks narrative.Playbooks) error {
+func (ExplainNarrativeJSONRenderer) Render(w io.Writer, playbooks []narrative.Playbook) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	if len(playbooks) == 1 {
@@ -44,7 +44,7 @@ type ExplainNarrativeMarkdownRenderer struct {
 }
 
 // Render implements ExplainNarrativeRenderer.
-func (r ExplainNarrativeMarkdownRenderer) Render(w io.Writer, playbooks narrative.Playbooks) error {
+func (r ExplainNarrativeMarkdownRenderer) Render(w io.Writer, playbooks []narrative.Playbook) error {
 	writeMarkdownPlaybooks(w, playbooks, r.Depth)
 	return nil
 }
@@ -56,7 +56,7 @@ type ExplainNarrativeTextRenderer struct {
 }
 
 // Render implements ExplainNarrativeRenderer.
-func (r ExplainNarrativeTextRenderer) Render(w io.Writer, playbooks narrative.Playbooks) error {
+func (r ExplainNarrativeTextRenderer) Render(w io.Writer, playbooks []narrative.Playbook) error {
 	writeNarrativePlaybooks(w, playbooks, r.Depth)
 	return nil
 }

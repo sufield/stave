@@ -81,29 +81,6 @@ func (ps Prerequisites) HasCapability(capability string) bool {
 	return false
 }
 
-// ByCapability returns a filtered Prerequisites collection for a specific capability.
-func (ps Prerequisites) ByCapability(capability string) Prerequisites {
-	var filtered Prerequisites
-	for _, p := range ps {
-		if p.Capability == capability {
-			filtered = append(filtered, p)
-		}
-	}
-	return filtered
-}
-
-// FieldPaths returns the list of field paths referenced across all prerequisites.
-func (ps Prerequisites) FieldPaths() []string {
-	if len(ps) == 0 {
-		return nil
-	}
-	paths := make([]string, len(ps))
-	for i := range ps {
-		paths[i] = ps[i].FieldPath
-	}
-	return paths
-}
-
 // Prerequisite is a (capability, field path) pair describing
 // what AWS configuration state a tool needs.
 type Prerequisite struct {

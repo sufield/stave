@@ -108,7 +108,7 @@ func writeScore(w io.Writer, r stave.ReadinessReport) error {
 }
 
 func writeActionPlan(w io.Writer, r stave.ReadinessReport) error {
-	if len(r.Actions) == 0 {
+	if !r.HasActions() {
 		return nil
 	}
 	if _, err := fmt.Fprintln(w, "\nAction plan (ranked by unblock count):"); err != nil {

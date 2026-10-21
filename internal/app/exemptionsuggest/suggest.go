@@ -40,11 +40,6 @@ func (d DwellDays) Float64() float64 {
 	return float64(d)
 }
 
-// DaysInt returns the integer number of days.
-func (d DwellDays) DaysInt() int {
-	return int(d)
-}
-
 // IsLongStanding reports whether finding remained unaddressed for threshold days or longer.
 func (d DwellDays) IsLongStanding(threshold float64) bool {
 	return float64(d) >= threshold
@@ -87,34 +82,6 @@ type Candidates []Candidate
 // Len returns the number of candidates in the collection.
 func (cs Candidates) Len() int {
 	return len(cs)
-}
-
-// FilterByPattern returns a new Candidates collection filtered by pattern.
-func (cs Candidates) FilterByPattern(p Pattern) Candidates {
-	if len(cs) == 0 {
-		return nil
-	}
-	var filtered Candidates
-	for i := range cs {
-		if cs[i].Pattern == p {
-			filtered = append(filtered, cs[i])
-		}
-	}
-	return filtered
-}
-
-// ByOwner returns a new Candidates collection filtered by owner team ID.
-func (cs Candidates) ByOwner(team teams.TeamID) Candidates {
-	if len(cs) == 0 {
-		return nil
-	}
-	var filtered Candidates
-	for i := range cs {
-		if cs[i].OwnerTeamID == team {
-			filtered = append(filtered, cs[i])
-		}
-	}
-	return filtered
 }
 
 // HasOwner reports whether this candidate carries an owner-team

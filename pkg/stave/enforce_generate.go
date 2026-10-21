@@ -103,7 +103,7 @@ func enforceLoadFindingRefs(ctx context.Context, inputPath string) ([]outenforce
 	// Assessment, not just any JSON with `kind: "ASSESSMENT"`. This blocks
 	// the trust-boundary attack where a forged
 	// `{"kind":"ASSESSMENT","findings":[]}` could drive the gate into an
-	// empty-rules "clean" state.
+	// empty-rules violation-free state.
 	loader := evaljson.NewLoader().WithStrictSchema()
 	assessment, err := loader.LoadEnvelopeFromFile(ctx, inputPath)
 	if err != nil {

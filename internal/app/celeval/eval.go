@@ -25,20 +25,6 @@ func (ar AssetResults) Len() int {
 	return len(ar)
 }
 
-// Firing returns a new AssetResults collection containing only assets where the expression fired.
-func (ar AssetResults) Firing() AssetResults {
-	if len(ar) == 0 {
-		return nil
-	}
-	var filtered AssetResults
-	for i := range ar {
-		if ar[i].Result {
-			filtered = append(filtered, ar[i])
-		}
-	}
-	return filtered
-}
-
 // Errors returns a new AssetResults collection containing only assets that encountered evaluation errors.
 func (ar AssetResults) Errors() AssetResults {
 	if len(ar) == 0 {

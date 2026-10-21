@@ -45,26 +45,6 @@ func (cf ClosedFindings) Len() int {
 	return len(cf)
 }
 
-// TotalDwellDays returns aggregate dwell duration across all closed findings.
-func (cf ClosedFindings) TotalDwellDays() DwellDays {
-	var total float64
-	for _, f := range cf {
-		total += f.DwellDays.Days()
-	}
-	return DwellDays(total)
-}
-
-// BySeverity returns a filtered slice of ClosedFinding items matching the given severity.
-func (cf ClosedFindings) BySeverity(sev policy.Severity) ClosedFindings {
-	var filtered ClosedFindings
-	for _, f := range cf {
-		if f.Severity == sev {
-			filtered = append(filtered, f)
-		}
-	}
-	return filtered
-}
-
 // DeactivatedChain is a chain active in before but inactive in after.
 type DeactivatedChain struct {
 	ChainID          kernel.ChainID  `json:"chain_id"`
@@ -81,17 +61,6 @@ func (dc DeactivatedChains) Len() int {
 	return len(dc)
 }
 
-// BySeverity returns a filtered slice of DeactivatedChain items matching the given previous severity.
-func (dc DeactivatedChains) BySeverity(sev policy.Severity) DeactivatedChains {
-	var filtered DeactivatedChains
-	for _, c := range dc {
-		if c.PreviousSeverity == sev {
-			filtered = append(filtered, c)
-		}
-	}
-	return filtered
-}
-
 // EfficiencyVerdict classifies the remediation outcome.
 type EfficiencyVerdict string
 
@@ -106,24 +75,9 @@ func (v EfficiencyVerdict) String() string {
 	return string(v)
 }
 
-// IsComplete reports whether the verdict represents complete remediation.
-func (v EfficiencyVerdict) IsComplete() bool {
-	return v == VerdictComplete
-}
-
-// IsPartial reports whether the verdict represents partial remediation.
-func (v EfficiencyVerdict) IsPartial() bool {
-	return v == VerdictPartial
-}
-
 // IsIncomplete reports whether the verdict represents incomplete remediation.
 func (v EfficiencyVerdict) IsIncomplete() bool {
 	return v == VerdictIncomplete
-}
-
-// IsSuccessful reports whether the remediation was complete or partial.
-func (v EfficiencyVerdict) IsSuccessful() bool {
-	return v == VerdictComplete || v == VerdictPartial
 }
 
 // ControlIDs represents a domain collection of kernel.ControlID items with query methods.
@@ -145,67 +99,14 @@ type ScoreDelta float64
 // Float64 returns the raw float64 value of the score delta.
 func (d ScoreDelta) Float64() float64 { return float64(d) }
 
-// IsPositive reports whether the posture score improved (> 0).
-func (d ScoreDelta) IsPositive() bool { return d > 0 }
-
-// IsNegative reports whether the posture score degraded (< 0).
-func (d ScoreDelta) IsNegative() bool { return d < 0 }
-
 // IsZero reports whether there was no change in posture score (== 0).
 func (d ScoreDelta) IsZero() bool { return d == 0 }
-
-// EfficiencyRatio encapsulates the predicted-vs-realized remediation efficiency ratio.
-type EfficiencyRatio float64
-
-// Float64 returns the raw float64 ratio value.
-func (r EfficiencyRatio) Float64() float64 { return float64(r) }
-
-// Percentage returns the efficiency ratio as a percentage (ratio * 100).
-func (r EfficiencyRatio) Percentage() float64 { return float64(r) * 100.0 }
-
-// Verdict returns the EfficiencyVerdict corresponding to this ratio.
-func (r EfficiencyRatio) Verdict() EfficiencyVerdict {
-	switch {
-	case r < 0.5:
-		return VerdictIncomplete
-	case r < 0.9:
-		return VerdictPartial
-	default:
-		return VerdictComplete
-	}
-}
-
-// IsComplete reports whether the ratio achieved complete remediation (>= 0.9).
-func (r EfficiencyRatio) IsComplete() bool { return r >= 0.9 }
-
-// IsPartial reports whether the ratio achieved partial remediation (0.5 <= ratio < 0.9).
-func (r EfficiencyRatio) IsPartial() bool { return r >= 0.5 && r < 0.9 }
-
-// IsIncomplete reports whether the ratio is incomplete (< 0.5).
-func (r EfficiencyRatio) IsIncomplete() bool { return r < 0.5 }
-
-// SimpleScore encapsulates a 0-100 simple posture score computed from violations-to-assets ratio.
-type SimpleScore float64
-
-// Float64 returns the raw float64 posture score value.
-func (s SimpleScore) Float64() float64 { return float64(s) }
-
-// Delta returns the score change delta relative to an after score (after - s).
-func (s SimpleScore) Delta(after SimpleScore) ScoreDelta {
-	return ScoreDelta(after - s)
-}
-
-// IsClean reports whether the score indicates zero violations (100.0).
-func (s SimpleScore) IsClean() bool { return s >= 100.0 }
-
-// IsZero reports whether the score is zero.
-func (s SimpleScore) IsZero() bool { return s == 0 }
 
 // Efficiency holds the predicted-vs-realized comparison.
 type Efficiency struct {
 	PredictedDelta ScoreDelta        `json:"predicted_delta"`
 	RealizedDelta  ScoreDelta        `json:"realized_delta"`
-	Ratio          EfficiencyRatio   `json:"efficiency_ratio"`
+	Ratio          float64           `json:"efficiency_ratio"`
 	Verdict        EfficiencyVerdict `json:"verdict"`
 	StillOpen      ControlIDs        `json:"still_open,omitempty"`
 }
@@ -216,8 +117,8 @@ type Report struct {
 	AfterFindings     int               `json:"after_findings"`
 	Closed            ClosedFindings    `json:"findings_closed"`
 	ChainsDeactivated DeactivatedChains `json:"chains_deactivated,omitempty"`
-	ScoreBefore       SimpleScore       `json:"score_before"`
-	ScoreAfter        SimpleScore       `json:"score_after"`
+	ScoreBefore       float64           `json:"score_before"`
+	ScoreAfter        float64           `json:"score_after"`
 	ScoreDelta        ScoreDelta        `json:"score_delta"`
 	Efficiency        *Efficiency       `json:"efficiency,omitempty"`
 }
@@ -317,11 +218,11 @@ func Analyze(in Input) (*Report, error) {
 		ChainsDeactivated: deactivated,
 		ScoreBefore:       scoreBefore,
 		ScoreAfter:        scoreAfter,
-		ScoreDelta:        scoreBefore.Delta(scoreAfter),
+		ScoreDelta:        ScoreDelta(scoreAfter - scoreBefore),
 	}
 
 	if in.PredictedDelta != 0 || len(in.PredictedClosed) > 0 {
-		r.Efficiency = computeEfficiency(in, scoreBefore.Delta(scoreAfter), afterKeys)
+		r.Efficiency = computeEfficiency(in, ScoreDelta(scoreAfter-scoreBefore), afterKeys)
 	}
 
 	return r, nil
@@ -353,15 +254,22 @@ func computeEfficiency(in Input, realized ScoreDelta, afterKeys map[findingKey]*
 	}
 }
 
-func classifyEfficiency(predicted, realized ScoreDelta) (EfficiencyRatio, EfficiencyVerdict) {
+func classifyEfficiency(predicted, realized ScoreDelta) (float64, EfficiencyVerdict) {
 	if predicted == 0 {
 		return 0, ""
 	}
 	if realized <= 0 {
 		return 0, VerdictIncomplete
 	}
-	ratio := EfficiencyRatio(max(realized.Float64()/predicted.Float64(), 0))
-	return ratio, ratio.Verdict()
+	ratio := max(realized.Float64()/predicted.Float64(), 0)
+	switch {
+	case ratio < 0.5:
+		return ratio, VerdictIncomplete
+	case ratio < 0.9:
+		return ratio, VerdictPartial
+	default:
+		return ratio, VerdictComplete
+	}
 }
 
 func buildKeySet(findings []remediation.Finding) map[findingKey]*remediation.Finding {
@@ -373,7 +281,7 @@ func buildKeySet(findings []remediation.Finding) map[findingKey]*remediation.Fin
 	return m
 }
 
-func computeSimpleScore(a *report.Assessment) SimpleScore {
+func computeSimpleScore(a *report.Assessment) float64 {
 	if a == nil {
 		// No assessment to score. Return 0 (a sentinel "no data" value)
 		// rather than dereferencing a.Summary and panicking; Analyze
@@ -391,5 +299,5 @@ func computeSimpleScore(a *report.Assessment) SimpleScore {
 	if score < 0 {
 		return 0
 	}
-	return SimpleScore(score)
+	return score
 }

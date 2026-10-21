@@ -28,7 +28,7 @@ func runUniversal(cmd *cobra.Command, o *options) error {
 		return fmt.Errorf("render output: %w", err)
 	}
 
-	if result.Violated > 0 {
+	if result.HasViolations() {
 		return ui.ErrViolationsFound
 	}
 	return nil

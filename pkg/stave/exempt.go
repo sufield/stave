@@ -210,6 +210,35 @@ type ExemptValidationResult struct {
 	Warnings []string
 }
 
+// HasErrors reports whether any validation errors were found.
+func (r *ExemptValidationResult) HasErrors() bool {
+	return r != nil && len(r.Errors) > 0
+}
+
+// HasWarnings reports whether any validation warnings were found.
+func (r *ExemptValidationResult) HasWarnings() bool {
+	return r != nil && len(r.Warnings) > 0
+}
+
+// IsValid reports whether the validation passed without errors (or warnings if strict).
+func (r *ExemptValidationResult) IsValid(strict bool) bool {
+	if r == nil {
+		return false
+	}
+	if r.HasErrors() {
+		return false
+	}
+	if strict && r.HasWarnings() {
+		return false
+	}
+	return true
+}
+
+// HasNoIssues reports whether there are neither errors nor warnings.
+func (r *ExemptValidationResult) HasNoIssues() bool {
+	return r != nil && !r.HasErrors() && !r.HasWarnings()
+}
+
 // ValidateAcceptances checks the acceptance file for required fields, date
 // formats, and structural correctness, cross-referencing compensating
 // controls against the built-in catalog. It is the library entry point

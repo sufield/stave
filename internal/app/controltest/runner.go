@@ -30,34 +30,6 @@ func (crs CaseResults) Len() int {
 	return len(crs)
 }
 
-// Passing returns case results that passed.
-func (crs CaseResults) Passing() CaseResults {
-	if len(crs) == 0 {
-		return nil
-	}
-	var filtered CaseResults
-	for i := range crs {
-		if crs[i].IsPassing() {
-			filtered = append(filtered, crs[i])
-		}
-	}
-	return filtered
-}
-
-// Failing returns case results that failed.
-func (crs CaseResults) Failing() CaseResults {
-	if len(crs) == 0 {
-		return nil
-	}
-	var filtered CaseResults
-	for i := range crs {
-		if !crs[i].IsPassing() {
-			filtered = append(filtered, crs[i])
-		}
-	}
-	return filtered
-}
-
 // Result is the outcome of running all tests in a control.
 type Result struct {
 	ControlID kernel.ControlID `json:"control_id"`
@@ -73,34 +45,6 @@ type TestResults []Result
 // Len returns the number of control test results.
 func (trs TestResults) Len() int {
 	return len(trs)
-}
-
-// Passing returns results for controls where all test cases passed.
-func (trs TestResults) Passing() TestResults {
-	if len(trs) == 0 {
-		return nil
-	}
-	var filtered TestResults
-	for i := range trs {
-		if trs[i].Failed == 0 {
-			filtered = append(filtered, trs[i])
-		}
-	}
-	return filtered
-}
-
-// Failing returns results for controls with at least one failed test case.
-func (trs TestResults) Failing() TestResults {
-	if len(trs) == 0 {
-		return nil
-	}
-	var filtered TestResults
-	for i := range trs {
-		if trs[i].Failed > 0 {
-			filtered = append(filtered, trs[i])
-		}
-	}
-	return filtered
 }
 
 // Verdict classifies the test case verdict.
@@ -129,22 +73,32 @@ type Summary struct {
 	Skipped        int `json:"skipped"`
 }
 
+// HasTests reports whether any test cases were evaluated.
+func (s Summary) HasTests() bool {
+	return s.TotalCases > 0
+}
+
+// IsEmpty reports whether no test cases were evaluated.
+func (s Summary) IsEmpty() bool {
+	return s.TotalCases == 0
+}
+
+// HasFailures reports whether any test cases failed.
+func (s Summary) HasFailures() bool {
+	return s.Failed > 0
+}
+
+// AllPassed reports whether all test cases passed and at least one test ran.
+func (s Summary) AllPassed() bool {
+	return s.HasTests() && !s.HasFailures()
+}
+
 // ControlDefinitions is a domain collection of policy.ControlDefinition items with query methods.
 type ControlDefinitions []policy.ControlDefinition
 
 // Len returns the count of control definitions in the collection.
 func (cds ControlDefinitions) Len() int {
 	return len(cds)
-}
-
-// ByID returns the control definition matching the given ID, or nil if not found.
-func (cds ControlDefinitions) ByID(id kernel.ControlID) *policy.ControlDefinition {
-	for i := range cds {
-		if cds[i].ID == id {
-			return &cds[i]
-		}
-	}
-	return nil
 }
 
 // RunInput holds the inputs for a test run.

@@ -47,42 +47,6 @@ func (vws ViolationWindows) Len() int {
 	return len(vws)
 }
 
-// Ongoing returns violation windows that have not been remediated.
-func (vws ViolationWindows) Ongoing() ViolationWindows {
-	if len(vws) == 0 {
-		return nil
-	}
-	var filtered ViolationWindows
-	for i := range vws {
-		if vws[i].IsOngoing {
-			filtered = append(filtered, vws[i])
-		}
-	}
-	return filtered
-}
-
-// Remediated returns violation windows that have been resolved.
-func (vws ViolationWindows) Remediated() ViolationWindows {
-	if len(vws) == 0 {
-		return nil
-	}
-	var filtered ViolationWindows
-	for i := range vws {
-		if !vws[i].IsOngoing {
-			filtered = append(filtered, vws[i])
-		}
-	}
-	return filtered
-}
-
-// PatientZero returns the earliest violation window, or nil if empty.
-func (vws ViolationWindows) PatientZero() *ViolationWindow {
-	if len(vws) == 0 {
-		return nil
-	}
-	return &vws[0]
-}
-
 // SnapshotCount encapsulates a count of snapshots or assessments evaluated during bisect/scan operations.
 type SnapshotCount int
 
@@ -94,14 +58,6 @@ func (c SnapshotCount) Int() int {
 // IsEmpty reports whether the count is zero.
 func (c SnapshotCount) IsEmpty() bool {
 	return c == 0
-}
-
-// EfficiencyRatio calculates the proportion of total snapshots evaluated (assessments run / total snapshots).
-func (c SnapshotCount) EfficiencyRatio(total SnapshotCount) float64 {
-	if total <= 0 {
-		return 0.0
-	}
-	return float64(c) / float64(total)
 }
 
 // Result holds the output of a bisect or scan operation.

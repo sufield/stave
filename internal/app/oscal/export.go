@@ -28,7 +28,7 @@ type ARContent struct {
 	UUID     UUID       `json:"uuid"`
 	Metadata ARMetadata `json:"metadata"`
 	ImportAP ImportAP   `json:"import-ap"`
-	Results  ARResults  `json:"results"`
+	Results  []ARResult `json:"results"`
 }
 
 // ARMetadata holds OSCAL metadata.
@@ -52,20 +52,6 @@ func (af ARFindings) Len() int {
 	return len(af)
 }
 
-// ByControl returns a new ARFindings collection filtered by target control ID.
-func (af ARFindings) ByControl(id kernel.ControlID) ARFindings {
-	if len(af) == 0 {
-		return nil
-	}
-	var filtered ARFindings
-	for i := range af {
-		if af[i].Target.TargetID == id {
-			filtered = append(filtered, af[i])
-		}
-	}
-	return filtered
-}
-
 // ARObservations is a domain collection of ARObservation items with query methods.
 type ARObservations []ARObservation
 
@@ -84,58 +70,12 @@ type ARResult struct {
 	Observations ARObservations `json:"observations"`
 }
 
-// ARResults is a domain collection of ARResult items with query methods.
-type ARResults []ARResult
-
-// Len returns the number of results in the collection.
-func (ar ARResults) Len() int {
-	return len(ar)
-}
-
-// ByUUID returns the ARResult matching the given UUID, or nil if not found.
-func (ar ARResults) ByUUID(u UUID) *ARResult {
-	for i := range ar {
-		if ar[i].UUID == u {
-			return &ar[i]
-		}
-	}
-	return nil
-}
-
-// TotalFindings returns the total number of findings across all results.
-func (ar ARResults) TotalFindings() int {
-	total := 0
-	for i := range ar {
-		total += ar[i].Findings.Len()
-	}
-	return total
-}
-
-// TotalObservations returns the total number of observations across all results.
-func (ar ARResults) TotalObservations() int {
-	total := 0
-	for i := range ar {
-		total += ar[i].Observations.Len()
-	}
-	return total
-}
-
 // RelatedObservations represents a domain collection of RelObs items with query methods.
 type RelatedObservations []RelObs
 
 // Len returns the number of related observations in the collection.
 func (ro RelatedObservations) Len() int {
 	return len(ro)
-}
-
-// ContainsUUID reports whether an observation with the given UUID is present in the collection.
-func (ro RelatedObservations) ContainsUUID(u UUID) bool {
-	for i := range ro {
-		if ro[i].ObservationUUID == u {
-			return true
-		}
-	}
-	return false
 }
 
 // ARFinding is a single OSCAL finding.
@@ -154,27 +94,9 @@ type ARTarget struct {
 	Status   ARStatus         `json:"status"`
 }
 
-// FindingState represents an OSCAL finding target status state (e.g. satisfied or not-satisfied).
-type FindingState string
-
-const (
-	StateSatisfied    FindingState = "satisfied"
-	StateNotSatisfied FindingState = "not-satisfied"
-)
-
-// IsSatisfied reports whether the finding target is satisfied.
-func (s FindingState) IsSatisfied() bool {
-	return s == StateSatisfied
-}
-
-// IsNotSatisfied reports whether the finding target is not satisfied.
-func (s FindingState) IsNotSatisfied() bool {
-	return s == StateNotSatisfied
-}
-
 // ARStatus holds the finding status.
 type ARStatus struct {
-	State FindingState `json:"state"`
+	State string `json:"state"`
 }
 
 // RelObs references a related observation.
@@ -201,20 +123,6 @@ type ARSubjects []ARSubject
 // Len returns the number of subjects in the collection.
 func (as ARSubjects) Len() int {
 	return len(as)
-}
-
-// ByAssetType returns a new ARSubjects collection filtered by target asset type.
-func (as ARSubjects) ByAssetType(at kernel.AssetType) ARSubjects {
-	if len(as) == 0 {
-		return nil
-	}
-	var filtered ARSubjects
-	for i := range as {
-		if as[i].Type == at {
-			filtered = append(filtered, as[i])
-		}
-	}
-	return filtered
 }
 
 // ARObservation describes an observed asset.
@@ -249,7 +157,7 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 		findingUUID := uuidV5("finding", findingID)
 		obsUUID := uuidV5("observation", findingID)
 
-		state := StateNotSatisfied
+		state := "not-satisfied"
 
 		oscalFindings = append(oscalFindings, ARFinding{
 			UUID:        findingUUID,
@@ -285,7 +193,7 @@ func Export(findings []remediation.Finding, generatedAt time.Time) *AssessmentRe
 				OSCALVersion: "1.1.2",
 			},
 			ImportAP: ImportAP{Href: "#"},
-			Results: ARResults{{
+			Results: []ARResult{{
 				UUID:         resultUUID,
 				Title:        "Assessment",
 				Start:        now,

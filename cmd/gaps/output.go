@@ -39,11 +39,11 @@ func writeGapList(w io.Writer, r stave.GapReport, topN int) error {
 		}
 		return nil
 	}
-	limit := r.Gaps.Len()
+	limit := len(r.Gaps)
 	if topN > 0 && topN < limit {
 		limit = topN
 	}
-	if _, err := fmt.Fprintf(w, "\nTop %d gaps (of %d total):\n", limit, r.Gaps.Len()); err != nil {
+	if _, err := fmt.Fprintf(w, "\nTop %d gaps (of %d total):\n", limit, len(r.Gaps)); err != nil {
 		return fmt.Errorf("write gap list header: %w", err)
 	}
 	for i := range limit {

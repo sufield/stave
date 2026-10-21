@@ -20,19 +20,9 @@ func (c ConfidenceScore) Float64() float64 {
 	return float64(c)
 }
 
-// Percentage returns the confidence score expressed as a percentage (between 0.0 and 100.0).
-func (c ConfidenceScore) Percentage() float64 {
-	return float64(c) * 100.0
-}
-
 // IsHigh reports whether the confidence score meets or exceeds 0.8.
 func (c ConfidenceScore) IsHigh() bool {
 	return c >= 0.8
-}
-
-// IsLow reports whether the confidence score is below 0.5.
-func (c ConfidenceScore) IsLow() bool {
-	return c < 0.5
 }
 
 // IsSufficient reports whether the confidence score meets or exceeds the required threshold.
@@ -69,48 +59,6 @@ func (cs Changes) Len() int {
 	return len(cs)
 }
 
-// FilterByMinConfidence returns a new Changes collection with items having at least minConfidence.
-func (cs Changes) FilterByMinConfidence(minConfidence ConfidenceScore) Changes {
-	if len(cs) == 0 {
-		return nil
-	}
-	var filtered Changes
-	for i := range cs {
-		if cs[i].Confidence >= minConfidence {
-			filtered = append(filtered, cs[i])
-		}
-	}
-	return filtered
-}
-
-// BySeverity returns a new Changes collection filtered by policy severity.
-func (cs Changes) BySeverity(sev policy.Severity) Changes {
-	if len(cs) == 0 {
-		return nil
-	}
-	var filtered Changes
-	for i := range cs {
-		if cs[i].Severity == sev {
-			filtered = append(filtered, cs[i])
-		}
-	}
-	return filtered
-}
-
-// ByControl returns a new Changes collection filtered by control ID.
-func (cs Changes) ByControl(id kernel.ControlID) Changes {
-	if len(cs) == 0 {
-		return nil
-	}
-	var filtered Changes
-	for i := range cs {
-		if cs[i].ControlID == id {
-			filtered = append(filtered, cs[i])
-		}
-	}
-	return filtered
-}
-
 // Report holds the exported changes.
 type Report struct {
 	GeneratedAt string  `json:"generated_at"`
@@ -123,20 +71,6 @@ type FindingList []remediation.Finding
 // Len returns the count of findings in the collection.
 func (fl FindingList) Len() int {
 	return len(fl)
-}
-
-// ByControl returns a new FindingList collection filtered by control ID.
-func (fl FindingList) ByControl(id kernel.ControlID) FindingList {
-	if len(fl) == 0 {
-		return nil
-	}
-	var filtered FindingList
-	for i := range fl {
-		if fl[i].ControlID == id {
-			filtered = append(filtered, fl[i])
-		}
-	}
-	return filtered
 }
 
 // Input configures the export.

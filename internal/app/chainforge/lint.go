@@ -30,16 +30,6 @@ func (lm LintMessages) Contains(target string) bool {
 	return slices.Contains(lm, target)
 }
 
-// HasSubstr returns true if any message contains the given substring.
-func (lm LintMessages) HasSubstr(substr string) bool {
-	for i := range lm {
-		if strings.Contains(lm[i], substr) {
-			return true
-		}
-	}
-	return false
-}
-
 // LintResults is a domain collection of LintResult items with querying methods.
 type LintResults []LintResult
 
@@ -61,24 +51,6 @@ func (lrs LintResults) Valid() bool {
 // HasErrors reports whether any lint result in the collection contains errors.
 func (lrs LintResults) HasErrors() bool {
 	return !lrs.Valid()
-}
-
-// TotalErrors returns the aggregate error count across all lint results.
-func (lrs LintResults) TotalErrors() int {
-	total := 0
-	for i := range lrs {
-		total += len(lrs[i].Errors)
-	}
-	return total
-}
-
-// TotalWarnings returns the aggregate warning count across all lint results.
-func (lrs LintResults) TotalWarnings() int {
-	total := 0
-	for i := range lrs {
-		total += len(lrs[i].Warnings)
-	}
-	return total
 }
 
 // LintChain validates a chain definition against the control catalog

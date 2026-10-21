@@ -42,28 +42,6 @@ func (sr SearchResults) Len() int {
 	return len(sr)
 }
 
-// BySeverity returns a filtered slice of SearchResult items matching the given severity.
-func (sr SearchResults) BySeverity(sev policy.Severity) SearchResults {
-	var filtered SearchResults
-	for _, r := range sr {
-		if r.Severity == sev {
-			filtered = append(filtered, r)
-		}
-	}
-	return filtered
-}
-
-// ByDomain returns a filtered slice of SearchResult items matching the given domain asset type.
-func (sr SearchResults) ByDomain(domain kernel.AssetType) SearchResults {
-	var filtered SearchResults
-	for _, r := range sr {
-		if r.Domain == domain {
-			filtered = append(filtered, r)
-		}
-	}
-	return filtered
-}
-
 // SearchQuery represents a catalog search keyword query.
 type SearchQuery string
 
@@ -75,11 +53,6 @@ func (q SearchQuery) String() string {
 // IsEmpty reports whether the search query is blank or empty.
 func (q SearchQuery) IsEmpty() bool {
 	return strings.TrimSpace(string(q)) == ""
-}
-
-// Lower returns the search query converted to lower case.
-func (q SearchQuery) Lower() string {
-	return toLower(string(q))
 }
 
 // Normalized returns the search query trimmed of whitespace and converted to lower case.

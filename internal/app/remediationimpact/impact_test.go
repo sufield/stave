@@ -14,9 +14,11 @@ import (
 
 func finding(ctl string, ast string, sev policy.Severity) remediation.Finding {
 	return remediation.Finding{
-		ControlID:       kernel.ControlID(ctl),
-		AssetID:         asset.ID(ast),
-		ControlSeverity: sev,
+		Finding: evaluation.Finding{
+			ControlID:       kernel.ControlID(ctl),
+			AssetID:         asset.ID(ast),
+			ControlSeverity: sev,
+		},
 	}
 }
 
@@ -134,121 +136,5 @@ func TestAnalyze_ChainDeactivationDetected(t *testing.T) {
 	}
 	if _, present := seen["chain.persisting"]; present {
 		t.Error("chain.persisting should not be deactivated (present in After)")
-	}
-}
-
-func TestClosedFindings_DomainMethods(t *testing.T) {
-	cf := ClosedFindings{
-		{ControlID: "CTL.A", Severity: policy.SeverityHigh},
-		{ControlID: "CTL.B", Severity: policy.SeverityMedium},
-		{ControlID: "CTL.C", Severity: policy.SeverityHigh},
-	}
-
-	if cf.Len() != 3 {
-		t.Errorf("Len: got %d, want 3", cf.Len())
-	}
-	if highs := cf.BySeverity(policy.SeverityHigh); highs.Len() != 2 {
-		t.Errorf("BySeverity High: got %d, want 2", highs.Len())
-	}
-}
-
-func TestDeactivatedChains_DomainMethods(t *testing.T) {
-	dc := DeactivatedChains{
-		{ChainID: "CH.A", PreviousSeverity: policy.SeverityCritical},
-		{ChainID: "CH.B", PreviousSeverity: policy.SeverityHigh},
-	}
-
-	if dc.Len() != 2 {
-		t.Errorf("Len: got %d, want 2", dc.Len())
-	}
-	if crits := dc.BySeverity(policy.SeverityCritical); crits.Len() != 1 {
-		t.Errorf("BySeverity Critical: got %d, want 1", crits.Len())
-	}
-}
-
-func TestControlIDs_DomainMethods(t *testing.T) {
-	ids := ControlIDs{"CTL.A.001", "CTL.B.001"}
-
-	if ids.Len() != 2 {
-		t.Errorf("Len: got %d, want 2", ids.Len())
-	}
-	if !ids.Contains("CTL.A.001") {
-		t.Error("Contains CTL.A.001: got false, want true")
-	}
-	if ids.Contains("CTL.C.001") {
-		t.Error("Contains CTL.C.001: got true, want false")
-	}
-}
-
-func TestEfficiencyVerdict_DomainMethods(t *testing.T) {
-	vComplete := VerdictComplete
-	if vComplete.String() != "COMPLETE" {
-		t.Errorf("String() = %q, want COMPLETE", vComplete.String())
-	}
-	if !vComplete.IsComplete() {
-		t.Error("IsComplete() = false, want true")
-	}
-	if !vComplete.IsSuccessful() {
-		t.Error("IsSuccessful() = false, want true")
-	}
-
-	vPartial := VerdictPartial
-	if !vPartial.IsPartial() {
-		t.Error("IsPartial() = false, want true")
-	}
-	if !vPartial.IsSuccessful() {
-		t.Error("IsSuccessful() = false, want true for partial")
-	}
-
-	vIncomplete := VerdictIncomplete
-	if !vIncomplete.IsIncomplete() {
-		t.Error("IsIncomplete() = false, want true")
-	}
-	if vIncomplete.IsSuccessful() {
-		t.Error("IsSuccessful() = true, want false for incomplete")
-	}
-}
-
-func TestEfficiencyRatio_DomainMethods(t *testing.T) {
-	complete := EfficiencyRatio(0.95)
-	if complete.Float64() != 0.95 {
-		t.Errorf("Float64() = %v, want 0.95", complete.Float64())
-	}
-	if complete.Percentage() != 95.0 {
-		t.Errorf("Percentage() = %v, want 95.0", complete.Percentage())
-	}
-	if !complete.IsComplete() || complete.Verdict() != VerdictComplete {
-		t.Errorf("complete ratio methods failed: %+v", complete)
-	}
-
-	partial := EfficiencyRatio(0.75)
-	if !partial.IsPartial() || partial.Verdict() != VerdictPartial {
-		t.Errorf("partial ratio methods failed: %+v", partial)
-	}
-
-	incomplete := EfficiencyRatio(0.3)
-	if !incomplete.IsIncomplete() || incomplete.Verdict() != VerdictIncomplete {
-		t.Errorf("incomplete ratio methods failed: %+v", incomplete)
-	}
-}
-
-func TestSimpleScore_DomainMethods(t *testing.T) {
-	s1 := SimpleScore(80.0)
-	s2 := SimpleScore(95.0)
-
-	if s1.Float64() != 80.0 {
-		t.Errorf("Float64() = %v, want 80.0", s1.Float64())
-	}
-	if s1.Delta(s2) != ScoreDelta(15.0) {
-		t.Errorf("Delta = %v, want 15.0", s1.Delta(s2))
-	}
-	if s1.IsClean() {
-		t.Error("IsClean() = true for 80.0, want false")
-	}
-	if !SimpleScore(100.0).IsClean() {
-		t.Error("IsClean() = false for 100.0, want true")
-	}
-	if !SimpleScore(0).IsZero() {
-		t.Error("IsZero() = false for 0, want true")
 	}
 }

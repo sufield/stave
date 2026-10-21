@@ -135,16 +135,6 @@ func (r SLABurnRate) Float64() float64 {
 	return float64(r)
 }
 
-// Percentage returns the burn rate expressed as a percentage of deadline.
-func (r SLABurnRate) Percentage() float64 {
-	return float64(r) * 100.0
-}
-
-// IsBreached reports whether the burn rate meets or exceeds 1.0 (deadline passed).
-func (r SLABurnRate) IsBreached() bool {
-	return r >= 1.0
-}
-
 // IsWarning reports whether the burn rate has consumed at least 75% of deadline.
 func (r SLABurnRate) IsWarning() bool {
 	return r >= 0.75
@@ -183,34 +173,6 @@ type TopFindings []TopFinding
 // Len returns the number of top findings in the collection.
 func (tf TopFindings) Len() int {
 	return len(tf)
-}
-
-// BySeverity returns a new TopFindings collection filtered by policy severity.
-func (tf TopFindings) BySeverity(sev policy.Severity) TopFindings {
-	if len(tf) == 0 {
-		return nil
-	}
-	var filtered TopFindings
-	for i := range tf {
-		if tf[i].Severity == sev {
-			filtered = append(filtered, tf[i])
-		}
-	}
-	return filtered
-}
-
-// Breached returns a new TopFindings collection filtered by SLA breach status.
-func (tf TopFindings) Breached() TopFindings {
-	if len(tf) == 0 {
-		return nil
-	}
-	var filtered TopFindings
-	for i := range tf {
-		if tf[i].SLABreached {
-			filtered = append(filtered, tf[i])
-		}
-	}
-	return filtered
 }
 
 // ChainsSection holds active chain data.
@@ -258,16 +220,6 @@ type FrameworkReadinesses []FrameworkReadiness
 // Len returns the number of framework readiness items in the collection.
 func (fr FrameworkReadinesses) Len() int {
 	return len(fr)
-}
-
-// ByFramework returns the FrameworkReadiness item matching the given framework, or nil if not found.
-func (fr FrameworkReadinesses) ByFramework(fw policy.ComplianceFramework) *FrameworkReadiness {
-	for i := range fr {
-		if fr[i].Framework == fw {
-			return &fr[i]
-		}
-	}
-	return nil
 }
 
 // TeamSection holds per-team data.

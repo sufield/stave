@@ -95,29 +95,6 @@ const (
 	BucketOutOfScope Bucket = "out_of_scope"
 )
 
-// CoveragePercent encapsulates compliance mapping coverage percentage in [0.0, 100.0].
-type CoveragePercent float64
-
-// Float64 returns the raw float64 percentage value.
-func (cp CoveragePercent) Float64() float64 {
-	return float64(cp)
-}
-
-// Ratio returns the coverage percentage expressed as a ratio in [0.0, 1.0].
-func (cp CoveragePercent) Ratio() float64 {
-	return float64(cp) / 100.0
-}
-
-// IsComplete reports whether coverage is 100%.
-func (cp CoveragePercent) IsComplete() bool {
-	return cp >= 100.0
-}
-
-// IsZero reports whether coverage is zero.
-func (cp CoveragePercent) IsZero() bool {
-	return cp <= 0.0
-}
-
 // ControlResult is the evaluated outcome for one framework control.
 type ControlResult struct {
 	ID             string   `json:"id"`
@@ -134,131 +111,21 @@ type ControlResult struct {
 	Uncovered      string   `json:"uncovered_aspects,omitempty"` // partial coverage: what's not covered
 }
 
-// IsPassing reports whether the framework control passed verification.
-func (c ControlResult) IsPassing() bool {
-	return c.Status == StatusPass
-}
-
-// IsFailing reports whether the framework control failed verification.
-func (c ControlResult) IsFailing() bool {
-	return c.Status == StatusFail
-}
-
-// IsNotVerified reports whether the framework control is not verified (gap).
-func (c ControlResult) IsNotVerified() bool {
-	return c.Status == StatusNotVerified
-}
-
-// IsOutOfScope reports whether the framework control is out of scope.
-func (c ControlResult) IsOutOfScope() bool {
-	return c.Status == StatusOutOfScope
-}
-
-// CoveredDetail returns a human-readable description of how the control is covered.
-func (c ControlResult) CoveredDetail() string {
-	var base string
-	switch {
-	case c.IsFailing():
-		base = fmt.Sprintf("%d Stave control(s) failed", len(c.FailedControls))
-	case c.Partial:
-		base = fmt.Sprintf("%d control(s) verified, partial mapping", len(c.StaveControls))
-	default:
-		base = fmt.Sprintf("%d Stave control(s) verified", len(c.StaveControls))
-	}
-	if c.Confidence != "" {
-		base += " [" + c.Confidence + "]"
-	}
-	if c.Partial && c.Uncovered != "" {
-		base += ": " + c.Uncovered
-	}
-	return base
-}
-
-// ControlResults is a domain collection of ControlResult items with querying methods.
-type ControlResults []ControlResult
-
-// Len returns the count of control results in the collection.
-func (cr ControlResults) Len() int {
-	return len(cr)
-}
-
-// IsEmpty reports whether the collection contains no control results.
-func (cr ControlResults) IsEmpty() bool {
-	return len(cr) == 0
-}
-
-// HasControls reports whether the collection contains at least one control result.
-func (cr ControlResults) HasControls() bool {
-	return len(cr) > 0
-}
-
-// Passing returns a new collection containing only passing control results.
-func (cr ControlResults) Passing() ControlResults {
-	if len(cr) == 0 {
-		return nil
-	}
-	var filtered ControlResults
-	for i := range cr {
-		if cr[i].IsPassing() {
-			filtered = append(filtered, cr[i])
-		}
-	}
-	return filtered
-}
-
-// Failing returns a new collection containing only failing control results.
-func (cr ControlResults) Failing() ControlResults {
-	if len(cr) == 0 {
-		return nil
-	}
-	var filtered ControlResults
-	for i := range cr {
-		if cr[i].IsFailing() {
-			filtered = append(filtered, cr[i])
-		}
-	}
-	return filtered
-}
-
-// Partial returns a new collection containing only partially covered control results.
-func (cr ControlResults) Partial() ControlResults {
-	if len(cr) == 0 {
-		return nil
-	}
-	var filtered ControlResults
-	for i := range cr {
-		if cr[i].Partial {
-			filtered = append(filtered, cr[i])
-		}
-	}
-	return filtered
-}
-
 // Report is the three-list coverage outcome.
 type Report struct {
 	Framework        string           `json:"framework"`
 	FrameworkVersion string           `json:"framework_version"`
 	TotalControls    int              `json:"total_controls"`
-	Covered          ControlResults   `json:"covered"`
-	Gaps             ControlResults   `json:"gaps"`
-	OutOfScope       ControlResults   `json:"out_of_scope"`
+	Covered          []ControlResult  `json:"covered"`
+	Gaps             []ControlResult  `json:"gaps"`
+	OutOfScope       []ControlResult  `json:"out_of_scope"`
 	InScope          int              `json:"in_scope"` // covered + gaps
 	Verified         int              `json:"verified"` // == len(covered)
 	Passed           int              `json:"passed"`
 	Failed           int              `json:"failed"`
-	CoveragePercent  CoveragePercent  `json:"coverage_percent"` // verified / in_scope * 100
+	CoveragePercent  float64          `json:"coverage_percent"` // verified / in_scope * 100
 	Integrity        *IntegrityReport `json:"integrity,omitempty"`
 	VerifyOnly       bool             `json:"-"` // --verify-mapping: render only the integrity block
-}
-
-// HasGaps reports whether there are in-scope controls without Stave verification.
-func (r Report) HasGaps() bool {
-	return r.Gaps.HasControls()
-}
-
-// IsFullyCovered reports whether all in-scope controls are verified (100% coverage).
-func (r Report) IsFullyCovered() bool {
-	return r.InScope > 0 && r.CoveragePercent.IsComplete()
 }
 
 // IntegrityReport is the mapping self-check: does the mapping file reference
@@ -439,7 +306,7 @@ func (m *Mapping) Evaluate(violated map[string]bool) Report {
 	rep.Verified = len(rep.Covered)
 	rep.InScope = len(rep.Covered) + len(rep.Gaps)
 	if rep.InScope > 0 {
-		rep.CoveragePercent = CoveragePercent(float64(rep.Verified) / float64(rep.InScope) * 100)
+		rep.CoveragePercent = float64(rep.Verified) / float64(rep.InScope) * 100
 	}
 	return rep
 }

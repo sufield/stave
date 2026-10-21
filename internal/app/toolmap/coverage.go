@@ -74,11 +74,6 @@ func (g Gap) IsCovered() bool {
 	return g.HasChain && g.HasControl
 }
 
-// IsUncovered reports whether neither chain nor control covers this prerequisite.
-func (g Gap) IsUncovered() bool {
-	return !g.HasChain && !g.HasControl
-}
-
 // Gaps is a domain collection of Gap items with query and filter methods.
 type Gaps []Gap
 
@@ -97,20 +92,6 @@ func (g Gaps) HasGaps() bool {
 	return len(g) > 0
 }
 
-// ByTool returns a new Gaps collection filtered by tool name.
-func (g Gaps) ByTool(tool string) Gaps {
-	if len(g) == 0 {
-		return nil
-	}
-	var filtered Gaps
-	for i := range g {
-		if g[i].Tool == tool {
-			filtered = append(filtered, g[i])
-		}
-	}
-	return filtered
-}
-
 // CoverageResult holds the output of a three-way join.
 type CoverageResult struct {
 	Covered Gaps `json:"covered"`
@@ -123,15 +104,6 @@ func (cr *CoverageResult) Total() int {
 		return 0
 	}
 	return cr.Covered.Len() + cr.Gaps.Len()
-}
-
-// CoveragePercentage returns the percentage of prerequisites that are covered (0.0 to 100.0).
-func (cr *CoverageResult) CoveragePercentage() float64 {
-	total := cr.Total()
-	if total == 0 {
-		return 0.0
-	}
-	return float64(cr.Covered.Len()) / float64(total) * 100.0
 }
 
 // HasGaps reports whether there are any uncovered prerequisites.

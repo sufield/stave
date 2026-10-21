@@ -47,7 +47,7 @@ func writeTable(w io.Writer, r stave.ScoreResult) {
 	if r.HasTrend() {
 		fmt.Fprintln(w, "\nTREND (last runs):")
 		for _, tp := range r.Trend {
-			bar := scoreBar(tp.Score.Value())
+			bar := scoreBar(tp.Score)
 			fmt.Fprintf(w, "  %s  %5.1f  %s\n",
 				tp.Timestamp.Format("2006-01-02"), tp.Score, bar)
 		}
@@ -57,10 +57,10 @@ func writeTable(w io.Writer, r stave.ScoreResult) {
 }
 
 func scoreMovers(r stave.ScoreResult) []string {
-	moversData := r.Movers()
-	if len(moversData) == 0 {
+	if !r.HasMovers() {
 		return nil
 	}
+	moversData := r.Movers()
 	out := make([]string, 0, len(moversData))
 	for _, m := range moversData {
 		out = append(out, formatMover(m))

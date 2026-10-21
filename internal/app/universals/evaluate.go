@@ -187,7 +187,7 @@ func evaluateOne(f formula, assets []asset, gm *GroundingMap, solve Solver) Resu
 
 	start := time.Now()
 	verdict, _ := solve(combined)
-	r.SolveTimeMs = SolveTimeMs(time.Since(start).Milliseconds())
+	r.SolveTimeMs = time.Since(start).Milliseconds()
 	r.Verdict = Verdict(verdict)
 
 	switch r.Verdict {
@@ -203,8 +203,8 @@ func evaluateOne(f formula, assets []asset, gm *GroundingMap, solve Solver) Resu
 	return r
 }
 
-func extractViolations(gs []grounded, ug UniversalGrounding) Violations {
-	var out Violations
+func extractViolations(gs []grounded, ug UniversalGrounding) []Violation {
+	var out []Violation
 	for _, g := range gs {
 		for _, pred := range ug.Predicates {
 			val, ok := g.preds[pred]

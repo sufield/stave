@@ -25,16 +25,6 @@ func (c Capabilities) Len() int {
 	return len(c)
 }
 
-// ByID returns the capability matching the given ID, or nil if not found.
-func (c Capabilities) ByID(id CapabilityID) *Capability {
-	for i := range c {
-		if c[i].ID == id {
-			return &c[i]
-		}
-	}
-	return nil
-}
-
 // ChainNodes is a domain collection of ChainNode items with query methods.
 type ChainNodes []ChainNode
 
@@ -59,20 +49,6 @@ func (s NodeStatus) String() string {
 // IsActive reports whether the node status is active.
 func (s NodeStatus) IsActive() bool {
 	return s == NodeStatusActive
-}
-
-// Active returns a new ChainNodes collection containing only active chain nodes.
-func (cn ChainNodes) Active() ChainNodes {
-	if len(cn) == 0 {
-		return nil
-	}
-	var filtered ChainNodes
-	for i := range cn {
-		if cn[i].Status.IsActive() {
-			filtered = append(filtered, cn[i])
-		}
-	}
-	return filtered
 }
 
 // Edges is a domain collection of Edge items with query methods.
@@ -124,14 +100,14 @@ func (ids CapabilityIDs) Contains(id CapabilityID) bool {
 
 // ChainNode represents a chain in the graph.
 type ChainNode struct {
-	ChainID         kernel.ChainID  `json:"chain_id"`
-	Name            string          `json:"name"`
-	Severity        policy.Severity `json:"severity"`
-	Status          NodeStatus      `json:"status"`
-	Preconditions   CapabilityIDs   `json:"preconditions"`
-	Postconditions  CapabilityIDs   `json:"postconditions"`
-	MemberControls  MemberControls  `json:"member_controls"`
-	ToolAnnotations ToolAnnotations `json:"tool_annotations,omitempty"`
+	ChainID         kernel.ChainID   `json:"chain_id"`
+	Name            string           `json:"name"`
+	Severity        policy.Severity  `json:"severity"`
+	Status          NodeStatus       `json:"status"`
+	Preconditions   CapabilityIDs    `json:"preconditions"`
+	Postconditions  CapabilityIDs    `json:"postconditions"`
+	MemberControls  []MemberControl  `json:"member_controls"`
+	ToolAnnotations []ToolAnnotation `json:"tool_annotations,omitempty"`
 }
 
 // ToolAnnotation records an offensive tool whose prerequisites
@@ -141,74 +117,10 @@ type ToolAnnotation struct {
 	MatchedCapabilities CapabilityIDs `json:"matched_capabilities"`
 }
 
-// ToolAnnotations represents a domain collection of ToolAnnotation items.
-type ToolAnnotations []ToolAnnotation
-
-// Len returns the number of tool annotations.
-func (ta ToolAnnotations) Len() int {
-	return len(ta)
-}
-
-// ToolNames returns a slice of tool names.
-func (ta ToolAnnotations) ToolNames() []string {
-	out := make([]string, len(ta))
-	for i := range ta {
-		out[i] = ta[i].ToolName
-	}
-	return out
-}
-
-// ContainsTool reports whether a tool with the given name is annotated.
-func (ta ToolAnnotations) ContainsTool(name string) bool {
-	for i := range ta {
-		if strings.EqualFold(ta[i].ToolName, name) {
-			return true
-		}
-	}
-	return false
-}
-
 // MemberControl is a control within a chain node.
 type MemberControl struct {
 	ControlID   kernel.ControlID `json:"control_id"`
 	Remediation string           `json:"remediation"`
-}
-
-// MemberControls represents a domain collection of MemberControl items in a chain node.
-type MemberControls []MemberControl
-
-// Len returns the number of member controls.
-func (mc MemberControls) Len() int {
-	return len(mc)
-}
-
-// ControlIDs returns a slice of control IDs for all member controls.
-func (mc MemberControls) ControlIDs() []kernel.ControlID {
-	out := make([]kernel.ControlID, len(mc))
-	for i := range mc {
-		out[i] = mc[i].ControlID
-	}
-	return out
-}
-
-// Contains reports whether the given control ID is in the member controls.
-func (mc MemberControls) Contains(id kernel.ControlID) bool {
-	for i := range mc {
-		if mc[i].ControlID == id {
-			return true
-		}
-	}
-	return false
-}
-
-// ByControl returns the MemberControl for the given control ID, or nil if not found.
-func (mc MemberControls) ByControl(id kernel.ControlID) *MemberControl {
-	for i := range mc {
-		if mc[i].ControlID == id {
-			return &mc[i]
-		}
-	}
-	return nil
 }
 
 // Edge connects two chains via a shared capability.

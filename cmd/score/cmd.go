@@ -224,12 +224,12 @@ func parseComplianceList(s string) []string {
 	return out
 }
 
-func buildTrend(results []stave.ScoreResult) stave.TrendPoints {
-	points := make(stave.TrendPoints, len(results))
+func buildTrend(results []stave.ScoreResult) []stave.TrendPoint {
+	points := make([]stave.TrendPoint, len(results))
 	for i := range results {
 		points[i] = stave.TrendPoint{
 			Timestamp: results[i].GeneratedAt,
-			Score:     results[i].Score,
+			Score:     results[i].Score.Value(),
 		}
 	}
 	return points

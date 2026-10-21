@@ -396,9 +396,7 @@ Exit Codes:
 				return err //nolint:wrapcheck // facade already wrapped; preserve exit codes.
 			}
 			w := cmd.OutOrStdout()
-			hasErrors := len(result.Errors) > 0
-			hasWarnings := len(result.Warnings) > 0
-			if !hasErrors && !hasWarnings {
+			if result.HasNoIssues() {
 				if _, werr := fmt.Fprintln(w, "Acceptance file is valid."); werr != nil {
 					return fmt.Errorf("write output: %w", werr)
 				}
@@ -414,7 +412,7 @@ Exit Codes:
 					return werr
 				}
 			}
-			if hasErrors || (opts.Strict && hasWarnings) {
+			if !result.IsValid(opts.Strict) {
 				return errors.New("validation failed")
 			}
 			return nil

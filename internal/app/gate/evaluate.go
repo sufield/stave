@@ -36,12 +36,12 @@ func (p Policy) IsValid() bool {
 	}
 }
 
-// IsAny reports whether the policy fails on any violation.
+// IsAny reports whether the policy fails on any finding.
 func (p Policy) IsAny() bool {
 	return p == PolicyAny
 }
 
-// IsNew reports whether the policy fails on new violations compared to baseline.
+// IsNew reports whether the policy fails only on findings new compared to baseline.
 func (p Policy) IsNew() bool {
 	return p == PolicyNew
 }
@@ -62,36 +62,6 @@ type EvaluateRequest struct {
 	EvalTime          *time.Time    `json:"eval_time,omitempty"`
 }
 
-// HasEvaluationPath reports whether an evaluation path is specified.
-func (r EvaluateRequest) HasEvaluationPath() bool {
-	return r.EvaluationPath != ""
-}
-
-// HasBaselinePath reports whether a baseline path is specified.
-func (r EvaluateRequest) HasBaselinePath() bool {
-	return r.BaselinePath != ""
-}
-
-// HasControlsDir reports whether a controls directory is specified.
-func (r EvaluateRequest) HasControlsDir() bool {
-	return r.ControlsDir != ""
-}
-
-// HasObservationsDir reports whether an observations directory is specified.
-func (r EvaluateRequest) HasObservationsDir() bool {
-	return r.ObservationsDir != ""
-}
-
-// HasMaxUnsafeDuration reports whether a non-zero max unsafe duration is configured.
-func (r EvaluateRequest) HasMaxUnsafeDuration() bool {
-	return r.MaxUnsafeDuration > 0
-}
-
-// HasEvalTime reports whether an explicit evaluation time override is set.
-func (r EvaluateRequest) HasEvalTime() bool {
-	return r.EvalTime != nil && !r.EvalTime.IsZero()
-}
-
 // EvaluateResponse is the output of the CI gate evaluation.
 type EvaluateResponse struct {
 	Policy            Policy    `json:"policy"`
@@ -107,56 +77,9 @@ type EvaluateResponse struct {
 	OverdueUpcoming   int       `json:"overdue_upcoming,omitempty"`
 }
 
-// IsPassing reports whether the gate evaluation passed policy.
-func (r EvaluateResponse) IsPassing() bool {
-	return r.Passed
-}
-
-// IsFailing reports whether the gate evaluation failed policy.
-func (r EvaluateResponse) IsFailing() bool {
-	return !r.Passed
-}
-
-// HasCurrentViolations reports whether any current violations were found.
-func (r EvaluateResponse) HasCurrentViolations() bool {
-	return r.CurrentViolations > 0
-}
-
-// HasNewViolations reports whether any new violations were introduced compared to baseline.
-func (r EvaluateResponse) HasNewViolations() bool {
-	return r.NewViolations > 0
-}
-
-// HasOverdueUpcoming reports whether any upcoming actions are overdue.
-func (r EvaluateResponse) HasOverdueUpcoming() bool {
-	return r.OverdueUpcoming > 0
-}
-
-// TotalBreaches returns the primary count of violations or overdue items driving the gate verdict.
-func (r EvaluateResponse) TotalBreaches() int {
-	switch r.Policy {
-	case PolicyAny:
-		return r.CurrentViolations
-	case PolicyNew:
-		return r.NewViolations
-	case PolicyOverdue:
-		return r.OverdueUpcoming
-	default:
-		return r.CurrentViolations + r.NewViolations + r.OverdueUpcoming
-	}
-}
-
-// PassLabel returns "PASS" if the evaluation passed, or "FAIL" otherwise.
-func (r EvaluateResponse) PassLabel() string {
-	if r.Passed {
-		return "PASS"
-	}
-	return "FAIL"
-}
-
-// IsClean reports whether the evaluation passed and has zero violations across all metrics.
-func (r EvaluateResponse) IsClean() bool {
-	return r.Passed && r.CurrentViolations == 0 && r.NewViolations == 0 && r.OverdueUpcoming == 0
+// HasViolations reports whether any violations were detected across current, new, or overdue counts.
+func (r *EvaluateResponse) HasViolations() bool {
+	return r != nil && (r.CurrentViolations > 0 || r.NewViolations > 0 || r.OverdueUpcoming > 0)
 }
 
 // FindingsCounterPort counts findings in an evaluation artifact.

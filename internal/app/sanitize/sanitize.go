@@ -38,30 +38,6 @@ func (r Rules) Len() int {
 	return len(r)
 }
 
-// ByField returns the rule matching the given field path, or nil if not found.
-func (r Rules) ByField(field string) *Rule {
-	for i := range r {
-		if r[i].Field == field {
-			return &r[i]
-		}
-	}
-	return nil
-}
-
-// ByMethod returns a new Rules collection filtered by redaction method.
-func (r Rules) ByMethod(method Method) Rules {
-	if len(r) == 0 {
-		return nil
-	}
-	var filtered Rules
-	for i := range r {
-		if r[i].Method == method {
-			filtered = append(filtered, r[i])
-		}
-	}
-	return filtered
-}
-
 // Config holds the sanitization rules.
 type Config struct {
 	Rules Rules `yaml:"redact" json:"redact"`

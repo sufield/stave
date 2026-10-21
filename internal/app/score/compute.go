@@ -115,51 +115,11 @@ type SeverityDetail struct {
 	ActualExposure  float64 `json:"actual_exposure"`
 }
 
-// HasViolations reports whether any violations were recorded.
-func (sd SeverityDetail) HasViolations() bool {
-	return sd.TotalViolations > 0
-}
-
-// ExposureRatio returns the fraction of actual exposure over max risk exposure (0.0 to 1.0).
-func (sd SeverityDetail) ExposureRatio() float64 {
-	if sd.MaxRiskExposure <= 0 {
-		return 0.0
-	}
-	return sd.ActualExposure / sd.MaxRiskExposure
-}
-
 // SLADetail holds breakdown data for the SLA component.
 type SLADetail struct {
 	FindingsWithSLA  int     `json:"findings_with_sla"`
 	FindingsBreached int     `json:"findings_breached"`
 	BreachRatePct    float64 `json:"breach_rate_percent"`
-}
-
-// HasBreaches reports whether any findings breached SLA thresholds.
-func (sd SLADetail) HasBreaches() bool {
-	return sd.FindingsBreached > 0
-}
-
-// HasSLAFindings reports whether any findings have applicable SLA definitions.
-func (sd SLADetail) HasSLAFindings() bool {
-	return sd.FindingsWithSLA > 0
-}
-
-// CompliantFindings returns the count of findings within SLA compliance.
-func (sd SLADetail) CompliantFindings() int {
-	return sd.FindingsWithSLA - sd.FindingsBreached
-}
-
-// ComplianceRatePct returns the SLA compliance percentage (0.0 to 100.0).
-func (sd SLADetail) ComplianceRatePct() float64 {
-	if sd.FindingsWithSLA <= 0 {
-		return 100.0
-	}
-	rate := 100.0 - sd.BreachRatePct
-	if rate < 0 {
-		return 0.0
-	}
-	return rate
 }
 
 // ChainDetail holds breakdown data for the chain component.
@@ -170,56 +130,12 @@ type ChainDetail struct {
 	ActiveChainWeight float64 `json:"active_chain_weight"`
 }
 
-// HasActiveChains reports whether any compound attack chains are currently active.
-func (cd ChainDetail) HasActiveChains() bool {
-	return cd.ActiveChains > 0
-}
-
-// InactiveChains returns the number of non-active compound chains.
-func (cd ChainDetail) InactiveChains() int {
-	return cd.TotalChains - cd.ActiveChains
-}
-
-// ActiveRatio returns the fraction of total chains that are active (0.0 to 1.0).
-func (cd ChainDetail) ActiveRatio() float64 {
-	if cd.TotalChains <= 0 {
-		return 0.0
-	}
-	return float64(cd.ActiveChains) / float64(cd.TotalChains)
-}
-
-// WeightUtilization returns the ratio of active chain weight over max chain weight (0.0 to 1.0).
-func (cd ChainDetail) WeightUtilization() float64 {
-	if cd.MaxChainWeight <= 0 {
-		return 0.0
-	}
-	return cd.ActiveChainWeight / cd.MaxChainWeight
-}
-
 // CoverageDetail holds breakdown data for the coverage component.
 type CoverageDetail struct {
 	Framework             policy.ComplianceFramework `json:"framework,omitempty"`
 	RequirementsSatisfied int                        `json:"requirements_satisfied"`
 	RequirementsTotal     int                        `json:"requirements_total"`
 	CoveragePct           float64                    `json:"coverage_percent"`
-}
-
-// IsComplete reports whether all compliance requirements are satisfied.
-func (cd CoverageDetail) IsComplete() bool {
-	return cd.RequirementsTotal > 0 && cd.RequirementsSatisfied >= cd.RequirementsTotal
-}
-
-// UnsatisfiedRequirements returns the count of unfulfilled requirements.
-func (cd CoverageDetail) UnsatisfiedRequirements() int {
-	return cd.RequirementsTotal - cd.RequirementsSatisfied
-}
-
-// SatisfiedRatio returns the fraction of satisfied requirements (0.0 to 1.0).
-func (cd CoverageDetail) SatisfiedRatio() float64 {
-	if cd.RequirementsTotal <= 0 {
-		return 0.0
-	}
-	return float64(cd.RequirementsSatisfied) / float64(cd.RequirementsTotal)
 }
 
 // Component holds a single score dimension.
@@ -256,40 +172,8 @@ type CoverageComponent struct {
 
 // TrendPoint captures a single score observation for trend display.
 type TrendPoint struct {
-	Timestamp time.Time    `json:"timestamp"`
-	Score     PostureScore `json:"score"`
-}
-
-// TrendPoints is a domain collection of TrendPoint items with querying methods.
-type TrendPoints []TrendPoint
-
-// Len returns the number of trend points.
-func (tp TrendPoints) Len() int {
-	return len(tp)
-}
-
-// Latest returns the most recent trend point in the collection, or nil if empty.
-func (tp TrendPoints) Latest() *TrendPoint {
-	if len(tp) == 0 {
-		return nil
-	}
-	return &tp[len(tp)-1]
-}
-
-// Earliest returns the earliest trend point in the collection, or nil if empty.
-func (tp TrendPoints) Earliest() *TrendPoint {
-	if len(tp) == 0 {
-		return nil
-	}
-	return &tp[0]
-}
-
-// NetChange returns the score delta between the latest and earliest observations (latest - earliest).
-func (tp TrendPoints) NetChange() float64 {
-	if len(tp) < 2 {
-		return 0
-	}
-	return (tp[len(tp)-1].Score - tp[0].Score).Value()
+	Timestamp time.Time `json:"timestamp"`
+	Score     float64   `json:"score"`
 }
 
 // RubricBand classifies the posture score into five qualitative bands.
@@ -303,7 +187,7 @@ const (
 	BandCritical       RubricBand = "critical"
 )
 
-// String returns the raw string value of the rubric band.
+// String returns the raw string value of RubricBand.
 func (b RubricBand) String() string {
 	return string(b)
 }
@@ -311,41 +195,6 @@ func (b RubricBand) String() string {
 // Display returns the uppercase display representation of the rubric band (e.g. "STRONG", "NEEDS_ATTENTION").
 func (b RubricBand) Display() string {
 	return strings.ToUpper(string(b))
-}
-
-// IsStrong reports whether the posture band is strong.
-func (b RubricBand) IsStrong() bool {
-	return b == BandStrong
-}
-
-// IsAdequate reports whether the posture band is adequate.
-func (b RubricBand) IsAdequate() bool {
-	return b == BandAdequate
-}
-
-// IsNeedsAttention reports whether the posture band needs attention.
-func (b RubricBand) IsNeedsAttention() bool {
-	return b == BandNeedsAttention
-}
-
-// IsAtRisk reports whether the posture band is at risk.
-func (b RubricBand) IsAtRisk() bool {
-	return b == BandAtRisk
-}
-
-// IsCritical reports whether the posture band is critical.
-func (b RubricBand) IsCritical() bool {
-	return b == BandCritical
-}
-
-// IsHealthy reports whether the posture band is strong or adequate.
-func (b RubricBand) IsHealthy() bool {
-	return b == BandStrong || b == BandAdequate
-}
-
-// RequiresAction reports whether the posture band requires remedial attention or is at risk/critical.
-func (b RubricBand) RequiresAction() bool {
-	return b == BandNeedsAttention || b == BandAtRisk || b == BandCritical
 }
 
 // PostureScore encapsulates a 0-100 security posture score value.
@@ -384,17 +233,17 @@ type Result struct {
 	Chain       ChainComponent    `json:"chain"`
 	Coverage    CoverageComponent `json:"coverage"`
 	WeightsUsed Weights           `json:"weights_used"`
-	Trend       TrendPoints       `json:"trend,omitempty"`
+	Trend       []TrendPoint      `json:"trend,omitempty"`
 }
 
-// IsHealthy reports whether the posture band reflects a healthy posture (strong or adequate).
-func (r Result) IsHealthy() bool {
-	return r.RubricBand.IsHealthy()
-}
-
-// HasTrend reports whether the result contains historical trend observations.
+// HasTrend reports whether historical trend points are present in the score result.
 func (r Result) HasTrend() bool {
-	return r.Trend.Len() > 0
+	return len(r.Trend) > 0
+}
+
+// HasMovers reports whether any score movers are present.
+func (r Result) HasMovers() bool {
+	return len(r.Movers()) > 0
 }
 
 // ScoreMover names a sub-score component that is currently
@@ -411,18 +260,6 @@ const (
 	MoverCoverage MoverComponent = "coverage"
 )
 
-// PointsLost encapsulates the contribution gap in score points (max contribution - actual contribution).
-type PointsLost float64
-
-// Float64 returns the raw float64 value of points lost.
-func (p PointsLost) Float64() float64 { return float64(p) }
-
-// IsZero reports whether no points were lost.
-func (p PointsLost) IsZero() bool { return p == 0 }
-
-// IsSignificant reports whether the points lost meet or exceed the given threshold.
-func (p PointsLost) IsSignificant(threshold float64) bool { return float64(p) >= threshold }
-
 // ScoreMover names a sub-score component that is currently
 // dragging the posture score below its maximum, with the count of
 // findings driving the impact and the points lost. Centralised on
@@ -438,53 +275,7 @@ type ScoreMover struct {
 	Count int
 	// PointsLost is the contribution gap (max - actual) in score
 	// points.
-	PointsLost PointsLost
-}
-
-// ScoreMovers is a domain collection of ScoreMover items with querying methods.
-type ScoreMovers []ScoreMover
-
-// Len returns the number of score movers in the collection.
-func (sm ScoreMovers) Len() int {
-	return len(sm)
-}
-
-// TotalPointsLost returns the sum of points lost across all movers.
-func (sm ScoreMovers) TotalPointsLost() PointsLost {
-	var total float64
-	for _, m := range sm {
-		total += m.PointsLost.Float64()
-	}
-	return PointsLost(total)
-}
-
-// ByComponent returns the mover corresponding to the specified component, or nil if not present.
-func (sm ScoreMovers) ByComponent(comp MoverComponent) *ScoreMover {
-	for i := range sm {
-		if sm[i].Component == comp {
-			return &sm[i]
-		}
-	}
-	return nil
-}
-
-// HasLoss reports whether any mover in the collection lost points.
-func (sm ScoreMovers) HasLoss() bool {
-	return sm.TotalPointsLost() > 0
-}
-
-// Worst returns the score mover that lost the most points, or nil if empty.
-func (sm ScoreMovers) Worst() *ScoreMover {
-	if len(sm) == 0 {
-		return nil
-	}
-	worst := &sm[0]
-	for i := 1; i < len(sm); i++ {
-		if sm[i].PointsLost > worst.PointsLost {
-			worst = &sm[i]
-		}
-	}
-	return worst
+	PointsLost float64
 }
 
 // Label returns the human-readable mover-row label the score CLI
@@ -516,34 +307,34 @@ func (m ScoreMover) Label() string {
 // coverage) order. Each entry carries the structured numbers the
 // renderer needs so display layers can format them without
 // reaching into Severity.Detail / SLA.Detail / etc. directly.
-func (r Result) Movers() ScoreMovers {
-	movers := make(ScoreMovers, 0, 4)
+func (r Result) Movers() []ScoreMover {
+	movers := make([]ScoreMover, 0, 4)
 	if r.Severity.Detail.FailingFindings > 0 {
 		movers = append(movers, ScoreMover{
 			Component:  MoverSeverity,
 			Count:      r.Severity.Detail.FailingFindings,
-			PointsLost: PointsLost(r.Severity.MaxContribution - r.Severity.Contribution),
+			PointsLost: r.Severity.MaxContribution - r.Severity.Contribution,
 		})
 	}
 	if r.SLA.Detail.FindingsBreached > 0 {
 		movers = append(movers, ScoreMover{
 			Component:  MoverSLA,
 			Count:      r.SLA.Detail.FindingsBreached,
-			PointsLost: PointsLost(r.SLA.MaxContribution - r.SLA.Contribution),
+			PointsLost: r.SLA.MaxContribution - r.SLA.Contribution,
 		})
 	}
 	if r.Chain.Detail.ActiveChains > 0 {
 		movers = append(movers, ScoreMover{
 			Component:  MoverChain,
 			Count:      r.Chain.Detail.ActiveChains,
-			PointsLost: PointsLost(r.Chain.MaxContribution - r.Chain.Contribution),
+			PointsLost: r.Chain.MaxContribution - r.Chain.Contribution,
 		})
 	}
 	if r.Coverage.SubScore < 1.0 {
 		movers = append(movers, ScoreMover{
 			Component:  MoverCoverage,
 			Count:      int(r.Coverage.Detail.CoveragePct),
-			PointsLost: PointsLost(r.Coverage.MaxContribution - r.Coverage.Contribution),
+			PointsLost: r.Coverage.MaxContribution - r.Coverage.Contribution,
 		})
 	}
 	return movers
@@ -560,10 +351,10 @@ func (r Result) Movers() ScoreMovers {
 // Returns "STABLE" with a zero net-change when no trend is recorded
 // so callers can render unconditionally.
 func (r Result) TrendDirection() (direction string, netChange float64) {
-	if r.Trend.Len() < 2 {
+	if len(r.Trend) < 2 {
 		return "STABLE", 0
 	}
-	netChange = r.Trend.NetChange()
+	netChange = r.Trend[len(r.Trend)-1].Score - r.Trend[0].Score
 	switch {
 	case netChange > 1:
 		return "IMPROVING", netChange

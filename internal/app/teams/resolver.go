@@ -213,16 +213,6 @@ func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN string, cont
 	}
 }
 
-// TeamByID returns the team definition for an ID, or nil.
-func (m *Manifest) TeamByID(id TeamID) *Team {
-	for i := range m.Teams {
-		if m.Teams[i].ID == id {
-			return &m.Teams[i]
-		}
-	}
-	return nil
-}
-
 // AnnotateFindings resolves owner for each finding and sets the owner fields.
 // tags is a function that returns resource tags for a given asset ID.
 // If tags is nil, tag-based resolution is skipped (ARN/control patterns still work).

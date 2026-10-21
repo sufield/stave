@@ -6,7 +6,6 @@ package teamgate
 
 import (
 	"github.com/sufield/stave/internal/app/teams"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	corereport "github.com/sufield/stave/internal/core/report"
 )
@@ -20,6 +19,11 @@ const (
 	ZeroToleranceThreshold Threshold = 0
 )
 
+// NewThreshold constructs a Threshold value object.
+func NewThreshold(limit int) Threshold {
+	return Threshold(limit)
+}
+
 // IsDisabled reports whether threshold check is disabled (-1).
 func (t Threshold) IsDisabled() bool {
 	return t < 0
@@ -28,6 +32,11 @@ func (t Threshold) IsDisabled() bool {
 // IsExceeded reports whether finding count exceeds this threshold.
 func (t Threshold) IsExceeded(count int) bool {
 	return !t.IsDisabled() && count > int(t)
+}
+
+// Value returns the raw integer threshold limit.
+func (t Threshold) Value() int {
+	return int(t)
 }
 
 // Thresholds defines the maximum allowed findings per severity.
@@ -64,24 +73,9 @@ const (
 	ReasonMediumThresholdExceeded   GateReason = "medium findings exceed threshold"
 )
 
-// String returns the raw string explanation of the gate failure reason.
+// String returns the string representation of GateReason.
 func (r GateReason) String() string {
 	return string(r)
-}
-
-// IsCritical reports whether the reason corresponds to critical threshold breach.
-func (r GateReason) IsCritical() bool {
-	return r == ReasonCriticalThresholdExceeded
-}
-
-// IsHigh reports whether the reason corresponds to high threshold breach.
-func (r GateReason) IsHigh() bool {
-	return r == ReasonHighThresholdExceeded
-}
-
-// IsMedium reports whether the reason corresponds to medium threshold breach.
-func (r GateReason) IsMedium() bool {
-	return r == ReasonMediumThresholdExceeded
 }
 
 // GateResult holds the per-team gate evaluation.
@@ -95,65 +89,12 @@ type GateResult struct {
 	Reason        GateReason   `json:"reason,omitempty"`
 }
 
-// IsClean reports whether there are zero findings for this team.
-func (gr GateResult) IsClean() bool {
-	return gr.TotalFindings == 0
-}
-
-// HasBreaches reports whether the team failed the gate evaluation.
-func (gr GateResult) HasBreaches() bool {
-	return !gr.Passed
-}
-
-// HasCritical reports whether any critical findings were evaluated for this team.
-func (gr GateResult) HasCritical() bool {
-	return gr.CriticalCount > 0
-}
-
-// HasHigh reports whether any high findings were evaluated for this team.
-func (gr GateResult) HasHigh() bool {
-	return gr.HighCount > 0
-}
-
-// HasMedium reports whether any medium findings were evaluated for this team.
-func (gr GateResult) HasMedium() bool {
-	return gr.MediumCount > 0
-}
-
-// HighOrCriticalCount returns the combined count of high and critical findings.
-func (gr GateResult) HighOrCriticalCount() int {
-	return gr.CriticalCount + gr.HighCount
-}
-
-// LowOrInfoCount returns findings below medium severity.
-func (gr GateResult) LowOrInfoCount() int {
-	count := gr.TotalFindings - (gr.CriticalCount + gr.HighCount + gr.MediumCount)
-	if count < 0 {
-		return 0
-	}
-	return count
-}
-
 // FindingList is a domain collection of remediation.Finding items with query methods.
 type FindingList []remediation.Finding
 
 // Len returns the count of findings in the collection.
 func (fl FindingList) Len() int {
 	return len(fl)
-}
-
-// BySeverity returns a new FindingList collection filtered by policy severity.
-func (fl FindingList) BySeverity(sev policy.Severity) FindingList {
-	if len(fl) == 0 {
-		return nil
-	}
-	var filtered FindingList
-	for i := range fl {
-		if fl[i].ControlSeverity == sev {
-			filtered = append(filtered, fl[i])
-		}
-	}
-	return filtered
 }
 
 // Input configures the gate evaluation.

@@ -31,7 +31,7 @@ func TestComputeSimpleScore_ExactValues(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			got := computeSimpleScore(assessmentWith(c.total, c.viol))
-			if math.Abs(got.Float64()-c.want) > 1e-9 {
+			if math.Abs(got-c.want) > 1e-9 {
 				t.Fatalf("computeSimpleScore(total=%d, viol=%d) = %.4f, want %.4f",
 					c.total, c.viol, got, c.want)
 			}
@@ -80,7 +80,7 @@ func TestAnalyze_EfficiencyMetrics(t *testing.T) {
 			if math.Abs(r.Efficiency.RealizedDelta.Float64()-c.wantRealized) > 1e-9 {
 				t.Errorf("RealizedDelta = %.4f, want %.4f", r.Efficiency.RealizedDelta, c.wantRealized)
 			}
-			if math.Abs(r.Efficiency.Ratio.Float64()-c.wantRatio) > 1e-9 {
+			if math.Abs(r.Efficiency.Ratio-c.wantRatio) > 1e-9 {
 				t.Errorf("Ratio = %.4f, want %.4f", r.Efficiency.Ratio, c.wantRatio)
 			}
 			if r.Efficiency.Verdict != c.wantVerdict {

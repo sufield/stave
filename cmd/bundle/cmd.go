@@ -150,7 +150,7 @@ func run(ctx context.Context, _, stderr io.Writer, opts *options) error {
 	fmt.Fprintf(stderr, "Bundle created (%s): %s\n", signed, outputPath)
 	fmt.Fprintf(stderr, "  %d violations, %d chain findings\n", res.Violations, res.ChainFindings)
 
-	if res.Violations > 0 {
+	if res.HasViolations() {
 		return ui.ErrViolationsFound
 	}
 	return nil

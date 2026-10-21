@@ -29,48 +29,6 @@ func (pcs PropertyChanges) Len() int {
 	return len(pcs)
 }
 
-// RiskIncreasing returns property changes that increase risk.
-func (pcs PropertyChanges) RiskIncreasing() PropertyChanges {
-	if len(pcs) == 0 {
-		return nil
-	}
-	var filtered PropertyChanges
-	for i := range pcs {
-		if pcs[i].RiskDirection == diff.RiskIncreasing {
-			filtered = append(filtered, pcs[i])
-		}
-	}
-	return filtered
-}
-
-// RiskDecreasing returns property changes that decrease risk.
-func (pcs PropertyChanges) RiskDecreasing() PropertyChanges {
-	if len(pcs) == 0 {
-		return nil
-	}
-	var filtered PropertyChanges
-	for i := range pcs {
-		if pcs[i].RiskDirection == diff.RiskDecreasing {
-			filtered = append(filtered, pcs[i])
-		}
-	}
-	return filtered
-}
-
-// ByProperty returns property changes matching a specific property path.
-func (pcs PropertyChanges) ByProperty(path string) PropertyChanges {
-	if len(pcs) == 0 {
-		return nil
-	}
-	var filtered PropertyChanges
-	for i := range pcs {
-		if pcs[i].Property == path {
-			filtered = append(filtered, pcs[i])
-		}
-	}
-	return filtered
-}
-
 // NewAsset records an asset present in after but not before.
 type NewAsset struct {
 	AssetID   asset.ID         `json:"asset_id"`
@@ -157,22 +115,6 @@ func (dr *DiffResult) HasDifferences() bool {
 	return dr.PropertyChanges.Len() > 0 || dr.NewAssets.Len() > 0 || dr.RemovedAssets.Len() > 0
 }
 
-// TotalDifferences returns the sum of property changes, new assets, and removed assets.
-func (dr *DiffResult) TotalDifferences() int {
-	if dr == nil {
-		return 0
-	}
-	return dr.PropertyChanges.Len() + dr.NewAssets.Len() + dr.RemovedAssets.Len()
-}
-
-// AssetCountDelta returns the change in total asset count (AfterAssets - BeforeAssets).
-func (dr *DiffResult) AssetCountDelta() int {
-	if dr == nil {
-		return 0
-	}
-	return dr.AfterAssets - dr.BeforeAssets
-}
-
 // RiskSummary aggregates risk direction counts from property changes.
 type RiskSummary struct {
 	Increasing int `json:"increasing"`
@@ -193,21 +135,6 @@ func (rs RiskSummary) HasRiskChanges() bool {
 // NetRisk returns the net risk change (increasing - decreasing).
 func (rs RiskSummary) NetRisk() int {
 	return rs.Increasing - rs.Decreasing
-}
-
-// IsNetRiskIncreasing reports whether risk-increasing changes outnumber risk-decreasing ones.
-func (rs RiskSummary) IsNetRiskIncreasing() bool {
-	return rs.NetRisk() > 0
-}
-
-// IsNetRiskDecreasing reports whether risk-decreasing changes outnumber risk-increasing ones.
-func (rs RiskSummary) IsNetRiskDecreasing() bool {
-	return rs.NetRisk() < 0
-}
-
-// IsRiskNeutral reports whether there are no risk-increasing or risk-decreasing changes.
-func (rs RiskSummary) IsRiskNeutral() bool {
-	return !rs.HasRiskChanges()
 }
 
 // Diff compares two snapshots and returns the structured differences.

@@ -26,21 +26,6 @@ func (p PropertyPath) String() string {
 	return string(p)
 }
 
-// IsTag reports whether the property path represents a tag property.
-func (p PropertyPath) IsTag() bool {
-	str := string(p)
-	return strings.HasPrefix(str, "tags.") || strings.HasPrefix(str, "properties.tags.")
-}
-
-// BaseName returns the final element of the dot-delimited property path.
-func (p PropertyPath) BaseName() string {
-	str := string(p)
-	if idx := strings.LastIndex(str, "."); idx >= 0 {
-		return str[idx+1:]
-	}
-	return str
-}
-
 // FieldGaps is a domain collection of FieldGap items with domain querying and filtering methods.
 type FieldGaps []FieldGap
 
@@ -57,34 +42,6 @@ func (fg FieldGaps) IsEmpty() bool {
 // HasGaps reports whether the collection contains at least one gap.
 func (fg FieldGaps) HasGaps() bool {
 	return len(fg) > 0
-}
-
-// FixableByAgent returns a new FieldGaps collection containing only gaps fixable by an agent loop.
-func (fg FieldGaps) FixableByAgent() FieldGaps {
-	if len(fg) == 0 {
-		return nil
-	}
-	var filtered FieldGaps
-	for i := range fg {
-		if fg[i].Remediation.FixableByAgent {
-			filtered = append(filtered, fg[i])
-		}
-	}
-	return filtered
-}
-
-// ByAssetType returns a new FieldGaps collection filtered by asset type.
-func (fg FieldGaps) ByAssetType(at kernel.AssetType) FieldGaps {
-	if len(fg) == 0 {
-		return nil
-	}
-	var filtered FieldGaps
-	for i := range fg {
-		if fg[i].AssetType == at {
-			filtered = append(filtered, fg[i])
-		}
-	}
-	return filtered
 }
 
 // Report is the analyzer's output: the prioritized gap list plus
@@ -113,11 +70,6 @@ type GapPriority int
 // Int returns the raw integer value of the gap priority.
 func (p GapPriority) Int() int {
 	return int(p)
-}
-
-// IsHighPriority reports whether the gap is ranked within top priority tier (rank <= 10).
-func (p GapPriority) IsHighPriority() bool {
-	return p > 0 && p <= 10
 }
 
 // RemediationCommand represents a CLI command hint for gap remediation.
@@ -150,36 +102,6 @@ type FieldGap struct {
 	MaxSeverity          policy.Severity  `json:"max_severity"`
 	IsIntentProperty     bool             `json:"is_intent_property"`
 	Remediation          Remediation      `json:"remediation"`
-}
-
-// MissingRatio returns the fraction of observed assets missing this property (0.0 to 1.0).
-func (fg FieldGap) MissingRatio() float64 {
-	if fg.TotalCount <= 0 {
-		return 0.0
-	}
-	return float64(fg.MissingCount) / float64(fg.TotalCount)
-}
-
-// CoveragePercentage returns the percentage of observed assets carrying this property (0.0 to 100.0).
-func (fg FieldGap) CoveragePercentage() float64 {
-	if fg.TotalCount <= 0 {
-		return 100.0
-	}
-	ratio := float64(fg.TotalCount-fg.MissingCount) / float64(fg.TotalCount) * 100.0
-	if ratio < 0 {
-		return 0.0
-	}
-	return ratio
-}
-
-// IsComplete reports whether every observed asset carries this property (no missing assets).
-func (fg FieldGap) IsComplete() bool {
-	return fg.MissingCount == 0
-}
-
-// IsFullyMissing reports whether all observed assets are missing this property.
-func (fg FieldGap) IsFullyMissing() bool {
-	return fg.TotalCount > 0 && fg.MissingCount >= fg.TotalCount
 }
 
 // ControlsBlocked is a domain collection of control IDs blocked by a gap with querying methods.
@@ -287,37 +209,4 @@ type Summary struct {
 	QuickWinTimeEstimate    string `json:"quick_win_time_estimate,omitempty"`
 	IndeterminateControls   int    `json:"indeterminate_controls"`
 	IndeterminateDisclaimer string `json:"indeterminate_disclaimer,omitempty"`
-}
-
-// AgentFixableCount returns the total number of gaps that can be fixed by an agent loop (tag + derived).
-func (s Summary) AgentFixableCount() int {
-	return s.TagGaps + s.DerivedGaps
-}
-
-// OperatorRequiredCount returns the total number of gaps requiring operator or collector code changes (api + collector).
-func (s Summary) OperatorRequiredCount() int {
-	return s.ApiGaps + s.CollectorGaps
-}
-
-// HasFixableGaps reports whether there are any gaps fixable by an agent loop.
-func (s Summary) HasFixableGaps() bool {
-	return s.FixableByAgentGaps > 0
-}
-
-// HasBlockedChains reports whether any compound chains are blocked by observation gaps.
-func (s Summary) HasBlockedChains() bool {
-	return s.ChainsBlockedTotal > 0
-}
-
-// HasGaps reports whether any gaps were detected.
-func (s Summary) HasGaps() bool {
-	return s.TotalGaps > 0
-}
-
-// FixableRatio returns the fraction of total gaps that are fixable by an agent (0.0 to 1.0).
-func (s Summary) FixableRatio() float64 {
-	if s.TotalGaps <= 0 {
-		return 0.0
-	}
-	return float64(s.FixableByAgentGaps) / float64(s.TotalGaps)
 }

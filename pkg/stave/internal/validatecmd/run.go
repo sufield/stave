@@ -251,7 +251,7 @@ func checkStaleness(ctx context.Context, req Request, params validateParams) (bo
 		return false, "", fmt.Errorf("load snapshots for staleness check: %w", err)
 	}
 	sr := staleness.Check(loaded.Snapshots, threshold, now)
-	if sr.Stale {
+	if sr.IsStale() {
 		return true, sr.Message, nil
 	}
 	return false, "", nil

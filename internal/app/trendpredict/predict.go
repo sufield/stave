@@ -31,11 +31,6 @@ func (r ReadinessPercentage) Clamp() ReadinessPercentage {
 	return r
 }
 
-// IsAchieved returns true if current readiness meets or exceeds the target.
-func (r ReadinessPercentage) IsAchieved(target ReadinessPercentage) bool {
-	return r >= target
-}
-
 // GapTo returns the percentage gap remaining to reach the target. Returns 0 if target is met.
 func (r ReadinessPercentage) GapTo(target ReadinessPercentage) float64 {
 	if r >= target {
@@ -66,9 +61,6 @@ func (d DaysSaved) Duration() time.Duration {
 	return time.Duration(int(d)) * 24 * time.Hour
 }
 
-// IsSignificant reports whether days saved is a week or longer (>= 7 days).
-func (d DaysSaved) IsSignificant() bool { return d >= 7 }
-
 // Accelerator describes a sprint-sized intervention that moves the date.
 type Accelerator struct {
 	Description string     `json:"description"`
@@ -95,15 +87,6 @@ type Accelerators []Accelerator
 // Len returns the number of accelerators in the collection.
 func (as Accelerators) Len() int {
 	return len(as)
-}
-
-// TotalDaysSaved returns the aggregate days saved across all accelerators.
-func (as Accelerators) TotalDaysSaved() DaysSaved {
-	var total int
-	for i := range as {
-		total += as[i].DaysSaved.Int()
-	}
-	return DaysSaved(total)
 }
 
 // Input configures the prediction.
@@ -216,15 +199,6 @@ func (m MTTRDays) Duration() time.Duration {
 
 // IsZero reports whether MTTR is 0.
 func (m MTTRDays) IsZero() bool { return m == 0 }
-
-// DefaultIfZero returns fallback if m is zero.
-func (m MTTRDays) DefaultIfZero(fallback MTTRDays) MTTRDays {
-	if m == 0 {
-		return fallback
-	}
-	return m
-}
-
 func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.Time) map[policy.Severity]MTTRDays {
 	var cutoff time.Time
 	if lookback > 0 {

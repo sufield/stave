@@ -60,29 +60,6 @@ func (cs Components) Len() int {
 	return len(cs)
 }
 
-// ByFilename returns the component matching the given filename, or nil if not found.
-func (cs Components) ByFilename(filename string) *Component {
-	for i := range cs {
-		if cs[i].Filename == filename {
-			return &cs[i]
-		}
-	}
-	return nil
-}
-
-// HasIntegrityHashes reports whether all components have valid SHA256 checksums.
-func (cs Components) HasIntegrityHashes() bool {
-	if len(cs) == 0 {
-		return false
-	}
-	for i := range cs {
-		if !cs[i].SHA256.IsValid() {
-			return false
-		}
-	}
-	return true
-}
-
 // Package describes the assembled audit evidence package.
 type Package struct {
 	Framework   policy.ComplianceFramework `json:"framework"`

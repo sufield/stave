@@ -28,10 +28,44 @@ type CatalogValidateResult struct {
 	TotalWarnings  int                    `json:"total_warnings"`
 }
 
+// HasErrors reports whether any catalog validation errors were found.
+func (r *CatalogValidateResult) HasErrors() bool {
+	return r != nil && r.TotalErrors > 0
+}
+
+// HasWarnings reports whether any catalog validation warnings were found.
+func (r *CatalogValidateResult) HasWarnings() bool {
+	return r != nil && r.TotalWarnings > 0
+}
+
+// IsValid reports whether the catalog validation passed without errors (or warnings if strict).
+func (r *CatalogValidateResult) IsValid(strict bool) bool {
+	if r == nil {
+		return false
+	}
+	if r.HasErrors() {
+		return false
+	}
+	if strict && r.HasWarnings() {
+		return false
+	}
+	return true
+}
+
 // CatalogValidateSection holds results from one validation phase.
 type CatalogValidateSection struct {
 	Errors   []string `json:"errors,omitempty"`
 	Warnings []string `json:"warnings,omitempty"`
+}
+
+// IsEmpty reports whether the section has no errors and no warnings.
+func (s CatalogValidateSection) IsEmpty() bool {
+	return len(s.Errors) == 0 && len(s.Warnings) == 0
+}
+
+// HasIssues reports whether the section has any errors or warnings.
+func (s CatalogValidateSection) HasIssues() bool {
+	return len(s.Errors) > 0 || len(s.Warnings) > 0
 }
 
 // CatalogValidate runs combined control lint, chain lint, and

@@ -246,14 +246,6 @@ func (r *GovernanceResolver) MaxInputFileSize() string {
 	}
 	return r.Policy.MaxInputFileSize
 }
-
-func (r *GovernanceResolver) MaxGapThreshold() string {
-	if r == nil || r.Policy == nil {
-		return ""
-	}
-	return r.Policy.MaxGapThreshold
-}
-
 func (r *GovernanceResolver) ConfidenceHighMultiplier() int {
 	if r == nil || r.Policy == nil {
 		return 0

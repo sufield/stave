@@ -20,31 +20,6 @@ const (
 	PatternSeasonal   Pattern = "seasonal"
 )
 
-// String returns the raw string representation of the pattern.
-func (p Pattern) String() string {
-	return string(p)
-}
-
-// IsDeployTime reports whether the pattern is deploy-time oscillation.
-func (p Pattern) IsDeployTime() bool {
-	return p == PatternDeployTime
-}
-
-// IsRandom reports whether the pattern is random oscillation.
-func (p Pattern) IsRandom() bool {
-	return p == PatternRandom
-}
-
-// IsChronic reports whether the pattern is chronic violation.
-func (p Pattern) IsChronic() bool {
-	return p == PatternChronic
-}
-
-// IsSeasonal reports whether the pattern is seasonal oscillation.
-func (p Pattern) IsSeasonal() bool {
-	return p == PatternSeasonal
-}
-
 // FailureRate represents the ratio of failing assessments over total assessments evaluated (0.0 to 1.0).
 type FailureRate float64
 
@@ -53,18 +28,18 @@ func (fr FailureRate) Value() float64 {
 	return float64(fr)
 }
 
-// Percentage returns the failure rate expressed as a percentage value (between 0.0 and 100.0).
-func (fr FailureRate) Percentage() float64 {
-	return float64(fr) * 100.0
-}
-
 // IsChronic reports whether the failure rate exceeds the chronic threshold (80%).
 func (fr FailureRate) IsChronic() bool {
 	return fr > 0.8
 }
 
-// IsClean reports whether there were zero observed failures.
-func (fr FailureRate) IsClean() bool {
+// IsViolationFree reports whether there were zero observed failures.
+func (fr FailureRate) IsViolationFree() bool {
+	return fr == 0.0
+}
+
+// AlwaysPasses reports whether all observed evaluations passed (0.0 failure rate).
+func (fr FailureRate) AlwaysPasses() bool {
 	return fr == 0.0
 }
 
@@ -77,19 +52,9 @@ func (c ConfidenceScore) Value() float64 { return float64(c) }
 // Float64 returns the raw float64 value.
 func (c ConfidenceScore) Float64() float64 { return float64(c) }
 
-// Percentage returns the confidence score expressed as a percentage (between 0.0 and 100.0).
-func (c ConfidenceScore) Percentage() float64 {
-	return float64(c) * 100.0
-}
-
 // IsHigh reports whether the confidence score meets or exceeds the given threshold.
 func (c ConfidenceScore) IsHigh(threshold ConfidenceScore) bool {
 	return c >= threshold
-}
-
-// IsLow reports whether the confidence score is below 0.5.
-func (c ConfidenceScore) IsLow() bool {
-	return c < 0.5
 }
 
 // Classification describes the oscillation pattern for a control-asset pair.
@@ -100,26 +65,6 @@ type Classification struct {
 	Confidence  ConfidenceScore  `json:"confidence"`
 	FailureRate FailureRate      `json:"failure_rate"`
 	Cycles      int              `json:"cycles"`
-}
-
-// IsChronic reports whether the classification is chronic.
-func (c Classification) IsChronic() bool {
-	return c.Pattern.IsChronic()
-}
-
-// IsDeployTime reports whether the classification is deploy-time.
-func (c Classification) IsDeployTime() bool {
-	return c.Pattern.IsDeployTime()
-}
-
-// HasOscillations reports whether state transitions were observed.
-func (c Classification) HasOscillations() bool {
-	return c.Cycles > 0
-}
-
-// IsHighConfidence reports whether the confidence score meets or exceeds the threshold.
-func (c Classification) IsHighConfidence(threshold ConfidenceScore) bool {
-	return c.Confidence.IsHigh(threshold)
 }
 
 // Classifications is a domain collection of Classification items with domain methods.
@@ -138,72 +83,6 @@ func (cs Classifications) IsEmpty() bool {
 // HasClassifications reports whether the collection contains at least one classification.
 func (cs Classifications) HasClassifications() bool {
 	return len(cs) > 0
-}
-
-// FilterByPattern returns a new Classifications collection filtered by pattern.
-func (cs Classifications) FilterByPattern(p Pattern) Classifications {
-	if len(cs) == 0 {
-		return nil
-	}
-	var filtered Classifications
-	for i := range cs {
-		if cs[i].Pattern == p {
-			filtered = append(filtered, cs[i])
-		}
-	}
-	return filtered
-}
-
-// Chronic returns all classifications with chronic patterns.
-func (cs Classifications) Chronic() Classifications {
-	return cs.FilterByPattern(PatternChronic)
-}
-
-// DeployTime returns all classifications with deploy-time patterns.
-func (cs Classifications) DeployTime() Classifications {
-	return cs.FilterByPattern(PatternDeployTime)
-}
-
-// ByControlID returns a new Classifications collection filtered by control ID.
-func (cs Classifications) ByControlID(id kernel.ControlID) Classifications {
-	if len(cs) == 0 {
-		return nil
-	}
-	var filtered Classifications
-	for i := range cs {
-		if cs[i].ControlID == id {
-			filtered = append(filtered, cs[i])
-		}
-	}
-	return filtered
-}
-
-// ByAssetID returns a new Classifications collection filtered by asset ID.
-func (cs Classifications) ByAssetID(id asset.ID) Classifications {
-	if len(cs) == 0 {
-		return nil
-	}
-	var filtered Classifications
-	for i := range cs {
-		if cs[i].AssetID == id {
-			filtered = append(filtered, cs[i])
-		}
-	}
-	return filtered
-}
-
-// HighConfidence returns a new Classifications collection filtered by confidence threshold.
-func (cs Classifications) HighConfidence(minConfidence ConfidenceScore) Classifications {
-	if len(cs) == 0 {
-		return nil
-	}
-	var filtered Classifications
-	for i := range cs {
-		if cs[i].Confidence.IsHigh(minConfidence) {
-			filtered = append(filtered, cs[i])
-		}
-	}
-	return filtered
 }
 
 // Input configures the oscillation classifier.

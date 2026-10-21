@@ -69,6 +69,14 @@ func (s *sevTally) breakdown() string {
 	return fmt.Sprintf("%d critical, %d high, %d medium, %d low", s.critical, s.high, s.medium, s.low)
 }
 
+func (s *sevTally) AllPassed() bool {
+	return s.total == 0
+}
+
+func (s *sevTally) HasFindings() bool {
+	return s.total > 0
+}
+
 func renderAllStaged(findingsJSON []byte, w io.Writer) error {
 	var doc stagedDoc
 	if err := json.Unmarshal(findingsJSON, &doc); err != nil {
@@ -96,7 +104,7 @@ func renderAllStaged(findingsJSON []byte, w io.Writer) error {
 	printStage(w, "[compound]", compound)
 
 	fmt.Fprintf(w, "\nSummary: %d total finding(s) (%s)\n", grand.total, grand.breakdown())
-	if grand.total == 0 {
+	if grand.AllPassed() {
 		fmt.Fprintf(w, "All evaluated controls passed.\n")
 	}
 	return nil

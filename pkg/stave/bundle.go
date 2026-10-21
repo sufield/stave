@@ -33,6 +33,11 @@ type EvidenceBundleResult struct {
 	ChainFindings int
 }
 
+// HasViolations reports whether any violations were detected in the bundle assessment.
+func (r EvidenceBundleResult) HasViolations() bool {
+	return r.Violations > 0
+}
+
 // BuildEvidenceBundle assembles a sealed evidence bundle from a `stave
 // apply` assessment (JSON) and the observation snapshots that produced it:
 // it parses the assessment, loads + prunes the snapshots, builds the

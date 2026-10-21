@@ -108,28 +108,6 @@ func (lf LapsedFindings) Len() int {
 	return len(lf)
 }
 
-// BumpedCount returns the number of findings whose severity was bumped due to threshold expiry.
-func (lf LapsedFindings) BumpedCount() int {
-	count := 0
-	for i := range lf {
-		if lf[i].SeverityBumpReason != "" {
-			count++
-		}
-	}
-	return count
-}
-
-// BySeverity returns a subset of lapsed findings matching the given severity.
-func (lf LapsedFindings) BySeverity(sev policy.Severity) LapsedFindings {
-	var filtered LapsedFindings
-	for i := range lf {
-		if lf[i].Severity == sev {
-			filtered = append(filtered, lf[i])
-		}
-	}
-	return filtered
-}
-
 // Input configures the lapse detection.
 type Input struct {
 	Findings []evaluation.Finding

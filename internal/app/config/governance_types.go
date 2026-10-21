@@ -59,13 +59,6 @@ func AllEnforcementGates() []string {
 	return []string{string(GateStrict), string(GateRegression), string(GateSLA)}
 }
 
-// IsSLAPolicy reports whether this gate is the SLA-fast-fail policy
-// (fail_on_overdue_upcoming). Replaces the (policy == GateSLA) probe
-// in cmd/enforce/gate so the literal stays on the type.
-func (g EnforcementGate) IsSLAPolicy() bool {
-	return g == GateSLA
-}
-
 // SkipsMaxUnsafe reports whether this gate policy bypasses the
 // max-unsafe-duration check. The SLA gate evaluates SLA-overdue and
 // upcoming-breach signals only, so it ignores max-unsafe; the other

@@ -75,7 +75,7 @@ func run(opts *options) error {
 		"assets_touched", stats.AssetsTouched,
 		"rules_applied", stats.RulesApplied,
 		"account_id_hashes", stats.AccountIDHashes)
-	if stats.AssetsTouched == 0 {
+	if stats.IsNoOp() {
 		slog.Warn("sanitize: no assets matched — input may be empty or rules may be mis-targeted")
 	}
 

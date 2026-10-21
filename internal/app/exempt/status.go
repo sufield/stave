@@ -37,48 +37,6 @@ func (items ExpiryItems) Len() int {
 	return len(items)
 }
 
-// ByControl returns a subset of items matching the control ID.
-func (items ExpiryItems) ByControl(controlID kernel.ControlID) ExpiryItems {
-	if len(items) == 0 {
-		return nil
-	}
-	var filtered ExpiryItems
-	for i := range items {
-		if items[i].ControlID == controlID {
-			filtered = append(filtered, items[i])
-		}
-	}
-	return filtered
-}
-
-// Expired returns only the items that have already expired.
-func (items ExpiryItems) Expired() ExpiryItems {
-	if len(items) == 0 {
-		return nil
-	}
-	var filtered ExpiryItems
-	for i := range items {
-		if items[i].DaysRemaining.IsExpired() {
-			filtered = append(filtered, items[i])
-		}
-	}
-	return filtered
-}
-
-// ExpiringSoon returns only the items expiring within 30 days.
-func (items ExpiryItems) ExpiringSoon() ExpiryItems {
-	if len(items) == 0 {
-		return nil
-	}
-	var filtered ExpiryItems
-	for i := range items {
-		if items[i].DaysRemaining.IsExpiringSoon() {
-			filtered = append(filtered, items[i])
-		}
-	}
-	return filtered
-}
-
 // ResolvedItem describes an exemption where the finding no longer exists.
 type ResolvedItem struct {
 	ControlID      kernel.ControlID `json:"control_id"`
@@ -93,20 +51,6 @@ type ResolvedItems []ResolvedItem
 // Len returns the number of resolved items in the collection.
 func (items ResolvedItems) Len() int {
 	return len(items)
-}
-
-// ByControl returns a subset of resolved items matching the control ID.
-func (items ResolvedItems) ByControl(controlID kernel.ControlID) ResolvedItems {
-	if len(items) == 0 {
-		return nil
-	}
-	var filtered ResolvedItems
-	for i := range items {
-		if items[i].ControlID == controlID {
-			filtered = append(filtered, items[i])
-		}
-	}
-	return filtered
 }
 
 // ComputeStatus analyzes exemption health.

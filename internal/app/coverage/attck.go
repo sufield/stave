@@ -136,20 +136,6 @@ func (tcs TacticsCoverage) Len() int {
 	return len(tcs)
 }
 
-// Covered returns tactics that meet or exceed the thin coverage threshold.
-func (tcs TacticsCoverage) Covered() TacticsCoverage {
-	if len(tcs) == 0 {
-		return nil
-	}
-	var filtered TacticsCoverage
-	for i := range tcs {
-		if tcs[i].IsCovered() {
-			filtered = append(filtered, tcs[i])
-		}
-	}
-	return filtered
-}
-
 // Gaps returns tactics that are coverage gaps (no coverage or thin coverage).
 func (tcs TacticsCoverage) Gaps() TacticsCoverage {
 	if len(tcs) == 0 {
@@ -162,16 +148,6 @@ func (tcs TacticsCoverage) Gaps() TacticsCoverage {
 		}
 	}
 	return filtered
-}
-
-// ByTacticID returns the tactic coverage matching the given tactic ID, or nil if not found.
-func (tcs TacticsCoverage) ByTacticID(id string) *TacticCoverage {
-	for i := range tcs {
-		if tcs[i].TacticID == id {
-			return &tcs[i]
-		}
-	}
-	return nil
 }
 
 // StaveOnlyTactics is a domain collection of StaveOnlyTactic items with query methods.

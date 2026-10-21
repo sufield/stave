@@ -332,6 +332,54 @@ type AttestationSummary struct {
 	Regressions        int `json:"regressions"`
 }
 
+// HasRegressions reports whether any regressions were introduced.
+func (s AttestationSummary) HasRegressions() bool {
+	return s.Regressions > 0
+}
+
+// HasOpen reports whether any violations remain open.
+func (s AttestationSummary) HasOpen() bool {
+	return s.Open > 0
+}
+
+// IsRegressionFree reports whether remediation introduced no regressions.
+func (s AttestationSummary) IsRegressionFree() bool {
+	return !s.HasRegressions()
+}
+
+// HasViolations reports whether any outstanding violations (open or regression) exist.
+func (s AttestationSummary) HasViolations() bool {
+	return s.Open > 0 || s.Regressions > 0
+}
+
+// TotalOutstanding returns the sum of open and regression violations.
+func (s AttestationSummary) TotalOutstanding() int {
+	return s.Open + s.Regressions
+}
+
+// HasRegressions reports whether any regressions were introduced.
+func (a *Attestation) HasRegressions() bool {
+	return a != nil && a.Summary.HasRegressions()
+}
+
+// IsRegressionFree reports whether remediation introduced no regressions.
+func (a *Attestation) IsRegressionFree() bool {
+	return a != nil && a.Summary.IsRegressionFree()
+}
+
+// HasViolations reports whether any outstanding violations exist.
+func (a *Attestation) HasViolations() bool {
+	return a != nil && a.Summary.HasViolations()
+}
+
+// TotalOutstanding returns the count of remaining and introduced violations.
+func (a *Attestation) TotalOutstanding() int {
+	if a == nil {
+		return 0
+	}
+	return a.Summary.TotalOutstanding()
+}
+
 // AttestationEntry identifies a specific resource-control pairing.
 type AttestationEntry struct {
 	ControlID   kernel.ControlID `json:"control_id"`

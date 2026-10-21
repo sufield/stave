@@ -79,39 +79,3 @@ func TestPredict_AlreadyMeetsTarget(t *testing.T) {
 		t.Errorf("should project today when already meeting target (readiness=%.1f)", p.CurrentReadiness)
 	}
 }
-
-func TestAccelerators_CollectionMethods(t *testing.T) {
-	accs := Accelerators{
-		{Description: "Fix criticals", DaysSaved: 10},
-		{Description: "Fix highs", DaysSaved: 5},
-	}
-
-	if accs.Len() != 2 {
-		t.Errorf("accs.Len() = %d, want 2", accs.Len())
-	}
-
-	if accs.TotalDaysSaved() != 15 {
-		t.Errorf("TotalDaysSaved = %d, want 15", accs.TotalDaysSaved())
-	}
-}
-
-func TestControlIDs_DomainMethods(t *testing.T) {
-	ids := ControlIDs{"CTL.A.001", "CTL.B.002"}
-
-	if ids.Len() != 2 {
-		t.Errorf("ids.Len() = %d, want 2", ids.Len())
-	}
-
-	if !ids.Contains("CTL.A.001") {
-		t.Errorf("Contains(CTL.A.001) = false, want true")
-	}
-
-	if ids.Contains("CTL.C.003") {
-		t.Errorf("Contains(CTL.C.003) = true, want false")
-	}
-
-	var empty ControlIDs
-	if empty.Len() != 0 || empty.Contains("CTL.A.001") {
-		t.Errorf("empty ControlIDs methods failed")
-	}
-}

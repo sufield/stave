@@ -19,19 +19,6 @@ func (r ReadinessPercentage) Value() float64 {
 	return float64(r)
 }
 
-// IsAuditReady reports whether the readiness percentage meets or exceeds the standard audit readiness threshold (90%).
-func (r ReadinessPercentage) IsAuditReady() bool {
-	return r >= 90.0
-}
-
-// Gap returns the percentage gap required to reach 100% full compliance readiness.
-func (r ReadinessPercentage) Gap() float64 {
-	if r >= 100.0 {
-		return 0.0
-	}
-	return 100.0 - float64(r)
-}
-
 // Clamp returns the readiness percentage constrained to the valid range [0.0, 100.0].
 func (r ReadinessPercentage) Clamp() ReadinessPercentage {
 	if r < 0 {
@@ -54,12 +41,110 @@ type FrameworkScore struct {
 	NextAction       kernel.ControlID           `json:"next_action,omitempty"`
 }
 
+// IsAuditReady reports whether the framework readiness meets or exceeds 90% with zero critical findings.
+func (fs FrameworkScore) IsAuditReady() bool {
+	return fs.ReadinessPct >= 90.0 && fs.CriticalFindings == 0
+}
+
+// IsPassing reports whether all controls evaluated in this framework passed.
+func (fs FrameworkScore) IsPassing() bool {
+	return fs.ControlsTotal > 0 && fs.ControlsFailing == 0
+}
+
+// HasFailing reports whether any controls are failing in this framework.
+func (fs FrameworkScore) HasFailing() bool {
+	return fs.ControlsFailing > 0
+}
+
+// HasCritical reports whether there are critical findings in this framework.
+func (fs FrameworkScore) HasCritical() bool {
+	return fs.CriticalFindings > 0
+}
+
+// HasNextAction reports whether a priority next remediation control is identified.
+func (fs FrameworkScore) HasNextAction() bool {
+	return fs.NextAction != ""
+}
+
+// PassingRatio returns the fraction of passing controls over total controls (0.0 to 1.0).
+func (fs FrameworkScore) PassingRatio() float64 {
+	if fs.ControlsTotal <= 0 {
+		return 1.0
+	}
+	return float64(fs.ControlsPassing) / float64(fs.ControlsTotal)
+}
+
+// FailingRatio returns the fraction of failing controls over total controls (0.0 to 1.0).
+func (fs FrameworkScore) FailingRatio() float64 {
+	if fs.ControlsTotal <= 0 {
+		return 0.0
+	}
+	return float64(fs.ControlsFailing) / float64(fs.ControlsTotal)
+}
+
 // FrameworkScores is a domain collection of FrameworkScore items with querying methods.
 type FrameworkScores []FrameworkScore
 
 // Len returns the number of framework scores in the collection.
 func (fs FrameworkScores) Len() int {
 	return len(fs)
+}
+
+// IsEmpty reports whether the collection contains no framework scores.
+func (fs FrameworkScores) IsEmpty() bool {
+	return len(fs) == 0
+}
+
+// AuditReady returns the subset of framework scores meeting the audit readiness threshold.
+func (fs FrameworkScores) AuditReady() FrameworkScores {
+	if len(fs) == 0 {
+		return nil
+	}
+	var out FrameworkScores
+	for _, score := range fs {
+		if score.IsAuditReady() {
+			out = append(out, score)
+		}
+	}
+	return out
+}
+
+// WithCritical returns framework scores that contain critical findings.
+func (fs FrameworkScores) WithCritical() FrameworkScores {
+	if len(fs) == 0 {
+		return nil
+	}
+	var out FrameworkScores
+	for _, score := range fs {
+		if score.HasCritical() {
+			out = append(out, score)
+		}
+	}
+	return out
+}
+
+// Frameworks returns the list of compliance frameworks represented in the scores.
+func (fs FrameworkScores) Frameworks() ComplianceFrameworks {
+	if len(fs) == 0 {
+		return nil
+	}
+	out := make(ComplianceFrameworks, len(fs))
+	for i, score := range fs {
+		out[i] = score.Framework
+	}
+	return out
+}
+
+// AverageReadiness calculates the mean readiness percentage across all frameworks.
+func (fs FrameworkScores) AverageReadiness() ReadinessPercentage {
+	if len(fs) == 0 {
+		return 100.0
+	}
+	var total float64
+	for _, score := range fs {
+		total += score.ReadinessPct.Value()
+	}
+	return ReadinessPercentage(total / float64(len(fs)))
 }
 
 // WorstReadiness returns the framework score with the lowest readiness percentage, or nil if empty.
@@ -74,16 +159,6 @@ func (fs FrameworkScores) WorstReadiness() *FrameworkScore {
 		}
 	}
 	return worst
-}
-
-// ByFramework returns the score for a specific compliance framework, or nil if not found.
-func (fs FrameworkScores) ByFramework(fw policy.ComplianceFramework) *FrameworkScore {
-	for i := range fs {
-		if fs[i].Framework == fw {
-			return &fs[i]
-		}
-	}
-	return nil
 }
 
 // ComplianceFrameworks is a domain collection of policy.ComplianceFramework items with query methods.
@@ -103,6 +178,45 @@ func (cfs ComplianceFrameworks) Contains(fw policy.ComplianceFramework) bool {
 type Report struct {
 	GeneratedAt string          `json:"generated_at"`
 	Frameworks  FrameworkScores `json:"frameworks"`
+}
+
+// IsEmpty reports whether the report has no framework scores.
+func (r *Report) IsEmpty() bool {
+	return r == nil || r.Frameworks.IsEmpty()
+}
+
+// FrameworkCount returns the number of frameworks in the report.
+func (r *Report) FrameworkCount() int {
+	if r == nil {
+		return 0
+	}
+	return r.Frameworks.Len()
+}
+
+// WorstReadiness returns the framework score with the lowest readiness, or nil if empty.
+func (r *Report) WorstReadiness() *FrameworkScore {
+	if r == nil {
+		return nil
+	}
+	return r.Frameworks.WorstReadiness()
+}
+
+// HasCriticalFindings reports whether any framework has critical findings.
+func (r *Report) HasCriticalFindings() bool {
+	return r != nil && !r.Frameworks.WithCritical().IsEmpty()
+}
+
+// IsAuditReady reports whether all frameworks in the report meet audit readiness (and report is non-empty).
+func (r *Report) IsAuditReady() bool {
+	if r == nil || r.Frameworks.IsEmpty() {
+		return false
+	}
+	for _, f := range r.Frameworks {
+		if !f.IsAuditReady() {
+			return false
+		}
+	}
+	return true
 }
 
 // Compute builds a scorecard across multiple frameworks.
