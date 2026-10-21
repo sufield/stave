@@ -52,6 +52,20 @@ func (af ARFindings) Len() int {
 	return len(af)
 }
 
+// ByControl returns findings matching the given control ID.
+func (af ARFindings) ByControl(id kernel.ControlID) ARFindings {
+	if len(af) == 0 {
+		return nil
+	}
+	var filtered ARFindings
+	for i := range af {
+		if af[i].Target.TargetID == id {
+			filtered = append(filtered, af[i])
+		}
+	}
+	return filtered
+}
+
 // ARObservations is a domain collection of ARObservation items with query methods.
 type ARObservations []ARObservation
 

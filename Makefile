@@ -383,7 +383,7 @@ lint-patterns:
 	if [ -z "$$CHANGED" ]; then \
 		echo "lint-patterns: no changed Go files"; \
 	else \
-		FILES=$$(echo "$$CHANGED" | grep -v '_test\.go$$' | grep -v '/tools/' | grep -v '/iam/arn\.go$$'); \
+		FILES=$$(echo "$$CHANGED" | grep -v '_test\.go$$' | grep -v '/tools/' | grep -v '/iam/arn\.go$$' | grep -v '^vendor/'); \
 		if [ -z "$$FILES" ]; then \
 			echo "lint-patterns: no scannable Go files (all test/tool/canonical)"; \
 		else \
