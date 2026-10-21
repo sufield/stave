@@ -37,10 +37,10 @@ Golden file comparisons (`make e2e`, `cmd/apply/verify/determinism_test.go`, `cm
 
 ### Version propagation
 
-The Go version is pinned in `go.mod` (`go 1.27.2`) and read everywhere else:
+The Go version is pinned in `go.mod` (`go 1.27.3`) and read everywhere else:
 
 ```
-go.mod (go 1.27.2)
+go.mod (go 1.27.3)
   ├── CI workflows:    go-version-file: 'go.mod'
   ├── Dockerfile:      ARG GO_VERSION  ← Makefile reads from go.mod
   └── versions.md:     rationale only

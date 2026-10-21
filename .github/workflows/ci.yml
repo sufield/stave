@@ -357,16 +357,16 @@ jobs:
       - name: Verify Go version
         # Positive assertion: setup-go must install exactly the
         # patch release `go.mod`'s toolchain directive specifies
-        # (currently go1.27.2). A negative-only check
+        # (currently go1.27.3). A negative-only check
         # would silently pass on any other patch — including an
         # older vulnerable one — so we assert intent here.
         run: |
           go version
-          go version | grep -q 'go1.27.2'
+          go version | grep -q 'go1.27.3'
       - name: Install govulncheck
         # Run govulncheck directly instead of golang/govulncheck-action
         # so we use the Go installed by the explicit setup-go above
-        # (1.27.2). The wrapper action invokes its own internal
+        # (1.27.3). The wrapper action invokes its own internal
         # setup-go with `go-version: stable` and silently overrides
         # any `go-version-file` we pass.
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
