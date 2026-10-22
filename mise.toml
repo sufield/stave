@@ -1,0 +1,19 @@
+[tools]
+go = "1.27.3"
+"golangci-lint" = "2.14.0"
+
+[tasks.build]
+description = "Build Stave"
+run = "make build"
+
+[tasks.test]
+description = "Run Stave tests"
+run = "make test"
+
+[tasks.lint]
+description = "Run linter"
+run = "make lint"
+
+[tasks.check]
+description = "Build + test + lint"
+run = "make check"

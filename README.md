@@ -25,6 +25,14 @@ Or build from source:
 git clone https://github.com/sufield/stave.git && cd stave && make build
 ```
 
+### One-command setup with [mise](https://mise.jdx.dev/)
+
+```bash
+git clone https://github.com/sufield/stave.git && cd stave
+mise install   # installs Go 1.27.3 and golangci-lint 2.14.0
+make build
+```
+
 For zero-setup options, click **Open in GitHub Codespaces** above, or see [`stave-workspace/README.md`](stave-workspace/README.md) for Coder workspaces and Docker.
 
 ## Quick Start
