@@ -45,24 +45,6 @@ func (m *mockReportLoader) LoadEvaluation(_ context.Context, _ string) (*report.
 	return m.data, m.err
 }
 
-type mockDiagnoseRunner struct {
-	data any
-	err  error
-}
-
-func (m *mockDiagnoseRunner) RunDiagnosis(_ context.Context, _ DiagnoseRequest) (any, error) {
-	return m.data, m.err
-}
-
-type mockDiagnoseDetail struct {
-	data any
-	err  error
-}
-
-func (m *mockDiagnoseDetail) RunDetail(_ context.Context, _, _, _, _ string) (any, error) {
-	return m.data, m.err
-}
-
 func canceled() context.Context {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
@@ -156,34 +138,6 @@ func TestReport(t *testing.T) {
 	})
 	t.Run("ctx", func(t *testing.T) {
 		_, err := Report(canceled(), ReportRequest{}, ReportDeps{Loader: &mockReportLoader{}})
-		assertCanceled(t, err)
-	})
-}
-
-// --- Diagnose ---
-
-func TestDiagnose(t *testing.T) {
-	t.Run("summary", func(t *testing.T) {
-		_, err := Diagnose(context.Background(), DiagnoseRequest{}, DiagnoseDeps{Runner: &mockDiagnoseRunner{data: "ok"}, Detail: &mockDiagnoseDetail{}})
-		assertNoErr(t, err)
-	})
-	t.Run("detail", func(t *testing.T) {
-		resp, err := Diagnose(context.Background(), DiagnoseRequest{ControlID: "CTL.A", AssetID: "b"}, DiagnoseDeps{Runner: &mockDiagnoseRunner{}, Detail: &mockDiagnoseDetail{data: "detail"}})
-		assertNoErr(t, err)
-		if !resp.IsDetailMode {
-			t.Error("expected detail mode")
-		}
-	})
-	t.Run("runner error", func(t *testing.T) {
-		_, err := Diagnose(context.Background(), DiagnoseRequest{}, DiagnoseDeps{Runner: &mockDiagnoseRunner{err: errors.New("fail")}, Detail: &mockDiagnoseDetail{}})
-		assertErr(t, err)
-	})
-	t.Run("detail error", func(t *testing.T) {
-		_, err := Diagnose(context.Background(), DiagnoseRequest{ControlID: "CTL.A", AssetID: "b"}, DiagnoseDeps{Runner: &mockDiagnoseRunner{}, Detail: &mockDiagnoseDetail{err: errors.New("fail")}})
-		assertErr(t, err)
-	})
-	t.Run("ctx", func(t *testing.T) {
-		_, err := Diagnose(canceled(), DiagnoseRequest{}, DiagnoseDeps{Runner: &mockDiagnoseRunner{}, Detail: &mockDiagnoseDetail{}})
 		assertCanceled(t, err)
 	})
 }

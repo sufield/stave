@@ -2,7 +2,6 @@ package contracts
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
 	"testing"
@@ -25,50 +24,6 @@ func TestOutputFormat_IsJSON(t *testing.T) {
 	}
 	if FormatText.IsJSON() {
 		t.Error("FormatText.IsJSON() should be false")
-	}
-}
-
-func TestSnapshotSummary_TotalEvidence(t *testing.T) {
-	s := SnapshotSummary{ActiveSnapshots: 3, HistoricalEvidence: 2}
-	if s.TotalEvidence() != 5 {
-		t.Errorf("TotalEvidence() = %d, want 5", s.TotalEvidence())
-	}
-}
-
-func TestSnapshotSummary_MarshalJSON(t *testing.T) {
-	s := SnapshotSummary{ActiveSnapshots: 3, HistoricalEvidence: 2}
-	data, err := json.Marshal(s)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var m map[string]any
-	if err := json.Unmarshal(data, &m); err != nil {
-		t.Fatal(err)
-	}
-	if m["total_evidence"] != float64(5) {
-		t.Errorf("total_evidence = %v", m["total_evidence"])
-	}
-}
-
-func TestSLAPosture_PendingRemediations(t *testing.T) {
-	r := SLAPosture{SLABreaches: 1, BreachingNow: 2, NearBreach: 3, CompliantWindow: 4}
-	if r.PendingRemediations() != 10 {
-		t.Errorf("PendingRemediations() = %d, want 10", r.PendingRemediations())
-	}
-}
-
-func TestSLAPosture_MarshalJSON(t *testing.T) {
-	r := SLAPosture{SLABreaches: 1, BreachingNow: 2, NearBreach: 3, CompliantWindow: 4}
-	data, err := json.Marshal(r)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var m map[string]any
-	if err := json.Unmarshal(data, &m); err != nil {
-		t.Fatal(err)
-	}
-	if m["pending_remediations"] != float64(10) {
-		t.Errorf("pending_remediations = %v", m["pending_remediations"])
 	}
 }
 

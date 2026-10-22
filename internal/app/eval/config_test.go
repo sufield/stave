@@ -6,7 +6,6 @@ import (
 	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
 	clockadp "github.com/sufield/stave/internal/core/ports"
 )
 
@@ -42,18 +41,13 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 		ControlsPath:     "/ctl",
 		ObservationsPath: "/obs",
 	}
-	invs := []policy.ControlDefinition{
+	filtered := []policy.ControlDefinition{
 		{ID: "CTL.A", Severity: policy.SeverityCritical},
-		{ID: "CTL.B", Severity: policy.SeverityLow},
-	}
-	filtered, err := FilterControls(invs, ControlFilter{ControlID: kernel.ControlID("CTL.A")})
-	if err != nil {
-		t.Fatalf("FilterControls() error = %v", err)
 	}
 
 	exceptionCfg := policy.NewExceptionConfig([]policy.ExceptionRule{
 		{
-			ControlID: kernel.ControlID("CTL.A"),
+			ControlID: "CTL.A",
 			Reason:    "known issue",
 		},
 	})

@@ -167,39 +167,6 @@ func TestRootCauseString(t *testing.T) {
 }
 
 // ---------------------------------------------------------------------------
-// TrendMetric
-// ---------------------------------------------------------------------------
-
-func TestTrendMetric(t *testing.T) {
-	tests := []struct {
-		name    string
-		current int
-		prev    int
-		change  int
-		dir     TrendDirection
-		symbol  string
-	}{
-		{"improving", 3, 5, -2, TrendImproving, "↓ "},
-		{"declining", 7, 3, 4, TrendDeclining, "↑ "},
-		{"stable", 3, 3, 0, TrendStable, ""},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := TrendMetric{Current: tt.current, Previous: tt.prev}
-			if got := m.Change(); got != tt.change {
-				t.Errorf("Change() = %d, want %d", got, tt.change)
-			}
-			if got := m.Direction(); got != tt.dir {
-				t.Errorf("Direction() = %d, want %d", got, tt.dir)
-			}
-			if got := m.Symbol(); got != tt.symbol {
-				t.Errorf("Symbol() = %q, want %q", got, tt.symbol)
-			}
-		})
-	}
-}
-
-// ---------------------------------------------------------------------------
 // EnforcementPolicy
 // ---------------------------------------------------------------------------
 

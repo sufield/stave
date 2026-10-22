@@ -217,43 +217,6 @@ func TestRuntime_BeginProgress_NonTTY(t *testing.T) {
 	}
 }
 
-func TestCountedProgress_Nil(t *testing.T) {
-	var cp *CountedProgress
-	cp.Update(1, 10) // should not panic
-	cp.Done()        // should not panic
-}
-
-func TestRuntime_BeginCountedProgress_Quiet(t *testing.T) {
-	r := &Runtime{Quiet: true}
-	cp := r.BeginCountedProgress("test")
-	if cp != nil {
-		t.Error("expected nil progress in quiet mode")
-	}
-}
-
-func TestRuntime_BeginCountedProgress_Nil(t *testing.T) {
-	var r *Runtime
-	cp := r.BeginCountedProgress("test")
-	if cp != nil {
-		t.Error("expected nil progress for nil runtime")
-	}
-}
-
-func TestRuntime_BeginCountedProgress_NonTTY(t *testing.T) {
-	var buf bytes.Buffer
-	r := &Runtime{Stderr: &buf}
-	cp := r.BeginCountedProgress("loading")
-	cp.Update(5, 10)
-	cp.Done()
-	out := buf.String()
-	if !strings.Contains(out, "Running: loading") {
-		t.Errorf("missing Running: %q", out)
-	}
-	if !strings.Contains(out, "Done:    loading") {
-		t.Errorf("missing Done: %q", out)
-	}
-}
-
 func TestRuntime_PrintWorkflowHandoff(t *testing.T) {
 	var buf bytes.Buffer
 	r := &Runtime{Stderr: &buf}

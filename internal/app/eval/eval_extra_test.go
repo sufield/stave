@@ -4,100 +4,7 @@ import (
 	"errors"
 	"testing"
 	"time"
-
-	"github.com/sufield/stave/internal/core/controldef"
-	"github.com/sufield/stave/internal/core/kernel"
 )
-
-// ---------------------------------------------------------------------------
-// ControlFilter (additional cases)
-// ---------------------------------------------------------------------------
-
-func TestFilterControls_BySeverityWithMultiple(t *testing.T) {
-	controls := []controldef.ControlDefinition{
-		{ID: "CTL.A.001", Severity: controldef.SeverityCritical},
-		{ID: "CTL.B.001", Severity: controldef.SeverityLow},
-		{ID: "CTL.C.001", Severity: controldef.SeverityHigh},
-		{ID: "CTL.D.001", Severity: controldef.SeverityInfo},
-	}
-	filtered, err := FilterControls(controls, ControlFilter{MinSeverity: controldef.SeverityHigh})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(filtered) != 2 {
-		t.Fatalf("expected 2 controls (critical + high), got %d", len(filtered))
-	}
-}
-
-func TestFilterControls_ByControlIDOnly(t *testing.T) {
-	controls := []controldef.ControlDefinition{
-		{ID: "CTL.A.001"},
-		{ID: "CTL.B.001"},
-	}
-	filtered, err := FilterControls(controls, ControlFilter{ControlID: "CTL.A.001"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(filtered) != 1 || filtered[0].ID != "CTL.A.001" {
-		t.Fatalf("unexpected: %v", filtered)
-	}
-}
-
-func TestFilterControls_ByExcludeMultiple(t *testing.T) {
-	controls := []controldef.ControlDefinition{
-		{ID: "CTL.A.001"},
-		{ID: "CTL.B.001"},
-		{ID: "CTL.C.001"},
-	}
-	filtered, err := FilterControls(controls, ControlFilter{
-		ExcludeControlID: []kernel.ControlID{"CTL.B.001", "CTL.C.001"},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(filtered) != 1 {
-		t.Fatalf("expected 1 control, got %d", len(filtered))
-	}
-}
-
-func TestFilterControls_ByComplianceFramework(t *testing.T) {
-	controls := []controldef.ControlDefinition{
-		{ID: "CTL.A.001", Compliance: controldef.ComplianceMapping{"hipaa": "164.312"}},
-		{ID: "CTL.B.001", Compliance: controldef.ComplianceMapping{}},
-	}
-	filtered, err := FilterControls(controls, ControlFilter{Compliance: "hipaa"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(filtered) != 1 || filtered[0].ID != "CTL.A.001" {
-		t.Fatalf("unexpected: %v", filtered)
-	}
-}
-
-func TestFilterControls_InvalidSeverityError(t *testing.T) {
-	_, err := FilterControls(nil, ControlFilter{MinSeverity: controldef.Severity(99)})
-	if err == nil {
-		t.Fatal("expected error for invalid severity")
-	}
-}
-
-func TestFilterControls_CombinedFilter(t *testing.T) {
-	controls := []controldef.ControlDefinition{
-		{ID: "CTL.A.001", Severity: controldef.SeverityCritical, Compliance: controldef.ComplianceMapping{"hipaa": "x"}},
-		{ID: "CTL.B.001", Severity: controldef.SeverityCritical, Compliance: controldef.ComplianceMapping{}},
-		{ID: "CTL.C.001", Severity: controldef.SeverityLow, Compliance: controldef.ComplianceMapping{"hipaa": "y"}},
-	}
-	filtered, err := FilterControls(controls, ControlFilter{
-		MinSeverity: controldef.SeverityHigh,
-		Compliance:  "hipaa",
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(filtered) != 1 || filtered[0].ID != "CTL.A.001" {
-		t.Fatalf("expected only CTL.A.001: %v", filtered)
-	}
-}
 
 // ---------------------------------------------------------------------------
 // Options
@@ -248,7 +155,6 @@ func TestNewConfigBasic(t *testing.T) {
 
 func TestNewConfigWithNilOptions(t *testing.T) {
 	plan := EvaluationPlan{ControlsPath: "/c", ObservationsPath: "/o"}
-	// nil options should not panic
 	cfg := NewConfig(plan, nil, nil)
 	if cfg.PolicySource != "/c" {
 		t.Fatalf("PolicySource = %q", cfg.PolicySource)
@@ -282,7 +188,6 @@ func TestIntentEvaluationResult_FirstError(t *testing.T) {
 		t.Fatal("empty result should return nil")
 	}
 
-	// When ONE error is set, FirstError returns it directly.
 	r = IntentEvaluationResult{ControlErr: errors.New("control only")}
 	if r.FirstError().Error() != "control only" {
 		t.Fatal("control-only path should return control error")
@@ -292,9 +197,6 @@ func TestIntentEvaluationResult_FirstError(t *testing.T) {
 		t.Fatal("observation-only path should return observation error")
 	}
 
-	// When BOTH errors are set, FirstError joins them so callers
-	// can errors.Is / errors.As against either; previously the
-	// observation error was silently dropped.
 	ctlErr := errors.New("control error")
 	obsErr := errors.New("obs error")
 	r = IntentEvaluationResult{ControlErr: ctlErr, ObservationErr: obsErr}

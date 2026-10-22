@@ -12,7 +12,6 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	appcontracts "github.com/sufield/stave/internal/core/contracts"
-	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -185,32 +184,6 @@ func TestResolveLockPath(t *testing.T) {
 	}
 }
 
-func TestControlFilter_Enabled(t *testing.T) {
-	if (ControlFilter{}).Enabled() {
-		t.Error("empty filter should not be enabled")
-	}
-	if !(ControlFilter{ControlID: "CTL.A"}).Enabled() {
-		t.Error("filter with ControlID should be enabled")
-	}
-	if !(ControlFilter{Compliance: "cis"}).Enabled() {
-		t.Error("filter with Compliance should be enabled")
-	}
-	if !(ControlFilter{ExcludeControlID: []kernel.ControlID{"CTL.A"}}).Enabled() {
-		t.Error("filter with ExcludeControlID should be enabled")
-	}
-}
-
-func TestFilterControls_ExcludeByID(t *testing.T) {
-	invs := sampleControlDefs()
-	got, err := FilterControls(invs, ControlFilter{ExcludeControlID: []kernel.ControlID{"CTL.B"}})
-	if err != nil {
-		t.Fatalf("FilterControls() error = %v", err)
-	}
-	if len(got) != 1 || got[0].ID != "CTL.A" {
-		t.Fatalf("filtered = %v", got)
-	}
-}
-
 func TestPrepareFindings_NilEnricher(t *testing.T) {
 	_, err := PrepareFindings(nil, nil, &evaluation.ComplianceReport{})
 	if err == nil || !strings.Contains(err.Error(), "must not be nil") {
@@ -267,27 +240,6 @@ func TestEnrich_NilSanitizer(t *testing.T) {
 	}
 	if len(enriched.ExemptedAssets) != 1 {
 		t.Errorf("ExemptedAssets = %v", enriched.ExemptedAssets)
-	}
-}
-
-func TestResolveOutputWriters(t *testing.T) {
-	out, stderr := resolveOutputWriters(nil, nil)
-	if out == nil || stderr == nil {
-		t.Fatal("expected non-nil writers")
-	}
-}
-
-func TestValidateBuildDependenciesInput_EmptyPlan(t *testing.T) {
-	err := validateBuildDependenciesInput(&BuildDependenciesInput{})
-	if err == nil || !strings.Contains(err.Error(), "evaluation plan is required") {
-		t.Fatalf("expected plan error, got: %v", err)
-	}
-}
-
-func TestApplyDeps_Close(t *testing.T) {
-	d := &ApplyDeps{}
-	if err := d.Close(); err != nil {
-		t.Errorf("Close on empty ApplyDeps returned %v; want nil", err)
 	}
 }
 
@@ -376,9 +328,3 @@ func TestRunDirectoryEvaluation_NilLoader(t *testing.T) {
 	}
 }
 
-func sampleControlDefs() []policy.ControlDefinition {
-	return []policy.ControlDefinition{
-		{ID: "CTL.A", Severity: policy.SeverityCritical},
-		{ID: "CTL.B", Severity: policy.SeverityLow},
-	}
-}

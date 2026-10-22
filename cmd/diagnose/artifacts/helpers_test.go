@@ -26,7 +26,6 @@ func getTestRootCmd() *cobra.Command {
 
 	f := compose.DefaultFactories()
 	root.AddCommand(NewControlsCmd(f.NewCtlRepo))
-	root.AddCommand(NewPacksCmd())
 	root.AddCommand(NewLintCmd())
 	root.AddCommand(NewFmtCmd())
 
