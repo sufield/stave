@@ -96,7 +96,7 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 	fmt.Fprintf(w, "After:  %s  (%d assets)\n\n",
 		r.AfterTime.Format("2006-01-02T15:04:05Z"), r.AfterAssets)
 
-	if len(r.PropertyChanges) > 0 {
+	if r.HasPropertyChanges() {
 		fmt.Fprintf(w, "PROPERTY CHANGES (%d)\n", len(r.PropertyChanges))
 		fmt.Fprintln(w, strings.Repeat("─", 55))
 
@@ -121,7 +121,7 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 		fmt.Fprintln(w)
 	}
 
-	if len(r.NewAssets) > 0 {
+	if r.HasNewAssets() {
 		fmt.Fprintf(w, "NEW ASSETS (%d)\n", len(r.NewAssets))
 		for i := range r.NewAssets {
 			a := &r.NewAssets[i]
@@ -131,7 +131,7 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 		fmt.Fprintln(w)
 	}
 
-	if len(r.RemovedAssets) > 0 {
+	if r.HasRemovedAssets() {
 		fmt.Fprintf(w, "REMOVED ASSETS (%d)\n", len(r.RemovedAssets))
 		for i := range r.RemovedAssets {
 			a := &r.RemovedAssets[i]

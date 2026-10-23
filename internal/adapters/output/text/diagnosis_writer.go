@@ -21,7 +21,7 @@ func WriteDiagnosisReport(w io.Writer, report *diagnosis.Report, labelFn LabelFu
 	if err := writeDiagnosisSummary(w, report); err != nil {
 		return err
 	}
-	if len(report.Issues) == 0 {
+	if report.IsEmpty() {
 		return writeNoDiagnosisIssues(w, labelFn)
 	}
 	return writeDiagnosesList(w, report.Issues, labelFn)

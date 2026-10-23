@@ -51,7 +51,7 @@ Exit Codes:
 			if rerr := renderer.Render(cmd.OutOrStdout(), resp); rerr != nil {
 				return fmt.Errorf("write output: %w", rerr)
 			}
-			if opts.FailOnNew && resp.HasNew {
+			if opts.FailOnNew && resp.HasRegressions() {
 				return ui.ErrViolationsFound
 			}
 			return nil

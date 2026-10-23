@@ -100,7 +100,7 @@ func (r *Runner) Run(ctx context.Context, cfg Config) error {
 	if err := p.RenderReport(report); err != nil {
 		return err
 	}
-	if len(report.Issues) > 0 {
+	if report.HasIssues() {
 		return ui.ErrDiagnosticsFound
 	}
 	return nil

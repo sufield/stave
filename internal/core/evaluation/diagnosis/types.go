@@ -49,6 +49,16 @@ type Report struct {
 	Summary Summary   `json:"summary"`
 }
 
+// HasIssues reports whether the diagnostic report contains any diagnostic issues.
+func (r *Report) HasIssues() bool {
+	return r != nil && len(r.Issues) > 0
+}
+
+// IsEmpty reports whether the diagnostic report contains no diagnostic issues.
+func (r *Report) IsEmpty() bool {
+	return !r.HasIssues()
+}
+
 // DiagnosticFinding is a lightweight view of an evaluation finding,
 // carrying only the fields the diagnosis package needs. This avoids
 // importing the evaluation package.

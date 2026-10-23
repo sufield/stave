@@ -35,14 +35,14 @@ func (TextRenderer) Render(w io.Writer, resp *stave.CIDiffResponse) error {
 	fmt.Fprintf(w, "  Resolved:           %d\n", resp.Summary.ResolvedFindings)
 	fmt.Fprintf(w, "  Unchanged:          %d\n\n", resp.Summary.UnchangedFindings)
 
-	if len(resp.NewFindings) > 0 {
+	if resp.HasRegressions() {
 		fmt.Fprintf(w, "New findings:\n")
 		for _, f := range resp.NewFindings {
 			fmt.Fprintf(w, "  %s on %s (%s)\n", f.ControlID, f.AssetID, f.AssetType)
 		}
 		fmt.Fprintln(w)
 	}
-	if len(resp.ResolvedFindings) > 0 {
+	if resp.HasResolvedFindings() {
 		fmt.Fprintf(w, "Resolved findings:\n")
 		for _, f := range resp.ResolvedFindings {
 			fmt.Fprintf(w, "  %s on %s (%s)\n", f.ControlID, f.AssetID, f.AssetType)

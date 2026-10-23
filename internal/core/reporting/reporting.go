@@ -69,6 +69,16 @@ type CIDiffResponse struct {
 	HasNew             bool              `json:"has_new"`
 }
 
+// HasRegressions reports whether new findings (regressions) were introduced compared to baseline.
+func (r *CIDiffResponse) HasRegressions() bool {
+	return r != nil && (r.HasNew || len(r.NewFindings) > 0)
+}
+
+// HasResolvedFindings reports whether previously failing findings have been resolved in current.
+func (r *CIDiffResponse) HasResolvedFindings() bool {
+	return r != nil && len(r.ResolvedFindings) > 0
+}
+
 // CIDiffSummary represents a cidiffsummary value.
 type CIDiffSummary struct {
 	BaselineFindings  int `json:"baseline_findings"`

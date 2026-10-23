@@ -107,12 +107,27 @@ type DiffResult struct {
 	ScopeWarning    *ScopeWarning   `json:"scope_warning,omitempty"`
 }
 
+// HasPropertyChanges reports whether any property changes were observed between snapshots.
+func (dr *DiffResult) HasPropertyChanges() bool {
+	return dr != nil && len(dr.PropertyChanges) > 0
+}
+
+// HasNewAssets reports whether any new assets appeared in the snapshot.
+func (dr *DiffResult) HasNewAssets() bool {
+	return dr != nil && len(dr.NewAssets) > 0
+}
+
+// HasRemovedAssets reports whether any assets were removed from the snapshot.
+func (dr *DiffResult) HasRemovedAssets() bool {
+	return dr != nil && len(dr.RemovedAssets) > 0
+}
+
 // HasDifferences reports whether there are any property changes, new assets, or removed assets.
 func (dr *DiffResult) HasDifferences() bool {
 	if dr == nil {
 		return false
 	}
-	return dr.PropertyChanges.Len() > 0 || dr.NewAssets.Len() > 0 || dr.RemovedAssets.Len() > 0
+	return dr.HasPropertyChanges() || dr.HasNewAssets() || dr.HasRemovedAssets()
 }
 
 // RiskSummary aggregates risk direction counts from property changes.
