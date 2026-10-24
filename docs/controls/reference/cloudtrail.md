@@ -337,6 +337,24 @@ CloudTrail is not configured to log S3 Vectors data events. S3 Vectors data-plan
 
 ---
 
+### CTL.CLOUDTRAIL.DATAEVENTS.BEDROCK.001
+
+**CloudTrail Data Events Not Enabled for Bedrock API Calls**
+
+- **Severity:** high
+- **Type:** unsafe_state
+- **Domain:** detection
+- **Compliance:** fedramp_moderate: AU-2; iso_27001_2022: A.8.15, A.8.16; nist_800_53_r5: AU-2, AU-3, AU-12; pci_dss_v4.0: 10.1, 10.2, 10.3; soc2: CC7.1, CC7.2;
+
+CloudTrail is not configured to log Bedrock data events (InvokeModel, InvokeModelWithResponseStream, Converse, Retrieve, RetrieveAndGenerate). Without data events for Bedrock, there is no record of which models were invoked, what prompts were sent, or which knowledge bases were queried. An attacker — or an unsanctioned internal user — can invoke foundation models, exfiltrate data through prompt responses, or abuse agent tool-use without any audit trail. Management events alone show model provisioning but not model usage.
+
+**Remediation:** Add a Bedrock data-event selector to the trail: aws cloudtrail put-event-selectors --trail-name <trail> --advanced-event-selectors '[{"Name":"Bedrock data events",
+   "FieldSelectors":[
+     {"Field":"eventCategory","Equals":["Data"]},
+     {"Field":"resources.type","Equals":["AWS::Bedrock::Model"]}]}]'.
+
+---
+
 ### CTL.CLOUDTRAIL.DATAEVENTS.S3.001
 
 **CloudTrail Data Events Not Enabled for Sensitive S3 Buckets**

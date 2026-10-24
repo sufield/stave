@@ -28,7 +28,6 @@ scope_tags:
 taxonomy:
   - compliance-mapping
   - logging
-  - ai-security
 subtractive_category:
   - S09
 type: unsafe_state
