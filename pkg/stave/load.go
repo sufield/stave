@@ -102,3 +102,8 @@ func (a *Assessment) SnapshotID() string {
 func (a *Assessment) HasFindings() bool {
 	return a != nil && len(a.Findings) > 0
 }
+
+// HasChainFindings reports whether the assessment carries at least one compound chain finding.
+func (a *Assessment) HasChainFindings() bool {
+	return a != nil && len(a.ChainFindings) > 0
+}

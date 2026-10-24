@@ -267,7 +267,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 
 	outcome := evaluation.EnforcementPolicy{}.Evaluate(report.SecurityState)
 
-	compoundOnly := !req.IncludeAtomic && len(report.ChainFindings) > 0
+	compoundOnly := !req.IncludeAtomic && report.HasChainFindings()
 
 	var unchainedCount int
 	if compoundOnly {
@@ -379,7 +379,7 @@ func renderReport(ctx context.Context, format string, verbose bool, includeAtomi
 		if enrichErr != nil {
 			return enriched, fmt.Errorf("enrich findings: %w", enrichErr)
 		}
-		if !includeAtomic && len(rep.ChainFindings) > 0 {
+		if !includeAtomic && rep.HasChainFindings() {
 			enriched.Result.CompoundOnlyMode = true
 			enriched.Result.SuppressedAtomicCount = atomicCount
 			enriched.Result.SuppressedBySeverity = &severityCounts

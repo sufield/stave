@@ -108,6 +108,34 @@ type Result struct {
 	SnapshotTime     time.Time          `json:"snapshot_time"`
 }
 
+// HasNewFindings reports whether any new findings were detected in this assessment.
+func (r *Result) HasNewFindings() bool {
+	return r != nil && len(r.NewFindings) > 0
+}
+
+// HasReturnedFindings reports whether any findings returned after absence.
+func (r *Result) HasReturnedFindings() bool {
+	return r != nil && len(r.ReturnedFindings) > 0
+}
+
+// HasResolvedFindings reports whether any previously seen findings were resolved.
+func (r *Result) HasResolvedFindings() bool {
+	return r != nil && len(r.ResolvedFindings) > 0
+}
+
+// HasRecentFindings reports whether there are either new or returned findings.
+func (r *Result) HasRecentFindings() bool {
+	return r.HasNewFindings() || r.HasReturnedFindings()
+}
+
+// TotalRecentCount returns the combined count of new and returned findings.
+func (r *Result) TotalRecentCount() int {
+	if r == nil {
+		return 0
+	}
+	return len(r.NewFindings) + len(r.ReturnedFindings)
+}
+
 // Input configures the classification.
 type Input struct {
 	// Current assessment findings.

@@ -91,6 +91,31 @@ func (r *ResolvedPermissions) PrivilegeBucket() string {
 	}
 }
 
+// HasEffectiveAllows reports whether the principal has any effective allowed actions.
+func (r *ResolvedPermissions) HasEffectiveAllows() bool {
+	return r != nil && len(r.EffectiveAllow) > 0
+}
+
+// HasExplicitDenies reports whether the principal has any explicit deny actions.
+func (r *ResolvedPermissions) HasExplicitDenies() bool {
+	return r != nil && len(r.ExplicitDeny) > 0
+}
+
+// HasSCPBlocked reports whether any actions were blocked by SCP ceiling.
+func (r *ResolvedPermissions) HasSCPBlocked() bool {
+	return r != nil && len(r.SCPBlocked) > 0
+}
+
+// HasBoundaryBlocked reports whether any actions were blocked by permissions boundary ceiling.
+func (r *ResolvedPermissions) HasBoundaryBlocked() bool {
+	return r != nil && len(r.BoundaryBlocked) > 0
+}
+
+// HasRoleChains reports whether any role chains were resolved for this principal.
+func (r *ResolvedPermissions) HasRoleChains() bool {
+	return r != nil && len(r.RoleChains) > 0
+}
+
 // ResolutionInput holds the policy data for a single principal.
 type ResolutionInput struct {
 	PrincipalARN     string

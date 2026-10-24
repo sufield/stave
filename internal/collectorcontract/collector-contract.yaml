@@ -1792,6 +1792,11 @@ contracts:
     consumers:
       - CTL.CLOUDTRAIL.GHOST.SNSTOPIC.001
 
+  - field: audit.cloudtrail.has_bedrock_data_event_gap
+    type: boolean
+    consumers:
+      - CTL.CLOUDTRAIL.DATAEVENTS.BEDROCK.001
+
   - field: audit.cloudtrail.has_s3_data_event_gap
     type: boolean
     consumers:

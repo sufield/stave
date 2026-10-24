@@ -119,7 +119,7 @@ func renderPrincipalJSON(w io.Writer, result iam.ResolvedPermissions) error {
 	if result.Incomplete {
 		out["incomplete_reasons"] = result.IncompleteReasons
 	}
-	if len(result.EffectiveAllow) > 0 {
+	if result.HasEffectiveAllows() {
 		allows := make([]map[string]string, len(result.EffectiveAllow))
 		for i, a := range result.EffectiveAllow {
 			allows[i] = map[string]string{
@@ -130,10 +130,10 @@ func renderPrincipalJSON(w io.Writer, result iam.ResolvedPermissions) error {
 		}
 		out["effective_allow"] = allows
 	}
-	if len(result.SCPBlocked) > 0 {
+	if result.HasSCPBlocked() {
 		out["scp_ceiling"] = result.SCPBlocked
 	}
-	if len(result.BoundaryBlocked) > 0 {
+	if result.HasBoundaryBlocked() {
 		out["boundary_ceiling"] = result.BoundaryBlocked
 	}
 
@@ -154,7 +154,7 @@ func renderPrincipalTable(w io.Writer, result iam.ResolvedPermissions, cfg Princ
 		return nil
 	}
 
-	if len(result.EffectiveAllow) > 0 {
+	if result.HasEffectiveAllows() {
 		fmt.Fprintln(w, "\nEFFECTIVE PERMISSIONS")
 		fmt.Fprintln(w, strings.Repeat("-", 70))
 		fmt.Fprintf(w, "%-30s %-25s %s\n", "Action", "Resource scope", "Source")
@@ -169,7 +169,7 @@ func renderPrincipalTable(w io.Writer, result iam.ResolvedPermissions, cfg Princ
 		}
 	}
 
-	if cfg.ShowDenied && len(result.ExplicitDeny) > 0 {
+	if cfg.ShowDenied && result.HasExplicitDenies() {
 		fmt.Fprintln(w, "\nEXPLICIT DENIES")
 		fmt.Fprintln(w, strings.Repeat("-", 70))
 		for _, d := range result.ExplicitDeny {
@@ -177,7 +177,7 @@ func renderPrincipalTable(w io.Writer, result iam.ResolvedPermissions, cfg Princ
 		}
 	}
 
-	if len(result.SCPBlocked) > 0 {
+	if result.HasSCPBlocked() {
 		fmt.Fprintf(w, "\nSCP CEILING (%d actions blocked)\n", len(result.SCPBlocked))
 		fmt.Fprintln(w, strings.Repeat("-", 70))
 		for _, a := range result.SCPBlocked {
@@ -185,7 +185,7 @@ func renderPrincipalTable(w io.Writer, result iam.ResolvedPermissions, cfg Princ
 		}
 	}
 
-	if cfg.ShowChains && len(result.RoleChains) > 0 {
+	if cfg.ShowChains && result.HasRoleChains() {
 		fmt.Fprintf(w, "\nROLE CHAINS (%d found)\n", len(result.RoleChains))
 		fmt.Fprintln(w, strings.Repeat("-", 70))
 		for i, chain := range result.RoleChains {

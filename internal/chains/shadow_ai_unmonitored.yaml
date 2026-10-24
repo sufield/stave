@@ -12,6 +12,7 @@ controls:
   - CTL.CLOUDTRAIL.DATAEVENTS.BEDROCK.001
 escalation_threshold: 2
 compound_severity: critical
+scope: account
 incident_precedent:
   name: Eric Doerr (Tenable) Shadow AI Discovery Pattern
   impact: Teams scanning endpoints for AI artifacts nearly always find something they never sanctioned

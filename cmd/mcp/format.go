@@ -70,7 +70,7 @@ func formatVerify(a *stave.Assessment, score *stave.ScoreResult, detailed bool) 
 	b.WriteString("\n── Detailed violations ──\n")
 	writeFindingDetails(&b, ranked)
 
-	if len(a.ChainFindings) > 0 {
+	if a.HasChainFindings() {
 		b.WriteString("\nChain findings (full):\n")
 		for i := range a.ChainFindings {
 			c := &a.ChainFindings[i]

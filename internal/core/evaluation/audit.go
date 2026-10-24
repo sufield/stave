@@ -395,6 +395,11 @@ type ComplianceReport struct {
 	ChainSuggestions []findings.ChainSuggestion `json:"chain_suggestions,omitempty"`
 }
 
+// HasChainFindings reports whether the report contains at least one compound chain finding.
+func (r *ComplianceReport) HasChainFindings() bool {
+	return r != nil && len(r.ChainFindings) > 0
+}
+
 // GetFindingByResource retrieves a finding for a specific control/asset pair.
 func (r *ComplianceReport) GetFindingByResource(ctlID kernel.ControlID, astID asset.ID) *Finding {
 	for i := range r.Findings {

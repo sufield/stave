@@ -92,10 +92,10 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 	sw := &stickyWriter{w: w}
 	fmt.Fprintln(sw, "ASSESSMENT — NEW FINDINGS ONLY")
 	fmt.Fprintf(sw, "Filtered: %d chronic findings suppressed\n", r.SuppressedCount)
-	fmt.Fprintf(sw, "          %d new findings shown\n", len(r.NewFindings)+len(r.ReturnedFindings))
+	fmt.Fprintf(sw, "          %d new findings shown\n", r.TotalRecentCount())
 	fmt.Fprintln(sw)
 
-	if len(r.NewFindings) > 0 {
+	if r.HasNewFindings() {
 		fmt.Fprintf(sw, "NEW THIS ASSESSMENT (%d)\n", len(r.NewFindings))
 		for i := range r.NewFindings {
 			f := &r.NewFindings[i]
@@ -104,7 +104,7 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 		fmt.Fprintln(sw)
 	}
 
-	if len(r.ReturnedFindings) > 0 {
+	if r.HasReturnedFindings() {
 		fmt.Fprintf(sw, "RETURNED AFTER ABSENCE (%d)\n", len(r.ReturnedFindings))
 		for i := range r.ReturnedFindings {
 			f := &r.ReturnedFindings[i]
@@ -119,7 +119,7 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 		fmt.Fprintln(sw)
 	}
 
-	if len(r.ResolvedFindings) > 0 {
+	if r.HasResolvedFindings() {
 		fmt.Fprintf(sw, "RECENTLY RESOLVED (%d) — fixed since last assessment\n", len(r.ResolvedFindings))
 		for i := range r.ResolvedFindings {
 			f := &r.ResolvedFindings[i]
@@ -132,7 +132,7 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 		fmt.Fprintln(sw)
 	}
 
-	if len(r.NewFindings) == 0 && len(r.ReturnedFindings) == 0 {
+	if !r.HasRecentFindings() {
 		fmt.Fprintln(sw, "No new findings since last assessment.")
 		fmt.Fprintln(sw)
 	}
