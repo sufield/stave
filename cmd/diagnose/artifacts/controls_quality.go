@@ -81,7 +81,7 @@ Exit Codes:
 				return fmt.Errorf("render quality output: %w", err)
 			}
 
-			if minCompleteness > 0 && report.OverallPct.Value() < minCompleteness {
+			if !report.MeetsCompletenessThreshold(minCompleteness) {
 				return fmt.Errorf("overall completeness %.1f%% is below threshold %.1f%%", report.OverallPct.Value(), minCompleteness)
 			}
 
@@ -125,14 +125,14 @@ func writeQualityTable(w io.Writer, r catalogquality.Report) {
 		fmt.Fprintf(w, "  %-25s %8d %8d\n", string(f), fs.Present, fs.Missing)
 	}
 
-	if len(r.BlindSpots) > 0 {
+	if r.HasBlindSpots() {
 		fmt.Fprintln(w, "\nBLIND SPOTS (asset types with no controls)")
 		for _, bs := range r.BlindSpots {
 			fmt.Fprintf(w, "  %-40s %d assets\n", bs.AssetType, bs.AssetCount)
 		}
 	}
 
-	if len(r.MITREGaps) > 0 {
+	if r.HasMITREGaps() {
 		fmt.Fprintln(w, "\nMITRE ATT&CK STAGE GAPS")
 		for _, gap := range r.MITREGaps {
 			fmt.Fprintf(w, "  - %s\n", gap)

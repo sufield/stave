@@ -61,6 +61,11 @@ func (qp QualityPercentage) Value() float64 {
 	return float64(qp)
 }
 
+// Meets reports whether the quality percentage meets or exceeds the required threshold.
+func (qp QualityPercentage) Meets(minThreshold float64) bool {
+	return float64(qp) >= minThreshold
+}
+
 // Report summarizes catalog quality across all controls.
 type Report struct {
 	TotalControls int                         `json:"total_controls"`
@@ -68,6 +73,22 @@ type Report struct {
 	OverallPct    QualityPercentage           `json:"overall_pct"`
 	BlindSpots    BlindSpots                  `json:"blind_spots"`
 	MITREGaps     AttackStages                `json:"mitre_gaps"`
+}
+
+// HasBlindSpots reports whether any unmonitored asset types were detected.
+func (r Report) HasBlindSpots() bool {
+	return len(r.BlindSpots) > 0
+}
+
+// HasMITREGaps reports whether any MITRE ATT&CK stages have no coverage.
+func (r Report) HasMITREGaps() bool {
+	return len(r.MITREGaps) > 0
+}
+
+// MeetsCompletenessThreshold reports whether the overall completeness meets the minimum threshold.
+// When minThreshold is <= 0, any completeness meets the requirement.
+func (r Report) MeetsCompletenessThreshold(minThreshold float64) bool {
+	return minThreshold <= 0 || r.OverallPct.Meets(minThreshold)
 }
 
 // Input configures the quality analysis.

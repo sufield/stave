@@ -166,6 +166,15 @@ func (r IntegrityReport) HasErrors() bool {
 // HasWarnings reports non-gating issues (partial coverage missing a reason).
 func (r IntegrityReport) HasWarnings() bool { return len(r.PartialNoReason) > 0 }
 
+// HasCatalog reports whether the control catalog was loaded for reference validation.
+func (r IntegrityReport) HasCatalog() bool { return r.CatalogTotal > 0 }
+
+// HasNoIssues reports whether the mapping has neither errors nor warnings.
+func (r IntegrityReport) HasNoIssues() bool { return !r.HasErrors() && !r.HasWarnings() }
+
+// HasPartialWarnings reports whether there are partial coverage entries missing uncovered_aspects.
+func (r IntegrityReport) HasPartialWarnings() bool { return len(r.PartialNoReason) > 0 }
+
 // Verify cross-references the mapping against the real control catalog. Pass
 // the set of catalog control IDs; an empty set skips the dangling-reference
 // check (so a failed catalog load does not flag every reference). Pure: no

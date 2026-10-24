@@ -107,12 +107,12 @@ func renderIntegrityText(w io.Writer, ir *cm.IntegrityReport) {
 		return
 	}
 	fmt.Fprintf(w, "\n🔎 MAPPING INTEGRITY\n")
-	if ir.CatalogTotal > 0 {
+	if ir.HasCatalog() {
 		fmt.Fprintf(w, "  references %d of %d catalog controls\n", ir.ReferencedControl, ir.CatalogTotal)
 	} else {
 		fmt.Fprintf(w, "  references %d catalog controls (catalog not loaded — dangling check skipped)\n", ir.ReferencedControl)
 	}
-	if !ir.HasErrors() && !ir.HasWarnings() {
+	if ir.HasNoIssues() {
 		fmt.Fprintln(w, "  ✅ no integrity issues")
 		return
 	}
@@ -125,8 +125,8 @@ func renderIntegrityText(w io.Writer, ir *cm.IntegrityReport) {
 	for _, ci := range ir.InvalidConfidence {
 		fmt.Fprintf(w, "  ❌ %s has invalid confidence %q (want direct|inferred)\n", ci.FrameworkID, ci.Value)
 	}
-	if n := len(ir.PartialNoReason); n > 0 {
-		fmt.Fprintf(w, "  ⚠️  %d partial mapping(s) missing uncovered_aspects: %s\n", n, strings.Join(ir.PartialNoReason, ", "))
+	if ir.HasPartialWarnings() {
+		fmt.Fprintf(w, "  ⚠️  %d partial mapping(s) missing uncovered_aspects: %s\n", len(ir.PartialNoReason), strings.Join(ir.PartialNoReason, ", "))
 	}
 }
 
@@ -183,12 +183,12 @@ func renderIntegrityMarkdown(w io.Writer, ir *cm.IntegrityReport) {
 		return
 	}
 	fmt.Fprintf(w, "\n## 🔎 Mapping integrity\n\n")
-	if ir.CatalogTotal > 0 {
+	if ir.HasCatalog() {
 		fmt.Fprintf(w, "References %d of %d catalog controls.\n\n", ir.ReferencedControl, ir.CatalogTotal)
 	} else {
 		fmt.Fprintf(w, "References %d catalog controls (catalog not loaded — dangling check skipped).\n\n", ir.ReferencedControl)
 	}
-	if !ir.HasErrors() && !ir.HasWarnings() {
+	if ir.HasNoIssues() {
 		fmt.Fprintln(w, "✅ No integrity issues.")
 		return
 	}
@@ -201,8 +201,8 @@ func renderIntegrityMarkdown(w io.Writer, ir *cm.IntegrityReport) {
 	for _, ci := range ir.InvalidConfidence {
 		fmt.Fprintf(w, "- ❌ `%s` has invalid confidence `%s` (want direct|inferred)\n", ci.FrameworkID, ci.Value)
 	}
-	if n := len(ir.PartialNoReason); n > 0 {
-		fmt.Fprintf(w, "- ⚠️ %d partial mapping(s) missing `uncovered_aspects`: %s\n", n, strings.Join(ir.PartialNoReason, ", "))
+	if ir.HasPartialWarnings() {
+		fmt.Fprintf(w, "- ⚠️ %d partial mapping(s) missing `uncovered_aspects`: %s\n", len(ir.PartialNoReason), strings.Join(ir.PartialNoReason, ", "))
 	}
 }
 

@@ -160,7 +160,7 @@ func showCapability(w io.Writer, registry *toolmap.Registry, opts *options) erro
 func writeText(w io.Writer, result *toolmap.CoverageResult) error {
 	fmt.Fprintf(w, "Coverage: %d covered, %d gaps\n\n", len(result.Covered), len(result.Gaps))
 
-	if len(result.Gaps) > 0 {
+	if result.HasGaps() {
 		fmt.Fprintf(w, "GAPS:\n")
 		for _, g := range result.Gaps {
 			fmt.Fprintf(w, "  %-20s %-28s %s (%s)\n", g.Tool, g.Capability, g.FieldPath, g.Reason())
@@ -168,7 +168,7 @@ func writeText(w io.Writer, result *toolmap.CoverageResult) error {
 		fmt.Fprintln(w)
 	}
 
-	if len(result.Covered) > 0 {
+	if result.HasCovered() {
 		fmt.Fprintf(w, "COVERED:\n")
 		for _, c := range result.Covered {
 			fmt.Fprintf(w, "  %-20s %-28s %s\n", c.Tool, c.Capability, c.FieldPath)

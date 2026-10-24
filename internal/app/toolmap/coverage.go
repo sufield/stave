@@ -111,6 +111,11 @@ func (cr *CoverageResult) HasGaps() bool {
 	return cr != nil && cr.Gaps.HasGaps()
 }
 
+// HasCovered reports whether there are any covered prerequisites.
+func (cr *CoverageResult) HasCovered() bool {
+	return cr != nil && len(cr.Covered) > 0
+}
+
 // IsFullyCovered reports whether all prerequisites are covered (zero gaps).
 func (cr *CoverageResult) IsFullyCovered() bool {
 	return cr != nil && !cr.HasGaps()
