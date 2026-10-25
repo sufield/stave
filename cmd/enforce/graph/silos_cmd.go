@@ -99,7 +99,7 @@ func renderSilosText(w io.Writer, r *stave.SiloReport) error {
 
 	fmt.Fprintf(w, "Catalog: %d controls, %d chains, %d services\n\n", r.TotalControls, r.TotalChains, r.TotalServices)
 
-	if len(r.Silos) == 0 {
+	if !r.HasSilos() {
 		fmt.Fprintf(w, "No silos found — every service with controls participates in at least one chain.\n")
 	} else {
 		fmt.Fprintf(w, "Silos (%d services with controls but zero compound chains):\n\n", r.SiloCount)
@@ -111,7 +111,7 @@ func renderSilosText(w io.Writer, r *stave.SiloReport) error {
 		}
 	}
 
-	if len(r.MostConnected) > 0 {
+	if r.HasMostConnected() {
 		fmt.Fprintf(w, "Most connected:\n\n")
 		for _, s := range r.MostConnected {
 			peers := strings.Join(s.ConnectedTo, ", ")
@@ -132,7 +132,7 @@ func renderSilosText(w io.Writer, r *stave.SiloReport) error {
 	fmt.Fprintf(w, "  Schema types:    %d\n", r.SchemaAssetTypeCount)
 	fmt.Fprintf(w, "  Evaluated:       %d\n", r.EvaluatedAssetTypeCount)
 	fmt.Fprintf(w, "  Unevaluated:     %d\n", r.UnevaluatedCount)
-	if len(r.UnevaluatedAssetTypes) > 0 {
+	if r.HasUnevaluatedAssetTypes() {
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "Unevaluated asset types (schema defined, zero controls):\n\n")
 		for _, u := range r.UnevaluatedAssetTypes {

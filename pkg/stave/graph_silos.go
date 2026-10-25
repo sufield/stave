@@ -45,6 +45,21 @@ type SiloReport struct {
 	SchemaAssetTypeCount    int                    `json:"schema_asset_type_count"`
 }
 
+// HasSilos reports whether any siloed services were detected.
+func (r *SiloReport) HasSilos() bool {
+	return r != nil && len(r.Silos) > 0
+}
+
+// HasMostConnected reports whether any connected services were identified.
+func (r *SiloReport) HasMostConnected() bool {
+	return r != nil && len(r.MostConnected) > 0
+}
+
+// HasUnevaluatedAssetTypes reports whether schema asset types exist with zero controls.
+func (r *SiloReport) HasUnevaluatedAssetTypes() bool {
+	return r != nil && len(r.UnevaluatedAssetTypes) > 0
+}
+
 // SiloConfig parameterizes [GraphSilos].
 type SiloConfig struct {
 	ChainsDir   string

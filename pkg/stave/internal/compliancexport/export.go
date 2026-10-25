@@ -41,6 +41,19 @@ func (e *EvidenceExport) FindEvidence(controlID, resourceARN string) *EvidenceRe
 	return nil
 }
 
+// HasGaps reports whether any requirement in the evidence export carries at least one gap.
+func (e *EvidenceExport) HasGaps() bool {
+	if e == nil {
+		return false
+	}
+	for i := range e.Requirements {
+		if e.Requirements[i].HasGaps() {
+			return true
+		}
+	}
+	return false
+}
+
 // ProfileSummary is the profile metadata in the JSON output.
 type ProfileSummary struct {
 	ID      string `json:"id"`
@@ -67,6 +80,11 @@ type RequirementExport struct {
 	Controls      []ControlSummary  `json:"controls"`
 	Gaps          []GapExport       `json:"gaps,omitempty"`
 	SLACompliance *SLACompliance    `json:"sla_compliance,omitempty"`
+}
+
+// HasGaps reports whether the requirement has any compliance gaps.
+func (r RequirementExport) HasGaps() bool {
+	return len(r.Gaps) > 0
 }
 
 // RequirementStatus is the wire-format string a requirement carries

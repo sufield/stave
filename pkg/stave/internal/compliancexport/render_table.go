@@ -40,21 +40,13 @@ func renderTable(w io.Writer, export *EvidenceExport, verbose bool) error { //no
 	}
 
 	// Gap detail
-	hasGaps := false
-	for i := range export.Requirements {
-		if len(export.Requirements[i].Gaps) > 0 {
-			hasGaps = true
-			break
-		}
-	}
-
-	if hasGaps {
+	if export.HasGaps() {
 		fmt.Fprintf(w, "\nGAPS\n")
 		fmt.Fprintln(w, sep)
 
 		for i := range export.Requirements {
 			r := &export.Requirements[i]
-			if len(r.Gaps) == 0 {
+			if !r.HasGaps() {
 				continue
 			}
 			fmt.Fprintf(w, "\n%s %s [%s — %d gap(s)]\n", r.ID, r.Description, r.Status.Label(), len(r.Gaps))

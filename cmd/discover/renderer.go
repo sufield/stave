@@ -45,7 +45,7 @@ func (textRenderer) Render(w io.Writer, m manifest) error {
 	fmt.Fprintf(w, "Controls that will evaluate: %d\n", m.ControlCount)
 
 	fmt.Fprintf(w, "\nCollect these (read-only) AWS API calls:\n")
-	if len(m.Requirements.AWSAPICalls) == 0 {
+	if !m.Requirements.HasAPICalls() {
 		fmt.Fprintf(w, "  (none — no covering pack declares API requirements)\n")
 	}
 	for _, sc := range m.Requirements.AWSAPICalls {
@@ -58,7 +58,7 @@ func (textRenderer) Render(w io.Writer, m manifest) error {
 		}
 	}
 
-	if len(m.Requirements.ObservationSignals) > 0 {
+	if m.Requirements.HasObservationSignals() {
 		fmt.Fprintf(w, "\nRequired observation signals:\n")
 		for _, s := range m.Requirements.ObservationSignals {
 			fmt.Fprintf(w, "  %s\n", s)

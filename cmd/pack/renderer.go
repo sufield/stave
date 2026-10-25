@@ -77,7 +77,7 @@ func renderShowText(w io.Writer, s showPayload) {
 		}
 	}
 
-	if len(p.Requirements.ObservationSignals) > 0 {
+	if p.Requirements.HasObservationSignals() {
 		fmt.Fprintf(w, "\nRequired observation signals:\n")
 		for _, sig := range p.Requirements.ObservationSignals {
 			fmt.Fprintf(w, "  %s\n", sig)

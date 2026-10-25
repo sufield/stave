@@ -44,6 +44,16 @@ type Requirements struct {
 	MinimumPermissions string         `yaml:"minimum_permissions" json:"minimum_permissions"`
 }
 
+// HasAPICalls reports whether the requirements declare at least one AWS API call.
+func (r Requirements) HasAPICalls() bool {
+	return len(r.AWSAPICalls) > 0
+}
+
+// HasObservationSignals reports whether the requirements declare at least one observation signal.
+func (r Requirements) HasObservationSignals() bool {
+	return len(r.ObservationSignals) > 0
+}
+
 // ServiceCalls groups the AWS CLI calls for one service.
 type ServiceCalls struct {
 	Service string   `yaml:"service" json:"service"`

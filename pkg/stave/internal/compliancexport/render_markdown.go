@@ -36,21 +36,13 @@ func renderMarkdown(w io.Writer, export *EvidenceExport) error { //nolint:unpara
 	fmt.Fprintln(w)
 
 	// Gaps
-	hasGaps := false
-	for i := range export.Requirements {
-		if len(export.Requirements[i].Gaps) > 0 {
-			hasGaps = true
-			break
-		}
-	}
-
-	if hasGaps {
+	if export.HasGaps() {
 		fmt.Fprintln(w, "## Gaps")
 		fmt.Fprintln(w)
 
 		for i := range export.Requirements {
 			r := &export.Requirements[i]
-			if len(r.Gaps) == 0 {
+			if !r.HasGaps() {
 				continue
 			}
 			fmt.Fprintf(w, "### %s — %s (%s)\n\n", r.ID, r.Description, r.Status.Label())
