@@ -89,6 +89,13 @@ func (f *Finding) ChainMembershipCount() int {
 	return len(f.ChainMembership)
 }
 
+// HasNearMissChains reports whether the finding participates in any
+// near-miss compound chains (chains that are exactly one control
+// short of firing).
+func (f *Finding) HasNearMissChains() bool {
+	return f != nil && len(f.NearMissChains) > 0
+}
+
 // PrimaryChainSeverity returns the severity of the first chain this
 // finding participates in, or "" if the finding is not a chain
 // member. The "primary" chain is the first entry in ChainMembership;

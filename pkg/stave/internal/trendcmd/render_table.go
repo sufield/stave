@@ -54,7 +54,7 @@ func renderTrendTable(out io.Writer, r *trendReport) error {
 	fmt.Fprintf(w, "\nDirection: %s\n\n", strings.ToUpper(r.Summary.Direction))
 
 	// MTTR.
-	if len(r.MTTR) > 0 {
+	if r.HasMTTR() {
 		fmt.Fprintln(w, "MEAN TIME TO REMEDIATE (closed windows only)")
 		fmt.Fprintln(w, sep)
 		for _, sev := range []string{"critical", "high", "medium", "low"} {
@@ -66,7 +66,7 @@ func renderTrendTable(out io.Writer, r *trendReport) error {
 	}
 
 	// Framework trajectory.
-	if len(r.FrameworkTrends) > 0 {
+	if r.HasFrameworkTrends() {
 		fmt.Fprintln(w, "FRAMEWORK COVERAGE TRAJECTORY")
 		fmt.Fprintln(w, sep)
 		for i := range r.FrameworkTrends {
@@ -92,7 +92,7 @@ func renderTrendTable(out io.Writer, r *trendReport) error {
 	fmt.Fprintf(w, "  Direction:  %s\n\n", strings.ToUpper(r.Velocity.Direction))
 
 	// SLA compliance rate.
-	if len(r.SLATrend) > 0 {
+	if r.HasSLATrend() {
 		fmt.Fprintf(w, "SLA COMPLIANCE RATE (last %d runs where SLA profile was active)\n", len(r.SLATrend))
 		fmt.Fprintln(w, sep)
 		for i := range r.SLATrend {
@@ -126,7 +126,7 @@ func renderTrendTable(out io.Writer, r *trendReport) error {
 	}
 
 	// Per-team trends.
-	if len(r.TeamTrends) > 0 && r.TeamSummary != nil {
+	if r.HasTeamPostureTrends() {
 		fmt.Fprintln(w)
 		fmt.Fprintln(w, "PER-TEAM POSTURE TREND")
 		fmt.Fprintln(w, sep)

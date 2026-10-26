@@ -237,7 +237,7 @@ func renderExecutiveSummary(w io.Writer, r *trendReport) error { //nolint:unpara
 	fmt.Fprintf(w, "EXECUTIVE SECURITY SUMMARY — %s\n\n", date)
 	fmt.Fprintf(w, "Account posture %s to %.1f.", direction, score)
 
-	if r.TeamSummary != nil {
+	if r.HasTeamPostureTrends() {
 		ts := r.TeamSummary
 		fmt.Fprintf(w, " %d of %d teams are improving, %d are stable, %d require attention.\n",
 			ts.TeamsImproving, ts.TeamsTracked, ts.TeamsStable, ts.TeamsRegressing)

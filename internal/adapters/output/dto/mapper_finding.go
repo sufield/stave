@@ -76,7 +76,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	if f.Exploitability != "" {
 		dto.Exploitability = string(f.Exploitability)
 	}
-	if len(f.NearMissChains) > 0 {
+	if f.HasNearMissChains() {
 		dto.NearMissChains = mapSlice(f.NearMissChains, fromNearMissEntry)
 	}
 
@@ -229,15 +229,15 @@ func fromEvidence(e evaluation.Evidence) EvidenceDTO {
 		TemporalRisk:          e.TemporalRisk,
 	}
 
-	if len(e.Misconfigurations) > 0 {
+	if e.HasMisconfigurations() {
 		dto.Misconfigurations = mapSlice(e.Misconfigurations, func(m policy.Misconfiguration) MisconfigurationDTO { return fromMisconfiguration(m) })
 	}
 
-	if len(e.RootCauses) > 0 {
+	if e.HasRootCauses() {
 		dto.RootCauses = mapSlice(e.RootCauses, func(c evaluation.RootCause) string { return c.String() })
 	}
 
-	if e.SourceEvidence != nil {
+	if e.HasSourceEvidence() {
 		dto.SourceEvidence = &SourceEvidenceDTO{
 			IdentityStatements: kernel.StringsFrom(e.SourceEvidence.IdentityStatements),
 			ResourceGrantees:   kernel.StringsFrom(e.SourceEvidence.ResourceGrantees),
@@ -275,7 +275,7 @@ func fromRemediationPlan(p evaluation.RemediationPlan) RemediationPlanDTO {
 		ExpectedEffect: p.ExpectedEffect,
 		Action:         p.Command,
 	}
-	if len(p.Actions) > 0 {
+	if p.HasActions() {
 		dto.Actions = mapSlice(p.Actions, func(a evaluation.RemediationAction) RemediationActionDTO { return fromRemediationAction(a) })
 	}
 	return dto

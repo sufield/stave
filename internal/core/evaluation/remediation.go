@@ -28,9 +28,14 @@ type RemediationPlan struct {
 	Command string `json:"command,omitempty"`
 }
 
+// HasActions reports whether the plan defines at least one remediation action.
+func (p RemediationPlan) HasActions() bool {
+	return len(p.Actions) > 0
+}
+
 // ComputeFingerprint sets ActionsFingerprint to a stable hash of the plan's actions.
 func (p *RemediationPlan) ComputeFingerprint(h ports.Digester) {
-	if len(p.Actions) == 0 {
+	if !p.HasActions() {
 		p.ActionsFingerprint = ""
 		return
 	}

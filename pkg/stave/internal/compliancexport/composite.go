@@ -88,7 +88,7 @@ func renderCompositeTable(w io.Writer, export CompositeEvidenceExport) {
 			fr.Score.RequirementsMet, fr.Score.RequirementsTotal)
 	}
 
-	if len(export.Composite.SharedGaps) > 0 {
+	if export.Composite.HasSharedGaps() {
 		fmt.Fprintln(w, "\nSHARED GAPS — Fix these first (highest cross-framework ROI)")
 		fmt.Fprintln(w, strings.Repeat("-", 70))
 		limit := min(len(export.Composite.SharedGaps), 10)
@@ -117,7 +117,7 @@ func renderCompositeTable(w io.Writer, export CompositeEvidenceExport) {
 		}
 	}
 
-	if len(export.Composite.TopNSharedGapImpact) > 0 {
+	if export.Composite.HasTopNImpact() {
 		fmt.Fprintln(w, "\nTOP-N IMPACT ANALYSIS")
 		fmt.Fprintln(w, strings.Repeat("-", 70))
 		for _, t := range export.Composite.TopNSharedGapImpact {
@@ -129,7 +129,7 @@ func renderCompositeTable(w io.Writer, export CompositeEvidenceExport) {
 		}
 	}
 
-	if len(export.Composite.UniqueGaps) > 0 {
+	if export.Composite.HasUniqueGaps() {
 		fmt.Fprintf(w, "\nUNIQUE GAPS — Framework-specific (%d)\n", len(export.Composite.UniqueGaps))
 		fmt.Fprintln(w, strings.Repeat("-", 70))
 		byFW := make(map[string][]evidence.UniqueGap)

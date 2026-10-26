@@ -142,6 +142,11 @@ func (e Evidence) HasMisconfigurations() bool {
 	return len(e.Misconfigurations) > 0
 }
 
+// HasRootCauses reports whether the evidence records any root causes.
+func (e Evidence) HasRootCauses() bool {
+	return len(e.RootCauses) > 0
+}
+
 // HasSourceEvidence reports whether the evidence carries a
 // pointer to specific configuration entries (SIDs, grantees).
 // Replaces the (e.SourceEvidence != nil) probe.

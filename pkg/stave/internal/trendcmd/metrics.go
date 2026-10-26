@@ -115,6 +115,37 @@ type trendReport struct {
 	Rollup          *rollupResult        `json:"rollup,omitempty"`
 }
 
+// HasRuns reports whether the trend report contains at least one historical run.
+func (r *trendReport) HasRuns() bool {
+	return r != nil && len(r.Runs) > 0
+}
+
+// HasMTTR reports whether MTTR data is present for any severity.
+func (r *trendReport) HasMTTR() bool {
+	return r != nil && len(r.MTTR) > 0
+}
+
+// HasFrameworkTrends reports whether compliance framework trend data is present.
+func (r *trendReport) HasFrameworkTrends() bool {
+	return r != nil && len(r.FrameworkTrends) > 0
+}
+
+// HasSLATrend reports whether SLA trend metrics are present.
+func (r *trendReport) HasSLATrend() bool {
+	return r != nil && len(r.SLATrend) > 0
+}
+
+// HasTeamTrends reports whether team trend metrics are present.
+func (r *trendReport) HasTeamTrends() bool {
+	return r != nil && len(r.TeamTrends) > 0
+}
+
+// HasTeamPostureTrends reports whether team trend metrics and their aggregate
+// summary are present for per-team posture reporting.
+func (r *trendReport) HasTeamPostureTrends() bool {
+	return r.HasTeamTrends() && r.TeamSummary != nil
+}
+
 // rollupResult holds aggregated metrics for a hierarchy group.
 type rollupResult struct {
 	GroupID      string  `json:"group_id"`

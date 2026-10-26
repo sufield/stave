@@ -21,6 +21,21 @@ type CompositeGapReport struct {
 	TopNSharedGapImpact []GapImpactSummary `json:"top_n_impact"`
 }
 
+// HasSharedGaps reports whether any cross-framework shared gaps exist.
+func (r CompositeGapReport) HasSharedGaps() bool {
+	return len(r.SharedGaps) > 0
+}
+
+// HasTopNImpact reports whether any top-N gap impact projections exist.
+func (r CompositeGapReport) HasTopNImpact() bool {
+	return len(r.TopNSharedGapImpact) > 0
+}
+
+// HasUniqueGaps reports whether any framework-specific unique gaps exist.
+func (r CompositeGapReport) HasUniqueGaps() bool {
+	return len(r.UniqueGaps) > 0
+}
+
 // SharedGap is a finding that violates requirements in 2+ frameworks.
 type SharedGap struct {
 	ControlID          string               `json:"control_id"`

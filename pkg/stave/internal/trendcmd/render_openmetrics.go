@@ -7,7 +7,7 @@ import (
 
 func renderTrendOpenMetrics(out io.Writer, r *trendReport) error {
 	w := &trendErrWriter{w: out}
-	if len(r.Runs) == 0 {
+	if !r.HasRuns() {
 		fmt.Fprintln(w, "# EOF")
 		return w.err
 	}
@@ -29,7 +29,7 @@ func renderTrendOpenMetrics(out io.Writer, r *trendReport) error {
 	fmt.Fprintf(w, "stave_violation_rate %g %d\n\n", latest.ViolationRate, tsMs)
 
 	// mttr_days (omitted when no closed windows)
-	if len(r.MTTR) > 0 {
+	if r.HasMTTR() {
 		fmt.Fprintln(w, "# HELP stave_mttr_days Mean time to remediate by severity")
 		fmt.Fprintln(w, "# TYPE stave_mttr_days gauge")
 		for sev, entry := range r.MTTR {
@@ -39,7 +39,7 @@ func renderTrendOpenMetrics(out io.Writer, r *trendReport) error {
 	}
 
 	// framework_coverage (only when compliance specified)
-	if len(r.FrameworkTrends) > 0 {
+	if r.HasFrameworkTrends() {
 		fmt.Fprintln(w, "# HELP stave_framework_coverage Compliance framework satisfaction rate")
 		fmt.Fprintln(w, "# TYPE stave_framework_coverage gauge")
 		for i := range r.FrameworkTrends {
@@ -58,7 +58,7 @@ func renderTrendOpenMetrics(out io.Writer, r *trendReport) error {
 	fmt.Fprintf(w, "stave_velocity_per_run %g %d\n\n", r.Velocity.AvgNetChange, tsMs)
 
 	// SLA compliance rate (only when SLA data exists)
-	if len(r.SLATrend) > 0 {
+	if r.HasSLATrend() {
 		latestSLA := &r.SLATrend[len(r.SLATrend)-1]
 		slaTs := latestSLA.CapturedAt.UnixMilli()
 
@@ -83,7 +83,7 @@ func renderTrendOpenMetrics(out io.Writer, r *trendReport) error {
 	}
 
 	// Per-team metrics.
-	if len(r.TeamTrends) > 0 {
+	if r.HasTeamTrends() {
 		fmt.Fprintln(w, "# HELP stave_team_posture_score Current posture score per team")
 		fmt.Fprintln(w, "# TYPE stave_team_posture_score gauge")
 		for i := range r.TeamTrends {
