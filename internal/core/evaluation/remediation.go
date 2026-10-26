@@ -29,7 +29,7 @@ type RemediationPlan struct {
 }
 
 // HasActions reports whether the plan defines at least one remediation action.
-func (p RemediationPlan) HasActions() bool {
+func (p *RemediationPlan) HasActions() bool {
 	return len(p.Actions) > 0
 }
 
