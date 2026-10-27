@@ -43,7 +43,7 @@ dependencies:
   - sources: ["internal/adapters/output/**/*.go"]
     docs:
       - path: docs/reference/output-formats.md
-        last_audited: "662c66d986"
+        last_audited: "cb6b27b313"
     auto_regen: false
 
   - sources: ["internal/platform/providers/aws/organizations/scp.go",
