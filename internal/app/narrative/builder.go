@@ -42,6 +42,21 @@ type NarrativeSections struct {
 	ChainContext   *ChainContext      `json:"chain_context,omitempty"`
 }
 
+// HasWhyThisMatters reports whether the narrative provides rationale for the control.
+func (ns NarrativeSections) HasWhyThisMatters() bool {
+	return ns.WhyThisMatters != ""
+}
+
+// HasCurrentState reports whether narrative sections contain any current state entries.
+func (ns NarrativeSections) HasCurrentState() bool {
+	return len(ns.CurrentState) > 0
+}
+
+// HasChainContext reports whether compound chain context is attached.
+func (ns NarrativeSections) HasChainContext() bool {
+	return ns.ChainContext != nil
+}
+
 // StateEntry shows a single observed property vs required.
 type StateEntry struct {
 	PropertyPath   string `json:"property_path"`
@@ -69,12 +84,32 @@ type Step struct {
 	Confidence  ConfidenceLevel `json:"confidence"`
 }
 
+// HasCaution reports whether this step carries a cautionary advisory.
+func (s Step) HasCaution() bool {
+	return s.Caution != ""
+}
+
+// HasAction reports whether this step carries a concrete remediation action.
+func (s Step) HasAction() bool {
+	return s.Action != ""
+}
+
+// HasConfidence reports whether this step specifies a confidence level.
+func (s Step) HasConfidence() bool {
+	return s.Confidence != ""
+}
+
 // Steps is a domain collection of Step items with querying methods.
 type Steps []Step
 
 // Len returns the number of steps in the collection.
 func (ss Steps) Len() int {
 	return len(ss)
+}
+
+// HasSteps reports whether the collection contains at least one step.
+func (ss Steps) HasSteps() bool {
+	return len(ss) > 0
 }
 
 // ChainContext describes the compound chain membership.
@@ -84,6 +119,16 @@ type ChainContext struct {
 	MemberControls    ChainMembers       `json:"member_controls"`
 	ChainNarrative    string             `json:"chain_narrative"`
 	DeactivationOrder []kernel.ControlID `json:"deactivation_order,omitempty"`
+}
+
+// HasChainNarrative reports whether chain-level explanation narrative is present.
+func (cc *ChainContext) HasChainNarrative() bool {
+	return cc != nil && cc.ChainNarrative != ""
+}
+
+// HasDeactivationOrder reports whether recommended deactivation order controls are specified.
+func (cc *ChainContext) HasDeactivationOrder() bool {
+	return cc != nil && len(cc.DeactivationOrder) > 0
 }
 
 // ChainMembers is a domain collection of ChainMember controls with querying methods.

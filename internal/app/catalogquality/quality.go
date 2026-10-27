@@ -137,7 +137,7 @@ func Analyze(input Input) Report {
 		}
 
 		// compliance
-		if len(ctl.Compliance) > 0 {
+		if ctl.HasComplianceCitations() {
 			inc(completeness, FieldCompliance, true)
 		} else {
 			inc(completeness, FieldCompliance, false)

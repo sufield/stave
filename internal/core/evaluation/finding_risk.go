@@ -48,6 +48,11 @@ type NearMissEntry struct {
 	Description     string             `json:"description"`
 }
 
+// HasControlsFailing reports whether any prerequisite controls are failing.
+func (n NearMissEntry) HasControlsFailing() bool {
+	return len(n.ControlsFailing) > 0
+}
+
 // ChainMembershipEntry records that a finding contributed to a fired chain.
 type ChainMembershipEntry struct {
 	// ChainID is the chain definition ID (e.g. "data_exfiltration_path").

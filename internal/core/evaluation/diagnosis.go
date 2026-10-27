@@ -56,6 +56,13 @@ func (s FindingControlSummary) ExposureSummary() (exposureType, principalScope s
 	return string(s.Exposure.Type), s.Exposure.PrincipalScope.String(), true
 }
 
+// HasComplianceCitations reports whether any compliance framework citations are mapped.
+// Mirrors controldef.ControlDefinition.HasComplianceCitations so renderers branching on
+// either type carry the same predicate shape.
+func (s FindingControlSummary) HasComplianceCitations() bool {
+	return len(s.Compliance) > 0
+}
+
 // FindingAssetSummary holds asset metadata for the diagnosed finding.
 type FindingAssetSummary struct {
 	ID         asset.ID         `json:"id"`

@@ -37,7 +37,7 @@ func (jsonRenderer) Render(w io.Writer, p preview) error {
 type textRenderer struct{}
 
 func (textRenderer) Render(w io.Writer, p preview) error {
-	if p.Pack != "" {
+	if p.HasPack() {
 		fmt.Fprintf(w, "Plan for pack: %s\n\n", p.Pack)
 	} else {
 		fmt.Fprintf(w, "Plan for services: %s\n\n", strings.Join(p.Services, ", "))
@@ -52,7 +52,7 @@ func (textRenderer) Render(w io.Writer, p preview) error {
 	fmt.Fprintf(w, "%-14s %9d %9d %5d %7d %5d\n",
 		"total", p.Total.Total, p.Total.Critical, p.Total.High, p.Total.Medium, p.Total.Low)
 
-	if len(p.CollectionOrder) > 0 {
+	if p.HasCollectionOrder() {
 		fmt.Fprintf(w, "\nRecommended collection order (most critical first):\n")
 		for i, svc := range p.CollectionOrder {
 			fmt.Fprintf(w, "  %d. %s\n", i+1, svc)

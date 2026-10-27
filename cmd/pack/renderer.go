@@ -58,7 +58,7 @@ func renderShowText(w io.Writer, s showPayload) {
 	fmt.Fprintf(w, "Pack:     %s\n", p.Name)
 	fmt.Fprintf(w, "Title:    %s\n", p.Title)
 	fmt.Fprintf(w, "Controls: %d resolved from the catalog\n", s.Count)
-	if len(s.Missing) > 0 {
+	if s.HasMissing() {
 		fmt.Fprintf(w, "          (warning: %d explicitly-listed IDs not in catalog: %s)\n",
 			len(s.Missing), strings.Join(s.Missing, ", "))
 	}

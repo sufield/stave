@@ -61,6 +61,11 @@ type showPayload struct {
 	Missing []string   `json:"missing_ids,omitempty"`
 }
 
+// HasMissing reports whether any pack-declared control IDs are missing from the catalog.
+func (s showPayload) HasMissing() bool {
+	return len(s.Missing) > 0
+}
+
 func runShow(cmd *cobra.Command, o *options, name string) error {
 	p, err := pack.Load(name)
 	if err != nil {

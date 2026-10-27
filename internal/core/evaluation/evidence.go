@@ -190,6 +190,21 @@ type SourceEvidence struct {
 	ResourceGrantees []kernel.GranteeID `json:"resource_grantees,omitempty"`
 }
 
+// HasIdentityStatements reports whether any identity-bound policy statements are listed.
+func (se *SourceEvidence) HasIdentityStatements() bool {
+	return se != nil && len(se.IdentityStatements) > 0
+}
+
+// HasResourceGrantees reports whether any resource grantees are listed.
+func (se *SourceEvidence) HasResourceGrantees() bool {
+	return se != nil && len(se.ResourceGrantees) > 0
+}
+
+// IsEmpty reports whether the source evidence carries neither identity statements nor resource grantees.
+func (se *SourceEvidence) IsEmpty() bool {
+	return se == nil || (!se.HasIdentityStatements() && !se.HasResourceGrantees())
+}
+
 // DriftPattern classifies the temporal behavior of a violation.
 type DriftPattern string
 

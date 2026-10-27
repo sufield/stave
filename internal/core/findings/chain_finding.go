@@ -77,6 +77,26 @@ func (c *CompoundFinding) SeverityLabel() string {
 	return c.Severity.String()
 }
 
+// HasControlsFailing reports whether any failing controls are attached to the chain.
+func (c *CompoundFinding) HasControlsFailing() bool {
+	return c != nil && len(c.ControlsFailing) > 0
+}
+
+// HasMissingSafeguards reports whether any missing safeguards are identified.
+func (c *CompoundFinding) HasMissingSafeguards() bool {
+	return c != nil && len(c.MissingSafeguards) > 0
+}
+
+// HasAttackStages reports whether attack stages are mapped for this compound chain.
+func (c *CompoundFinding) HasAttackStages() bool {
+	return c != nil && len(c.AttackStages) > 0
+}
+
+// HasDescription reports whether a narrative description is present.
+func (c *CompoundFinding) HasDescription() bool {
+	return c != nil && c.Description != ""
+}
+
 // ChainSuggestion is a candidate chain definition inferred from
 // unchained high-severity controls that co-fail on the same asset(s).
 type ChainSuggestion struct {
@@ -105,4 +125,9 @@ type NearMissChain struct {
 	MissingControl  kernel.ControlID   `json:"missing_control"`
 	Severity        policy.Severity    `json:"severity"`
 	ScopeID         string             `json:"scope_id,omitempty"`
+}
+
+// HasControlsFailing reports whether any prerequisite controls are failing.
+func (n *NearMissChain) HasControlsFailing() bool {
+	return n != nil && len(n.ControlsFailing) > 0
 }

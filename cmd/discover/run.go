@@ -20,6 +20,11 @@ type manifest struct {
 	Requirements      pack.Requirements `json:"requirements"`
 }
 
+// HasUnmatchedServices reports whether any requested services were unmatched by packs.
+func (m manifest) HasUnmatchedServices() bool {
+	return len(m.ServicesUnmatched) > 0
+}
+
 func catalogMeta(o *options) ([]pack.ControlMeta, error) {
 	sums, err := stave.CatalogControlSummaries(o.controls, !o.controlsSet)
 	if err != nil {

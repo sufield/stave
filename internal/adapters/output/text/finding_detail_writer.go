@@ -40,7 +40,7 @@ func writeMetadataLine(d *drawer, detail *evaluation.FindingDetail) {
 	if detail.Control.Severity.IsSet() {
 		parts = append(parts, "Severity: "+titleCase(detail.Control.Severity.String()))
 	}
-	if len(detail.Control.Compliance) > 0 {
+	if detail.Control.HasComplianceCitations() {
 		var refs []string
 		for framework, ref := range detail.Control.Compliance {
 			refs = append(refs, string(framework)+" "+string(ref))
@@ -132,10 +132,10 @@ func writeEvidenceSourceDetails(d *drawer, ev *evaluation.Evidence) {
 	if !ev.HasSourceEvidence() {
 		return
 	}
-	if len(ev.SourceEvidence.IdentityStatements) > 0 {
+	if ev.SourceEvidence.HasIdentityStatements() {
 		d.f("  Identity statements: %s\n", strings.Join(kernel.StringsFrom(ev.SourceEvidence.IdentityStatements), ", "))
 	}
-	if len(ev.SourceEvidence.ResourceGrantees) > 0 {
+	if ev.SourceEvidence.HasResourceGrantees() {
 		d.f("  Resource grantees:  %s\n", strings.Join(kernel.StringsFrom(ev.SourceEvidence.ResourceGrantees), ", "))
 	}
 }

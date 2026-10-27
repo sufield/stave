@@ -88,7 +88,7 @@ func (w *FindingWriter) marshalConcise(enriched *appcontracts.EnrichedResult) ([
 	result := enriched.Result
 
 	w.writeHeader(d, &result)
-	if len(result.Findings) == 0 {
+	if !result.HasFindings() {
 		w.writeNoViolationsSummary(d)
 		w.writeIndeterminate(d, enriched)
 		if d.err != nil {
@@ -100,13 +100,13 @@ func (w *FindingWriter) marshalConcise(enriched *appcontracts.EnrichedResult) ([
 	w.writeConciseTable(d, enriched)
 	w.writeIndeterminate(d, enriched)
 
-	if len(result.ChainFindings) > 0 {
+	if result.HasChainFindings() {
 		d.f("\nCompound Chains: %d\n", len(result.ChainFindings))
 		for i := range result.ChainFindings {
 			d.f("  [%s] %s\n", result.ChainFindings[i].Severity, result.ChainFindings[i].ChainID)
 		}
 	}
-	if len(result.NearMissChains) > 0 {
+	if result.HasNearMissChains() {
 		d.f("\nNear-Miss Chains: %d\n", len(result.NearMissChains))
 		for i := range result.NearMissChains {
 			nm := &result.NearMissChains[i]
@@ -205,7 +205,7 @@ func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceRepo
 	if result.Summary.Indeterminate > 0 {
 		d.f("  Indeterminate:       %d\n", result.Summary.Indeterminate)
 	}
-	if len(result.Issues) > 0 {
+	if result.HasIssues() {
 		d.f("  Issues (consolidated): %d\n", len(result.Issues))
 	}
 	d.f("\n")

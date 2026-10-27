@@ -63,7 +63,7 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	// Annotate each SARIF result with its Issue fingerprint so
 	// downstream consumers can reconstruct the consolidated view.
 	// See docs/product/metrics.md § Metric 2.
-	if len(enriched.Result.Issues) > 0 {
+	if enriched.Result.HasIssues() {
 		// Verify the architectural contract before walking the two
 		// slices in lockstep — buildResults is required to preserve
 		// per-finding order so issue-id metadata lands on the right
@@ -363,7 +363,7 @@ func buildFindingProperties(f *remediation.Finding, alts []map[string]any) map[s
 		props["stage_span"] = f.PrimaryChainStageSpan()
 		props["finding_id"] = f.FindingID
 	}
-	if len(f.NearMissChains) > 0 {
+	if f.HasNearMissChains() {
 		nm := make([]map[string]any, len(f.NearMissChains))
 		for i, n := range f.NearMissChains {
 			entry := map[string]any{
@@ -371,7 +371,7 @@ func buildFindingProperties(f *remediation.Finding, alts []map[string]any) map[s
 				"chain_severity":  n.ChainSeverity.String(),
 				"missing_control": string(n.MissingControl),
 			}
-			if len(n.ControlsFailing) > 0 {
+			if n.HasControlsFailing() {
 				ids := make([]string, len(n.ControlsFailing))
 				for j, cid := range n.ControlsFailing {
 					ids[j] = string(cid)
@@ -457,21 +457,21 @@ func buildChainResults(chainFindings []findings.CompoundFinding, existingRules m
 			"stave/severity":       cf.Severity.String(),
 			"stave/compound_score": cf.CompoundScore,
 		}
-		if len(cf.ControlsFailing) > 0 {
+		if cf.HasControlsFailing() {
 			ids := make([]string, len(cf.ControlsFailing))
 			for j, cid := range cf.ControlsFailing {
 				ids[j] = string(cid)
 			}
 			props["stave/controls_failing"] = ids
 		}
-		if len(cf.MissingSafeguards) > 0 {
+		if cf.HasMissingSafeguards() {
 			ids := make([]string, len(cf.MissingSafeguards))
 			for j, cid := range cf.MissingSafeguards {
 				ids[j] = string(cid)
 			}
 			props["stave/missing_safeguards"] = ids
 		}
-		if len(cf.AttackStages) > 0 {
+		if cf.HasAttackStages() {
 			stages := make([]string, len(cf.AttackStages))
 			for j, s := range cf.AttackStages {
 				stages[j] = string(s)

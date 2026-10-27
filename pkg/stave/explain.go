@@ -60,7 +60,7 @@ func ExplainControl(id string) (*ControlExplanation, error) {
 			assetTypes = append(assetTypes, string(at))
 		}
 		var frameworks map[string]string
-		if len(c.Compliance) > 0 {
+		if c.HasComplianceCitations() {
 			frameworks = make(map[string]string, len(c.Compliance))
 			for fw, req := range c.Compliance {
 				frameworks[string(fw)] = string(req)

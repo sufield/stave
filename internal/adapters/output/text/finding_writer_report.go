@@ -16,22 +16,22 @@ func (w *FindingWriter) writeChainFindings(d *drawer, result *evaluation.Complia
 	for i := range result.ChainFindings {
 		cf := &result.ChainFindings[i]
 		d.f("\n  [%s] Chain: %s\n", cf.SeverityLabel(), cf.ChainID)
-		if cf.Description != "" {
+		if cf.HasDescription() {
 			d.f("  %s\n", strings.TrimSpace(cf.Description))
 		}
 		d.f("  Failing:    %s\n", strings.Join(controlIDStrings(cf.ControlsFailing), ", "))
-		if len(cf.MissingSafeguards) > 0 {
+		if cf.HasMissingSafeguards() {
 			d.f("  Fix any of: %s\n", strings.Join(controlIDStrings(cf.MissingSafeguards), ", "))
 		}
 		d.f("  Score:      %.1f\n", cf.CompoundScore)
-		if len(cf.AttackStages) > 0 {
+		if cf.HasAttackStages() {
 			d.f("  Stages:     %s\n", strings.Join(attackStageStrings(cf.AttackStages), ", "))
 		}
 	}
 }
 
 func (w *FindingWriter) writeAttackStageSummary(d *drawer, result *evaluation.ComplianceReport) {
-	if len(result.AttackStageSummary) == 0 {
+	if !result.HasAttackStageSummary() {
 		return
 	}
 	d.f("\nAttack Stage Summary")

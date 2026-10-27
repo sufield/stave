@@ -177,14 +177,14 @@ func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth 
 		}
 
 		// Section 2: Why this matters.
-		if pb.Narrative.WhyThisMatters != "" {
+		if pb.Narrative.HasWhyThisMatters() {
 			fmt.Fprintln(w, "\nWHY THIS MATTERS")
 			fmt.Fprintln(w, strings.Repeat("\u2500", 64))
 			fmt.Fprintln(w, pb.Narrative.WhyThisMatters)
 		}
 
 		// Section 3: Current state.
-		if len(pb.Narrative.CurrentState) > 0 {
+		if pb.Narrative.HasCurrentState() {
 			fmt.Fprintln(w, "\nCURRENT STATE")
 			fmt.Fprintln(w, strings.Repeat("\u2500", 64))
 			for _, s := range pb.Narrative.CurrentState {
@@ -200,7 +200,7 @@ func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth 
 		writeNarrativeSteps(w, pb.Narrative.Steps)
 
 		// Section 5: Chain context.
-		if pb.Narrative.ChainContext != nil {
+		if pb.Narrative.HasChainContext() {
 			cc := pb.Narrative.ChainContext
 			fmt.Fprintln(w, "\nCOMPOUND CHAIN CONTEXT")
 			fmt.Fprintln(w, strings.Repeat("\u2500", 64))
@@ -209,10 +209,10 @@ func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth 
 				m := &cc.MemberControls[i]
 				fmt.Fprintf(w, "  %s %s  %s\n", m.StatusIcon(), m.ControlID, m.Status)
 			}
-			if cc.ChainNarrative != "" {
+			if cc.HasChainNarrative() {
 				fmt.Fprintf(w, "\n%s\n", cc.ChainNarrative)
 			}
-			if len(cc.DeactivationOrder) > 0 {
+			if cc.HasDeactivationOrder() {
 				fmt.Fprintln(w, "\nRecommended deactivation order:")
 				for i, id := range cc.DeactivationOrder {
 					fmt.Fprintf(w, "  %d. %s\n", i+1, id)
@@ -224,8 +224,8 @@ func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth 
 	}
 }
 
-func writeNarrativeSteps(w io.Writer, steps []narrative.Step) {
-	if len(steps) == 0 {
+func writeNarrativeSteps(w io.Writer, steps narrative.Steps) {
+	if !steps.HasSteps() {
 		return
 	}
 	fmt.Fprintln(w, "\nREMEDIATION STEPS")
@@ -236,13 +236,13 @@ func writeNarrativeSteps(w io.Writer, steps []narrative.Step) {
 			safeLabel = "  [SAFE DEFAULT]"
 		}
 		fmt.Fprintf(w, "Step %d of %d — %s%s\n", s.StepNumber, len(steps), s.Title, safeLabel)
-		if s.Caution != "" {
+		if s.HasCaution() {
 			fmt.Fprintf(w, "  \u26a0 CAUTION: %s\n", s.Caution)
 		}
-		if s.Action != "" {
+		if s.HasAction() {
 			fmt.Fprintf(w, "  %s\n", s.Action)
 		}
-		if s.Confidence != "" {
+		if s.HasConfidence() {
 			fmt.Fprintf(w, "  Confidence: %s\n", strings.ToUpper(string(s.Confidence)))
 		}
 	}
@@ -257,11 +257,11 @@ func writeMarkdownPlaybooks(w io.Writer, playbooks []narrative.Playbook, depth s
 		fmt.Fprintf(w, "**Severity:** %s  \n", pb.Severity)
 		fmt.Fprintf(w, "**Finding ID:** %s  \n\n", pb.FindingID)
 
-		if depth != "brief" && pb.Narrative.WhyThisMatters != "" {
+		if depth != "brief" && pb.Narrative.HasWhyThisMatters() {
 			fmt.Fprintf(w, "## Why This Matters\n\n%s\n\n", pb.Narrative.WhyThisMatters)
 		}
 
-		if depth != "brief" && len(pb.Narrative.CurrentState) > 0 {
+		if depth != "brief" && pb.Narrative.HasCurrentState() {
 			fmt.Fprintln(w, "## Current State")
 			fmt.Fprintln(w, "| Property | Current | Required |")
 			fmt.Fprintln(w, "|---|---|---|")
@@ -278,15 +278,15 @@ func writeMarkdownPlaybooks(w io.Writer, playbooks []narrative.Playbook, depth s
 				safe = " [SAFE DEFAULT]"
 			}
 			fmt.Fprintf(w, "### Step %d: %s%s\n\n", s.StepNumber, s.Title, safe)
-			if s.Caution != "" {
+			if s.HasCaution() {
 				fmt.Fprintf(w, "> **CAUTION:** %s\n\n", s.Caution)
 			}
-			if s.Action != "" {
+			if s.HasAction() {
 				fmt.Fprintf(w, "%s\n\n", s.Action)
 			}
 		}
 
-		if depth != "brief" && pb.Narrative.ChainContext != nil {
+		if depth != "brief" && pb.Narrative.HasChainContext() {
 			cc := pb.Narrative.ChainContext
 			fmt.Fprintf(w, "## Chain Context: %s\n\n", cc.ChainID)
 			for i := range cc.MemberControls {

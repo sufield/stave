@@ -133,7 +133,7 @@ func ExtractSourceEvidence(a asset.Asset, causes []evaluation.RootCause) *evalua
 		}
 	}
 
-	if len(evidence.IdentityStatements) == 0 && len(evidence.ResourceGrantees) == 0 {
+	if evidence.IsEmpty() {
 		return nil
 	}
 	return evidence

@@ -38,7 +38,7 @@ type textRenderer struct{}
 
 func (textRenderer) Render(w io.Writer, m manifest) error {
 	fmt.Fprintf(w, "Services requested: %s\n", strings.Join(m.Services, ", "))
-	if len(m.ServicesUnmatched) > 0 {
+	if m.HasUnmatchedServices() {
 		fmt.Fprintf(w, "  (no controls/packs cover: %s)\n", strings.Join(m.ServicesUnmatched, ", "))
 	}
 	fmt.Fprintf(w, "Packs covering them: %s\n", joinOrNone(m.Packs))

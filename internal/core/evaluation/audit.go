@@ -400,6 +400,26 @@ func (r *ComplianceReport) HasChainFindings() bool {
 	return r != nil && len(r.ChainFindings) > 0
 }
 
+// HasFindings reports whether the report contains at least one finding.
+func (r *ComplianceReport) HasFindings() bool {
+	return r != nil && len(r.Findings) > 0
+}
+
+// HasNearMissChains reports whether the report records any near-miss attack chains.
+func (r *ComplianceReport) HasNearMissChains() bool {
+	return r != nil && len(r.NearMissChains) > 0
+}
+
+// HasIssues reports whether the report records any non-finding issues or errors.
+func (r *ComplianceReport) HasIssues() bool {
+	return r != nil && len(r.Issues) > 0
+}
+
+// HasAttackStageSummary reports whether attack stages are mapped in the summary.
+func (r *ComplianceReport) HasAttackStageSummary() bool {
+	return r != nil && len(r.AttackStageSummary) > 0
+}
+
 // GetFindingByResource retrieves a finding for a specific control/asset pair.
 func (r *ComplianceReport) GetFindingByResource(ctlID kernel.ControlID, astID asset.ID) *Finding {
 	for i := range r.Findings {

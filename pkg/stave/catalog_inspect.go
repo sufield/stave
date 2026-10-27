@@ -45,6 +45,41 @@ type remediationView struct {
 	Action      string `json:"action"`
 }
 
+// HasApplicableAssetTypes reports whether any asset types apply to this control.
+func (d ControlDetail) HasApplicableAssetTypes() bool {
+	return len(d.ApplicableAssetTypes) > 0
+}
+
+// HasCompliance reports whether any compliance framework citations are present.
+func (d ControlDetail) HasCompliance() bool {
+	return len(d.Compliance) > 0
+}
+
+// HasObservationFields reports whether required observation fields are listed.
+func (d ControlDetail) HasObservationFields() bool {
+	return len(d.ObservationFields) > 0
+}
+
+// HasTaxonomy reports whether taxonomy tags are attached.
+func (d ControlDetail) HasTaxonomy() bool {
+	return len(d.Taxonomy) > 0
+}
+
+// HasChains reports whether the control participates in any attack chains.
+func (d ControlDetail) HasChains() bool {
+	return len(d.Chains) > 0
+}
+
+// HasRemediation reports whether a remediation action is defined.
+func (d ControlDetail) HasRemediation() bool {
+	return d.Remediation != nil
+}
+
+// HasAction reports whether the remediation view defines a concrete action.
+func (r *remediationView) HasAction() bool {
+	return r != nil && r.Action != ""
+}
+
 // RenderCatalogInspect loads the catalog, finds the control matching
 // opts.ControlID, and renders its full metadata. Returns
 // [ErrInvalidInput] when the ID is not found.
@@ -95,7 +130,7 @@ func controlDetailFrom(c *policy.ControlDefinition, chainIDs []string) ControlDe
 	}
 
 	var compliance map[string]string
-	if len(c.Compliance) > 0 {
+	if c.HasComplianceCitations() {
 		compliance = make(map[string]string, len(c.Compliance))
 		for k, v := range c.Compliance {
 			compliance[string(k)] = string(v)
@@ -156,14 +191,14 @@ func renderControlDetailText(buf *bytes.Buffer, d ControlDetail) {
 		fmt.Fprintf(buf, "  Corpus:          %s\n", d.CorpusReference)
 	}
 
-	if len(d.ApplicableAssetTypes) > 0 {
+	if d.HasApplicableAssetTypes() {
 		fmt.Fprintf(buf, "\nApplicable Asset Types:\n")
 		for _, at := range d.ApplicableAssetTypes {
 			fmt.Fprintf(buf, "  %s\n", at)
 		}
 	}
 
-	if len(d.Compliance) > 0 {
+	if d.HasCompliance() {
 		fmt.Fprintf(buf, "\nCompliance:\n")
 		keys := make([]string, 0, len(d.Compliance))
 		for k := range d.Compliance {
@@ -175,31 +210,31 @@ func renderControlDetailText(buf *bytes.Buffer, d ControlDetail) {
 		}
 	}
 
-	if len(d.ObservationFields) > 0 {
+	if d.HasObservationFields() {
 		fmt.Fprintf(buf, "\nObservation Fields:\n")
 		for _, f := range d.ObservationFields {
 			fmt.Fprintf(buf, "  %s\n", f)
 		}
 	}
 
-	if len(d.Taxonomy) > 0 {
+	if d.HasTaxonomy() {
 		fmt.Fprintf(buf, "\nTaxonomy:\n")
 		for _, t := range d.Taxonomy {
 			fmt.Fprintf(buf, "  %s\n", t)
 		}
 	}
 
-	if len(d.Chains) > 0 {
+	if d.HasChains() {
 		fmt.Fprintf(buf, "\nChains:\n")
 		for _, ch := range d.Chains {
 			fmt.Fprintf(buf, "  %s\n", ch)
 		}
 	}
 
-	if d.Remediation != nil {
+	if d.HasRemediation() {
 		fmt.Fprintf(buf, "\nRemediation:\n")
 		fmt.Fprintf(buf, "  %s\n", d.Remediation.Description)
-		if d.Remediation.Action != "" {
+		if d.Remediation.HasAction() {
 			fmt.Fprintf(buf, "\n  Action: %s\n", d.Remediation.Action)
 		}
 	}

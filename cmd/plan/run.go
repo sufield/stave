@@ -28,6 +28,16 @@ type preview struct {
 	CollectionOrder []string `json:"collection_order"`
 }
 
+// HasPack reports whether the plan targets an explicit pack rather than services.
+func (p preview) HasPack() bool {
+	return p.Pack != ""
+}
+
+// HasCollectionOrder reports whether a recommended collection order is specified.
+func (p preview) HasCollectionOrder() bool {
+	return len(p.CollectionOrder) > 0
+}
+
 func catalogMeta(o *options) ([]pack.ControlMeta, error) {
 	sums, err := stave.CatalogControlSummaries(o.controls, !o.controlsSet)
 	if err != nil {
