@@ -73,7 +73,7 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	if f.IsChainMember() {
 		dto.ChainMembership = mapSlice(f.ChainMembershipEntries(), fromChainMembershipEntry)
 	}
-	if f.Exploitability != "" {
+	if f.HasExploitability() {
 		dto.Exploitability = string(f.Exploitability)
 	}
 	if f.HasNearMissChains() {

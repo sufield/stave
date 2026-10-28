@@ -155,12 +155,42 @@ type ComplianceSummary struct {
 	NearbyFrameworks            []NearbyFramework    `json:"nearby_frameworks,omitempty"`
 }
 
+// HasIndeterminate reports whether the evaluation encountered indeterminate findings.
+func (s ComplianceSummary) HasIndeterminate() bool {
+	return s.Indeterminate > 0
+}
+
+// HasFrameworkReadiness reports whether any framework readiness assessments are available.
+func (s ComplianceSummary) HasFrameworkReadiness() bool {
+	return len(s.FrameworkReadiness) > 0
+}
+
+// HasFrameworkCitationsSatisfied reports whether any framework citations are covered.
+func (s ComplianceSummary) HasFrameworkCitationsSatisfied() bool {
+	return s.FrameworkCitationsSatisfied > 0
+}
+
+// HasSuperFix reports whether a high-impact remediation (SuperFix) was identified.
+func (s ComplianceSummary) HasSuperFix() bool {
+	return s.SuperFix != nil
+}
+
+// HasNearbyFrameworks reports whether any nearby framework candidates were detected.
+func (s ComplianceSummary) HasNearbyFrameworks() bool {
+	return len(s.NearbyFrameworks) > 0
+}
+
 // FrameworkReadiness shows per-framework compliance scores.
 type FrameworkReadiness struct {
 	Framework        string `json:"framework"`
 	TotalControls    int    `json:"total_controls"`
 	PassingControls  int    `json:"passing_controls"`
 	ReadinessPercent int    `json:"readiness_percent"`
+}
+
+// HasMappedControls reports whether the framework has at least one mapped control.
+func (r FrameworkReadiness) HasMappedControls() bool {
+	return r.TotalControls > 0
 }
 
 // SuperFix identifies the single highest-impact remediation —
@@ -418,6 +448,16 @@ func (r *ComplianceReport) HasIssues() bool {
 // HasAttackStageSummary reports whether attack stages are mapped in the summary.
 func (r *ComplianceReport) HasAttackStageSummary() bool {
 	return r != nil && len(r.AttackStageSummary) > 0
+}
+
+// HasTopExposures reports whether the report records critical-path top exposures.
+func (r *ComplianceReport) HasTopExposures() bool {
+	return r != nil && len(r.TopExposures) > 0
+}
+
+// HasSkippedControls reports whether any controls were skipped during evaluation.
+func (r *ComplianceReport) HasSkippedControls() bool {
+	return r != nil && len(r.SkippedControls) > 0
 }
 
 // GetFindingByResource retrieves a finding for a specific control/asset pair.

@@ -201,6 +201,21 @@ func (f *Finding) HasScopeTags() bool {
 	return f != nil && len(f.ScopeTags) > 0
 }
 
+// HasExploitability reports whether the finding has an exploitability assessment.
+func (f *Finding) HasExploitability() bool {
+	return f != nil && f.Exploitability != ""
+}
+
+// HasDecidingLayer reports whether the finding specifies a deciding analytical layer.
+func (f *Finding) HasDecidingLayer() bool {
+	return f != nil && f.DecidingLayer != ""
+}
+
+// HasExposureScore reports whether the finding carries a positive exposure score.
+func (f *Finding) HasExposureScore() bool {
+	return f != nil && f.ExposureScore > 0
+}
+
 // HasEnrichedContext reports whether the finding carries
 // analytical metadata beyond the bare control violation.
 func (f *Finding) HasEnrichedContext() bool {

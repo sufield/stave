@@ -21,11 +21,13 @@ func WriteFindingDetail(w io.Writer, detail *evaluation.FindingDetail) error {
 	writeControlSection(d, detail)
 	writeResourceSection(d, detail)
 	writeEvidenceSection(d, &detail.Evidence)
-	if detail.Trace != nil {
+	if detail.HasTrace() {
 		writeTraceSection(d, detail.Trace)
 	}
 	writeRemediationSection(d, detail)
-	writeNextStepsSection(d, detail.NextSteps)
+	if detail.HasNextSteps() {
+		writeNextStepsSection(d, detail.NextSteps)
+	}
 
 	return d.err
 }
@@ -155,21 +157,25 @@ func writeTraceSection(d *drawer, ft *evaluation.FindingTrace) {
 }
 
 func writeRemediationSection(d *drawer, detail *evaluation.FindingDetail) {
-	if detail.Remediation == nil {
+	if !detail.HasRemediation() {
 		return
 	}
 
 	writeSectionHeader(d, "Remediation Guidance")
 	writeField(d, "", detail.Remediation.Description)
-	if detail.Remediation.Action != "" {
+	if detail.Remediation.HasAction() {
 		d.f("\n  Action: %s\n", strings.TrimSpace(detail.Remediation.Action))
 	}
-	writeRemediationExample(d, detail.Remediation.Example)
-	writeRemediationPlan(d, detail.RemediationPlan)
+	if detail.Remediation.HasExample() {
+		writeRemediationExample(d, detail.Remediation.Example)
+	}
+	if detail.HasRemediationPlan() {
+		writeRemediationPlan(d, detail.RemediationPlan)
+	}
 }
 
 func writeRemediationExample(d *drawer, example string) {
-	if example == "" {
+	if strings.TrimSpace(example) == "" {
 		return
 	}
 	d.f("\n  Example configuration:\n")
@@ -183,9 +189,13 @@ func writeRemediationPlan(d *drawer, plan *evaluation.RemediationPlan) {
 		return
 	}
 	d.f("\n  Fix plan (%s):\n", plan.ID)
-	writeRemediationPreconditions(d, plan.Preconditions)
-	writeRemediationActions(d, plan.Actions)
-	if plan.ExpectedEffect != "" {
+	if plan.HasPreconditions() {
+		writeRemediationPreconditions(d, plan.Preconditions)
+	}
+	if plan.HasActions() {
+		writeRemediationActions(d, plan.Actions)
+	}
+	if plan.HasExpectedEffect() {
 		d.f("    Expected effect: %s\n", plan.ExpectedEffect)
 	}
 }

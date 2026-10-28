@@ -114,6 +114,16 @@ type EnrichedResult struct {
 	CoveragePosture       *coverage.CoverageIndex
 }
 
+// HasIndeterminateFindings reports whether any indeterminate findings were produced.
+func (e *EnrichedResult) HasIndeterminateFindings() bool {
+	return e != nil && len(e.IndeterminateFindings) > 0
+}
+
+// HasExemptedAssets reports whether any exempted assets were recorded.
+func (e *EnrichedResult) HasExemptedAssets() bool {
+	return e != nil && len(e.ExemptedAssets) > 0
+}
+
 // FindingMarshaler transforms enriched findings into format-specific bytes
 // without performing I/O.
 type FindingMarshaler interface {

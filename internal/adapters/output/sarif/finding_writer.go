@@ -169,7 +169,7 @@ func buildRules(findings []remediation.Finding) ([]sarifRule, map[kernel.Control
 				Text: f.ControlDescription,
 			},
 		}
-		if f.RemediationSpec.Action != "" {
+		if f.RemediationSpec.HasAction() {
 			rule.Help = &sarifMessage{Text: f.RemediationSpec.Action}
 		}
 		tags := buildRuleTags(f)
@@ -338,13 +338,13 @@ func buildFindingProperties(f *remediation.Finding, alts []map[string]any) map[s
 	if sev := f.SeverityLabel(); sev != "" {
 		props["stave/severity"] = sev
 	}
-	if f.Exploitability != "" {
+	if f.HasExploitability() {
 		props["stave/exploitability"] = string(f.Exploitability)
 	}
-	if f.DecidingLayer != "" {
+	if f.HasDecidingLayer() {
 		props["stave/deciding_layer"] = string(f.DecidingLayer)
 	}
-	if f.ExposureScore > 0 {
+	if f.HasExposureScore() {
 		props["stave/exposure_score"] = float64(f.ExposureScore)
 	}
 	if f.HasClassification() {

@@ -89,6 +89,11 @@ func (s *RemediationSpec) HasAction() bool {
 	return s != nil && s.Action != ""
 }
 
+// HasExample reports whether a concrete configuration example is provided.
+func (s *RemediationSpec) HasExample() bool {
+	return s != nil && s.Example != ""
+}
+
 // IsEmpty reports whether the spec carries neither a Description nor
 // an Action — i.e. the catalog author left both prose fields blank,
 // so a renderer has nothing to print. Distinct from Actionable, which

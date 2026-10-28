@@ -130,7 +130,7 @@ func (f *Finding) HasRemediationPlan() bool {
 // advisory plans. Both branches collapse to a single predicate
 // callers consume.
 func (f *Finding) HasRemediationCommand() bool {
-	return f.HasRemediationPlan() && f.RemediationPlan.Command != ""
+	return f.HasRemediationPlan() && f.RemediationPlan.HasCommand()
 }
 
 // RemediationCommand returns the plan's Command together with a

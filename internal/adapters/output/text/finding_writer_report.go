@@ -8,7 +8,7 @@ import (
 )
 
 func (w *FindingWriter) writeChainFindings(d *drawer, result *evaluation.ComplianceReport) {
-	if len(result.ChainFindings) == 0 {
+	if !result.HasChainFindings() {
 		return
 	}
 	d.f("\nCompound Risk Chains")
@@ -51,7 +51,7 @@ func (w *FindingWriter) writeAttackStageSummary(d *drawer, result *evaluation.Co
 }
 
 func (w *FindingWriter) writeTopExposures(d *drawer, result *evaluation.ComplianceReport) {
-	if len(result.TopExposures) == 0 {
+	if !result.HasTopExposures() {
 		return
 	}
 	// The main findings list is already sorted by ExposureScore
@@ -80,15 +80,15 @@ func (w *FindingWriter) writeTopExposures(d *drawer, result *evaluation.Complian
 }
 
 func (w *FindingWriter) writeFrameworkReadiness(d *drawer, result *evaluation.ComplianceReport) {
-	readiness := result.Summary.FrameworkReadiness
-	if len(readiness) == 0 {
+	if !result.Summary.HasFrameworkReadiness() {
 		return
 	}
+	readiness := result.Summary.FrameworkReadiness
 	d.f("\nFramework Readiness")
 	d.f("\n-------------------\n")
 	for i := range readiness {
 		r := &readiness[i]
-		if r.TotalControls == 0 {
+		if !r.HasMappedControls() {
 			// No controls mapped for this requested framework: show the
 			// gap explicitly so 0% is not misread as "failing every
 			// control" (and never as the old false 100%).
@@ -98,15 +98,16 @@ func (w *FindingWriter) writeFrameworkReadiness(d *drawer, result *evaluation.Co
 		d.f("  %-20s %3d%%  (%d/%d controls passing)\n",
 			r.Framework, r.ReadinessPercent, r.PassingControls, r.TotalControls)
 	}
-	if result.Summary.FrameworkCitationsSatisfied > 0 {
+	if result.Summary.HasFrameworkCitationsSatisfied() {
 		d.f("\nCompliance ROI: fixing %d violations covers %d framework citations\n",
 			result.Summary.Violations, result.Summary.FrameworkCitationsSatisfied)
 	}
-	if sf := result.Summary.SuperFix; sf != nil {
+	if result.Summary.HasSuperFix() {
+		sf := result.Summary.SuperFix
 		d.f("\n[!] High-Impact Remediation: fixing %s satisfies %d requirements across %s\n",
 			string(sf.ControlID), sf.CitationsFixed, strings.Join(sf.Frameworks, ", "))
 	}
-	if len(result.Summary.NearbyFrameworks) > 0 {
+	if result.Summary.HasNearbyFrameworks() {
 		d.f("\nNearby Frameworks (already >80%% ready)\n")
 		for i := range result.Summary.NearbyFrameworks {
 			nf := &result.Summary.NearbyFrameworks[i]

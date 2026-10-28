@@ -31,6 +31,26 @@ func (d *FindingDetail) HasPostureDrift() bool {
 	return d != nil && d.PostureDrift != nil
 }
 
+// HasTrace reports whether predicate evaluation trace data is available.
+func (d *FindingDetail) HasTrace() bool {
+	return d != nil && d.Trace != nil
+}
+
+// HasRemediation reports whether remediation guidance is attached.
+func (d *FindingDetail) HasRemediation() bool {
+	return d != nil && d.Remediation != nil
+}
+
+// HasRemediationPlan reports whether an automated fix plan is attached.
+func (d *FindingDetail) HasRemediationPlan() bool {
+	return d != nil && d.RemediationPlan != nil
+}
+
+// HasNextSteps reports whether any follow-up actions are recommended.
+func (d *FindingDetail) HasNextSteps() bool {
+	return d != nil && len(d.NextSteps) > 0
+}
+
 // FindingControlSummary holds control metadata relevant to diagnosis.
 type FindingControlSummary struct {
 	ID          kernel.ControlID         `json:"id"`

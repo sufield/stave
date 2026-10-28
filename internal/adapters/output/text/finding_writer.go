@@ -17,7 +17,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/sufield/stave/internal/core/asset"
 	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
@@ -55,7 +54,7 @@ func (w *FindingWriter) marshalVerbose(enriched *appcontracts.EnrichedResult) ([
 	result := enriched.Result
 
 	w.writeHeader(d, &result)
-	if len(result.Findings) == 0 {
+	if !result.HasFindings() {
 		w.writeNoViolationsSummary(d)
 		w.writeIndeterminate(d, enriched)
 		if d.err != nil {
@@ -73,8 +72,8 @@ func (w *FindingWriter) marshalVerbose(enriched *appcontracts.EnrichedResult) ([
 	w.writeFrameworkReadiness(d, &result)
 	w.writeRemediationGroups(d, remFindings)
 	w.writeIndeterminate(d, enriched)
-	w.writeSkippedControls(d, result.SkippedControls)
-	writeExemptedAssets(d, enriched.ExemptedAssets)
+	w.writeSkippedControls(d, &result)
+	writeExemptedAssets(d, enriched)
 
 	if d.err != nil {
 		return nil, d.err
@@ -202,7 +201,7 @@ func (w *FindingWriter) writeHeader(d *drawer, result *evaluation.ComplianceRepo
 	d.f("  Assets evaluated:    %d\n", result.Summary.TotalAssets)
 	d.f("  Attack surface:      %d\n", result.Summary.ExposedResources)
 	d.f("  Violations:          %d\n", result.Summary.Violations)
-	if result.Summary.Indeterminate > 0 {
+	if result.Summary.HasIndeterminate() {
 		d.f("  Indeterminate:       %d\n", result.Summary.Indeterminate)
 	}
 	if result.HasIssues() {
@@ -286,22 +285,22 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 	}
 }
 
-func (w *FindingWriter) writeSkippedControls(d *drawer, skipped []evaluation.SkippedControl) {
-	if len(skipped) == 0 {
+func (w *FindingWriter) writeSkippedControls(d *drawer, result *evaluation.ComplianceReport) {
+	if !result.HasSkippedControls() {
 		return
 	}
-	d.f("\nSkipped Controls: %d\n", len(skipped))
-	for _, s := range skipped {
+	d.f("\nSkipped Controls: %d\n", len(result.SkippedControls))
+	for _, s := range result.SkippedControls {
 		d.f("  - %s: %s\n", s.ControlID, s.Reason)
 	}
 }
 
-func writeExemptedAssets(d *drawer, skipped []asset.ExemptedAsset) {
-	if len(skipped) == 0 {
+func writeExemptedAssets(d *drawer, enriched *appcontracts.EnrichedResult) {
+	if !enriched.HasExemptedAssets() {
 		return
 	}
-	d.f("\nExempted Assets: %d\n", len(skipped))
-	for _, s := range skipped {
+	d.f("\nExempted Assets: %d\n", len(enriched.ExemptedAssets))
+	for _, s := range enriched.ExemptedAssets {
 		d.f("  - %s: %s\n", s.ID, s.Reason)
 	}
 }
@@ -359,7 +358,7 @@ func joinControls(ids []kernel.ControlID) string {
 // could not be evaluated because required fields were absent from the
 // observation snapshot.
 func (w *FindingWriter) writeIndeterminate(d *drawer, enriched *appcontracts.EnrichedResult) {
-	if len(enriched.IndeterminateFindings) == 0 {
+	if !enriched.HasIndeterminateFindings() {
 		return
 	}
 	d.f("\nIndeterminate (%d) — cannot evaluate, data missing\n", len(enriched.IndeterminateFindings))

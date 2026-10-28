@@ -264,13 +264,13 @@ func buildProductFields(f *remediation.Finding, version string) map[string]strin
 		"DurationHours": fmt.Sprintf("%.1f", f.DwellHours()),
 		"StaveVersion":  version,
 	}
-	if f.Exploitability != "" {
+	if f.HasExploitability() {
 		fields["Exploitability"] = string(f.Exploitability)
 	}
-	if f.DecidingLayer != "" {
+	if f.HasDecidingLayer() {
 		fields["DecidingLayer"] = string(f.DecidingLayer)
 	}
-	if f.ExposureScore > 0 {
+	if f.HasExposureScore() {
 		fields["ExposureScore"] = fmt.Sprintf("%.2f", float64(f.ExposureScore))
 	}
 	if f.IsChainMember() {

@@ -30,7 +30,22 @@ type RemediationPlan struct {
 
 // HasActions reports whether the plan defines at least one remediation action.
 func (p *RemediationPlan) HasActions() bool {
-	return len(p.Actions) > 0
+	return p != nil && len(p.Actions) > 0
+}
+
+// HasPreconditions reports whether the plan has any required preconditions.
+func (p *RemediationPlan) HasPreconditions() bool {
+	return p != nil && len(p.Preconditions) > 0
+}
+
+// HasExpectedEffect reports whether the plan documents an expected effect.
+func (p *RemediationPlan) HasExpectedEffect() bool {
+	return p != nil && p.ExpectedEffect != ""
+}
+
+// HasCommand reports whether a parameterized CLI remediation command is available.
+func (p *RemediationPlan) HasCommand() bool {
+	return p != nil && p.Command != ""
 }
 
 // ComputeFingerprint sets ActionsFingerprint to a stable hash of the plan's actions.
