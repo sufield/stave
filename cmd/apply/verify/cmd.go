@@ -24,7 +24,7 @@ func NewCmd(rt *ui.Runtime) *cobra.Command {
 		Short: "Compare before/after evaluations to check remediation",
 		Long: `Compare before/after evaluations to check whether remediation resolved findings.
 
-Verify runs the same controls against two sets of observations (before and after
+Check runs the same controls against two sets of observations (before and after
 remediation) and reports which findings were resolved, which remain, and which
 are newly introduced. Use it after applying fixes to confirm that violations
 have been addressed without introducing regressions.

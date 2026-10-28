@@ -52,7 +52,7 @@ bash examples/demo-ai-security/run.sh
 ## Snapshots
 
 Stave evaluates local JSON snapshots, not live APIs. Capture once,
-evaluate anywhere — offline, deterministic, auditable.
+evaluate anywhere offline, deterministic and auditable.
 
 The contract and evaluation are always deterministic. The collection
 method is your choice based on your risk posture:
@@ -111,7 +111,7 @@ in-memory — no separate `stave transform` step needed.
 
 ### Onboarding skills (`internal/_skills/`)
 
-Six executable skills guide you from install to real-environment evaluation. Each skill is a markdown file your AI coding agent (Claude Code, Cursor) can read and execute — or you can follow manually.
+Six executable skills guide you from install to real-environment evaluation. Each skill is a markdown file your AI coding agent (Claude Code, Cursor) can read and execute or you can follow manually.
 
 | # | Skill | Time | AWS needed? |
 |---|-------|------|-------------|
@@ -124,7 +124,7 @@ Six executable skills guide you from install to real-environment evaluation. Eac
 
 ## Assessment Templates
 
-Templates are JTBD bundles — everything needed to run a specific
+Templates are JTBD bundles with everything needed to run a specific
 security assessment job. Instead of assembling controls, chains,
 and parameters manually, pick a template and go.
 
@@ -160,7 +160,7 @@ stave recommend --snapshot ./observations/
 | `breach-reconstruction` | Timeline reconstruction after a security incident | 60 |
 | `bucket-hijacking-assessment` | Evaluate router-to-S3 destination bindings for namespace hijacking | 70 |
 
-`critical-findings` is the default — zero arguments selects it.
+`critical-findings` is the default. Zero arguments selects it.
 It dynamically selects controls based on which services appear in
 your snapshot. No configuration needed; if the catalog has IAM
 controls and your snapshot has IAM resources, those controls run.
@@ -206,7 +206,7 @@ template for local customization.
 ## Why not a scanner?
 
 CSPM tools scan for known-bad patterns. Stave verifies that
-invariants hold — deterministic, reproducible, mathematically
+invariants hold. It is deterministic, reproducible and mathematically
 grounded. The word is *verifier*, not scanner: proof, not heuristics.
 
 Your AI agent has admin access. Your CSPM tool says you're compliant.
@@ -247,7 +247,7 @@ Stave doesn't replace your scanner. It finds what your scanner structurally cann
 
 Current counts in [`docs/metrics.yaml`](docs/metrics.yaml).
 
-## How Controls Are Built
+## How Controls are Built
 
 Every control in the catalog traces to a documented security failure such as 
 HackerOne disclosures, public breach postmortems, AWS security
