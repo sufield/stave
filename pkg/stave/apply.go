@@ -287,7 +287,7 @@ func convertRemediation(f *evaluation.Finding) Remediation {
 }
 
 func remediationSpecFor(f *evaluation.Finding) policy.RemediationSpec {
-	if f.ControlRemediation != nil {
+	if f.HasControlRemediation() {
 		return *f.ControlRemediation
 	}
 	return policy.DefaultRemediationForClass(f.ControlID.Classify())

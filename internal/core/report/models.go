@@ -53,6 +53,12 @@ func (a *Assessment) HasFindings() bool {
 	return a != nil && len(a.Findings) > 0
 }
 
+// HasChainFindings reports whether the assessment records any compound risk chains.
+func (a *Assessment) HasChainFindings() bool {
+	return a != nil && len(a.ChainFindings) > 0
+}
+
+
 // EnsureFindings normalises the Findings slice in-place: a nil
 // slice is replaced with an empty slice. Returns the (now non-nil)
 // slice for fluent use. Replaces the (env.Findings == nil →

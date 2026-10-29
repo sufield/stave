@@ -310,3 +310,10 @@ func (f *Finding) SeverityLabel() string {
 	}
 	return f.ControlSeverity.String()
 }
+
+// HasControlRemediation reports whether author-defined remediation guidance
+// is attached to the finding.
+func (f *Finding) HasControlRemediation() bool {
+	return f != nil && f.ControlRemediation != nil
+}
+

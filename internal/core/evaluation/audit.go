@@ -445,6 +445,20 @@ func (r *ComplianceReport) HasIssues() bool {
 	return r != nil && len(r.Issues) > 0
 }
 
+// HasConsolidatedIssues reports whether the report records at least one
+// issue that consolidates multiple member findings.
+func (r *ComplianceReport) HasConsolidatedIssues() bool {
+	if !r.HasIssues() {
+		return false
+	}
+	for i := range r.Issues {
+		if r.Issues[i].IsConsolidated() {
+			return true
+		}
+	}
+	return false
+}
+
 // HasAttackStageSummary reports whether attack stages are mapped in the summary.
 func (r *ComplianceReport) HasAttackStageSummary() bool {
 	return r != nil && len(r.AttackStageSummary) > 0

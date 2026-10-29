@@ -89,6 +89,12 @@ func (i Issue) IsConsolidated() bool {
 	return len(i.MemberFindingIDs) > 1
 }
 
+// MemberCount returns the number of member findings grouped by this issue.
+func (i Issue) MemberCount() int {
+	return len(i.MemberFindingIDs)
+}
+
+
 // discriminatorKeys are never included in the root-cause key set.
 // These are kind-type gate clauses that appear on nearly every
 // predicate of a given asset type; including them would cause every

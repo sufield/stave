@@ -302,7 +302,7 @@ func rehydrateControlRemediation(report *evaluation.ComplianceReport, controls [
 	}
 	attach := func(fs []evaluation.Finding) {
 		for i := range fs {
-			if fs[i].ControlRemediation == nil {
+			if !fs[i].HasControlRemediation() {
 				if rem, ok := remediationByID[fs[i].ControlID]; ok {
 					fs[i].ControlRemediation = rem
 				}

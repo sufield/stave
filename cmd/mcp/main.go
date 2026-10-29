@@ -996,7 +996,7 @@ func runChainsTool(ctx context.Context, args chainsArgs) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(assess.ChainFindings) == 0 {
+	if !assess.HasChainFindings() {
 		return wrapTextResult("No compound risk chains detected in this snapshot. All risk is single-resource.")
 	}
 	if len(chains) == 0 {

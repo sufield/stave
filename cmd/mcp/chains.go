@@ -90,7 +90,7 @@ type arrow struct {
 // left-to-right SVG graph of the compound legs (the co-failing
 // controls) flowing into a compound-risk node. All CSS/JS/SVG inline.
 func renderChains(assessment *stave.Assessment) (string, error) {
-	if len(assessment.ChainFindings) == 0 {
+	if !assessment.HasChainFindings() {
 		return "", errors.New("renderChains: no chain findings")
 	}
 	view := buildChainsView(assessment)

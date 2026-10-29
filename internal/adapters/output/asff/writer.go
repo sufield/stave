@@ -170,7 +170,7 @@ func extractAWSAccountID(assetID string) string {
 
 // mapChainFindings adds compound chain findings as ASFF entries.
 func mapChainFindings(assessment *report.Assessment, timestamp, productARN string) []ASFFinding {
-	if assessment == nil || len(assessment.ChainFindings) == 0 {
+	if !assessment.HasChainFindings() {
 		return nil
 	}
 	findings := make([]ASFFinding, 0, len(assessment.ChainFindings))

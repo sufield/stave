@@ -67,7 +67,7 @@ func Write(w io.Writer, in Input) {
 	}
 
 	// Chain activations.
-	if len(a.ChainFindings) > 0 {
+	if a.HasChainFindings() {
 		writeGauge(w, "stave_chain_active_total", "Number of active attack chains", float64(len(a.ChainFindings)))
 		writeComment(w, "stave_chain_active", "Active chain by ID")
 		for i := range a.ChainFindings {

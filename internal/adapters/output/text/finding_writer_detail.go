@@ -132,34 +132,17 @@ func writeFindingEvidenceContext(d *drawer, f *remediation.Finding) {
 // per-control detail stays in the findings list below. See
 // docs/product/metrics.md § Metric 2.
 func (w *FindingWriter) writeIssues(d *drawer, result *evaluation.ComplianceReport) {
-	issues := result.Issues
-	if len(issues) == 0 {
-		return
-	}
-	// Skip when every Issue is a singleton — there's nothing consolidated
-	// to show and the findings list below carries the same information.
-	anyMulti := false
-	for i := range issues {
-		if len(issues[i].MemberFindingIDs) > 1 {
-			anyMulti = true
-			break
-		}
-	}
-	if !anyMulti {
+	if !result.HasConsolidatedIssues() {
 		return
 	}
 
 	d.f("\nIssues (consolidated by shared root cause)")
 	d.f("\n------------------------------------------\n")
-	for i := range issues {
-		iss := &issues[i]
-		d.f("\n%d. %s  (%d %s)\n", i+1, iss.AssetID, len(iss.MemberFindingIDs), pluralize(len(iss.MemberFindingIDs), "finding", "findings"))
+	for i := range result.Issues {
+		iss := &result.Issues[i]
+		d.f("\n%d. %s  (%d %s)\n", i+1, iss.AssetID, iss.MemberCount(), pluralize(iss.MemberCount(), "finding", "findings"))
 		d.f("   Score: %.1f\n", iss.ConsolidatedScore.Value())
-		sharedStrs := make([]string, len(iss.SharedKeys))
-		for j, k := range iss.SharedKeys {
-			sharedStrs[j] = k.String()
-		}
-		d.f("   Root cause: %s\n", strings.Join(sharedStrs, ", "))
+		d.f("   Root cause: %s\n", strings.Join(iss.SharedKeyStrings(), ", "))
 		d.f("   Members:\n")
 		for _, fid := range iss.MemberFindingIDs {
 			if f, ok := result.FindByID(string(fid)); ok {

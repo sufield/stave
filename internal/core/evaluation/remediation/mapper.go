@@ -167,7 +167,7 @@ func (f *Finding) EffectiveRemediationCommand() string {
 // Prioritizes YAML-defined remediation from control metadata,
 // falling back to class-based defaults from the control definition layer.
 func resolveSpec(f *evaluation.Finding) policy.RemediationSpec {
-	if f.ControlRemediation != nil {
+	if f.HasControlRemediation() {
 		return *f.ControlRemediation
 	}
 	return policy.DefaultRemediationForClass(f.ControlID.Classify())
