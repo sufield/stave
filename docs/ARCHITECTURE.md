@@ -1,6 +1,6 @@
 # Architecture
 
-Stave follows Hexagonal Architecture (ports and adapters). The dependency rule is enforced by `internal/app/architecture_dependency_test.go`.
+Stave follows Hexagonal Architecture. The dependency rule is enforced by `internal/app/architecture_dependency_test.go`.
 
 ## Layer Map
 
@@ -8,7 +8,7 @@ Stave follows Hexagonal Architecture (ports and adapters). The dependency rule i
 cmd/                 CLI entry points (Cobra). Extracts flags, wires adapters, delegates to app layer.
 internal/
   core/              Domain model. Zero external dependencies. Business rules and types.
-    usecase/         Use-case orchestration (Gate, Apply, Fix, Verify, Trace) + port interfaces.
+    usecase/         Use-case orchestration (Gate, Apply, Fix, Check, Trace) + port interfaces.
     evaluation/      Evaluation engine, findings, remediation, risk scoring.
     controldef/      Control definition types and parsing.
     asset/           Asset, Snapshot, Timeline, Delta.
@@ -31,7 +31,7 @@ internal/
 
 ## Dependency Rule
 
-Dependencies point inward. Outer layers depend on inner layers, never the reverse.
+Dependencies point inward. Outer layers depend on inner layers.
 
 ```
 cmd/  --->  adapters/  --->  app/  --->  core/
@@ -76,25 +76,32 @@ The evaluation pipeline processes stages in this order:
 
 This order is the triangular matrix order from the Axiomatic
 Design analysis: each stage consumes only the outputs of
-earlier stages, never later ones. Reordering stages violates
+earlier stages. Reordering stages violates
 the Independence Axiom (Axiom 1) and introduces circular
 dependencies that break deterministic evaluation.
 
 Reference: `docs-internal/architecture/axiomatic-design.md`
 
-## Design Rationale: Three Reasoning Engines
+## Design Rationale: Four Reasoning Engines
 
-Stave uses three reasoning engines:
+Stave uses four reasoning engines:
 
 | Engine | Computation class | What it answers |
 |---|---|---|
 | CEL | Local predicate (per-resource) | "Is this resource misconfigured?" |
 | Datalog (Soufflé) | Transitive closure (global graph) | "Can this role reach that resource?" |
 | Z3 (SMT) | Satisfiability (semantic equivalence) | "Is this control version equivalent to the previous?" |
+| Lean 4 | Theorem proving (formal verification) | "Is the engine's logic provably correct?" |
+
+The first three are runtime engines; Lean 4 is the verification
+layer that proves properties about them (CEL type safety, IAM
+reachability soundness, network invariants, cross-account trust,
+composition). Bridge tool: `internal/tools/lean-celtype-bridge/`.
+Formalization domains: `docs-internal/lean4-*/`.
 
 Each engine serves a distinct functional requirement that the
-other two cannot satisfy. The Information Axiom (Axiom 2)
-confirms this is the minimum set — removing any engine loses
+others cannot satisfy. The Information Axiom (Axiom 2)
+confirms this is the minimum set; removing any engine loses
 a capability no other engine can provide.
 
 ## Command Trace: `stave apply`

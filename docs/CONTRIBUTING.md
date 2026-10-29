@@ -145,8 +145,8 @@ Startup target for lightweight commands is approximately `<500ms` (see `Benchmar
 
 Adding a control changes the policy fingerprint embedded in 2000+
 golden fixtures. Regenerating those goldens locally on every control
-addition is slow churn that adds no signal — the diffs are catalog
-growth, not behavior. So:
+addition is slow churn that adds no signal. The diffs are catalog
+growth. So:
 
 - `make test-fast` is the dev feedback loop. It uses `go test -short`
   and excludes `./e2e/`, so any test that gates on `testing.Short()`
@@ -216,7 +216,7 @@ Interpreting the diff categories:
 | MIXED | Both metadata and behavioral paths diffed in the same fixture. | **Investigate first.** |
 
 The target does not run as part of `make check` or CI. It is a
-developer tool — run it explicitly, review the report, then commit.
+developer tool. Run it explicitly, review the report, then commit.
 Automatic regeneration is what masked the drift-cleanup series bugs.
 
 ## Code Quality

@@ -14,8 +14,8 @@ Structured output following the `out.v0.1` schema. Machine-readable, suitable fo
 # Count violations
 stave apply --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations | jq '.summary.violations'
 
-# List violated resource IDs
-stave apply --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations | jq -r '.findings[].resource_id'
+# List violated asset IDs
+stave apply --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations | jq -r '.findings[].asset_id'
 
 # Get unique violated control IDs
 stave apply --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations | jq -r '.findings[].control_id' | sort -u
@@ -65,16 +65,13 @@ stave lint --controls testdata/e2e/e2e-01-violation/controls --observations test
 
 ```json
 {
-  "schema_version": "validate.v0.1",
+  "schema_version": "lint.v0.1",
   "valid": true,
-  "errors": [],
-  "warnings": [],
   "summary": {
-    "controls_checked": 10,
-    "snapshots_checked": 2,
-    "resource_observations_checked": 15,
-    "identity_observations_checked": 0,
-    "context_provided": false
+    "controls_checked": 1,
+    "snapshots_checked": 3,
+    "asset_observations_checked": 6,
+    "identity_observations_checked": 0
   }
 }
 ```

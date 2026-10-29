@@ -24,7 +24,7 @@ stave transform -i raw/ -o observations/
 ```
 
 You can also use an **external extractor** that emits `obs.v0.1`
-directly — a Steampipe SQL query piped through `jq`, CloudQuery, or your
+directly. A Steampipe SQL query piped through `jq`, CloudQuery, or your
 own. See [Building an Extractor](extractor-prompt.md) when you need breadth
 beyond the built-in filters or a custom data source.
 

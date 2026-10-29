@@ -531,8 +531,10 @@ subdirectory.
 
 | Engine | Role | Location |
 |--------|------|----------|
+| CEL | Per-resource predicate evaluation | `internal/core/evaluation/engine/` |
 | Soufflé/Datalog | Path discovery (transitive closure) | `reasoning/souffle/` |
 | Z3 | Semantic verification (condition satisfiability) | `internal/tools/semantic-diff/` |
+| Lean 4 | Formal proofs over engine logic | `docs-internal/lean4-*/`, `internal/tools/lean-celtype-bridge/` |
 
 ### SIR export
 
@@ -556,6 +558,25 @@ reasoning/souffle/discovery/discovery.dl  Chain discovery + classification
 make semantic-diff                         # all controls
 make semantic-diff ARGS="-symbolic -v"     # verbose proof mode
 ```
+
+### Lean 4
+
+Formal verification layer proving properties about the runtime engines.
+Bridge tool exports the catalog as JSONL for the Lean checker.
+
+```bash
+make export-for-lean                       # export bridge JSONL
+```
+
+Five formalization domains in `docs-internal/`:
+
+| Domain | What it proves |
+|--------|---------------|
+| `lean4-celtype` | CEL predicate type safety against collector contract |
+| `lean4-iam` | IAM reachability soundness (alignment with Soufflé) |
+| `lean4-network` | Network topology invariants |
+| `lean4-xaccount` | Cross-account trust boundary properties |
+| `lean4-compose` | Chain composition correctness |
 
 ---
 

@@ -4,7 +4,7 @@
 > extractor only when you need a data source or resource type the built-in
 > filters don't cover yet.
 
-This is the ultimate way to leverage Contract-First architecture. Since the obs.v0.1 schema is the only thing the engine cares about, you can use a "Meta-Prompt" that turns any LLM to generate code for an Extractor.
+This leverages Contract-First architecture. Since the obs.v0.1 schema is the only thing the engine cares about, you can use a "Meta-Prompt" that turns any LLM to generate code for an Extractor.
 
 Here is a template for developers. You can paste this into Claude, ChatGPT, or GitHub Copilot to generate a working extractor in minutes.
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 ## Using Steampipe as an Extractor
 ```
 
-[Steampipe](https://steampipe.io) is the fastest way to build a Stave extractor without writing code. Steampipe exposes cloud APIs as SQL tables — you write a query, pipe the result through `jq`, and produce `obs.v0.1` JSON directly.
+[Steampipe](https://steampipe.io) is the fastest way to build a Stave extractor without writing code. Steampipe exposes cloud APIs as SQL tables. You write a query, pipe the result through `jq`, and produce `obs.v0.1` JSON directly.
 
 Steampipe has 150+ plugins covering AWS, GCP, Azure, Kubernetes, GitHub, and dozens of other services. Every `aws_s3_bucket`, `aws_iam_role`, `aws_vpc_security_group`, and `aws_opensearch_domain` row maps directly to a Stave observation asset. This makes it the recommended extraction path for teams that want comprehensive coverage without building custom extractors.
 
@@ -189,7 +189,7 @@ CloudQuery supports 100+ source plugins (AWS, GCP, Azure, K8s, GitHub, Terraform
 
 ## Using AWS Config as an Extractor
 
-[AWS Config](https://aws.amazon.com/config/) continuously records resource configuration changes. If your organization already has Config enabled, you can export configuration snapshots directly — no additional tooling needed.
+[AWS Config](https://aws.amazon.com/config/) continuously records resource configuration changes. If your organization already has Config enabled, you can export configuration snapshots directly.
 
 This is the lowest-friction path for teams that already have AWS Config deployed and don't want to add Steampipe or CloudQuery to their stack.
 
@@ -221,11 +221,11 @@ aws configservice deliver-config-snapshot \
 # Then download and transform the snapshot JSON
 ```
 
-AWS Config covers 380+ resource types across all AWS services. The `select-resource-config` API returns the full configuration as JSON — the same data Stave controls evaluate. For teams already paying for AWS Config, this is zero additional cost.
+AWS Config covers 380+ resource types across all AWS services. The `select-resource-config` API returns the full configuration as JSON. The same data Stave controls evaluate. For teams already paying for AWS Config, this is zero additional cost.
 
 ## Choosing an Extraction Tool
 
-Pick the tool your team already knows. Stave doesn't care how you produce obs.v0.1 JSON — only that it conforms to the schema.
+Pick the tool your team already knows. 
 
 | Tool | Best for | Setup | Multi-cloud |
 |---|---|---|---|
@@ -237,8 +237,6 @@ Pick the tool your team already knows. Stave doesn't care how you produce obs.v0
 All four paths produce the same obs.v0.1 JSON. Stave evaluates the same controls regardless of how the observations were created.
 
 ---
-
-Why this is powerful for your project:
 
 Zero Onboarding: Developers don't need to learn the Stave Go codebase. They only need to know the 10-line JSON contract.
 

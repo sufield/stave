@@ -14,7 +14,7 @@ How Stave addresses the 7 cloud security lessons from the Cloud Security Allianc
 
 **The problem:** Crypto mining workloads began within minutes of credential compromise. Traditional alerting required hours or days to trigger.
 
-**How Stave helps:** Stave shifts detection left — it finds unsafe state before the incident. Running offline against snapshots in CI means that by the time an attacker arrives, the misconfiguration they'd exploit has already been flagged and remediated. You don't need to detect the attack in real-time if the attack surface doesn't exist.
+**How Stave helps:** Stave shifts detection left. It finds unsafe state before the incident. Running offline against snapshots in CI means that by the time an attacker arrives, the misconfiguration they'd exploit has already been flagged and remediated. You don't need to detect the attack in real-time if the attack surface doesn't exist.
 
 **Workflow:** `stave apply` runs in CI on every snapshot. `ci gate` fails the pipeline if new violations appear.
 
@@ -22,7 +22,7 @@ How Stave addresses the 7 cloud security lessons from the Cloud Security Allianc
 
 **The problem:** Organizations treated crypto mining as a cost issue rather than recognizing it as evidence of compromised access and potential persistence mechanisms.
 
-**How Stave helps:** Stave proves those gaps exist with duration tracking. `--max-unsafe 168h` means "this bucket has been misconfigured for over 7 days." Duration tracking produces evidence of structural gaps — a bucket that's been public for months is a different risk than one that was public for 5 minutes during a deploy.
+**How Stave helps:** Stave proves those gaps exist with duration tracking. `--max-unsafe 168h` means "this bucket has been misconfigured for over 7 days." Duration tracking produces evidence of structural gaps. A bucket that's been public for months is a different risk than one that was public for 5 minutes during a deploy.
 
 **Controls:** Every control tracks unsafe duration. `stave diagnose` explains why a finding triggered and for how long.
 
@@ -54,7 +54,7 @@ How Stave addresses the 7 cloud security lessons from the Cloud Security Allianc
 
 **The problem:** Cloud environments evolve continuously. Without continuous visibility, risk accumulates quietly.
 
-**How Stave helps:** Continuous exposure assessment via snapshot cadence. The CI pipeline runs `stave apply` on every new snapshot produced by the upstream collector, so risk accumulation is visible — not quiet.
+**How Stave helps:** Continuous exposure assessment via snapshot cadence. The CI pipeline runs `stave apply` on every new snapshot produced by the upstream collector, so risk accumulation is visible.
 
 **Workflow:** Capture snapshots on a regular cadence (daily or weekly). Run `stave apply` in CI. `stave status` shows when the last evaluation ran and what to do next.
 

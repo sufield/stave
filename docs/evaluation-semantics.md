@@ -45,7 +45,7 @@ Stave builds a per-asset timeline from the ordered snapshots. Two rules govern
 how the timeline interprets state changes:
 
 - **Absence is not evidence of safety.** When an asset is missing from a
-  snapshot, no state transition occurs — an asset that was unsafe stays unsafe.
+  snapshot, no state transition occurs. An asset that was unsafe stays unsafe.
   This prevents false negatives when an asset temporarily disappears from
   observations.
 
@@ -120,7 +120,7 @@ safety when you only lack evidence of danger.
 ## Predicate Evaluation (CEL)
 
 Control predicates defined in `unsafe_predicate` are compiled to
-[CEL (Common Expression Language)](https://github.com/google/cel-spec)
+[Common Expression Language](https://github.com/google/cel-spec)
 expressions and evaluated by the `cel-go` runtime. This provides:
 
 - Type-safe expression evaluation
@@ -218,7 +218,7 @@ matches.
 
 Stave's predicate operators split into two camps when the field they
 test is absent. Knowing which camp matters when an extractor drops a
-field — different operators interpret the absence differently.
+field. Different operators interpret the absence differently.
 
 | Operator | Missing-field interpretation | Reason |
 |----------|------------------------------|--------|
