@@ -327,4 +327,3 @@ func TestRunDirectoryEvaluation_NilLoader(t *testing.T) {
 		t.Fatalf("expected nil loader error, got: %v", err)
 	}
 }
-

@@ -1027,8 +1027,8 @@ func TestMK4_BuildLifecycles_BasicLifecycle(t *testing.T) {
 func TestMK4_RecordAssetObservation_AssetTypeGateSkips(t *testing.T) {
 	// Lines 241–250: asset type gate.
 	ctls := []policy.ControlDefinition{{
-		ID:              "CTL.RAO.001",
-		Type:            policy.TypeUnsafeState,
+		ID:                   "CTL.RAO.001",
+		Type:                 policy.TypeUnsafeState,
 		ApplicableAssetTypes: []kernel.AssetType{"ec2_instance"},
 	}}
 	snaps := []asset.Snapshot{{
@@ -1212,4 +1212,3 @@ func TestMK4_BuildLifecycles_EmptySnapshotList(t *testing.T) {
 		t.Fatal("expected empty lifecycle map for no snapshots")
 	}
 }
-

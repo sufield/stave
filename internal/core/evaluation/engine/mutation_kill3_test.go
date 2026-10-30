@@ -527,7 +527,7 @@ func TestMK3_CompileReport_ChecksSortedByControlThenAsset(t *testing.T) {
 	ctlA := newTestControl("CTL.A.001").build()
 	ctlB := newTestControl("CTL.B.001").build()
 	a := newTestAssessor().
-		withClock(base.Add(2 * time.Hour)).
+		withClock(base.Add(2*time.Hour)).
 		withControls(ctlA, ctlB).
 		alwaysUnsafe().
 		build()
@@ -1334,10 +1334,10 @@ type mk3Span struct {
 	confidence string
 }
 
-func (s *mk3Span) RecordStep(string, any, any)       {}
-func (s *mk3Span) SetVerdict(v, c string)            { s.verdict = v; s.confidence = c }
-func (s *mk3Span) SetFindingID(id string)            { s.findingID = id }
-func (s *mk3Span) End()                              {}
+func (s *mk3Span) RecordStep(string, any, any) {}
+func (s *mk3Span) SetVerdict(v, c string)      { s.verdict = v; s.confidence = c }
+func (s *mk3Span) SetFindingID(id string)      { s.findingID = id }
+func (s *mk3Span) End()                        {}
 
 func makeIndeterminateFinding(id string, status evaluation.FindingStatus) evaluation.Finding {
 	return evaluation.Finding{

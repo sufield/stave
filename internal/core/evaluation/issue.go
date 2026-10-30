@@ -94,7 +94,6 @@ func (i Issue) MemberCount() int {
 	return len(i.MemberFindingIDs)
 }
 
-
 // discriminatorKeys are never included in the root-cause key set.
 // These are kind-type gate clauses that appear on nearly every
 // predicate of a given asset type; including them would cause every

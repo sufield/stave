@@ -1151,7 +1151,7 @@ func TestComplianceToMap_Empty(t *testing.T) {
 
 func TestComplianceToMap_Populated(t *testing.T) {
 	cm := policy.ComplianceMapping{
-		"cis": "1.1",
+		"cis":  "1.1",
 		"nist": "AC-2",
 	}
 	got := complianceToMap(cm)

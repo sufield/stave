@@ -260,4 +260,3 @@ func TestSafeFileSystem_MkdirAll(t *testing.T) {
 		t.Error("expected directory")
 	}
 }
-

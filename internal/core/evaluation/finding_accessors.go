@@ -316,4 +316,3 @@ func (f *Finding) SeverityLabel() string {
 func (f *Finding) HasControlRemediation() bool {
 	return f != nil && f.ControlRemediation != nil
 }
-
