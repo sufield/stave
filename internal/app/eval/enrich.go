@@ -85,7 +85,7 @@ func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) 
 		}
 		r.RiskSignals = signals
 	}
-	if len(r.TopExposures) > 0 {
+	if r.HasTopExposures() {
 		exposures := make([]findings.ExposureRank, len(r.TopExposures))
 		for i, e := range r.TopExposures {
 			e.AssetID = asset.ID(s.ID(string(e.AssetID)))
@@ -93,12 +93,12 @@ func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) 
 		}
 		r.TopExposures = exposures
 	}
-	if len(r.ChainFindings) > 0 {
+	if r.HasChainFindings() {
 		chains := make([]findings.CompoundFinding, len(r.ChainFindings))
 		for i := range r.ChainFindings {
 			cf := r.ChainFindings[i]
 			cf.AssetID = asset.ID(s.ID(string(cf.AssetID)))
-			if len(cf.ContributingAssets) > 0 {
+			if cf.HasContributingAssets() {
 				contrib := make([]asset.ID, len(cf.ContributingAssets))
 				for j, a := range cf.ContributingAssets {
 					contrib[j] = asset.ID(s.ID(string(a)))
@@ -109,7 +109,7 @@ func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) 
 		}
 		r.ChainFindings = chains
 	}
-	if len(r.Issues) > 0 {
+	if r.HasIssues() {
 		issues := make([]evaluation.Issue, len(r.Issues))
 		for i := range r.Issues {
 			issue := r.Issues[i]

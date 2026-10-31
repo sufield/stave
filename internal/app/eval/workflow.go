@@ -416,7 +416,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// Recompute SecurityState after graph findings are appended.
 	// The assessor derives state from CEL findings only; graph chains
 	// from Soufflé can fire without any individual CEL violation.
-	if len(report.ChainFindings) > 0 && report.SecurityState != evaluation.StateNonCompliant {
+	if report.NeedsChainEscalation() {
 		report.SecurityState = evaluation.StateNonCompliant
 		report.Summary.Violations = max(report.Summary.Violations, len(report.ChainFindings))
 	}
@@ -439,11 +439,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// chain-bonus factor feeds into per-finding scores.
 	rankInputs := make([]risk.RankInput, len(report.Findings))
 	for i := range report.Findings {
-		ri := report.Findings[i].ToRankInput()
-		if report.Findings[i].SharedRoleContext != nil {
-			ri.SharedRoleCount = report.Findings[i].SharedRoleContext.SharingCount
-		}
-		rankInputs[i] = ri
+		rankInputs[i] = report.Findings[i].ToRankInput()
 	}
 	report.TopExposures = risk.RankExposures(rankInputs, controlLookup, 0)
 
@@ -491,7 +487,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 // annotateChainMembership cross-references fired chains with individual
 // findings and populates ChainMembership on each contributing finding.
 func annotateChainMembership(report *evaluation.ComplianceReport) {
-	if len(report.ChainFindings) == 0 {
+	if !report.HasChainFindings() {
 		return
 	}
 
@@ -543,7 +539,7 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 	// on that asset becomes a chain member.
 	for i := range report.ChainFindings {
 		cf := &report.ChainFindings[i]
-		if len(cf.ControlsFailing) > 0 {
+		if cf.HasControlsFailing() {
 			continue
 		}
 		membership := evaluation.ChainMembershipEntry{

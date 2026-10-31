@@ -306,9 +306,7 @@ func buildIssue(assetID asset.ID, memberIndices []int, findings []Finding) Issue
 			headlineIdx = idx
 			headlineScore = f.ExposureScore
 		}
-		if f.ScoreBreakdown != nil && f.ScoreBreakdown.BlastMultiplier > maxBlast {
-			maxBlast = f.ScoreBreakdown.BlastMultiplier
-		}
+		maxBlast = max(maxBlast, f.BlastMultiplier())
 	}
 	slices.Sort(memberIDs)
 	sharedStrings := slices.Sorted(maps.Keys(sharedSet))

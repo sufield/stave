@@ -196,7 +196,7 @@ func convertFinding(f *evaluation.Finding) Finding {
 		Remediation:                convertRemediation(f),
 		ReasoningTrace:             f.ReasoningTrace,
 		ChainMembership:            convertChainMembership(f.ChainMembership),
-		ChainBonus:                 chainBonusFromBreakdown(f),
+		ChainBonus:                 f.ChainBonus(),
 		ExposureScore:              f.ExposureScore.Value(),
 		Defect:                     f.Defect,
 		Infection:                  f.Infection,
@@ -230,20 +230,6 @@ func convertFinding(f *evaluation.Finding) Finding {
 		}
 	}
 	return out
-}
-
-// chainBonusFromBreakdown reads the chain-bonus multiplier off the
-// internal finding's ScoreBreakdown. Default 1.0 when the breakdown
-// hasn't been populated (pre-enrichment findings) or when the finding
-// doesn't belong to any chain.
-func chainBonusFromBreakdown(f *evaluation.Finding) float64 {
-	if f.ScoreBreakdown == nil {
-		return 1.0
-	}
-	if f.ScoreBreakdown.ChainBonus == 0 {
-		return 1.0
-	}
-	return f.ScoreBreakdown.ChainBonus
 }
 
 func convertDelta(ds []policy.DeltaPath) []DeltaPath {

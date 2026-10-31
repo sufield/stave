@@ -430,6 +430,12 @@ func (r *ComplianceReport) HasChainFindings() bool {
 	return r != nil && len(r.ChainFindings) > 0
 }
 
+// NeedsChainEscalation reports whether chain findings exist that have
+// not yet been reflected in SecurityState.
+func (r *ComplianceReport) NeedsChainEscalation() bool {
+	return r.HasChainFindings() && r.SecurityState != StateNonCompliant
+}
+
 // HasFindings reports whether the report contains at least one finding.
 func (r *ComplianceReport) HasFindings() bool {
 	return r != nil && len(r.Findings) > 0

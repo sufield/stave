@@ -49,7 +49,7 @@ func fromCompoundFinding(c *findings.CompoundFinding, idx map[findingKey]*remedi
 	}
 
 	assets := c.ContributingAssets
-	if len(assets) == 0 && c.AssetID != "" {
+	if c.IsSingleAssetChain() {
 		assets = []asset.ID{c.AssetID}
 	}
 

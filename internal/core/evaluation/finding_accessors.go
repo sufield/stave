@@ -316,3 +316,21 @@ func (f *Finding) SeverityLabel() string {
 func (f *Finding) HasControlRemediation() bool {
 	return f != nil && f.ControlRemediation != nil
 }
+
+// BlastMultiplier returns the blast-radius multiplier from the score breakdown,
+// or 1 when no breakdown is attached. Safe on nil receivers.
+func (f *Finding) BlastMultiplier() kernel.BlastRadius {
+	if f == nil || f.ScoreBreakdown == nil {
+		return 1.0
+	}
+	return f.ScoreBreakdown.BlastMultiplier
+}
+
+// ChainBonus returns the chain-bonus multiplier from the score breakdown,
+// or 1.0 when the breakdown is absent or non-positive. Safe on nil receivers.
+func (f *Finding) ChainBonus() float64 {
+	if f == nil || f.ScoreBreakdown == nil || f.ScoreBreakdown.ChainBonus <= 0 {
+		return 1.0
+	}
+	return f.ScoreBreakdown.ChainBonus
+}

@@ -94,6 +94,17 @@ func (f *Finding) ChainMembershipCount() int {
 	return len(f.ChainMembership)
 }
 
+// SharedRoleCount returns the count of resources sharing the finding's IAM
+// role, or 0 when no shared role context is attached. Encapsulates
+// f.SharedRoleContext so callers (such as RankInput projection) do not
+// inspect or dereference the pointer directly.
+func (f *Finding) SharedRoleCount() int {
+	if f == nil || f.SharedRoleContext == nil {
+		return 0
+	}
+	return f.SharedRoleContext.SharingCount
+}
+
 // HasNearMissChains reports whether the finding participates in any
 // near-miss compound chains (chains that are exactly one control
 // short of firing).
@@ -224,10 +235,9 @@ func (f *Finding) ToFailingControl() risk.FailingControl {
 }
 
 // ToRankInput projects the finding to the input shape the exposure
-// ranking consumes. The 6-field copy used to live inline in
-// internal/app/eval/workflow.go; moving it here keeps the
+// ranking consumes. Moving field extraction here keeps the
 // finding-to-rank-input contract on the type that owns the source
-// fields so a future Evidence-field rename only edits one site.
+// fields so ranking inputs remain encapsulated in one site.
 func (f *Finding) ToRankInput() risk.RankInput {
 	if f == nil {
 		return risk.RankInput{}
@@ -239,6 +249,7 @@ func (f *Finding) ToRankInput() risk.RankInput {
 		Exposure:             f.Exposure,
 		UnsafeDurationHours:  f.Evidence.UnsafeDurationHours,
 		ChainMembershipCount: f.ChainMembershipCount(),
+		SharedRoleCount:      f.SharedRoleCount(),
 	}
 }
 

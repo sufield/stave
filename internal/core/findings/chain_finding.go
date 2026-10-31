@@ -82,6 +82,17 @@ func (c *CompoundFinding) HasControlsFailing() bool {
 	return c != nil && len(c.ControlsFailing) > 0
 }
 
+// HasContributingAssets reports whether multiple assets contributed to this chain.
+func (c *CompoundFinding) HasContributingAssets() bool {
+	return c != nil && len(c.ContributingAssets) > 0
+}
+
+// IsSingleAssetChain reports whether this chain is scoped to one asset
+// (no multi-asset contributing set, but a known asset ID).
+func (c *CompoundFinding) IsSingleAssetChain() bool {
+	return c != nil && !c.HasContributingAssets() && c.AssetID != ""
+}
+
 // HasMissingSafeguards reports whether any missing safeguards are identified.
 func (c *CompoundFinding) HasMissingSafeguards() bool {
 	return c != nil && len(c.MissingSafeguards) > 0
