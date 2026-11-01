@@ -9,7 +9,7 @@ collect → transform → apply → triage → fix → check → repeat
 ```
 
 1. **Collect**: capture raw AWS CLI output (`aws iam get-role`, etc.)
-2. **Transform**: `stave transform --in raw/` → obs.v0.1 observations
+2. **Transform**: convert raw JSON → obs.v0.1 using Lean 4 extractors
 3. **Apply**: `stave apply --observations obs/ --format json` → findings
 4. **Triage**: read findings, prioritize by severity and chain membership
 5. **Fix**: follow `remediation.action`, apply the change

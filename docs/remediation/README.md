@@ -1,8 +1,8 @@
 # Structured Remediation Output
 
 Stave produces machine-readable, IaC-agnostic property changes alongside
-every finding. Any tool — Terraform, CDK, Pulumi, AWS CLI, or a human
-at the console — can consume these and generate its own fix.
+every finding. Any tool such as Terraform, CDK, Pulumi, AWS CLI, or a human
+at the console can consume these and generate its own fix.
 
 ## Schema
 

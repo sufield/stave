@@ -152,6 +152,12 @@ func (p *WorkspacePolicy) Validate() error {
 	return nil
 }
 
+// HasEnabledControlPacks reports whether the workspace policy enables
+// at least one control pack. Safe on nil receivers.
+func (p *WorkspacePolicy) HasEnabledControlPacks() bool {
+	return p != nil && len(p.EnabledControlPacks) > 0
+}
+
 // PolicyException allows a specific resource to bypass a security control.
 // ControlID is validated at YAML load time via kernel.ControlID.UnmarshalYAML.
 // Expires uses policy.ExpiryDate so YAML loaders parse the date once at the

@@ -1082,6 +1082,29 @@ func TestApplyFilter(t *testing.T) {
 	}
 }
 
+func TestInfrastructureDrift_HasChanges(t *testing.T) {
+	t.Parallel()
+
+	empty := InfrastructureDrift{}
+	if empty.HasChanges() {
+		t.Error("empty drift should not report changes")
+	}
+
+	emptySlice := InfrastructureDrift{Changes: []AssetChange{}}
+	if emptySlice.HasChanges() {
+		t.Error("drift with empty changes slice should not report changes")
+	}
+
+	withChanges := InfrastructureDrift{
+		Changes: []AssetChange{
+			{AssetID: "bucket-1", Action: DriftProvisioned},
+		},
+	}
+	if !withChanges.HasChanges() {
+		t.Error("drift with changes should report changes")
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Asset helpers
 // ---------------------------------------------------------------------------

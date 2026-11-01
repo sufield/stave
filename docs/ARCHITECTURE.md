@@ -60,7 +60,7 @@ Enforced by `internal/app/architecture_dependency_test.go`.
 | CLI command registration | `cmd/commands.go` (`WireCommands()`) |
 | Dependency wiring | `cmd/cmdutil/compose/infra.go` (`Provider`) |
 
-## Design Invariant: Pipeline Processing Order
+## Pipeline Processing Order
 
 The evaluation pipeline processes stages in this order:
 
@@ -93,10 +93,10 @@ Stave uses four reasoning engines:
 | Z3 (SMT) | Satisfiability (semantic equivalence) | "Is this control version equivalent to the previous?" |
 | Lean 4 | Theorem proving (formal verification) | "Is the engine's logic provably correct?" |
 
-The first three are runtime engines; Lean 4 is the verification
+The first three are runtime engines. Lean 4 is the verification
 layer that proves properties about them (CEL type safety, IAM
 reachability soundness, network invariants, cross-account trust,
-composition). Bridge tool: `internal/tools/lean-celtype-bridge/`.
+composition, KMS). Bridge tool: `internal/tools/lean-celtype-bridge/`.
 Formalization domains: `docs-internal/lean4-*/`.
 
 Each engine serves a distinct functional requirement that the

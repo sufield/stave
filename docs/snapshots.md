@@ -104,4 +104,3 @@ Coupling them would force Stave to solve credential management,
 network access, and provider versioning. The same problems the
 snapshot model was designed to avoid. Separating them lets each
 side evolve independently.
-

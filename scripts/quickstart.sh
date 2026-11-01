@@ -29,9 +29,9 @@ echo "== 2. Plan — what Stave will check =="
 if [ -z "$OBSERVATIONS" ] || [ ! -d "$OBSERVATIONS" ] || [ -z "$(ls -A "$OBSERVATIONS" 2>/dev/null)" ]; then
   echo
   echo "== Next =="
-  echo "1. Collect: run the read-only API calls above with your own tool (-> raw snapshots)."
-  echo "2. Convert: transform the snapshots into obs.v0.1 observations with your extractor"
-  echo "   (e.g. scripts/aws-snapshot.sh ./observations) -- this step is NOT Stave."
+  echo "1. Collect: run the read-only API calls above (scripts/aws-snapshot.sh collects raw JSON)."
+  echo "2. Convert: transform raw JSON into obs.v0.1 observations using the Lean 4 extractors"
+  echo "   (iam-explainer/Stave/Extract/) -- this step is NOT Stave."
   echo "3. Re-run:  scripts/quickstart.sh $SERVICES ./observations"
   exit 0
 fi

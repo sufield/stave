@@ -125,6 +125,11 @@ type InfrastructureDrift struct {
 	Changes       []AssetChange     `json:"changes"`
 }
 
+// HasChanges reports whether the infrastructure drift records at least one asset change.
+func (d InfrastructureDrift) HasChanges() bool {
+	return len(d.Changes) > 0
+}
+
 // GetStateTransition returns the two most recent observation snapshots for comparison.
 func GetStateTransition(snapshots []Snapshot) (prev Snapshot, curr Snapshot, err error) {
 	if len(snapshots) < 2 {

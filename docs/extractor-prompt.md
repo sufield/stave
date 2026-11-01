@@ -1,118 +1,80 @@
-> **Most users don't need this.** `stave apply` auto-transforms raw AWS CLI
-> JSON in-memory — just point `--observations` at the raw directory. Use
-> `stave transform` to inspect intermediate output. Reach for a custom
-> extractor only when you need a data source or resource type the built-in
-> filters don't cover yet.
+# Extractor Overview
 
-This leverages Contract-First architecture. Since the obs.v0.1 schema is the only thing the engine cares about, you can use a "Meta-Prompt" that turns any LLM to generate code for an Extractor.
+> **Extractors convert raw AWS CLI JSON into obs.v0.1 observations.**
+> All extractor logic lives in the Lean 4 project (`iam-explainer/Stave/Extract/`).
+> Convert first, then evaluate with `stave apply --observations`.
 
-Here is a template for developers. You can paste this into Claude, ChatGPT, or GitHub Copilot to generate a working extractor in minutes.
+## Canonical implementation
 
-🚀 Stave Extractor Jumpstart Template
+All extractor logic lives in the `iam-explainer` Lean 4 project under
+`Stave/Extract/`. The implementation is formally verified — zero sorry,
+all proofs checked at compile time.
 
-Instructions for the Developer:
-Fill in the placeholders [ ] below and paste this entire prompt into an LLM.
+### Module map
 
-The Prompt Template
-# Task: Build a Stave Observation Extractor
+| Module | What it does | Transforms |
+|---|---|---|
+| `Asset.lean` | Core `ObsAsset` type, JSON helpers | — |
+| `S3.lean` | S3 bucket transforms | buckets, encryption, public access block, tags |
+| `CloudTrail.lean` | CloudTrail trail transform | trails |
+| `KMS.lean` | KMS key transforms | keys, rotation, key policy |
+| `EC2.lean` | EC2 transforms | volumes, instances, security groups |
+| `IAM.lean` | IAM transforms | roles, users, groups, password policy, attached policies, tags, inline policies |
+| `Misc.lean` | CloudWatch, Config, Lambda, OpenSearch | alarms, recorders, functions, domains |
+| `SupplyChain.lean` | OIDC federation trust analysis | [details](extractor-supply-chain.md) |
+| `CrossEnv.lean` | Cross-account trust BFS | [details](extractor-cross-env.md) |
+| `Escalation.lean` | Privilege escalation pattern matching | [details](extractor-escalation.md) |
+| `Exfiltration.lean` | Data exfiltration reverse reachability | [details](extractor-exfiltration.md) |
+| `Reachability.lean` | Anonymous principal BFS | [details](extractor-reachability.md) |
 
-I need to build a data extractor for the Stave policy engine. The extractor's job is to fetch configuration data from a source and output a JSON file that conforms to the `obs.v0.1` schema.
+### Architecture
 
-## 1. Environment & Tools
-- **Target Language:** [e.g., Python 3.11, Rust, Go, Node.js]
-- **Data Source:** [e.g., AWS SDK/Boto3, Terraform Plan JSON, GitHub API, Local CSV]
-- **Output Format:** Standardized JSON (STDOUT or file)
+Every extractor is a pure function: `Json → List ObsAsset`. No IO,
+no API calls, no side effects. The input is already-collected AWS CLI
+or Steampipe JSON. The output conforms to the `obs.v0.1` schema.
 
-## 2. The Contract (obs.v0.1)
-The output MUST be a flat JSON object with this exact structure:
+```
+AWS CLI / Steampipe JSON  →  Lean 4 extractor  →  obs.v0.1 JSON  →  stave apply
+```
+
+The 24 basic transforms (S3 through Misc) are 1:1 equivalents of the
+Go jq filters in `stave/internal/adapters/aws/transform/filters/`.
+The 5 analysis extractors (SupplyChain through Reachability) implement
+graph algorithms that the basic transforms cannot express.
+
+## The obs.v0.1 contract
+
+All extractors produce the same JSON shape. Stave evaluates the same
+controls regardless of how the observations were created.
 
 ```json
 {
-  "schema": "obs.v0.1",
-  "source_type": "[e.g., aws_s3, gcp_storage, custom_script]",
-  "captured_at": "YYYY-MM-DDTHH:MM:SSZ",
+  "schema_version": "obs.v0.1",
+  "captured_at": "2026-04-12T00:00:00Z",
   "assets": [
     {
-      "id": "unique-identifier-of-the-resource",
-      "type": "resource-category-type",
-      "properties": {
-        "key1": "value1",
-        "key2": 123,
-        "key3": true
-      }
+      "id": "unique-resource-identifier",
+      "type": "aws_s3_bucket",
+      "vendor": "aws",
+      "properties": { }
     }
   ]
 }
 ```
 
-## 3. Implementation Requirements
+## Writing a custom extractor
 
-- **Mapping:** Iterate through the [Data Source] and map each resource to an entry in the `assets` array.
-- **Properties:** The `properties` map should contain the raw configuration values needed for security invariants.
-- **No Extra Fields:** The schema has `additionalProperties: false`. Do not add top-level fields outside of the ones listed above.
-- **Error Handling:** If the [Data Source] is unreachable, exit with a non-zero code and a clear error message to STDERR.
+If you need a data source or resource type the built-in extractors
+don't cover, write a function that produces `List ObsAsset` and
+serialize to the schema above. Any language works — the contract is
+the only coupling point.
 
-## 4. Deliverable
+### Using Steampipe
 
-Please provide:
-1. The full [Language] source code for the extractor.
-2. Instructions on how to run it.
-3. A sample command to pipe the output into Stave: `[extractor_cmd] | stave evaluate --input -`
-Example: How a developer would use this for Python/S3
-
-If a developer wanted to build a quick S3 extractor in Python, they would fill it out like this:
-
-Target Language: Python 3.10 (Boto3)
-
-Data Source: AWS S3 ListBuckets API
-
-Source Type: aws_s3_bucket
-
-The resulting code would look like this (Generated by the LLM):
-
-```python
-import boto3
-import json
-from datetime import datetime, timezone
-
-def extract():
-    s3 = boto3.client('s3')
-    response = s3.list_buckets()
-    
-    observation = {
-        "schema": "obs.v0.1",
-        "source_type": "aws_s3_bucket",
-        "captured_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "assets": []
-    }
-
-    for bucket in response['Buckets']:
-        # Fetch extra properties like versioning
-        v_res = s3.get_bucket_versioning(Bucket=bucket['Name'])
-        
-        observation["assets"].append({
-            "id": bucket['Name'],
-            "type": "s3_bucket",
-            "properties": {
-                "name": bucket['Name'],
-                "creation_date": bucket['CreationDate'].isoformat(),
-                "versioning": v_res.get('Status', 'Disabled')
-            }
-        })
-
-    print(json.dumps(observation, indent=2))
-
-if __name__ == "__main__":
-    extract()
-## Using Steampipe as an Extractor
-```
-
-[Steampipe](https://steampipe.io) is the fastest way to build a Stave extractor without writing code. Steampipe exposes cloud APIs as SQL tables. You write a query, pipe the result through `jq`, and produce `obs.v0.1` JSON directly.
-
-Steampipe has 150+ plugins covering AWS, GCP, Azure, Kubernetes, GitHub, and dozens of other services. Every `aws_s3_bucket`, `aws_iam_role`, `aws_vpc_security_group`, and `aws_opensearch_domain` row maps directly to a Stave observation asset. This makes it the recommended extraction path for teams that want comprehensive coverage without building custom extractors.
+Steampipe exposes cloud APIs as SQL tables. Query, pipe through `jq`,
+produce obs.v0.1 directly:
 
 ```bash
-# Example: extract S3 bucket observations via Steampipe
 steampipe query --output json \
   "SELECT name, region, versioning_enabled, server_side_encryption_configuration,
           logging, acl, policy, public_access_block_configuration
@@ -143,19 +105,15 @@ steampipe query --output json \
     }' > observations/$(date -u +%Y-%m-%dT%H%M%SZ).json
 ```
 
-Steampipe + jq + Stave is a complete air-gapped pipeline: query cloud state, transform to obs.v0.1, evaluate offline. No custom code required.
+### Using CloudQuery
 
-## Using CloudQuery as an Extractor
-
-[CloudQuery](https://www.cloudquery.io) syncs cloud configuration to a local database (Postgres, SQLite, or flat files) on a schedule. If your team already runs CloudQuery for asset inventory, you can query the synced data and transform it to obs.v0.1 without additional API calls.
-
-CloudQuery is the better choice when you need repeatable, scheduled extraction in CI/CD pipelines or when you want to store historical snapshots in a data warehouse for trend analysis.
+CloudQuery syncs cloud configuration to a local database on a
+schedule. Query the synced data and transform to obs.v0.1 without
+additional API calls:
 
 ```bash
-# Sync AWS resources to a local SQLite database
 cloudquery sync aws-config.yml
 
-# Extract S3 observations from the synced database
 sqlite3 -json cloudquery.db \
   "SELECT name, versioning_status, server_side_encryption_configuration,
           logging_target_bucket, block_public_acls, block_public_policy,
@@ -185,16 +143,12 @@ sqlite3 -json cloudquery.db \
     }' > observations/$(date -u +%Y-%m-%dT%H%M%SZ).json
 ```
 
-CloudQuery supports 100+ source plugins (AWS, GCP, Azure, K8s, GitHub, Terraform) and syncs to Postgres, SQLite, BigQuery, S3, or local files. Your team can query the same synced data for both Stave extraction and operational dashboards.
+### Using AWS Config
 
-## Using AWS Config as an Extractor
-
-[AWS Config](https://aws.amazon.com/config/) continuously records resource configuration changes. If your organization already has Config enabled, you can export configuration snapshots directly.
-
-This is the lowest-friction path for teams that already have AWS Config deployed and don't want to add Steampipe or CloudQuery to their stack.
+If your organization already has AWS Config enabled, export
+configuration snapshots directly:
 
 ```bash
-# Export current configuration for all S3 buckets
 aws configservice select-resource-config \
   --expression "SELECT resourceId, resourceType, configuration
                 WHERE resourceType = 'AWS::S3::Bucket'" \
@@ -214,34 +168,17 @@ aws configservice select-resource-config \
         }
       }]
     }' > observations/$(date -u +%Y-%m-%dT%H%M%SZ).json
-
-# Or export a full configuration snapshot to S3
-aws configservice deliver-config-snapshot \
-  --delivery-channel-name default
-# Then download and transform the snapshot JSON
 ```
 
-AWS Config covers 380+ resource types across all AWS services. The `select-resource-config` API returns the full configuration as JSON. The same data Stave controls evaluate. For teams already paying for AWS Config, this is zero additional cost.
+### Choosing an extraction tool
 
-## Choosing an Extraction Tool
+| Tool | Best for | Multi-cloud |
+|---|---|---|
+| **Lean 4 extractors** | Formal verification, analysis algorithms | AWS (extensible) |
+| **Steampipe** | Ad-hoc queries, 150+ plugins | AWS, GCP, Azure, K8s |
+| **CloudQuery** | Scheduled pipelines, historical snapshots | AWS, GCP, Azure, K8s |
+| **AWS Config** | Teams already using Config | AWS only |
+| **Custom script** | Niche sources, exact field control | Anything |
 
-Pick the tool your team already knows. 
-
-| Tool | Best for | Setup | Multi-cloud |
-|---|---|---|---|
-| **Steampipe** | Ad-hoc queries, interactive exploration, quick start | Install + plugin | AWS, GCP, Azure, K8s, 150+ |
-| **CloudQuery** | Scheduled CI/CD pipelines, historical snapshots, data warehouse | Config file + sync job | AWS, GCP, Azure, K8s, 100+ |
-| **AWS Config** | Teams already using Config, zero new tooling | Already deployed | AWS only |
-| **Custom (Python/Go)** | Niche sources, exact field control, LLM-generated | Write code | Anything |
-
-All four paths produce the same obs.v0.1 JSON. Stave evaluates the same controls regardless of how the observations were created.
-
----
-
-Zero Onboarding: Developers don't need to learn the Stave Go codebase. They only need to know the 10-line JSON contract.
-
-Language Freedom: One team can use Python, another Go, another SQL + jq, another AWS Config — Stave core engine doesn't care.
-
-Unix Philosophy: It reinforces the pipe workflow.
-
-Instant Scaffolding: The LLM prompt template is a language-agnostic scaffolder. Steampipe, CloudQuery, and AWS Config are zero-code alternatives.
+All paths produce the same obs.v0.1 JSON. Stave evaluates the same
+controls regardless of how the observations were created.

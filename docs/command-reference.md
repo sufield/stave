@@ -8,7 +8,7 @@ All commands ship in the standard `stave` binary. No build tags are
 required. Descriptions are each command's one-line summary; run
 `stave <command> --help` for full usage, flags, and exit codes.
 
-_177 commands across 13 groups._
+_176 commands across 13 groups._
 
 ## Getting Started
 
@@ -198,7 +198,6 @@ _177 commands across 13 groups._
 | `fingerprint` | Policy fingerprint diagnostics |
 | `fingerprint explain` | Show the policy fingerprint preimage and diagnosis |
 | `sanitize` | Sanitize a snapshot for cross-boundary sharing |
-| `transform` | Convert raw AWS CLI snapshots into obs.v0.1 observations (built-in jq) |
 | `vet` | Vet a Steampipe→Stave mapping file before use |
 
 ## Interop & Export

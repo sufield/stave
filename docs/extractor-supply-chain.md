@@ -1,155 +1,87 @@
-# Building a Supply Chain Ingress Extractor
+# Supply Chain Ingress Extractor
 
-This guide describes how to build an extractor that analyzes OIDC
-federation trust policies for CI/CD ingress risks.
+Analyzes OIDC federation trust policies for CI/CD ingress risks.
+Determines whether the subject claim is scoped, whether wildcards
+are used, and whether the assumed role has admin-level permissions.
 
-## Overview
+## Implementation
 
-The extractor inspects IAM role trust policies for OIDC identity
-provider conditions. It determines whether the subject claim is
-scoped, whether wildcards are used, and whether the assumed role
-has admin-level permissions.
+**Source:** `iam-explainer/Stave/Extract/SupplyChain.lean`
 
-## Algorithm
+Pure function over already-collected IAM role JSON. No live API calls.
 
-### Step 1: Find OIDC-trusted roles
+### Types
 
-```bash
-# List all IAM roles and check trust policies for OIDC providers
-for ROLE in $(aws iam list-roles --query 'Roles[].RoleName' --output text); do
-  TRUST=$(aws iam get-role --role-name "$ROLE" \
-    --query 'Role.AssumeRolePolicyDocument' --output json)
-
-  # Check for OIDC provider principals
-  OIDC_PROVIDERS=$(echo "$TRUST" | jq -r '
-    [.Statement[] | select(.Effect == "Allow") |
-     .Principal.Federated // empty |
-     select(test("oidc|token.actions|gitlab|bitbucket"))] | unique[]')
-
-  if [ -n "$OIDC_PROVIDERS" ]; then
-    echo "OIDC role: $ROLE (providers: $OIDC_PROVIDERS)"
-  fi
-done
+```lean
+structure OIDCTrust where
+  roleArn : String
+  roleName : String
+  hasOidcTrust : Bool
+  provider : String          -- "github" | "gitlab" | "bitbucket" | "google" | "unknown"
+  subClaimIsScoped : Bool
+  subClaimValue : String
+  hasWildcardSub : Bool
+  hasAdminPermissions : Bool
 ```
 
-### Step 2: Analyze subject claim conditions
+### Pipeline
 
-```bash
-check_oidc_trust() {
-  local TRUST="$1"
+1. **`identifyProvider`** — Maps the federated principal URL to a
+   provider name. Matches `token.actions.githubusercontent.com` →
+   `github`, `gitlab.com` → `gitlab`, `bitbucket.org` → `bitbucket`,
+   `accounts.google.com` → `google`.
 
-  # Extract the sub condition
-  SUB_CONDITION=$(echo "$TRUST" | jq -r '
-    .Statement[] | select(.Effect == "Allow") |
-    .Condition // {} |
-    (.StringEquals // {}) + (.StringLike // {}) |
-    to_entries[] |
-    select(.key | test(":sub$")) | .value')
+2. **`isWildcardSub`** — Returns true for `*` or `*:` prefix patterns.
 
-  if [ -z "$SUB_CONDITION" ]; then
-    echo "sub_claim_scoped=false"
-    return
-  fi
+3. **`analyzeOIDCTrust`** — Parses a single role's trust policy.
+   Finds OIDC-federated `Allow` statements, extracts the `:sub`
+   condition from `StringEquals` or `StringLike` blocks, checks
+   for `AdministratorAccess` in attached policies.
 
-  # Check for wildcards
-  if echo "$SUB_CONDITION" | grep -q '^\*$\|^\*:'; then
-    echo "has_wildcard_sub=true"
-    echo "sub_claim_scoped=false"
-  else
-    echo "has_wildcard_sub=false"
-    echo "sub_claim_scoped=true"
-  fi
-}
-```
+4. **`transformSupplyChain`** — Orchestrator. Takes `List Json` (raw
+   IAM roles), outputs `List ObsAsset`. Non-OIDC roles produce no
+   output.
 
-### Step 3: Check role permissions
+### Input
 
-```bash
-check_admin_permissions() {
-  local ROLE_NAME="$1"
+The `roles` parameter expects the raw `aws iam list-roles` JSON
+enriched with `AttachedPolicies`. Each element needs `Arn`,
+`RoleName`, `AssumeRolePolicyDocument`, and `AttachedPolicies` fields.
 
-  # Check for AdministratorAccess policy
-  ADMIN=$(aws iam list-attached-role-policies --role-name "$ROLE_NAME" \
-    --query 'AttachedPolicies[?PolicyArn==`arn:aws:iam::aws:policy/AdministratorAccess`]' \
-    --output text)
-  if [ -n "$ADMIN" ]; then
-    echo "has_admin_permissions=true"
-    return
-  fi
-
-  # Check for broad wildcard actions
-  for ARN in $(aws iam list-attached-role-policies --role-name "$ROLE_NAME" \
-      --query 'AttachedPolicies[].PolicyArn' --output text); do
-    VERSION=$(aws iam get-policy --policy-arn "$ARN" \
-      --query 'Policy.DefaultVersionId' --output text)
-    WILDCARD=$(aws iam get-policy-version --policy-arn "$ARN" \
-      --version-id "$VERSION" \
-      --query 'PolicyVersion.Document.Statement[?Effect==`Allow`]' --output json |
-      jq '[.[] | select(.Action == "*" or .Action == ["*"])] | length')
-    if [ "$WILDCARD" -gt 0 ]; then
-      echo "has_admin_permissions=true"
-      return
-    fi
-  done
-
-  echo "has_admin_permissions=false"
-}
-```
-
-### Step 4: Identify the OIDC provider
-
-| Provider URL | `provider` value |
-|---|---|
-| `token.actions.githubusercontent.com` | `github` |
-| `gitlab.com` | `gitlab` |
-| `bitbucket.org` | `bitbucket` |
-| `accounts.google.com` | `google` |
-
-### Step 5: Output obs.v0.1 JSON
+## Output (obs.v0.1)
 
 ```json
 {
-  "schema_version": "obs.v0.1",
-  "captured_at": "2026-04-12T00:00:00Z",
-  "assets": [
-    {
-      "id": "arn:aws:iam::123456789:role/github-deploy",
-      "type": "aws_iam_role",
-      "vendor": "aws",
-      "properties": {
-        "identity": {
-          "kind": "role",
-          "trust": {
-            "oidc": {
-              "has_oidc_trust": true,
-              "provider": "github",
-              "sub_claim_scoped": false,
-              "sub_claim_value": "*",
-              "has_wildcard_sub": true,
-              "has_admin_permissions": true
-            }
-          }
+  "id": "arn:aws:iam::123456789:role/github-deploy",
+  "type": "aws_iam_role",
+  "vendor": "aws",
+  "properties": {
+    "identity": {
+      "kind": "role",
+      "trust": {
+        "oidc": {
+          "has_oidc_trust": true,
+          "provider": "github",
+          "sub_claim_scoped": false,
+          "sub_claim_value": "*",
+          "has_wildcard_sub": true,
+          "has_admin_permissions": true
         }
       }
     }
-  ]
+  }
 }
 ```
 
-## Required AWS permissions
+## Verified properties
 
-```json
-{
-  "Action": [
-    "iam:ListRoles",
-    "iam:GetRole",
-    "iam:ListAttachedRolePolicies",
-    "iam:GetPolicyVersion",
-    "iam:ListOpenIDConnectProviders",
-    "iam:GetOpenIDConnectProvider"
-  ]
-}
-```
+- GitHub provider correctly identified (`native_decide`)
+- GitLab provider correctly identified (`native_decide`)
+- `*` is a wildcard sub (`native_decide`)
+- `*:ref` is a wildcard sub (`native_decide`)
+- Scoped claim (`repo:org/repo:ref:refs/heads/main`) is not wildcard (`native_decide`)
+- Wildcard sub + admin permissions detected from trust policy (`#guard`)
+- Non-OIDC role (Lambda service principal) returns none (`#guard`)
 
 ## Controls that evaluate this output
 

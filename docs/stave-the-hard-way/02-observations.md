@@ -72,15 +72,15 @@ unsafe?").
 ## How Observations Are Created
 
 In production, you capture raw AWS CLI output and evaluate it directly —
-`stave apply` auto-transforms raw AWS CLI JSON in-memory:
+Convert raw AWS CLI JSON to obs.v0.1 using the Lean 4 extractors, then
+evaluate:
 
 ```bash
-# doctest:skip — illustrative; raw/ does not exist in fixtures
-stave apply --observations raw/
+# doctest:skip — illustrative; observations/ does not exist in fixtures
+stave apply --observations observations/
 ```
 
-To inspect the intermediate obs.v0.1 output, use `stave transform --in raw/`
-as a separate step. Collection is decoupled from evaluation.
+Collection is decoupled from evaluation.
 
 ## Verify
 

@@ -1,8 +1,7 @@
 # Testing
 
 Stave's test suite is structured as a pyramid. Use the lowest tier
-that covers the change you made; reach higher only when you need
-to.
+that covers the change you made; reach higher only when needed.
 
 ## Tiers
 
@@ -14,7 +13,7 @@ to.
 | `make test` | Everything, with `-race`, `-parallel 16`, `-tags stavedev` | 10–30 minutes | Final pre-merge check on a fast machine |
 | `make test-ci` | `regenerate-goldens` + `golden-update-all` + `make test` | 30+ minutes | Reproduce CI locally |
 
-The targets above call `sync-schemas`, `sync-controls`, and
+The targets call `sync-schemas`, `sync-controls`, and
 `sync-alternatives` first so the embedded data matches the
 source-of-truth `controls/`, `schemas/`, and `data/` directories.
 
@@ -25,8 +24,8 @@ its source tree and skips the `rm`/`cp` when the hash matches a
 cached value AND the destination still exists. On unchanged
 source, the three syncs together cost ~100 ms instead of ~800 ms,
 shaving most of the prelude off every `make test` / `make lint`
-during iteration. The cache files (`.sync-*-hash`) are gitignored
-— CI has no cache, so clean checkouts re-sync every time and
+during iteration. The cache files (`.sync-*-hash`) are gitignored.
+CI has no cache, so clean checkouts re-sync every time and
 correctness is unchanged. To force a re-sync locally, delete the
 relevant `.sync-*-hash` file.
 
@@ -42,7 +41,7 @@ make regenerate-goldens ARGS="-filter s3"
 make regenerate-goldens ARGS="-filter s3-public-read-policy"
 ```
 
-Use this when you touched a single domain's controls. Drop the
+Use this when you touch a single domain's controls. Drop the
 filter (`make regenerate-goldens`) only when an engine-wide change
 could shift output across the catalog.
 
@@ -56,7 +55,7 @@ make golden-one    PKG=./internal/profile/reporter RUN=TestTextReporter_Golden
 ## `-short` flag behavior
 
 A test that calls `testing.Short()` and `t.Skip(...)` self-skips
-under `-short`. Stave uses this for:
+under `-short`. This is used for:
 
 - Tests that build and exec the stave binary (`./e2e`,
   `./cmd/stave/testdata/scripts/*.txtar`,
@@ -138,5 +137,4 @@ relevant entries.
 Per-fixture golden regeneration uses the worker pool exposed by
 `regengoldens`. CI passes `ARGS="-workers 4"` to bound the pool
 to four concurrent fixtures per shard; raise it locally with
-`make regenerate-goldens ARGS="-workers 8"` on a beefier
-machine.
+`make regenerate-goldens ARGS="-workers 8"` on a beefier machine.

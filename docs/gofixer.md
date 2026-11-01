@@ -1,15 +1,15 @@
-# Go Modernization & Dead-Code Cleanup (`gofixer`)
+# Go Modernization & Dead-Code Cleanup
 
-Referenced by `CONTRIBUTING.md`. Run this before opening a PR so new code
+Run this before opening a PR so new code
 ships in the project's current idioms and leaves no dead code behind.
 
-The whole workflow is one target:
+The workflow is one target:
 
 ```bash
 cd stave && make gofixer
 ```
 
-It is also wired into `make check`-style hygiene; run it explicitly when
+It is also wired into `make check`-style hygiene; run it when
 you've added or refactored Go code.
 
 ## What it does
@@ -33,7 +33,7 @@ you've added or refactored Go code.
 
 ## Typical modernizations applied
 
-These are tool-driven and behavior-preserving — review the diff, but they
+These are tool-driven and behavior-preserving. Review the diff, but they
 are safe:
 
 - `for i := 0; i < n; i++ {` → `for i := range n {`

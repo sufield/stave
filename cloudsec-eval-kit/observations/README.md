@@ -21,8 +21,8 @@ After deploying SadCloud, capture observations using the AWS CLI:
 aws iam list-roles > raw/iam-roles.json
 aws iam get-role --role-name <name> >> raw/iam-role-detail.json
 
-# Transform to obs.v0.1 (if using Stave)
-stave transform --in raw/ --out observations/
+# Transform to obs.v0.1 using Lean 4 extractors
+# See iam-explainer/Stave/Extract/ for the conversion modules
 ```
 
 Two snapshots (captured at different times) are required for

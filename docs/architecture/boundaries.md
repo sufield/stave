@@ -7,7 +7,7 @@ description: "What Stave verifies, what it deliberately does not, and where down
 
 # Architectural Boundaries
 
-Stave is a pure-function evaluator: files in, findings out, no network, credentials or exec. Three properties operators commonly assume are checked by Stave fall **outside** that function. 
+Stave is a pure-function evaluator: files in, findings out. Three properties operators commonly assume are checked by Stave fall **outside** that function. 
 
 They are decisions the architecture forces, with corresponding operational responsibilities elsewhere in the pipeline. 
 
@@ -76,7 +76,7 @@ The interface is standardized so that the Stave core is independent of any cloud
    matter when adding a new control family.
 2. **Collector unit tests.** Each collector should test that its
    derived booleans match sample raw data. The schema defines
-   WHAT to produce; the collector test suite verifies CORRECTNESS
+   what to produce; the collector test suite verifies correctness
    of values.
 3. **Multiple collectors.** Running two independent collectors on
    the same account and diffing their observations surfaces value
@@ -140,10 +140,10 @@ This is correct temporal evaluation.
   not the agent's clock. This prevents the assertion target from
   moving while the agent iterates.
 
-  ```bash
-  stave apply --observations testdata/e2e/e2e-01-violation/observations \
-      --eval-time "$(jq -r '.captured_at' testdata/e2e/e2e-01-violation/observations/*.json | sort | head -1)"
-  ```
+```bash
+stave apply --observations testdata/e2e/e2e-01-violation/observations \
+    --eval-time "$(jq -r '.captured_at' testdata/e2e/e2e-01-violation/observations/*.json | sort | head -1)"
+```
 
 ### Which controls are time-dependent
 
@@ -160,12 +160,11 @@ the `attack_stage: credential_access` family; `stave search
 Controls named `CTL.*.GHOST.*` (and `CTL.IAM.POLICY.GHOSTREF.*`,
 the cross-asset analogue) fire on **collector-set boolean**
 properties: `has_ghost_principal`, `has_ghost_resource_refs`,
-`has_ghost_trigger`, etc. The predicate reads one boolean. The
-predicate does not walk the inventory.
+`has_ghost_trigger`, etc. The predicate reads one boolean. 
 
 > Zero Go code at evaluation time computes ghost references.
 > Every `has_ghost_*` field name in the catalog is sourced from
-> the collector. Stave reads booleans, not inventories.
+> the collector. Stave reads booleans.
 
 ### The deleted-vs-not-collected ambiguity
 
@@ -208,7 +207,7 @@ A collector that emits `has_ghost_*: true` is asserting:
    confirmation).
 
 When (2) fails. The resource type was not queried. The collector
-SHOULD emit `has_ghost_*: false` rather than `true`. Absence due
+should emit `has_ghost_*: false` rather than `true`. Absence due
 to incomplete collection is not a ghost.
 
 ### What this means for downstream consumers
@@ -216,7 +215,7 @@ to incomplete collection is not a ghost.
 Ghost-finding counts are bounded by collector completeness. A
 collector with broad coverage produces trustworthy ghost counts.
 A narrow collector produces ambiguous ones. Treat ghost findings
-as "investigate" rather than "incident" until the collection
+as investigate rather than incident until the collection
 scope is verified.
 
 ## Implications for downstream consumers
@@ -231,5 +230,5 @@ scope is verified.
 ## Related
 
 - [Architecture Overview](overview.md) — the pipeline this document scopes
-- [Fact Export reference](https://www.systeminvariant.dev/docs/reference/fact-export) — the SIR's projected scope (separate boundary, separate doc)
-- [How to use a reasoning engine with Stave facts](https://www.systeminvariant.dev/docs/how-to/controls/reasoning-engines) — composing UNSAT verdicts with the scope caveat
+- [Fact Export reference](https://www.systeminvariant.dev/docs/reference/fact-export)  The SIR's projected scope (separate boundary, separate doc)
+- [How to use a reasoning engine with Stave facts](https://www.systeminvariant.dev/docs/how-to/controls/reasoning-engines)  Composing UNSAT verdicts with the scope caveat

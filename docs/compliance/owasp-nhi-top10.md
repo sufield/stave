@@ -5,10 +5,9 @@ controls that detect or prevent it. Annotations live in each
 control's `compliance.owasp_nhi` field, queryable via
 `stave controls list --format json`.
 
-- Catalog version: 2816 controls
 - Reference: <https://owasp.org/www-project-non-human-identities-top-10/>
 
-## Coverage Summary
+## Coverage
 
 | #     | Risk                                | Controls | Coverage |
 |-------|-------------------------------------|----------|----------|
@@ -102,7 +101,7 @@ Lifecycle (already annotated):
 ## NHI2 — Secret Leakage
 
 **Risk:** Credentials embedded in code, configuration, user data,
-or environment variables — accessible to anyone with read on
+or environment variables. Accessible to anyone with read on
 those surfaces.
 
 **Stave controls:**
@@ -156,8 +155,8 @@ Cognito federation:
 
 ## NHI4 — Insecure Authentication
 
-**Risk:** Weak machine-to-machine authentication mechanisms —
-trust policies that admit too much, MFA gaps, or session
+**Risk:** Weak machine-to-machine authentication mechanisms.
+Trust policies that admit too much, MFA gaps, or session
 configurations that don't bind to expected callers.
 
 **Stave controls:**
@@ -275,8 +274,8 @@ S3 access (already annotated):
 
 ## NHI6 — Insecure Cloud Deployment
 
-**Risk:** Deployment-time misconfiguration of cloud identities —
-trust relationships that don't enforce boundary controls, SCPs
+**Risk:** Deployment-time misconfiguration of cloud identities.
+Trust relationships that don't enforce boundary controls, SCPs
 missing required guardrails, cross-account/cross-environment
 plumbing without isolation.
 
@@ -432,7 +431,7 @@ exceed Stave's static-analysis scope.
 
 These gaps reflect either observation-data limits (NHI10 mostly)
 or domain coverage that hasn't reached the relevant resource
-type yet. They are not blockers for the current coverage claim.
+type yet. 
 
 ## Updating this document
 
@@ -444,6 +443,6 @@ When adding controls that detect NHI risks:
 3. Re-run `make sync-controls` and `make docs-controls` so embedded
    metadata and downstream docs stay in sync.
 
-The annotation is the source of truth — `grep -r 'owasp_nhi'
+The annotation is the source of truth. `grep -r 'owasp_nhi'
 controls/` enumerates every annotated control. This document
 is a curated narrative on top of those annotations.

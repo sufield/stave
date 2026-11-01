@@ -87,7 +87,7 @@ stave/
 ### Layer Rules
 
 - **`internal/core/`** contains pure business logic with no file I/O, no CLI dependencies, and no `internal/` imports. Importable by adopters.
-- **`internal/app/`** orchestrates use cases by wiring domain logic to adapters. It has zero direct dependencies on the adapter layer (enforced by architecture tests with zero exceptions).
+- **`internal/app/`** orchestrates use cases by wiring domain logic to adapters. It has no direct dependencies on the adapter layer (enforced by architecture tests).
 - **`internal/adapters/`** handle all I/O: reading files, parsing formats, writing output, filesystem operations.
 - **`cmd/`** handles only CLI concerns: flag parsing, exit codes, error formatting. It wires adapters into the app layer via dependency injection.
 

@@ -36,7 +36,7 @@ cross-domain.
 filtering (assets tagged `containsPHI: true` or `DataDomain: health`).
 Use `--include-all` to evaluate all assets regardless of tags.
 
-## Coverage Summary
+## Coverage
 
 | §164 Section | Description | Controls | Services |
 |---|---|---|---|

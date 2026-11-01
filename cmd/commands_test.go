@@ -39,7 +39,8 @@ func TestWireCommands_CommandCount(t *testing.T) {
 	// 62 after adding `network enumerate`.
 	// 63 after adding `iam`.
 	// 61 after moving `lint` (artifact) and `fmt` under `controls`.
-	const want = 61
+	// 60 after removing `transform` (extractor logic migrated to Lean 4).
+	const want = 60
 	if got != want {
 		t.Errorf("root command count = %d, want %d; update this constant if a command was added/removed", got, want)
 	}

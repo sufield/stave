@@ -64,7 +64,6 @@ import (
 	templateverify "github.com/sufield/stave/cmd/templatecmd/verifycmd"
 	stavetest "github.com/sufield/stave/cmd/test"
 	stavetoolmap "github.com/sufield/stave/cmd/toolmap"
-	stavetransform "github.com/sufield/stave/cmd/transform"
 	stavetrend "github.com/sufield/stave/cmd/trend"
 	stavevet "github.com/sufield/stave/cmd/vet"
 	artifact "github.com/sufield/stave/internal/adapters/artifacts"
@@ -162,7 +161,6 @@ func WireCommands(app *App) error {
 	root.AddCommand(stavepack.NewCmd())
 	root.AddCommand(stavediscover.NewCmd())
 	root.AddCommand(staveplan.NewCmd())
-	root.AddCommand(stavetransform.NewCmd())
 	root.AddCommand(staveexport.NewCmd())
 
 	// Data & Artifacts

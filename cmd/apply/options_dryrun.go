@@ -49,7 +49,7 @@ func ResolveDryRun(o *Options, cs cobraState) (ReadinessConfig, error) {
 		Sanitize:               cs.GlobalFlags.Sanitize,
 		Stdout:                 cs.Stdout,
 		ControlsFlagSet:        o.controlsSet,
-		HasEnabledControlPacks: len(enabledPacks) > 0,
+		HasEnabledControlPacks: cfg.HasEnabledControlPacks(),
 		EnabledPacks:           enabledPacks,
 	}, nil
 }

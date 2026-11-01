@@ -89,13 +89,13 @@ bash scripts/aws-snapshot.sh ./my-snapshot
 stave apply --observations ./my-snapshot/
 ```
 
-`stave apply` auto-detects raw AWS CLI JSON and transforms it
-in-memory — no separate `stave transform` step needed.
+`stave apply` evaluates obs.v0.1 observations against the control catalog.
+Convert raw AWS CLI JSON to obs.v0.1 using the Lean 4 extractors.
 
 **3. Read your findings.**
 
-> **What services are supported?** `stave transform --coverage`
-> lists the AWS API shapes with embedded filters.
+> **What services are supported?** `stave discover --services all`
+> lists the AWS services with controls in the catalog.
 >
 > **What fields does a service need?** `stave contract show --asset-type aws_iam_role`
 > shows every property path the catalog reads.

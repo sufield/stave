@@ -1,17 +1,17 @@
-# Capturing snapshots for `stave transform`
+# Capturing snapshots for Lean 4 extractors
 
 The easiest way to capture is to run the bundled collector, which does everything
 below automatically (read-only):
 
 ```bash
 bash scripts/aws-snapshot.sh ./my-snapshot
-# -> ./my-snapshot/raw/ (captured) and ./my-snapshot/observations/ (converted)
+# -> ./my-snapshot/raw/ (captured)
+# Convert raw/ to obs.v0.1 using Lean 4 extractors (iam-explainer/Stave/Extract/)
 ```
 
 This page is the reference for **manual or selective** capture: the exact AWS CLI
 call per resource type, the **output filename**, and the **join key** the
-transform needs. All calls are read-only (SecurityAudit suffices). Put every file
-in one directory and run `stave transform -i <dir> -o <obs> --account <id>`.
+extractor needs. All calls are read-only (SecurityAudit suffices).
 
 Placeholders: `<id>` = AWS account ID, `<bucket>` / `<role>` / `<user>` /
 `<group>` / `<keyid>` = the resource name, `<arn>` = that resource's ARN.
@@ -72,13 +72,9 @@ Placeholders: `<id>` = AWS account ID, `<bucket>` / `<role>` / `<user>` /
 | KMS rotation | `aws kms get-key-rotation-status --key-id <keyid> --output json` | `kms-rotation-<keyid>.json` | self-describing |
 | KMS key policy | `aws kms get-key-policy --key-id <keyid> --policy-name default \| jq '. + {KeyArn:"<arn>"}'` | `kms-policy-<keyid>.json` | annotate `KeyArn` |
 
-## Calls collected for filters still in development
+## Additional calls collected by aws-snapshot.sh
 
-`aws-snapshot.sh` also captures these (their filters are documented in
-`ctf/stave-transform/pending-items.md` but not built — `stave transform`
-skips files it has no filter for): `aws iam get-account-authorization-details`,
+`aws-snapshot.sh` also captures: `aws iam get-account-authorization-details`,
 `aws ec2 describe-network-interfaces`, `aws ec2 describe-instance-attribute
 --attribute userData`, `aws cloudtrail get-event-selectors`, `aws ses
 get-identity-dkim-attributes`, `aws ses list-identity-policies`.
-
-Run `stave transform --coverage` for the live list of recognized input shapes.

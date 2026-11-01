@@ -3,8 +3,7 @@
 This document is the source-of-truth catalog of real-world IAM
 compound attack patterns. Every pattern below is grounded in published incident
 reports, MITRE ATT&CK techniques, Stratus Red Team scenarios,
-Rhino Security Labs research, or CSA Top Threats — no theoretical
-shapes.
+Rhino Security Labs research, or CSA Top Threats.
 
 **Citation prefix schema** (per the locked decision in
 `bizacademy/aws-compound-control-authoring-plan.md`):
@@ -23,7 +22,7 @@ The taxonomy spans six sub-families. Each pattern lists:
 - **Trigger** — English description of the condition that should fire the control
 - **Counter-example** — configuration that LOOKS similar but isn't risky
 
-The taxonomy is agnostic to current Stave coverage — it names
+The taxonomy is agnostic to current Stave coverage. It names
 what should exist.
 
 ---
@@ -102,7 +101,7 @@ path. The unit of analysis is the tuple, not the row.
 
 Trust policies are the negotiated boundary between principals and
 roles. Compositional weaknesses here are subtle because the
-attached permissions look fine in isolation — the failure is in
+attached permissions look fine in isolation. The failure is in
 *who* can assume the role and under *what* circumstances.
 
 ### 2.1 `trust.cross_account_no_external_id_external_account`
@@ -133,7 +132,7 @@ attached permissions look fine in isolation — the failure is in
 
 **Trigger:** Trust policy contains `"Principal": "*"` or `"Principal": {"AWS": "*"}` without a follow-on `Condition` that bounds who can satisfy. Anyone in any AWS account assumes.
 
-**Counter-example:** Wildcard principal narrowed by `aws:PrincipalOrgID` to the trusting account's organization — equivalent to a per-org trust but expressed compactly.
+**Counter-example:** Wildcard principal narrowed by `aws:PrincipalOrgID` to the trusting account's organization. Equivalent to a per-org trust but expressed compactly.
 
 ### 2.4 `trust.broken_string_equals_userid`
 
@@ -171,7 +170,7 @@ attached permissions look fine in isolation — the failure is in
 
 The Rhino Security Labs catalog enumerates ~21 distinct AWS IAM
 privilege escalation methods. The patterns below pull the
-highest-value ones — each fires when a principal has a permission
+highest-value ones. Each fires when a principal has a permission
 that, combined with another configuration fact, enables stepping
 to a higher-privilege identity.
 
@@ -183,7 +182,7 @@ to a higher-privilege identity.
 
 **Trigger:** Principal has `iam:PassRole` permission scoped to a role whose effective permissions exceed the principal's permission boundary or attached policies. The principal can stand up an EC2/Lambda/ECS resource with that role and use it as a stepping-stone.
 
-**Counter-example:** Principal has `iam:PassRole` only on roles whose permissions are a subset of the principal's own — no escalation possible.
+**Counter-example:** Principal has `iam:PassRole` only on roles whose permissions are a subset of the principal's own with no escalation possible.
 
 ### 3.2 `privesc.put_inline_policy_self_or_peer`
 
@@ -191,7 +190,7 @@ to a higher-privilege identity.
 
 **Corpus citation:** `rhino:08-put-user-policy`, `MITRE:T1098`
 
-**Trigger:** Principal has `iam:PutUserPolicy` or `iam:PutRolePolicy` permission on itself or on a peer with the same permission boundary; current attached policies stay inside the boundary, but inline grants can be authored that exceed it (boundary check applies only at AttachPolicy/PutPolicy time for *unique* policies — putting an inline that overlaps doesn't always trigger the boundary check).
+**Trigger:** Principal has `iam:PutUserPolicy` or `iam:PutRolePolicy` permission on itself or on a peer with the same permission boundary; current attached policies stay inside the boundary, but inline grants can be authored that exceed it (boundary check applies only at AttachPolicy/PutPolicy time for *unique* policies. Putting an inline that overlaps doesn't always trigger the boundary check).
 
 **Counter-example:** Principal has `iam:PutUserPolicy` scoped only to its OWN identity, and the boundary explicitly denies any inline policy authoring (rare but exists).
 
@@ -244,7 +243,7 @@ policies (attached managed, inline, group memberships, permission
 boundary, SCP). When the composition produces effective permissions
 that diverge from the operator's narrative intent for any *single*
 policy, the gap is the vulnerability. These controls flag for
-human review — the compositional risk needs context to confirm.
+human review. The compositional risk needs context to confirm.
 
 ### 4.1 `composition.inline_shadows_managed_deny`
 
@@ -252,7 +251,7 @@ human review — the compositional risk needs context to confirm.
 
 **Corpus citation:** `csa:top-threats-2024:t1`
 
-**Trigger:** Principal has a managed policy with an explicit `Deny` on a sensitive action (e.g., `s3:DeleteBucket`), AND an inline policy with an `Allow` on a broader action set that *includes* the denied action (e.g., `s3:*`). In AWS, explicit deny wins — but composition that *looks* like it would also work via `NotAction` or different `Condition` can confuse the operator. Flag for review.
+**Trigger:** Principal has a managed policy with an explicit `Deny` on a sensitive action (e.g., `s3:DeleteBucket`), AND an inline policy with an `Allow` on a broader action set that *includes* the denied action (e.g., `s3:*`). In AWS, explicit deny wins but composition that *looks* like it would also work via `NotAction` or different `Condition` can confuse the operator. Flag for review.
 
 **Counter-example:** Inline policy explicitly excludes the denied action from its action list, making the deny stand alone.
 
@@ -274,7 +273,7 @@ human review — the compositional risk needs context to confirm.
 
 **Trigger:** Policy uses `NotAction` with a small exclusion list and `Resource: "*"`. Effective permission: *everything except the listed actions* on *every resource*. Even with a few well-chosen exclusions, the residual permission set is enormous and almost certainly broader than the operator's narrative intent.
 
-**Counter-example:** Policy uses `Action` with an explicit allowlist instead of `NotAction` — even an over-broad allowlist is more reviewable than an exclusion list.
+**Counter-example:** Policy uses `Action` with an explicit allowlist instead of `NotAction`. Even an over-broad allowlist is more reviewable than an exclusion list.
 
 ### 4.4 `composition.resource_wildcard_with_cumulative_breadth`
 
@@ -282,9 +281,9 @@ human review — the compositional risk needs context to confirm.
 
 **Corpus citation:** `csa:top-threats-2024:t1`
 
-**Trigger:** Policy uses `Resource: "*"` with an action set that's narrow individually but cumulatively covers a sensitive operation surface (e.g., `s3:ListAllMyBuckets` + `s3:GetBucketLocation` + `s3:GetBucketTagging` — each looks "metadata only," cumulatively gives full bucket reconnaissance across the account).
+**Trigger:** Policy uses `Resource: "*"` with an action set that's narrow individually but cumulatively covers a sensitive operation surface (e.g., `s3:ListAllMyBuckets` + `s3:GetBucketLocation` + `s3:GetBucketTagging`. Each looks "metadata only," cumulatively gives full bucket reconnaissance across the account).
 
-**Counter-example:** Policy uses `Resource: "arn:aws:s3:::specific-bucket-name"` even when the action list is broad — the resource scope makes the impact bounded.
+**Counter-example:** Policy uses `Resource: "arn:aws:s3:::specific-bucket-name"` even when the action list is broad. The resource scope makes the impact bounded.
 
 ### 4.5 `composition.deny_condition_doesnt_constrain_caller`
 
@@ -292,7 +291,7 @@ human review — the compositional risk needs context to confirm.
 
 **Corpus citation:** `rhino:deny-condition-bypass`
 
-**Trigger:** Policy has a `Deny` statement with a `Condition` block whose key isn't actually populated in the caller's identity (e.g., `Condition: {StringEquals: {"aws:RequestTag/data-classification": "public"}}` — but the principal's calls don't set request tags). The deny doesn't constrain the principal in question because the condition is never evaluated against a present value.
+**Trigger:** Policy has a `Deny` statement with a `Condition` block whose key isn't actually populated in the caller's identity (e.g., `Condition: {StringEquals: {"aws:RequestTag/data-classification": "public"}}` but the principal's calls don't set request tags). The deny doesn't constrain the principal in question because the condition is never evaluated against a present value.
 
 **Counter-example:** Deny condition keys are guaranteed to be present in every call (e.g., `aws:CalledVia`, `aws:SecureTransport`, `aws:CurrentTime`).
 

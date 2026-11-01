@@ -22,7 +22,7 @@ func wireHelpGroups(root *cobra.Command) {
 			"diagnose", "explain", "expand", "bisect",
 		},
 		groupData: {
-			"discover", "transform", "snapshot", "readiness",
+			"discover", "snapshot", "readiness",
 			"gaps", "coverage", "sanitize", "contract",
 			"vet",
 		},

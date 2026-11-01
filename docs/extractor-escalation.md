@@ -1,72 +1,66 @@
-# Building a Privilege Escalation Extractor
+# Privilege Escalation Extractor
 
-This guide describes how to build an extractor that detects
-multi-step privilege escalation chains.
+Detects multi-step privilege escalation chains by pattern-matching
+IAM permissions against 10 known escalation vectors.
 
-## Overview
+## Implementation
 
-The escalation extractor analyzes known IAM escalation patterns
-and traces whether a low-privileged principal can chain permissions
-to reach administrative access.
+**Source:** `iam-explainer/Stave/Extract/Escalation.lean`
+(`Extract.Escalation` namespace)
 
-## Known escalation vectors
+Pure function over already-collected IAM data. No live API calls.
 
-| Vector | Steps | How it works |
-|---|---|---|
-| PassRoleToLambda | `iam:PassRole` → `lambda:CreateFunction` → `lambda:InvokeFunction` | Pass an admin role to a new Lambda, invoke it |
-| CreatePolicyVersion | `iam:CreatePolicyVersion` on self | Create a new policy version granting full admin |
-| AttachRolePolicy | `iam:AttachRolePolicy` on self | Attach AdministratorAccess to own role |
-| CreateAccessKey | `iam:CreateAccessKey` on admin user | Generate keys for an existing admin |
-| AssumeRoleChain | `sts:AssumeRole` → `sts:AssumeRole` | Chain through roles to reach admin |
-| UpdateLoginProfile | `iam:UpdateLoginProfile` on admin | Reset an admin user's password |
-| EC2RunWithRole | `ec2:RunInstances` + `iam:PassRole` | Launch an instance with an admin role |
-| GlueDevEndpoint | `glue:CreateDevEndpoint` + `iam:PassRole` | Create a Glue endpoint with an admin role |
-| SageMakerNotebook | `sagemaker:CreateNotebookInstance` + `iam:PassRole` | Notebook with admin role |
-| CloudFormationRole | `cloudformation:CreateStack` + `iam:PassRole` | Stack with admin service role |
+### Known escalation vectors
 
-## Algorithm
+| Vector | Required permissions |
+|---|---|
+| PassRoleToLambda | `iam:PassRole`, `lambda:CreateFunction`, `lambda:InvokeFunction` |
+| CreatePolicyVersion | `iam:CreatePolicyVersion` |
+| AttachRolePolicy | `iam:AttachRolePolicy` |
+| CreateAccessKey | `iam:CreateAccessKey` |
+| AssumeRoleChain | `sts:AssumeRole` |
+| UpdateLoginProfile | `iam:UpdateLoginProfile` |
+| EC2RunWithRole | `ec2:RunInstances`, `iam:PassRole` |
+| GlueDevEndpoint | `glue:CreateDevEndpoint`, `iam:PassRole` |
+| SageMakerNotebook | `sagemaker:CreateNotebookInstance`, `iam:PassRole` |
+| CloudFormationRole | `cloudformation:CreateStack`, `iam:PassRole` |
 
-### Step 1: Build permission graph
+### Types
 
-For each IAM principal, enumerate all effective permissions:
+```lean
+structure EscalationVector where
+  name : String
+  requiredActions : List String
 
-```bash
-for USER in $(aws iam list-users --query 'Users[].UserName' --output text); do
-  # Attached policies
-  aws iam list-attached-user-policies --user-name $USER
-  # Inline policies
-  aws iam list-user-policies --user-name $USER
-  # Group memberships → group policies
-  for GROUP in $(aws iam list-groups-for-user --user-name $USER \
-      --query 'Groups[].GroupName' --output text); do
-    aws iam list-attached-group-policies --group-name $GROUP
-  done
-done
+structure PrincipalPerms where
+  arn : String
+  principalType : String       -- "user" | "role"
+  effectiveActions : List String
+  adminRoleArns : List String  -- known admin roles for target resolution
 ```
 
-### Step 2: Match escalation patterns
+### Pipeline
 
-For each principal, check if their effective permissions match any
-known escalation vector:
+1. **`actionsMatch`** — Case-insensitive permission matching. Handles
+   `*` (full wildcard) and `service:*` (service wildcard) grants.
 
-```python
-VECTORS = {
-    "PassRoleToLambda": ["iam:PassRole", "lambda:CreateFunction", "lambda:InvokeFunction"],
-    "CreatePolicyVersion": ["iam:CreatePolicyVersion"],
-    "AttachRolePolicy": ["iam:AttachRolePolicy"],
-    # ...
-}
+2. **`collectAllowActions`** — Extracts all `Allow` actions from a
+   policy document's statements. Handles both single-string and
+   array-valued `Action` fields.
 
-for principal in principals:
-    perms = get_effective_permissions(principal)
-    for name, required in VECTORS.items():
-        if all(p in perms for p in required):
-            # Check if target role exists with admin access
-            if can_reach_admin(principal, name):
-                flag_escalation(principal, name, required)
-```
+3. **`findEscalations`** — For a given principal, returns all matching
+   vectors paired with a target admin role ARN (if known).
 
-### Step 3: Output obs.v0.1 JSON
+4. **`transformEscalation`** — Orchestrator. Takes `List PrincipalPerms`,
+   outputs `List ObsAsset` with one asset per principal-vector match.
+
+### Input
+
+Build `PrincipalPerms` by enumerating each IAM principal's effective
+permissions: attached policies, inline policies, and group memberships.
+The `effectiveActions` field is the union of all `Allow` actions.
+
+## Output (obs.v0.1)
 
 ```json
 {
@@ -87,6 +81,15 @@ for principal in principals:
   }
 }
 ```
+
+## Verified properties
+
+- Exact permission match works (`#guard`)
+- Non-matching permissions produce no results (`#guard`)
+- `*` wildcard covers all required actions (`#guard`)
+- `service:*` wildcard covers service-scoped actions (`#guard`)
+- `CreatePolicyVersion` detected from single permission (`#guard`)
+- Read-only principal produces empty escalation list (`#guard`)
 
 ## Controls that evaluate this output
 

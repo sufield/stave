@@ -1,11 +1,10 @@
 # Stave Workflow: From Zero to Verified
 
-You know which AWS services you use. Stave tells you what to collect and what its standardized
-input must contain; you collect and convert it with your own tools; Stave evaluates it.
-**Stave never has AWS credentials and never calls AWS** — it reads `obs.v0.1` observation files
-you produce.
+You know which AWS services you use. Stave tells you what to collect and what its standardized input must contain. You collect and convert it with your own tools; Stave evaluates it.
 
-Two distinct artifacts, do not conflate them:
+**Stave never has AWS credentials and never calls AWS** — it reads `obs.v0.1` observation files you produce.
+
+Two distinct artifacts:
 
 | Term | What it is | Who produces it |
 |------|-----------|-----------------|
@@ -25,10 +24,7 @@ discover ─▶ plan ─▶ collect ─▶ convert ─▶ apply ─▶ fix ─�
 stave discover --services iam,s3,ec2,lambda,cloudtrail
 ```
 
-Resolves the packs covering those services and merges their requirements: the read-only **API
-calls** to collect (your snapshots), the **observation signals** the converted `obs.v0.1` must
-carry (e.g. `identity.permission_drift.unused_service_ratio`), and the **minimum collector IAM
-permissions**. Hand it to compliance — every call is read-only. `--format json` for tooling.
+Resolves the packs covering those services and merges their requirements: the read-only **API calls** to collect (your snapshots), the **observation signals** the converted `obs.v0.1` must carry (e.g. `identity.permission_drift.unused_service_ratio`), and the **minimum collector IAM permissions**. Hand it to compliance. Every call is read-only. `--format json` for tooling.
 
 ## Step 2 — Plan: what will Stave check?
 
@@ -44,8 +40,7 @@ highest-impact data first).
 
 ## Step 3 — Collect (your tools): snapshots
 
-Run the manifest's API calls with whatever produces JSON — AWS CLI, Steampipe, your internal
-tool — into a raw snapshot directory:
+Run the manifest's API calls with whatever produces JSON. AWS CLI, Steampipe, your internal tool into a raw snapshot directory:
 
 ```bash
 mkdir -p snapshots
@@ -58,21 +53,11 @@ aws s3api list-buckets --output json > snapshots/s3-buckets.json
 
 Snapshots are raw API shapes; Stave reads the standardized `obs.v0.1` form.
 
-**Default path:** `stave apply` auto-transforms raw AWS CLI JSON in-memory —
-no separate conversion step needed. Point `--observations` at the raw
-snapshot directory.
-
-**Explicit path:** use `stave transform` when you need to inspect or persist
-the intermediate `obs.v0.1` output, or use an external extractor (`aws + jq`,
-Steampipe transforms, or a custom adapter):
+Convert raw AWS CLI JSON to `obs.v0.1` using the **Lean 4 extractors**
+(`iam-explainer/Stave/Extract/`), then evaluate with `stave apply`:
 
 ```bash
-# doctest:skip — illustrative; raw/ and acct/raw do not exist in the repo
-# auto-transform (default): stave apply handles raw input directly
-stave apply --observations ./acct/raw
-
-# explicit: convert separately, then evaluate
-stave transform -i raw/ -o observations/
+# doctest:skip — illustrative; observations/ does not exist in the repo
 stave apply --observations observations/
 ```
 
@@ -88,8 +73,7 @@ those services' controls (a different `policy_fingerprint` proves the scope is r
 
 ## Step 6 — Fix
 
-Remediate the criticals first (each finding carries a `remediation` hint and a parameterized
-`fix_plan.command`). Re-collect the affected service group and re-convert → new observations.
+Remediate the criticals first (each finding carries a `remediation` hint and a parameterized `fix_plan.command`). Re-collect the affected service group and re-convert → new observations.
 
 ## Step 7 — Check: did the fixes work?
 
@@ -101,8 +85,7 @@ Reports **RESOLVED / STILL-FAILING / NEW**. Each `--after` can become the next `
 
 ## Step 8 — Repeat
 
-Fix more, re-collect, re-convert, `check` again. Each observation set is a timestamped artifact;
-the diff between two is the proof of remediation.
+Fix more, re-collect, re-convert, `check` again. Each observation set is a timestamped artifact; the diff between two is the proof of remediation.
 
 ---
 
@@ -128,5 +111,3 @@ stave check --before testdata/e2e/e2e-01-violation/observations --after testdata
 | "Which controls should I run?" | `stave plan` shows them by service and severity |
 | "Does Stave need my AWS credentials?" | No. Never. It reads the observations you converted. |
 | "I fixed things — now what?" | `stave check --before --after` |
-
-You **do** convert snapshots into observations — that's the one step Stave never does for you.

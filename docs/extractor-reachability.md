@@ -1,307 +1,193 @@
-# Building a Reachability Extractor
+# Reachability Extractor
 
-This guide describes how to build an extractor that computes
-unauthenticated reachability paths and produces `obs.v0.1` JSON
-for evaluation by Stave's `CTL.EXPOSURE.ANON.*` controls.
+BFS from the anonymous principal through an access graph. Detects
+unauthenticated paths to storage resources, with authentication and
+inspection boundary detection.
 
-Stave does not traverse graphs. Your extractor performs BFS from
-the anonymous principal node, annotates each reachable target
-resource, and outputs the results as observation properties.
+## Implementation
 
-## Overview
+**Source:** `iam-explainer/Stave/Extract/Reachability.lean`
+(`Extract.Reachability` namespace)
 
+Pure function over already-collected data. No live API calls.
+
+Stave does not traverse graphs. This extractor performs BFS, annotates
+each reachable target resource, and outputs the results as observation
+properties for Stave's CEL predicates to evaluate.
+
+### Types
+
+```lean
+inductive NodeType where
+  | anonymous | entryPoint | compute | identity | storage | network
+
+structure GraphNode where
+  nodeId : String
+  nodeType : NodeType
+  dataClassification : Option String := none
+  fixHint : Option String := none
+
+structure GraphEdge where
+  source : String    -- accessor
+  target : String    -- resource
+
+inductive AuthBoundary where
+  | cognito | lambdaAuthorizer | iam | mtls
+
+inductive InspectionBoundary where
+  | waf | requestValidation
+
+structure ReachablePath where
+  target : GraphNode
+  path : List GraphNode
+  hopCount : Nat
+  authBoundaries : List AuthBoundary
+  inspectionBoundaries : List InspectionBoundary
+  isFullyResolved : Bool
+  unresolvedReason : Option String
+  entryPointType : Option String
+
+structure BlockedPath where
+  target : GraphNode
+  blockedAtId : String
+  blockedAtType : NodeType
+  reason : String
 ```
-Your Extractor                        Stave
-────────────────                      ─────
-Build directed graph from config  →   Check reachable == true
-BFS from anonymous principal      →   Check target_data_classification in [phi, pii, confidential]
-Count hops in shortest path       →   Check path_hop_count > 3
-Detect auth/inspection boundaries →   Check has_auth_boundary == false
-Track graph completeness          →   Check is_fully_resolved == false
-Record blocking points            →   Display proof of obstruction
-Output obs.v0.1 JSON              →   Evaluate as standard predicates
-```
 
-## Step 1: Build the access graph
+### Pipeline
 
-### Nodes
+1. **`bfsFromAnonymous`** — BFS from the synthetic anonymous node.
+   Returns all reachable storage nodes with their shortest paths.
+   Fuel-bounded (default 100 iterations).
 
-| Node type | AWS source | How to enumerate |
-|---|---|---|
-| `anonymous` | Synthetic | Create one node representing the public internet |
-| `entry_point` | API Gateway, ALB, CloudFront | `apigateway:GetRestApis`, `elbv2:DescribeLoadBalancers` |
-| `compute` | Lambda, ECS, EC2 | `lambda:ListFunctions`, `ecs:ListTasks` |
-| `identity` | IAM roles | `iam:ListRoles`, `iam:GetRole` |
-| `storage` | S3, DynamoDB, RDS, Secrets Manager | `s3:ListBuckets`, `dynamodb:ListTables` |
-| `network` | VPC endpoints, security groups | `ec2:DescribeVpcEndpoints`, `ec2:DescribeSecurityGroups` |
+2. **`annotateBoundaries`** — Post-BFS pass. Takes auth and inspection
+   boundary maps (`nodeId → boundary type`) and annotates each path
+   with the boundaries it crosses.
 
-### Edges (access grants)
+3. **`transformReachability`** — Converts `List ReachablePath` into
+   obs.v0.1 assets with full path summaries and boundary annotations.
 
-| Edge type | Source → Target | How to discover |
-|---|---|---|
-| API Gateway integration | entry_point → compute | `apigateway:GetIntegration` (Lambda URI) |
-| Lambda execution role | compute → identity | `lambda:GetFunction` → `Configuration.Role` |
-| IAM policy grant | identity → storage | `iam:ListAttachedRolePolicies` + `iam:GetPolicyVersion` |
-| Role assumption | identity → identity | `sts:AssumeRole` in policy statements |
-| Bucket policy | anonymous/identity → storage | `s3:GetBucketPolicy` → Principal analysis |
-| VPC endpoint policy | network → storage | `ec2:DescribeVpcEndpoints` → PolicyDocument |
-| Security group rule | network → compute | `ec2:DescribeSecurityGroups` → IpPermissions |
+4. **`transformBlocked`** — Converts `List BlockedPath` into
+   negative-assurance assets showing where the path was blocked.
 
-### Edge direction
+### Building the access graph
 
 Edges point from **accessor to resource** (who can reach what).
 The anonymous node connects to all public entry points.
 
-## Step 2: BFS from anonymous
-
-```python
-from collections import deque
-
-def bfs_from_anonymous(graph):
-    """Returns {resource_id: path} for all reachable resources."""
-    queue = deque([("anonymous", ["anonymous"])])
-    visited = {"anonymous"}
-    reachable = {}
-
-    while queue:
-        node, path = queue.popleft()
-        for neighbor in graph.neighbors(node):
-            if neighbor not in visited:
-                visited.add(neighbor)
-                new_path = path + [neighbor]
-                if graph.is_resource(neighbor):
-                    reachable[neighbor] = new_path
-                queue.append((neighbor, new_path))
-
-    return reachable
-```
-
-Record the **shortest path** (BFS guarantees this). The path
-becomes the `path_summary` property.
-
-## Step 3: Detect boundaries
-
-For each edge in the path, check if it passes through an
-authentication or inspection boundary.
-
-### Authentication boundaries (identity verification)
-
-| Type | How to detect |
+| Node type | AWS source |
 |---|---|
-| `cognito` | API Gateway method has `authorizationType: COGNITO_USER_POOLS` |
-| `lambda_authorizer` | API Gateway method has `authorizationType: CUSTOM` |
-| `iam` | API Gateway method has `authorizationType: AWS_IAM` |
-| `mtls` | API Gateway stage has mutual TLS configured |
+| `anonymous` | Synthetic — one node representing the public internet |
+| `entry_point` | API Gateway, ALB, CloudFront |
+| `compute` | Lambda, ECS, EC2 |
+| `identity` | IAM roles |
+| `storage` | S3, DynamoDB, RDS, Secrets Manager |
+| `network` | VPC endpoints, security groups |
 
-### Inspection boundaries (request filtering)
-
-| Type | How to detect |
+| Edge type | Source → Target |
 |---|---|
-| `waf` | `wafv2:GetWebACLForResource` returns a WebACL for the stage/ALB |
-| `api_gateway_request_validation` | API Gateway method has `requestValidatorId` set |
+| API Gateway integration | entry_point → compute |
+| Lambda execution role | compute → identity |
+| IAM policy grant | identity → storage |
+| Role assumption | identity → identity |
+| Bucket policy | anonymous/identity → storage |
+| VPC endpoint policy | network → storage |
+| Security group rule | network → compute |
 
-Set `has_auth_boundary = true` if any authentication type is found.
-Set `has_inspection_boundary = true` if any inspection type is found.
-Populate the `auth_boundary_types` and `inspection_boundary_types`
-arrays with all detected types.
+### Authentication vs inspection boundaries
 
-**Important:** WAF is inspection, not authentication. A path with
-WAF but no authorizer is inspected but still unauthenticated.
+WAF is inspection, not authentication. A path with WAF but no
+authorizer is inspected but still unauthenticated.
 
-## Step 4: Track graph completeness
+| Authentication | Inspection |
+|---|---|
+| `cognito` — Cognito user pool | `waf` — WAF WebACL |
+| `lambda_authorizer` — Custom authorizer | `requestValidation` — API Gateway request validator |
+| `iam` — IAM authorization | |
+| `mtls` — Mutual TLS | |
 
-During BFS, when you encounter an access-denied error or missing
-configuration, mark the path as partially resolved:
+### Negative assurance
 
-```python
-try:
-    policy_doc = iam.get_role_policy(role_name, policy_name)
-except iam.exceptions.AccessDeniedException:
-    path.is_fully_resolved = False
-    path.unresolved_reason = "access_denied_on_iam_policy_lookup"
-```
+When BFS cannot reach a resource, `transformBlocked` records where the
+path was blocked — providing formal proof of safety for auditors.
 
-Controls that fire on partially-resolved paths:
-- `CTL.EXPOSURE.ANON.PARTIAL.001` (severity: medium)
-
-This is the "unknown" state — the extractor cannot prove safety
-beyond the unresolved node. The auditor decides whether to grant
-additional permissions or accept the risk.
-
-## Step 5: Read data classification tags
-
-For each reachable resource, read its tags to determine sensitivity:
-
-```python
-def classify_resource(arn):
-    tags = resourcegroupstaggingapi.get_resources(
-        ResourceARNList=[arn]
-    )["ResourceTagMappingList"][0]["Tags"]
-
-    for tag in tags:
-        if tag["Key"].lower() in ("data-classification", "data_classification"):
-            return tag["Value"].lower()  # phi, pii, confidential, public
-    return "none"
-```
-
-The `target_data_classification` field drives the core control
-`CTL.EXPOSURE.ANON.001` — only `phi`, `pii`, and `confidential`
-trigger the critical finding.
-
-## Step 6: Record negative assurance
-
-When BFS cannot reach a resource (because a boundary blocks the
-path), record **where** the path was blocked:
-
-```python
-if not reachable:
-    observation["blocked_at"] = {
-        "node_type": "entry_point",
-        "id": "apigateway:my-api/GET/*",
-        "reason": "cognito_authorizer"
-    }
-```
-
-This provides formal proof of safety for auditors. The `blocked_at`
-field shows the exact resource and boundary type that terminated
-the path.
-
-Possible `reason` values:
-- `cognito_authorizer` — Cognito user pool blocks unauthenticated
-- `iam_authorization` — IAM auth required on API Gateway
-- `lambda_authorizer` — Custom Lambda authorizer blocks
-- `no_route` — No network path exists (security group/NACL)
-- `resource_policy_deny` — Explicit deny in resource-based policy
-- `vpc_endpoint_policy` — VPC endpoint policy restricts access
-
-## Step 7: Encode path summary as objects
-
-Each node in `path_summary` is an object with type, identifier,
-and optional remediation hint:
-
-```json
-{
-  "path_summary": [
-    {
-      "node_type": "entry_point",
-      "id": "apigateway:my-api/GET/*",
-      "fix_hint": "aws apigateway update-method --authorization-type COGNITO_USER_POOLS"
-    },
-    {
-      "node_type": "compute",
-      "id": "lambda:my-function",
-      "fix_hint": null
-    },
-    {
-      "node_type": "identity",
-      "id": "iam_role:my-lambda-role",
-      "fix_hint": null
-    },
-    {
-      "node_type": "storage",
-      "id": "s3:my-phi-bucket",
-      "fix_hint": "Restrict s3:GetObject to VPC endpoint"
-    }
-  ]
-}
-```
+Possible `reason` values: `cognito_authorizer`, `iam_authorization`,
+`lambda_authorizer`, `no_route`, `resource_policy_deny`,
+`vpc_endpoint_policy`.
 
 ### Fix efficiency
 
-When providing `fix_hint`, prefer fixes at the **ingress** (entry
-point) over fixes at the **egress** (target resource). An
-authorizer at the API Gateway protects every resource behind that
-API, while a bucket policy fix only protects one bucket.
+Path summaries include `fix_hint` per node. Prefer fixes at ingress
+over egress:
 
-Priority order:
 1. **Entry point fix** (highest efficiency) — blocks all paths
 2. **Identity fix** — scopes the role's reach
 3. **Target fix** (defense-in-depth) — protects one resource
 
-### Node types
+## Output (obs.v0.1)
 
-| `node_type` | Description | Examples |
-|---|---|---|
-| `entry_point` | First externally-facing service | API Gateway, ALB, CloudFront |
-| `compute` | Execution environment | Lambda, ECS task, EC2 instance |
-| `identity` | IAM principal | IAM role, service account |
-| `storage` | Data store (target resource) | S3 bucket, DynamoDB table, RDS |
-| `network` | Network boundary | VPC endpoint, security group |
-
-## Step 8: Output obs.v0.1 JSON
-
-Assemble the full observation. Each reachable (or proven-safe)
-resource gets a `reachability` property:
+### Reachable resource
 
 ```json
 {
-  "schema_version": "obs.v0.1",
-  "captured_at": "2026-04-12T00:00:00Z",
-  "assets": [
-    {
-      "id": "arn:aws:s3:::my-phi-bucket",
-      "type": "aws_s3_bucket",
-      "vendor": "aws",
-      "properties": {
-        "reachability": {
-          "kind": "anonymous_path",
-          "anonymous_path": {
-            "reachable": true,
-            "path_hop_count": 4,
-            "path_summary": [
-              {"node_type": "entry_point", "id": "apigateway:my-api/GET/*", "fix_hint": "Enable Cognito authorizer"},
-              {"node_type": "compute", "id": "lambda:my-function", "fix_hint": null},
-              {"node_type": "identity", "id": "iam_role:my-lambda-role", "fix_hint": null},
-              {"node_type": "storage", "id": "s3:my-phi-bucket", "fix_hint": "Restrict to VPC endpoint"}
-            ],
-            "target_data_classification": "phi",
-            "has_auth_boundary": false,
-            "auth_boundary_types": [],
-            "has_inspection_boundary": true,
-            "inspection_boundary_types": ["waf"],
-            "is_fully_resolved": true,
-            "unresolved_reason": null,
-            "entry_point_type": "apigateway",
-            "blocked_at": null
-          }
+  "id": "arn:aws:s3:::my-phi-bucket",
+  "type": "aws_s3_bucket",
+  "vendor": "aws",
+  "properties": {
+    "reachability": {
+      "kind": "anonymous_path",
+      "anonymous_path": {
+        "reachable": true,
+        "path_hop_count": 4,
+        "path_summary": [
+          {"node_type": "entry_point", "id": "apigateway:my-api/GET/*", "fix_hint": "Enable Cognito authorizer"},
+          {"node_type": "compute", "id": "lambda:my-function", "fix_hint": null},
+          {"node_type": "identity", "id": "iam_role:my-lambda-role", "fix_hint": null},
+          {"node_type": "storage", "id": "s3:my-phi-bucket", "fix_hint": "Restrict to VPC endpoint"}
+        ],
+        "target_data_classification": "phi",
+        "has_auth_boundary": false,
+        "auth_boundary_types": [],
+        "has_inspection_boundary": true,
+        "inspection_boundary_types": ["waf"],
+        "is_fully_resolved": true,
+        "unresolved_reason": null,
+        "entry_point_type": "apigateway:my-api/GET/*",
+        "blocked_at": null
+      }
+    }
+  }
+}
+```
+
+### Blocked resource (negative assurance)
+
+```json
+{
+  "id": "arn:aws:s3:::protected-bucket",
+  "type": "aws_s3_bucket",
+  "vendor": "aws",
+  "properties": {
+    "reachability": {
+      "kind": "anonymous_path",
+      "anonymous_path": {
+        "reachable": false,
+        "blocked_at": {
+          "node_type": "entry_point",
+          "id": "apigateway:my-api/GET/*",
+          "reason": "cognito_authorizer"
         }
       }
     }
-  ]
+  }
 }
 ```
 
-## Required AWS permissions
+## Verified properties
 
-The extractor needs read-only access to enumerate the graph:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Effect": "Allow",
-    "Action": [
-      "apigateway:GET",
-      "lambda:GetFunction",
-      "lambda:GetPolicy",
-      "iam:ListRoles",
-      "iam:ListAttachedRolePolicies",
-      "iam:GetRolePolicy",
-      "iam:GetPolicyVersion",
-      "s3:GetBucketPolicy",
-      "s3:GetBucketTagging",
-      "elasticloadbalancing:DescribeLoadBalancers",
-      "elasticloadbalancing:DescribeListeners",
-      "elasticloadbalancing:DescribeRules",
-      "ec2:DescribeSecurityGroups",
-      "ec2:DescribeVpcEndpoints",
-      "wafv2:GetWebACLForResource",
-      "tag:GetResources"
-    ],
-    "Resource": "*"
-  }]
-}
-```
+- 3-hop path (anonymous → API GW → Lambda → S3) produces hop count 3 (`#guard`)
+- No path to storage produces empty results (`#guard`)
+- Boundary annotation correctly attaches auth and inspection types (`#guard`)
 
 ## Controls that evaluate this output
 

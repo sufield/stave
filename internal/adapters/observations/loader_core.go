@@ -11,12 +11,10 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"time"
-
-	"github.com/sufield/stave/internal/core/asset"
 
 	"github.com/sufield/stave/internal/adapters/integrity"
 	contractvalidator "github.com/sufield/stave/internal/contracts/validator"
+	"github.com/sufield/stave/internal/core/asset"
 	appcontracts "github.com/sufield/stave/internal/core/contracts"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -24,19 +22,12 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
-// RawTransformer converts a batch of unrecognized files (no schema_version)
-// into a single obs.v0.1 JSON document. The loader calls it when the
-// observations directory contains files that are not obs.v0.1 snapshots.
-type RawTransformer func(files map[string][]byte, evalTime time.Time) ([]byte, error)
-
 // ObservationLoader loads snapshots from JSON files.
 type ObservationLoader struct {
 	validator              contractvalidator.ObservationJSONValidator
 	integrityManifestPath  string
 	integrityPublicKeyPath string
 	onProgress             func(processed, total int)
-	rawTransform           RawTransformer
-	evalTime               time.Time
 }
 
 // LoaderOption configures an ObservationLoader.
@@ -52,15 +43,6 @@ func WithIntegrityCheck(manifestPath, publicKeyPath string) LoaderOption {
 	return func(l *ObservationLoader) {
 		l.integrityManifestPath = manifestPath
 		l.integrityPublicKeyPath = publicKeyPath
-	}
-}
-
-// WithRawTransform sets the fallback transformer for raw (non-obs.v0.1)
-// files found in the observations directory.
-func WithRawTransform(fn RawTransformer, evalTime time.Time) LoaderOption {
-	return func(l *ObservationLoader) {
-		l.rawTransform = fn
-		l.evalTime = evalTime
 	}
 }
 
@@ -92,41 +74,19 @@ func (l *ObservationLoader) LoadSnapshots(ctx context.Context, dir string) (appc
 		return appcontracts.LoadResult{}, err
 	}
 
-	// Read all files. When a raw transformer is configured, partition
-	// into obs.v0.1 vs raw; otherwise send everything through the
-	// normal validator (which rejects missing schema_version).
 	type fileData struct {
 		name string
 		path string
 		data []byte
 	}
 	var obsFiles []fileData
-	var rawBatch map[string][]byte
 	for _, entry := range entries {
 		path := filepath.Join(dir, entry.Name())
 		data, err := fsutil.ReadFileLimited(path)
 		if err != nil {
 			return appcontracts.LoadResult{}, fmt.Errorf("load snapshot %s: %w", path, err)
 		}
-		if l.rawTransform != nil && !hasSchemaVersion(data) {
-			if rawBatch == nil {
-				rawBatch = make(map[string][]byte)
-			}
-			rawBatch[entry.Name()] = data
-		} else {
-			obsFiles = append(obsFiles, fileData{entry.Name(), path, data})
-		}
-	}
-
-	// Auto-transform raw files if a transformer is configured.
-	if len(rawBatch) > 0 {
-		transformed, err := l.rawTransform(rawBatch, l.evalTime)
-		if err != nil {
-			return appcontracts.LoadResult{}, fmt.Errorf("auto-transform raw input: %w", err)
-		}
-		if len(transformed) > 0 {
-			obsFiles = append(obsFiles, fileData{"_auto_transformed.json", "auto-transform", transformed})
-		}
+		obsFiles = append(obsFiles, fileData{entry.Name(), path, data})
 	}
 
 	var snapshots []asset.Snapshot
@@ -240,19 +200,6 @@ func isBundleFormat(data []byte) bool {
 		return false
 	}
 	return len(probe.Snapshots) > 0 && !bytes.Equal(bytes.TrimSpace(probe.Snapshots), []byte("null")) && len(probe.Assets) == 0
-}
-
-// hasSchemaVersion probes whether data is an obs.v0.1 or bundle document
-// by checking for a top-level "schema_version" key. Raw AWS CLI output
-// never contains this key.
-func hasSchemaVersion(data []byte) bool {
-	var probe struct {
-		SchemaVersion json.RawMessage `json:"schema_version"`
-	}
-	if err := json.Unmarshal(data, &probe); err != nil {
-		return false
-	}
-	return len(probe.SchemaVersion) > 0 && !bytes.Equal(bytes.TrimSpace(probe.SchemaVersion), []byte("null"))
 }
 
 func buildInputHashes(fileHashes map[string]string) *evaluation.InputHashes {

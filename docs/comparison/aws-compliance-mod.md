@@ -45,7 +45,7 @@ AWS Compliance Mod is the answer.
 [Stave](https://github.com/sufield/stave) is a deterministic
 cloud-security evaluation engine for compound risk reasoning. It
 operates on **snapshot-anchored facts** (`obs.v0.1`) — not live
-APIs — and emits **deterministic verdicts** (`out.v0.1`) that
+APIs and emits **deterministic verdicts** (`out.v0.1`) that
 auditors and CI/CD can treat as evidence.
 
 The catalog has two axes:
@@ -85,10 +85,10 @@ through my CI?"_, Stave is the answer.
 
 ## Where they overlap (atomic scope)
 
-For the atomic-control set — "bucket encryption enabled," "user
-MFA active," "root account access key present" — both tools
+For the atomic-control set "bucket encryption enabled," "user
+MFA active," "root account access key present" both tools
 detect the same kinds of misconfigurations. The differences on
-this axis are tactical, not strategic:
+this axis are tactical:
 
 - AWS Compliance Mod queries live AWS APIs; Stave queries a
   snapshot. Same answer for the same state of the world.
@@ -113,7 +113,7 @@ represent by construction:
 1. **Compound risk chains.** A set of controls that, when they
    co-fail, create more risk than the sum of individual
    findings. Example: a public-read S3 bucket + access logging
-   disabled isn't the sum of two findings — it's an exfiltration
+   disabled isn't the sum of two findings. It's an exfiltration
    path with no audit trail. Stave's chain engine fires when the
    composition's escalation threshold is met; the compound
    finding carries its own severity that may exceed any member.
@@ -125,7 +125,7 @@ represent by construction:
    inventory. Per-resource scanners that don't model
    cross-resource invariants miss every one of these. Stave's
    catalog has 104 ghost-reference controls today across 18 AWS
-   services — APIGateway (7), CloudFront (7), CloudTrail (4),
+   services. APIGateway (7), CloudFront (7), CloudTrail (4),
    CloudWatch (6), Cognito (16 — the densest surface),
    Config (6), DynamoDB (3), EC2 (4), ECS (4), EKS (11),
    ELB (9), EventBridge (9), IAM (4), Route53 (1), S3 (1),
@@ -133,7 +133,7 @@ represent by construction:
 3. **Snapshot-anchored reproducibility.** Re-running the same
    `obs.v0.1` snapshot produces byte-identical output. Two
    weeks later, a different engineer points the same snapshot
-   at Stave and gets the same verdict — useful for audit
+   at Stave and gets the same verdict. This is useful for audit
    timelines, regression bisects, "what did we know at time T"
    questions. Live-API tools can't offer this property because
    the live API has moved on.
@@ -147,7 +147,7 @@ represent by construction:
 
 ---
 
-## Concrete side-by-side
+## Comparison
 
 The two tools authoring the same intent. Both check "do not
 allow cross-account role assumption without an external ID."
@@ -156,8 +156,7 @@ allow cross-account role assumption without an external ID."
 
 A typical IAM check in `turbot/steampipe-mod-aws-compliance`
 under the CIS or PCI benchmarks (verify the exact file in
-the live repo before quoting verbatim — the shape below is
-representative; SQL is illustrative not copy-pasted):
+the live repo before quoting verbatim. SQL is pseudo code):
 
 ```sql
 -- Representative shape of an IAM control in the AWS Compliance Mod.
@@ -181,7 +180,7 @@ where
   ...
 ```
 
-What this gives the operator: a per-role row, status, reason,
+This gives: a per-role row, status, reason,
 in a CIS-cited benchmark dashboard. Reads one role at a time;
 the "is this role cross-account?" question is computed in SQL
 from the role's own trust policy.
@@ -220,17 +219,16 @@ unsafe_predicate:
       value: true
 ```
 
-The predicate checks three properties on a single role — but
+The predicate checks three properties on a single role. But
 two of those properties (`blast_radius_scope` and
 `cross_account_trust_without_external_id`) are pre-computed by
 the Stave observation extractor by **reasoning across the
 role's trust policy, attached permissions, and the reachable
 resources in other accounts**. The extractor walks the IAM
 graph; the predicate evaluates the result. The control fires
-when the composition produces the unsafe state — not when any
-single property is independently wrong.
+when the composition produces the unsafe state.
 
-That composition is what AWS Compliance Mod's per-row SQL
+That composition is AWS Compliance Mod's per-row SQL
 shape can't express. The "is the trust missing an external
 ID?" question is per-role and SQL-shaped; the "does the role
 have cross-account reach AND does the trust permit assumption
@@ -271,7 +269,7 @@ powerpipe mod install github.com/zepho/powerpipe-mod-stave
 go install github.com/sufield/stave/cmd/stave@latest
 ```
 
-A typical operator workflow:
+A typical workflow:
 
 1. **Daily / on-snapshot:** `stave apply --format json > out.stave.json`
    produces the deterministic evaluation. CI fails on new
@@ -284,10 +282,7 @@ A typical operator workflow:
    the framework question; Stave's `stave_posture` dashboard
    answers the composition question.
 
-The two surfaces are intentionally orthogonal — Stave's
+The two surfaces are intentionally orthogonal. Stave's
 Powerpipe mod focuses on compound-risk chains and ghost
 references, while the AWS Compliance Mod focuses on
 per-resource framework coverage.
-
----
-

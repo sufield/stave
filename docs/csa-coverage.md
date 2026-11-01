@@ -67,4 +67,4 @@ Stave is the configuration safety layer. These tools cover adjacent concerns:
 - **Runtime agent-based detection** — CSPM agents, EDR tools
 - **Live API querying** — CSPM platforms with cloud credentials
 
-Stave's role is to prove that your infrastructure's configuration doesn't have the gaps that make these attacks possible in the first place. It complements runtime detection tools by ensuring the attack surface is minimized before an attacker arrives.
+Stave's role is to prove that your infrastructure's configuration doesn't have the gaps that make these attacks possible. It complements runtime detection tools by ensuring the attack surface is minimized before an attacker arrives.

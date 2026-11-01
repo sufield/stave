@@ -712,7 +712,7 @@ func TestMK4_StripeIndex_EmptyString(t *testing.T) {
 func TestMK4_NewCollector_PerStripeHint(t *testing.T) {
 	// Lines 113: per-stripe hint calculation — mutations on arithmetic.
 	c := NewCollector(100)
-	for i := 0; i < stripeCount; i++ {
+	for i := range stripeCount {
 		if c.stripes[i] == nil {
 			t.Fatalf("stripe %d is nil", i)
 		}
@@ -724,7 +724,7 @@ func TestMK4_NewCollector_PerStripeHint(t *testing.T) {
 
 func TestMK4_NewCollector_ZeroHintStillInitializes(t *testing.T) {
 	c := NewCollector(0)
-	for i := 0; i < stripeCount; i++ {
+	for i := range stripeCount {
 		if c.stripes[i] == nil {
 			t.Fatalf("stripe %d is nil with zero hint", i)
 		}
@@ -844,7 +844,7 @@ func TestMK4_Snapshot_DeepClonesFindings(t *testing.T) {
 func TestMK4_Snapshot_IncludesAllStripes(t *testing.T) {
 	// Lines 331–333: make statements — ensure all stripes are merged.
 	c := NewCollector(100)
-	for i := 0; i < 20; i++ {
+	for i := range 20 {
 		id := asset.ID(fmt.Sprintf("asset-%d", i))
 		c.RecordFindings([]*evaluation.Finding{
 			{FindingID: kernel.FindingID(fmt.Sprintf("f-%d", i)), ControlID: "CTL.A", AssetID: id},

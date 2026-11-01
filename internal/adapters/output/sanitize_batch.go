@@ -21,7 +21,7 @@ func SanitizeBaselineEntries(s kernel.Sanitizer, entries []evaluation.BaselineEn
 
 // SanitizeObservationDelta returns a copy with asset IDs in changes sanitized.
 func SanitizeObservationDelta(s kernel.Sanitizer, delta asset.InfrastructureDrift) asset.InfrastructureDrift {
-	if s == nil || len(delta.Changes) == 0 {
+	if s == nil || !delta.HasChanges() {
 		return delta
 	}
 	changes := make([]asset.AssetChange, len(delta.Changes))

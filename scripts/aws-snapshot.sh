@@ -2,35 +2,27 @@
 #
 # AWS snapshot collector for Stave (collect-only)
 #
-# Gathers read-only AWS CLI JSON into a raw/ directory, then calls
-# `stave transform` to convert it into obs.v0.1 observations. This script does NO
-# mapping: the snapshot→observation logic lives entirely in the embedded jq
-# filters (the single source of truth). This script only collects raw API output
-# and supplies the per-resource join keys (by filename for S3/IAM-inline, by an
-# annotation for IAM-role enrichment).
+# Gathers read-only AWS CLI JSON into a raw/ directory. Convert the raw
+# output to obs.v0.1 observations using the Lean 4 extractors in
+# iam-explainer/Stave/Extract/, then evaluate with `stave apply`.
 #
 # Usage:
 #   bash scripts/aws-snapshot.sh [output-directory]
 #
 # Layout produced under <output-directory>/:
 #   raw/            raw AWS CLI JSON (collected here)
-#   observations/   obs.v0.1 written by `stave transform`
+#   observations/   (you populate this via Lean 4 extractors)
 #
 # Environment:
 #   AWS_PROFILE / AWS_REGION   Standard AWS CLI selectors.
-#   STAVE                      Path to the stave binary (default: stave on PATH).
 #
 # Prerequisites:
 #   - AWS CLI v2 with read-only credentials (SecurityAudit is sufficient).
 #   - jq on PATH (lists resource names and stamps role join keys).
-#   - stave on PATH (the converter).
 #
 # Coverage: S3, IAM (roles/users/groups/password policy/inline policies), EBS,
 # EC2 (instances, security groups), CloudTrail, AWS Config, OpenSearch,
-# CloudWatch alarms. Some calls below feed filters still in development (admin
-# analysis, SES, KMS, event selectors, ENIs, instance user-data); they are
-# collected now so a snapshot is complete when those filters land — `stave
-# transform` simply skips raw files it has no filter for yet.
+# CloudWatch alarms, KMS, SES.
 #
 # Exit codes: 0 observations written; 1 missing prerequisite.
 # All AWS calls are read-only; nothing leaves the local filesystem.
@@ -40,7 +32,6 @@ set -uo pipefail
 OUTPUT_DIR="${1:-./my-snapshot}"
 RAW_DIR="$OUTPUT_DIR/raw"
 OBS_DIR="$OUTPUT_DIR/observations"
-STAVE="${STAVE:-stave}"
 mkdir -p "$RAW_DIR" "$OBS_DIR"
 
 need() {
@@ -51,7 +42,6 @@ need() {
 }
 need aws
 need jq
-need "$STAVE"
 
 NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 ACCOUNT=$(aws sts get-caller-identity --query Account --output text 2>/dev/null || echo "")
@@ -167,15 +157,13 @@ while read -r ident; do
 	aws ses list-identity-policies --identity "$ident" 2>/dev/null | cap "ses-policies-$ident.json" '-'
 done < <(jq -r '.Identities[]' "$RAW_DIR/ses_identities.json" 2>/dev/null)
 
-# ----- convert (the .jq filters are the single source of truth) ------------
-echo ""
-echo "==> Converting raw snapshots → obs.v0.1 (stave transform)"
-"$STAVE" transform -i "$RAW_DIR" -o "$OBS_DIR" --account "$ACCOUNT" --eval-time "$NOW"
-
 echo ""
 echo "════════════════════════════════════════════════════════════"
-echo "Next steps:"
-echo "  stave apply --observations $OBS_DIR"
+echo "Raw snapshots collected in: $RAW_DIR"
 echo ""
-echo "  # machine-readable:"
-echo "  stave apply --observations $OBS_DIR --format json | jq '.findings | length'"
+echo "Next steps:"
+echo "  1. Convert raw JSON to obs.v0.1 using the Lean 4 extractors"
+echo "     (iam-explainer/Stave/Extract/)"
+echo "  2. Place the obs.v0.1 files in: $OBS_DIR"
+echo "  3. Evaluate:"
+echo "     stave apply --observations $OBS_DIR --eval-time $NOW --include-atomic"

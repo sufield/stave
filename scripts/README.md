@@ -7,7 +7,7 @@ Shell and Python helper scripts for snapshot collection, fixture capture, and de
 | Script | Purpose |
 |--------|---------|
 | `quickstart.sh` | From "I use these AWS services" to findings. Runs `stave discover` then `stave apply` against an observations directory. |
-| `aws-snapshot.sh` | AWS snapshot collector. Gathers read-only AWS CLI JSON into `raw/`, then calls `stave transform` to produce `obs.v0.1` observations. Requires AWS CLI v2 with SecurityAudit credentials and `jq`. |
+| `aws-snapshot.sh` | AWS snapshot collector. Gathers read-only AWS CLI JSON into `raw/`. Convert to obs.v0.1 using the Lean 4 extractors. Requires AWS CLI v2 with SecurityAudit credentials and `jq`. |
 
 ## Development Scripts
 

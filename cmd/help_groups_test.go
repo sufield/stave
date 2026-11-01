@@ -20,7 +20,6 @@ func TestRootHelpGroupsAssigned(t *testing.T) {
 		"bisect":   groupEvaluate,
 		// Data
 		"discover":  groupData,
-		"transform": groupData,
 		"snapshot":  groupData,
 		"readiness": groupData,
 		"gaps":      groupData,

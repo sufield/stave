@@ -181,7 +181,7 @@ func renderText(w io.Writer, out asset.InfrastructureDrift) error {
 		return firstErr
 	}
 
-	if len(out.Changes) == 0 {
+	if !out.HasChanges() {
 		printf("No asset changes detected.\n")
 		return firstErr
 	}

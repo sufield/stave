@@ -76,7 +76,7 @@ func Resolve(o *Options, cs cobraState) (RunConfig, error) {
 	// instead of erroring. An explicit --controls flag (even to a missing
 	// path) and enabled_control_packs both take precedence and are
 	// validated normally.
-	hasPacks := !o.controlsSet && projCfg != nil && len(projCfg.EnabledControlPacks) > 0
+	hasPacks := !o.controlsSet && projCfg.HasEnabledControlPacks()
 	// Fall back to the built-in catalog only when the controls path is
 	// genuinely absent. A path that exists but is a file (or otherwise not
 	// a directory) is a misconfiguration and must still surface the normal

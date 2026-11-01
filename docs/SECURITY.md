@@ -1,7 +1,5 @@
 # Security Policy
 
-## Scope
-
 This policy covers the **Stave CLI**.
 
 ## Reporting a Vulnerability
@@ -117,9 +115,9 @@ Stave requires no elevated privileges at any stage:
 - **Docker:** The demo image runs as a non-root user (UID 10001). See `docs-content/demo/Dockerfile`.
 - **Output permissions:** All output directories use `0700` and files use `0600` (owner-only access).
 
-## Credential-Free Operation
+## Credential-less Operation
 
-Stave is architecturally credential-free. It never requires, reads, or processes cloud credentials:
+Stave never requires, reads, or processes cloud credentials:
 
 - **Source type validation is local** — The `generated_by.source_type` field is validated against a built-in allowlist. Accepted source types do not imply cloud API access; all inputs are local snapshot files. Run `stave capabilities` to see the current allowlist.
 - **No credential environment variables** — Stave does not read `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `AWS_PROFILE`, `GOOGLE_APPLICATION_CREDENTIALS`, or any other credential-related environment variable. The only environment variable Stave reads is `NO_COLOR` (per [no-color.org](https://no-color.org/)).

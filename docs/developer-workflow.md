@@ -3,30 +3,21 @@
 ## Getting data into Stave
 
 Stave evaluates `obs.v0.1` observations and never calls cloud APIs itself.
-**Collection stays external** — you use your tools and your credentials
+**Collection stays external** Use your tools and your credentials
 (the AWS CLI, [Steampipe](https://steampipe.io), Pulumi, Terraform state,
 etc.) to produce raw configuration snapshots.
 
-**`stave apply` auto-transforms raw AWS CLI JSON** in-memory, so the
-default path is one step — no separate conversion needed:
+Convert raw AWS CLI JSON to `obs.v0.1` using the **Lean 4 extractors**
+(`iam-explainer/Stave/Extract/`), then evaluate:
 
 ```bash
-# doctest:skip — requires raw AWS CLI output
-stave apply --observations raw/ --format text
-```
-
-To inspect the intermediate `obs.v0.1` output or run the conversion
-separately, use **`stave transform`**:
-
-```bash
-# doctest:skip — requires raw AWS CLI output
-stave transform -i raw/ -o observations/
+# doctest:skip — requires obs.v0.1 observations
+stave apply --observations observations/ --format text
 ```
 
 You can also use an **external extractor** that emits `obs.v0.1`
 directly. A Steampipe SQL query piped through `jq`, CloudQuery, or your
-own. See [Building an Extractor](extractor-prompt.md) when you need breadth
-beyond the built-in filters or a custom data source.
+own. See [Building an Extractor](extractor-prompt.md) for custom data sources.
 
 **`validate`** checks that observations are schema-compliant. Run it whenever
 observations come from an external extractor to catch mistakes before `apply`.

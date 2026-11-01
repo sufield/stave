@@ -289,3 +289,25 @@ func TestValidateField_EmptyValues(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkspacePolicy_HasEnabledControlPacks(t *testing.T) {
+	var nilPolicy *WorkspacePolicy
+	if nilPolicy.HasEnabledControlPacks() {
+		t.Error("nil policy should not have enabled control packs")
+	}
+
+	emptyPolicy := &WorkspacePolicy{}
+	if emptyPolicy.HasEnabledControlPacks() {
+		t.Error("empty policy should not have enabled control packs")
+	}
+
+	emptySlicePolicy := &WorkspacePolicy{EnabledControlPacks: []string{}}
+	if emptySlicePolicy.HasEnabledControlPacks() {
+		t.Error("policy with empty packs slice should not have enabled control packs")
+	}
+
+	withPacks := &WorkspacePolicy{EnabledControlPacks: []string{"aws-baseline"}}
+	if !withPacks.HasEnabledControlPacks() {
+		t.Error("policy with enabled packs should return true")
+	}
+}
