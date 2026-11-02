@@ -943,6 +943,87 @@ func TestMisconfigurationIsMissing(t *testing.T) {
 	}
 }
 
+func TestMisconfigurationIsInDisjunction(t *testing.T) {
+	t.Parallel()
+	m0 := Misconfiguration{DisjunctionID: 0}
+	if m0.IsInDisjunction() {
+		t.Fatal("DisjunctionID 0 should not be in disjunction")
+	}
+
+	m1 := Misconfiguration{DisjunctionID: 1}
+	if !m1.IsInDisjunction() {
+		t.Fatal("DisjunctionID 1 should be in disjunction")
+	}
+
+	mNeg := Misconfiguration{DisjunctionID: -1}
+	if mNeg.IsInDisjunction() {
+		t.Fatal("negative DisjunctionID should not be in disjunction")
+	}
+}
+
+func TestMisconfigurationConfirmsDisjunction(t *testing.T) {
+	t.Parallel()
+
+	// Not in disjunction (DisjunctionID == 0)
+	notInDisj := Misconfiguration{DisjunctionID: 0, FieldAbsent: false, Operator: predicate.OpEq}
+	if notInDisj.ConfirmsDisjunction() {
+		t.Fatal("clause not in disjunction should not confirm disjunction")
+	}
+
+	// In disjunction, field present -> confirms
+	fieldPresent := Misconfiguration{DisjunctionID: 1, FieldAbsent: false, Operator: predicate.OpEq}
+	if !fieldPresent.ConfirmsDisjunction() {
+		t.Fatal("present field in disjunction should confirm disjunction")
+	}
+
+	// In disjunction, field absent with OpMissing -> confirms
+	opMissing := Misconfiguration{DisjunctionID: 1, FieldAbsent: true, Operator: predicate.OpMissing}
+	if !opMissing.ConfirmsDisjunction() {
+		t.Fatal("absent field with OpMissing in disjunction should confirm disjunction")
+	}
+
+	// In disjunction, field absent with non-missing operator -> does not confirm
+	absentOtherOp := Misconfiguration{DisjunctionID: 1, FieldAbsent: true, Operator: predicate.OpEq}
+	if absentOtherOp.ConfirmsDisjunction() {
+		t.Fatal("absent field with non-missing op in disjunction should not confirm disjunction")
+	}
+}
+
+func TestMisconfigurationIsDisjunctionConfirmed(t *testing.T) {
+	t.Parallel()
+
+	confirmed := map[int]bool{1: true, 2: false}
+
+	// Clause not in disjunction
+	notInDisj := Misconfiguration{DisjunctionID: 0}
+	if notInDisj.IsDisjunctionConfirmed(confirmed) {
+		t.Fatal("clause not in disjunction should not report disjunction confirmed")
+	}
+
+	// Clause in disjunction that is confirmed
+	inConfirmedDisj := Misconfiguration{DisjunctionID: 1}
+	if !inConfirmedDisj.IsDisjunctionConfirmed(confirmed) {
+		t.Fatal("clause in confirmed disjunction should report true")
+	}
+
+	// Clause in disjunction that is not confirmed
+	inUnconfirmedDisj := Misconfiguration{DisjunctionID: 2}
+	if inUnconfirmedDisj.IsDisjunctionConfirmed(confirmed) {
+		t.Fatal("clause in unconfirmed disjunction should report false")
+	}
+
+	// Clause with unknown disjunction ID
+	inUnknownDisj := Misconfiguration{DisjunctionID: 3}
+	if inUnknownDisj.IsDisjunctionConfirmed(confirmed) {
+		t.Fatal("clause with unknown disjunction ID should report false")
+	}
+
+	// Nil map should not panic and return false
+	if inConfirmedDisj.IsDisjunctionConfirmed(nil) {
+		t.Fatal("nil confirmed map should report false")
+	}
+}
+
 func TestMisconfigurationString(t *testing.T) {
 	t.Parallel()
 	tests := []struct {

@@ -1,7 +1,7 @@
 # The Stave Doctrine
 
-Nine principles. Each one is **already in the code** — this file
-describes what was built, not what we hope to build.
+Nine principles are **in the code**. This file
+describes what was built.
 
 A doctrine names the **rejections**. Saying what something *is*
 without naming what it *isn't* is marketing. Saying what it isn't
@@ -19,8 +19,8 @@ acceptable alone; together they're an exfiltration path. The unit of
 analysis is the tuple, not the row.
 
 **In the code:** [`chains/`](../internal/chains/) holds 585+ compound-risk
-chains alongside 2,650+ single-resource controls in
-[`controls/`](../internal/controls/). The same `apply` engine evaluates both —
+chains alongside 3,000+ single-resource controls in
+[`controls/`](../internal/controls/). The same `apply` engine evaluates both, 
 a single-resource control is a chain of size 1. The chain
 visualizer (`stave-mcp --render-chains`) renders each chain's
 co-failing controls flowing into a compound-risk node.
@@ -29,13 +29,13 @@ co-failing controls flowing into a compound-risk node.
 
 ## 2. Prevention Over Detection
 
-Detection is what you do after the unsafe state forms; prevention is
+Detection is done after the unsafe state forms; prevention is
 what you do so it doesn't form. The unsafe state forms through drift
 over time, and the cheapest place to stop it is the merge gate.
 
 **In the code:** `stave ci gate`
 returns exit 3 when the policy fails — the unsafe state never
-reaches production. Three real policies, not arbitrary thresholds:
+reaches production. Three policies:
 `fail_on_new_violation` (block regressions), `fail_on_overdue_upcoming`
 (block what's been unsafe too long), `fail_on_any_violation` (zero
 tolerance). `--max-unsafe` is a *duration* because drift is
@@ -45,7 +45,7 @@ temporal, not a count.
 
 ## 3. Intent Over Opinion
 
-The catalog is operator-authored. You decide what "unsafe" means for
+The catalog is operator-authored. You decide what unsafe means for
 your account. Stave does not ship a vendor opinion that you cannot
 inspect, fork, or contradict.
 
@@ -76,8 +76,8 @@ the catalog decides.
 
 ## 5. Your Machine Over Our Cloud
 
-Evaluation runs where the snapshot lives. We do not require — or
-accept — credentialed access to your cloud.
+Evaluation runs where the snapshot lives. We do not require or
+accept credentialed access to your cloud.
 
 **In the code:** the [`stave apply`](../cmd/apply/) path makes zero
 network calls; [`--require-offline`](../cmd/apply/) makes that an
@@ -94,7 +94,7 @@ by policy.
 
 We don't write integrations. We publish contracts — `obs.v0.1` for
 observations, `ctrl.v1` for controls, deterministic JSON for output
-— and anything that emits or consumes them composes for free.
+ and anything that emits or consumes them composes for free.
 Steampipe, Pulumi, AWS CLI, your custom Python script, an agent: all
 produce `obs.v0.1`. Stave consumes it. The catalog produces verdict
 JSON. Anything reads it.
@@ -121,21 +121,21 @@ runs."
 documents the stable names). The embedded catalog is the default
 `--controls`. `./chains` is the auto-discovered chains directory.
 The chosen defaults match the project layout the Coder workspace,
-the Docker image, and the DO 1-Click all ship with — convention
+the Docker image, and the DO 1-Click all ship with convention
 holds across every distribution channel.
 
 ---
 
-## 8. The Catalog Is the Product
+## 8. The Catalog is the Product
 
 The engine is infrastructure: small, stable, and easy to reason
 about. The catalog is what compounds. Every new control added is
-permanent organizational knowledge — a class of mistake encoded once
+permanent organizational knowledge. A class of mistake encoded once
 that the gate then enforces forever, against every snapshot, in
 every account, in every CI run, with no ML drift and no vendor
 roadmap.
 
-**In the code:** 2,907 controls + 622 chains today, growing with
+**In the code:** 3,000+ controls + 700+ chains today, growing with
 every incident. The engine in [`pkg/stave/`](../pkg/stave/) exposes
 ~16 public functions ([`pkg/stave/doc.go`](../pkg/stave/doc.go)) —
 small enough to fit in your head. The catalog growth is the value
@@ -187,15 +187,15 @@ Everything above derives from this. If drift is the cause, then:
   gate the merge (#5 Your Machine, #6 Contracts),
 - everything not in that loop is somebody else's job (#9 Scope).
 
-The bet was made before the AI-agent wave, before MCP, before the
+The bet was made before the AI-agent wave, MCP and the
 2026 vendor-native-framework gold rush. The market moved to
 validate it. When you build on the right abstraction, the market
 comes to you.
 
 ---
 
-*A note on language: in user-facing surfaces — the CLI, docs, MCP
-tool descriptions — Stave says **control** (the catalog entry the
+*A note on language: in user-facing surfaces, the CLI, docs, MCP
+tool descriptions, Stave says **control** (the catalog entry the
 operator authors and edits). In this document, where the rationale
 is the point, it sometimes says **invariant** (the formal property
 each control encodes).*

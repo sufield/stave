@@ -52,7 +52,7 @@ func (g *Graph) CanReach(srcID, dstID string, port int) (bool, string) {
 	}
 
 	// Cross-VPC via peering or transit gateway.
-	if src.VPCID != "" && dst.VPCID != "" && src.VPCID != dst.VPCID {
+	if src.IsCrossVPC(dst) {
 		if g.vpcsArePeered(src.VPCID, dst.VPCID) || g.vpcsConnectedViaTGW(src.VPCID, dst.VPCID) {
 			for _, dstSG := range dst.SGIDs {
 				for _, rule := range g.SGRules[dstSG] {
@@ -163,7 +163,7 @@ func (g *Graph) canReachAnyPort(srcID, dstID string) (bool, string, int) {
 		}
 	}
 
-	if src.VPCID != "" && dst.VPCID != "" && src.VPCID != dst.VPCID {
+	if src.IsCrossVPC(dst) {
 		if g.vpcsArePeered(src.VPCID, dst.VPCID) || g.vpcsConnectedViaTGW(src.VPCID, dst.VPCID) {
 			for _, dstSG := range dst.SGIDs {
 				for _, rule := range g.SGRules[dstSG] {

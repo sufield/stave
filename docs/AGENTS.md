@@ -1,10 +1,10 @@
 # AGENTS.md — Stave CLI Codex
 
-Rules for AI agents working on this codebase. These patterns were established through 60+ refactorings over 2 months. Violating them creates regressions.
+Rules for AI agents working on this codebase. These patterns were established through 60+ refactorings. Violating them creates regressions.
 
 ## Canonical sources
 
-If this file disagrees with one of these, the canonical doc wins — open an issue noting the drift:
+If this file disagrees with one of these, the canonical doc wins. Open an issue noting the drift:
 
 - **Architecture:** the facade migration plan. `pkg/stave/` is the stable public API; both `cmd/` and `cmd/mcp/` consume it. `cmd/mcp/architecture_test.go` enforces zero `internal/` imports for the MCP server today; the CLI proper is mid-migration.
 - **Build + testing:** [`TESTING.md`](TESTING.md).
@@ -275,9 +275,9 @@ Every `output.json` contains `head_commit` (current git SHA) and
 the fingerprint, which changes every `output.json`. This is expected — the
 diffs are just the commit hash line.
 
-## Identity: Stave Is a Formal Proof System
+## Identity: Stave is a Formal Proof System
 
-Stave is NOT a cloud tool. It is a **policy evaluation engine for JSON-represented infrastructure**. The engine knows nothing about AWS, GCP, Azure, or any specific cloud service. It evaluates predicates against `properties.*` paths on assets with open-ended `type` and `vendor` strings.
+Stave is a **policy evaluation engine for JSON-represented infrastructure**. The engine knows nothing about AWS, GCP, Azure, or any specific cloud service. It evaluates predicates against `properties.*` paths on assets with open-ended `type` and `vendor` strings.
 
 ### Proven with zero engine changes — 299 controls, 32 domains, 5 vendors
 
@@ -298,7 +298,7 @@ Stave is NOT a cloud tool. It is a **policy evaluation engine for JSON-represent
 
 ### Terminology
 
-Use "controls" everywhere. Never use "invariants" for security controls.
+Use controls. Never use invariants for security controls.
 The compliance catalog files (`docs/{framework}/`) use `controls:` as the
 top-level YAML key, `existing_control:` for mapped entries. The term
 "invariant" is only used in the Go code sense (type invariants at

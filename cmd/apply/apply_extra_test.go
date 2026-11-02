@@ -207,6 +207,66 @@ func TestSharedOptions_Normalize(t *testing.T) {
 	}
 }
 
+func TestSharedOptions_HasScoping(t *testing.T) {
+	var nilOpts *SharedOptions
+	if nilOpts.HasScoping() {
+		t.Error("nil options should not have scoping")
+	}
+
+	emptyOpts := &SharedOptions{}
+	if emptyOpts.HasScoping() {
+		t.Error("empty options should not have scoping")
+	}
+
+	withPacks := &SharedOptions{Packs: []string{"aws-baseline"}}
+	if !withPacks.HasScoping() {
+		t.Error("options with packs should have scoping")
+	}
+
+	withServices := &SharedOptions{Services: []string{"iam"}}
+	if !withServices.HasScoping() {
+		t.Error("options with services should have scoping")
+	}
+
+	withBoth := &SharedOptions{Packs: []string{"aws-baseline"}, Services: []string{"iam"}}
+	if !withBoth.HasScoping() {
+		t.Error("options with both packs and services should have scoping")
+	}
+}
+
+func TestOptions_IsUnscopedAuto(t *testing.T) {
+	var nilOpts *Options
+	if nilOpts.isUnscopedAuto() {
+		t.Error("nil options should not be unscoped auto")
+	}
+
+	emptyOpts := &Options{}
+	if emptyOpts.isUnscopedAuto() {
+		t.Error("default options should not be unscoped auto")
+	}
+
+	autoUnscoped := &Options{Auto: true}
+	if !autoUnscoped.isUnscopedAuto() {
+		t.Error("auto mode without packs or services should be unscoped auto")
+	}
+
+	autoWithPacks := &Options{
+		Auto:          true,
+		SharedOptions: SharedOptions{Packs: []string{"aws-baseline"}},
+	}
+	if autoWithPacks.isUnscopedAuto() {
+		t.Error("auto mode with packs should not be unscoped auto")
+	}
+
+	autoWithServices := &Options{
+		Auto:          true,
+		SharedOptions: SharedOptions{Services: []string{"iam"}},
+	}
+	if autoWithServices.isUnscopedAuto() {
+		t.Error("auto mode with services should not be unscoped auto")
+	}
+}
+
 // --- validateDirsWithConfig ---
 
 func TestValidateDirsWithConfig_StdinObservations(t *testing.T) {

@@ -25,7 +25,7 @@ func resolvePackAllowlist(opts *Options, cfg RunConfig) ([]string, error) {
 	if err != nil {
 		return nil, &ui.UserError{Err: fmt.Errorf("resolve --services: %w", err)}
 	}
-	if len(opts.Packs) == 0 && len(opts.Services) == 0 {
+	if !opts.HasScoping() {
 		return nil, nil // no scoping
 	}
 	// Union: a control runs if it's in any selected pack or any selected service.

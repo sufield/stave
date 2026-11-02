@@ -2,7 +2,7 @@
 
 You know which AWS services you use. Stave tells you what to collect and what its standardized input must contain. You collect and convert it with your own tools; Stave evaluates it.
 
-**Stave never has AWS credentials and never calls AWS** — it reads `obs.v0.1` observation files you produce.
+**Stave does not need AWS credentials and never calls AWS**. It reads `obs.v0.1` observation files you produce.
 
 Two distinct artifacts:
 
@@ -12,10 +12,10 @@ Two distinct artifacts:
 | **Observation** (`obs.v0.1`) | Stave's standardized input, carrying the derived signals controls read | an **extractor** that converts snapshots → observations |
 
 ```
-discover ─▶ plan ─▶ collect ─▶ convert ─▶ apply ─▶ fix ─▶ check ─▶ repeat
- (what to    (what     (raw       (snapshots  (-o reads          (resolved/
-  collect +   gets      snapshots)  → obs.v0.1) observations)      remaining/
-  signals)    checked)              ▲ NOT Stave                     new)
+discover ─▶ plan    ─▶ collect   ─▶ convert   ─▶ apply        ─▶ fix  ─▶ check   ─▶ repeat
+ (what to    (what     (raw       (snapshots     (-o reads               (resolved/
+  collect +   gets      snapshots)  → obs.v0.1)   observations)           remaining/
+  signals)    checked)              ▲ NOT Stave                           new)
 ```
 
 ## Step 1 — Discover: what to collect, and what the observations must contain
@@ -38,7 +38,7 @@ highest-impact data first).
 > `stave plan` previews **what will be checked** (before you collect). `stave apply --dry-run`
 > checks whether already-converted **observations are ready** (after you convert). Different jobs.
 
-## Step 3 — Collect (your tools): snapshots
+## Step 3 — Collect : snapshots
 
 Run the manifest's API calls with whatever produces JSON. AWS CLI, Steampipe, your internal tool into a raw snapshot directory:
 
@@ -49,7 +49,7 @@ aws s3api list-buckets --output json > snapshots/s3-buckets.json
 # … the rest of the calls from `stave discover` …
 ```
 
-## Step 4 — Convert (extractor): snapshots → observations
+## Step 4 — Convert : snapshots → observations
 
 Snapshots are raw API shapes; Stave reads the standardized `obs.v0.1` form.
 
@@ -69,7 +69,7 @@ stave apply -o testdata/e2e/e2e-01-violation/observations
 
 `-o` / `--observations` reads the `obs.v0.1` observations. `--services` scopes evaluation to
 those services' controls (a different `policy_fingerprint` proves the scope is real). Exit code
-**3** means violations were found — a successful evaluation, not an error.
+**3** means violations were found. A successful evaluation, not an error.
 
 ## Step 6 — Fix
 
@@ -103,11 +103,10 @@ stave check --before testdata/e2e/e2e-01-violation/observations --after testdata
 
 `scripts/quickstart.sh` runs steps 1–2 (and 5 if you pass a converted observations directory).
 
-## What you never have to know
+## Mapping Intent to Command
 
-| You don't ask | Because |
+| Your question | Command |
 |---------------|---------|
 | "Which snapshots do I need?" | `stave discover --services …` lists the exact read-only API calls |
 | "Which controls should I run?" | `stave plan` shows them by service and severity |
-| "Does Stave need my AWS credentials?" | No. Never. It reads the observations you converted. |
 | "I fixed things — now what?" | `stave check --before --after` |

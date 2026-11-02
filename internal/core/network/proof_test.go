@@ -1203,3 +1203,30 @@ func TestTransitiveEgressFixtures(t *testing.T) {
 		})
 	}
 }
+
+func TestHost_IsCrossVPC(t *testing.T) {
+	var nilHost *Host
+	h1 := &Host{ID: "h1", VPCID: "vpc-1"}
+	h2 := &Host{ID: "h2", VPCID: "vpc-2"}
+	h1Same := &Host{ID: "h3", VPCID: "vpc-1"}
+	noVPC := &Host{ID: "h4", VPCID: ""}
+
+	if nilHost.IsCrossVPC(h1) {
+		t.Error("nil host should not be cross-VPC")
+	}
+	if h1.IsCrossVPC(nilHost) {
+		t.Error("host with nil other should not be cross-VPC")
+	}
+	if h1.IsCrossVPC(h1Same) {
+		t.Error("hosts in same VPC should not be cross-VPC")
+	}
+	if h1.IsCrossVPC(noVPC) {
+		t.Error("host with other missing VPC should not be cross-VPC")
+	}
+	if noVPC.IsCrossVPC(h1) {
+		t.Error("host missing VPC should not be cross-VPC")
+	}
+	if !h1.IsCrossVPC(h2) {
+		t.Error("hosts in different VPCs should be cross-VPC")
+	}
+}

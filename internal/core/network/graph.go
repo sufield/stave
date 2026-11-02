@@ -23,6 +23,11 @@ func (h *Host) IsDevelopment() bool  { return h.Tags["stave:environment"] == "de
 func (h *Host) IsDatabaseTier() bool { return h.Tags["stave:tier"] == "database" }
 func (h *Host) IsIsolated() bool     { return h.Tags["stave:network-zone"] == "isolated" }
 
+// IsCrossVPC reports whether both hosts are assigned to VPCs and reside in different VPCs.
+func (h *Host) IsCrossVPC(other *Host) bool {
+	return h != nil && other != nil && h.VPCID != "" && other.VPCID != "" && h.VPCID != other.VPCID
+}
+
 // SGRule is a single security group rule.
 type SGRule struct {
 	Direction   string // "ingress" | "egress"

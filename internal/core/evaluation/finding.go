@@ -276,7 +276,7 @@ func (f *Finding) IsIndeterminate() bool {
 	// confirmed branch (present field or op=missing).
 	confirmed := map[int]bool{}
 	for _, mc := range f.Evidence.Misconfigurations {
-		if mc.DisjunctionID > 0 && (!mc.FieldAbsent || mc.Operator == predicate.OpMissing) {
+		if mc.ConfirmsDisjunction() {
 			confirmed[mc.DisjunctionID] = true
 		}
 	}
@@ -288,7 +288,7 @@ func (f *Finding) IsIndeterminate() bool {
 		if isAbsenceOperator(mc.Operator) {
 			continue
 		}
-		if mc.DisjunctionID > 0 && confirmed[mc.DisjunctionID] {
+		if mc.IsDisjunctionConfirmed(confirmed) {
 			continue
 		}
 		return true
@@ -311,7 +311,7 @@ func isAbsenceOperator(op predicate.Operator) bool {
 func (f *Finding) MissingFields() []string {
 	confirmed := map[int]bool{}
 	for _, mc := range f.Evidence.Misconfigurations {
-		if mc.DisjunctionID > 0 && (!mc.FieldAbsent || mc.Operator == predicate.OpMissing) {
+		if mc.ConfirmsDisjunction() {
 			confirmed[mc.DisjunctionID] = true
 		}
 	}
@@ -321,7 +321,7 @@ func (f *Finding) MissingFields() []string {
 		if !mc.FieldAbsent || isAbsenceOperator(mc.Operator) {
 			continue
 		}
-		if mc.DisjunctionID > 0 && confirmed[mc.DisjunctionID] {
+		if mc.IsDisjunctionConfirmed(confirmed) {
 			continue
 		}
 		fields = append(fields, mc.DisplayProperty())

@@ -84,6 +84,23 @@ func (m Misconfiguration) IsMissing() bool {
 	return m.Operator == predicate.OpMissing || m.ActualValue == nil
 }
 
+// IsInDisjunction reports whether this misconfiguration belongs to an `any` (OR) disjunction block.
+func (m Misconfiguration) IsInDisjunction() bool {
+	return m.DisjunctionID > 0
+}
+
+// ConfirmsDisjunction reports whether this misconfiguration belongs to an `any` (OR)
+// disjunction block and has confirmed evidence (present field or op=missing check).
+func (m Misconfiguration) ConfirmsDisjunction() bool {
+	return m.IsInDisjunction() && (!m.FieldAbsent || m.Operator == predicate.OpMissing)
+}
+
+// IsDisjunctionConfirmed reports whether this misconfiguration belongs to an `any` (OR)
+// disjunction block that is marked as confirmed in the supplied lookup map.
+func (m Misconfiguration) IsDisjunctionConfirmed(confirmed map[int]bool) bool {
+	return m.IsInDisjunction() && confirmed[m.DisjunctionID]
+}
+
 // String returns a human-readable explanation of the violation.
 func (m Misconfiguration) String() string {
 	path := m.DisplayProperty()

@@ -88,6 +88,11 @@ func (o *SharedOptions) normalize() {
 	o.ObservationsDir = fsutil.CleanUserPath(o.ObservationsDir)
 }
 
+// HasScoping reports whether evaluation is scoped to specific packs or services.
+func (o *SharedOptions) HasScoping() bool {
+	return o != nil && (len(o.Packs) > 0 || len(o.Services) > 0)
+}
+
 // Options configuration for the apply command.
 type Options struct {
 	SharedOptions
@@ -313,6 +318,13 @@ func (o *Options) hasSupportedSLAPolicy() bool {
 	return slices.Contains(validSLAPolicyValues, o.SLAPolicy)
 }
 
+// isUnscopedAuto reports whether auto mode was requested without the
+// required pack or service scoping. Encapsulates the combined flag check
+// so validate() reads as a business-rule chain.
+func (o *Options) isUnscopedAuto() bool {
+	return o != nil && o.Auto && !o.HasScoping()
+}
+
 func (o *Options) validate() error {
 	if o.Profile != "" && o.InputFile == "" {
 		return &ui.UserError{Err: errors.New("flag --input is required when using --profile")}
@@ -330,7 +342,7 @@ func (o *Options) validate() error {
 	if (o.NewOnly || o.NewSince != "") && o.HistoryDir == "" {
 		return &ui.UserError{Err: errors.New("--history is required when using --new-only or --new-since")}
 	}
-	if o.Auto && len(o.Services) == 0 && len(o.Packs) == 0 {
+	if o.isUnscopedAuto() {
 		return &ui.UserError{Err: errors.New("--auto requires --services or --pack")}
 	}
 	if !o.hasSupportedSLAPolicy() {

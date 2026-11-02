@@ -45,13 +45,13 @@ stave apply --observations ./my-snapshot/
 stave export-sir --format jsonl --output facts.jsonl
 make chain-discover ARGS="-snapshot observations/"
 
-# Try a demo (zero AWS access required)
+# Try a demo (AWS access is not required)
 bash examples/demo-ai-security/run.sh
 ```
 
 ## Snapshots
 
-Stave evaluates local JSON snapshots, not live APIs. Capture once,
+Stave evaluates local JSON snapshots without using live APIs. Capture once,
 evaluate anywhere offline, deterministic and auditable.
 
 The contract and evaluation are always deterministic. The collection
@@ -111,7 +111,7 @@ Convert raw AWS CLI JSON to obs.v0.1 using the Lean 4 extractors.
 
 ### Onboarding skills (`internal/_skills/`)
 
-Six executable skills guide you from install to real-environment evaluation. Each skill is a markdown file your AI coding agent (Claude Code, Cursor) can read and execute or you can follow manually.
+Six executable skills guide you from install to real-environment evaluation. Each skill is a markdown file any AI coding agent (Claude Code, Cursor) can read and execute or you can follow manually.
 
 | # | Skill | Time | AWS needed? |
 |---|-------|------|-------------|
@@ -137,7 +137,7 @@ stave template init
 stave apply --values ./stave-values.yaml --snapshot ./observations/
 ```
 
-Arguments are overrides, not requirements:
+Arguments are overrides:
 
 ```bash
 # Override the template type
@@ -207,7 +207,7 @@ template for local customization.
 
 CSPM tools scan for known-bad patterns. Stave verifies that
 invariants hold. It is deterministic, reproducible and mathematically
-grounded. The word is *verifier*, not scanner: proof, not heuristics.
+grounded. It is a *verifier*, not scanner: proof, not heuristics.
 
 Your AI agent has admin access. Your CSPM tool says you're compliant.
 
@@ -224,9 +224,9 @@ A Bedrock agent with broad Lambda invoke + no guardrail + a Lambda tool that rea
 - Model allowlist ✅
 - Public access blocked ✅
 
-**The dashboard is green**. Stave's compound chains compose those individually-passing settings into the attack story they describe — agent → Lambda → S3 PHI, no audit trail.
+**The dashboard is green**. Stave's compound chains compose those individually-passing settings into the attack story they describe. agent → Lambda → S3 PHI without audit trail.
 
-AI surface coverage spans [Bedrock](internal/controls/bedrock/) (agent, guardrail, model, logging) and [SageMaker](internal/controls/sagemaker/) (training, notebook, pipeline, endpoint) with compound chains across both. Every AI control maps to the OWASP Non-Human Identity (NHI) Top 10 — see [`docs/compliance/owasp-nhi-top10.md`](docs/compliance/owasp-nhi-top10.md).
+AI surface coverage spans [Bedrock](internal/controls/bedrock/) (agent, guardrail, model, logging) and [SageMaker](internal/controls/sagemaker/) (training, notebook, pipeline, endpoint) with compound chains across both. Every AI control maps to the OWASP Non-Human Identity (NHI) Top 10. See [`docs/compliance/owasp-nhi-top10.md`](docs/compliance/owasp-nhi-top10.md).
 
 | | CSPM tools | Cloud configuration verifier |
 |---|---|---|
@@ -236,7 +236,7 @@ AI surface coverage spans [Bedrock](internal/controls/bedrock/) (agent, guardrai
 | **Access** | Require credentials + runtime access | Operate on an artifact, offline, credential-free |
 | **Trust** | Findings you trust on faith | Findings you can independently re-derive |
 
-Stave doesn't replace your scanner. It finds what your scanner structurally cannot — the compound risks that exist in the relationships between individually-correct configurations.
+Stave finds what your scanner cannot, the compound risks that exist in the relationships between individually-correct configurations.
 
 ## Catalog at a glance
 
