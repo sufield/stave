@@ -217,7 +217,7 @@ func intentPaths() map[string]struct{} {
 func indeterminateCount(controls []policy.ControlDefinition) int {
 	n := 0
 	for i := range controls {
-		if len(controls[i].ApplicableAssetTypes) == 0 {
+		if !controls[i].HasApplicableAssetTypes() {
 			n++
 		}
 	}

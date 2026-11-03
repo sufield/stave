@@ -183,14 +183,13 @@ func writeFindingReasoning(d *drawer, f *remediation.Finding) {
 	}
 	var scope, reasoning []translation.Clause
 	for _, mc := range f.ReasoningTrace {
-		key := mc.ObservationKey.String()
 		c := translation.Clause{
-			ObservationKey: key,
+			ObservationKey: mc.ObservationKey.String(),
 			Operator:       string(mc.Operator),
 			ExpectedValue:  mc.ExpectedValue,
 			ObservedValue:  mc.ObservedValue,
 		}
-		if translation.ClassifyClause(key) == translation.RoleGate {
+		if c.IsGate() {
 			scope = append(scope, c)
 		} else {
 			reasoning = append(reasoning, c)

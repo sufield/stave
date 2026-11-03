@@ -179,6 +179,55 @@ func TestChainDefinition_ScopeFieldOptional(t *testing.T) {
 	}
 }
 
+func TestChainDefinition_HasScopeField(t *testing.T) {
+	var nilChain *ChainDefinition
+	if nilChain.HasScopeField() {
+		t.Error("nil chain should not have scope field")
+	}
+
+	emptyChain := &ChainDefinition{}
+	if emptyChain.HasScopeField() {
+		t.Error("empty chain should not have scope field")
+	}
+
+	chainWithScope := &ChainDefinition{ScopeField: "properties.identity.cognito.user_pool_id"}
+	if !chainWithScope.HasScopeField() {
+		t.Error("chain with ScopeField should return true")
+	}
+}
+
+func TestChainDefinition_IsScopeGrouped(t *testing.T) {
+	var nilChain *ChainDefinition
+	if nilChain.IsScopeGrouped() {
+		t.Error("nil chain should not be scope grouped")
+	}
+
+	emptyChain := &ChainDefinition{}
+	if emptyChain.IsScopeGrouped() {
+		t.Error("empty chain should not be scope grouped")
+	}
+
+	chainAssetScope := &ChainDefinition{Scope: ScopeAsset}
+	if chainAssetScope.IsScopeGrouped() {
+		t.Error("chain with explicit asset scope should not be scope grouped")
+	}
+
+	chainWithScopeField := &ChainDefinition{ScopeField: "properties.identity.cognito.user_pool_id"}
+	if !chainWithScopeField.IsScopeGrouped() {
+		t.Error("chain with ScopeField should be scope grouped")
+	}
+
+	chainGlobal := &ChainDefinition{Scope: ScopeGlobal}
+	if !chainGlobal.IsScopeGrouped() {
+		t.Error("chain with global scope should be scope grouped")
+	}
+
+	chainAccount := &ChainDefinition{Scope: ScopeAccount}
+	if !chainAccount.IsScopeGrouped() {
+		t.Error("chain with account scope should be scope grouped")
+	}
+}
+
 func containsStr(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || s != "" && containsSubstring(s, substr))
 }

@@ -95,6 +95,18 @@ func (s ChainScope) IsGlobal() bool { return s == ScopeGlobal }
 // IsAccount reports whether the chain uses account-level grouping.
 func (s ChainScope) IsAccount() bool { return s == ScopeAccount }
 
+// HasScopeField reports whether the chain specifies a property path for grouping.
+func (c *ChainDefinition) HasScopeField() bool {
+	return c != nil && c.ScopeField != ""
+}
+
+// IsScopeGrouped reports whether the chain specifies custom scope grouping
+// (via ScopeField, global scope, or account scope) rather than the default
+// per-asset grouping.
+func (c *ChainDefinition) IsScopeGrouped() bool {
+	return c != nil && (c.HasScopeField() || c.Scope.IsGlobal() || c.Scope.IsAccount())
+}
+
 // ChainComplexity classifies how difficult a chain is to exploit.
 type ChainComplexity string
 

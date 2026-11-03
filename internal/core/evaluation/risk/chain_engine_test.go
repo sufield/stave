@@ -728,3 +728,81 @@ func TestDetectChains_AccountScope_NilResolver(t *testing.T) {
 		t.Errorf("expected 0 findings (nil resolver, account scope → nothing evaluable), got %d", len(findings))
 	}
 }
+
+func TestCanResolveScopeField(t *testing.T) {
+	dummyResolver := func(id asset.ID, path string) (string, bool) {
+		return "val", true
+	}
+
+	tests := []struct {
+		name     string
+		chain    *policy.ChainDefinition
+		resolver ScopeResolver
+		want     bool
+	}{
+		{
+			name:     "nil chain",
+			chain:    nil,
+			resolver: dummyResolver,
+			want:     false,
+		},
+		{
+			name:     "chain without scope field, with resolver",
+			chain:    &policy.ChainDefinition{},
+			resolver: dummyResolver,
+			want:     false,
+		},
+		{
+			name:     "chain with scope field, nil resolver",
+			chain:    &policy.ChainDefinition{ScopeField: "prop.scope"},
+			resolver: nil,
+			want:     false,
+		},
+		{
+			name:     "chain with scope field, with resolver",
+			chain:    &policy.ChainDefinition{ScopeField: "prop.scope"},
+			resolver: dummyResolver,
+			want:     true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := canResolveScopeField(tc.chain, tc.resolver); got != tc.want {
+				t.Errorf("canResolveScopeField() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestChainBuckets_HasResolvedScope(t *testing.T) {
+	scopeChain := &policy.ChainDefinition{ScopeField: "prop.scope"}
+	nonScopeChain := &policy.ChainDefinition{}
+
+	var nilBucket *chainBuckets
+	if nilBucket.hasResolvedScope("scope-1", scopeChain) {
+		t.Error("nil bucket should return false")
+	}
+
+	b := &chainBuckets{
+		resolvedByScope: map[string]struct{}{
+			"scope-1": {},
+		},
+	}
+
+	if !b.hasResolvedScope("scope-1", scopeChain) {
+		t.Error("resolved scope on scope-grouped chain should return true")
+	}
+
+	if b.hasResolvedScope("scope-unknown", scopeChain) {
+		t.Error("unresolved scope should return false")
+	}
+
+	if b.hasResolvedScope("scope-1", nonScopeChain) {
+		t.Error("resolved scope on non-scope-grouped chain should return false")
+	}
+
+	if b.hasResolvedScope("scope-1", nil) {
+		t.Error("nil chain should return false")
+	}
+}

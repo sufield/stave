@@ -5,6 +5,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/asset"
 	policy "github.com/sufield/stave/internal/core/controldef"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
@@ -391,5 +392,59 @@ func TestClassify_AnyMatch_Evaluable(t *testing.T) {
 	result := classifyControl(&ctl, fields, nil, nil)
 	if result.Classification != Evaluable {
 		t.Errorf("classification = %q, want EVALUABLE", result.Classification)
+	}
+}
+
+func TestCanCheckAssetPresence(t *testing.T) {
+	presentTypes := map[string]struct{}{"aws_s3_bucket": {}}
+	ctlWithTypes := &policy.ControlDefinition{
+		ApplicableAssetTypes: []kernel.AssetType{"aws_s3_bucket"},
+	}
+	ctlWithoutTypes := &policy.ControlDefinition{}
+
+	tests := []struct {
+		name         string
+		ctl          *policy.ControlDefinition
+		presentTypes map[string]struct{}
+		want         bool
+	}{
+		{
+			name:         "nil control, present types available",
+			ctl:          nil,
+			presentTypes: presentTypes,
+			want:         false,
+		},
+		{
+			name:         "nil control, nil present types",
+			ctl:          nil,
+			presentTypes: nil,
+			want:         false,
+		},
+		{
+			name:         "control with types, nil present types",
+			ctl:          ctlWithTypes,
+			presentTypes: nil,
+			want:         false,
+		},
+		{
+			name:         "control without types, present types available",
+			ctl:          ctlWithoutTypes,
+			presentTypes: presentTypes,
+			want:         false,
+		},
+		{
+			name:         "control with types, present types available",
+			ctl:          ctlWithTypes,
+			presentTypes: presentTypes,
+			want:         true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := canCheckAssetPresence(tc.ctl, tc.presentTypes); got != tc.want {
+				t.Errorf("canCheckAssetPresence() = %v, want %v", got, tc.want)
+			}
+		})
 	}
 }

@@ -1453,3 +1453,32 @@ func TestNewAssetEvalContext(t *testing.T) {
 		t.Fatal("should have properties from asset")
 	}
 }
+
+func TestControlDefinition_HasApplicableAssetTypes(t *testing.T) {
+	t.Parallel()
+
+	var nilCtl *ControlDefinition
+	if nilCtl.HasApplicableAssetTypes() {
+		t.Error("nil control should not have applicable asset types")
+	}
+
+	emptyCtl := &ControlDefinition{}
+	if emptyCtl.HasApplicableAssetTypes() {
+		t.Error("empty control should not have applicable asset types")
+	}
+
+	nilSliceCtl := &ControlDefinition{ApplicableAssetTypes: nil}
+	if nilSliceCtl.HasApplicableAssetTypes() {
+		t.Error("control with nil slice should not have applicable asset types")
+	}
+
+	emptySliceCtl := &ControlDefinition{ApplicableAssetTypes: []kernel.AssetType{}}
+	if emptySliceCtl.HasApplicableAssetTypes() {
+		t.Error("control with empty slice should not have applicable asset types")
+	}
+
+	withTypes := &ControlDefinition{ApplicableAssetTypes: []kernel.AssetType{"aws_s3_bucket"}}
+	if !withTypes.HasApplicableAssetTypes() {
+		t.Error("control with applicable asset types should return true")
+	}
+}

@@ -136,7 +136,7 @@ func classifyChains(controls []policy.ControlDefinition, chains []policy.ChainDe
 				indeterminate = true
 				continue
 			}
-			if len(ctl.ApplicableAssetTypes) == 0 {
+			if !ctl.HasApplicableAssetTypes() {
 				indeterminate = true
 				continue
 			}
@@ -247,7 +247,7 @@ func marginalValue(
 
 		for _, memberID := range chain.ControlIDs {
 			ctl, ok := ctlIndex[memberID]
-			if !ok || len(ctl.ApplicableAssetTypes) == 0 {
+			if !ok || !ctl.HasApplicableAssetTypes() {
 				continue
 			}
 			if anyObserved(ctl.ApplicableAssetTypes, simulated) {

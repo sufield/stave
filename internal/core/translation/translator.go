@@ -87,6 +87,13 @@ func ClassifyClause(observationKey string) ClauseRole {
 	return RoleUnsafeMatch
 }
 
+// IsGate reports whether this clause is a predicate gate (an asset-class
+// discriminator or parameterized constraint) that selects which assets
+// the predicate applies to.
+func (c Clause) IsGate() bool {
+	return ClassifyClause(c.ObservationKey) == RoleGate
+}
+
 // RenderClause produces one line of plain English prose for a matched
 // predicate clause. See docs/product/metrics.md § Metric 5.
 //

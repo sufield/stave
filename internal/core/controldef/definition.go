@@ -273,13 +273,19 @@ func (ctl *ControlDefinition) ExposureSummary() (exposureType, principalScope st
 	return string(ctl.Exposure.Type), ctl.Exposure.PrincipalScope.String(), true
 }
 
+// HasApplicableAssetTypes reports whether this control restricts evaluation
+// to a declared list of asset types (as opposed to evaluating against all types).
+func (ctl *ControlDefinition) HasApplicableAssetTypes() bool {
+	return ctl != nil && len(ctl.ApplicableAssetTypes) > 0
+}
+
 // AppliesToAssetType reports whether this control should evaluate against
 // the given asset type. Returns true when the control declares no
 // applicable types (legacy default — fire on all) or when the asset type
 // is in the declared list. Comparison is by exact string equality on the
 // underlying type identifier.
 func (ctl *ControlDefinition) AppliesToAssetType(assetType kernel.AssetType) bool {
-	if len(ctl.ApplicableAssetTypes) == 0 {
+	if !ctl.HasApplicableAssetTypes() {
 		return true
 	}
 	return slices.Contains(ctl.ApplicableAssetTypes, assetType)

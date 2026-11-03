@@ -245,6 +245,12 @@ func walkProperties(prefix string, m map[string]any, out map[string]struct{}) {
 	}
 }
 
+// canCheckAssetPresence reports whether observed asset types are available
+// and the control defines specific applicable asset types to evaluate against them.
+func canCheckAssetPresence(ctl *policy.ControlDefinition, presentAssetTypes map[string]struct{}) bool {
+	return presentAssetTypes != nil && ctl.HasApplicableAssetTypes()
+}
+
 // classifyControl determines coverage classification for a single control.
 func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]struct{}, presentAssetTypes map[string]struct{}, discriminatorValues map[string]sets.Set[string]) ControlResult {
 	result := ControlResult{
@@ -253,7 +259,7 @@ func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]str
 		Frameworks: extractFrameworks(ctl),
 	}
 
-	if presentAssetTypes != nil && len(ctl.ApplicableAssetTypes) > 0 {
+	if canCheckAssetPresence(ctl, presentAssetTypes) {
 		hasAsset := false
 		for _, at := range ctl.ApplicableAssetTypes {
 			if _, ok := presentAssetTypes[string(at)]; ok {
@@ -628,7 +634,7 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	// Prefer control-declared asset types over the heuristic.
 	controlAssetType := make(map[kernel.ControlID]kernel.AssetType, len(input.Controls))
 	for i := range input.Controls {
-		if len(input.Controls[i].ApplicableAssetTypes) > 0 {
+		if input.Controls[i].HasApplicableAssetTypes() {
 			controlAssetType[input.Controls[i].ID] = input.Controls[i].ApplicableAssetTypes[0]
 		}
 	}

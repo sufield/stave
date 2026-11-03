@@ -38,6 +38,16 @@ type chainBuckets struct {
 	resolvedByScope map[string]struct{}
 }
 
+// hasResolvedScope reports whether the chain uses scope grouping and the
+// bucket scope was successfully resolved (rather than falling back to asset.ID).
+func (b *chainBuckets) hasResolvedScope(scope string, chain *policy.ChainDefinition) bool {
+	if b == nil || !chain.IsScopeGrouped() {
+		return false
+	}
+	_, ok := b.resolvedByScope[scope]
+	return ok
+}
+
 // DetectChains checks each chain definition: a chain fires only when
 // enough of its member controls fail within a single grouping bucket.
 // The grouping bucket is asset.ID by default; when the chain declares
@@ -227,13 +237,18 @@ func emitChainFinding(
 	// duplicate AssetID — and adding it unconditionally would churn
 	// every chain golden in the repo. Emit only when scope_field
 	// actually drove grouping.
-	_, isResolved := b.resolvedByScope[scope]
-	if isResolved && (chain.ScopeField != "" || chain.Scope.IsGlobal() || chain.Scope.IsAccount()) {
+	if b.hasResolvedScope(scope, chain) {
 		finding.ScopeID = scope
 		finding.ScopeField = chain.ScopeField
 		finding.ContributingAssets = contributing
 	}
 	return finding, true
+}
+
+// canResolveScopeField reports whether the chain specifies a ScopeField and
+// a resolver is available to evaluate it.
+func canResolveScopeField(chain *policy.ChainDefinition, resolver ScopeResolver) bool {
+	return chain.HasScopeField() && resolver != nil
 }
 
 // groupingKey returns the scope value to use when bucketing one failing
@@ -251,7 +266,7 @@ func groupingKey(chain *policy.ChainDefinition, assetID asset.ID, resolver Scope
 	if chain.Scope.IsGlobal() {
 		return "__global__", true
 	}
-	if chain.ScopeField != "" && resolver != nil {
+	if canResolveScopeField(chain, resolver) {
 		if v, ok := resolver(assetID, chain.ScopeField); ok && v != "" {
 			return v, true
 		}

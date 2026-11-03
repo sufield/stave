@@ -38,6 +38,37 @@ func TestClassifyClause_UnsafeMatch(t *testing.T) {
 	}
 }
 
+func TestClause_IsGate(t *testing.T) {
+	cases := []struct {
+		name string
+		c    Clause
+		want bool
+	}{
+		{
+			name: "discriminator gate",
+			c:    Clause{ObservationKey: "storage.kind"},
+			want: true,
+		},
+		{
+			name: "parameterized top-level gate",
+			c:    Clause{ObservationKey: "protected_prefix"},
+			want: true,
+		},
+		{
+			name: "nested unsafe match",
+			c:    Clause{ObservationKey: "storage.access.public_read"},
+			want: false,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.c.IsGate(); got != tc.want {
+				t.Errorf("Clause{%q}.IsGate() = %v, want %v", tc.c.ObservationKey, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestRenderClause_Eq(t *testing.T) {
 	cases := []struct {
 		name string
