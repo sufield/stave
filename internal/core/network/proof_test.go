@@ -1230,3 +1230,45 @@ func TestHost_IsCrossVPC(t *testing.T) {
 		t.Error("hosts in different VPCs should be cross-VPC")
 	}
 }
+
+func TestRoute_IsDefaultRoute(t *testing.T) {
+	tests := []struct {
+		name string
+		r    Route
+		want bool
+	}{
+		{
+			name: "ipv4 default route",
+			r:    Route{Destination: "0.0.0.0/0"},
+			want: true,
+		},
+		{
+			name: "ipv6 default route",
+			r:    Route{Destination: "::/0"},
+			want: true,
+		},
+		{
+			name: "rfc1918 private subnet",
+			r:    Route{Destination: "10.0.0.0/16"},
+			want: false,
+		},
+		{
+			name: "specific host route",
+			r:    Route{Destination: "192.168.1.1/32"},
+			want: false,
+		},
+		{
+			name: "empty destination",
+			r:    Route{Destination: ""},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.r.IsDefaultRoute(); got != tc.want {
+				t.Errorf("Route{%q}.IsDefaultRoute() = %v, want %v", tc.r.Destination, got, tc.want)
+			}
+		})
+	}
+}

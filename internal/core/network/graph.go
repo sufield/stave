@@ -62,6 +62,12 @@ type Route struct {
 	TargetID    string
 }
 
+// IsDefaultRoute reports whether the route destination covers all IPv4
+// ("0.0.0.0/0") or IPv6 ("::/0") addresses.
+func (r Route) IsDefaultRoute() bool {
+	return r.Destination == "0.0.0.0/0" || r.Destination == "::/0"
+}
+
 // TGWAttachment is a Transit Gateway VPC attachment.
 type TGWAttachment struct {
 	AttachmentID     string

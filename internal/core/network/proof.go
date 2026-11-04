@@ -397,7 +397,7 @@ func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
 			return nil, fmt.Errorf("%w: subnet %s has no route table association — cannot prove firewall routing", ErrVacuousProof, sub.ID)
 		}
 		for _, route := range g.Routes[sub.RouteTableID] {
-			if route.Destination != "0.0.0.0/0" && route.Destination != "::/0" {
+			if !route.IsDefaultRoute() {
 				continue
 			}
 			if route.TargetType == "igw" && !g.Firewalls[route.TargetID] {
@@ -497,7 +497,7 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 			continue
 		}
 		for _, route := range g.Routes[sub.RouteTableID] {
-			if route.Destination != "0.0.0.0/0" && route.Destination != "::/0" {
+			if !route.IsDefaultRoute() {
 				continue
 			}
 			cls, reason := classifyRouteTarget(route.TargetType)

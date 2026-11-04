@@ -224,6 +224,64 @@ func TestValidateControlDefinitionEmptyPredicate(t *testing.T) {
 	}
 }
 
+func TestPredicateRule_IsEmpty(t *testing.T) {
+	t.Parallel()
+
+	// Zero-value rule is an empty leaf.
+	emptyRule := PredicateRule{}
+	if !emptyRule.IsEmpty() {
+		t.Error("zero-value rule should be empty")
+	}
+
+	// Rule with field is not empty.
+	withField := PredicateRule{Field: predicate.NewFieldPath("foo")}
+	if withField.IsEmpty() {
+		t.Error("rule with field should not be empty")
+	}
+
+	// Rule with operator is not empty.
+	withOp := PredicateRule{Op: predicate.OpEq}
+	if withOp.IsEmpty() {
+		t.Error("rule with operator should not be empty")
+	}
+
+	// Rule with nested Any is not a leaf, so not empty.
+	withAny := PredicateRule{Any: []PredicateRule{{Field: predicate.NewFieldPath("foo"), Op: predicate.OpEq}}}
+	if withAny.IsEmpty() {
+		t.Error("rule with nested Any rules should not be empty")
+	}
+
+	// Rule with nested All is not a leaf, so not empty.
+	withAll := PredicateRule{All: []PredicateRule{{Field: predicate.NewFieldPath("foo"), Op: predicate.OpEq}}}
+	if withAll.IsEmpty() {
+		t.Error("rule with nested All rules should not be empty")
+	}
+}
+
+func TestValidateControlDefinitionEmptyPredicateRule(t *testing.T) {
+	t.Parallel()
+	ctl := &ControlDefinition{
+		ID:          kernel.ControlID("CTL.TEST.EMPTYRULE.001"),
+		Name:        "test",
+		Description: "test desc",
+		UnsafePredicate: UnsafePredicate{
+			Any: []PredicateRule{
+				{}, // empty leaf rule
+			},
+		},
+	}
+	issues := ctl.Validate()
+	hasEmptyPred := false
+	for _, issue := range issues {
+		if issue.RuleID == "CONTROL_EMPTY_PREDICATE" {
+			hasEmptyPred = true
+		}
+	}
+	if !hasEmptyPred {
+		t.Fatal("expected CONTROL_EMPTY_PREDICATE issue for empty leaf rule")
+	}
+}
+
 func TestValidateControlDefinitionUnsupportedOperator(t *testing.T) {
 	t.Parallel()
 	ctl := &ControlDefinition{

@@ -22,6 +22,12 @@ type PredicateRule struct {
 	All []PredicateRule
 }
 
+// IsEmpty reports whether the rule is an unconfigured leaf rule with no
+// nested logic blocks, no field path, and no operator.
+func (r PredicateRule) IsEmpty() bool {
+	return len(r.Any) == 0 && len(r.All) == 0 && r.Field.IsZero() && r.Op == ""
+}
+
 // ExtractMisconfigurations traverses the predicate tree to pull the actual observed
 // values for every field mentioned in the unsafe predicate.
 // Returns a sorted, deduplicated slice of misconfigurations.

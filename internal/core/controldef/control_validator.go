@@ -221,8 +221,7 @@ func (ctl *ControlDefinition) validateDuration() []diag.Finding {
 func (ctl *ControlDefinition) validatePredicateRules() []diag.Finding {
 	var issues []diag.Finding
 	ctl.UnsafePredicate.Walk(func(rule PredicateRule) {
-		isLeaf := len(rule.Any) == 0 && len(rule.All) == 0
-		if isLeaf && rule.Field.IsZero() && rule.Op == "" {
+		if rule.IsEmpty() {
 			issues = append(issues, ctl.newIssue(diag.RuleControlEmptyPredicate, nil).
 				Warning().
 				Remediation("Remove empty predicate rule or add a field and operator").

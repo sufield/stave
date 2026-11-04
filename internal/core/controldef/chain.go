@@ -95,6 +95,16 @@ func (s ChainScope) IsGlobal() bool { return s == ScopeGlobal }
 // IsAccount reports whether the chain uses account-level grouping.
 func (s ChainScope) IsAccount() bool { return s == ScopeAccount }
 
+// IsValid reports whether the scope is one of the recognized values.
+func (s ChainScope) IsValid() bool {
+	switch s {
+	case ScopeAsset, ScopeGlobal, ScopeAccount:
+		return true
+	default:
+		return false
+	}
+}
+
 // HasScopeField reports whether the chain specifies a property path for grouping.
 func (c *ChainDefinition) HasScopeField() bool {
 	return c != nil && c.ScopeField != ""
@@ -105,6 +115,12 @@ func (c *ChainDefinition) HasScopeField() bool {
 // per-asset grouping.
 func (c *ChainDefinition) IsScopeGrouped() bool {
 	return c != nil && (c.HasScopeField() || c.Scope.IsGlobal() || c.Scope.IsAccount())
+}
+
+// HasInvalidScope reports whether the chain explicitly declares an unrecognized scope.
+// An empty scope is valid and defaults to per-asset grouping.
+func (c *ChainDefinition) HasInvalidScope() bool {
+	return c != nil && c.Scope != "" && !c.Scope.IsValid()
 }
 
 // ChainComplexity classifies how difficult a chain is to exploit.
@@ -251,7 +267,7 @@ func (c *ChainDefinition) Validate() error {
 		return fmt.Errorf("chain %s: escalation_threshold (%d) > control count (%d)",
 			c.ID, c.EscalationThreshold, len(c.ControlIDs))
 	}
-	if c.Scope != "" && c.Scope != ScopeAsset && c.Scope != ScopeGlobal && c.Scope != ScopeAccount {
+	if c.HasInvalidScope() {
 		return fmt.Errorf("chain %s: invalid scope %q (must be \"asset\", \"global\", or \"account\")", c.ID, c.Scope)
 	}
 	return nil

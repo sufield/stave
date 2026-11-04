@@ -27,6 +27,7 @@ func TestChainDefinition_Validate(t *testing.T) {
 		{"too few controls", ChainDefinition{ID: "x", ControlIDs: []kernel.ControlID{"A"}, EscalationThreshold: 1}, "at least 2"},
 		{"threshold zero", ChainDefinition{ID: "x", ControlIDs: []kernel.ControlID{"A", "B"}, EscalationThreshold: 0}, "must be >= 1"},
 		{"threshold exceeds", ChainDefinition{ID: "x", ControlIDs: []kernel.ControlID{"A", "B"}, EscalationThreshold: 5}, "escalation_threshold (5) > control count (2)"},
+		{"invalid scope", ChainDefinition{ID: "x", ControlIDs: []kernel.ControlID{"A", "B"}, EscalationThreshold: 1, Scope: "invalid"}, "invalid scope"},
 	}
 
 	for _, tt := range tests {
@@ -225,6 +226,60 @@ func TestChainDefinition_IsScopeGrouped(t *testing.T) {
 	chainAccount := &ChainDefinition{Scope: ScopeAccount}
 	if !chainAccount.IsScopeGrouped() {
 		t.Error("chain with account scope should be scope grouped")
+	}
+}
+
+func TestChainDefinition_HasInvalidScope(t *testing.T) {
+	var nilChain *ChainDefinition
+	if nilChain.HasInvalidScope() {
+		t.Error("nil chain should not report invalid scope")
+	}
+
+	emptyScope := &ChainDefinition{}
+	if emptyScope.HasInvalidScope() {
+		t.Error("chain without explicit scope should not report invalid scope")
+	}
+
+	validAsset := &ChainDefinition{Scope: ScopeAsset}
+	if validAsset.HasInvalidScope() {
+		t.Error("chain with ScopeAsset should not report invalid scope")
+	}
+
+	validGlobal := &ChainDefinition{Scope: ScopeGlobal}
+	if validGlobal.HasInvalidScope() {
+		t.Error("chain with ScopeGlobal should not report invalid scope")
+	}
+
+	validAccount := &ChainDefinition{Scope: ScopeAccount}
+	if validAccount.HasInvalidScope() {
+		t.Error("chain with ScopeAccount should not report invalid scope")
+	}
+
+	invalidScope := &ChainDefinition{Scope: "unrecognized"}
+	if !invalidScope.HasInvalidScope() {
+		t.Error("chain with unrecognized scope should report invalid scope")
+	}
+}
+
+func TestChainScope_IsValid(t *testing.T) {
+	tests := []struct {
+		scope ChainScope
+		want  bool
+	}{
+		{ScopeAsset, true},
+		{ScopeGlobal, true},
+		{ScopeAccount, true},
+		{ChainScope(""), false},
+		{ChainScope("invalid"), false},
+		{ChainScope("ASSET"), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(string(tt.scope), func(t *testing.T) {
+			if got := tt.scope.IsValid(); got != tt.want {
+				t.Errorf("ChainScope(%q).IsValid() = %v, want %v", tt.scope, got, tt.want)
+			}
+		})
 	}
 }
 
