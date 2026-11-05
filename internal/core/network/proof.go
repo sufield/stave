@@ -257,22 +257,23 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 		// Check external entry (0.0.0.0/0 or ::/0 on any port).
 		for _, dstSG := range dst.SGIDs {
 			for _, rule := range g.SGRules[dstSG] {
-				if rule.IsInternetIngress() {
-					result.Result = "SAT"
-					result.Interpretation = "Database isolation violated — database host is directly accessible from the internet."
-					result.Counterexample = &Counterexample{
-						Source:      rule.SourceValue + " (internet)",
-						Destination: dst.ID,
-						Port:        rule.Port,
-						PathType:    "external",
-						RuleSG:      dstSG,
-						RuleSource:  rule.SourceValue,
-						Explanation: "Database host " + dst.ID + " accepts traffic from " + rule.SourceValue + " on port " + strconv.Itoa(rule.Port) + " via " + dstSG + ".",
-						Remediation: "Remove internet ingress on " + dstSG + ". Database hosts must not be reachable from the internet.",
-					}
-					result.SolveTimeMs = time.Since(start).Milliseconds()
-					return result, nil
+				if !rule.IsInternetIngress() {
+					continue
 				}
+				result.Result = "SAT"
+				result.Interpretation = "Database isolation violated — database host is directly accessible from the internet."
+				result.Counterexample = &Counterexample{
+					Source:      rule.SourceValue + " (internet)",
+					Destination: dst.ID,
+					Port:        rule.Port,
+					PathType:    "external",
+					RuleSG:      dstSG,
+					RuleSource:  rule.SourceValue,
+					Explanation: "Database host " + dst.ID + " accepts traffic from " + rule.SourceValue + " on port " + strconv.Itoa(rule.Port) + " via " + dstSG + ".",
+					Remediation: "Remove internet ingress on " + dstSG + ". Database hosts must not be reachable from the internet.",
+				}
+				result.SolveTimeMs = time.Since(start).Milliseconds()
+				return result, nil
 			}
 		}
 	}
