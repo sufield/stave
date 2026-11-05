@@ -1272,3 +1272,98 @@ func TestRoute_IsDefaultRoute(t *testing.T) {
 		})
 	}
 }
+
+func TestSGRule_IsInternetIngress(t *testing.T) {
+	tests := []struct {
+		name string
+		rule SGRule
+		want bool
+	}{
+		{
+			name: "ipv4 internet ingress",
+			rule: SGRule{Direction: "ingress", SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+			want: true,
+		},
+		{
+			name: "ipv6 internet ingress",
+			rule: SGRule{Direction: "ingress", SourceType: "cidr", SourceValue: "::/0"},
+			want: true,
+		},
+		{
+			name: "ipv4 egress to internet",
+			rule: SGRule{Direction: "egress", SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+			want: false,
+		},
+		{
+			name: "ingress private cidr",
+			rule: SGRule{Direction: "ingress", SourceType: "cidr", SourceValue: "10.0.0.0/16"},
+			want: false,
+		},
+		{
+			name: "ingress sg reference",
+			rule: SGRule{Direction: "ingress", SourceType: "sg", SourceValue: "sg-12345"},
+			want: false,
+		},
+		{
+			name: "ingress empty cidr",
+			rule: SGRule{Direction: "ingress", SourceType: "cidr", SourceValue: ""},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.rule.IsInternetIngress(); got != tc.want {
+				t.Errorf("SGRule{%+v}.IsInternetIngress() = %v, want %v", tc.rule, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSGRule_IsInternetIngressOnPort(t *testing.T) {
+	tests := []struct {
+		name string
+		rule SGRule
+		port int
+		want bool
+	}{
+		{
+			name: "matching port internet ingress",
+			rule: SGRule{Direction: "ingress", SourceType: "cidr", SourceValue: "0.0.0.0/0", Port: 22},
+			port: 22,
+			want: true,
+		},
+		{
+			name: "mismatched port internet ingress",
+			rule: SGRule{Direction: "ingress", SourceType: "cidr", SourceValue: "0.0.0.0/0", Port: 443},
+			port: 22,
+			want: false,
+		},
+		{
+			name: "matching port ipv6 internet ingress",
+			rule: SGRule{Direction: "ingress", SourceType: "cidr", SourceValue: "::/0", Port: 22},
+			port: 22,
+			want: true,
+		},
+		{
+			name: "matching port egress to internet",
+			rule: SGRule{Direction: "egress", SourceType: "cidr", SourceValue: "0.0.0.0/0", Port: 22},
+			port: 22,
+			want: false,
+		},
+		{
+			name: "matching port internal cidr",
+			rule: SGRule{Direction: "ingress", SourceType: "cidr", SourceValue: "10.0.0.0/16", Port: 22},
+			port: 22,
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.rule.IsInternetIngressOnPort(tc.port); got != tc.want {
+				t.Errorf("SGRule{%+v}.IsInternetIngressOnPort(%d) = %v, want %v", tc.rule, tc.port, got, tc.want)
+			}
+		})
+	}
+}

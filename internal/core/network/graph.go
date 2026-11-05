@@ -37,6 +37,18 @@ type SGRule struct {
 	SourceValue string
 }
 
+// IsInternetIngress reports whether the security group rule permits inbound
+// traffic from the public internet ("0.0.0.0/0" or "::/0").
+func (r SGRule) IsInternetIngress() bool {
+	return r.Direction == "ingress" && r.SourceType == "cidr" && (r.SourceValue == "0.0.0.0/0" || r.SourceValue == "::/0")
+}
+
+// IsInternetIngressOnPort reports whether the security group rule permits inbound
+// traffic from the public internet on the specified port.
+func (r SGRule) IsInternetIngressOnPort(port int) bool {
+	return r.Port == port && r.IsInternetIngress()
+}
+
 // VPCPeering is a VPC peering connection.
 type VPCPeering struct {
 	PeeringID    string

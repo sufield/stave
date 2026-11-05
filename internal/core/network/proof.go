@@ -120,10 +120,7 @@ func (g *Graph) ProveBastionSSH(port int) (*ProofResult, error) {
 func (g *Graph) findExternalBypass(dst *Host, port int) *Counterexample {
 	for _, dstSG := range dst.SGIDs {
 		for _, rule := range g.SGRules[dstSG] {
-			if rule.Direction != "ingress" || rule.Port != port {
-				continue
-			}
-			if rule.SourceType != "cidr" || (rule.SourceValue != "0.0.0.0/0" && rule.SourceValue != "::/0") {
+			if !rule.IsInternetIngressOnPort(port) {
 				continue
 			}
 			return &Counterexample{
@@ -260,10 +257,7 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 		// Check external entry (0.0.0.0/0 or ::/0 on any port).
 		for _, dstSG := range dst.SGIDs {
 			for _, rule := range g.SGRules[dstSG] {
-				if rule.Direction != "ingress" {
-					continue
-				}
-				if rule.SourceType == "cidr" && (rule.SourceValue == "0.0.0.0/0" || rule.SourceValue == "::/0") {
+				if rule.IsInternetIngress() {
 					result.Result = "SAT"
 					result.Interpretation = "Database isolation violated — database host is directly accessible from the internet."
 					result.Counterexample = &Counterexample{

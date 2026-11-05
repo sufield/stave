@@ -116,8 +116,7 @@ func (g *Graph) EnumerateSSHPaths(port int) []SSHPath {
 		// External entry (0.0.0.0/0).
 		for _, dstSG := range dst.SGIDs {
 			for _, rule := range g.SGRules[dstSG] {
-				if rule.Direction == "ingress" && rule.Port == port &&
-					rule.SourceType == "cidr" && (rule.SourceValue == "0.0.0.0/0" || rule.SourceValue == "::/0") {
+				if rule.IsInternetIngressOnPort(port) {
 					paths = append(paths, SSHPath{
 						Source:      "0.0.0.0/0",
 						Destination: dst.ID,
