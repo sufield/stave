@@ -1,7 +1,7 @@
 # Authoring Defect / Infection / Failure Metadata
 
-Controls carry three optional prose fields — `defect`,
-`infection`, `failure` — that expand finding output
+Controls carry three optional fields: `defect`,
+`infection`, `failure`. They expand finding output
 from *"what fired"* to *"what fired and why it
 matters."* The vocabulary comes from Andreas Zeller's
 *Why Programs Fail*, which describes how defects in
@@ -45,8 +45,7 @@ sections.
 
 ## Writing the Defect
 
-Be specific about what is misconfigured, not about the
-class of misconfiguration.
+Be specific about what is misconfigured.
 
 - Defect: *"The bucket's ACL grants AllUsers read
   access."* ✓

@@ -117,7 +117,7 @@ Confidence is independent of the decision: a `PASS` or `VIOLATION` can carry
 can never hide a confirmed security issue. The governing principle: never claim
 safety when you only lack evidence of danger.
 
-## Predicate Evaluation (CEL)
+## Predicate Evaluation
 
 Control predicates defined in `unsafe_predicate` are compiled to
 [Common Expression Language](https://github.com/google/cel-spec)

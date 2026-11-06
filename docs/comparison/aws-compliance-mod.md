@@ -4,7 +4,7 @@
 
 Per-resource framework checks would have passed; the breach
 happened because of resource composition. Stave's job is the
-composition — the chains and cross-resource invariants that
+composition. The chains and cross-resource invariants that
 per-resource scanners can't see by construction. Run both.
 
 ---

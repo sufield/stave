@@ -3,7 +3,7 @@
 Stave evaluates infrastructure configurations against HIPAA Security Rule
 technical safeguards (§164.312, §164.316) across 20 service domains. The
 HIPAA profile loads all built-in controls and filters to the 64 controls
-with HIPAA compliance mappings — covering 100% of §164.312 technical
+with HIPAA compliance mappings covering 100% of §164.312 technical
 safeguard checks.
 
 ## Quick Start

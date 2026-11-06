@@ -4,7 +4,7 @@ Why compound risk exists and why chains are separate from controls.
 
 ## Single Misconfigurations Are Rarely Catastrophic
 
-A public S3 bucket with no data is a policy violation, not a breach. An unencrypted RDS database behind a VPC with no internet route is a compliance gap, not a data exposure. Individual misconfigurations create *conditions* for compromise — they are not compromises themselves.
+A public S3 bucket with no data is a policy violation, not a breach. An unencrypted RDS database behind a VPC with no internet route is a compliance gap, not a data exposure. Individual misconfigurations create *conditions* for compromise.
 
 The catastrophic scenario is the combination: a public S3 bucket *containing PHI* with *no access logging* and *no CloudTrail data event monitoring*. Each individual control fires independently. No single control captures the compound risk that all three conditions together create a complete, undetectable exfiltration path.
 
@@ -18,7 +18,7 @@ Making chains separate from controls preserves the single-responsibility propert
 
 ## Escalation Thresholds
 
-A chain with 3 member controls and an `escalation_threshold: 2` activates when *any 2 of the 3* controls fail simultaneously. This models real attack paths where the attacker needs most — but not necessarily all — of the conditions to be present.
+A chain with 3 member controls and an `escalation_threshold: 2` activates when *any 2 of the 3* controls fail simultaneously. This models real attack paths where the attacker needs most of the conditions to be present.
 
 The threshold also prevents chain activation from noise: a single transient failure in one control does not trigger a critical compound finding.
 
@@ -26,13 +26,13 @@ The threshold also prevents chain activation from noise: a single transient fail
 
 Chains carry `preconditions` and `postconditions` from a closed capability vocabulary. If chain A's postcondition matches chain B's precondition, there is a directed edge from A to B in the attack path graph.
 
-This is not a graph algorithm — it is a double loop over active chains performing set intersection. The graph structure is data, not computation. External tools (NetworkX, Neo4j) perform path finding, centrality analysis, and visualization.
+This is a double loop over active chains performing set intersection. The graph structure is data, not computation. External tools (NetworkX, Neo4j) perform path finding, centrality analysis, and visualization.
 
 The capability vocabulary is closed (19 terms) because open vocabularies produce unmaintainable, inconsistent annotations. Every capability string is validated at chain load time.
 
 ## Browsing Chains
 
-The catalog groups chains by family — the service prefix of the chain ID (e.g. `iam_`, `s3_`, `apigw_`). Each chain shows its compound severity and a one-line description.
+The catalog groups chains by family. The service prefix of the chain ID (e.g. `iam_`, `s3_`, `apigw_`). Each chain shows its compound severity and a one-line description.
 
 ```bash
 # All chains, grouped by family

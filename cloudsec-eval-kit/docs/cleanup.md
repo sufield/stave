@@ -7,7 +7,7 @@ cd terraform/
 terraform destroy -auto-approve
 ```
 
-This takes ~5 minutes. All resources deployed by SadCloud are removed.
+This takes few minutes. All resources deployed by SadCloud are removed.
 
 ## Verify
 
@@ -29,7 +29,7 @@ If `terraform destroy` fails (state drift, timeout):
 
 ## KMS Key Note
 
-KMS keys cannot be deleted immediately — AWS enforces a 7–30 day
+KMS keys cannot be deleted immediately. AWS enforces a 7–30 day
 waiting period. The keys are scheduled for deletion by
 `terraform destroy` but will appear in the KMS console until the
 waiting period expires. They are disabled and non-functional during

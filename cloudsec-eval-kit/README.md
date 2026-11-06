@@ -2,17 +2,13 @@
 
 A standardized AWS environment for evaluating cloud security tools.
 
-## What This Is
-
 A Terraform-deployed AWS environment containing **30 documented
 misconfigurations** across **8 services**, including **5 multi-resource
 attack paths**. Each misconfiguration has a unique ID, a description,
 a severity rating, and a manual verification method.
 
-## What It's For
-
-When evaluating cloud security tools — during a POC, a vendor
-comparison, or an internal assessment — this environment provides
+When evaluating cloud security tools during a POC, a vendor
+comparison, or an internal assessment, this environment provides
 uniform ground. Every tool runs against the same misconfigurations.
 You compare results, not demos.
 
@@ -103,7 +99,7 @@ Your results are yours by default. Contributing is a choice.
 
 The Terraform modules are from [NCC Group's SadCloud](https://github.com/nccgroup/sadcloud),
 an open-source collection of intentionally vulnerable AWS configurations.
-The environment is deployed exactly as SadCloud specifies — no modifications.
+The environment is deployed exactly as SadCloud specifies.
 
 ## License
 
