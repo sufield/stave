@@ -6,7 +6,7 @@
       "tool": {
         "driver": {
           "name": "stave",
-          "version": "edge",
+          "version": "0.0.4",
           "rules": [
             {
               "id": "CTL.EXP.DURATION.001",
