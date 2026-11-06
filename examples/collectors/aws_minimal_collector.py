@@ -11,7 +11,7 @@ extend it, own it — adding an asset type is one map_* function.
 
     pip install boto3
     python3 aws_minimal_collector.py --region us-east-1 --out ./observations
-    ./stave validate --observations ./observations      # confirm shape FIRST
+    ./stave lint --observations ./observations            # confirm shape FIRST
     ./stave apply    --observations ./observations --format json
 
 Read-only. Uses your existing AWS credentials (env / profile / role). Point it at a
@@ -19,7 +19,7 @@ vulnerable-lab account or your own.
 
 IMPORTANT — the `properties` paths below are ILLUSTRATIVE. Confirm the exact paths your
 catalog expects with:  ./stave contract show <asset_type>   (or `stave forge paths`)
-and adjust the map_* functions. `stave validate` is your safety net for the envelope.
+and adjust the map_* functions. `stave lint` is your safety net for the envelope.
 """
 import argparse, json, os, sys, datetime
 try:
@@ -347,7 +347,7 @@ def main():
     with open(path, "w") as f:
         json.dump(snapshot, f, indent=2)
     print(f"wrote {len(assets)} assets -> {path}")
-    print("next: ./stave validate --observations", args.out)
+    print("next: ./stave lint --observations", args.out)
 
 
 if __name__ == "__main__":

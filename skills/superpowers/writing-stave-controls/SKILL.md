@@ -86,8 +86,8 @@ the property the control reads is different.
 Validate both before writing the control:
 
 ```bash
-stave validate --in fixtures/writeup/observations/*.obs.json --kind observation --strict
-stave validate --in fixtures/remediated/observations/*.obs.json --kind observation --strict
+stave lint --in fixtures/writeup/observations/*.obs.json --kind observation --strict
+stave lint --in fixtures/remediated/observations/*.obs.json --kind observation --strict
 ```
 
 **Checkpoint 1: both validations exit 0.**

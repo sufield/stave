@@ -16,7 +16,7 @@ observation snapshot for Stave. Two modes:
     Sends the target asset-type schema + the raw rows' column
     names (NOT the data values) to an LLM and asks for a row →
     Asset mapping. Applies the mapping locally; if `--validate`
-    is set, runs stave validate; on failure the validator's
+    is set, runs stave lint; on failure the linter's
     error message is fed back to the LLM (OODA loop, three
     attempts by default).
 
@@ -416,7 +416,7 @@ def _set_nested(node: dict[str, Any], segments: list[str], value: Any) -> None:
 
 
 def run_stave_validate(obs_path: Path, *, strict: bool = True) -> tuple[bool, str]:
-    """Invoke `stave validate --in <path> --kind observation`.
+    """Invoke `stave lint --in <path> --kind observation`.
 
     Returns (ok, diagnostics). The diagnostics text is the error
     message body when validation fails — useful for an OODA loop
@@ -424,7 +424,7 @@ def run_stave_validate(obs_path: Path, *, strict: bool = True) -> tuple[bool, st
     """
     if shutil.which("stave") is None:
         return False, "stave binary not on PATH; build it via `cd stave && make build`"
-    cmd = ["stave", "validate", "--in", str(obs_path), "--kind", "observation"]
+    cmd = ["stave", "lint", "--in", str(obs_path), "--kind", "observation"]
     if strict:
         cmd.append("--strict")
     proc = subprocess.run(cmd, capture_output=True, text=True, check=False)
@@ -495,7 +495,7 @@ def main() -> int:
     )
     parser.add_argument("--output", type=Path, help="Output directory for the obs.v0.1 file (required unless --list-transforms)")
     parser.add_argument("--source", default="deployed", choices=["deployed", "planned", "local"])
-    parser.add_argument("--validate", action="store_true", help="Run stave validate after transform")
+    parser.add_argument("--validate", action="store_true", help="Run stave lint after transform")
     parser.add_argument("--no-llm", action="store_true", help="Hard-disable LLM mode (default unless --llm)")
     parser.add_argument("--llm", action="store_true", help="Enable LLM-assisted transform for unknown types")
     parser.add_argument("--ooda-max-attempts", type=int, default=3, help="Validation/repair loop bound")

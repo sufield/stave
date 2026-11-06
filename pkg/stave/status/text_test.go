@@ -54,7 +54,7 @@ func TestFormatText_WithLastCommand(t *testing.T) {
 	result := Result{
 		State: ProjectState{
 			Root:            "/project",
-			LastCommand:     "stave validate",
+			LastCommand:     "stave lint",
 			LastCommandTime: ts,
 		},
 		NextCommand: "stave apply",
@@ -65,7 +65,7 @@ func TestFormatText_WithLastCommand(t *testing.T) {
 	}
 	out := buf.String()
 
-	if !strings.Contains(out, "Last command: stave validate") {
+	if !strings.Contains(out, "Last command: stave lint") {
 		t.Fatal("missing last command")
 	}
 	if !strings.Contains(out, "2026-01-15T10:00:00Z") {

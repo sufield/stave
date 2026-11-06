@@ -1,7 +1,7 @@
 # Steampipe → Stave mapping template
 #
 # Place at contracts/steampipe/<asset_type>.yaml. Fill in every TODO
-# and run `stave validate-mapping --file <this-file>` to check the
+# and run `stave vet --file <this-file>` to check the
 # structure before exercising the transform.
 
 asset_type: TODO_aws_resource_type

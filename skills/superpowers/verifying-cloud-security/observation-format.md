@@ -73,7 +73,7 @@ stave contract show --asset-type aws_iam_role --format json | jq '.property_path
 To validate an observation before evaluating it:
 
 ```bash
-stave validate --in observations/*.obs.json --kind observation --strict
+stave lint --in observations/*.obs.json --kind observation --strict
 ```
 
 ## What schema validation catches, what it doesn't
