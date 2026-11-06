@@ -29,7 +29,7 @@ stave contract show --asset-type aws_s3_bucket --format json | jq '.property_pat
 
 | Command | Purpose | Exit codes |
 |---|---|---|
-| `stave lint --in <file> --kind observation --strict` | Schema-validate an observation file | 0 valid, 2 invalid (with field-level error) |
+| `stave validate --in <file> --kind observation --strict` | Schema-validate an observation file | 0 valid, 2 invalid (with field-level error) |
 
 `--strict` rejects partial / under-specified observations. Always pass
 it in agent workflows; the looser default exists for hand-debugging.

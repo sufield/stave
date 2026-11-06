@@ -415,11 +415,11 @@ def _set_nested(node: dict[str, Any], segments: list[str], value: Any) -> None:
 # ---------------------------------------------------------------------------
 
 
-def run_stave_validate(obs_path: Path, *, strict: bool = True) -> tuple[bool, str]:
+def run_stave_lint(obs_path: Path, *, strict: bool = True) -> tuple[bool, str]:
     """Invoke `stave lint --in <path> --kind observation`.
 
     Returns (ok, diagnostics). The diagnostics text is the error
-    message body when validation fails — useful for an OODA loop
+    message body when linting fails — useful for an OODA loop
     that feeds it back to the LLM.
     """
     if shutil.which("stave") is None:
@@ -532,7 +532,7 @@ def main() -> int:
 
         if not args.validate:
             return 0
-        ok, diagnostics = run_stave_validate(out_path, strict=True)
+        ok, diagnostics = run_stave_lint(out_path, strict=True)
         if ok:
             print("validation passed")
             return 0

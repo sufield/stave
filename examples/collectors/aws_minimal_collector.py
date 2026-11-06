@@ -11,7 +11,7 @@ extend it, own it — adding an asset type is one map_* function.
 
     pip install boto3
     python3 aws_minimal_collector.py --region us-east-1 --out ./observations
-    ./stave lint --observations ./observations            # confirm shape FIRST
+    ./stave lint --observations ./observations      # confirm shape FIRST
     ./stave apply    --observations ./observations --format json
 
 Read-only. Uses your existing AWS credentials (env / profile / role). Point it at a

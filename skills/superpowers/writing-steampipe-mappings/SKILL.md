@@ -23,7 +23,7 @@ this data source to Stave."*
 
 - An asset type you need to evaluate has no `contracts/steampipe/*.yaml`
   mapping
-- `stave lint` rejects your observation because required properties
+- `stave validate` rejects your observation because required properties
   are missing (and the values exist in Steampipe rows the mapping
   doesn't yet project)
 - The catalog reads a property the existing mapping doesn't populate
@@ -139,7 +139,7 @@ Operation kinds:
 Before running the mapping, check it for structural / coverage problems:
 
 ```bash
-stave vet --file contracts/steampipe/aws_kms_key.yaml \
+stave validate-mapping --file contracts/steampipe/aws_kms_key.yaml \
     --format json | jq '{
       result: .overall_status,
       structural_errors: [.structural[] | select(.severity == "error")] | length,
@@ -167,10 +167,10 @@ python3 examples/agents/stave_transform.py \
     --output observations/
 
 # Validate the OUTPUT
-stave lint --in observations/*.obs.json --kind observation --strict
+stave validate --in observations/*.obs.json --kind observation --strict
 ```
 
-**Checkpoint 2: `stave lint` exits 0** on every emitted observation.
+**Checkpoint 2: `stave validate` exits 0** on every emitted observation.
 
 ### Phase 7 — Evaluate to confirm controls fire correctly
 
@@ -193,7 +193,7 @@ data has unsafe shapes.
 ## Key principles
 
 - **Validate the mapping structurally before running it.**
-  `stave vet` is faster than waiting for `stave apply` to
+  `stave validate-mapping` is faster than waiting for `stave apply` to
   surface mapping bugs as evaluation errors.
 - **Operation order matters.** Operations process in YAML declaration
   order; `computed` operations can read paths set by earlier `field`

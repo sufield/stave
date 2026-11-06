@@ -104,7 +104,7 @@ your asset type, switch to the `stave:writing-steampipe-mappings` skill.
 Validate the observation **before** trying to evaluate it:
 
 ```bash
-stave lint --in observations/*.obs.json --kind observation --strict
+stave validate --in observations/*.obs.json --kind observation --strict
 ```
 
 **Checkpoint 2: exit code MUST be 0.** Validation errors name the
@@ -112,7 +112,7 @@ specific field and what's wrong. Read them, fix the observation, retry.
 Do not proceed with `--strict` failures — they will surface as confusing
 evaluation errors later.
 
-Note: `stave lint` can return exit 0 with "0 asset observations
+Note: `stave validate` can return exit 0 with "0 asset observations
 checked" when the file is structurally valid but empty or the loader
 skipped it. Confirm the count is non-zero before treating exit 0 as a
 green light.
