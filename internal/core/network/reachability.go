@@ -35,7 +35,7 @@ func (g *Graph) CanReach(srcID, dstID string, port int) (bool, string) {
 
 	for _, dstSG := range dst.SGIDs {
 		for _, rule := range g.SGRules[dstSG] {
-			if rule.Direction != "ingress" || rule.Port != port {
+			if !rule.IsIngress() || rule.Port != port {
 				continue
 			}
 			switch rule.SourceType {
@@ -56,7 +56,7 @@ func (g *Graph) CanReach(srcID, dstID string, port int) (bool, string) {
 		if g.vpcsArePeered(src.VPCID, dst.VPCID) || g.vpcsConnectedViaTGW(src.VPCID, dst.VPCID) {
 			for _, dstSG := range dst.SGIDs {
 				for _, rule := range g.SGRules[dstSG] {
-					if rule.Direction != "ingress" || rule.Port != port {
+					if !rule.IsIngress() || rule.Port != port {
 						continue
 					}
 					if rule.SourceType == "cidr" && broadInternalCIDRs[rule.SourceValue] {
@@ -146,7 +146,7 @@ func (g *Graph) canReachAnyPort(srcID, dstID string) (bool, string, int) {
 
 	for _, dstSG := range dst.SGIDs {
 		for _, rule := range g.SGRules[dstSG] {
-			if rule.Direction != "ingress" {
+			if !rule.IsIngress() {
 				continue
 			}
 			switch rule.SourceType {
@@ -166,7 +166,7 @@ func (g *Graph) canReachAnyPort(srcID, dstID string) (bool, string, int) {
 		if g.vpcsArePeered(src.VPCID, dst.VPCID) || g.vpcsConnectedViaTGW(src.VPCID, dst.VPCID) {
 			for _, dstSG := range dst.SGIDs {
 				for _, rule := range g.SGRules[dstSG] {
-					if rule.Direction != "ingress" {
+					if !rule.IsIngress() {
 						continue
 					}
 					if rule.SourceType == "cidr" && broadInternalCIDRs[rule.SourceValue] {
@@ -191,7 +191,7 @@ func (g *Graph) allHosts() []*Host {
 func (g *Graph) findRule(src, dst *Host, port int) (string, string) {
 	for _, dstSG := range dst.SGIDs {
 		for _, rule := range g.SGRules[dstSG] {
-			if rule.Direction != "ingress" || rule.Port != port {
+			if !rule.IsIngress() || rule.Port != port {
 				continue
 			}
 			switch rule.SourceType {

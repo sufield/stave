@@ -1367,3 +1367,40 @@ func TestSGRule_IsInternetIngressOnPort(t *testing.T) {
 		})
 	}
 }
+
+func TestSGRule_IsIngress(t *testing.T) {
+	tests := []struct {
+		name string
+		rule SGRule
+		want bool
+	}{
+		{
+			name: "ingress direction",
+			rule: SGRule{Direction: "ingress"},
+			want: true,
+		},
+		{
+			name: "egress direction",
+			rule: SGRule{Direction: "egress"},
+			want: false,
+		},
+		{
+			name: "empty direction",
+			rule: SGRule{Direction: ""},
+			want: false,
+		},
+		{
+			name: "other direction",
+			rule: SGRule{Direction: "inbound"},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.rule.IsIngress(); got != tc.want {
+				t.Errorf("SGRule{%+v}.IsIngress() = %v, want %v", tc.rule, got, tc.want)
+			}
+		})
+	}
+}

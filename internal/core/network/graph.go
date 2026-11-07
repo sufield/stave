@@ -37,10 +37,15 @@ type SGRule struct {
 	SourceValue string
 }
 
+// IsIngress reports whether the security group rule applies to inbound traffic.
+func (r SGRule) IsIngress() bool {
+	return r.Direction == "ingress"
+}
+
 // IsInternetIngress reports whether the security group rule permits inbound
 // traffic from the public internet ("0.0.0.0/0" or "::/0").
 func (r SGRule) IsInternetIngress() bool {
-	return r.Direction == "ingress" && r.SourceType == "cidr" && (r.SourceValue == "0.0.0.0/0" || r.SourceValue == "::/0")
+	return r.IsIngress() && r.SourceType == "cidr" && (r.SourceValue == "0.0.0.0/0" || r.SourceValue == "::/0")
 }
 
 // IsInternetIngressOnPort reports whether the security group rule permits inbound
