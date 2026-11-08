@@ -630,7 +630,7 @@ func (s *assessmentSession) compileReport() evaluation.ComplianceReport {
 
 	activeCount := 0
 	for i := range confirmedFindings {
-		if confirmedFindings[i].Status == evaluation.FindingActive {
+		if confirmedFindings[i].IsActive() {
 			activeCount++
 		}
 	}
@@ -704,7 +704,7 @@ func partitionIndeterminateFindings(findings []evaluation.Finding) (confirmed, i
 	for i := range findings {
 		if findings[i].IsIndeterminate() {
 			findings[i].DataQuality = evaluation.DataQualityIndeterminate
-			if findings[i].Status == evaluation.FindingSuppressed {
+			if findings[i].IsSuppressed() {
 				confirmed = append(confirmed, findings[i])
 			} else {
 				indeterminate = append(indeterminate, findings[i])
@@ -788,7 +788,7 @@ func buildSuppressionSet(findings []evaluation.Finding) map[risk.SuppressionKey]
 	out := make(map[risk.SuppressionKey]struct{})
 	for i := range findings {
 		f := &findings[i]
-		if f.Status != evaluation.FindingSuppressed {
+		if !f.IsSuppressed() {
 			continue
 		}
 		if f.Suppression != nil && !f.Suppression.Valid {

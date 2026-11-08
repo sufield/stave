@@ -126,7 +126,7 @@ func Detect(in Input) LapsedFindings {
 	for i := range in.Findings {
 		f := &in.Findings[i]
 
-		if f.Status != evaluation.FindingSuppressed {
+		if !f.IsSuppressed() {
 			continue
 		}
 		if f.Suppression == nil || f.Suppression.Valid {

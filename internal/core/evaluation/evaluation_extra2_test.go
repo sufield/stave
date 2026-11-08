@@ -228,3 +228,37 @@ func TestClassifySafetyStatus_Constants(t *testing.T) {
 		t.Fatal("StateNonCompliant")
 	}
 }
+
+func TestFinding_IsSuppressed_IsActive(t *testing.T) {
+	var nilFinding *Finding
+	if nilFinding.IsSuppressed() {
+		t.Error("nil finding should not be suppressed")
+	}
+	if nilFinding.IsActive() {
+		t.Error("nil finding should not be active")
+	}
+
+	activeFinding := &Finding{Status: FindingActive}
+	if !activeFinding.IsActive() {
+		t.Error("active finding should report IsActive() == true")
+	}
+	if activeFinding.IsSuppressed() {
+		t.Error("active finding should report IsSuppressed() == false")
+	}
+
+	suppressedFinding := &Finding{Status: FindingSuppressed}
+	if !suppressedFinding.IsSuppressed() {
+		t.Error("suppressed finding should report IsSuppressed() == true")
+	}
+	if suppressedFinding.IsActive() {
+		t.Error("suppressed finding should report IsActive() == false")
+	}
+
+	emptyFinding := &Finding{}
+	if emptyFinding.IsSuppressed() {
+		t.Error("empty finding should report IsSuppressed() == false")
+	}
+	if emptyFinding.IsActive() {
+		t.Error("empty finding should report IsActive() == false")
+	}
+}

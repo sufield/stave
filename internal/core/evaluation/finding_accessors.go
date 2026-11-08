@@ -8,6 +8,18 @@ import (
 	"github.com/sufield/stave/internal/core/predicate"
 )
 
+// IsSuppressed reports whether this finding is in the suppressed state
+// (excepted or acknowledged). Safe on nil receiver.
+func (f *Finding) IsSuppressed() bool {
+	return f != nil && f.Status == FindingSuppressed
+}
+
+// IsActive reports whether this finding is an active violation.
+// Safe on nil receiver.
+func (f *Finding) IsActive() bool {
+	return f != nil && f.Status == FindingActive
+}
+
 // IsUnattributed reports whether this finding lacks a ControlID.
 func (f *Finding) IsUnattributed() bool {
 	if f == nil {
