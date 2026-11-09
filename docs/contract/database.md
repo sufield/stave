@@ -2,7 +2,7 @@
 
 Contract fields for AWS RDS observations. Namespace prefix: `database.*`.
 DynamoDB and other database kinds use the shared `database.*` namespace
-discriminated by `database.kind` — see [misc.md](misc.md) for the
+discriminated by `database.kind`. See [misc.md](misc.md) for the
 compliance-expansion table.
 
 Part of the [observation contract](README.md).
@@ -65,6 +65,3 @@ table.
 | `database.dynamodb.dax.has_ghost_subnet` | bool | The subnet group references a deleted subnet |
 | `database.dynamodb.dax.has_ghost_sg` | bool | The cluster references a deleted security group |
 | `database.dynamodb.dax.ghost_sg_ids` | []string | Specific deleted SG IDs (when `has_ghost_sg` is true) |
-
----
-

@@ -1404,3 +1404,99 @@ func TestSGRule_IsIngress(t *testing.T) {
 		})
 	}
 }
+
+func TestSGRule_IsCIDR(t *testing.T) {
+	tests := []struct {
+		name string
+		rule SGRule
+		want bool
+	}{
+		{
+			name: "cidr source type",
+			rule: SGRule{SourceType: "cidr"},
+			want: true,
+		},
+		{
+			name: "sg source type",
+			rule: SGRule{SourceType: "sg"},
+			want: false,
+		},
+		{
+			name: "empty source type",
+			rule: SGRule{SourceType: ""},
+			want: false,
+		},
+		{
+			name: "other source type",
+			rule: SGRule{SourceType: "prefix-list"},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.rule.IsCIDR(); got != tc.want {
+				t.Errorf("SGRule{%+v}.IsCIDR() = %v, want %v", tc.rule, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSGRule_HasBroadInternalCIDR(t *testing.T) {
+	tests := []struct {
+		name string
+		rule SGRule
+		want bool
+	}{
+		{
+			name: "rfc1918 10/8",
+			rule: SGRule{SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			want: true,
+		},
+		{
+			name: "rfc1918 172.16/12",
+			rule: SGRule{SourceType: "cidr", SourceValue: "172.16.0.0/12"},
+			want: true,
+		},
+		{
+			name: "rfc1918 192.168/16",
+			rule: SGRule{SourceType: "cidr", SourceValue: "192.168.0.0/16"},
+			want: true,
+		},
+		{
+			name: "default route ipv4 0.0.0.0/0",
+			rule: SGRule{SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+			want: true,
+		},
+		{
+			name: "default route ipv6 ::/0",
+			rule: SGRule{SourceType: "cidr", SourceValue: "::/0"},
+			want: true,
+		},
+		{
+			name: "narrow cidr",
+			rule: SGRule{SourceType: "cidr", SourceValue: "10.0.1.0/24"},
+			want: false,
+		},
+		{
+			name: "sg reference with broad cidr value",
+			rule: SGRule{SourceType: "sg", SourceValue: "10.0.0.0/8"},
+			want: false,
+		},
+		{
+			name: "empty rule",
+			rule: SGRule{},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.rule.HasBroadInternalCIDR(); got != tc.want {
+				t.Errorf("SGRule{%+v}.HasBroadInternalCIDR() = %v, want %v", tc.rule, got, tc.want)
+			}
+		})
+	}
+}
+
+

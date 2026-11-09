@@ -42,10 +42,21 @@ func (r SGRule) IsIngress() bool {
 	return r.Direction == "ingress"
 }
 
+// IsCIDR reports whether the security group rule source is a CIDR block.
+func (r SGRule) IsCIDR() bool {
+	return r.SourceType == "cidr"
+}
+
+// HasBroadInternalCIDR reports whether the security group rule source is a broad
+// internal CIDR block (RFC1918 range or 0.0.0.0/0 / ::/0).
+func (r SGRule) HasBroadInternalCIDR() bool {
+	return r.IsCIDR() && broadInternalCIDRs[r.SourceValue]
+}
+
 // IsInternetIngress reports whether the security group rule permits inbound
 // traffic from the public internet ("0.0.0.0/0" or "::/0").
 func (r SGRule) IsInternetIngress() bool {
-	return r.IsIngress() && r.SourceType == "cidr" && (r.SourceValue == "0.0.0.0/0" || r.SourceValue == "::/0")
+	return r.IsIngress() && r.IsCIDR() && (r.SourceValue == "0.0.0.0/0" || r.SourceValue == "::/0")
 }
 
 // IsInternetIngressOnPort reports whether the security group rule permits inbound

@@ -5,7 +5,7 @@ Derived observation properties for the multi-SSO Cognito User Pool controls
 All live under `properties.identity.cognito.*` on asset `aws_cognito_user_pool`
 (kind `cognito_user_pool`).
 
-Inspired by Doyensec CloudsecTidbits No. 4 — *The Danger of Multi-SSO AWS Cognito
+Inspired by Doyensec CloudsecTidbits No. 4 *The Danger of Multi-SSO AWS Cognito
 User Pools*.
 
 ## PreSignUp gate — `CTL.COGNITO.FEDERATION.PRESIGNUP.MISSING.001` (SSO-001)

@@ -4,7 +4,7 @@ Derived observation properties for ALB/NLB routing-graph controls. A collector
 populates these; Stave core only reads them. The compound signals
 (`tg_path_*`, `nlb_shares_*`, `auth_rule_shadowed`) are computed by the
 collector using the reasoning specs under `examples/alb-routing-*` (Soufflé +
-Z3, which must agree). Inspired by Doyensec CloudsecTidbits No. 5 — *Navigating
+Z3, which must agree). Inspired by Doyensec CloudsecTidbits No. 5 *Navigating
 Lax Load Balancers*; validated against doyensec/ELBaph.
 
 The compound controls read `properties.network.elb.*`; the atomic ALB controls

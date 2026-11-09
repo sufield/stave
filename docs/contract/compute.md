@@ -141,6 +141,3 @@ discriminator field `container_registry.kind` is `"repository"`.
 | `container_registry.findings.critical_count` | int | Outstanding CRITICAL findings count |
 | `container_registry.findings.high_count` | int | Outstanding HIGH findings count |
 | `container_registry.findings.oldest_finding_days` | int | Age of the oldest unresolved CRITICAL or HIGH finding |
-
----
-

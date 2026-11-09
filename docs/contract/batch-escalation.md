@@ -5,7 +5,7 @@ job-container → host-IMDS → instance-role privilege-escalation path. A colle
 populates these; Stave core only reads them. The compound chain signal is
 computed by `examples/batch-escalation-chain/` (Soufflé + Z3, which agree).
 
-Inspired by Doyensec CloudsecTidbits No. 3 — *Messing Around With AWS Batch For
+Inspired by Doyensec CloudsecTidbits No. 3 *Messing Around With AWS Batch For
 Privilege Escalations* (lab: github.com/doyensec/cloudsec-tidbits).
 
 ## `batch.*` — Batch compute environment (asset `aws_batch_compute_environment`)

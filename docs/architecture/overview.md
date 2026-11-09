@@ -7,7 +7,7 @@ description: "Stave's internal architecture: pipeline stages, package map, trust
 
 # Architecture Overview
 
-Stave is a single static binary with no plugins, no network, and no persistent state. All evaluation runs as a pure function: files in, findings out.
+Stave is a single static binary with no plugins, network or persistent state. All evaluation runs as a pure function: files in, findings out.
 
 ## Pipeline
 

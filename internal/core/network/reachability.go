@@ -59,7 +59,7 @@ func (g *Graph) CanReach(srcID, dstID string, port int) (bool, string) {
 					if !rule.IsIngress() || rule.Port != port {
 						continue
 					}
-					if rule.SourceType == "cidr" && broadInternalCIDRs[rule.SourceValue] {
+					if rule.HasBroadInternalCIDR() {
 						return true, "cross-vpc"
 					}
 				}
@@ -169,7 +169,7 @@ func (g *Graph) canReachAnyPort(srcID, dstID string) (bool, string, int) {
 					if !rule.IsIngress() {
 						continue
 					}
-					if rule.SourceType == "cidr" && broadInternalCIDRs[rule.SourceValue] {
+					if rule.HasBroadInternalCIDR() {
 						return true, "cross-vpc", rule.Port
 					}
 				}
@@ -202,7 +202,7 @@ func (g *Graph) findRule(src, dst *Host, port int) (string, string) {
 					}
 				}
 			case "cidr":
-				if broadInternalCIDRs[rule.SourceValue] {
+				if rule.HasBroadInternalCIDR() {
 					return dstSG, "cidr:" + rule.SourceValue
 				}
 			}

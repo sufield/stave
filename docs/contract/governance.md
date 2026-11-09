@@ -66,7 +66,7 @@ in Deny statements correctly. `NotAction` in a Deny is semantically the
 ```
 
 A collector that skips `NotAction` statements silently under-reports deny
-coverage — a SILENT_RISK at the collector layer. The Stave predicate engine
+coverage. A SILENT_RISK at the collector layer. The Stave predicate engine
 never sees the raw policy document; it only evaluates these pre-computed
 booleans.
 

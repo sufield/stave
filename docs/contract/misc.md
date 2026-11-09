@@ -27,7 +27,7 @@ Covered namespaces:
 DNS record evaluation is **vendor-agnostic**. The controls evaluate
 `properties.dns.*` regardless of whether the DNS is hosted on Route53,
 Cloudflare, Namecheap, GoDaddy, or a self-hosted nameserver. The
-`vendor` field on the asset is extractor metadata — controls never
+`vendor` field on the asset is extractor metadata, controls never
 reference it.
 
 ### DNS record (`dns_record`)
@@ -224,6 +224,3 @@ classification tag are treated as `unclassified`.
 
 **Controls:** CTL.KMS.ISOLATION.001 (key shared across sensitivity
 domains — cryptographic boundary collapse).
-
----
-

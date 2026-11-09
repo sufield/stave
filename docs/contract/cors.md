@@ -15,7 +15,7 @@ CORS configurations are captured per service from AWS CLI JSON responses
 and normalized into precomputed boolean signals plus raw rule arrays.
 Predicates evaluate the precomputed booleans; raw rules remain available
 for custom predicates. The compound signal **wildcard origin combined
-with credentialed access** is the primary unsafe state — naked wildcard
+with credentialed access** is the primary unsafe state with naked wildcard
 origins on public assets are expected.
 
 ### S3 bucket (`aws_s3_bucket`)
@@ -98,6 +98,3 @@ still wildcard-effective at the browser). The precomputed
 allows_wildcard_origin: false`. Predicates that should only fire on
 misconfigured CORS must gate on `configured: true` to avoid firing on
 resources that have no CORS at all.
-
----
-

@@ -24,6 +24,3 @@ Part of the [observation contract](README.md).
 | `network.security_group.is_default` | bool | Is the VPC default security group |
 | `network.security_group.has_rules` | bool | Has any ingress or egress rules |
 | `network.security_group.has_unrestricted_ingress` | bool | 0.0.0.0/0 in any ingress rule |
-
----
-

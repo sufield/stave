@@ -30,7 +30,7 @@ Strengths the AWS Compliance Mod excels at:
 - **Per-resource property checks.** "Bucket encryption enabled?
   Yes/no." Fast, deterministic, easy to debug.
 - **Live AWS coverage.** Queries hit AWS APIs directly via
-  Steampipe; you see your current cloud state, not a snapshot.
+  Steampipe; you see your current cloud state.
 - **Ecosystem depth.** Used by thousands of organizations;
   contributor velocity; tight integration with the Powerpipe
   dashboard surface.
@@ -44,8 +44,7 @@ AWS Compliance Mod is the answer.
 
 [Stave](https://github.com/sufield/stave) is a deterministic
 cloud-security evaluation engine for compound risk reasoning. It
-operates on **snapshot-anchored facts** (`obs.v0.1`) — not live
-APIs and emits **deterministic verdicts** (`out.v0.1`) that
+operates on **snapshot-anchored facts** (`obs.v0.1`) and emits **deterministic verdicts** (`out.v0.1`) that
 auditors and CI/CD can treat as evidence.
 
 The catalog has two axes:
@@ -75,8 +74,7 @@ Three additional properties that distinguish Stave architecturally:
   contract isn't.
 - **Compound-risk chain modeling.** Multiple co-failing controls
   compose into a single chain finding with its own severity. A
-  chain isn't the sum of individual findings — it's an
-  attack-path that the per-resource scanners can't represent.
+  chain is an attack-path that the per-resource scanners can't represent.
 
 If your question is _"would the Capital-One-shape of risk get
 through my CI?"_, Stave is the answer.
@@ -87,8 +85,7 @@ through my CI?"_, Stave is the answer.
 
 For the atomic-control set "bucket encryption enabled," "user
 MFA active," "root account access key present" both tools
-detect the same kinds of misconfigurations. The differences on
-this axis are tactical:
+detect the same kinds of misconfigurations. 
 
 - AWS Compliance Mod queries live AWS APIs; Stave queries a
   snapshot. Same answer for the same state of the world.
@@ -117,7 +114,7 @@ represent by construction:
    path with no audit trail. Stave's chain engine fires when the
    composition's escalation threshold is met; the compound
    finding carries its own severity that may exceed any member.
-2. **Ghost references.** Dangling cross-resource pointers — a
+2. **Ghost references.** Dangling cross-resource pointers, a
    Cognito user pool referencing a deleted Lambda trigger, a
    CloudFront distribution whose S3 origin no longer exists, an
    ECS task naming a removed IAM role. The reference exists in
@@ -131,7 +128,7 @@ represent by construction:
    ELB (9), EventBridge (9), IAM (4), Route53 (1), S3 (1),
    Secrets Manager (3), SNS (6), SQS (3).
 3. **Snapshot-anchored reproducibility.** Re-running the same
-   `obs.v0.1` snapshot produces byte-identical output. Two
+   `obs.v0.1` snapshot produces byte-identical output. Few
    weeks later, a different engineer points the same snapshot
    at Stave and gets the same verdict. This is useful for audit
    timelines, regression bisects, "what did we know at time T"
@@ -155,8 +152,7 @@ allow cross-account role assumption without an external ID."
 ### AWS Compliance Mod (per-resource SQL check)
 
 A typical IAM check in `turbot/steampipe-mod-aws-compliance`
-under the CIS or PCI benchmarks (verify the exact file in
-the live repo before quoting verbatim. SQL is pseudo code):
+under the CIS or PCI benchmarks (SQL is pseudo code):
 
 ```sql
 -- Representative shape of an IAM control in the AWS Compliance Mod.

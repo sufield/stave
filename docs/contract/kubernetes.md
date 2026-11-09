@@ -47,6 +47,3 @@ Part of the [observation contract](README.md).
 |-------|------|-------------|
 | `secrets.kind` | string | `"pod"` — discriminator |
 | `secrets.has_env_secrets` | bool | Secrets mounted as environment variables |
-
----
-

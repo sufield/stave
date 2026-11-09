@@ -1,7 +1,7 @@
 # Reachability Domain
 
 Cross-cutting reachability analysis. The `reachability.*` namespace
-overlays any asset type — an S3 bucket, DynamoDB table, Secrets Manager
+overlays any asset type. An S3 bucket, DynamoDB table, Secrets Manager
 secret, etc., may carry `reachability.*` fields populated by post-
 collection graph traversal.
 
@@ -185,6 +185,3 @@ access patterns for jurisdictional compliance.
 
 **Controls:** CTL.EXPOSURE.SOVEREIGNTY.001 (cross-border access to
 sensitive data).
-
----
-

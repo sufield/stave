@@ -87,7 +87,7 @@ Each sub-namespace under `identity.escalation.<technique>` records whether a
 single, named escalation technique applies to the principal. The extractor (or
 a downstream derivation) computes the technique's preconditions — action-level
 IAM permissions, Resource-ARN scoping, group membership for group-hop
-techniques — and emits `.present: true` when they all hold. Controls stay
+techniques and emits `.present: true` when they all hold. Controls stay
 declarative over `<technique>.present`; the permission analysis lives upstream
 in one place.
 

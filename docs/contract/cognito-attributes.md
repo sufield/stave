@@ -3,7 +3,7 @@
 Derived observation properties for the user-attribute tampering controls. A
 collector populates these; Stave core only reads them.
 
-Inspired by Doyensec CloudsecTidbits S1 #2 — *Tampering User Attributes In AWS
+Inspired by Doyensec CloudsecTidbits S1 #2 *Tampering User Attributes In AWS
 Cognito User Pools*.
 
 ## Distinction from the SSO attribute-mapping vector

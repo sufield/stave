@@ -1,6 +1,6 @@
 # Storage Domain
 
-Contract fields for object storage services — S3 buckets, S3 Express
+Contract fields for object storage services. S3 buckets, S3 Express
 Directory Buckets, S3 Tables Table Buckets, S3 Vectors Vector Buckets,
 GCS buckets, and single-region S3 Access Points. Namespace prefix:
 `storage.*`. Also covers `s3_ref.*` (bucket reference / takeover
@@ -170,7 +170,7 @@ Point carries its own Public Access Block settings and its own resource policy,
 both evaluated independently of the parent bucket's controls. An Access Point
 can therefore expose a bucket that is itself hardened, or delegate a narrower
 slice of a broadly-configured bucket. Single-region Access Points are a
-separate resource kind from Multi-Region Access Points (MRAPs) — MRAP facts
+separate resource kind from Multi-Region Access Points (MRAPs). MRAP facts
 are attached to the bucket asset as `storage.multi_region_access_points[]`;
 single-region Access Points are top-level `aws_s3_access_point` assets with
 `storage.kind = "access_point"`.
@@ -270,6 +270,3 @@ Controls for `vector_bucket` assets live under `controls/s3vectors/`.
 | `s3express:` | `s3:ListDirectoryBuckets` | `s3express:GetBucketPolicy` | — |
 | `s3tables:` | `s3tables:ListTableBuckets` | `s3tables:GetTableBucketPolicy` | `s3tables:ListTables` |
 | `s3vectors:` | `s3vectors:ListVectorBuckets` | `s3vectors:GetVectorBucketPolicy` | `s3vectors:ListVectorBucketIndexes` |
-
----
-

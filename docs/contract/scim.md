@@ -4,9 +4,9 @@ Derived observation properties for the two SCIM infrastructure controls. A
 collector populates these; Stave core only reads them. Infrastructure controls
 inspired by Doyensec *SCIM Hunting — Beyond SSO*.
 
-## What is already covered (do NOT duplicate)
+## What is already covered
 
-The base SCIM misconfigurations already fire on existing controls — no
+The base SCIM misconfigurations already fire on existing controls. No
 SCIM-named variants are built for them:
 
 | SCIM concern | Already caught by |
