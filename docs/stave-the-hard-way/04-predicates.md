@@ -1,7 +1,6 @@
 # Lab 04 — Predicates
 
-A predicate is the evaluation rule inside a control. When it matches, the
-state is unsafe.
+A predicate is the evaluation rule inside a control. When it matches, the state is unsafe.
 
 ## Anatomy of a Predicate
 
@@ -23,8 +22,7 @@ unsafe_predicate:
       value: true
 ```
 
-`all:` means every clause must match (conjunction). Each clause has three
-parts: a field path, an operator, and an expected value.
+`all:` means every clause must match (conjunction). Each clause has three parts: a field path, an operator, and an expected value.
 
 ## Operators
 

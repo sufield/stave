@@ -20,6 +20,24 @@ func (f *Finding) IsActive() bool {
 	return f != nil && f.Status == FindingActive
 }
 
+// IsExpired reports whether the suppression was invalidated because its expiry date has passed.
+// Safe on nil receiver.
+func (s *Suppression) IsExpired() bool {
+	return s != nil && s.InvalidReason == SuppressionInvalidExpired
+}
+
+// IsCompensatingFailing reports whether the suppression was invalidated because one or
+// more compensating controls are failing or excepted. Safe on nil receiver.
+func (s *Suppression) IsCompensatingFailing() bool {
+	return s != nil && s.InvalidReason == SuppressionInvalidCompensatingFailing
+}
+
+// IsLapsed reports whether the suppression has lapsed due to an expired deadline
+// or failing compensating controls. Safe on nil receiver.
+func (s *Suppression) IsLapsed() bool {
+	return s.IsExpired() || s.IsCompensatingFailing()
+}
+
 // IsUnattributed reports whether this finding lacks a ControlID.
 func (f *Finding) IsUnattributed() bool {
 	if f == nil {

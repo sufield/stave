@@ -262,3 +262,61 @@ func TestFinding_IsSuppressed_IsActive(t *testing.T) {
 		t.Error("empty finding should report IsActive() == false")
 	}
 }
+
+func TestSuppression_IsExpired_IsCompensatingFailing(t *testing.T) {
+	var nilSuppression *Suppression
+	if nilSuppression.IsExpired() {
+		t.Error("nil suppression should not report IsExpired() == true")
+	}
+	if nilSuppression.IsCompensatingFailing() {
+		t.Error("nil suppression should not report IsCompensatingFailing() == true")
+	}
+	if nilSuppression.IsLapsed() {
+		t.Error("nil suppression should not report IsLapsed() == true")
+	}
+
+	expired := &Suppression{InvalidReason: SuppressionInvalidExpired}
+	if !expired.IsExpired() {
+		t.Error("expired suppression should report IsExpired() == true")
+	}
+	if expired.IsCompensatingFailing() {
+		t.Error("expired suppression should not report IsCompensatingFailing() == true")
+	}
+	if !expired.IsLapsed() {
+		t.Error("expired suppression should report IsLapsed() == true")
+	}
+
+	compFailing := &Suppression{InvalidReason: SuppressionInvalidCompensatingFailing}
+	if !compFailing.IsCompensatingFailing() {
+		t.Error("compensating failing suppression should report IsCompensatingFailing() == true")
+	}
+	if compFailing.IsExpired() {
+		t.Error("compensating failing suppression should not report IsExpired() == true")
+	}
+	if !compFailing.IsLapsed() {
+		t.Error("compensating failing suppression should report IsLapsed() == true")
+	}
+
+	empty := &Suppression{}
+	if empty.IsExpired() {
+		t.Error("empty suppression should not report IsExpired() == true")
+	}
+	if empty.IsCompensatingFailing() {
+		t.Error("empty suppression should not report IsCompensatingFailing() == true")
+	}
+	if empty.IsLapsed() {
+		t.Error("empty suppression should not report IsLapsed() == true")
+	}
+
+	other := &Suppression{InvalidReason: "other_reason"}
+	if other.IsExpired() {
+		t.Error("other invalid reason should not report IsExpired() == true")
+	}
+	if other.IsCompensatingFailing() {
+		t.Error("other invalid reason should not report IsCompensatingFailing() == true")
+	}
+	if other.IsLapsed() {
+		t.Error("other invalid reason should not report IsLapsed() == true")
+	}
+}
+

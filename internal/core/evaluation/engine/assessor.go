@@ -899,7 +899,7 @@ func applyAcknowledgments(
 				AcknowledgedDate: rule.AcknowledgedDate,
 				ExpiryDate:       rule.ExpiryDate,
 				Valid:            false,
-				InvalidReason:    "expired",
+				InvalidReason:    evaluation.SuppressionInvalidExpired,
 			}
 			result = append(result, f)
 			continue
@@ -930,7 +930,7 @@ func applyAcknowledgments(
 				AcknowledgedDate: rule.AcknowledgedDate,
 				ExpiryDate:       rule.ExpiryDate,
 				Valid:            false,
-				InvalidReason:    "compensating_controls_failing",
+				InvalidReason:    evaluation.SuppressionInvalidCompensatingFailing,
 			}
 			result = append(result, f)
 			continue

@@ -69,3 +69,5 @@ Run the RED fixture and find the `remediation.action` field in the AUTHAGE
 finding. It tells you exactly what to change.
 
 Next: [Lab 07 — Chains](07-chains.md)
+
+https://youtu.be/KNcA6SqZum4

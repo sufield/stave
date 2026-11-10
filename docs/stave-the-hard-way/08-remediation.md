@@ -76,3 +76,5 @@ Run `stave check` yourself with the before/after paths above. Confirm
 `regressions: 0`.
 
 Next: [Lab 09 — Drift Detection](09-drift-detection.md)
+
+https://youtu.be/7GZauRV5rws

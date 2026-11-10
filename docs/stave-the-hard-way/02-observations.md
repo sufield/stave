@@ -1,6 +1,6 @@
 # Lab 02 — Observations
 
-Stave never calls AWS APIs. It evaluates observations — structured snapshots
+Stave never calls AWS APIs. It evaluates observations which are structured snapshots
 of configuration state captured at a point in time.
 
 ## The obs.v0.1 Format
@@ -88,3 +88,5 @@ Open both fixture files. Confirm they have the same `assets[0].id` but
 different `captured_at` timestamps.
 
 Next: [Lab 03 — Security Properties](03-security-properties.md)
+
+https://youtu.be/Wq0PD2G5Y5M

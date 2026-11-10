@@ -68,3 +68,5 @@ guarantee.
 Run the full loop yourself: apply against the bad fixture, read the finding,
 apply against the clean fixture, verify with `stave check`. The proof is in
 the output.
+
+https://youtu.be/Pb8OU4YaVXw

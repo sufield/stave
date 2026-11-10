@@ -76,3 +76,5 @@ Explain in one sentence why the boundary fixture passes AUTHAGE.001 but
 would fail TRUST.MFA.001.
 
 Next: [Lab 06 — Findings](06-findings.md)
+
+https://youtu.be/9aqzHi1MMoA

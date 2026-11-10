@@ -63,3 +63,5 @@ stave doctor
 ```
 
 Next: [Lab 02 — Observations](02-observations.md)
+
+https://youtu.be/Idc3IVTTrg4

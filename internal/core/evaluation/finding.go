@@ -77,6 +77,12 @@ type Suppression struct {
 	InvalidReason    string            `json:"invalid_reason,omitempty"`
 }
 
+// Suppression invalid reason constants.
+const (
+	SuppressionInvalidExpired             = "expired"
+	SuppressionInvalidCompensatingFailing = "compensating_controls_failing"
+)
+
 // FindingOwnership groups the owner-routing fields populated when a
 // team manifest is loaded. Embedded anonymously in Finding so JSON
 // tags and direct field access (f.OwnerTeamID) are preserved.

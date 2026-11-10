@@ -1,8 +1,6 @@
 # Lab 03 — Security Properties
 
-A security property is a statement about configuration state that must hold
-for an asset to be considered safe. Stave expresses properties as YAML
-controls.
+A security property is a statement about configuration state that must hold for an asset to be considered safe. Stave expresses properties as YAML controls.
 
 ## The Simplest Control
 

@@ -91,3 +91,5 @@ compound property does `iam_mfa_theater` prove that neither AUTHAGE.001
 nor SESSION.DURATION.001 proves alone?
 
 Next: [Lab 08 — Remediation](08-remediation.md)
+
+https://youtu.be/8oiY-smtq60

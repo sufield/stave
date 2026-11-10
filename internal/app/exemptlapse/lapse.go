@@ -132,12 +132,12 @@ func Detect(in Input) LapsedFindings {
 		if f.Suppression == nil || f.Suppression.Valid {
 			continue
 		}
-		if f.Suppression.InvalidReason != "expired" && f.Suppression.InvalidReason != "compensating_controls_failing" {
+		if !f.Suppression.IsLapsed() {
 			continue
 		}
 
 		expiry, err := time.Parse("2006-01-02", f.Suppression.ExpiryDate)
-		if err != nil && f.Suppression.InvalidReason == "expired" {
+		if err != nil && f.Suppression.IsExpired() {
 			continue
 		}
 
@@ -159,7 +159,7 @@ func Detect(in Input) LapsedFindings {
 		}
 
 		var compensatingNote string
-		if f.Suppression.InvalidReason == "compensating_controls_failing" {
+		if f.Suppression.IsCompensatingFailing() {
 			compensatingNote = "Compensating control is failing"
 		}
 

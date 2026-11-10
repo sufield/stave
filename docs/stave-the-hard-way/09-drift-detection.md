@@ -78,3 +78,5 @@ Run the `stave ci diff` command above. Confirm it reports the AUTHAGE.001
 finding as newly introduced.
 
 Next: [Lab 10 — Continuous Verification](10-continuous-verification.md)
+
+https://youtu.be/b5Orf87wHrY
