@@ -46,6 +46,7 @@ type Request struct {
 	Sanitize        bool
 	Strict          bool
 	FixHints        bool
+	ShowAll         bool // show all warnings instead of capping at 2
 	Format          string
 	Template        string
 	AssertRecent    string
@@ -84,6 +85,7 @@ func Run(ctx context.Context, req Request, label LabelFunc, tmpl TemplateFunc, p
 		Format:   renderFormatStr(req.Format, req.Template),
 		Strict:   req.Strict,
 		FixHints: req.FixHints,
+		ShowAll:  req.ShowAll,
 		Label:    label,
 		Template: tmpl,
 	}

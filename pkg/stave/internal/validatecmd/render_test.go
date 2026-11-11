@@ -135,6 +135,81 @@ func TestOutputAndExit_JSONOutput(t *testing.T) {
 	}
 }
 
+func TestWriteText_WarningsCappedByDefault(t *testing.T) {
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
+			{RuleID: "W1", Severity: diag.SeverityWarn},
+			{RuleID: "W2", Severity: diag.SeverityWarn},
+			{RuleID: "W3", Severity: diag.SeverityWarn},
+			{RuleID: "W4", Severity: diag.SeverityWarn},
+		}},
+		Summary: appvalidation.Summary{SnapshotsLoaded: 1},
+	}
+	var buf bytes.Buffer
+	r := testReporter(&buf, false, false)
+	if err := r.Write(result, hintContext{}); err != nil {
+		t.Fatalf("Write failed: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "2 more warning") {
+		t.Fatalf("expected truncation message, got: %s", out)
+	}
+	if strings.Contains(out, "W4") {
+		t.Fatalf("expected W4 to be suppressed, got: %s", out)
+	}
+}
+
+func TestWriteText_ShowAllShowsEveryWarning(t *testing.T) {
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
+			{RuleID: "W1", Severity: diag.SeverityWarn},
+			{RuleID: "W2", Severity: diag.SeverityWarn},
+			{RuleID: "W3", Severity: diag.SeverityWarn},
+			{RuleID: "W4", Severity: diag.SeverityWarn},
+		}},
+		Summary: appvalidation.Summary{SnapshotsLoaded: 1},
+	}
+	var buf bytes.Buffer
+	r := testReporter(&buf, false, false)
+	r.ShowAll = true
+	if err := r.Write(result, hintContext{}); err != nil {
+		t.Fatalf("Write failed: %v", err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "more warning") {
+		t.Fatalf("expected no truncation with --all, got: %s", out)
+	}
+	if !strings.Contains(out, "W4") {
+		t.Fatalf("expected W4 to be printed with --all, got: %s", out)
+	}
+}
+
+func TestWriteText_ErrorsNeverCapped(t *testing.T) {
+	result := &appvalidation.Report{
+		Diagnostics: &diag.Assessment{Findings: []diag.Finding{
+			{RuleID: "E1", Severity: diag.SeverityError},
+			{RuleID: "E2", Severity: diag.SeverityError},
+			{RuleID: "E3", Severity: diag.SeverityError},
+			{RuleID: "E4", Severity: diag.SeverityError},
+		}},
+		Summary: appvalidation.Summary{ControlsLoaded: 1},
+	}
+	var buf bytes.Buffer
+	r := testReporter(&buf, false, false)
+	if err := r.Write(result, hintContext{}); err != nil {
+		t.Fatalf("Write failed: %v", err)
+	}
+	out := buf.String()
+	if strings.Contains(out, "more warning") {
+		t.Fatalf("errors should never be truncated, got: %s", out)
+	}
+	for _, id := range []string{"E1", "E2", "E3", "E4"} {
+		if !strings.Contains(out, id) {
+			t.Fatalf("expected %s in output, got: %s", id, out)
+		}
+	}
+}
+
 func TestWriteValidationText_WithFixHints(t *testing.T) {
 	result := &appvalidation.Report{
 		Diagnostics: &diag.Assessment{Findings: []diag.Finding{

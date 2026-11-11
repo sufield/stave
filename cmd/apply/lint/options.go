@@ -51,6 +51,9 @@ type options struct {
 	// Staleness
 	AssertRecent string
 
+	// Display
+	ShowAll bool // --all: show every warning instead of capping at 2
+
 	// useBuiltinControls is set when --controls is absent and no controls
 	// directory exists: validate against the embedded catalog.
 	useBuiltinControls bool
@@ -83,6 +86,7 @@ func (o *options) BindFlags(cmd *cobra.Command) {
 	f.StringVar(&o.Template, "template", "", "Custom output template")
 	f.StringSliceVar(&o.Check, "check", nil, "Additional checks: collector-contract")
 	f.StringVar(&o.AssertRecent, "assert-recent", "", "Fail if no snapshot newer than this duration (e.g. 48h)")
+	f.BoolVar(&o.ShowAll, "all", false, "Show all warnings (default: first 2)")
 }
 
 // Prepare resolves config defaults, normalizes paths, and validates flag

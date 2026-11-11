@@ -26,7 +26,7 @@ func ValidateContent(
 	kind, schemaVersion string,
 	strict bool,
 	format, template string,
-	fixHints bool,
+	fixHints, showAll bool,
 	controlsDir, observationsDir string,
 	label LabelFunc,
 	tmpl TemplateFunc,
@@ -59,6 +59,7 @@ func ValidateContent(
 		Format:   renderFormatStr(format, template),
 		Strict:   strict,
 		FixHints: fixHints,
+		ShowAll:  showAll,
 		Label:    label,
 		Template: tmpl,
 	}

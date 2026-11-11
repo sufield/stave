@@ -12,6 +12,10 @@ import (
 
 var errNilResult = errors.New("validation result is nil")
 
+// maxWarningsShown is the default cap on warnings printed in text mode.
+// Errors are always shown in full; only warnings are truncated.
+const maxWarningsShown = 2
+
 // Reporter handles the formatting and writing of validation results. The
 // cli/ui-bound formatting (severity labels, template execution) is injected
 // as Label/Template callbacks so this engine stays off the internal/cli/ui
@@ -21,6 +25,7 @@ type Reporter struct {
 	Format   string // "text", "json", or path to template
 	Strict   bool
 	FixHints bool
+	ShowAll  bool // when true, print every warning instead of capping at maxWarningsShown
 	Label    LabelFunc
 	Template TemplateFunc
 }
@@ -67,9 +72,25 @@ func (r *Reporter) writeText(res *appvalidation.Report, report Report) error {
 		return err
 	}
 
+	// Always print all errors; cap warnings at maxWarningsShown unless --all.
+	warningsPrinted := 0
+	totalWarnings := len(report.Warnings)
 	for _, issue := range diagnostics.Findings {
+		if issue.IsWarning() {
+			warningsPrinted++
+			if !r.ShowAll && warningsPrinted > maxWarningsShown {
+				continue
+			}
+		}
 		if err := printIssue(r.Writer, issue, r.Label); err != nil {
 			return err
+		}
+	}
+	suppressed := totalWarnings - min(totalWarnings, maxWarningsShown)
+	if !r.ShowAll && suppressed > 0 {
+		if _, err := fmt.Fprintf(r.Writer, "... %d more warning%s (use --all to see all)\n\n",
+			suppressed, plural(suppressed)); err != nil {
+			return fmt.Errorf("write output: %w", err)
 		}
 	}
 

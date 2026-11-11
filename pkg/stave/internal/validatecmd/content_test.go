@@ -38,7 +38,7 @@ unsafe_predicate:
       value: true
 `)
 
-	res, err := ValidateContent(data, "control", "v1", true, "text", "", false, "", "", testLabel, testExec)
+	res, err := ValidateContent(data, "control", "v1", true, "text", "", false, false, "", "", testLabel, testExec)
 	if err != nil {
 		t.Fatalf("expected contract validate success, got %v", err)
 	}
@@ -66,7 +66,7 @@ unsafe_predicate:
 unexpected: true
 `)
 
-	res, err := ValidateContent(data, "control", "v1", true, "text", "", false, "", "", testLabel, testExec)
+	res, err := ValidateContent(data, "control", "v1", true, "text", "", false, false, "", "", testLabel, testExec)
 	if err != nil {
 		t.Fatalf("unexpected service error: %v", err)
 	}
@@ -85,7 +85,7 @@ control: public_access
 expect: disabled
 `)
 
-	res, err := ValidateContent(data, "control", "v1", true, "text", "", false, "", "", testLabel, testExec)
+	res, err := ValidateContent(data, "control", "v1", true, "text", "", false, false, "", "", testLabel, testExec)
 	if err != nil {
 		t.Fatalf("unexpected service error: %v", err)
 	}

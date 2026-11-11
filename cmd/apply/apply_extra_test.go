@@ -251,16 +251,16 @@ func TestOptions_IsUnscopedAuto(t *testing.T) {
 	}
 
 	autoWithPacks := &Options{
-		Auto:          true,
-		SharedOptions: SharedOptions{Packs: []string{"aws-baseline"}},
+		Auto:  true,
+		Packs: []string{"aws-baseline"},
 	}
 	if autoWithPacks.isUnscopedAuto() {
 		t.Error("auto mode with packs should not be unscoped auto")
 	}
 
 	autoWithServices := &Options{
-		Auto:          true,
-		SharedOptions: SharedOptions{Services: []string{"iam"}},
+		Auto:     true,
+		Services: []string{"iam"},
 	}
 	if autoWithServices.isUnscopedAuto() {
 		t.Error("auto mode with services should not be unscoped auto")

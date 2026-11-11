@@ -95,6 +95,7 @@ func NewCmd(rt *ui.Runtime) *cobra.Command {
 				Format:   string(resolvedFormat),
 				Quiet:    gf.Quiet,
 				Sanitize: gf.Sanitize,
+				ShowAll:  opts.ShowAll,
 				Rt:       rt,
 				Opts:     opts,
 			})

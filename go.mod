@@ -1,6 +1,6 @@
 module github.com/sufield/stave
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/aclements/go-z3 v0.0.0-20220809013456-4675d5f90ca5

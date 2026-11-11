@@ -49,12 +49,12 @@ func ValidateContent(
 	kind, schemaVersion string,
 	strict bool,
 	format, template string,
-	fixHints bool,
+	fixHints, showAll bool,
 	controlsDir, observationsDir string,
 	label LabelFunc,
 	tmpl TemplateFunc,
 ) (ValidateProjectResult, error) {
-	return validatecmd.ValidateContent(data, kind, schemaVersion, strict, format, template, fixHints, controlsDir, observationsDir, label, tmpl) //nolint:wrapcheck // engine already wraps; preserve exit-code sentinels.
+	return validatecmd.ValidateContent(data, kind, schemaVersion, strict, format, template, fixHints, showAll, controlsDir, observationsDir, label, tmpl) //nolint:wrapcheck // engine already wraps; preserve exit-code sentinels.
 }
 
 // packConfigDiagnostics builds the pack-config findings: a load-failure

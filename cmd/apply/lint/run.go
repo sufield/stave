@@ -23,6 +23,7 @@ type Input struct {
 	Format   string
 	Quiet    bool
 	Sanitize bool
+	ShowAll  bool
 	Rt       *ui.Runtime
 	Opts     *options
 }
@@ -52,6 +53,7 @@ func runValidateProject(ctx context.Context, in Input) error {
 		Sanitize:        in.Sanitize,
 		Strict:          in.Opts.Strict,
 		FixHints:        in.Opts.FixHints,
+		ShowAll:         in.ShowAll,
 		Format:          in.Format,
 		Template:        in.Opts.Template,
 		AssertRecent:    in.Opts.AssertRecent,
@@ -100,7 +102,7 @@ func runValidateSingleFile(in Input) error {
 
 	res, err := stave.ValidateContent(
 		data, kind, in.Opts.SchemaVersion, in.Opts.Strict,
-		in.Format, in.Opts.Template, in.Opts.FixHints,
+		in.Format, in.Opts.Template, in.Opts.FixHints, in.ShowAll,
 		in.Opts.Controls, in.Opts.Observations,
 		ui.SeverityLabel, ui.ExecuteTemplate,
 	)
