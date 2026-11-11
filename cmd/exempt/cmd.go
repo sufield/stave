@@ -407,7 +407,11 @@ Exit Codes:
 					return werr
 				}
 			}
-			for _, warn := range result.Warnings {
+			for i, warn := range result.Warnings {
+				if i >= 2 {
+					fmt.Fprintf(w, "  ... %d more warnings (use --verbose to see all)\n", len(result.Warnings)-2)
+					break
+				}
 				if _, werr := fmt.Fprintf(w, "  WARNING: %s\n", warn); werr != nil {
 					return werr
 				}

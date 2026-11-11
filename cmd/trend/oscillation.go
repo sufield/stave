@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/internal/platform/metadata"
 	"github.com/sufield/stave/pkg/stave"
@@ -48,9 +49,7 @@ Exit Codes:
 				MinOscillations: minOscillations,
 				Format:          format,
 			})
-			for _, warn := range warnings {
-				fmt.Fprintln(cmd.ErrOrStderr(), warn)
-			}
+			cmdutil.WriteWarnings(cmd.ErrOrStderr(), warnings)
 			if err != nil {
 				if errors.Is(err, stave.ErrInvalidInput) {
 					return &ui.UserError{Err: err}

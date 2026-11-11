@@ -7,6 +7,20 @@ import (
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
+const maxWarnings = 2
+
+// WriteWarnings prints up to maxWarnings warning strings to w.
+// Remaining warnings are summarized with a count.
+func WriteWarnings(w io.Writer, warnings []string) {
+	for i, warn := range warnings {
+		if i >= maxWarnings {
+			fmt.Fprintf(w, "... %d more warnings (use --verbose to see all)\n", len(warnings)-maxWarnings)
+			return
+		}
+		fmt.Fprintln(w, warn)
+	}
+}
+
 // OutputOptions captures the canonical "--output PATH" flag pattern.
 // Existing commands use a mix of field names (Out, OutputFile, OutPath,
 // OutFile, OutputPath); new commands should embed or use this struct so

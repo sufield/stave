@@ -61,6 +61,8 @@ func writeNoDiagnosisIssues(w io.Writer, labelFn LabelFunc) error {
 	return nil
 }
 
+const maxDiagnosesShown = 2
+
 func writeDiagnosesList(w io.Writer, diagnoses []diagnosis.Insight, labelFn LabelFunc) error {
 	warn := labelFn("warning", fmt.Sprintf("Diagnostics (%d):", len(diagnoses)))
 	if _, err := fmt.Fprintf(w, "\n%s\n", warn); err != nil {
@@ -68,6 +70,12 @@ func writeDiagnosesList(w io.Writer, diagnoses []diagnosis.Insight, labelFn Labe
 	}
 
 	for i, diag := range diagnoses {
+		if i >= maxDiagnosesShown {
+			if _, err := fmt.Fprintf(w, "\n... %d more diagnostics (use --verbose to see all)\n", len(diagnoses)-maxDiagnosesShown); err != nil {
+				return err
+			}
+			break
+		}
 		if err := writeDiagnosisItem(w, i, diag); err != nil {
 			return err
 		}

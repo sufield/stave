@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/cmd/cmdutil/cliflags"
 	"github.com/sufield/stave/internal/cli/ui"
 	"github.com/sufield/stave/pkg/stave"
@@ -63,9 +64,7 @@ Examples:
 			if err != nil {
 				return err //nolint:wrapcheck // facade already wrapped; preserve exit 4.
 			}
-			for _, warn := range warnings {
-				fmt.Fprintln(cmd.ErrOrStderr(), warn)
-			}
+			cmdutil.WriteWarnings(cmd.ErrOrStderr(), warnings)
 			if _, werr := cmd.OutOrStdout().Write(out); werr != nil {
 				return fmt.Errorf("write resource output: %w", werr)
 			}

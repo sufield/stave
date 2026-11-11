@@ -1473,7 +1473,8 @@ SYNC_EXCLUDES = \
 	--exclude='internal/app/oscal/export_test.go' \
 	--exclude='scripts/gen-contract.py' \
 	--exclude='scripts/format_commit.sh' \
-	--exclude='visuals/'
+	--exclude='visuals/' \
+	--exclude='docs/reasoning-engines/'
 
 ## sync: Sync to public repo (calls sync-skills automatically so the
 ##       monorepo's external-but-published assets ride along)

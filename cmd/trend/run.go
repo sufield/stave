@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/sufield/stave/cmd/cmdutil"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -24,9 +25,7 @@ func runTrend(ctx context.Context, w, stderr io.Writer, opts *trendOptions) erro
 		RegressionOnly: opts.RegressionOnly,
 		Rollup:         opts.Rollup,
 	})
-	for _, warn := range warnings {
-		fmt.Fprintln(stderr, warn)
-	}
+	cmdutil.WriteWarnings(stderr, warnings)
 	if err != nil {
 		return err //nolint:wrapcheck // facade already wrapped; preserve exit 4.
 	}
