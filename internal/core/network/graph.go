@@ -72,6 +72,16 @@ type VPCPeering struct {
 	AccepterVPC  string
 }
 
+// Connects reports whether this peering connection connects the two specified
+// VPCs in either direction. Returns false if either VPC ID is empty.
+func (p VPCPeering) Connects(vpc1, vpc2 string) bool {
+	if vpc1 == "" || vpc2 == "" {
+		return false
+	}
+	return (p.RequesterVPC == vpc1 && p.AccepterVPC == vpc2) ||
+		(p.RequesterVPC == vpc2 && p.AccepterVPC == vpc1)
+}
+
 // Subnet is a VPC subnet with route table association.
 type Subnet struct {
 	ID           string
@@ -82,6 +92,12 @@ type Subnet struct {
 
 // IsPrivate returns true if the subnet is tagged stave:subnet-type=private.
 func (s *Subnet) IsPrivate() bool { return s.Tags["stave:subnet-type"] == "private" }
+
+// HasRouteTable reports whether the subnet is associated with a route table.
+// Safe on nil receiver.
+func (s *Subnet) HasRouteTable() bool {
+	return s != nil && s.RouteTableID != ""
+}
 
 // Route is a single route in a route table.
 type Route struct {

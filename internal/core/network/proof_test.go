@@ -1629,5 +1629,147 @@ func TestGraph_RouteBypassesFirewall(t *testing.T) {
 	}
 }
 
+func TestVPCPeering_Connects(t *testing.T) {
+	peering := VPCPeering{
+		PeeringID:    "pcx-12345",
+		RequesterVPC: "vpc-requester",
+		AccepterVPC:  "vpc-accepter",
+	}
+
+	tests := []struct {
+		name    string
+		peering VPCPeering
+		vpc1    string
+		vpc2    string
+		want    bool
+	}{
+		{
+			name:    "forward order matching requester and accepter",
+			peering: peering,
+			vpc1:    "vpc-requester",
+			vpc2:    "vpc-accepter",
+			want:    true,
+		},
+		{
+			name:    "reverse order matching accepter and requester",
+			peering: peering,
+			vpc1:    "vpc-accepter",
+			vpc2:    "vpc-requester",
+			want:    true,
+		},
+		{
+			name:    "requester matches but other VPC differs",
+			peering: peering,
+			vpc1:    "vpc-requester",
+			vpc2:    "vpc-other",
+			want:    false,
+		},
+		{
+			name:    "accepter matches but other VPC differs",
+			peering: peering,
+			vpc1:    "vpc-other",
+			vpc2:    "vpc-accepter",
+			want:    false,
+		},
+		{
+			name:    "neither VPC matches",
+			peering: peering,
+			vpc1:    "vpc-foo",
+			vpc2:    "vpc-bar",
+			want:    false,
+		},
+		{
+			name:    "same VPC for both arguments",
+			peering: peering,
+			vpc1:    "vpc-requester",
+			vpc2:    "vpc-requester",
+			want:    false,
+		},
+		{
+			name:    "empty first VPC",
+			peering: peering,
+			vpc1:    "",
+			vpc2:    "vpc-accepter",
+			want:    false,
+		},
+		{
+			name:    "empty second VPC",
+			peering: peering,
+			vpc1:    "vpc-requester",
+			vpc2:    "",
+			want:    false,
+		},
+		{
+			name:    "both VPCs empty",
+			peering: peering,
+			vpc1:    "",
+			vpc2:    "",
+			want:    false,
+		},
+		{
+			name:    "empty peering with empty args",
+			peering: VPCPeering{},
+			vpc1:    "",
+			vpc2:    "",
+			want:    false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.peering.Connects(tc.vpc1, tc.vpc2); got != tc.want {
+				t.Errorf("VPCPeering%+v.Connects(%q, %q) = %v, want %v", tc.peering, tc.vpc1, tc.vpc2, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSubnet_HasRouteTable(t *testing.T) {
+	tests := []struct {
+		name   string
+		subnet *Subnet
+		want   bool
+	}{
+		{
+			name: "subnet with route table association",
+			subnet: &Subnet{
+				ID:           "subnet-01",
+				VPCID:        "vpc-01",
+				RouteTableID: "rt-01",
+			},
+			want: true,
+		},
+		{
+			name: "subnet without route table association",
+			subnet: &Subnet{
+				ID:           "subnet-02",
+				VPCID:        "vpc-01",
+				RouteTableID: "",
+			},
+			want: false,
+		},
+		{
+			name:   "empty subnet struct",
+			subnet: &Subnet{},
+			want:   false,
+		},
+		{
+			name:   "nil subnet pointer",
+			subnet: nil,
+			want:   false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.subnet.HasRouteTable(); got != tc.want {
+				t.Errorf("Subnet%+v.HasRouteTable() = %v, want %v", tc.subnet, got, tc.want)
+			}
+		})
+	}
+}
+
+
+
 
 

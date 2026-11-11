@@ -397,7 +397,7 @@ func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
 	}
 
 	for _, sub := range privateSubnets {
-		if sub.RouteTableID == "" {
+		if !sub.HasRouteTable() {
 			return nil, fmt.Errorf("%w: subnet %s has no route table association — cannot prove firewall routing", ErrVacuousProof, sub.ID)
 		}
 		for _, route := range g.Routes[sub.RouteTableID] {
@@ -497,7 +497,7 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 			continue
 		}
 		sub := g.Subnets[h.SubnetID]
-		if sub == nil || sub.RouteTableID == "" {
+		if !sub.HasRouteTable() {
 			continue
 		}
 		for _, route := range g.Routes[sub.RouteTableID] {

@@ -79,8 +79,7 @@ func (g *Graph) cidrCoversHost(cidr string, src, dst *Host) bool {
 
 func (g *Graph) vpcsArePeered(vpc1, vpc2 string) bool {
 	for _, p := range g.Peerings {
-		if (p.RequesterVPC == vpc1 && p.AccepterVPC == vpc2) ||
-			(p.RequesterVPC == vpc2 && p.AccepterVPC == vpc1) {
+		if p.Connects(vpc1, vpc2) {
 			return true
 		}
 	}
