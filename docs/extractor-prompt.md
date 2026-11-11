@@ -1,14 +1,18 @@
 # Extractor Overview
 
-> **Extractors convert raw AWS CLI JSON into obs.v0.1 observations.**
-> All extractor logic lives in the Lean 4 project (`iam-explainer/Stave/Extract/`).
+> **Extractors convert raw cloud API JSON into obs.v0.1 observations.**
+> Any tool or script that produces obs.v0.1 JSON is an extractor.
 > Convert first, then evaluate with `stave apply --observations`.
 
-## Canonical implementation
+## Lean 4 extractors
 
-All extractor logic lives in the `iam-explainer` Lean 4 project under
-`Stave/Extract/`. The implementation is formally verified — zero sorry,
-all proofs checked at compile time.
+The formally verified extractor suite lives in the `iam-lean` project
+under `Stave/Extract/`. Every extractor is a pure function:
+`Json → List ObsAsset`. No IO, no API calls, no side effects.
+
+```
+AWS CLI / Steampipe JSON  →  Lean 4 extractor  →  obs.v0.1 JSON  →  stave apply
+```
 
 ### Module map
 
@@ -20,27 +24,14 @@ all proofs checked at compile time.
 | `KMS.lean` | KMS key transforms | keys, rotation, key policy |
 | `EC2.lean` | EC2 transforms | volumes, instances, security groups |
 | `IAM.lean` | IAM transforms | roles, users, groups, password policy, attached policies, tags, inline policies |
+| `RDS.lean` | RDS transforms | instances, clusters, snapshots |
+| `VPC.lean` | VPC transforms | VPCs, subnets, security groups, flow logs |
 | `Misc.lean` | CloudWatch, Config, Lambda, OpenSearch | alarms, recorders, functions, domains |
 | `SupplyChain.lean` | OIDC federation trust analysis | [details](extractor-supply-chain.md) |
 | `CrossEnv.lean` | Cross-account trust BFS | [details](extractor-cross-env.md) |
 | `Escalation.lean` | Privilege escalation pattern matching | [details](extractor-escalation.md) |
 | `Exfiltration.lean` | Data exfiltration reverse reachability | [details](extractor-exfiltration.md) |
 | `Reachability.lean` | Anonymous principal BFS | [details](extractor-reachability.md) |
-
-### Architecture
-
-Every extractor is a pure function: `Json → List ObsAsset`. No IO,
-no API calls, no side effects. The input is already-collected AWS CLI
-or Steampipe JSON. The output conforms to the `obs.v0.1` schema.
-
-```
-AWS CLI / Steampipe JSON  →  Lean 4 extractor  →  obs.v0.1 JSON  →  stave apply
-```
-
-The 24 basic transforms (S3 through Misc) are 1:1 equivalents of the
-Go jq filters in `stave/internal/adapters/aws/transform/filters/`.
-The 5 analysis extractors (SupplyChain through Reachability) implement
-graph algorithms that the basic transforms cannot express.
 
 ## The obs.v0.1 contract
 

@@ -368,6 +368,15 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 	return result, nil
 }
 
+// RouteBypassesFirewall reports whether the route targets an internet gateway
+// directly without traversing a firewall endpoint. Safe on nil receiver.
+func (g *Graph) RouteBypassesFirewall(route Route) bool {
+	if g == nil {
+		return false
+	}
+	return route.IsInternetGateway() && !g.Firewalls[route.TargetID]
+}
+
 // ProveFirewallMandatory checks that all private subnets route internet
 // traffic through a Network Firewall endpoint. Returns UNSAT if all
 // egress routes through firewall, SAT if a bypass exists.
@@ -395,7 +404,7 @@ func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
 			if !route.IsDefaultRoute() {
 				continue
 			}
-			if route.TargetType == "igw" && !g.Firewalls[route.TargetID] {
+			if g.RouteBypassesFirewall(route) {
 				result.Result = "SAT"
 				result.Interpretation = "Firewall bypass exists — private subnet routes internet traffic directly to an internet gateway."
 				result.Counterexample = &Counterexample{

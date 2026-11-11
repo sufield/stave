@@ -96,6 +96,11 @@ func (r Route) IsDefaultRoute() bool {
 	return r.Destination == "0.0.0.0/0" || r.Destination == "::/0"
 }
 
+// IsInternetGateway reports whether the route target is an internet gateway ("igw").
+func (r Route) IsInternetGateway() bool {
+	return r.TargetType == "igw"
+}
+
 // TGWAttachment is a Transit Gateway VPC attachment.
 type TGWAttachment struct {
 	AttachmentID     string

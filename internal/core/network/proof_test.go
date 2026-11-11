@@ -1273,6 +1273,48 @@ func TestRoute_IsDefaultRoute(t *testing.T) {
 	}
 }
 
+func TestRoute_IsInternetGateway(t *testing.T) {
+	tests := []struct {
+		name string
+		r    Route
+		want bool
+	}{
+		{
+			name: "igw target",
+			r:    Route{TargetType: "igw"},
+			want: true,
+		},
+		{
+			name: "nat target",
+			r:    Route{TargetType: "nat"},
+			want: false,
+		},
+		{
+			name: "vpce target",
+			r:    Route{TargetType: "vpce"},
+			want: false,
+		},
+		{
+			name: "local target",
+			r:    Route{TargetType: "local"},
+			want: false,
+		},
+		{
+			name: "empty target",
+			r:    Route{TargetType: ""},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.r.IsInternetGateway(); got != tc.want {
+				t.Errorf("Route{TargetType: %q}.IsInternetGateway() = %v, want %v", tc.r.TargetType, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestSGRule_IsInternetIngress(t *testing.T) {
 	tests := []struct {
 		name string
@@ -1498,5 +1540,94 @@ func TestSGRule_HasBroadInternalCIDR(t *testing.T) {
 		})
 	}
 }
+
+func TestGraph_RouteBypassesFirewall(t *testing.T) {
+	tests := []struct {
+		name  string
+		graph *Graph
+		route Route
+		want  bool
+	}{
+		{
+			name: "igw route not in firewalls",
+			graph: &Graph{
+				Firewalls: map[string]bool{"vpce-fw-1": true},
+			},
+			route: Route{
+				Destination: "0.0.0.0/0",
+				TargetType:  "igw",
+				TargetID:    "igw-main",
+			},
+			want: true,
+		},
+		{
+			name: "igw route recognized as firewall endpoint",
+			graph: &Graph{
+				Firewalls: map[string]bool{"igw-fw": true},
+			},
+			route: Route{
+				Destination: "0.0.0.0/0",
+				TargetType:  "igw",
+				TargetID:    "igw-fw",
+			},
+			want: false,
+		},
+		{
+			name: "vpce route not in firewalls",
+			graph: &Graph{
+				Firewalls: map[string]bool{"vpce-fw-1": true},
+			},
+			route: Route{
+				Destination: "0.0.0.0/0",
+				TargetType:  "vpce",
+				TargetID:    "vpce-s3",
+			},
+			want: false,
+		},
+		{
+			name: "nat route",
+			graph: &Graph{
+				Firewalls: map[string]bool{"vpce-fw-1": true},
+			},
+			route: Route{
+				Destination: "0.0.0.0/0",
+				TargetType:  "nat",
+				TargetID:    "nat-gw-1",
+			},
+			want: false,
+		},
+		{
+			name: "local route",
+			graph: &Graph{
+				Firewalls: map[string]bool{},
+			},
+			route: Route{
+				Destination: "10.0.0.0/16",
+				TargetType:  "local",
+				TargetID:    "local",
+			},
+			want: false,
+		},
+		{
+			name:  "nil graph",
+			graph: nil,
+			route: Route{
+				Destination: "0.0.0.0/0",
+				TargetType:  "igw",
+				TargetID:    "igw-main",
+			},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.graph.RouteBypassesFirewall(tc.route); got != tc.want {
+				t.Errorf("Graph.RouteBypassesFirewall(%+v) = %v, want %v", tc.route, got, tc.want)
+			}
+		})
+	}
+}
+
 
 
