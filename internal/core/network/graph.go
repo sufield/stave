@@ -17,15 +17,38 @@ type Host struct {
 	Tags      map[string]string
 }
 
-func (h *Host) IsProduction() bool   { return h.Tags["stave:environment"] == "production" }
+// Environment returns the host's environment tag value, or "" if untagged or receiver is nil.
+func (h *Host) Environment() string {
+	if h == nil {
+		return ""
+	}
+	return h.Tags["stave:environment"]
+}
+
+func (h *Host) IsProduction() bool   { return h.Environment() == "production" }
 func (h *Host) IsBastion() bool      { return h.Tags["stave:role"] == "bastion" }
-func (h *Host) IsDevelopment() bool  { return h.Tags["stave:environment"] == "development" }
+func (h *Host) IsDevelopment() bool  { return h.Environment() == "development" }
 func (h *Host) IsDatabaseTier() bool { return h.Tags["stave:tier"] == "database" }
 func (h *Host) IsIsolated() bool     { return h.Tags["stave:network-zone"] == "isolated" }
 
 // IsCrossVPC reports whether both hosts are assigned to VPCs and reside in different VPCs.
 func (h *Host) IsCrossVPC(other *Host) bool {
 	return h != nil && other != nil && h.VPCID != "" && other.VPCID != "" && h.VPCID != other.VPCID
+}
+
+// SameVPC reports whether both hosts are assigned to the same non-empty VPC.
+// Safe on nil receiver.
+func (h *Host) SameVPC(other *Host) bool {
+	return h != nil && other != nil && h.VPCID != "" && h.VPCID == other.VPCID
+}
+
+// SameHostOrVPC reports whether both hosts represent the same host or reside
+// in the same non-empty VPC. Safe on nil receiver.
+func (h *Host) SameHostOrVPC(other *Host) bool {
+	if h == nil || other == nil {
+		return false
+	}
+	return (h.ID != "" && h.ID == other.ID) || h.SameVPC(other)
 }
 
 // SGRule is a single security group rule.

@@ -1231,6 +1231,138 @@ func TestHost_IsCrossVPC(t *testing.T) {
 	}
 }
 
+func TestHost_SameVPC(t *testing.T) {
+	var nilHost *Host
+	h1 := &Host{ID: "h1", VPCID: "vpc-1"}
+	h2 := &Host{ID: "h2", VPCID: "vpc-2"}
+	h1Same := &Host{ID: "h3", VPCID: "vpc-1"}
+	noVPC := &Host{ID: "h4", VPCID: ""}
+	noVPC2 := &Host{ID: "h5", VPCID: ""}
+
+	if nilHost.SameVPC(h1) {
+		t.Error("nil host should not be same VPC")
+	}
+	if h1.SameVPC(nilHost) {
+		t.Error("host with nil other should not be same VPC")
+	}
+	if !h1.SameVPC(h1Same) {
+		t.Error("hosts with matching VPCID should be same VPC")
+	}
+	if h1.SameVPC(h2) {
+		t.Error("hosts with different VPCID should not be same VPC")
+	}
+	if h1.SameVPC(noVPC) {
+		t.Error("host with other missing VPC should not be same VPC")
+	}
+	if noVPC.SameVPC(h1) {
+		t.Error("host missing VPC should not be same VPC")
+	}
+	if noVPC.SameVPC(noVPC2) {
+		t.Error("hosts both missing VPC should not be same VPC")
+	}
+}
+
+func TestHost_SameHostOrVPC(t *testing.T) {
+	var nilHost *Host
+	h1 := &Host{ID: "h1", VPCID: "vpc-1"}
+	h1Clone := &Host{ID: "h1", VPCID: "vpc-2"}
+	h2SameVPC := &Host{ID: "h2", VPCID: "vpc-1"}
+	h3DiffVPC := &Host{ID: "h3", VPCID: "vpc-2"}
+	noVPC1 := &Host{ID: "h4", VPCID: ""}
+	noVPC2 := &Host{ID: "h5", VPCID: ""}
+	empty1 := &Host{}
+	empty2 := &Host{}
+
+	if nilHost.SameHostOrVPC(h1) {
+		t.Error("nil host should not be same host or VPC")
+	}
+	if h1.SameHostOrVPC(nilHost) {
+		t.Error("host with nil other should not be same host or VPC")
+	}
+	if !h1.SameHostOrVPC(h1) {
+		t.Error("identical host should be same host or VPC")
+	}
+	if !h1.SameHostOrVPC(h1Clone) {
+		t.Error("hosts with matching ID should be same host or VPC")
+	}
+	if !h1.SameHostOrVPC(h2SameVPC) {
+		t.Error("hosts in same VPC should be same host or VPC")
+	}
+	if h1.SameHostOrVPC(h3DiffVPC) {
+		t.Error("different hosts in different VPCs should not be same host or VPC")
+	}
+	if h1.SameHostOrVPC(noVPC1) {
+		t.Error("different host with no VPC should not be same host or VPC")
+	}
+	if noVPC1.SameHostOrVPC(noVPC2) {
+		t.Error("different hosts both missing VPC should not be same host or VPC")
+	}
+	if empty1.SameHostOrVPC(empty2) {
+		t.Error("two empty hosts without ID or VPC should not be same host or VPC")
+	}
+}
+
+func TestHost_Environment(t *testing.T) {
+	tests := []struct {
+		name string
+		host *Host
+		want string
+	}{
+		{
+			name: "production environment",
+			host: &Host{
+				ID:   "i-prod",
+				Tags: map[string]string{"stave:environment": "production"},
+			},
+			want: "production",
+		},
+		{
+			name: "development environment",
+			host: &Host{
+				ID:   "i-dev",
+				Tags: map[string]string{"stave:environment": "development"},
+			},
+			want: "development",
+		},
+		{
+			name: "untagged environment with other tags",
+			host: &Host{
+				ID:   "i-bastion",
+				Tags: map[string]string{"stave:role": "bastion"},
+			},
+			want: "",
+		},
+		{
+			name: "empty tags map",
+			host: &Host{
+				ID:   "i-empty",
+				Tags: map[string]string{},
+			},
+			want: "",
+		},
+		{
+			name: "nil tags map",
+			host: &Host{
+				ID: "i-nil-tags",
+			},
+			want: "",
+		},
+		{
+			name: "nil host",
+			host: nil,
+			want: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.host.Environment(); got != tc.want {
+				t.Errorf("Host%+v.Environment() = %q, want %q", tc.host, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestRoute_IsDefaultRoute(t *testing.T) {
 	tests := []struct {
 		name string

@@ -71,7 +71,7 @@ func (g *Graph) CanReach(srcID, dstID string, port int) (bool, string) {
 }
 
 func (g *Graph) cidrCoversHost(cidr string, src, dst *Host) bool {
-	if src.VPCID != dst.VPCID {
+	if !src.SameVPC(dst) {
 		return false
 	}
 	return broadInternalCIDRs[cidr]

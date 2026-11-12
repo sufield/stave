@@ -198,7 +198,7 @@ func (g *Graph) ProveProdDevIsolation() (*ProofResult, error) {
 					PathType:    pathType,
 					RuleSG:      ruleSG,
 					RuleSource:  ruleSource,
-					Explanation: "Host " + src.ID + " (" + src.Tags["stave:environment"] + ") can reach " + dst.ID + " (" + dst.Tags["stave:environment"] + ") via " + pathType + ".",
+					Explanation: "Host " + src.ID + " (" + src.Environment() + ") can reach " + dst.ID + " (" + dst.Environment() + ") via " + pathType + ".",
 					Remediation: "Remove cross-environment ingress rule on " + ruleSG + ". Ensure production and development VPCs have no peering or broad CIDR rules.",
 				}
 				result.SolveTimeMs = time.Since(start).Milliseconds()
@@ -232,7 +232,7 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 	for _, dst := range dbHosts {
 		// Check cross-VPC reachability from any non-same-VPC host.
 		for _, src := range g.allHosts() {
-			if src.ID == dst.ID || src.VPCID == dst.VPCID {
+			if src.SameHostOrVPC(dst) {
 				continue
 			}
 			if ok, pathType, port := g.canReachAnyPort(src.ID, dst.ID); ok {

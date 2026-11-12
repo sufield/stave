@@ -9,6 +9,8 @@ Every Stave finding names an attack path that can be erased from your configurat
 
 The workflow is subtractive: find the paths, delete them, verify they're gone, track progress. The goal is fewer findings over time with fewer paths.
 
+https://youtu.be/opychROnD1k
+
 ## The workflow
 
 ### 1. Detect
@@ -49,7 +51,7 @@ Trend computes the trajectory across runs:
 - **New:** findings appearing for the first time — new paths introduced.
 - **Oscillating:** findings that disappear and reappear — paths re-opened after erasure.
 
-Oscillation is the pattern to watch. A finding that disappears during a review cycle and reappears after means someone re-introduced the path. Trend catches this automatically  point-in-time reviews miss it because each review only sees the current state.
+Oscillation is the pattern to watch. A finding that disappears during a review cycle and reappears after means someone re-introduced the path. Trend catches this automatically — point-in-time reviews miss it because each review only sees the current state.
 
 ## Path Erasure Rate
 
@@ -67,7 +69,7 @@ For compound chains, a single erasure (one finding resolved) can eliminate an en
 
 Every path you erase from configuration is one less thing your monitoring tools have to watch. The GuardDuty alert that fired on the overprivileged role stops firing when the role is scoped. The CloudTrail anomaly from the unused access key stops appearing when the key is deleted.
 
-Erasure doesn't replace monitoring. It reduces monitoring's workload to the paths that  can't be prevented. The ones where detection is the right answer because architectural elimination isn't possible.
+Erasure doesn't replace monitoring. It reduces monitoring's workload to the paths that can't be prevented. The ones where detection is the right answer because architectural elimination isn't possible.
 
 ## Quick start
 
