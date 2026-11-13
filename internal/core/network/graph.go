@@ -126,6 +126,20 @@ func (r SGRule) IsInternetIngressOnPort(port int) bool {
 	return r.Port == port && r.IsInternetIngress()
 }
 
+// IsIngressOnPort reports whether the security group rule permits inbound
+// traffic on the specified port.
+func (r SGRule) IsIngressOnPort(port int) bool {
+	return r.Port == port && r.IsIngress()
+}
+
+// RuleSource returns the formatted source identifier (e.g. "sg:sg-12345" or "cidr:10.0.0.0/8").
+func (r SGRule) RuleSource() string {
+	if r.SourceType != "" {
+		return r.SourceType + ":" + r.SourceValue
+	}
+	return r.SourceValue
+}
+
 // IsInternal reports whether the security group rule permits internal access
 // from src to dst (either logically via security group reference or via
 // perimeter-level broad CIDR within the same VPC), returning true and the
@@ -191,6 +205,17 @@ func (r Route) IsDefaultRoute() bool {
 // IsInternetGateway reports whether the route target is an internet gateway ("igw").
 func (r Route) IsInternetGateway() bool {
 	return r.TargetType == "igw"
+}
+
+// Target returns the formatted route target string (e.g. "nat:nat-01", "igw:igw-01").
+func (r Route) Target() string {
+	if r.TargetType == "" && r.TargetID == "" {
+		return ""
+	}
+	if r.TargetID == "" {
+		return r.TargetType
+	}
+	return r.TargetType + ":" + r.TargetID
 }
 
 // TGWAttachment is a Transit Gateway VPC attachment.
@@ -394,6 +419,24 @@ func (g *Graph) PrivateSubnets() []*Subnet {
 		}
 	}
 	return out
+}
+
+// SubnetForHost returns the subnet associated with the given host.
+// Safe on nil receiver or nil host.
+func (g *Graph) SubnetForHost(h *Host) *Subnet {
+	if g == nil || h == nil || h.SubnetID == "" {
+		return nil
+	}
+	return g.Subnets[h.SubnetID]
+}
+
+// RoutesForSubnet returns all routes associated with the subnet's route table.
+// Safe on nil receiver or nil subnet.
+func (g *Graph) RoutesForSubnet(sub *Subnet) []Route {
+	if g == nil || !sub.HasRouteTable() {
+		return nil
+	}
+	return g.Routes[sub.RouteTableID]
 }
 
 func (g *Graph) extractSubnet(a *asset.Asset) {

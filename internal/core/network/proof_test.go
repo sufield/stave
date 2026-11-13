@@ -680,7 +680,7 @@ func TestCanReach_TGW(t *testing.T) {
 			{AttachmentID: "tgw-att-2", TransitGatewayID: "tgw-01", VPCID: "vpc-b"},
 		},
 	}
-	ok, pathType := g.CanReach("i-src", "i-dst", 22)
+	ok, pathType := g.CanReach(g.Hosts["i-src"], g.Hosts["i-dst"], 22)
 	if !ok {
 		t.Fatal("expected reachability via TGW")
 	}
@@ -1571,6 +1571,134 @@ func TestRoute_IsInternetGateway(t *testing.T) {
 	}
 }
 
+func TestRoute_ClassifyTarget(t *testing.T) {
+	tests := []struct {
+		name       string
+		route      Route
+		wantClass  routeTargetClass
+		wantReason string
+	}{
+		{
+			name:       "nat sink target",
+			route:      Route{TargetType: "nat"},
+			wantClass:  routeSink,
+			wantReason: "",
+		},
+		{
+			name:       "igw sink target",
+			route:      Route{TargetType: "igw"},
+			wantClass:  routeSink,
+			wantReason: "",
+		},
+		{
+			name:       "eigw sink target",
+			route:      Route{TargetType: "eigw"},
+			wantClass:  routeSink,
+			wantReason: "",
+		},
+		{
+			name:       "local non-sink target",
+			route:      Route{TargetType: "local"},
+			wantClass:  routeNonSink,
+			wantReason: "",
+		},
+		{
+			name:       "tgw gated target",
+			route:      Route{TargetType: "tgw"},
+			wantClass:  routeGated,
+			wantReason: "TGW route table not resolved",
+		},
+		{
+			name:       "vgw gated target",
+			route:      Route{TargetType: "vgw"},
+			wantClass:  routeGated,
+			wantReason: "on-premises egress not observable",
+		},
+		{
+			name:       "vpce gated target",
+			route:      Route{TargetType: "vpce"},
+			wantClass:  routeGated,
+			wantReason: "firewall policy not evaluated",
+		},
+		{
+			name:       "instance gated target",
+			route:      Route{TargetType: "instance"},
+			wantClass:  routeGated,
+			wantReason: "NAT instance or appliance forwarding not observable",
+		},
+		{
+			name:       "eni gated target",
+			route:      Route{TargetType: "eni"},
+			wantClass:  routeGated,
+			wantReason: "NAT instance or appliance forwarding not observable",
+		},
+		{
+			name:       "unrecognized target",
+			route:      Route{TargetType: "peer"},
+			wantClass:  routeGated,
+			wantReason: "unrecognized route target",
+		},
+		{
+			name:       "empty target",
+			route:      Route{TargetType: ""},
+			wantClass:  routeGated,
+			wantReason: "unrecognized route target",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotClass, gotReason := tc.route.ClassifyTarget()
+			if gotClass != tc.wantClass || gotReason != tc.wantReason {
+				t.Errorf("Route{%+v}.ClassifyTarget() = (%v, %q), want (%v, %q)",
+					tc.route, gotClass, gotReason, tc.wantClass, tc.wantReason)
+			}
+		})
+	}
+}
+
+func TestRoute_Target(t *testing.T) {
+	tests := []struct {
+		name  string
+		route Route
+		want  string
+	}{
+		{
+			name:  "both type and id present",
+			route: Route{TargetType: "nat", TargetID: "nat-01"},
+			want:  "nat:nat-01",
+		},
+		{
+			name:  "igw target",
+			route: Route{TargetType: "igw", TargetID: "igw-prod"},
+			want:  "igw:igw-prod",
+		},
+		{
+			name:  "local target with matching id",
+			route: Route{TargetType: "local", TargetID: "local"},
+			want:  "local:local",
+		},
+		{
+			name:  "target type only",
+			route: Route{TargetType: "nat", TargetID: ""},
+			want:  "nat",
+		},
+		{
+			name:  "empty target",
+			route: Route{TargetType: "", TargetID: ""},
+			want:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.route.Target(); got != tc.want {
+				t.Errorf("Route{%+v}.Target() = %q, want %q", tc.route, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestSGRule_IsInternetIngress(t *testing.T) {
 	tests := []struct {
 		name string
@@ -1661,6 +1789,80 @@ func TestSGRule_IsInternetIngressOnPort(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := tc.rule.IsInternetIngressOnPort(tc.port); got != tc.want {
 				t.Errorf("SGRule{%+v}.IsInternetIngressOnPort(%d) = %v, want %v", tc.rule, tc.port, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSGRule_IsIngressOnPort(t *testing.T) {
+	tests := []struct {
+		name string
+		rule SGRule
+		port int
+		want bool
+	}{
+		{
+			name: "matching port ingress",
+			rule: SGRule{Direction: "ingress", Port: 80},
+			port: 80,
+			want: true,
+		},
+		{
+			name: "mismatched port ingress",
+			rule: SGRule{Direction: "ingress", Port: 80},
+			port: 443,
+			want: false,
+		},
+		{
+			name: "matching port egress",
+			rule: SGRule{Direction: "egress", Port: 80},
+			port: 80,
+			want: false,
+		},
+		{
+			name: "mismatched port egress",
+			rule: SGRule{Direction: "egress", Port: 80},
+			port: 443,
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.rule.IsIngressOnPort(tc.port); got != tc.want {
+				t.Errorf("SGRule{%+v}.IsIngressOnPort(%d) = %v, want %v", tc.rule, tc.port, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSGRule_RuleSource(t *testing.T) {
+	tests := []struct {
+		name string
+		rule SGRule
+		want string
+	}{
+		{
+			name: "security group source",
+			rule: SGRule{SourceType: "sg", SourceValue: "sg-12345"},
+			want: "sg:sg-12345",
+		},
+		{
+			name: "cidr source",
+			rule: SGRule{SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			want: "cidr:10.0.0.0/8",
+		},
+		{
+			name: "empty source type fallback",
+			rule: SGRule{SourceType: "", SourceValue: "10.0.0.0/8"},
+			want: "10.0.0.0/8",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.rule.RuleSource(); got != tc.want {
+				t.Errorf("SGRule{%+v}.RuleSource() = %q, want %q", tc.rule, got, tc.want)
 			}
 		})
 	}
@@ -2295,6 +2497,345 @@ func TestGraph_CanRouteCrossVPC(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := tc.g.CanRouteCrossVPC(tc.src, tc.dst); got != tc.want {
 				t.Errorf("Graph.CanRouteCrossVPC(%v, %v) = %v, want %v", tc.src, tc.dst, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestGraph_CanReach(t *testing.T) {
+	hostA := &Host{ID: "i-a", VPCID: "vpc-a", SGIDs: []string{"sg-a"}}
+	hostB := &Host{ID: "i-b", VPCID: "vpc-a", SGIDs: []string{"sg-b"}}
+	hostC := &Host{ID: "i-c", VPCID: "vpc-c", SGIDs: []string{"sg-c"}}
+
+	g := &Graph{
+		Hosts: map[string]*Host{
+			"i-a": hostA,
+			"i-b": hostB,
+			"i-c": hostC,
+		},
+		SGRules: map[string][]SGRule{
+			"sg-b": {
+				{Direction: "ingress", Protocol: "tcp", Port: 80, SourceType: "sg", SourceValue: "sg-a"},
+				{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			},
+			"sg-c": {
+				{Direction: "ingress", Protocol: "tcp", Port: 80, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			},
+		},
+		Peerings: []VPCPeering{
+			{RequesterVPC: "vpc-a", AccepterVPC: "vpc-c"},
+		},
+	}
+
+	tests := []struct {
+		name         string
+		g            *Graph
+		src          *Host
+		dst          *Host
+		port         int
+		wantOk       bool
+		wantPathType string
+	}{
+		{
+			name:         "same VPC via security group reference",
+			g:            g,
+			src:          hostA,
+			dst:          hostB,
+			port:         80,
+			wantOk:       true,
+			wantPathType: "sg-ref",
+		},
+		{
+			name:         "same VPC via broad CIDR",
+			g:            g,
+			src:          hostA,
+			dst:          hostB,
+			port:         443,
+			wantOk:       true,
+			wantPathType: "cidr",
+		},
+		{
+			name:         "cross-VPC peered via broad CIDR",
+			g:            g,
+			src:          hostA,
+			dst:          hostC,
+			port:         80,
+			wantOk:       true,
+			wantPathType: "cross-vpc",
+		},
+		{
+			name:         "unmatched port",
+			g:            g,
+			src:          hostA,
+			dst:          hostB,
+			port:         22,
+			wantOk:       false,
+			wantPathType: "",
+		},
+		{
+			name:         "nil graph",
+			g:            nil,
+			src:          hostA,
+			dst:          hostB,
+			port:         80,
+			wantOk:       false,
+			wantPathType: "",
+		},
+		{
+			name:         "nil src",
+			g:            g,
+			src:          nil,
+			dst:          hostB,
+			port:         80,
+			wantOk:       false,
+			wantPathType: "",
+		},
+		{
+			name:         "nil dst",
+			g:            g,
+			src:          hostA,
+			dst:          nil,
+			port:         80,
+			wantOk:       false,
+			wantPathType: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotOk, gotPathType := tc.g.CanReach(tc.src, tc.dst, tc.port)
+			if gotOk != tc.wantOk || gotPathType != tc.wantPathType {
+				t.Errorf("CanReach(%v, %v, %d) = (%v, %q), want (%v, %q)",
+					tc.src, tc.dst, tc.port, gotOk, gotPathType, tc.wantOk, tc.wantPathType)
+			}
+		})
+	}
+}
+
+func TestGraph_canReachAnyPort(t *testing.T) {
+	hostA := &Host{ID: "i-a", VPCID: "vpc-a", SGIDs: []string{"sg-a"}}
+	hostB := &Host{ID: "i-b", VPCID: "vpc-a", SGIDs: []string{"sg-b"}}
+	hostC := &Host{ID: "i-c", VPCID: "vpc-c", SGIDs: []string{"sg-c"}}
+	hostD := &Host{ID: "i-d", VPCID: "vpc-d", SGIDs: []string{"sg-d"}}
+
+	g := &Graph{
+		Hosts: map[string]*Host{
+			"i-a": hostA,
+			"i-b": hostB,
+			"i-c": hostC,
+			"i-d": hostD,
+		},
+		SGRules: map[string][]SGRule{
+			"sg-b": {
+				{Direction: "ingress", Protocol: "tcp", Port: 8080, SourceType: "sg", SourceValue: "sg-a"},
+			},
+			"sg-c": {
+				{Direction: "ingress", Protocol: "tcp", Port: 9000, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			},
+		},
+		Peerings: []VPCPeering{
+			{RequesterVPC: "vpc-a", AccepterVPC: "vpc-c"},
+		},
+	}
+
+	tests := []struct {
+		name         string
+		g            *Graph
+		src          *Host
+		dst          *Host
+		wantOk       bool
+		wantPathType string
+		wantPort     int
+	}{
+		{
+			name:         "internal reachability on any port",
+			g:            g,
+			src:          hostA,
+			dst:          hostB,
+			wantOk:       true,
+			wantPathType: "sg-ref",
+			wantPort:     8080,
+		},
+		{
+			name:         "cross-vpc reachability on any port",
+			g:            g,
+			src:          hostA,
+			dst:          hostC,
+			wantOk:       true,
+			wantPathType: "cross-vpc",
+			wantPort:     9000,
+		},
+		{
+			name:         "no reachability to isolated host",
+			g:            g,
+			src:          hostA,
+			dst:          hostD,
+			wantOk:       false,
+			wantPathType: "",
+			wantPort:     0,
+		},
+		{
+			name:         "nil graph",
+			g:            nil,
+			src:          hostA,
+			dst:          hostB,
+			wantOk:       false,
+			wantPathType: "",
+			wantPort:     0,
+		},
+		{
+			name:         "nil src",
+			g:            g,
+			src:          nil,
+			dst:          hostB,
+			wantOk:       false,
+			wantPathType: "",
+			wantPort:     0,
+		},
+		{
+			name:         "nil dst",
+			g:            g,
+			src:          hostA,
+			dst:          nil,
+			wantOk:       false,
+			wantPathType: "",
+			wantPort:     0,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotOk, gotPathType, gotPort := tc.g.canReachAnyPort(tc.src, tc.dst)
+			if gotOk != tc.wantOk || gotPathType != tc.wantPathType || gotPort != tc.wantPort {
+				t.Errorf("canReachAnyPort(%v, %v) = (%v, %q, %d), want (%v, %q, %d)",
+					tc.src, tc.dst, gotOk, gotPathType, gotPort, tc.wantOk, tc.wantPathType, tc.wantPort)
+			}
+		})
+	}
+}
+
+func TestGraph_SubnetForHost(t *testing.T) {
+	subA := &Subnet{ID: "subnet-a", VPCID: "vpc-a", RouteTableID: "rt-a"}
+	hostWithSubnet := &Host{ID: "i-a", SubnetID: "subnet-a"}
+	hostWithUnknownSubnet := &Host{ID: "i-b", SubnetID: "subnet-unknown"}
+	hostWithoutSubnet := &Host{ID: "i-c", SubnetID: ""}
+
+	g := &Graph{
+		Subnets: map[string]*Subnet{
+			"subnet-a": subA,
+		},
+	}
+
+	tests := []struct {
+		name string
+		g    *Graph
+		host *Host
+		want *Subnet
+	}{
+		{
+			name: "host with matching subnet",
+			g:    g,
+			host: hostWithSubnet,
+			want: subA,
+		},
+		{
+			name: "host with unknown subnet",
+			g:    g,
+			host: hostWithUnknownSubnet,
+			want: nil,
+		},
+		{
+			name: "host with empty subnet ID",
+			g:    g,
+			host: hostWithoutSubnet,
+			want: nil,
+		},
+		{
+			name: "nil host",
+			g:    g,
+			host: nil,
+			want: nil,
+		},
+		{
+			name: "nil graph",
+			g:    nil,
+			host: hostWithSubnet,
+			want: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.g.SubnetForHost(tc.host); got != tc.want {
+				t.Errorf("Graph.SubnetForHost(%v) = %v, want %v", tc.host, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestGraph_RoutesForSubnet(t *testing.T) {
+	routesA := []Route{
+		{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+		{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"},
+	}
+	subWithRoutes := &Subnet{ID: "subnet-a", RouteTableID: "rt-a"}
+	subWithoutRT := &Subnet{ID: "subnet-b", RouteTableID: ""}
+	subWithUnknownRT := &Subnet{ID: "subnet-c", RouteTableID: "rt-unknown"}
+
+	g := &Graph{
+		Routes: map[string][]Route{
+			"rt-a": routesA,
+		},
+	}
+
+	tests := []struct {
+		name   string
+		g      *Graph
+		subnet *Subnet
+		want   []Route
+	}{
+		{
+			name:   "subnet with associated routes",
+			g:      g,
+			subnet: subWithRoutes,
+			want:   routesA,
+		},
+		{
+			name:   "subnet without route table",
+			g:      g,
+			subnet: subWithoutRT,
+			want:   nil,
+		},
+		{
+			name:   "subnet with unknown route table",
+			g:      g,
+			subnet: subWithUnknownRT,
+			want:   nil,
+		},
+		{
+			name:   "nil subnet",
+			g:      g,
+			subnet: nil,
+			want:   nil,
+		},
+		{
+			name:   "nil graph",
+			g:      nil,
+			subnet: subWithRoutes,
+			want:   nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.g.RoutesForSubnet(tc.subnet)
+			if len(got) != len(tc.want) {
+				t.Errorf("Graph.RoutesForSubnet(%v) returned %d routes, want %d", tc.subnet, len(got), len(tc.want))
+			}
+			for i := range got {
+				if got[i] != tc.want[i] {
+					t.Errorf("Graph.RoutesForSubnet(%v)[%d] = %+v, want %+v", tc.subnet, i, got[i], tc.want[i])
+				}
 			}
 		})
 	}

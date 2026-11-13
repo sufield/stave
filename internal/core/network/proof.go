@@ -75,7 +75,7 @@ func (g *Graph) ProveBastionSSH(port int) (*ProofResult, error) {
 			if src.IsTrusted(dst) {
 				continue
 			}
-			if ok, pathType := g.CanReach(src.ID, dst.ID, port); ok {
+			if ok, pathType := g.CanReach(src, dst, port); ok {
 				result.SSHPaths++
 				ruleSG, ruleSource := g.findRule(src, dst, port)
 				result.Counterexample = &Counterexample{
@@ -179,7 +179,7 @@ func (g *Graph) ProveProdDevIsolation() (*ProofResult, error) {
 	for _, pair := range pairs {
 		for _, src := range pair[0] {
 			for _, dst := range pair[1] {
-				ok, pathType, port := g.canReachAnyPort(src.ID, dst.ID)
+				ok, pathType, port := g.canReachAnyPort(src, dst)
 				if !ok {
 					continue
 				}
@@ -230,7 +230,7 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 			if src.IsInternal(dst) {
 				continue
 			}
-			if ok, pathType, port := g.canReachAnyPort(src.ID, dst.ID); ok {
+			if ok, pathType, port := g.canReachAnyPort(src, dst); ok {
 				ruleSG, ruleSource := g.findRule(src, dst, port)
 				result.Result = "SAT"
 				result.Interpretation = "Database isolation violated — a host outside the database VPC can reach a database host."
@@ -303,7 +303,7 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 			if relay.IsTrusted(dst) {
 				continue
 			}
-			if ok, _ := g.CanReach(relay.ID, dst.ID, port); !ok {
+			if ok, _ := g.CanReach(relay, dst, port); !ok {
 				continue
 			}
 
@@ -331,7 +331,7 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 				if src.IsTrusted(relay, dst) {
 					continue
 				}
-				if ok, _ := g.CanReach(src.ID, relay.ID, port); ok {
+				if ok, _ := g.CanReach(src, relay, port); ok {
 					ruleSG, ruleSource := g.findRule(relay, dst, port)
 					result.Result = "SAT"
 					result.Interpretation = "Transitive SSH path exists — a non-bastion host can relay SSH to production via an intermediate host."
@@ -390,7 +390,7 @@ func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
 		if !sub.HasRouteTable() {
 			return nil, fmt.Errorf("%w: subnet %s has no route table association — cannot prove firewall routing", ErrVacuousProof, sub.ID)
 		}
-		for _, route := range g.Routes[sub.RouteTableID] {
+		for _, route := range g.RoutesForSubnet(sub) {
 			if !route.IsDefaultRoute() {
 				continue
 			}
@@ -427,11 +427,11 @@ const (
 	routeNonSink                         // no internet egress (local)
 )
 
-// classifyRouteTarget classifies a default-route target for the
+// ClassifyTarget classifies a default-route target for the
 // transitive-egress prover. The default arm is Gated — an unrecognized
 // target_type can only ever widen the answer, never hide a path.
-func classifyRouteTarget(targetType string) (routeTargetClass, string) {
-	switch targetType {
+func (r Route) ClassifyTarget() (routeTargetClass, string) {
+	switch r.TargetType {
 	case "nat", "igw", "eigw":
 		return routeSink, ""
 	case "local":
@@ -473,12 +473,10 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 	}
 
 	type egressCandidate struct {
-		host       *Host
-		targetID   string
-		targetType string
-		dest       string // route destination (0.0.0.0/0 or ::/0)
-		class      routeTargetClass
-		reason     string
+		host   *Host
+		route  Route
+		class  routeTargetClass
+		reason string
 	}
 
 	var sinks, gated []egressCandidate
@@ -486,25 +484,23 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 		if h.IsIsolated() {
 			continue
 		}
-		sub := g.Subnets[h.SubnetID]
+		sub := g.SubnetForHost(h)
 		if !sub.HasRouteTable() {
 			continue
 		}
-		for _, route := range g.Routes[sub.RouteTableID] {
+		for _, route := range g.RoutesForSubnet(sub) {
 			if !route.IsDefaultRoute() {
 				continue
 			}
-			cls, reason := classifyRouteTarget(route.TargetType)
+			cls, reason := route.ClassifyTarget()
 			if cls == routeNonSink {
 				continue
 			}
 			c := egressCandidate{
-				host:       h,
-				targetID:   route.TargetID,
-				targetType: route.TargetType,
-				dest:       route.Destination,
-				class:      cls,
-				reason:     reason,
+				host:   h,
+				route:  route,
+				class:  cls,
+				reason: reason,
 			}
 			if cls == routeSink {
 				sinks = append(sinks, c)
@@ -525,7 +521,7 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 
 	for _, iso := range isolated {
 		for _, s := range sinks {
-			ok, _, port := g.canReachAnyPort(iso.ID, s.host.ID)
+			ok, _, port := g.canReachAnyPort(iso, s.host)
 			if !ok {
 				continue
 			}
@@ -543,7 +539,7 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 				PathType:    "transitive-egress",
 				RuleSG:      ruleSG,
 				RuleSource:  ruleSource,
-				Explanation: "Isolated host " + iso.ID + " can reach " + s.host.ID + " on port " + portStr + ". " + s.host.ID + "'s subnet routes " + s.dest + " to " + s.targetType + ":" + s.targetID + ". Two-hop path: " + iso.ID + " → " + s.host.ID + " → internet.",
+				Explanation: "Isolated host " + iso.ID + " can reach " + s.host.ID + " on port " + portStr + ". " + s.host.ID + "'s subnet routes " + s.route.Destination + " to " + s.route.Target() + ". Two-hop path: " + iso.ID + " → " + s.host.ID + " → internet.",
 				Remediation: "Remove network access from " + iso.ID + " to " + s.host.ID + ", or remove " + s.host.ID + "'s internet egress route.",
 			}
 			result.SolveTimeMs = time.Since(start).Milliseconds()
@@ -553,7 +549,7 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 
 	for _, iso := range isolated {
 		for _, gc := range gated {
-			ok, _, port := g.canReachAnyPort(iso.ID, gc.host.ID)
+			ok, _, port := g.canReachAnyPort(iso, gc.host)
 			if !ok {
 				continue
 			}
@@ -571,8 +567,8 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 				PathType:    "gated-egress",
 				RuleSG:      ruleSG,
 				RuleSource:  ruleSource,
-				Explanation: "Isolated host " + iso.ID + " can reach " + gc.host.ID + " on port " + portStr + ". " + gc.host.ID + "'s subnet routes " + gc.dest + " to " + gc.targetType + ":" + gc.targetID + " (" + gc.reason + ").",
-				Remediation: "Provide observation for " + gc.targetType + " " + gc.targetID + " to settle the verdict, or remove network access from " + iso.ID + " to " + gc.host.ID + ".",
+				Explanation: "Isolated host " + iso.ID + " can reach " + gc.host.ID + " on port " + portStr + ". " + gc.host.ID + "'s subnet routes " + gc.route.Destination + " to " + gc.route.Target() + " (" + gc.reason + ").",
+				Remediation: "Provide observation for " + gc.route.TargetType + " " + gc.route.TargetID + " to settle the verdict, or remove network access from " + iso.ID + " to " + gc.host.ID + ".",
 			}
 			result.SolveTimeMs = time.Since(start).Milliseconds()
 			return result, nil

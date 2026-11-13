@@ -21,19 +21,15 @@ var broadInternalCIDRs = map[string]bool{
 }
 
 // CanReach reports whether src can reach dst on the given port via SG rules.
-func (g *Graph) CanReach(srcID, dstID string, port int) (bool, string) {
-	src, ok := g.Hosts[srcID]
-	if !ok {
-		return false, ""
-	}
-	dst, ok := g.Hosts[dstID]
-	if !ok {
+// Safe on nil receiver, src, or dst.
+func (g *Graph) CanReach(src, dst *Host, port int) (bool, string) {
+	if g == nil || src == nil || dst == nil {
 		return false, ""
 	}
 
 	for _, dstSG := range dst.SGIDs {
 		for _, rule := range g.SGRules[dstSG] {
-			if !rule.IsIngress() || rule.Port != port {
+			if !rule.IsIngressOnPort(port) {
 				continue
 			}
 			if ok, pathType := rule.IsInternal(src, dst); ok {
@@ -46,7 +42,7 @@ func (g *Graph) CanReach(srcID, dstID string, port int) (bool, string) {
 	if g.CanRouteCrossVPC(src, dst) {
 		for _, dstSG := range dst.SGIDs {
 			for _, rule := range g.SGRules[dstSG] {
-				if !rule.IsIngress() || rule.Port != port {
+				if !rule.IsIngressOnPort(port) {
 					continue
 				}
 				if rule.HasBroadInternalCIDR() {
@@ -72,7 +68,7 @@ func (g *Graph) EnumerateSSHPaths(port int) []SSHPath {
 			if src.IsProduction() {
 				continue
 			}
-			if ok, pathType := g.CanReach(src.ID, dst.ID, port); ok {
+			if ok, pathType := g.CanReach(src, dst, port); ok {
 				ruleSG, ruleSource := g.findRule(src, dst, port)
 				paths = append(paths, SSHPath{
 					Source:      src.ID,
@@ -105,14 +101,9 @@ func (g *Graph) EnumerateSSHPaths(port int) []SSHPath {
 }
 
 // canReachAnyPort reports whether src can reach dst on any port via SG rules.
-// Returns the path type and matched port.
-func (g *Graph) canReachAnyPort(srcID, dstID string) (bool, string, int) {
-	src, ok := g.Hosts[srcID]
-	if !ok {
-		return false, "", 0
-	}
-	dst, ok := g.Hosts[dstID]
-	if !ok {
+// Returns the path type and matched port. Safe on nil receiver, src, or dst.
+func (g *Graph) canReachAnyPort(src, dst *Host) (bool, string, int) {
+	if g == nil || src == nil || dst == nil {
 		return false, "", 0
 	}
 
@@ -154,14 +145,14 @@ func (g *Graph) allHosts() []*Host {
 func (g *Graph) findRule(src, dst *Host, port int) (string, string) {
 	for _, dstSG := range dst.SGIDs {
 		for _, rule := range g.SGRules[dstSG] {
-			if !rule.IsIngress() || rule.Port != port {
+			if !rule.IsIngressOnPort(port) {
 				continue
 			}
 			if rule.IsSecurityGroup() && src.HasSecurityGroup(rule.SourceValue) {
-				return dstSG, "sg:" + rule.SourceValue
+				return dstSG, rule.RuleSource()
 			}
 			if rule.HasBroadInternalCIDR() {
-				return dstSG, "cidr:" + rule.SourceValue
+				return dstSG, rule.RuleSource()
 			}
 		}
 	}
