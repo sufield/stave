@@ -1333,7 +1333,7 @@ func TestHost_IsInternal(t *testing.T) {
 	}
 }
 
-func TestHost_IsCandidateRelay(t *testing.T) {
+func TestHost_IsTrusted(t *testing.T) {
 	var nilHost *Host
 	dst := &Host{ID: "i-prod", Tags: map[string]string{"stave:environment": "production"}}
 	prodRelay := &Host{ID: "i-prod-2", Tags: map[string]string{"stave:environment": "production"}}
@@ -1342,56 +1342,87 @@ func TestHost_IsCandidateRelay(t *testing.T) {
 	devRelay := &Host{ID: "i-dev", Tags: map[string]string{"stave:environment": "development"}}
 	untaggedRelay := &Host{ID: "i-unknown"}
 
-	if nilHost.IsCandidateRelay(dst) {
-		t.Error("nil host should not be candidate relay")
+	if nilHost.IsTrusted(dst) {
+		t.Error("nil host should not be trusted")
 	}
-	if stagingRelay.IsCandidateRelay(nil) {
-		t.Error("relay to nil destination should not be candidate relay")
+	if stagingRelay.IsTrusted(nil) {
+		t.Error("staging host with nil destination should not be trusted")
 	}
-	if dst.IsCandidateRelay(dst) {
-		t.Error("destination itself should not be candidate relay to itself")
+	if !dst.IsTrusted(dst) {
+		t.Error("destination itself should be trusted via same host / loopback")
 	}
 	sameDstClone := &Host{ID: "i-prod"}
-	if sameDstClone.IsCandidateRelay(dst) {
-		t.Error("host matching destination ID should not be candidate relay")
+	if !sameDstClone.IsTrusted(dst) {
+		t.Error("host matching destination ID should be trusted via same host")
 	}
-	if prodRelay.IsCandidateRelay(dst) {
-		t.Error("production host should not be candidate relay")
+	if !prodRelay.IsTrusted(dst) {
+		t.Error("production host should be trusted via operational environment")
 	}
-	if bastionRelay.IsCandidateRelay(dst) {
-		t.Error("authorized bastion should not be candidate relay")
+	if !bastionRelay.IsTrusted(dst) {
+		t.Error("authorized bastion should be trusted via administrative role")
 	}
-	if !stagingRelay.IsCandidateRelay(dst) {
-		t.Error("staging non-bastion host should be candidate relay")
+	if stagingRelay.IsTrusted(dst) {
+		t.Error("staging non-bastion host should not be trusted")
 	}
-	if !devRelay.IsCandidateRelay(dst) {
-		t.Error("development non-bastion host should be candidate relay")
+	if devRelay.IsTrusted(dst) {
+		t.Error("development non-bastion host should not be trusted")
 	}
-	if !untaggedRelay.IsCandidateRelay(dst) {
-		t.Error("untagged non-bastion host should be candidate relay")
+	if untaggedRelay.IsTrusted(dst) {
+		t.Error("untagged non-bastion host should not be trusted")
 	}
 
 	// Multi-target checks (e.g. src checked against relay and dst)
-	if stagingRelay.IsCandidateRelay() {
-		t.Error("host with no target specified should not be candidate relay")
+	if stagingRelay.IsTrusted() {
+		t.Error("untrusted host with no target specified should not be trusted")
 	}
-	if !stagingRelay.IsCandidateRelay(devRelay, dst) {
-		t.Error("staging host should be candidate relay to distinct relay and dst")
+	if !prodRelay.IsTrusted() {
+		t.Error("production host should be trusted even with no targets specified")
 	}
-	if stagingRelay.IsCandidateRelay(stagingRelay, dst) {
-		t.Error("staging host matching first target should not be candidate relay")
+	if !bastionRelay.IsTrusted() {
+		t.Error("bastion host should be trusted even with no targets specified")
 	}
-	if stagingRelay.IsCandidateRelay(devRelay, stagingRelay) {
-		t.Error("staging host matching second target should not be candidate relay")
+	if stagingRelay.IsTrusted(devRelay, dst) {
+		t.Error("staging host should not be trusted when matching neither target")
 	}
-	if stagingRelay.IsCandidateRelay(devRelay, nil) {
-		t.Error("host with nil target in multi-target list should not be candidate relay")
+	if !stagingRelay.IsTrusted(stagingRelay, dst) {
+		t.Error("staging host matching first target should be trusted")
 	}
-	if prodRelay.IsCandidateRelay(devRelay, dst) {
-		t.Error("production host should not be candidate relay in multi-target check")
+	if !stagingRelay.IsTrusted(devRelay, stagingRelay) {
+		t.Error("staging host matching second target should be trusted")
 	}
-	if bastionRelay.IsCandidateRelay(devRelay, dst) {
-		t.Error("bastion host should not be candidate relay in multi-target check")
+	if stagingRelay.IsTrusted(devRelay, nil) {
+		t.Error("staging host with unmatched targets including nil should not be trusted")
+	}
+	if !prodRelay.IsTrusted(devRelay, dst) {
+		t.Error("production host should be trusted in multi-target check")
+	}
+	if !bastionRelay.IsTrusted(devRelay, dst) {
+		t.Error("bastion host should be trusted in multi-target check")
+	}
+}
+
+func TestHost_HasSecurityGroup(t *testing.T) {
+	var nilHost *Host
+	h := &Host{ID: "i-app", SGIDs: []string{"sg-app", "sg-common"}}
+	emptyHost := &Host{ID: "i-bare"}
+
+	if nilHost.HasSecurityGroup("sg-app") {
+		t.Error("nil host should not have security group")
+	}
+	if h.HasSecurityGroup("") {
+		t.Error("host should not match empty security group ID")
+	}
+	if !h.HasSecurityGroup("sg-app") {
+		t.Error("host should have sg-app")
+	}
+	if !h.HasSecurityGroup("sg-common") {
+		t.Error("host should have sg-common")
+	}
+	if h.HasSecurityGroup("sg-other") {
+		t.Error("host should not have sg-other")
+	}
+	if emptyHost.HasSecurityGroup("sg-app") {
+		t.Error("host with no security groups should return false")
 	}
 }
 
@@ -1709,6 +1740,125 @@ func TestSGRule_IsCIDR(t *testing.T) {
 	}
 }
 
+func TestSGRule_IsSecurityGroup(t *testing.T) {
+	tests := []struct {
+		name string
+		rule SGRule
+		want bool
+	}{
+		{
+			name: "sg source type",
+			rule: SGRule{SourceType: "sg"},
+			want: true,
+		},
+		{
+			name: "cidr source type",
+			rule: SGRule{SourceType: "cidr"},
+			want: false,
+		},
+		{
+			name: "empty source type",
+			rule: SGRule{SourceType: ""},
+			want: false,
+		},
+		{
+			name: "other source type",
+			rule: SGRule{SourceType: "prefix-list"},
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.rule.IsSecurityGroup(); got != tc.want {
+				t.Errorf("SGRule{%+v}.IsSecurityGroup() = %v, want %v", tc.rule, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSGRule_IsInternal(t *testing.T) {
+	sameVPC1 := &Host{ID: "i-app1", VPCID: "vpc-1", SGIDs: []string{"sg-app"}}
+	sameVPC2 := &Host{ID: "i-app2", VPCID: "vpc-1", SGIDs: []string{"sg-db"}}
+	diffVPC := &Host{ID: "i-ext", VPCID: "vpc-2", SGIDs: []string{"sg-app"}}
+
+	tests := []struct {
+		name         string
+		rule         SGRule
+		src          *Host
+		dst          *Host
+		wantOK       bool
+		wantPathType string
+	}{
+		{
+			name:         "matching sg reference",
+			rule:         SGRule{SourceType: "sg", SourceValue: "sg-app"},
+			src:          sameVPC1,
+			dst:          sameVPC2,
+			wantOK:       true,
+			wantPathType: "sg-ref",
+		},
+		{
+			name:         "unmatched sg reference",
+			rule:         SGRule{SourceType: "sg", SourceValue: "sg-other"},
+			src:          sameVPC1,
+			dst:          sameVPC2,
+			wantOK:       false,
+			wantPathType: "",
+		},
+		{
+			name:         "broad internal cidr same vpc",
+			rule:         SGRule{SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			src:          sameVPC1,
+			dst:          sameVPC2,
+			wantOK:       true,
+			wantPathType: "cidr",
+		},
+		{
+			name:         "broad internal cidr different vpc",
+			rule:         SGRule{SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			src:          diffVPC,
+			dst:          sameVPC2,
+			wantOK:       false,
+			wantPathType: "",
+		},
+		{
+			name:         "narrow cidr same vpc",
+			rule:         SGRule{SourceType: "cidr", SourceValue: "10.0.1.0/24"},
+			src:          sameVPC1,
+			dst:          sameVPC2,
+			wantOK:       false,
+			wantPathType: "",
+		},
+		{
+			name:         "nil src",
+			rule:         SGRule{SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			src:          nil,
+			dst:          sameVPC2,
+			wantOK:       false,
+			wantPathType: "",
+		},
+		{
+			name:         "nil dst",
+			rule:         SGRule{SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			src:          sameVPC1,
+			dst:          nil,
+			wantOK:       false,
+			wantPathType: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotOK, gotPathType := tc.rule.IsInternal(tc.src, tc.dst)
+			if gotOK != tc.wantOK || gotPathType != tc.wantPathType {
+				t.Errorf("SGRule{%+v}.IsInternal(%v, %v) = (%v, %q), want (%v, %q)",
+					tc.rule, tc.src, tc.dst, gotOK, gotPathType, tc.wantOK, tc.wantPathType)
+			}
+		})
+	}
+}
+
 func TestSGRule_HasBroadInternalCIDR(t *testing.T) {
 	tests := []struct {
 		name string
@@ -1989,6 +2139,162 @@ func TestSubnet_HasRouteTable(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if got := tc.subnet.HasRouteTable(); got != tc.want {
 				t.Errorf("Subnet%+v.HasRouteTable() = %v, want %v", tc.subnet, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestGraph_VPCsConnected(t *testing.T) {
+	g := &Graph{
+		Peerings: []VPCPeering{
+			{RequesterVPC: "vpc-a", AccepterVPC: "vpc-b"},
+		},
+		TGWAttachments: []TGWAttachment{
+			{TransitGatewayID: "tgw-1", VPCID: "vpc-c"},
+			{TransitGatewayID: "tgw-1", VPCID: "vpc-d"},
+		},
+	}
+
+	tests := []struct {
+		name string
+		g    *Graph
+		vpc1 string
+		vpc2 string
+		want bool
+	}{
+		{
+			name: "connected via peering forward",
+			g:    g,
+			vpc1: "vpc-a",
+			vpc2: "vpc-b",
+			want: true,
+		},
+		{
+			name: "connected via peering reverse",
+			g:    g,
+			vpc1: "vpc-b",
+			vpc2: "vpc-a",
+			want: true,
+		},
+		{
+			name: "connected via tgw",
+			g:    g,
+			vpc1: "vpc-c",
+			vpc2: "vpc-d",
+			want: true,
+		},
+		{
+			name: "not connected across topologies",
+			g:    g,
+			vpc1: "vpc-a",
+			vpc2: "vpc-c",
+			want: false,
+		},
+		{
+			name: "same vpc",
+			g:    g,
+			vpc1: "vpc-a",
+			vpc2: "vpc-a",
+			want: false,
+		},
+		{
+			name: "empty vpc1",
+			g:    g,
+			vpc1: "",
+			vpc2: "vpc-b",
+			want: false,
+		},
+		{
+			name: "empty vpc2",
+			g:    g,
+			vpc1: "vpc-a",
+			vpc2: "",
+			want: false,
+		},
+		{
+			name: "nil graph",
+			g:    nil,
+			vpc1: "vpc-a",
+			vpc2: "vpc-b",
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.g.VPCsConnected(tc.vpc1, tc.vpc2); got != tc.want {
+				t.Errorf("Graph.VPCsConnected(%q, %q) = %v, want %v", tc.vpc1, tc.vpc2, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestGraph_CanRouteCrossVPC(t *testing.T) {
+	g := &Graph{
+		Peerings: []VPCPeering{
+			{RequesterVPC: "vpc-a", AccepterVPC: "vpc-b"},
+		},
+	}
+	hostA := &Host{ID: "i-a", VPCID: "vpc-a"}
+	hostB := &Host{ID: "i-b", VPCID: "vpc-b"}
+	hostA2 := &Host{ID: "i-a2", VPCID: "vpc-a"}
+	hostUnconnected := &Host{ID: "i-x", VPCID: "vpc-x"}
+
+	tests := []struct {
+		name string
+		g    *Graph
+		src  *Host
+		dst  *Host
+		want bool
+	}{
+		{
+			name: "peered cross-vpc hosts",
+			g:    g,
+			src:  hostA,
+			dst:  hostB,
+			want: true,
+		},
+		{
+			name: "same vpc hosts",
+			g:    g,
+			src:  hostA,
+			dst:  hostA2,
+			want: false,
+		},
+		{
+			name: "unconnected vpc hosts",
+			g:    g,
+			src:  hostA,
+			dst:  hostUnconnected,
+			want: false,
+		},
+		{
+			name: "nil src",
+			g:    g,
+			src:  nil,
+			dst:  hostB,
+			want: false,
+		},
+		{
+			name: "nil dst",
+			g:    g,
+			src:  hostA,
+			dst:  nil,
+			want: false,
+		},
+		{
+			name: "nil graph",
+			g:    nil,
+			src:  hostA,
+			dst:  hostB,
+			want: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.g.CanRouteCrossVPC(tc.src, tc.dst); got != tc.want {
+				t.Errorf("Graph.CanRouteCrossVPC(%v, %v) = %v, want %v", tc.src, tc.dst, got, tc.want)
 			}
 		})
 	}

@@ -1,6 +1,7 @@
 package network
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -55,20 +56,32 @@ func (h *Host) IsInternal(other *Host) bool {
 	return h.SameHost(other) || h.SameVPC(other)
 }
 
-// IsCandidateRelay reports whether h is eligible to act as a candidate
-// unauthorized SSH relay to the specified path hosts (i.e. neither a production host,
-// nor an authorized bastion, nor matching any of the specified target hosts).
+// IsTrusted reports whether h is trusted in the context of the specified target hosts
+// (i.e. represents the same compute host as any target via local boundary, resides
+// in the production environment via operational trust, or is an authorized bastion).
 // Safe on nil receiver and nil targets.
-func (h *Host) IsCandidateRelay(targets ...*Host) bool {
-	if h == nil || len(targets) == 0 || h.IsProduction() || h.IsBastion() {
+func (h *Host) IsTrusted(targets ...*Host) bool {
+	if h == nil {
 		return false
 	}
+	if h.IsProduction() || h.IsBastion() {
+		return true
+	}
 	for _, target := range targets {
-		if target == nil || h.SameHost(target) {
-			return false
+		if h.SameHost(target) {
+			return true
 		}
 	}
-	return true
+	return false
+}
+
+// HasSecurityGroup reports whether h is associated with the specified security group ID.
+// Safe on nil receiver.
+func (h *Host) HasSecurityGroup(sgID string) bool {
+	if h == nil || sgID == "" {
+		return false
+	}
+	return slices.Contains(h.SGIDs, sgID)
 }
 
 // SGRule is a single security group rule.
@@ -90,6 +103,11 @@ func (r SGRule) IsCIDR() bool {
 	return r.SourceType == "cidr"
 }
 
+// IsSecurityGroup reports whether the security group rule source is another security group.
+func (r SGRule) IsSecurityGroup() bool {
+	return r.SourceType == "sg"
+}
+
 // HasBroadInternalCIDR reports whether the security group rule source is a broad
 // internal CIDR block (RFC1918 range or 0.0.0.0/0 / ::/0).
 func (r SGRule) HasBroadInternalCIDR() bool {
@@ -106,6 +124,21 @@ func (r SGRule) IsInternetIngress() bool {
 // traffic from the public internet on the specified port.
 func (r SGRule) IsInternetIngressOnPort(port int) bool {
 	return r.Port == port && r.IsInternetIngress()
+}
+
+// IsInternal reports whether the security group rule permits internal access
+// from src to dst (either logically via security group reference or via
+// perimeter-level broad CIDR within the same VPC), returning true and the
+// corresponding path type ("sg-ref" or "cidr").
+// Safe on nil src and dst.
+func (r SGRule) IsInternal(src, dst *Host) (bool, string) {
+	if r.IsSecurityGroup() && src.HasSecurityGroup(r.SourceValue) {
+		return true, "sg-ref"
+	}
+	if r.HasBroadInternalCIDR() && src.SameVPC(dst) {
+		return true, "cidr"
+	}
+	return false, ""
 }
 
 // VPCPeering is a VPC peering connection.
@@ -423,22 +456,44 @@ func (g *Graph) extractTGWAttachment(a *asset.Asset) {
 	}
 }
 
+// VPCsConnected reports whether two distinct VPCs are connected via VPC peering
+// or Transit Gateway. Safe on nil receiver. Returns false if either VPC ID is empty.
+func (g *Graph) VPCsConnected(vpc1, vpc2 string) bool {
+	if g == nil || vpc1 == "" || vpc2 == "" {
+		return false
+	}
+	return g.vpcsArePeered(vpc1, vpc2) || g.vpcsConnectedViaTGW(vpc1, vpc2)
+}
+
+// CanRouteCrossVPC reports whether src and dst reside in different VPCs and their
+// respective VPCs are connected via VPC peering or Transit Gateway.
+// Safe on nil receiver, src, or dst.
+func (g *Graph) CanRouteCrossVPC(src, dst *Host) bool {
+	return g != nil && src.IsCrossVPC(dst) && g.VPCsConnected(src.VPCID, dst.VPCID)
+}
+
+func (g *Graph) vpcsArePeered(vpc1, vpc2 string) bool {
+	if g == nil {
+		return false
+	}
+	for _, p := range g.Peerings {
+		if p.Connects(vpc1, vpc2) {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *Graph) vpcsConnectedViaTGW(vpc1, vpc2 string) bool {
+	if g == nil || vpc1 == "" || vpc2 == "" {
+		return false
+	}
 	tgws := make(map[string][]string)
 	for _, att := range g.TGWAttachments {
 		tgws[att.TransitGatewayID] = append(tgws[att.TransitGatewayID], att.VPCID)
 	}
 	for _, vpcs := range tgws {
-		has1, has2 := false, false
-		for _, v := range vpcs {
-			if v == vpc1 {
-				has1 = true
-			}
-			if v == vpc2 {
-				has2 = true
-			}
-		}
-		if has1 && has2 {
+		if slices.Contains(vpcs, vpc1) && slices.Contains(vpcs, vpc2) {
 			return true
 		}
 	}

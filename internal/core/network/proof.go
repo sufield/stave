@@ -63,11 +63,6 @@ func (g *Graph) ProveBastionSSH(port int) (*ProofResult, error) {
 		return nil, fmt.Errorf("%w: no hosts tagged stave:role=bastion — cannot prove bastion routing", ErrVacuousProof)
 	}
 
-	bastionIDs := make(map[string]bool, len(bastions))
-	for _, b := range bastions {
-		bastionIDs[b.ID] = true
-	}
-
 	result := &ProofResult{
 		Property:        "bastion-ssh",
 		ProductionHosts: len(prod),
@@ -77,7 +72,7 @@ func (g *Graph) ProveBastionSSH(port int) (*ProofResult, error) {
 	// Find all SSH paths to production from non-bastion, non-production sources.
 	for _, dst := range prod {
 		for _, src := range g.allHosts() {
-			if src.ID == dst.ID || src.IsProduction() || bastionIDs[src.ID] {
+			if src.IsTrusted(dst) {
 				continue
 			}
 			if ok, pathType := g.CanReach(src.ID, dst.ID, port); ok {
@@ -305,7 +300,7 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 
 	for _, dst := range prod {
 		for _, relay := range g.allHosts() {
-			if !relay.IsCandidateRelay(dst) {
+			if relay.IsTrusted(dst) {
 				continue
 			}
 			if ok, _ := g.CanReach(relay.ID, dst.ID, port); !ok {
@@ -333,7 +328,7 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 
 			// Check if any other non-prod, non-bastion host can reach the relay.
 			for _, src := range g.allHosts() {
-				if !src.IsCandidateRelay(relay, dst) {
+				if src.IsTrusted(relay, dst) {
 					continue
 				}
 				if ok, _ := g.CanReach(src.ID, relay.ID, port); ok {

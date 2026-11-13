@@ -1,7 +1,5 @@
 package network
 
-import "slices"
-
 // SSHPath describes a network path to a host on port 22.
 type SSHPath struct {
 	Source      string `json:"source"`
@@ -38,52 +36,27 @@ func (g *Graph) CanReach(srcID, dstID string, port int) (bool, string) {
 			if !rule.IsIngress() || rule.Port != port {
 				continue
 			}
-			switch rule.SourceType {
-			case "sg":
-				if slices.Contains(src.SGIDs, rule.SourceValue) {
-					return true, "sg-ref"
-				}
-			case "cidr":
-				if g.cidrCoversHost(rule.SourceValue, src, dst) {
-					return true, "cidr"
-				}
+			if ok, pathType := rule.IsInternal(src, dst); ok {
+				return true, pathType
 			}
 		}
 	}
 
 	// Cross-VPC via peering or transit gateway.
-	if src.IsCrossVPC(dst) {
-		if g.vpcsArePeered(src.VPCID, dst.VPCID) || g.vpcsConnectedViaTGW(src.VPCID, dst.VPCID) {
-			for _, dstSG := range dst.SGIDs {
-				for _, rule := range g.SGRules[dstSG] {
-					if !rule.IsIngress() || rule.Port != port {
-						continue
-					}
-					if rule.HasBroadInternalCIDR() {
-						return true, "cross-vpc"
-					}
+	if g.CanRouteCrossVPC(src, dst) {
+		for _, dstSG := range dst.SGIDs {
+			for _, rule := range g.SGRules[dstSG] {
+				if !rule.IsIngress() || rule.Port != port {
+					continue
+				}
+				if rule.HasBroadInternalCIDR() {
+					return true, "cross-vpc"
 				}
 			}
 		}
 	}
 
 	return false, ""
-}
-
-func (g *Graph) cidrCoversHost(cidr string, src, dst *Host) bool {
-	if !src.SameVPC(dst) {
-		return false
-	}
-	return broadInternalCIDRs[cidr]
-}
-
-func (g *Graph) vpcsArePeered(vpc1, vpc2 string) bool {
-	for _, p := range g.Peerings {
-		if p.Connects(vpc1, vpc2) {
-			return true
-		}
-	}
-	return false
 }
 
 // EnumerateSSHPaths finds all SSH paths to production hosts.
@@ -148,29 +121,20 @@ func (g *Graph) canReachAnyPort(srcID, dstID string) (bool, string, int) {
 			if !rule.IsIngress() {
 				continue
 			}
-			switch rule.SourceType {
-			case "sg":
-				if slices.Contains(src.SGIDs, rule.SourceValue) {
-					return true, "sg-ref", rule.Port
-				}
-			case "cidr":
-				if g.cidrCoversHost(rule.SourceValue, src, dst) {
-					return true, "cidr", rule.Port
-				}
+			if ok, pathType := rule.IsInternal(src, dst); ok {
+				return true, pathType, rule.Port
 			}
 		}
 	}
 
-	if src.IsCrossVPC(dst) {
-		if g.vpcsArePeered(src.VPCID, dst.VPCID) || g.vpcsConnectedViaTGW(src.VPCID, dst.VPCID) {
-			for _, dstSG := range dst.SGIDs {
-				for _, rule := range g.SGRules[dstSG] {
-					if !rule.IsIngress() {
-						continue
-					}
-					if rule.HasBroadInternalCIDR() {
-						return true, "cross-vpc", rule.Port
-					}
+	if g.CanRouteCrossVPC(src, dst) {
+		for _, dstSG := range dst.SGIDs {
+			for _, rule := range g.SGRules[dstSG] {
+				if !rule.IsIngress() {
+					continue
+				}
+				if rule.HasBroadInternalCIDR() {
+					return true, "cross-vpc", rule.Port
 				}
 			}
 		}
@@ -193,17 +157,11 @@ func (g *Graph) findRule(src, dst *Host, port int) (string, string) {
 			if !rule.IsIngress() || rule.Port != port {
 				continue
 			}
-			switch rule.SourceType {
-			case "sg":
-				for _, srcSG := range src.SGIDs {
-					if rule.SourceValue == srcSG {
-						return dstSG, "sg:" + srcSG
-					}
-				}
-			case "cidr":
-				if rule.HasBroadInternalCIDR() {
-					return dstSG, "cidr:" + rule.SourceValue
-				}
+			if rule.IsSecurityGroup() && src.HasSecurityGroup(rule.SourceValue) {
+				return dstSG, "sg:" + rule.SourceValue
+			}
+			if rule.HasBroadInternalCIDR() {
+				return dstSG, "cidr:" + rule.SourceValue
 			}
 		}
 	}
