@@ -26,7 +26,7 @@ func (h *Host) Environment() string {
 }
 
 func (h *Host) IsProduction() bool   { return h.Environment() == "production" }
-func (h *Host) IsBastion() bool      { return h.Tags["stave:role"] == "bastion" }
+func (h *Host) IsBastion() bool      { return h != nil && h.Tags["stave:role"] == "bastion" }
 func (h *Host) IsDevelopment() bool  { return h.Environment() == "development" }
 func (h *Host) IsDatabaseTier() bool { return h.Tags["stave:tier"] == "database" }
 func (h *Host) IsIsolated() bool     { return h.Tags["stave:network-zone"] == "isolated" }
@@ -42,13 +42,33 @@ func (h *Host) SameVPC(other *Host) bool {
 	return h != nil && other != nil && h.VPCID != "" && h.VPCID == other.VPCID
 }
 
-// SameHostOrVPC reports whether both hosts represent the same host or reside
-// in the same non-empty VPC. Safe on nil receiver.
-func (h *Host) SameHostOrVPC(other *Host) bool {
-	if h == nil || other == nil {
+// SameHost reports whether both hosts represent the same compute resource.
+// Safe on nil receiver.
+func (h *Host) SameHost(other *Host) bool {
+	return h != nil && other != nil && h.ID != "" && h.ID == other.ID
+}
+
+// IsInternal reports whether other is within the same internal network scope
+// (i.e., represents the same compute host or resides in the same non-empty VPC).
+// Safe on nil receiver.
+func (h *Host) IsInternal(other *Host) bool {
+	return h.SameHost(other) || h.SameVPC(other)
+}
+
+// IsCandidateRelay reports whether h is eligible to act as a candidate
+// unauthorized SSH relay to the specified path hosts (i.e. neither a production host,
+// nor an authorized bastion, nor matching any of the specified target hosts).
+// Safe on nil receiver and nil targets.
+func (h *Host) IsCandidateRelay(targets ...*Host) bool {
+	if h == nil || len(targets) == 0 || h.IsProduction() || h.IsBastion() {
 		return false
 	}
-	return (h.ID != "" && h.ID == other.ID) || h.SameVPC(other)
+	for _, target := range targets {
+		if target == nil || h.SameHost(target) {
+			return false
+		}
+	}
+	return true
 }
 
 // SGRule is a single security group rule.

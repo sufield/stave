@@ -1231,6 +1231,37 @@ func TestHost_IsCrossVPC(t *testing.T) {
 	}
 }
 
+func TestHost_SameHost(t *testing.T) {
+	var nilHost *Host
+	h1 := &Host{ID: "i-1"}
+	h1Clone := &Host{ID: "i-1", VPCID: "vpc-1"}
+	h2 := &Host{ID: "i-2"}
+	empty1 := &Host{ID: ""}
+	empty2 := &Host{ID: ""}
+
+	if nilHost.SameHost(h1) {
+		t.Error("nil host should not be same host")
+	}
+	if h1.SameHost(nilHost) {
+		t.Error("host with nil other should not be same host")
+	}
+	if !h1.SameHost(h1) {
+		t.Error("identical host should be same host")
+	}
+	if !h1.SameHost(h1Clone) {
+		t.Error("hosts with matching ID should be same host")
+	}
+	if h1.SameHost(h2) {
+		t.Error("hosts with different IDs should not be same host")
+	}
+	if empty1.SameHost(empty2) {
+		t.Error("hosts with empty ID should not be same host")
+	}
+	if h1.SameHost(empty1) {
+		t.Error("host should not match empty ID host")
+	}
+}
+
 func TestHost_SameVPC(t *testing.T) {
 	var nilHost *Host
 	h1 := &Host{ID: "h1", VPCID: "vpc-1"}
@@ -1262,7 +1293,7 @@ func TestHost_SameVPC(t *testing.T) {
 	}
 }
 
-func TestHost_SameHostOrVPC(t *testing.T) {
+func TestHost_IsInternal(t *testing.T) {
 	var nilHost *Host
 	h1 := &Host{ID: "h1", VPCID: "vpc-1"}
 	h1Clone := &Host{ID: "h1", VPCID: "vpc-2"}
@@ -1273,32 +1304,94 @@ func TestHost_SameHostOrVPC(t *testing.T) {
 	empty1 := &Host{}
 	empty2 := &Host{}
 
-	if nilHost.SameHostOrVPC(h1) {
-		t.Error("nil host should not be same host or VPC")
+	if nilHost.IsInternal(h1) {
+		t.Error("nil host should not be internal")
 	}
-	if h1.SameHostOrVPC(nilHost) {
-		t.Error("host with nil other should not be same host or VPC")
+	if h1.IsInternal(nilHost) {
+		t.Error("host with nil other should not be internal")
 	}
-	if !h1.SameHostOrVPC(h1) {
-		t.Error("identical host should be same host or VPC")
+	if !h1.IsInternal(h1) {
+		t.Error("identical host should be internal")
 	}
-	if !h1.SameHostOrVPC(h1Clone) {
-		t.Error("hosts with matching ID should be same host or VPC")
+	if !h1.IsInternal(h1Clone) {
+		t.Error("hosts with matching ID should be internal")
 	}
-	if !h1.SameHostOrVPC(h2SameVPC) {
-		t.Error("hosts in same VPC should be same host or VPC")
+	if !h1.IsInternal(h2SameVPC) {
+		t.Error("hosts in same VPC should be internal")
 	}
-	if h1.SameHostOrVPC(h3DiffVPC) {
-		t.Error("different hosts in different VPCs should not be same host or VPC")
+	if h1.IsInternal(h3DiffVPC) {
+		t.Error("different hosts in different VPCs should not be internal")
 	}
-	if h1.SameHostOrVPC(noVPC1) {
-		t.Error("different host with no VPC should not be same host or VPC")
+	if h1.IsInternal(noVPC1) {
+		t.Error("different host with no VPC should not be internal")
 	}
-	if noVPC1.SameHostOrVPC(noVPC2) {
-		t.Error("different hosts both missing VPC should not be same host or VPC")
+	if noVPC1.IsInternal(noVPC2) {
+		t.Error("different hosts both missing VPC should not be internal")
 	}
-	if empty1.SameHostOrVPC(empty2) {
-		t.Error("two empty hosts without ID or VPC should not be same host or VPC")
+	if empty1.IsInternal(empty2) {
+		t.Error("two empty hosts without ID or VPC should not be internal")
+	}
+}
+
+func TestHost_IsCandidateRelay(t *testing.T) {
+	var nilHost *Host
+	dst := &Host{ID: "i-prod", Tags: map[string]string{"stave:environment": "production"}}
+	prodRelay := &Host{ID: "i-prod-2", Tags: map[string]string{"stave:environment": "production"}}
+	bastionRelay := &Host{ID: "i-bastion", Tags: map[string]string{"stave:role": "bastion"}}
+	stagingRelay := &Host{ID: "i-staging", Tags: map[string]string{"stave:environment": "staging"}}
+	devRelay := &Host{ID: "i-dev", Tags: map[string]string{"stave:environment": "development"}}
+	untaggedRelay := &Host{ID: "i-unknown"}
+
+	if nilHost.IsCandidateRelay(dst) {
+		t.Error("nil host should not be candidate relay")
+	}
+	if stagingRelay.IsCandidateRelay(nil) {
+		t.Error("relay to nil destination should not be candidate relay")
+	}
+	if dst.IsCandidateRelay(dst) {
+		t.Error("destination itself should not be candidate relay to itself")
+	}
+	sameDstClone := &Host{ID: "i-prod"}
+	if sameDstClone.IsCandidateRelay(dst) {
+		t.Error("host matching destination ID should not be candidate relay")
+	}
+	if prodRelay.IsCandidateRelay(dst) {
+		t.Error("production host should not be candidate relay")
+	}
+	if bastionRelay.IsCandidateRelay(dst) {
+		t.Error("authorized bastion should not be candidate relay")
+	}
+	if !stagingRelay.IsCandidateRelay(dst) {
+		t.Error("staging non-bastion host should be candidate relay")
+	}
+	if !devRelay.IsCandidateRelay(dst) {
+		t.Error("development non-bastion host should be candidate relay")
+	}
+	if !untaggedRelay.IsCandidateRelay(dst) {
+		t.Error("untagged non-bastion host should be candidate relay")
+	}
+
+	// Multi-target checks (e.g. src checked against relay and dst)
+	if stagingRelay.IsCandidateRelay() {
+		t.Error("host with no target specified should not be candidate relay")
+	}
+	if !stagingRelay.IsCandidateRelay(devRelay, dst) {
+		t.Error("staging host should be candidate relay to distinct relay and dst")
+	}
+	if stagingRelay.IsCandidateRelay(stagingRelay, dst) {
+		t.Error("staging host matching first target should not be candidate relay")
+	}
+	if stagingRelay.IsCandidateRelay(devRelay, stagingRelay) {
+		t.Error("staging host matching second target should not be candidate relay")
+	}
+	if stagingRelay.IsCandidateRelay(devRelay, nil) {
+		t.Error("host with nil target in multi-target list should not be candidate relay")
+	}
+	if prodRelay.IsCandidateRelay(devRelay, dst) {
+		t.Error("production host should not be candidate relay in multi-target check")
+	}
+	if bastionRelay.IsCandidateRelay(devRelay, dst) {
+		t.Error("bastion host should not be candidate relay in multi-target check")
 	}
 }
 

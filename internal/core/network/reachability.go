@@ -93,7 +93,7 @@ func (g *Graph) EnumerateSSHPaths(port int) []SSHPath {
 
 	for _, dst := range prod {
 		for _, src := range g.allHosts() {
-			if src.ID == dst.ID {
+			if src.SameHost(dst) {
 				continue
 			}
 			if src.IsProduction() {

@@ -232,7 +232,7 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 	for _, dst := range dbHosts {
 		// Check cross-VPC reachability from any non-same-VPC host.
 		for _, src := range g.allHosts() {
-			if src.SameHostOrVPC(dst) {
+			if src.IsInternal(dst) {
 				continue
 			}
 			if ok, pathType, port := g.canReachAnyPort(src.ID, dst.ID); ok {
@@ -297,11 +297,6 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 		return nil, fmt.Errorf("%w: no hosts tagged stave:environment=production — cannot prove transitive SSH", ErrVacuousProof)
 	}
 
-	bastionIDs := make(map[string]bool, len(bastions))
-	for _, b := range bastions {
-		bastionIDs[b.ID] = true
-	}
-
 	result := &ProofResult{
 		Property:        "transitive-ssh",
 		ProductionHosts: len(prod),
@@ -310,7 +305,7 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 
 	for _, dst := range prod {
 		for _, relay := range g.allHosts() {
-			if relay.ID == dst.ID || relay.IsProduction() || bastionIDs[relay.ID] {
+			if !relay.IsCandidateRelay(dst) {
 				continue
 			}
 			if ok, _ := g.CanReach(relay.ID, dst.ID, port); !ok {
@@ -338,7 +333,7 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 
 			// Check if any other non-prod, non-bastion host can reach the relay.
 			for _, src := range g.allHosts() {
-				if src.ID == relay.ID || src.ID == dst.ID || src.IsProduction() || bastionIDs[src.ID] {
+				if !src.IsCandidateRelay(relay, dst) {
 					continue
 				}
 				if ok, _ := g.CanReach(src.ID, relay.ID, port); ok {
