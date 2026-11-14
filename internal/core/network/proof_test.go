@@ -749,6 +749,110 @@ func TestProveTransitiveSSH_UNSAT(t *testing.T) {
 	}
 }
 
+func TestProveTransitiveSSH_IPv6_SAT(t *testing.T) {
+	g := &Graph{
+		Hosts: map[string]*Host{
+			"i-bastion": {ID: "i-bastion", VPCID: "vpc-prod", SubnetID: "subnet-b", SGIDs: []string{"sg-bastion"}, Tags: map[string]string{"stave:role": "bastion", "stave:environment": "production"}},
+			"i-jumpbox": {ID: "i-jumpbox", VPCID: "vpc-prod", SubnetID: "subnet-j", SGIDs: []string{"sg-jump"}, Tags: map[string]string{}},
+			"i-prod-01": {ID: "i-prod-01", VPCID: "vpc-prod", SubnetID: "subnet-p", SGIDs: []string{"sg-prod"}, Tags: map[string]string{"stave:environment": "production"}},
+		},
+		SGRules: map[string][]SGRule{
+			"sg-bastion": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "203.0.113.0/24"},
+			},
+			"sg-jump": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "::/0"},
+			},
+			"sg-prod": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-bastion"},
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-jump"},
+			},
+		},
+	}
+
+	result, err := g.ProveTransitiveSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT, got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample")
+	}
+	if want := "::/0 -> i-jumpbox"; result.Counterexample.Source != want {
+		t.Errorf("Source = %q, want %q", result.Counterexample.Source, want)
+	}
+	if want := "Remove SSH ingress from ::/0 on i-jumpbox or remove its access to production host i-prod-01."; result.Counterexample.Remediation != want {
+		t.Errorf("Remediation = %q, want %q", result.Counterexample.Remediation, want)
+	}
+}
+
+func TestProveTransitiveSSH_InternalHop_SAT(t *testing.T) {
+	g := &Graph{
+		Hosts: map[string]*Host{
+			"i-bastion": {ID: "i-bastion", VPCID: "vpc-prod", SubnetID: "subnet-b", SGIDs: []string{"sg-bastion"}, Tags: map[string]string{"stave:role": "bastion", "stave:environment": "production"}},
+			"i-dev":     {ID: "i-dev", VPCID: "vpc-prod", SubnetID: "subnet-d", SGIDs: []string{"sg-dev"}, Tags: map[string]string{"stave:environment": "development"}},
+			"i-relay":   {ID: "i-relay", VPCID: "vpc-prod", SubnetID: "subnet-r", SGIDs: []string{"sg-relay"}, Tags: map[string]string{}},
+			"i-prod-01": {ID: "i-prod-01", VPCID: "vpc-prod", SubnetID: "subnet-p", SGIDs: []string{"sg-prod"}, Tags: map[string]string{"stave:environment": "production"}},
+		},
+		SGRules: map[string][]SGRule{
+			"sg-bastion": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "203.0.113.0/24"},
+			},
+			"sg-dev": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			},
+			"sg-relay": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-dev"},
+			},
+			"sg-prod": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-bastion"},
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-relay"},
+			},
+		},
+	}
+
+	result, err := g.ProveTransitiveSSH(22)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Result != "SAT" {
+		t.Fatalf("expected SAT, got %s", result.Result)
+	}
+	if result.Counterexample == nil {
+		t.Fatal("expected counterexample")
+	}
+	if want := "i-dev -> i-relay"; result.Counterexample.Source != want {
+		t.Errorf("Source = %q, want %q", result.Counterexample.Source, want)
+	}
+	if want := "transitive"; result.Counterexample.PathType != want {
+		t.Errorf("PathType = %q, want %q", result.Counterexample.PathType, want)
+	}
+}
+
+func TestGraph_findTransitiveBypass_NilChecks(t *testing.T) {
+	var nilGraph *Graph
+	relay := &Host{ID: "i-relay"}
+	dst := &Host{ID: "i-dst"}
+	ruleMatch := &RuleMatch{SecurityGroupID: "sg-1", RuleSource: "sg:sg-2", PathType: "sg-ref", Port: 22}
+
+	if ce := nilGraph.findTransitiveInternetBypass(relay, dst, 22, ruleMatch); ce != nil {
+		t.Errorf("expected nil counterexample from nil graph, got %+v", ce)
+	}
+	if ce := nilGraph.findTransitiveInternalBypass(relay, relay, dst, 22, ruleMatch); ce != nil {
+		t.Errorf("expected nil counterexample from nil graph, got %+v", ce)
+	}
+
+	g := &Graph{}
+	if ce := g.findTransitiveInternetBypass(relay, dst, 22, nil); ce != nil {
+		t.Errorf("expected nil counterexample for nil relayMatch, got %+v", ce)
+	}
+	if ce := g.findTransitiveInternalBypass(relay, relay, dst, 22, nil); ce != nil {
+		t.Errorf("expected nil counterexample for nil relayMatch, got %+v", ce)
+	}
+}
+
 // --- transitive-egress tests ---
 
 func TestProveTransitiveEgress_SAT(t *testing.T) {

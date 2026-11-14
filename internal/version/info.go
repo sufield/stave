@@ -5,3 +5,6 @@ package version
 //
 //	go build -ldflags "-X github.com/sufield/stave/internal/version.String=0.0.3"
 var String = "dev"
+
+// BuildTime is set via ldflags at build time (RFC3339).
+var BuildTime = ""

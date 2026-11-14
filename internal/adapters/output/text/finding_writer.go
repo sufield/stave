@@ -139,6 +139,12 @@ func (w *FindingWriter) writeConciseTable(d *drawer, enriched *appcontracts.Enri
 			control,
 			assetName,
 		)
+		if f.ControlName != "" {
+			d.f("  %4s %s\n", "", f.ControlName)
+		}
+		if f.Defect != "" {
+			d.f("  %4s Trigger: %s\n", "", f.Defect)
+		}
 	}
 }
 

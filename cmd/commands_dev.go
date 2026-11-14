@@ -23,6 +23,7 @@ import (
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
+	staveversion "github.com/sufield/stave/internal/version"
 )
 
 // ---------------------------------------------------------------------------
@@ -53,13 +54,21 @@ func (r *VersionRunner) Run(edition Edition, verbose, verify bool) error {
 	}
 
 	if !verbose && !verify {
+		if staveversion.BuildTime != "" {
+			_, err := fmt.Fprintf(r.Stdout, "%s (%s) built %s\n", out.Version, out.Edition, staveversion.BuildTime)
+			return err
+		}
 		_, err := fmt.Fprintf(r.Stdout, "%s (%s)\n", out.Version, out.Edition)
 		return err
 	}
 
 	var sb strings.Builder
-	fmt.Fprintf(&sb, "Version:      %s\nEdition:      %s\nSchemas:      control=%s, observation=%s, output=%s\n",
-		out.Version, out.Edition, out.SchemaControl, out.SchemaObservation, out.SchemaOutput)
+	fmt.Fprintf(&sb, "Version:      %s\nEdition:      %s\n", out.Version, out.Edition)
+	if staveversion.BuildTime != "" {
+		fmt.Fprintf(&sb, "Built:        %s\n", staveversion.BuildTime)
+	}
+	fmt.Fprintf(&sb, "Schemas:      control=%s, observation=%s, output=%s\n",
+		out.SchemaControl, out.SchemaObservation, out.SchemaOutput)
 
 	if verbose {
 		fmt.Fprintf(&sb, "Project root: %s\nLockfile:     %v (%s)\nLock hash:    %s\n",

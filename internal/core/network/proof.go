@@ -277,19 +277,10 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 			}
 
 			// Relay can reach prod. Check if relay is reachable from the internet.
-			if g.IsPubliclyAccessible(relay, port) {
+			if ce := g.findTransitiveInternetBypass(relay, dst, port, relayMatch); ce != nil {
 				result.Result = "SAT"
 				result.Interpretation = "Transitive SSH path exists — a non-bastion host reachable from the internet can relay SSH to production."
-				result.Counterexample = &Counterexample{
-					Source:      "0.0.0.0/0 -> " + relay.ID,
-					Destination: dst.ID,
-					Port:        port,
-					PathType:    "transitive",
-					RuleSG:      relayMatch.SecurityGroupID,
-					RuleSource:  relayMatch.RuleSource,
-					Explanation: "Host " + relay.ID + " is SSH-accessible from the internet and can reach production host " + dst.ID + " on port " + strconv.Itoa(port) + ". Two-hop path: internet -> " + relay.ID + " -> " + dst.ID + ".",
-					Remediation: "Remove SSH ingress from 0.0.0.0/0 on " + relay.ID + " or remove its access to production host " + dst.ID + ".",
-				}
+				result.Counterexample = ce
 				result.SolveTimeMs = time.Since(start).Milliseconds()
 				return result, nil
 			}
@@ -299,19 +290,10 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 				if src.IsTrusted(relay, dst) {
 					continue
 				}
-				if ok, _ := g.CanReach(src, relay, port); ok {
+				if ce := g.findTransitiveInternalBypass(src, relay, dst, port, relayMatch); ce != nil {
 					result.Result = "SAT"
 					result.Interpretation = "Transitive SSH path exists — a non-bastion host can relay SSH to production via an intermediate host."
-					result.Counterexample = &Counterexample{
-						Source:      src.ID + " -> " + relay.ID,
-						Destination: dst.ID,
-						Port:        port,
-						PathType:    "transitive",
-						RuleSG:      relayMatch.SecurityGroupID,
-						RuleSource:  relayMatch.RuleSource,
-						Explanation: "Host " + src.ID + " can reach " + relay.ID + ", which can reach production host " + dst.ID + " on port " + strconv.Itoa(port) + ". Two-hop path: " + src.ID + " -> " + relay.ID + " -> " + dst.ID + ".",
-						Remediation: "Remove SSH access from " + src.ID + " to " + relay.ID + " or from " + relay.ID + " to production host " + dst.ID + ".",
-					}
+					result.Counterexample = ce
 					result.SolveTimeMs = time.Since(start).Milliseconds()
 					return result, nil
 				}
@@ -323,6 +305,40 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 	result.Interpretation = "No transitive SSH paths to production exist — no non-bastion relay can bridge to production."
 	result.SolveTimeMs = time.Since(start).Milliseconds()
 	return result, nil
+}
+
+func (g *Graph) findTransitiveInternetBypass(relay, dst *Host, port int, relayMatch *RuleMatch) *Counterexample {
+	match := g.findInternetRule(relay, port)
+	if match == nil || relayMatch == nil {
+		return nil
+	}
+	return &Counterexample{
+		Source:      match.RuleSource + " -> " + relay.ID,
+		Destination: dst.ID,
+		Port:        port,
+		PathType:    "transitive",
+		RuleSG:      relayMatch.SecurityGroupID,
+		RuleSource:  relayMatch.RuleSource,
+		Explanation: "Host " + relay.ID + " is SSH-accessible from the internet and can reach production host " + dst.ID + " on port " + strconv.Itoa(port) + ". Two-hop path: internet -> " + relay.ID + " -> " + dst.ID + ".",
+		Remediation: "Remove SSH ingress from " + match.RuleSource + " on " + relay.ID + " or remove its access to production host " + dst.ID + ".",
+	}
+}
+
+func (g *Graph) findTransitiveInternalBypass(src, relay, dst *Host, port int, relayMatch *RuleMatch) *Counterexample {
+	match := g.findRule(src, relay, port)
+	if match == nil || relayMatch == nil {
+		return nil
+	}
+	return &Counterexample{
+		Source:      src.ID + " -> " + relay.ID,
+		Destination: dst.ID,
+		Port:        port,
+		PathType:    "transitive",
+		RuleSG:      relayMatch.SecurityGroupID,
+		RuleSource:  relayMatch.RuleSource,
+		Explanation: "Host " + src.ID + " can reach " + relay.ID + ", which can reach production host " + dst.ID + " on port " + strconv.Itoa(port) + ". Two-hop path: " + src.ID + " -> " + relay.ID + " -> " + dst.ID + ".",
+		Remediation: "Remove SSH access from " + src.ID + " to " + relay.ID + " or from " + relay.ID + " to production host " + dst.ID + ".",
+	}
 }
 
 // RouteBypassesFirewall reports whether the route targets an internet gateway

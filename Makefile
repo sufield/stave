@@ -46,7 +46,8 @@ GO_VERSION=$(shell grep '^go ' go.mod | sed 's/go //')
 endif
 
 # Build flags
-LDFLAGS=-ldflags "-s -w -X github.com/sufield/stave/internal/version.String=$(VERSION)"
+BUILD_TIME=$(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+LDFLAGS=-ldflags "-s -w -X github.com/sufield/stave/internal/version.String=$(VERSION) -X github.com/sufield/stave/internal/version.BuildTime=$(BUILD_TIME)"
 
 # Default target
 all: lint test build
@@ -758,7 +759,7 @@ reproduce-release: sync-schemas
 		echo "Building $$bin"; \
 		CGO_ENABLED=0 GOOS="$$os" GOARCH="$$arch" \
 			$(GOBUILD) -trimpath \
-			-ldflags "-s -w -buildid= -X github.com/sufield/stave/internal/version.String=v$(VERSION)" \
+			-ldflags "-s -w -buildid= -X github.com/sufield/stave/internal/version.String=v$(VERSION) -X github.com/sufield/stave/internal/version.BuildTime=$(BUILD_TIME)" \
 			-o "dist-local/$$bin" \
 			./cmd/stave; \
 	done
