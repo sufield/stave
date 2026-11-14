@@ -155,6 +155,24 @@ func (r SGRule) IsInternal(src, dst *Host) (bool, string) {
 	return false, ""
 }
 
+// Allows reports whether the security group rule permits access from src to dst,
+// either via internal access (SG reference or broad CIDR within same VPC) or via
+// cross-VPC broad CIDR routing when crossVPC is true.
+// Returns true and the path type ("sg-ref", "cidr", or "cross-vpc").
+// Safe on nil src and dst.
+func (r SGRule) Allows(src, dst *Host, crossVPC bool) (bool, string) {
+	if src == nil || dst == nil {
+		return false, ""
+	}
+	if ok, pathType := r.IsInternal(src, dst); ok {
+		return true, pathType
+	}
+	if crossVPC && r.HasBroadInternalCIDR() {
+		return true, "cross-vpc"
+	}
+	return false, ""
+}
+
 // VPCPeering is a VPC peering connection.
 type VPCPeering struct {
 	PeeringID    string
@@ -437,6 +455,13 @@ func (g *Graph) RoutesForSubnet(sub *Subnet) []Route {
 		return nil
 	}
 	return g.Routes[sub.RouteTableID]
+}
+
+// IsPubliclyAccessible reports whether h is accessible from the public internet
+// on the specified port.
+// Safe on nil receiver or nil host.
+func (g *Graph) IsPubliclyAccessible(h *Host, port int) bool {
+	return g.findInternetRule(h, port) != nil
 }
 
 func (g *Graph) extractSubnet(a *asset.Asset) {

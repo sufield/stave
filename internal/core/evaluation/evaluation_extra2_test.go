@@ -319,4 +319,3 @@ func TestSuppression_IsExpired_IsCompensatingFailing(t *testing.T) {
 		t.Error("other invalid reason should not report IsLapsed() == true")
 	}
 }
-

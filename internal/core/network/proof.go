@@ -75,18 +75,17 @@ func (g *Graph) ProveBastionSSH(port int) (*ProofResult, error) {
 			if src.IsTrusted(dst) {
 				continue
 			}
-			if ok, pathType := g.CanReach(src, dst, port); ok {
+			if match := g.findRule(src, dst, port); match != nil {
 				result.SSHPaths++
-				ruleSG, ruleSource := g.findRule(src, dst, port)
 				result.Counterexample = &Counterexample{
 					Source:      src.ID,
 					Destination: dst.ID,
 					Port:        port,
-					PathType:    pathType,
-					RuleSG:      ruleSG,
-					RuleSource:  ruleSource,
-					Explanation: buildExplanation(src, dst, pathType, ruleSG, ruleSource),
-					Remediation: buildRemediation(ruleSG, ruleSource, bastions),
+					PathType:    match.PathType,
+					RuleSG:      match.SecurityGroupID,
+					RuleSource:  match.RuleSource,
+					Explanation: match.Explanation(src, dst),
+					Remediation: match.Remediation(bastions),
 				}
 				result.Result = "SAT"
 				result.Interpretation = "Bastion bypass exists — a non-bastion host can SSH to production without traversing a bastion."
@@ -113,44 +112,20 @@ func (g *Graph) ProveBastionSSH(port int) (*ProofResult, error) {
 }
 
 func (g *Graph) findExternalBypass(dst *Host, port int) *Counterexample {
-	for _, dstSG := range dst.SGIDs {
-		for _, rule := range g.SGRules[dstSG] {
-			if !rule.IsInternetIngressOnPort(port) {
-				continue
-			}
-			return &Counterexample{
-				Source:      "0.0.0.0/0 (internet)",
-				Destination: dst.ID,
-				Port:        port,
-				PathType:    "external",
-				RuleSG:      dstSG,
-				RuleSource:  "0.0.0.0/0",
-				Explanation: "Production host " + dst.ID + " accepts SSH from the internet (0.0.0.0/0) on " + dstSG + ". No bastion in the path.",
-				Remediation: "Remove SSH ingress from 0.0.0.0/0 on " + dstSG + ". Restrict to bastion SG reference only.",
-			}
-		}
+	match := g.findInternetRule(dst, port)
+	if match == nil {
+		return nil
 	}
-	return nil
-}
-
-func buildExplanation(src, dst *Host, pathType, ruleSG, ruleSource string) string {
-	switch pathType {
-	case "cross-vpc":
-		return "Host " + src.ID + " (vpc:" + src.VPCID + ") can SSH to production host " +
-			dst.ID + " (vpc:" + dst.VPCID + ") via VPC peering. Security group " +
-			ruleSG + " allows SSH from " + ruleSource + ". No bastion in the path."
-	default:
-		return "Host " + src.ID + " can SSH to production host " +
-			dst.ID + " via " + ruleSG + " allowing SSH from " + ruleSource + ". No bastion in the path."
+	return &Counterexample{
+		Source:      match.RuleSource + " (internet)",
+		Destination: dst.ID,
+		Port:        port,
+		PathType:    match.PathType,
+		RuleSG:      match.SecurityGroupID,
+		RuleSource:  match.RuleSource,
+		Explanation: match.Explanation(nil, dst),
+		Remediation: match.Remediation(nil),
 	}
-}
-
-func buildRemediation(ruleSG, ruleSource string, bastions []*Host) string {
-	rem := "Remove SSH ingress rule (" + ruleSource + ") on " + ruleSG + "."
-	if len(bastions) > 0 {
-		rem += " Replace with SSH from bastion SG only."
-	}
-	return rem
 }
 
 // ProveProdDevIsolation checks that no network path exists between
@@ -179,22 +154,21 @@ func (g *Graph) ProveProdDevIsolation() (*ProofResult, error) {
 	for _, pair := range pairs {
 		for _, src := range pair[0] {
 			for _, dst := range pair[1] {
-				ok, pathType, port := g.canReachAnyPort(src, dst)
-				if !ok {
+				match := g.findRuleAnyPort(src, dst)
+				if match == nil {
 					continue
 				}
-				ruleSG, ruleSource := g.findRule(src, dst, port)
 				result.Result = "SAT"
 				result.Interpretation = "Production-development isolation violated — a cross-environment path exists."
 				result.Counterexample = &Counterexample{
 					Source:      src.ID,
 					Destination: dst.ID,
-					Port:        port,
-					PathType:    pathType,
-					RuleSG:      ruleSG,
-					RuleSource:  ruleSource,
-					Explanation: "Host " + src.ID + " (" + src.Environment() + ") can reach " + dst.ID + " (" + dst.Environment() + ") via " + pathType + ".",
-					Remediation: "Remove cross-environment ingress rule on " + ruleSG + ". Ensure production and development VPCs have no peering or broad CIDR rules.",
+					Port:        match.Port,
+					PathType:    match.PathType,
+					RuleSG:      match.SecurityGroupID,
+					RuleSource:  match.RuleSource,
+					Explanation: "Host " + src.ID + " (" + src.Environment() + ") can reach " + dst.ID + " (" + dst.Environment() + ") via " + match.PathType + ".",
+					Remediation: "Remove cross-environment ingress rule on " + match.SecurityGroupID + ". Ensure production and development VPCs have no peering or broad CIDR rules.",
 				}
 				result.SolveTimeMs = time.Since(start).Milliseconds()
 				return result, nil
@@ -230,19 +204,18 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 			if src.IsInternal(dst) {
 				continue
 			}
-			if ok, pathType, port := g.canReachAnyPort(src, dst); ok {
-				ruleSG, ruleSource := g.findRule(src, dst, port)
+			if match := g.findRuleAnyPort(src, dst); match != nil {
 				result.Result = "SAT"
 				result.Interpretation = "Database isolation violated — a host outside the database VPC can reach a database host."
 				result.Counterexample = &Counterexample{
 					Source:      src.ID,
 					Destination: dst.ID,
-					Port:        port,
-					PathType:    pathType,
-					RuleSG:      ruleSG,
-					RuleSource:  ruleSource,
-					Explanation: "Host " + src.ID + " (vpc:" + src.VPCID + ") can reach database host " + dst.ID + " (vpc:" + dst.VPCID + ") via " + pathType + ".",
-					Remediation: "Remove cross-VPC ingress to database SG " + ruleSG + ". Restrict to application-tier SG references within the same VPC.",
+					Port:        match.Port,
+					PathType:    match.PathType,
+					RuleSG:      match.SecurityGroupID,
+					RuleSource:  match.RuleSource,
+					Explanation: "Host " + src.ID + " (vpc:" + src.VPCID + ") can reach database host " + dst.ID + " (vpc:" + dst.VPCID + ") via " + match.PathType + ".",
+					Remediation: "Remove cross-VPC ingress to database SG " + match.SecurityGroupID + ". Restrict to application-tier SG references within the same VPC.",
 				}
 				result.SolveTimeMs = time.Since(start).Milliseconds()
 				return result, nil
@@ -250,26 +223,21 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 		}
 
 		// Check external entry (0.0.0.0/0 or ::/0 on any port).
-		for _, dstSG := range dst.SGIDs {
-			for _, rule := range g.SGRules[dstSG] {
-				if !rule.IsInternetIngress() {
-					continue
-				}
-				result.Result = "SAT"
-				result.Interpretation = "Database isolation violated — database host is directly accessible from the internet."
-				result.Counterexample = &Counterexample{
-					Source:      rule.SourceValue + " (internet)",
-					Destination: dst.ID,
-					Port:        rule.Port,
-					PathType:    "external",
-					RuleSG:      dstSG,
-					RuleSource:  rule.SourceValue,
-					Explanation: "Database host " + dst.ID + " accepts traffic from " + rule.SourceValue + " on port " + strconv.Itoa(rule.Port) + " via " + dstSG + ".",
-					Remediation: "Remove internet ingress on " + dstSG + ". Database hosts must not be reachable from the internet.",
-				}
-				result.SolveTimeMs = time.Since(start).Milliseconds()
-				return result, nil
+		if match := g.findInternetRuleAnyPort(dst); match != nil {
+			result.Result = "SAT"
+			result.Interpretation = "Database isolation violated — database host is directly accessible from the internet."
+			result.Counterexample = &Counterexample{
+				Source:      match.RuleSource + " (internet)",
+				Destination: dst.ID,
+				Port:        match.Port,
+				PathType:    match.PathType,
+				RuleSG:      match.SecurityGroupID,
+				RuleSource:  match.RuleSource,
+				Explanation: "Database host " + dst.ID + " accepts traffic from " + match.RuleSource + " on port " + strconv.Itoa(match.Port) + " via " + match.SecurityGroupID + ".",
+				Remediation: "Remove internet ingress on " + match.SecurityGroupID + ". Database hosts must not be reachable from the internet.",
 			}
+			result.SolveTimeMs = time.Since(start).Milliseconds()
+			return result, nil
 		}
 	}
 
@@ -303,13 +271,13 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 			if relay.IsTrusted(dst) {
 				continue
 			}
-			if ok, _ := g.CanReach(relay, dst, port); !ok {
+			relayMatch := g.findRule(relay, dst, port)
+			if relayMatch == nil {
 				continue
 			}
 
 			// Relay can reach prod. Check if relay is reachable from the internet.
-			if ce := g.findExternalBypass(relay, port); ce != nil {
-				ruleSG, ruleSource := g.findRule(relay, dst, port)
+			if g.IsPubliclyAccessible(relay, port) {
 				result.Result = "SAT"
 				result.Interpretation = "Transitive SSH path exists — a non-bastion host reachable from the internet can relay SSH to production."
 				result.Counterexample = &Counterexample{
@@ -317,8 +285,8 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 					Destination: dst.ID,
 					Port:        port,
 					PathType:    "transitive",
-					RuleSG:      ruleSG,
-					RuleSource:  ruleSource,
+					RuleSG:      relayMatch.SecurityGroupID,
+					RuleSource:  relayMatch.RuleSource,
 					Explanation: "Host " + relay.ID + " is SSH-accessible from the internet and can reach production host " + dst.ID + " on port " + strconv.Itoa(port) + ". Two-hop path: internet -> " + relay.ID + " -> " + dst.ID + ".",
 					Remediation: "Remove SSH ingress from 0.0.0.0/0 on " + relay.ID + " or remove its access to production host " + dst.ID + ".",
 				}
@@ -332,7 +300,6 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 					continue
 				}
 				if ok, _ := g.CanReach(src, relay, port); ok {
-					ruleSG, ruleSource := g.findRule(relay, dst, port)
 					result.Result = "SAT"
 					result.Interpretation = "Transitive SSH path exists — a non-bastion host can relay SSH to production via an intermediate host."
 					result.Counterexample = &Counterexample{
@@ -340,8 +307,8 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 						Destination: dst.ID,
 						Port:        port,
 						PathType:    "transitive",
-						RuleSG:      ruleSG,
-						RuleSource:  ruleSource,
+						RuleSG:      relayMatch.SecurityGroupID,
+						RuleSource:  relayMatch.RuleSource,
 						Explanation: "Host " + src.ID + " can reach " + relay.ID + ", which can reach production host " + dst.ID + " on port " + strconv.Itoa(port) + ". Two-hop path: " + src.ID + " -> " + relay.ID + " -> " + dst.ID + ".",
 						Remediation: "Remove SSH access from " + src.ID + " to " + relay.ID + " or from " + relay.ID + " to production host " + dst.ID + ".",
 					}
@@ -521,13 +488,12 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 
 	for _, iso := range isolated {
 		for _, s := range sinks {
-			ok, _, port := g.canReachAnyPort(iso, s.host)
-			if !ok {
+			match := g.findRuleAnyPort(iso, s.host)
+			if match == nil {
 				continue
 			}
-			ruleSG, ruleSource := g.findRule(iso, s.host, port)
-			portStr := strconv.Itoa(port)
-			if port == 0 {
+			portStr := strconv.Itoa(match.Port)
+			if match.Port == 0 {
 				portStr = "all"
 			}
 			result.Result = "SAT"
@@ -535,10 +501,10 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 			result.Counterexample = &Counterexample{
 				Source:      iso.ID,
 				Destination: s.host.ID,
-				Port:        port,
+				Port:        match.Port,
 				PathType:    "transitive-egress",
-				RuleSG:      ruleSG,
-				RuleSource:  ruleSource,
+				RuleSG:      match.SecurityGroupID,
+				RuleSource:  match.RuleSource,
 				Explanation: "Isolated host " + iso.ID + " can reach " + s.host.ID + " on port " + portStr + ". " + s.host.ID + "'s subnet routes " + s.route.Destination + " to " + s.route.Target() + ". Two-hop path: " + iso.ID + " → " + s.host.ID + " → internet.",
 				Remediation: "Remove network access from " + iso.ID + " to " + s.host.ID + ", or remove " + s.host.ID + "'s internet egress route.",
 			}
@@ -549,13 +515,12 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 
 	for _, iso := range isolated {
 		for _, gc := range gated {
-			ok, _, port := g.canReachAnyPort(iso, gc.host)
-			if !ok {
+			match := g.findRuleAnyPort(iso, gc.host)
+			if match == nil {
 				continue
 			}
-			ruleSG, ruleSource := g.findRule(iso, gc.host, port)
-			portStr := strconv.Itoa(port)
-			if port == 0 {
+			portStr := strconv.Itoa(match.Port)
+			if match.Port == 0 {
 				portStr = "all"
 			}
 			result.Result = "EVIDENCE_GATED"
@@ -563,10 +528,10 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 			result.Counterexample = &Counterexample{
 				Source:      iso.ID,
 				Destination: gc.host.ID,
-				Port:        port,
+				Port:        match.Port,
 				PathType:    "gated-egress",
-				RuleSG:      ruleSG,
-				RuleSource:  ruleSource,
+				RuleSG:      match.SecurityGroupID,
+				RuleSource:  match.RuleSource,
 				Explanation: "Isolated host " + iso.ID + " can reach " + gc.host.ID + " on port " + portStr + ". " + gc.host.ID + "'s subnet routes " + gc.route.Destination + " to " + gc.route.Target() + " (" + gc.reason + ").",
 				Remediation: "Provide observation for " + gc.route.TargetType + " " + gc.route.TargetID + " to settle the verdict, or remove network access from " + iso.ID + " to " + gc.host.ID + ".",
 			}

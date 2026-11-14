@@ -2841,7 +2841,554 @@ func TestGraph_RoutesForSubnet(t *testing.T) {
 	}
 }
 
+func TestGraph_IsPubliclyAccessible(t *testing.T) {
+	hostIPv4 := &Host{ID: "i-ipv4", SGIDs: []string{"sg-ipv4"}}
+	hostIPv6 := &Host{ID: "i-ipv6", SGIDs: []string{"sg-ipv6"}}
+	hostWrongPort := &Host{ID: "i-wrong-port", SGIDs: []string{"sg-wrong-port"}}
+	hostEgress := &Host{ID: "i-egress", SGIDs: []string{"sg-egress"}}
+	hostPrivate := &Host{ID: "i-private", SGIDs: []string{"sg-private"}}
+	hostSGRef := &Host{ID: "i-sgref", SGIDs: []string{"sg-ref"}}
+	hostUnknownSG := &Host{ID: "i-unknown", SGIDs: []string{"sg-unknown"}}
+	hostNoSGs := &Host{ID: "i-no-sgs", SGIDs: nil}
 
+	g := &Graph{
+		SGRules: map[string][]SGRule{
+			"sg-ipv4": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+			},
+			"sg-ipv6": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "::/0"},
+			},
+			"sg-wrong-port": {
+				{Direction: "ingress", Protocol: "tcp", Port: 80, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+			},
+			"sg-egress": {
+				{Direction: "egress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+			},
+			"sg-private": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+			},
+			"sg-ref": {
+				{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-bastion"},
+			},
+		},
+	}
 
+	tests := []struct {
+		name string
+		g    *Graph
+		host *Host
+		port int
+		want bool
+	}{
+		{
+			name: "host with 0.0.0.0/0 ingress on matching port",
+			g:    g,
+			host: hostIPv4,
+			port: 22,
+			want: true,
+		},
+		{
+			name: "host with ::/0 ingress on matching port",
+			g:    g,
+			host: hostIPv6,
+			port: 22,
+			want: true,
+		},
+		{
+			name: "host with internet ingress on different port",
+			g:    g,
+			host: hostWrongPort,
+			port: 22,
+			want: false,
+		},
+		{
+			name: "host with egress-only internet rule",
+			g:    g,
+			host: hostEgress,
+			port: 22,
+			want: false,
+		},
+		{
+			name: "host with private CIDR ingress only",
+			g:    g,
+			host: hostPrivate,
+			port: 22,
+			want: false,
+		},
+		{
+			name: "host with security group reference only",
+			g:    g,
+			host: hostSGRef,
+			port: 22,
+			want: false,
+		},
+		{
+			name: "host with unknown security group ID",
+			g:    g,
+			host: hostUnknownSG,
+			port: 22,
+			want: false,
+		},
+		{
+			name: "host without security groups",
+			g:    g,
+			host: hostNoSGs,
+			port: 22,
+			want: false,
+		},
+		{
+			name: "nil host",
+			g:    g,
+			host: nil,
+			port: 22,
+			want: false,
+		},
+		{
+			name: "nil graph",
+			g:    nil,
+			host: hostIPv4,
+			port: 22,
+			want: false,
+		},
+	}
 
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.g.IsPubliclyAccessible(tc.host, tc.port); got != tc.want {
+				t.Errorf("Graph.IsPubliclyAccessible(%v, %d) = %v, want %v", tc.host, tc.port, got, tc.want)
+			}
+		})
+	}
+}
 
+func TestSGRule_Allows(t *testing.T) {
+	srcSameVPC := &Host{ID: "i-src1", VPCID: "vpc-1", SGIDs: []string{"sg-client"}}
+	dstSameVPC := &Host{ID: "i-dst1", VPCID: "vpc-1", SGIDs: []string{"sg-server"}}
+	srcDiffVPC := &Host{ID: "i-src2", VPCID: "vpc-2", SGIDs: []string{"sg-client"}}
+	srcOtherSG := &Host{ID: "i-src3", VPCID: "vpc-1", SGIDs: []string{"sg-other"}}
+
+	sgRefRule := SGRule{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-client"}
+	broadCIDRRule := SGRule{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "10.0.0.0/8"}
+	narrowCIDRRule := SGRule{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "198.51.100.0/24"}
+
+	tests := []struct {
+		name         string
+		rule         SGRule
+		src          *Host
+		dst          *Host
+		crossVPC     bool
+		wantAllowed  bool
+		wantPathType string
+	}{
+		{
+			name:         "sg reference with matching source SG",
+			rule:         sgRefRule,
+			src:          srcSameVPC,
+			dst:          dstSameVPC,
+			crossVPC:     false,
+			wantAllowed:  true,
+			wantPathType: "sg-ref",
+		},
+		{
+			name:         "sg reference with non-matching source SG",
+			rule:         sgRefRule,
+			src:          srcOtherSG,
+			dst:          dstSameVPC,
+			crossVPC:     false,
+			wantAllowed:  false,
+			wantPathType: "",
+		},
+		{
+			name:         "broad CIDR in same VPC",
+			rule:         broadCIDRRule,
+			src:          srcSameVPC,
+			dst:          dstSameVPC,
+			crossVPC:     false,
+			wantAllowed:  true,
+			wantPathType: "cidr",
+		},
+		{
+			name:         "broad CIDR cross VPC with crossVPC true",
+			rule:         broadCIDRRule,
+			src:          srcDiffVPC,
+			dst:          dstSameVPC,
+			crossVPC:     true,
+			wantAllowed:  true,
+			wantPathType: "cross-vpc",
+		},
+		{
+			name:         "broad CIDR cross VPC with crossVPC false",
+			rule:         broadCIDRRule,
+			src:          srcDiffVPC,
+			dst:          dstSameVPC,
+			crossVPC:     false,
+			wantAllowed:  false,
+			wantPathType: "",
+		},
+		{
+			name:         "narrow CIDR in same VPC",
+			rule:         narrowCIDRRule,
+			src:          srcSameVPC,
+			dst:          dstSameVPC,
+			crossVPC:     false,
+			wantAllowed:  false,
+			wantPathType: "",
+		},
+		{
+			name:         "narrow CIDR cross VPC with crossVPC true",
+			rule:         narrowCIDRRule,
+			src:          srcDiffVPC,
+			dst:          dstSameVPC,
+			crossVPC:     true,
+			wantAllowed:  false,
+			wantPathType: "",
+		},
+		{
+			name:         "nil source host",
+			rule:         broadCIDRRule,
+			src:          nil,
+			dst:          dstSameVPC,
+			crossVPC:     true,
+			wantAllowed:  false,
+			wantPathType: "",
+		},
+		{
+			name:         "nil destination host",
+			rule:         broadCIDRRule,
+			src:          srcSameVPC,
+			dst:          nil,
+			crossVPC:     false,
+			wantAllowed:  false,
+			wantPathType: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotAllowed, gotPathType := tc.rule.Allows(tc.src, tc.dst, tc.crossVPC)
+			if gotAllowed != tc.wantAllowed {
+				t.Errorf("SGRule.Allows() allowed = %v, want %v", gotAllowed, tc.wantAllowed)
+			}
+			if gotPathType != tc.wantPathType {
+				t.Errorf("SGRule.Allows() pathType = %q, want %q", gotPathType, tc.wantPathType)
+			}
+		})
+	}
+}
+
+func TestRuleMatch_Explanation(t *testing.T) {
+	src := &Host{ID: "i-src", VPCID: "vpc-1"}
+	dst := &Host{ID: "i-dst", VPCID: "vpc-2"}
+
+	tests := []struct {
+		name     string
+		match    *RuleMatch
+		src      *Host
+		dst      *Host
+		wantText string
+	}{
+		{
+			name: "cross-vpc path type",
+			match: &RuleMatch{
+				SecurityGroupID: "sg-target",
+				RuleSource:      "10.0.0.0/8",
+				PathType:        "cross-vpc",
+				Port:            22,
+			},
+			src:      src,
+			dst:      dst,
+			wantText: "Host i-src (vpc:vpc-1) can SSH to production host i-dst (vpc:vpc-2) via VPC peering. Security group sg-target allows SSH from 10.0.0.0/8. No bastion in the path.",
+		},
+		{
+			name: "external path type",
+			match: &RuleMatch{
+				SecurityGroupID: "sg-target",
+				RuleSource:      "0.0.0.0/0",
+				PathType:        "external",
+				Port:            22,
+			},
+			src:      nil,
+			dst:      dst,
+			wantText: "Production host i-dst accepts SSH from the internet (0.0.0.0/0) on sg-target. No bastion in the path.",
+		},
+		{
+			name: "default internal path type",
+			match: &RuleMatch{
+				SecurityGroupID: "sg-target",
+				RuleSource:      "sg:sg-app",
+				PathType:        "sg-ref",
+				Port:            22,
+			},
+			src:      src,
+			dst:      dst,
+			wantText: "Host i-src can SSH to production host i-dst via sg-target allowing SSH from sg:sg-app. No bastion in the path.",
+		},
+		{
+			name:     "nil match receiver",
+			match:    nil,
+			src:      src,
+			dst:      dst,
+			wantText: "",
+		},
+		{
+			name: "nil src and dst hosts",
+			match: &RuleMatch{
+				SecurityGroupID: "sg-target",
+				RuleSource:      "sg:sg-app",
+				PathType:        "sg-ref",
+				Port:            22,
+			},
+			src:      nil,
+			dst:      nil,
+			wantText: "Host  can SSH to production host  via sg-target allowing SSH from sg:sg-app. No bastion in the path.",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.match.Explanation(tc.src, tc.dst)
+			if got != tc.wantText {
+				t.Errorf("Explanation() = %q, want %q", got, tc.wantText)
+			}
+		})
+	}
+}
+
+func TestRuleMatch_Remediation(t *testing.T) {
+	match := &RuleMatch{
+		SecurityGroupID: "sg-target",
+		RuleSource:      "0.0.0.0/0",
+		PathType:        "cidr",
+		Port:            22,
+	}
+
+	tests := []struct {
+		name     string
+		match    *RuleMatch
+		bastions []*Host
+		wantText string
+	}{
+		{
+			name:     "with bastions",
+			match:    match,
+			bastions: []*Host{{ID: "i-bastion"}},
+			wantText: "Remove SSH ingress rule (0.0.0.0/0) on sg-target. Replace with SSH from bastion SG only.",
+		},
+		{
+			name:     "without bastions",
+			match:    match,
+			bastions: nil,
+			wantText: "Remove SSH ingress rule (0.0.0.0/0) on sg-target.",
+		},
+		{
+			name: "external path type",
+			match: &RuleMatch{
+				SecurityGroupID: "sg-target",
+				RuleSource:      "0.0.0.0/0",
+				PathType:        "external",
+				Port:            22,
+			},
+			bastions: nil,
+			wantText: "Remove SSH ingress from 0.0.0.0/0 on sg-target. Restrict to bastion SG reference only.",
+		},
+		{
+			name:     "nil match receiver",
+			match:    nil,
+			bastions: []*Host{{ID: "i-bastion"}},
+			wantText: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.match.Remediation(tc.bastions)
+			if got != tc.wantText {
+				t.Errorf("Remediation() = %q, want %q", got, tc.wantText)
+			}
+		})
+	}
+}
+
+func TestGraph_findRule(t *testing.T) {
+	src := &Host{ID: "i-src", VPCID: "vpc-1", SGIDs: []string{"sg-client"}}
+	dst := &Host{ID: "i-dst", VPCID: "vpc-1", SGIDs: []string{"sg-server"}}
+	g := &Graph{
+		Hosts: map[string]*Host{"i-src": src, "i-dst": dst},
+		SGRules: map[string][]SGRule{
+			"sg-server": {
+				{
+					Direction:   "ingress",
+					Protocol:    "tcp",
+					Port:        22,
+					SourceType:  "sg",
+					SourceValue: "sg-client",
+				},
+				{
+					Direction:   "ingress",
+					Protocol:    "tcp",
+					Port:        80,
+					SourceType:  "cidr",
+					SourceValue: "10.0.0.0/8",
+				},
+			},
+		},
+	}
+
+	t.Run("matching port returns RuleMatch", func(t *testing.T) {
+		match := g.findRule(src, dst, 22)
+		if match == nil {
+			t.Fatal("expected non-nil RuleMatch")
+		}
+		if match.SecurityGroupID != "sg-server" {
+			t.Errorf("SecurityGroupID = %q, want sg-server", match.SecurityGroupID)
+		}
+		if match.RuleSource != "sg:sg-client" {
+			t.Errorf("RuleSource = %q, want sg:sg-client", match.RuleSource)
+		}
+		if match.PathType != "sg-ref" {
+			t.Errorf("PathType = %q, want sg-ref", match.PathType)
+		}
+		if match.Port != 22 {
+			t.Errorf("Port = %d, want 22", match.Port)
+		}
+	})
+
+	t.Run("unmatched port returns nil", func(t *testing.T) {
+		if match := g.findRule(src, dst, 443); match != nil {
+			t.Errorf("expected nil RuleMatch for unmatched port, got %+v", match)
+		}
+	})
+
+	t.Run("nil receiver or hosts return nil", func(t *testing.T) {
+		var nilGraph *Graph
+		if match := nilGraph.findRule(src, dst, 22); match != nil {
+			t.Errorf("expected nil for nil graph, got %+v", match)
+		}
+		if match := g.findRule(nil, dst, 22); match != nil {
+			t.Errorf("expected nil for nil src, got %+v", match)
+		}
+		if match := g.findRule(src, nil, 22); match != nil {
+			t.Errorf("expected nil for nil dst, got %+v", match)
+		}
+	})
+
+	t.Run("findRuleAnyPort returns first matching rule", func(t *testing.T) {
+		match := g.findRuleAnyPort(src, dst)
+		if match == nil {
+			t.Fatal("expected non-nil RuleMatch")
+		}
+		if match.Port != 22 {
+			t.Errorf("Port = %d, want 22", match.Port)
+		}
+	})
+
+	t.Run("findRuleAnyPort returns nil when no rule matches", func(t *testing.T) {
+		unrelated := &Host{ID: "i-other", VPCID: "vpc-99"}
+		if match := g.findRuleAnyPort(unrelated, dst); match != nil {
+			t.Errorf("expected nil RuleMatch, got %+v", match)
+		}
+	})
+}
+
+func TestGraph_findInternetRule(t *testing.T) {
+	dst := &Host{ID: "i-dst", VPCID: "vpc-1", SGIDs: []string{"sg-public", "sg-private"}}
+	g := &Graph{
+		Hosts: map[string]*Host{"i-dst": dst},
+		SGRules: map[string][]SGRule{
+			"sg-public": {
+				{
+					Direction:   "ingress",
+					Protocol:    "tcp",
+					Port:        22,
+					SourceType:  "cidr",
+					SourceValue: "0.0.0.0/0",
+				},
+				{
+					Direction:   "ingress",
+					Protocol:    "tcp",
+					Port:        80,
+					SourceType:  "cidr",
+					SourceValue: "::/0",
+				},
+			},
+			"sg-private": {
+				{
+					Direction:   "ingress",
+					Protocol:    "tcp",
+					Port:        443,
+					SourceType:  "cidr",
+					SourceValue: "10.0.0.0/8",
+				},
+			},
+		},
+	}
+
+	t.Run("matching port returns RuleMatch", func(t *testing.T) {
+		match := g.findInternetRule(dst, 22)
+		if match == nil {
+			t.Fatal("expected non-nil RuleMatch")
+		}
+		if match.SecurityGroupID != "sg-public" {
+			t.Errorf("SecurityGroupID = %q, want sg-public", match.SecurityGroupID)
+		}
+		if match.RuleSource != "0.0.0.0/0" {
+			t.Errorf("RuleSource = %q, want 0.0.0.0/0", match.RuleSource)
+		}
+		if match.PathType != "external" {
+			t.Errorf("PathType = %q, want external", match.PathType)
+		}
+		if match.Port != 22 {
+			t.Errorf("Port = %d, want 22", match.Port)
+		}
+	})
+
+	t.Run("matching IPv6 port returns RuleMatch", func(t *testing.T) {
+		match := g.findInternetRule(dst, 80)
+		if match == nil {
+			t.Fatal("expected non-nil RuleMatch")
+		}
+		if match.RuleSource != "::/0" {
+			t.Errorf("RuleSource = %q, want ::/0", match.RuleSource)
+		}
+	})
+
+	t.Run("unmatched port returns nil", func(t *testing.T) {
+		if match := g.findInternetRule(dst, 443); match != nil {
+			t.Errorf("expected nil for non-internet port, got %+v", match)
+		}
+	})
+
+	t.Run("nil receiver or host returns nil", func(t *testing.T) {
+		var nilGraph *Graph
+		if match := nilGraph.findInternetRule(dst, 22); match != nil {
+			t.Errorf("expected nil for nil graph, got %+v", match)
+		}
+		if match := g.findInternetRule(nil, 22); match != nil {
+			t.Errorf("expected nil for nil host, got %+v", match)
+		}
+		if match := nilGraph.findInternetRuleAnyPort(dst); match != nil {
+			t.Errorf("expected nil for nil graph, got %+v", match)
+		}
+		if match := g.findInternetRuleAnyPort(nil); match != nil {
+			t.Errorf("expected nil for nil host, got %+v", match)
+		}
+	})
+
+	t.Run("findInternetRuleAnyPort returns first internet rule", func(t *testing.T) {
+		match := g.findInternetRuleAnyPort(dst)
+		if match == nil {
+			t.Fatal("expected non-nil RuleMatch")
+		}
+		if match.Port != 22 {
+			t.Errorf("Port = %d, want 22", match.Port)
+		}
+	})
+
+	t.Run("findInternetRuleAnyPort returns nil when host has no internet ingress", func(t *testing.T) {
+		privateHost := &Host{ID: "i-priv", VPCID: "vpc-1", SGIDs: []string{"sg-private"}}
+		if match := g.findInternetRuleAnyPort(privateHost); match != nil {
+			t.Errorf("expected nil RuleMatch, got %+v", match)
+		}
+	})
+}
