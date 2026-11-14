@@ -124,21 +124,33 @@ func (w *FindingWriter) marshalConcise(enriched *appcontracts.EnrichedResult) ([
 }
 
 func (w *FindingWriter) writeConciseTable(d *drawer, enriched *appcontracts.EnrichedResult) {
+	hasMITRE := false
+	for i := range enriched.Findings {
+		if extractMITRE(enriched.Findings[i].CorpusReference) != "" {
+			hasMITRE = true
+			break
+		}
+	}
+
 	d.ln("Findings")
 	d.ln("--------")
-	d.f("  %-4s %-10s %-12s %-40s %s\n", "#", "Severity", "MITRE", "Control", "Asset")
+	if hasMITRE {
+		d.f("  %-4s %-10s %-12s %-40s %s\n", "#", "Severity", "MITRE", "Control", "Asset")
+	} else {
+		d.f("  %-4s %-10s %-40s %s\n", "#", "Severity", "Control", "Asset")
+	}
 	for i := range enriched.Findings {
 		f := &enriched.Findings[i]
 		mitre := extractMITRE(f.CorpusReference)
 		control := shortControlID(string(f.ControlID))
 		assetName := shortAssetID(string(f.AssetID))
-		d.f("  %-4d %-10s %-12s %-40s %s\n",
-			i+1,
-			f.ControlSeverity,
-			mitre,
-			control,
-			assetName,
-		)
+		if hasMITRE {
+			d.f("  %-4d %-10s %-12s %-40s %s\n",
+				i+1, f.ControlSeverity, mitre, control, assetName)
+		} else {
+			d.f("  %-4d %-10s %-40s %s\n",
+				i+1, f.ControlSeverity, control, assetName)
+		}
 		if f.ControlName != "" {
 			d.f("  %4s %s\n", "", f.ControlName)
 		}
