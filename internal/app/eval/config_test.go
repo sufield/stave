@@ -1,12 +1,10 @@
 package eval
 
 import (
-	"io"
 	"testing"
 	"time"
 
 	policy "github.com/sufield/stave/internal/core/controldef"
-	clockadp "github.com/sufield/stave/internal/core/ports"
 )
 
 func TestNewConfig_SetsExpectedFields(t *testing.T) {
@@ -15,17 +13,12 @@ func TestNewConfig_SetsExpectedFields(t *testing.T) {
 		ControlsPath:     "/tmp/ctl",
 		ObservationsPath: "/tmp/obs",
 	}
-	clock := clockadp.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC))
 	cfg := NewConfig(plan,
 		WithMaxUnsafeDuration(24*time.Hour),
-		WithRuntime(io.Discard, io.Discard, clock, "test"),
 	)
 
 	if cfg.PolicySource != plan.ControlsPath || cfg.ObservationSource != plan.ObservationsPath {
 		t.Fatalf("unexpected dirs: %+v", cfg)
-	}
-	if cfg.BuildVersion != "test" {
-		t.Fatalf("BuildVersion = %q, want test", cfg.BuildVersion)
 	}
 	if cfg.Metadata.ControlSource.Source != "dir" {
 		t.Fatalf("ControlSource.Source = %q, want dir", cfg.Metadata.ControlSource.Source)
@@ -54,7 +47,6 @@ func TestNewConfig_EndToEnd(t *testing.T) {
 
 	cfg := NewConfig(plan,
 		WithMaxUnsafeDuration(24*time.Hour),
-		WithRuntime(io.Discard, io.Discard, clockadp.FixedClock(time.Date(2026, 2, 1, 0, 0, 0, 0, time.UTC)), "test"),
 		WithExceptionConfig(exceptionCfg),
 		WithPreloadedControls(filtered),
 	)

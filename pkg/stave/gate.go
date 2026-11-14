@@ -104,11 +104,6 @@ func (r *GateResult) PassLabel() string {
 	return "FAIL"
 }
 
-// HasViolations reports whether any violations were detected across current, new, or overdue counts.
-func (r *GateResult) HasViolations() bool {
-	return r != nil && (r.CurrentViolations > 0 || r.NewViolations > 0 || r.OverdueCount > 0)
-}
-
 // MergeTeamVerdict folds a per-team gate result into this global
 // result. A failing team flips Passed to false and appends a
 // "team <ID>: <reason>" suffix to Reason; a passing team is a no-op.

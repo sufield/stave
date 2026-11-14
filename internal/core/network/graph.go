@@ -67,12 +67,7 @@ func (h *Host) IsTrusted(targets ...*Host) bool {
 	if h.IsProduction() || h.IsBastion() {
 		return true
 	}
-	for _, target := range targets {
-		if h.SameHost(target) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(targets, h.SameHost)
 }
 
 // HasSecurityGroup reports whether h is associated with the specified security group ID.

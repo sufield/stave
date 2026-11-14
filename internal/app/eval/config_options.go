@@ -1,7 +1,6 @@
 package eval
 
 import (
-	"io"
 	"slices"
 	"time"
 
@@ -9,16 +8,6 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/ports"
 )
-
-// WithRuntime constructs the withruntime component.
-func WithRuntime(output, stderr io.Writer, clock ports.Clock, toolVersion string) Option {
-	return func(cfg *AssessmentConfig) {
-		cfg.Output = output
-		cfg.Stderr = stderr
-		cfg.Clock = clock
-		cfg.BuildVersion = toolVersion
-	}
-}
 
 // WithMaxUnsafeDuration constructs the withmaxunsafeduration component.
 func WithMaxUnsafeDuration(maxUnsafeDuration time.Duration) Option {
@@ -53,13 +42,6 @@ func WithPreloadedControls(controls []policy.ControlDefinition) Option {
 	cloned := slices.Clone(controls)
 	return func(cfg *AssessmentConfig) {
 		cfg.ActivePolicies = cloned
-	}
-}
-
-// WithControlSource constructs the withcontrolsource component.
-func WithControlSource(source evaluation.ControlSourceInfo) Option {
-	return func(cfg *AssessmentConfig) {
-		cfg.Metadata.ControlSource = source
 	}
 }
 

@@ -49,34 +49,6 @@ type ValidationResult struct {
 	Findings []ValidationFinding
 }
 
-// IsValid reports whether validation succeeded without error-level findings.
-func (r *ValidationResult) IsValid() bool {
-	return r != nil && r.Valid
-}
-
-// HasErrors reports whether there are any error-level findings.
-func (r *ValidationResult) HasErrors() bool {
-	return r != nil && r.ErrorCount > 0
-}
-
-// HasWarnings reports whether there are any warning-level findings.
-func (r *ValidationResult) HasWarnings() bool {
-	return r != nil && r.WarningCount > 0
-}
-
-// TotalFindings returns the combined count of error and warning findings.
-func (r *ValidationResult) TotalFindings() int {
-	if r == nil {
-		return 0
-	}
-	return r.ErrorCount + r.WarningCount
-}
-
-// HasNoIssues reports whether there are zero errors and zero warnings.
-func (r *ValidationResult) HasNoIssues() bool {
-	return r != nil && r.TotalFindings() == 0
-}
-
 // ValidationFinding is one diagnostic issue found during validation.
 type ValidationFinding struct {
 	// RuleID identifies the validation rule that fired.

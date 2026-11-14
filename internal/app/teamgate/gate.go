@@ -19,11 +19,6 @@ const (
 	ZeroToleranceThreshold Threshold = 0
 )
 
-// NewThreshold constructs a Threshold value object.
-func NewThreshold(limit int) Threshold {
-	return Threshold(limit)
-}
-
 // IsDisabled reports whether threshold check is disabled (-1).
 func (t Threshold) IsDisabled() bool {
 	return t < 0
@@ -32,11 +27,6 @@ func (t Threshold) IsDisabled() bool {
 // IsExceeded reports whether finding count exceeds this threshold.
 func (t Threshold) IsExceeded(count int) bool {
 	return !t.IsDisabled() && count > int(t)
-}
-
-// Value returns the raw integer threshold limit.
-func (t Threshold) Value() int {
-	return int(t)
 }
 
 // Thresholds defines the maximum allowed findings per severity.
@@ -91,11 +81,6 @@ type GateResult struct {
 
 // FindingList is a domain collection of remediation.Finding items with query methods.
 type FindingList []remediation.Finding
-
-// Len returns the count of findings in the collection.
-func (fl FindingList) Len() int {
-	return len(fl)
-}
 
 // Input configures the gate evaluation.
 type Input struct {

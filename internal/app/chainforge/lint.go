@@ -33,26 +33,6 @@ func (lm LintMessages) Contains(target string) bool {
 // LintResults is a domain collection of LintResult items with querying methods.
 type LintResults []LintResult
 
-// Len returns the number of lint results in the collection.
-func (lrs LintResults) Len() int {
-	return len(lrs)
-}
-
-// Valid reports whether all lint results in the collection have zero errors.
-func (lrs LintResults) Valid() bool {
-	for i := range lrs {
-		if len(lrs[i].Errors) > 0 {
-			return false
-		}
-	}
-	return true
-}
-
-// HasErrors reports whether any lint result in the collection contains errors.
-func (lrs LintResults) HasErrors() bool {
-	return !lrs.Valid()
-}
-
 // LintChain validates a chain definition against the control catalog
 // and the catalog-supplied capability registry.
 func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]struct{}, registry policy.CapabilityRegistry) LintResult {

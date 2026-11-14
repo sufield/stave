@@ -76,11 +76,6 @@ func (res OCSFResources) ByType(t kernel.AssetType) OCSFResources {
 // ComplianceFindings is a domain collection of ComplianceFinding events with querying methods.
 type ComplianceFindings []ComplianceFinding
 
-// Len returns the number of compliance finding events in the collection.
-func (cf ComplianceFindings) Len() int {
-	return len(cf)
-}
-
 // EventUID represents an OCSF event unique identifier.
 type EventUID string
 

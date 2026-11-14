@@ -4,7 +4,6 @@
 package telemetry
 
 import (
-	"slices"
 	"strings"
 	"time"
 
@@ -47,16 +46,6 @@ func (wid WindowID) IsEmpty() bool {
 
 // ClosedWindowIDs is a domain collection of closed window identifiers with query methods.
 type ClosedWindowIDs []WindowID
-
-// Len returns the count of closed window IDs.
-func (c ClosedWindowIDs) Len() int {
-	return len(c)
-}
-
-// Contains reports whether the target window ID is in the collection.
-func (c ClosedWindowIDs) Contains(wid WindowID) bool {
-	return slices.Contains(c, wid)
-}
 
 // Event represents a single telemetry record for one finding.
 // One JSON object per line in NDJSON output.

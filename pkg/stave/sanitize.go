@@ -19,11 +19,6 @@ type SanitizeStats struct {
 	AccountIDHashes int
 }
 
-// HasModifiedAssets reports whether any assets were touched by sanitization.
-func (s SanitizeStats) HasModifiedAssets() bool {
-	return s.AssetsTouched > 0
-}
-
 // IsNoOp reports whether no assets were touched during sanitization.
 func (s SanitizeStats) IsNoOp() bool {
 	return s.AssetsTouched == 0

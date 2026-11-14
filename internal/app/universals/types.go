@@ -18,11 +18,6 @@ func (v Verdict) IsHolds() bool {
 	return v == VerdictHolds
 }
 
-// IsViolated reports whether the verdict is SAT (the universal formula was violated).
-func (v Verdict) IsViolated() bool {
-	return v == VerdictViolated
-}
-
 // Result is the outcome of evaluating one universal formula via Z3.
 type Result struct {
 	ID          UniversalID `json:"id"`

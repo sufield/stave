@@ -170,11 +170,6 @@ func (s *SLAProjection) StatusMarker() string {
 // ScoreHistory is a domain collection of daily posture scores.
 type ScoreHistory []PostureScore
 
-// Len returns the number of days in the score history.
-func (sh ScoreHistory) Len() int {
-	return len(sh)
-}
-
 // Input holds data for forecasting.
 type Input struct {
 	ScoreHistory ScoreHistory // one per day

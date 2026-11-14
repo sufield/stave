@@ -114,20 +114,17 @@ func TestAuditWorkflowPerformAssessment(t *testing.T) {
 
 	t.Run("writes findings and returns violations", func(t *testing.T) {
 		m := &marshalerStub{}
-		run, err := NewAuditWorkflow(
-			evalObservationRepoStub{
+		run := &AuditWorkflow{
+			ObservationRepo: evalObservationRepoStub{
 				snapshots: snapshots,
 				hashes: &evaluation.InputHashes{
 					Files:   map[evaluation.FilePath]kernel.Digest{"a.json": "abc"},
 					Overall: "overall",
 				},
 			},
-			evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
-			m,
-			testEnrichFn,
-		)
-		if err != nil {
-			t.Fatalf("NewAuditWorkflow: %v", err)
+			PolicyRepo:      evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
+			ReportPublisher: m,
+			ContextEnricher: testEnrichFn,
 		}
 
 		status, err := run.ExecuteAndWrite(context.Background(), AssessmentConfig{
@@ -157,17 +154,14 @@ func TestAuditWorkflowPerformAssessment(t *testing.T) {
 	})
 
 	t.Run("marshaler failure is wrapped", func(t *testing.T) {
-		run, err := NewAuditWorkflow(
-			evalObservationRepoStub{snapshots: snapshots},
-			evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
-			&marshalerStub{err: errors.New("marshal boom")},
-			testEnrichFn,
-		)
-		if err != nil {
-			t.Fatalf("NewAuditWorkflow: %v", err)
+		run := &AuditWorkflow{
+			ObservationRepo: evalObservationRepoStub{snapshots: snapshots},
+			PolicyRepo:      evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
+			ReportPublisher: &marshalerStub{err: errors.New("marshal boom")},
+			ContextEnricher: testEnrichFn,
 		}
 
-		_, err = run.ExecuteAndWrite(context.Background(), AssessmentConfig{
+		_, err := run.ExecuteAndWrite(context.Background(), AssessmentConfig{
 			PolicySource:      "ctl",
 			ObservationSource: "obs",
 			SLAThreshold:      30 * time.Minute,

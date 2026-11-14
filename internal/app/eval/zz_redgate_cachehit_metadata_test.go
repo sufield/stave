@@ -108,22 +108,19 @@ func Test_RedGate_CacheHitMetadata(t *testing.T) {
 	overallDigest := kernel.Digest(strings.Repeat("b", 64))
 
 	hits := &hitCounterHandler{}
-	run, err := NewAuditWorkflow(
-		evalObservationRepoStub{
+	run := &AuditWorkflow{
+		ObservationRepo: evalObservationRepoStub{
 			snapshots: snapshots,
 			hashes: &evaluation.InputHashes{
 				Files:   map[evaluation.FilePath]kernel.Digest{"a.json": fileDigest},
 				Overall: overallDigest,
 			},
 		},
-		evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
-		&marshalerStub{},
-		testEnrichFn,
-	)
-	if err != nil {
-		t.Fatalf("NewAuditWorkflow: %v", err)
+		PolicyRepo:      evalControlRepoStub{controls: []policy.ControlDefinition{ctl}},
+		ReportPublisher: &marshalerStub{},
+		ContextEnricher: testEnrichFn,
+		Logger:          slog.New(hits),
 	}
-	run.Logger = slog.New(hits)
 
 	// Provenance the cold run records and that the warm hit must
 	// preserve byte-for-byte in its output extensions block.

@@ -2,7 +2,6 @@ package eval
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -102,37 +101,6 @@ func (w *AuditWorkflow) Snapshots() []asset.Snapshot {
 	out := make([]asset.Snapshot, len(w.loadedSnapshots))
 	copy(out, w.loadedSnapshots)
 	return out
-}
-
-// NewAuditWorkflow initializes the workflow with required
-// security connectors. Returns an error rather than panicking on
-// missing dependencies — panics on configuration errors are
-// recoverable mistakes (the calling layer typically has its own
-// retry / fallback path) and should not crash the process.
-func NewAuditWorkflow(
-	invRepo appcontracts.ObservationRepository,
-	polRepo appcontracts.ControlRepository,
-	publisher appcontracts.FindingMarshaler,
-	enricher appcontracts.EnrichFunc,
-) (*AuditWorkflow, error) {
-	if invRepo == nil {
-		return nil, errors.New("newAuditWorkflow: ObservationRepo is required")
-	}
-	if polRepo == nil {
-		return nil, errors.New("newAuditWorkflow: PolicyRepo is required")
-	}
-	if publisher == nil {
-		return nil, errors.New("newAuditWorkflow: ReportPublisher is required")
-	}
-	if enricher == nil {
-		return nil, errors.New("newAuditWorkflow: ContextEnricher is required")
-	}
-	return &AuditWorkflow{
-		ObservationRepo: invRepo,
-		PolicyRepo:      polRepo,
-		ReportPublisher: publisher,
-		ContextEnricher: enricher,
-	}, nil
 }
 
 // PerformAssessment executes the security audit and returns the compliance report.

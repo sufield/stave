@@ -68,11 +68,6 @@ type Report struct {
 // FindingList is a domain collection of remediation.Finding items with query methods.
 type FindingList []remediation.Finding
 
-// Len returns the count of findings in the collection.
-func (fl FindingList) Len() int {
-	return len(fl)
-}
-
 // Input configures the export.
 type Input struct {
 	Findings      FindingList

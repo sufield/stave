@@ -93,11 +93,6 @@ type FindingRef struct {
 // FindingRefs is a domain collection of FindingRef items with domain extraction methods.
 type FindingRefs []FindingRef
 
-// Len returns the number of finding references in the collection.
-func (frs FindingRefs) Len() int {
-	return len(frs)
-}
-
 // FilterS3Public returns a new FindingRefs collection containing only S3 public-exposure controls.
 func (frs FindingRefs) FilterS3Public() FindingRefs {
 	if len(frs) == 0 {

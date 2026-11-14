@@ -20,11 +20,6 @@ func (c SnapshotCount) Int() int {
 	return int(c)
 }
 
-// IsEmpty reports whether the snapshot count is zero.
-func (c SnapshotCount) IsEmpty() bool {
-	return c == 0
-}
-
 // CompareRequest defines the inputs for a baseline/target comparison.
 type CompareRequest struct {
 	BaselineFindings  []evaluation.Finding
@@ -46,47 +41,6 @@ type CompareResult struct {
 // HasRegressions reports whether any regression findings were introduced.
 func (cr CompareResult) HasRegressions() bool {
 	return cr.RegressionCount > 0
-}
-
-// HasOpen reports whether any violations remain open.
-func (cr CompareResult) HasOpen() bool {
-	return cr.OpenCount > 0
-}
-
-// IsRegressionFree reports whether remediation introduced no regressions.
-func (cr CompareResult) IsRegressionFree() bool {
-	return !cr.HasRegressions()
-}
-
-// TotalOutstanding returns the sum of open and regression violations.
-func (cr CompareResult) TotalOutstanding() int {
-	return cr.OpenCount + cr.RegressionCount
-}
-
-// HasViolations reports whether any outstanding violations (open or regression) exist.
-func (cr CompareResult) HasViolations() bool {
-	return cr.TotalOutstanding() > 0
-}
-
-// RemediatedCount returns the number of successfully remediated findings.
-func (cr CompareResult) RemediatedCount() int {
-	if cr.Attestation != nil {
-		return cr.Attestation.Summary.Remediated
-	}
-	return 0
-}
-
-// HasRemediated reports whether any findings were successfully remediated.
-func (cr CompareResult) HasRemediated() bool {
-	return cr.RemediatedCount() > 0
-}
-
-// PassLabel returns "PASS" if regression-free, or "FAIL" otherwise.
-func (cr CompareResult) PassLabel() string {
-	if cr.IsRegressionFree() {
-		return "PASS"
-	}
-	return "FAIL"
 }
 
 // Compare runs a baseline/target finding comparison and produces an
@@ -133,11 +87,6 @@ func Compare(req CompareRequest) (CompareResult, error) {
 
 // AttestationEntries is a domain collection of report.AttestationEntry items with query methods.
 type AttestationEntries []report.AttestationEntry
-
-// Len returns the number of attestation entries in the collection.
-func (ae AttestationEntries) Len() int {
-	return len(ae)
-}
 
 // findingsToEntries transforms domain findings into attestation entries,
 // applying sanitization if configured.

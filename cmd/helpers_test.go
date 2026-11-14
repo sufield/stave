@@ -8,10 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil/compose"
-	appeval "github.com/sufield/stave/internal/app/eval"
-	"github.com/sufield/stave/internal/platform/identity"
-	"github.com/sufield/stave/internal/platform/logging"
-	"github.com/sufield/stave/internal/version"
 )
 
 // getRootCmd returns a fully-wired root cobra command for tests.
@@ -62,20 +58,6 @@ func getDevRootCmd() *cobra.Command {
 		panic("getDevRootCmd: " + err.Error())
 	}
 	return app.Root
-}
-
-// testAttachRunIDFromPlan attaches a run ID from the evaluation plan to the app logger.
-func (a *App) testAttachRunIDFromPlan(plan *appeval.EvaluationPlan) {
-	if plan == nil {
-		return
-	}
-	runID := identity.ComputeRunIDParts(
-		version.String,
-		plan.ObservationsHash.String(),
-		plan.ControlsHash.String(),
-	)
-	a.Logger = logging.WithRunID(a.Logger, runID)
-	logging.SetDefaultLogger(a.Logger)
 }
 
 func TestResolveNow_Empty(t *testing.T) {

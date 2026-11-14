@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime/debug"
@@ -406,17 +405,4 @@ func (r *byteReader) readInto(dst []byte) bool {
 	copy(dst, r.buf[r.pos:r.pos+len(dst)])
 	r.pos += len(dst)
 	return true
-}
-
-// unused but exported so test helpers can build a corrupted reader
-// without copying the type.
-var _ io.Reader = (*byteReader)(nil)
-
-func (r *byteReader) Read(p []byte) (int, error) {
-	if r.pos >= len(r.buf) {
-		return 0, io.EOF
-	}
-	n := copy(p, r.buf[r.pos:])
-	r.pos += n
-	return n, nil
 }

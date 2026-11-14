@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/sufield/stave/internal/core/ports"
-	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 	"github.com/sufield/stave/pkg/stave/internal/policyexport"
 )
 
@@ -130,18 +129,9 @@ func ExportPolicies(ctx context.Context, cfg ExportConfig) (*PolicyExport, error
 	if cfg.SnapshotsDir == "" {
 		return nil, errors.New("stave.ExportPolicies: ExportConfig.SnapshotsDir is required")
 	}
-	resolver := cfg.EffectivePermissionResolver
-	if resolver == nil {
-		// Default to the AWS implementation. Other providers
-		// register their own here when they ship one; for now
-		// the only supported cloud is AWS, so the unconditional
-		// default mirrors the rest of the export path's
-		// AWS-only assumptions.
-		resolver = iam.NewEffectivePermissionResolver()
-	}
 	r, err := policyexport.Run(ctx, policyexport.Config{
 		SnapshotsDir:         cfg.SnapshotsDir,
-		EffectivePermissions: resolver,
+		EffectivePermissions: cfg.EffectivePermissionResolver,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("run: %w", err)

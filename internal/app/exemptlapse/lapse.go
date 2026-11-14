@@ -103,11 +103,6 @@ type LapsedFinding struct {
 // LapsedFindings represents a collection of LapsedFinding entries with query methods.
 type LapsedFindings []LapsedFinding
 
-// Len returns the number of lapsed findings.
-func (lf LapsedFindings) Len() int {
-	return len(lf)
-}
-
 // Input configures the lapse detection.
 type Input struct {
 	Findings []evaluation.Finding

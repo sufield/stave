@@ -20,33 +20,6 @@ type Tool struct {
 // Tools is a domain collection of Tool entries with query and lookup methods.
 type Tools []Tool
 
-// Len returns the number of tools in the collection.
-func (ts Tools) Len() int {
-	return len(ts)
-}
-
-// Names returns the list of names for all tools in the collection.
-func (ts Tools) Names() []string {
-	if len(ts) == 0 {
-		return nil
-	}
-	names := make([]string, len(ts))
-	for i := range ts {
-		names[i] = ts[i].Name
-	}
-	return names
-}
-
-// ByName returns the tool matching the given name, or nil if not found.
-func (ts Tools) ByName(name string) *Tool {
-	for i := range ts {
-		if ts[i].Name == name {
-			return &ts[i]
-		}
-	}
-	return nil
-}
-
 // Prerequisites represents a domain collection of Prerequisite items with query methods.
 type Prerequisites []Prerequisite
 

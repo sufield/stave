@@ -77,11 +77,6 @@ type EvaluateResponse struct {
 	OverdueUpcoming   int       `json:"overdue_upcoming,omitempty"`
 }
 
-// HasViolations reports whether any violations were detected across current, new, or overdue counts.
-func (r *EvaluateResponse) HasViolations() bool {
-	return r != nil && (r.CurrentViolations > 0 || r.NewViolations > 0 || r.OverdueUpcoming > 0)
-}
-
 // FindingsCounterPort counts findings in an evaluation artifact.
 type FindingsCounterPort interface {
 	CountFindings(ctx context.Context, path string) (int, error)

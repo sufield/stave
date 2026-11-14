@@ -37,18 +37,8 @@ type SearchResult struct {
 // SearchResults represents a collection of SearchResult items with query methods.
 type SearchResults []SearchResult
 
-// Len returns the count of search results.
-func (sr SearchResults) Len() int {
-	return len(sr)
-}
-
 // SearchQuery represents a catalog search keyword query.
 type SearchQuery string
-
-// String returns the raw string value of the search query.
-func (q SearchQuery) String() string {
-	return string(q)
-}
 
 // IsEmpty reports whether the search query is blank or empty.
 func (q SearchQuery) IsEmpty() bool {
@@ -58,14 +48,6 @@ func (q SearchQuery) IsEmpty() bool {
 // Normalized returns the search query trimmed of whitespace and converted to lower case.
 func (q SearchQuery) Normalized() string {
 	return toLower(strings.TrimSpace(string(q)))
-}
-
-// Matches reports whether the query matches target text using case-insensitive substring search.
-func (q SearchQuery) Matches(target string) bool {
-	if q.IsEmpty() {
-		return true
-	}
-	return strutil.ContainsFold(target, q.Normalized())
 }
 
 // Filter constrains the search.

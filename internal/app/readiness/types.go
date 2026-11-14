@@ -45,11 +45,6 @@ func (o ObservedAssetTypes) Len() int {
 	return len(o)
 }
 
-// IsEmpty reports whether there are no observed asset types.
-func (o ObservedAssetTypes) IsEmpty() bool {
-	return len(o) == 0
-}
-
 // HasTypes reports whether there is at least one observed asset type.
 func (o ObservedAssetTypes) HasTypes() bool {
 	return len(o) > 0
@@ -76,42 +71,12 @@ func (o ObservedAssetTypes) CountFor(at kernel.AssetType) int {
 	return o[at]
 }
 
-// Contains reports whether the given asset type is present in observed asset types.
-func (o ObservedAssetTypes) Contains(at kernel.AssetType) bool {
-	if o == nil {
-		return false
-	}
-	_, ok := o[at]
-	return ok
-}
-
 // CatalogAssetTypes is a domain collection of asset types declared in the control catalog.
 type CatalogAssetTypes map[kernel.AssetType]bool
 
 // Len returns the number of catalog asset types.
 func (c CatalogAssetTypes) Len() int {
 	return len(c)
-}
-
-// SortedTypes returns the catalog asset types sorted alphabetically.
-func (c CatalogAssetTypes) SortedTypes() []kernel.AssetType {
-	if len(c) == 0 {
-		return nil
-	}
-	types := make([]kernel.AssetType, 0, len(c))
-	for t := range c {
-		types = append(types, t)
-	}
-	slices.Sort(types)
-	return types
-}
-
-// Contains reports whether the given asset type is declared in the catalog.
-func (c CatalogAssetTypes) Contains(at kernel.AssetType) bool {
-	if c == nil {
-		return false
-	}
-	return c[at]
 }
 
 // Report is the analyzer's output: a snapshot of what the

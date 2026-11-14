@@ -73,10 +73,6 @@ func (s *sevTally) AllPassed() bool {
 	return s.total == 0
 }
 
-func (s *sevTally) HasFindings() bool {
-	return s.total > 0
-}
-
 func renderAllStaged(findingsJSON []byte, w io.Writer) error {
 	var doc stagedDoc
 	if err := json.Unmarshal(findingsJSON, &doc); err != nil {

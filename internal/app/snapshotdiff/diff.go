@@ -53,46 +53,8 @@ type ScopeWarning struct {
 // NewAssets is a domain collection of NewAsset items with querying methods.
 type NewAssets []NewAsset
 
-// Len returns the number of new assets in the collection.
-func (na NewAssets) Len() int {
-	return len(na)
-}
-
-// ByType returns a new NewAssets collection filtered by asset type.
-func (na NewAssets) ByType(typ kernel.AssetType) NewAssets {
-	if len(na) == 0 {
-		return nil
-	}
-	var filtered NewAssets
-	for i := range na {
-		if na[i].AssetType == typ {
-			filtered = append(filtered, na[i])
-		}
-	}
-	return filtered
-}
-
 // RemovedAssets is a domain collection of RemovedAsset items with querying methods.
 type RemovedAssets []RemovedAsset
-
-// Len returns the number of removed assets in the collection.
-func (ra RemovedAssets) Len() int {
-	return len(ra)
-}
-
-// ByType returns a new RemovedAssets collection filtered by asset type.
-func (ra RemovedAssets) ByType(typ kernel.AssetType) RemovedAssets {
-	if len(ra) == 0 {
-		return nil
-	}
-	var filtered RemovedAssets
-	for i := range ra {
-		if ra[i].AssetType == typ {
-			filtered = append(filtered, ra[i])
-		}
-	}
-	return filtered
-}
 
 // DiffResult holds the structured diff between two snapshots.
 type DiffResult struct {
@@ -137,19 +99,9 @@ type RiskSummary struct {
 	Neutral    int `json:"neutral"`
 }
 
-// Total returns the total count of property changes evaluated for risk.
-func (rs RiskSummary) Total() int {
-	return rs.Increasing + rs.Decreasing + rs.Neutral
-}
-
 // HasRiskChanges reports whether any risk-increasing or risk-decreasing changes exist.
 func (rs RiskSummary) HasRiskChanges() bool {
 	return rs.Increasing > 0 || rs.Decreasing > 0
-}
-
-// NetRisk returns the net risk change (increasing - decreasing).
-func (rs RiskSummary) NetRisk() int {
-	return rs.Increasing - rs.Decreasing
 }
 
 // Diff compares two snapshots and returns the structured differences.

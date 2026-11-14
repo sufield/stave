@@ -29,11 +29,6 @@ func (p PropertyPath) String() string {
 // FieldGaps is a domain collection of FieldGap items with domain querying and filtering methods.
 type FieldGaps []FieldGap
 
-// Len returns the number of gaps in the collection.
-func (fg FieldGaps) Len() int {
-	return len(fg)
-}
-
 // IsEmpty reports whether the collection contains no gaps.
 func (fg FieldGaps) IsEmpty() bool {
 	return len(fg) == 0
@@ -119,16 +114,6 @@ func (cb ControlsBlocked) Contains(target kernel.ControlID) bool {
 
 // ChainsBlocked is a domain collection of chain IDs blocked by a gap with querying methods.
 type ChainsBlocked []kernel.ChainID
-
-// Len returns the number of blocked chains.
-func (cb ChainsBlocked) Len() int {
-	return len(cb)
-}
-
-// Contains returns true if target is in the list of blocked chains.
-func (cb ChainsBlocked) Contains(target kernel.ChainID) bool {
-	return slices.Contains(cb, target)
-}
 
 // Remediation describes how the operator closes the gap and the
 // effort it takes. Four classes today, partitioned along "can an

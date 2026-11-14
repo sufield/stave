@@ -25,11 +25,6 @@ type CaseResult struct {
 // CaseResults is a domain collection of CaseResult items with querying methods.
 type CaseResults []CaseResult
 
-// Len returns the number of case results in the collection.
-func (crs CaseResults) Len() int {
-	return len(crs)
-}
-
 // Result is the outcome of running all tests in a control.
 type Result struct {
 	ControlID kernel.ControlID `json:"control_id"`
@@ -41,11 +36,6 @@ type Result struct {
 
 // TestResults is a domain collection of Result items across multiple controls.
 type TestResults []Result
-
-// Len returns the number of control test results.
-func (trs TestResults) Len() int {
-	return len(trs)
-}
 
 // Verdict classifies the test case verdict.
 type Verdict string
@@ -95,11 +85,6 @@ func (s Summary) AllPassed() bool {
 
 // ControlDefinitions is a domain collection of policy.ControlDefinition items with query methods.
 type ControlDefinitions []policy.ControlDefinition
-
-// Len returns the count of control definitions in the collection.
-func (cds ControlDefinitions) Len() int {
-	return len(cds)
-}
 
 // RunInput holds the inputs for a test run.
 type RunInput struct {
