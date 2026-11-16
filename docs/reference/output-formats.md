@@ -27,7 +27,21 @@ stave apply --controls testdata/e2e/e2e-01-violation/controls --observations tes
 stave apply --controls testdata/e2e/e2e-01-violation/controls --observations testdata/e2e/e2e-01-violation/observations --format text
 ```
 
-Human-readable output for terminal use. Includes color when the terminal supports it (respects `NO_COLOR` environment variable).
+Human-readable output for terminal use. Text is the default format. Respects `NO_COLOR` environment variable and suppresses ANSI when stdout is not a TTY.
+
+The default concise view shows a findings table with columns for severity, control ID, and asset. Each finding includes:
+
+- **Control name** — the human-readable title from the control YAML
+- **Trigger** — what specifically failed (the `defect` field from evaluation)
+
+The **MITRE** column appears only when at least one finding has a MITRE ATT&CK mapping; otherwise it is omitted to save space.
+
+After the findings table, the output shows:
+
+- **Indeterminate** controls (data missing from the observation snapshot)
+- **Compound Chains** and **Near-Miss Chains** (when present)
+
+Pass `--verbose` for the full view with evidence, reasoning, remediation actions, and exploitability tiers.
 
 ## SARIF
 

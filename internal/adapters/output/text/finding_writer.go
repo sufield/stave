@@ -27,7 +27,8 @@ import (
 
 // FindingWriter marshals findings as human-readable text.
 type FindingWriter struct {
-	Verbose bool
+	Verbose              bool
+	ShowAllIndeterminate bool
 }
 
 var _ appcontracts.FindingMarshaler = (*FindingWriter)(nil)
@@ -372,16 +373,26 @@ func joinControls(ids []kernel.ControlID) string {
 	return strings.Join(parts, ", ")
 }
 
+// maxIndeterminateDisplay is the default cap on indeterminate findings
+// shown in text output. Use --indeterminate-only to see all.
+const maxIndeterminateDisplay = 3
+
 // writeIndeterminate renders the indeterminate section — controls that
 // could not be evaluated because required fields were absent from the
-// observation snapshot.
+// observation snapshot. Text output caps display at maxIndeterminateDisplay;
+// use --indeterminate-only to see the full list.
 func (w *FindingWriter) writeIndeterminate(d *drawer, enriched *appcontracts.EnrichedResult) {
 	if !enriched.HasIndeterminateFindings() {
 		return
 	}
-	d.f("\nIndeterminate (%d) — cannot evaluate, data missing\n", len(enriched.IndeterminateFindings))
+	total := len(enriched.IndeterminateFindings)
+	d.f("\nIndeterminate (%d) — cannot evaluate, data missing\n", total)
 	d.ln(strings.Repeat("-", 50))
-	for i := range enriched.IndeterminateFindings {
+	limit := total
+	if !w.ShowAllIndeterminate && limit > maxIndeterminateDisplay {
+		limit = maxIndeterminateDisplay
+	}
+	for i := 0; i < limit; i++ {
 		f := &enriched.IndeterminateFindings[i]
 		missing := f.MissingFields()
 		d.f("  %-10s %-40s %s\n",
@@ -392,6 +403,9 @@ func (w *FindingWriter) writeIndeterminate(d *drawer, enriched *appcontracts.Enr
 		if len(missing) > 0 {
 			d.f("             Missing: %s\n", strings.Join(missing, ", "))
 		}
+	}
+	if limit < total {
+		d.f("  ... and %d more (use --indeterminate-only to see all)\n", total-limit)
 	}
 	d.f("\n  Collect the missing fields to convert these to confirmed findings or passes.\n")
 }

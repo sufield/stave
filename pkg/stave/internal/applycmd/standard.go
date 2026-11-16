@@ -351,7 +351,7 @@ func checkStaleness(ctx context.Context, obsDir, assertRecent string, now time.T
 // into a byte buffer. When includeAtomic is false, per-control findings are
 // suppressed from the output (compound-only default mode).
 func renderReport(ctx context.Context, format string, verbose bool, includeAtomic bool, findingsOnly bool, indeterminateOnly bool, sanitizer kernel.Sanitizer, report *evaluation.ComplianceReport, controls []policy.ControlDefinition) ([]byte, error) {
-	marshaler, err := buildFindingWriter(format, verbose)
+	marshaler, err := buildFindingWriter(format, verbose, indeterminateOnly)
 	if err != nil {
 		return nil, err
 	}

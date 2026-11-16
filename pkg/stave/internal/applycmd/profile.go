@@ -224,10 +224,10 @@ func buildClock(now string) (ports.Clock, error) {
 
 // buildFindingWriter replicates cmd/cmdutil/compose.DefaultFindingWriter
 // (which stays command-side for other callers).
-func buildFindingWriter(format string, verbose bool) (appcontracts.FindingMarshaler, error) {
+func buildFindingWriter(format string, verbose bool, showAllIndeterminate bool) (appcontracts.FindingMarshaler, error) {
 	switch appcontracts.OutputFormat(format) {
 	case appcontracts.FormatText:
-		return &outtext.FindingWriter{Verbose: verbose}, nil
+		return &outtext.FindingWriter{Verbose: verbose, ShowAllIndeterminate: showAllIndeterminate}, nil
 	case appcontracts.FormatJSON:
 		return outjson.NewFindingWriter(true), nil
 	case appcontracts.FormatSARIF:
@@ -238,7 +238,7 @@ func buildFindingWriter(format string, verbose bool) (appcontracts.FindingMarsha
 }
 
 func writeResults(ctx context.Context, req ProfileRequest, sanitizer kernel.Sanitizer, result *evaluation.ComplianceReport, controls []policy.ControlDefinition) ([]byte, error) {
-	marshaler, err := buildFindingWriter(req.Format, false)
+	marshaler, err := buildFindingWriter(req.Format, false, false)
 	if err != nil {
 		return nil, err
 	}

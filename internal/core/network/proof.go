@@ -1,3 +1,23 @@
+// Package network proves network safety properties over concrete VPC
+// snapshots using exhaustive graph search.
+//
+// The provers use SAT/UNSAT vocabulary because the questions are
+// satisfiability questions ("does there exist a path that bypasses the
+// bastion?"), but the solver is brute-force enumeration, not an SMT
+// engine. This is deliberate:
+//
+//   - The graph is small (tens–hundreds of hosts/rules); exhaustive
+//     search is faster than Z3's formula-building overhead.
+//   - No symbolic reasoning is needed — predicates are concrete SG rule
+//     lookups, not constraint intersection.
+//   - A three-valued verdict (SAT / UNSAT / EVIDENCE_GATED) is needed
+//     when the snapshot is incomplete; Z3 is two-valued.
+//   - Counterexamples are built inline with infrastructure names; no
+//     model-extraction step.
+//   - Zero native dependencies — no CGo, no subprocess, single binary.
+//
+// Z3 is used elsewhere (semantic-diff) for genuinely symbolic work:
+// checking CEL predicate equivalence, where enumeration is impossible.
 package network
 
 import (
