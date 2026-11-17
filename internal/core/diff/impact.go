@@ -37,4 +37,3 @@ type DistanceChange struct {
 	GatesFell   []kernel.ControlID `json:"gates_fell,omitempty"` // controls that went pass→fail
 	GatesHeld   []kernel.ControlID `json:"gates_held,omitempty"` // controls still holding
 }
-
