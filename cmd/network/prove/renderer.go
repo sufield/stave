@@ -89,12 +89,7 @@ func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
 		fmt.Fprintf(w, "    Destination: %s\n", ce.Destination)
 		renderPort(w, ce)
 		fmt.Fprintf(w, "    Path:        %s\n", ce.PathType)
-		if ce.RuleSG != "" {
-			fmt.Fprintf(w, "    Rule SG:     %s\n", ce.RuleSG)
-		}
-		if ce.RuleSource != "" {
-			fmt.Fprintf(w, "    Rule source: %s\n", ce.RuleSource)
-		}
+		renderViolation(w, ce)
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "  %s\n", ce.Explanation)
 		fmt.Fprintln(w)
@@ -107,12 +102,7 @@ func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
 		fmt.Fprintf(w, "    Destination: %s\n", ce.Destination)
 		renderPort(w, ce)
 		fmt.Fprintf(w, "    Path:        %s\n", ce.PathType)
-		if ce.RuleSG != "" {
-			fmt.Fprintf(w, "    Rule SG:     %s\n", ce.RuleSG)
-		}
-		if ce.RuleSource != "" {
-			fmt.Fprintf(w, "    Rule source: %s\n", ce.RuleSource)
-		}
+		renderViolation(w, ce)
 		fmt.Fprintln(w)
 		fmt.Fprintf(w, "  %s\n", ce.Explanation)
 		fmt.Fprintln(w)
@@ -120,6 +110,29 @@ func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
 		fmt.Fprintf(w, "    %s\n", ce.Remediation)
 	}
 	return nil
+}
+
+func renderViolation(w io.Writer, ce *network.Counterexample) {
+	if ce.RoutePath != nil {
+		fmt.Fprintf(w, "    Route table: %s\n", ce.RoutePath.RouteTableID)
+		fmt.Fprintf(w, "    Destination: %s\n", ce.RoutePath.Destination)
+		return
+	}
+	if ce.SGExposure != nil {
+		if ce.SGExposure.SecurityGroupID != "" {
+			fmt.Fprintf(w, "    Rule SG:     %s\n", ce.SGExposure.SecurityGroupID)
+		}
+		if ce.SGExposure.RuleSource != "" {
+			fmt.Fprintf(w, "    Rule source: %s\n", ce.SGExposure.RuleSource)
+		}
+		return
+	}
+	if ce.RuleSG != "" {
+		fmt.Fprintf(w, "    Rule SG:     %s\n", ce.RuleSG)
+	}
+	if ce.RuleSource != "" {
+		fmt.Fprintf(w, "    Rule source: %s\n", ce.RuleSource)
+	}
 }
 
 func renderPort(w io.Writer, ce *network.Counterexample) {

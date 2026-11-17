@@ -1752,10 +1752,10 @@ func TestRoute_ClassifyTarget(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			gotClass, gotReason := tc.route.ClassifyTarget()
-			if gotClass != tc.wantClass || gotReason != tc.wantReason {
+			got := tc.route.ClassifyTarget()
+			if got.Class != tc.wantClass || got.Reason != tc.wantReason {
 				t.Errorf("Route{%+v}.ClassifyTarget() = (%v, %q), want (%v, %q)",
-					tc.route, gotClass, gotReason, tc.wantClass, tc.wantReason)
+					tc.route, got.Class, got.Reason, tc.wantClass, tc.wantReason)
 			}
 		})
 	}
