@@ -84,42 +84,49 @@ func (g *Graph) CanReach(src, dst *Host, port int) (bool, string) {
 
 // EnumerateSSHPaths finds all SSH paths to production hosts.
 func (g *Graph) EnumerateSSHPaths(port int) []SSHPath {
-	prod := g.ProductionHosts()
 	var paths []SSHPath
+	for _, dst := range g.ProductionHosts() {
+		paths = append(paths, g.enumerateInternalSSHPaths(dst, port)...)
+		paths = append(paths, g.enumerateExternalSSHPaths(dst, port)...)
+	}
+	return paths
+}
 
-	for _, dst := range prod {
-		for _, src := range g.allHosts() {
-			if src.SameHost(dst) {
-				continue
-			}
-			if src.IsProduction() {
-				continue
-			}
-			if match := g.findRule(src, dst, port); match != nil {
+// enumerateInternalSSHPaths finds all authorized SSH paths to dst from non-production internal hosts.
+func (g *Graph) enumerateInternalSSHPaths(dst *Host, port int) []SSHPath {
+	var paths []SSHPath
+	for _, src := range g.allHosts() {
+		if src.SameHost(dst) || src.IsProduction() {
+			continue
+		}
+		if match := g.findRule(src, dst, port); match != nil {
+			paths = append(paths, SSHPath{
+				Source:      src.ID,
+				Destination: dst.ID,
+				Port:        port,
+				PathType:    match.PathType,
+				RuleSG:      match.SecurityGroupID,
+				RuleSource:  match.RuleSource,
+			})
+		}
+	}
+	return paths
+}
+
+// enumerateExternalSSHPaths finds all direct public internet SSH ingress paths to dst.
+func (g *Graph) enumerateExternalSSHPaths(dst *Host, port int) []SSHPath {
+	var paths []SSHPath
+	for _, dstSG := range dst.SGIDs {
+		for _, rule := range g.SGRules[dstSG] {
+			if rule.IsInternetIngressOnPort(port) {
 				paths = append(paths, SSHPath{
-					Source:      src.ID,
+					Source:      "0.0.0.0/0",
 					Destination: dst.ID,
 					Port:        port,
-					PathType:    match.PathType,
-					RuleSG:      match.SecurityGroupID,
-					RuleSource:  match.RuleSource,
+					PathType:    "external",
+					RuleSG:      dstSG,
+					RuleSource:  "0.0.0.0/0",
 				})
-			}
-		}
-
-		// External entry (0.0.0.0/0).
-		for _, dstSG := range dst.SGIDs {
-			for _, rule := range g.SGRules[dstSG] {
-				if rule.IsInternetIngressOnPort(port) {
-					paths = append(paths, SSHPath{
-						Source:      "0.0.0.0/0",
-						Destination: dst.ID,
-						Port:        port,
-						PathType:    "external",
-						RuleSG:      dstSG,
-						RuleSource:  "0.0.0.0/0",
-					})
-				}
 			}
 		}
 	}

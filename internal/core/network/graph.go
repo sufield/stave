@@ -368,59 +368,39 @@ func nested(props map[string]any, keys ...string) (map[string]any, bool) {
 	return m, true
 }
 
-// ProductionHosts returns all hosts tagged stave:environment=production.
-func (g *Graph) ProductionHosts() []*Host {
+func (g *Graph) filterHosts(predicate func(*Host) bool) []*Host {
 	var out []*Host
 	for _, h := range g.Hosts {
-		if h.IsProduction() {
+		if predicate(h) {
 			out = append(out, h)
 		}
 	}
 	return out
+}
+
+// ProductionHosts returns all hosts tagged stave:environment=production.
+func (g *Graph) ProductionHosts() []*Host {
+	return g.filterHosts((*Host).IsProduction)
 }
 
 // BastionHosts returns all hosts tagged stave:role=bastion.
 func (g *Graph) BastionHosts() []*Host {
-	var out []*Host
-	for _, h := range g.Hosts {
-		if h.IsBastion() {
-			out = append(out, h)
-		}
-	}
-	return out
+	return g.filterHosts((*Host).IsBastion)
 }
 
 // DevelopmentHosts returns all hosts tagged stave:environment=development.
 func (g *Graph) DevelopmentHosts() []*Host {
-	var out []*Host
-	for _, h := range g.Hosts {
-		if h.IsDevelopment() {
-			out = append(out, h)
-		}
-	}
-	return out
+	return g.filterHosts((*Host).IsDevelopment)
 }
 
 // DatabaseHosts returns all hosts tagged stave:tier=database.
 func (g *Graph) DatabaseHosts() []*Host {
-	var out []*Host
-	for _, h := range g.Hosts {
-		if h.IsDatabaseTier() {
-			out = append(out, h)
-		}
-	}
-	return out
+	return g.filterHosts((*Host).IsDatabaseTier)
 }
 
 // IsolatedHosts returns all hosts tagged stave:network-zone=isolated.
 func (g *Graph) IsolatedHosts() []*Host {
-	var out []*Host
-	for _, h := range g.Hosts {
-		if h.IsIsolated() {
-			out = append(out, h)
-		}
-	}
-	return out
+	return g.filterHosts((*Host).IsIsolated)
 }
 
 // PrivateSubnets returns all subnets tagged stave:subnet-type=private.
