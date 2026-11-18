@@ -108,8 +108,15 @@ func renderScope(w io.Writer, r *network.ProofResult) {
 		fmt.Fprintf(w, "  SSH paths:        %d\n", r.SSHPaths)
 	}
 	// Generic scope fields.
-	renderGenericScope(w, r.Scope)
+	if r.ScopeCount() > 0 {
+		renderGenericScope(w, r.Scope)
+	}
 	fmt.Fprintln(w)
+}
+
+// FormatSolverCompletion returns the formatted solver completion line.
+func FormatSolverCompletion(solveTimeMs int64) string {
+	return fmt.Sprintf("Solver: graph-search (completed in %dms)", solveTimeMs)
 }
 
 func renderUnsat(w io.Writer, r *network.ProofResult) {
@@ -117,7 +124,7 @@ func renderUnsat(w io.Writer, r *network.ProofResult) {
 		return
 	}
 	fmt.Fprintf(w, "  PROOF: %s\n", r.Interpretation)
-	fmt.Fprintf(w, "  Solver: graph-search (completed in %dms)\n", r.SolveTimeMs)
+	fmt.Fprintf(w, "  %s\n", FormatSolverCompletion(r.SolveTimeMs))
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "  No violation exists.")
 }
@@ -130,18 +137,22 @@ func renderProofSummary(w io.Writer, r *network.ProofResult) {
 	renderScope(w, r)
 }
 
+func verdictCounterexampleHeader(r *network.ProofResult) string {
+	if r.IsEvidenceGated() {
+		return "EVIDENCE GATED:"
+	}
+	return "COUNTEREXAMPLE:"
+}
+
 func renderVerdict(w io.Writer, r *network.ProofResult) {
 	if r == nil {
 		return
 	}
-	switch {
-	case r.IsUNSAT():
+	if r.IsUNSAT() {
 		renderUnsat(w, r)
-	case r.IsEvidenceGated():
-		renderCounterexample(w, "EVIDENCE GATED:", r.Counterexample)
-	default:
-		renderCounterexample(w, "COUNTEREXAMPLE:", r.Counterexample)
+		return
 	}
+	renderCounterexample(w, verdictCounterexampleHeader(r), r.Counterexample)
 }
 
 func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {

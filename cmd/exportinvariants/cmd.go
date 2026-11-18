@@ -94,9 +94,8 @@ Exit codes:
 // paths are pure pkg/stave consumption — no internal/cli/ui
 // import needed to keep the standard exit-code contract.
 func run(ctx context.Context, w io.Writer, opts *options) error {
-	renderer, rerr := NewRenderer(opts.Format)
-	if rerr != nil {
-		return rerr
+	if err := validateFormat(opts.Format); err != nil {
+		return err
 	}
 
 	out, err := stave.ExportInvariants(ctx, stave.InvariantExportConfig{
@@ -106,7 +105,7 @@ func run(ctx context.Context, w io.Writer, opts *options) error {
 		return fmt.Errorf("export controls: %w", err)
 	}
 
-	if err := renderer.Render(w, out); err != nil {
+	if err := renderJSON(w, out); err != nil {
 		return fmt.Errorf("render output: %w", err)
 	}
 	return nil

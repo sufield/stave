@@ -2,18 +2,18 @@ package prove
 
 import (
 	"fmt"
-	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/internal/cli/ui"
+	"github.com/sufield/stave/internal/core/network"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/pkg/stave"
 )
 
 // ValidProperties contains the safety properties supported by the network prover.
-var ValidProperties = []string{"bastion-ssh", "prod-dev-isolation", "database-isolation", "firewall-mandatory", "transitive-ssh", "transitive-egress"}
+var ValidProperties = network.SupportedProperties
 
 const (
 	// DefaultProperty is the default safety property verified when none is specified.
@@ -42,7 +42,7 @@ func addFlags(cmd *cobra.Command, o *options) {
 
 // IsValidProperty reports whether prop is one of the supported safety properties.
 func IsValidProperty(prop string) bool {
-	return slices.Contains(ValidProperties, prop)
+	return network.IsSupportedProperty(prop)
 }
 
 func (o *options) Validate() error {

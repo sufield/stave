@@ -5922,6 +5922,21 @@ func Test_newEgressCandidate(t *testing.T) {
 	if c.target != target {
 		t.Errorf("c.target = %+v, want %+v", c.target, target)
 	}
+	if c.RouteDestination() != "0.0.0.0/0" {
+		t.Errorf("c.RouteDestination() = %q, want 0.0.0.0/0", c.RouteDestination())
+	}
+	if c.RouteTarget() != "nat:nat-01" {
+		t.Errorf("c.RouteTarget() = %q, want nat:nat-01", c.RouteTarget())
+	}
+	if c.RouteTargetType() != "nat" {
+		t.Errorf("c.RouteTargetType() = %q, want nat", c.RouteTargetType())
+	}
+	if c.TargetID() != "nat-01" {
+		t.Errorf("c.TargetID() = %q, want nat-01", c.TargetID())
+	}
+	if c.TargetReason() != "" {
+		t.Errorf("c.TargetReason() = %q, want empty string", c.TargetReason())
+	}
 }
 
 func TestGraph_hostEgressCandidate(t *testing.T) {
@@ -6819,6 +6834,1036 @@ func Test_egressCandidatePartition_CountsAndAdd(t *testing.T) {
 		}
 	})
 }
+
+func Test_formatEgressReachabilityPrefix(t *testing.T) {
+	t.Run("specific port", func(t *testing.T) {
+		got := formatEgressReachabilityPrefix("iso-1", "host-2", 443)
+		want := "Isolated host iso-1 can reach host-2 on port 443."
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("wildcard port 0 formats as all", func(t *testing.T) {
+		got := formatEgressReachabilityPrefix("iso-1", "host-2", 0)
+		want := "Isolated host iso-1 can reach host-2 on port all."
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+}
+
+func Test_egressCandidate_Methods(t *testing.T) {
+	t.Run("HostID with nil host returns empty string", func(t *testing.T) {
+		c := egressCandidate{}
+		if c.HostID() != "" {
+			t.Errorf("c.HostID() = %q, want empty string", c.HostID())
+		}
+	})
+
+	t.Run("HostID with host returns host ID", func(t *testing.T) {
+		c := egressCandidate{host: &Host{ID: "host-42"}}
+		if c.HostID() != "host-42" {
+			t.Errorf("c.HostID() = %q, want host-42", c.HostID())
+		}
+	})
+
+	t.Run("IsSink and IsGated delegates", func(t *testing.T) {
+		sink := egressCandidate{target: RouteTarget{Class: routeSink}}
+		if !sink.IsSink() {
+			t.Error("expected IsSink() to be true")
+		}
+		if sink.IsGated() {
+			t.Error("expected IsGated() to be false")
+		}
+
+		gated := egressCandidate{target: RouteTarget{Class: routeGated}}
+		if gated.IsSink() {
+			t.Error("expected IsSink() to be false")
+		}
+		if !gated.IsGated() {
+			t.Error("expected IsGated() to be true")
+		}
+	})
+}
+
+func TestHost_SafeAccessors(t *testing.T) {
+	t.Run("nil host returns empty strings", func(t *testing.T) {
+		var nilHost *Host
+		if nilHost.SafeVPCID() != "" {
+			t.Errorf("nilHost.SafeVPCID() = %q, want empty", nilHost.SafeVPCID())
+		}
+		if nilHost.SafeSubnetID() != "" {
+			t.Errorf("nilHost.SafeSubnetID() = %q, want empty", nilHost.SafeSubnetID())
+		}
+	})
+
+	t.Run("populated host returns IDs", func(t *testing.T) {
+		h := &Host{ID: "host-1", VPCID: "vpc-1", SubnetID: "sub-1"}
+		if h.SafeVPCID() != "vpc-1" {
+			t.Errorf("h.SafeVPCID() = %q, want vpc-1", h.SafeVPCID())
+		}
+		if h.SafeSubnetID() != "sub-1" {
+			t.Errorf("h.SafeSubnetID() = %q, want sub-1", h.SafeSubnetID())
+		}
+	})
+}
+
+func TestSubnet_SafeVPCID(t *testing.T) {
+	t.Run("nil subnet returns empty string", func(t *testing.T) {
+		var nilSub *Subnet
+		if nilSub.SafeVPCID() != "" {
+			t.Errorf("nilSub.SafeVPCID() = %q, want empty", nilSub.SafeVPCID())
+		}
+	})
+
+	t.Run("populated subnet returns VPCID", func(t *testing.T) {
+		sub := &Subnet{ID: "sub-1", VPCID: "vpc-99"}
+		if sub.SafeVPCID() != "vpc-99" {
+			t.Errorf("sub.SafeVPCID() = %q, want vpc-99", sub.SafeVPCID())
+		}
+	})
+}
+
+func TestGraph_IsPubliclyAccessibleAnyPort(t *testing.T) {
+	t.Run("nil graph or host returns false", func(t *testing.T) {
+		var nilGraph *Graph
+		if nilGraph.IsPubliclyAccessibleAnyPort(&Host{ID: "host-1"}) {
+			t.Error("nilGraph.IsPubliclyAccessibleAnyPort() should be false")
+		}
+
+		g := &Graph{}
+		if g.IsPubliclyAccessibleAnyPort(nil) {
+			t.Error("g.IsPubliclyAccessibleAnyPort(nil) should be false")
+		}
+	})
+
+	t.Run("reports true when host has internet ingress on any port", func(t *testing.T) {
+		h := &Host{ID: "i-public", SGIDs: []string{"sg-http"}}
+		g := &Graph{
+			SGRules: map[string][]SGRule{
+				"sg-http": {
+					{Direction: "ingress", Protocol: "tcp", Port: 8080, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+				},
+			},
+		}
+		if !g.IsPubliclyAccessibleAnyPort(h) {
+			t.Error("expected IsPubliclyAccessibleAnyPort() to be true")
+		}
+	})
+
+	t.Run("reports false when host only has internal ingress", func(t *testing.T) {
+		h := &Host{ID: "i-private", SGIDs: []string{"sg-internal"}}
+		g := &Graph{
+			SGRules: map[string][]SGRule{
+				"sg-internal": {
+					{Direction: "ingress", Protocol: "tcp", Port: 8080, SourceType: "cidr", SourceValue: "10.0.0.0/8"},
+				},
+			},
+		}
+		if g.IsPubliclyAccessibleAnyPort(h) {
+			t.Error("expected IsPubliclyAccessibleAnyPort() to be false for private CIDR")
+		}
+	})
+}
+
+func TestSubnet_IsPublic(t *testing.T) {
+	t.Run("nil subnet returns false", func(t *testing.T) {
+		var nilSub *Subnet
+		if nilSub.IsPublic() {
+			t.Error("nilSub.IsPublic() should be false")
+		}
+	})
+
+	t.Run("untagged subnet returns false", func(t *testing.T) {
+		s := &Subnet{}
+		if s.IsPublic() {
+			t.Error("expected false for untagged subnet")
+		}
+	})
+
+	t.Run("publicly tagged subnet returns true", func(t *testing.T) {
+		s := &Subnet{Tags: map[string]string{"stave:subnet-type": "public"}}
+		if !s.IsPublic() {
+			t.Error("expected true for public subnet")
+		}
+	})
+
+	t.Run("private subnet returns false", func(t *testing.T) {
+		s := &Subnet{Tags: map[string]string{"stave:subnet-type": "private"}}
+		if s.IsPublic() {
+			t.Error("expected false for private subnet")
+		}
+	})
+}
+
+func TestGraph_PublicSubnets(t *testing.T) {
+	t.Run("nil graph returns nil", func(t *testing.T) {
+		var nilGraph *Graph
+		if nilGraph.PublicSubnets() != nil {
+			t.Error("nilGraph.PublicSubnets() should return nil")
+		}
+	})
+
+	t.Run("returns only public subnets", func(t *testing.T) {
+		s1 := &Subnet{ID: "sub-priv", Tags: map[string]string{"stave:subnet-type": "private"}}
+		s2 := &Subnet{ID: "sub-pub", Tags: map[string]string{"stave:subnet-type": "public"}}
+		g := &Graph{
+			Subnets: map[string]*Subnet{
+				"sub-priv": s1,
+				"sub-pub":  s2,
+			},
+		}
+		public := g.PublicSubnets()
+		if len(public) != 1 || public[0] != s2 {
+			t.Errorf("got %v, want [%v]", public, s2)
+		}
+	})
+}
+
+func TestGraph_findDatabaseTierBypass(t *testing.T) {
+	t.Run("nil or empty hosts returns nil and empty reason", func(t *testing.T) {
+		g := NewGraph()
+		ce, reason := g.findDatabaseTierBypass(nil)
+		if ce != nil || reason != "" {
+			t.Errorf("got ce=%v, reason=%q; want nil, \"\"", ce, reason)
+		}
+
+		ce, reason = g.findDatabaseTierBypass([]*Host{})
+		if ce != nil || reason != "" {
+			t.Errorf("got ce=%v, reason=%q; want nil, \"\"", ce, reason)
+		}
+	})
+
+	t.Run("returns bypass when database host has internet exposure", func(t *testing.T) {
+		g := NewGraph()
+		db := &Host{ID: "db-1", SGIDs: []string{"sg-db"}}
+		g.SGRules["sg-db"] = []SGRule{
+			{Direction: "ingress", Protocol: "tcp", Port: 5432, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+		}
+
+		ce, reason := g.findDatabaseTierBypass([]*Host{db})
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Destination != "db-1" || ce.Port != 5432 {
+			t.Errorf("ce = %+v, want Destination=db-1, Port=5432", ce)
+		}
+		if reason == "" {
+			t.Error("expected non-empty reason")
+		}
+	})
+}
+
+func TestRuleMatch_PathPredicates(t *testing.T) {
+	t.Run("nil rule match returns false", func(t *testing.T) {
+		var nilMatch *RuleMatch
+		if nilMatch.IsExternal() {
+			t.Error("nilMatch.IsExternal() should be false")
+		}
+		if nilMatch.IsCrossVPC() {
+			t.Error("nilMatch.IsCrossVPC() should be false")
+		}
+	})
+
+	t.Run("external match", func(t *testing.T) {
+		m := &RuleMatch{PathType: "external"}
+		if !m.IsExternal() {
+			t.Error("expected IsExternal() to be true")
+		}
+		if m.IsCrossVPC() {
+			t.Error("expected IsCrossVPC() to be false")
+		}
+	})
+
+	t.Run("cross-vpc match", func(t *testing.T) {
+		m := &RuleMatch{PathType: "cross-vpc"}
+		if m.IsExternal() {
+			t.Error("expected IsExternal() to be false")
+		}
+		if !m.IsCrossVPC() {
+			t.Error("expected IsCrossVPC() to be true")
+		}
+	})
+
+	t.Run("internal match (e.g. sg-ref)", func(t *testing.T) {
+		m := &RuleMatch{PathType: "sg-ref"}
+		if m.IsExternal() {
+			t.Error("expected IsExternal() to be false")
+		}
+		if m.IsCrossVPC() {
+			t.Error("expected IsCrossVPC() to be false")
+		}
+	})
+}
+
+func TestRoute_IsEgress(t *testing.T) {
+	t.Run("igw is egress sink", func(t *testing.T) {
+		r := Route{TargetType: "igw"}
+		if !r.IsEgress() {
+			t.Error("expected IsEgress() to be true for igw")
+		}
+	})
+
+	t.Run("nat is egress sink", func(t *testing.T) {
+		r := Route{TargetType: "nat"}
+		if !r.IsEgress() {
+			t.Error("expected IsEgress() to be true for nat")
+		}
+	})
+
+	t.Run("local is not egress sink", func(t *testing.T) {
+		r := Route{TargetType: "local"}
+		if r.IsEgress() {
+			t.Error("expected IsEgress() to be false for local")
+		}
+	})
+
+	t.Run("tgw is not egress sink (gated)", func(t *testing.T) {
+		r := Route{TargetType: "tgw"}
+		if r.IsEgress() {
+			t.Error("expected IsEgress() to be false for tgw")
+		}
+	})
+}
+
+func TestSubnet_DefaultRouteTarget(t *testing.T) {
+	t.Run("nil receiver or graph returns false", func(t *testing.T) {
+		var nilSub *Subnet
+		var nilGraph *Graph
+		if _, ok := nilSub.DefaultRouteTarget(nilGraph); ok {
+			t.Error("expected false for nil subnet and graph")
+		}
+
+		g := NewGraph()
+		if _, ok := nilSub.DefaultRouteTarget(g); ok {
+			t.Error("expected false for nil subnet")
+		}
+
+		sub := &Subnet{ID: "sub-1"}
+		if _, ok := sub.DefaultRouteTarget(nilGraph); ok {
+			t.Error("expected false for nil graph")
+		}
+	})
+
+	t.Run("returns formatted target when default route exists", func(t *testing.T) {
+		g := NewGraph()
+		sub := &Subnet{ID: "sub-1", RouteTableID: "rt-1"}
+		g.Routes["rt-1"] = []Route{
+			{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-01"},
+		}
+
+		target, ok := sub.DefaultRouteTarget(g)
+		if !ok || target != "igw:igw-01" {
+			t.Errorf("got target=%q, ok=%v; want igw:igw-01, true", target, ok)
+		}
+
+		gTarget, gOk := g.SubnetDefaultRouteTarget(sub)
+		if !gOk || gTarget != "igw:igw-01" {
+			t.Errorf("got gTarget=%q, gOk=%v; want igw:igw-01, true", gTarget, gOk)
+		}
+	})
+}
+
+func TestGraph_PeeringAndTGWQueries(t *testing.T) {
+	t.Run("nil graph returns 0 and false", func(t *testing.T) {
+		var nilGraph *Graph
+		if nilGraph.PeeringCount() != 0 {
+			t.Errorf("nilGraph.PeeringCount() = %d, want 0", nilGraph.PeeringCount())
+		}
+		if nilGraph.HasPeerings() {
+			t.Error("nilGraph.HasPeerings() should be false")
+		}
+		if nilGraph.TGWAttachmentCount() != 0 {
+			t.Errorf("nilGraph.TGWAttachmentCount() = %d, want 0", nilGraph.TGWAttachmentCount())
+		}
+		if nilGraph.HasTGWAttachments() {
+			t.Error("nilGraph.HasTGWAttachments() should be false")
+		}
+	})
+
+	t.Run("populated graph returns counts and true", func(t *testing.T) {
+		g := &Graph{
+			Peerings: []VPCPeering{
+				{PeeringID: "pcx-1", RequesterVPC: "vpc-a", AccepterVPC: "vpc-b"},
+			},
+			TGWAttachments: []TGWAttachment{
+				{AttachmentID: "tgw-att-1", TransitGatewayID: "tgw-1", VPCID: "vpc-a"},
+				{AttachmentID: "tgw-att-2", TransitGatewayID: "tgw-1", VPCID: "vpc-b"},
+			},
+		}
+
+		if g.PeeringCount() != 1 {
+			t.Errorf("g.PeeringCount() = %d, want 1", g.PeeringCount())
+		}
+		if !g.HasPeerings() {
+			t.Error("expected HasPeerings() to be true")
+		}
+		if g.TGWAttachmentCount() != 2 {
+			t.Errorf("g.TGWAttachmentCount() = %d, want 2", g.TGWAttachmentCount())
+		}
+		if !g.HasTGWAttachments() {
+			t.Error("expected HasTGWAttachments() to be true")
+		}
+	})
+}
+
+func TestProofResult_ScopeAccessors(t *testing.T) {
+	t.Run("nil result returns zeroes and false", func(t *testing.T) {
+		var r *ProofResult
+		if r.ScopeCount() != 0 {
+			t.Errorf("r.ScopeCount() = %d, want 0", r.ScopeCount())
+		}
+		if r.HasScopeKey("hosts") {
+			t.Error("expected r.HasScopeKey(hosts) to be false")
+		}
+		if r.ScopeValue("hosts") != 0 {
+			t.Errorf("r.ScopeValue(hosts) = %d, want 0", r.ScopeValue("hosts"))
+		}
+	})
+
+	t.Run("empty scope returns zero count and false", func(t *testing.T) {
+		r := &ProofResult{}
+		if r.ScopeCount() != 0 {
+			t.Errorf("r.ScopeCount() = %d, want 0", r.ScopeCount())
+		}
+		if r.HasScopeKey("hosts") {
+			t.Error("expected r.HasScopeKey(hosts) to be false")
+		}
+		if r.ScopeValue("hosts") != 0 {
+			t.Errorf("r.ScopeValue(hosts) = %d, want 0", r.ScopeValue("hosts"))
+		}
+	})
+
+	t.Run("populated scope returns count and values", func(t *testing.T) {
+		r := &ProofResult{
+			Scope: map[string]int{
+				"hosts":     5,
+				"endpoints": 2,
+			},
+		}
+		if r.ScopeCount() != 2 {
+			t.Errorf("r.ScopeCount() = %d, want 2", r.ScopeCount())
+		}
+		if !r.HasScopeKey("hosts") {
+			t.Error("expected r.HasScopeKey(hosts) to be true")
+		}
+		if r.ScopeValue("hosts") != 5 {
+			t.Errorf("r.ScopeValue(hosts) = %d, want 5", r.ScopeValue("hosts"))
+		}
+		if !r.HasScopeKey("endpoints") {
+			t.Error("expected r.HasScopeKey(endpoints) to be true")
+		}
+		if r.ScopeValue("endpoints") != 2 {
+			t.Errorf("r.ScopeValue(endpoints) = %d, want 2", r.ScopeValue("endpoints"))
+		}
+		if r.HasScopeKey("missing") {
+			t.Error("expected r.HasScopeKey(missing) to be false")
+		}
+		if r.ScopeValue("missing") != 0 {
+			t.Errorf("r.ScopeValue(missing) = %d, want 0", r.ScopeValue("missing"))
+		}
+	})
+}
+
+func Test_formatEgressRemediation(t *testing.T) {
+	wantRemove := "Remove network access from i-iso to i-sink"
+	if got := formatRemoveAccessRemediation("i-iso", "i-sink"); got != wantRemove {
+		t.Errorf("formatRemoveAccessRemediation() = %q, want %q", got, wantRemove)
+	}
+
+	wantBypass := "Remove network access from i-iso to i-sink, or remove i-sink's internet egress route."
+	if got := formatEgressBypassRemediation("i-iso", "i-sink"); got != wantBypass {
+		t.Errorf("formatEgressBypassRemediation() = %q, want %q", got, wantBypass)
+	}
+
+	wantGated := "Provide observation for transit_gateway tgw-123 to settle the verdict, or remove network access from i-iso to i-sink."
+	if got := formatEgressGatedRemediation("transit_gateway", "tgw-123", "i-iso", "i-sink"); got != wantGated {
+		t.Errorf("formatEgressGatedRemediation() = %q, want %q", got, wantGated)
+	}
+}
+
+func Test_IsSupportedProperty(t *testing.T) {
+	for _, prop := range SupportedProperties {
+		if !IsSupportedProperty(prop) {
+			t.Errorf("expected IsSupportedProperty(%q) to be true", prop)
+		}
+	}
+	if IsSupportedProperty("nonexistent-property") {
+		t.Error("expected IsSupportedProperty(nonexistent-property) to be false")
+	}
+	if IsSupportedProperty("") {
+		t.Error("expected IsSupportedProperty(\"\") to be false")
+	}
+}
+
+func Test_SupportedPropertiesList(t *testing.T) {
+	got := SupportedPropertiesList()
+	for _, prop := range SupportedProperties {
+		if !strings.Contains(got, prop) {
+			t.Errorf("SupportedPropertiesList() = %q, missing %q", got, prop)
+		}
+	}
+}
+
+func Test_EnumerateResult(t *testing.T) {
+	t.Run("nil result returns 0 and false", func(t *testing.T) {
+		var r *EnumerateResult
+		if r.PathCount() != 0 {
+			t.Errorf("r.PathCount() = %d, want 0", r.PathCount())
+		}
+		if r.HasPaths() {
+			t.Error("expected HasPaths() to be false")
+		}
+	})
+
+	t.Run("empty paths", func(t *testing.T) {
+		r := NewEnumerateResult("production", 22, 5, nil)
+		if r.Scope != "production" || r.Port != 22 || r.ProductionHosts != 5 {
+			t.Errorf("unexpected fields: %+v", r)
+		}
+		if r.PathCount() != 0 {
+			t.Errorf("r.PathCount() = %d, want 0", r.PathCount())
+		}
+		if r.HasPaths() {
+			t.Error("expected HasPaths() to be false")
+		}
+	})
+
+	t.Run("populated paths", func(t *testing.T) {
+		paths := []SSHPath{
+			{Source: "h1", Destination: "h2", Port: 22, PathType: "sg-ref"},
+		}
+		r := NewEnumerateResult("production", 22, 5, paths)
+		if r.PathCount() != 1 {
+			t.Errorf("r.PathCount() = %d, want 1", r.PathCount())
+		}
+		if !r.HasPaths() {
+			t.Error("expected HasPaths() to be true")
+		}
+	})
+}
+
+func TestRuleMatch_InternetSource(t *testing.T) {
+	t.Run("nil match returns empty string", func(t *testing.T) {
+		var m *RuleMatch
+		if got := m.InternetSource(); got != "" {
+			t.Errorf("m.InternetSource() = %q, want empty string", got)
+		}
+	})
+
+	t.Run("populated match returns formatted internet source", func(t *testing.T) {
+		m := &RuleMatch{RuleSource: "0.0.0.0/0"}
+		if got := m.InternetSource(); got != "0.0.0.0/0 (internet)" {
+			t.Errorf("m.InternetSource() = %q, want %q", got, "0.0.0.0/0 (internet)")
+		}
+	})
+}
+
+func TestHost_SecurityGroupQueries(t *testing.T) {
+	t.Run("nil host returns zero and false", func(t *testing.T) {
+		var h *Host
+		if h.SecurityGroupCount() != 0 {
+			t.Errorf("h.SecurityGroupCount() = %d, want 0", h.SecurityGroupCount())
+		}
+		if h.HasSecurityGroups() {
+			t.Error("expected h.HasSecurityGroups() to be false")
+		}
+	})
+
+	t.Run("empty host returns zero and false", func(t *testing.T) {
+		h := &Host{}
+		if h.SecurityGroupCount() != 0 {
+			t.Errorf("h.SecurityGroupCount() = %d, want 0", h.SecurityGroupCount())
+		}
+		if h.HasSecurityGroups() {
+			t.Error("expected h.HasSecurityGroups() to be false")
+		}
+	})
+
+	t.Run("populated host returns count and true", func(t *testing.T) {
+		h := &Host{SGIDs: []string{"sg-1", "sg-2"}}
+		if h.SecurityGroupCount() != 2 {
+			t.Errorf("h.SecurityGroupCount() = %d, want 2", h.SecurityGroupCount())
+		}
+		if !h.HasSecurityGroups() {
+			t.Error("expected h.HasSecurityGroups() to be true")
+		}
+	})
+}
+
+func TestSGRule_IsEgressAndInternetCIDR(t *testing.T) {
+	t.Run("IsEgress", func(t *testing.T) {
+		egress := SGRule{Direction: "egress"}
+		ingress := SGRule{Direction: "ingress"}
+		if !egress.IsEgress() {
+			t.Error("expected egress.IsEgress() to be true")
+		}
+		if ingress.IsEgress() {
+			t.Error("expected ingress.IsEgress() to be false")
+		}
+	})
+
+	t.Run("IsInternetCIDR", func(t *testing.T) {
+		v4 := SGRule{SourceType: "cidr", SourceValue: "0.0.0.0/0"}
+		v6 := SGRule{SourceType: "cidr", SourceValue: "::/0"}
+		internal := SGRule{SourceType: "cidr", SourceValue: "10.0.0.0/8"}
+		sg := SGRule{SourceType: "sg", SourceValue: "0.0.0.0/0"}
+
+		if !v4.IsInternetCIDR() {
+			t.Error("expected 0.0.0.0/0 to be internet CIDR")
+		}
+		if !v6.IsInternetCIDR() {
+			t.Error("expected ::/0 to be internet CIDR")
+		}
+		if internal.IsInternetCIDR() {
+			t.Error("expected 10.0.0.0/8 not to be internet CIDR")
+		}
+		if sg.IsInternetCIDR() {
+			t.Error("expected sg source type not to be internet CIDR")
+		}
+	})
+}
+
+func TestRoute_IsVPCEndpointAndTransitGateway(t *testing.T) {
+	vpce := Route{TargetType: "vpce"}
+	tgw := Route{TargetType: "tgw"}
+	other := Route{TargetType: "nat"}
+
+	if !vpce.IsVPCEndpoint() {
+		t.Error("expected vpce.IsVPCEndpoint() to be true")
+	}
+	if other.IsVPCEndpoint() {
+		t.Error("expected other.IsVPCEndpoint() to be false")
+	}
+
+	if !tgw.IsTransitGateway() {
+		t.Error("expected tgw.IsTransitGateway() to be true")
+	}
+	if other.IsTransitGateway() {
+		t.Error("expected other.IsTransitGateway() to be false")
+	}
+}
+
+func Test_CounterexampleConstructors_SafeAccessors(t *testing.T) {
+	match := &RuleMatch{
+		SecurityGroupID: "sg-test",
+		RuleSource:      "10.0.0.0/8",
+		PathType:        "cidr",
+		Port:            22,
+	}
+
+	t.Run("newInternalBastionBypassCounterexample nil checks", func(t *testing.T) {
+		if newInternalBastionBypassCounterexample(nil, nil, 22, match, nil) != nil {
+			t.Error("expected nil counterexample on nil src and dst")
+		}
+		src := &Host{ID: "src-1"}
+		dst := &Host{ID: "dst-1"}
+		ce := newInternalBastionBypassCounterexample(src, dst, 22, match, nil)
+		if ce == nil || ce.Source != "src-1" || ce.Destination != "dst-1" {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+	})
+
+	t.Run("newExternalBypassCounterexample nil checks", func(t *testing.T) {
+		if newExternalBypassCounterexample(nil, 22, match) != nil {
+			t.Error("expected nil on nil dst")
+		}
+		dst := &Host{ID: "dst-1"}
+		ce := newExternalBypassCounterexample(dst, 22, match)
+		if ce == nil || ce.Destination != "dst-1" {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+	})
+
+	t.Run("newCrossEnvBypassCounterexample nil checks", func(t *testing.T) {
+		if newCrossEnvBypassCounterexample(nil, nil, match) != nil {
+			t.Error("expected nil on nil src/dst")
+		}
+		src := &Host{ID: "src-1", Tags: map[string]string{"stave:environment": "production"}}
+		dst := &Host{ID: "dst-1", Tags: map[string]string{"stave:environment": "development"}}
+		ce := newCrossEnvBypassCounterexample(src, dst, match)
+		if ce == nil || ce.Source != "src-1" || ce.Destination != "dst-1" {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+	})
+}
+
+func Test_formatFirewallBypass(t *testing.T) {
+	wantExp := "Subnet subnet-1 has a 0.0.0.0/0 route to IGW igw-1 in route table rtb-1 without passing through a Network Firewall endpoint."
+	if got := formatFirewallBypassExplanation("subnet-1", "0.0.0.0/0", "igw-1", "rtb-1"); got != wantExp {
+		t.Errorf("formatFirewallBypassExplanation() = %q, want %q", got, wantExp)
+	}
+
+	wantRem := "Change the 0.0.0.0/0 route in rtb-1 to target a Network Firewall endpoint instead of igw-1."
+	if got := formatFirewallBypassRemediation("0.0.0.0/0", "rtb-1", "igw-1"); got != wantRem {
+		t.Errorf("formatFirewallBypassRemediation() = %q, want %q", got, wantRem)
+	}
+}
+
+func TestGraph_ReachabilityPath(t *testing.T) {
+	t.Run("nil graph or empty slices return nil", func(t *testing.T) {
+		var g *Graph
+		if src, dst, match := g.ReachabilityPath(nil, nil, 0); match != nil || src != nil || dst != nil {
+			t.Error("expected all nils on nil graph")
+		}
+		g = NewGraph()
+		if src, dst, match := g.ReachabilityPath(nil, nil, 0); match != nil || src != nil || dst != nil {
+			t.Error("expected all nils on nil sources")
+		}
+	})
+
+	t.Run("port 0 matches any port and port > 0 matches specific port", func(t *testing.T) {
+		g := NewGraph()
+		src := &Host{ID: "src", SGIDs: []string{"sg-src"}}
+		dst := &Host{ID: "dst", SGIDs: []string{"sg-dst"}}
+		g.Hosts["src"] = src
+		g.Hosts["dst"] = dst
+		g.SGRules["sg-dst"] = []SGRule{
+			{Direction: "ingress", SourceType: "sg", SourceValue: "sg-src", Port: 8080},
+		}
+
+		// Port 0 should find reachability on 8080
+		s, d, m := g.ReachabilityPath([]*Host{src}, []*Host{dst}, 0)
+		if m == nil || s != src || d != dst || m.Port != 8080 {
+			t.Errorf("unexpected match: s=%v, d=%v, m=%v", s, d, m)
+		}
+
+		// Port 8080 should find reachability
+		s, d, m = g.ReachabilityPath([]*Host{src}, []*Host{dst}, 8080)
+		if m == nil || s != src || d != dst || m.Port != 8080 {
+			t.Errorf("unexpected match: s=%v, d=%v, m=%v", s, d, m)
+		}
+
+		// Port 22 should NOT match
+		s, d, m = g.ReachabilityPath([]*Host{src}, []*Host{dst}, 22)
+		if m != nil {
+			t.Errorf("expected no match on port 22, got %+v", m)
+		}
+	})
+}
+
+func TestSSHPath_FormatEntryAndIsCrossVPC(t *testing.T) {
+	p := SSHPath{
+		Source:      "src-1",
+		Destination: "dst-1",
+		PathType:    "cross-vpc",
+		RuleSG:      "sg-test",
+		RuleSource:  "sg:sg-other",
+	}
+
+	wantEntry := "  1. src-1 → dst-1  [cross-vpc]  sg:sg-test  via:sg:sg-other"
+	if got := p.FormatEntry(1); got != wantEntry {
+		t.Errorf("p.FormatEntry(1) = %q, want %q", got, wantEntry)
+	}
+
+	if !p.IsCrossVPC() {
+		t.Error("expected p.IsCrossVPC() to be true")
+	}
+
+	p2 := SSHPath{PathType: "sg-ref"}
+	if p2.IsCrossVPC() {
+		t.Error("expected p2.IsCrossVPC() to be false")
+	}
+}
+
+func TestSubnet_SafeRouteTableID(t *testing.T) {
+	t.Run("nil subnet returns empty string", func(t *testing.T) {
+		var s *Subnet
+		if got := s.SafeRouteTableID(); got != "" {
+			t.Errorf("s.SafeRouteTableID() = %q, want empty string", got)
+		}
+		if s.HasRouteTable() {
+			t.Error("expected nil subnet HasRouteTable() to be false")
+		}
+	})
+
+	t.Run("empty subnet returns empty string", func(t *testing.T) {
+		s := &Subnet{}
+		if got := s.SafeRouteTableID(); got != "" {
+			t.Errorf("s.SafeRouteTableID() = %q, want empty string", got)
+		}
+		if s.HasRouteTable() {
+			t.Error("expected empty subnet HasRouteTable() to be false")
+		}
+	})
+
+	t.Run("populated subnet returns route table ID", func(t *testing.T) {
+		s := &Subnet{RouteTableID: "rtb-123"}
+		if got := s.SafeRouteTableID(); got != "rtb-123" {
+			t.Errorf("s.SafeRouteTableID() = %q, want rtb-123", got)
+		}
+		if !s.HasRouteTable() {
+			t.Error("expected populated subnet HasRouteTable() to be true")
+		}
+	})
+}
+
+func TestGraph_SubsetCounts(t *testing.T) {
+	t.Run("nil graph returns 0 counts", func(t *testing.T) {
+		var g *Graph
+		if g.ProductionHostCount() != 0 || g.BastionHostCount() != 0 ||
+			g.DevelopmentHostCount() != 0 || g.DatabaseHostCount() != 0 ||
+			g.IsolatedHostCount() != 0 || g.PrivateSubnetCount() != 0 ||
+			g.PublicSubnetCount() != 0 {
+			t.Error("expected all zero counts on nil graph")
+		}
+	})
+
+	t.Run("populated graph returns matching counts", func(t *testing.T) {
+		g := NewGraph()
+		g.Hosts["prod-1"] = &Host{ID: "prod-1", Tags: map[string]string{"stave:environment": "production"}}
+		g.Hosts["bastion-1"] = &Host{ID: "bastion-1", Tags: map[string]string{"stave:role": "bastion"}}
+		g.Hosts["dev-1"] = &Host{ID: "dev-1", Tags: map[string]string{"stave:environment": "development"}}
+		g.Hosts["db-1"] = &Host{ID: "db-1", Tags: map[string]string{"stave:tier": "database"}}
+		g.Hosts["iso-1"] = &Host{ID: "iso-1", Tags: map[string]string{"stave:network-zone": "isolated"}}
+
+		g.Subnets["sub-priv"] = &Subnet{ID: "sub-priv", Tags: map[string]string{"stave:subnet-type": "private"}}
+		g.Subnets["sub-pub"] = &Subnet{ID: "sub-pub", Tags: map[string]string{"stave:subnet-type": "public"}}
+
+		if g.ProductionHostCount() != 1 {
+			t.Errorf("ProductionHostCount() = %d, want 1", g.ProductionHostCount())
+		}
+		if g.BastionHostCount() != 1 {
+			t.Errorf("BastionHostCount() = %d, want 1", g.BastionHostCount())
+		}
+		if g.DevelopmentHostCount() != 1 {
+			t.Errorf("DevelopmentHostCount() = %d, want 1", g.DevelopmentHostCount())
+		}
+		if g.DatabaseHostCount() != 1 {
+			t.Errorf("DatabaseHostCount() = %d, want 1", g.DatabaseHostCount())
+		}
+		if g.IsolatedHostCount() != 1 {
+			t.Errorf("IsolatedHostCount() = %d, want 1", g.IsolatedHostCount())
+		}
+		if g.PrivateSubnetCount() != 1 {
+			t.Errorf("PrivateSubnetCount() = %d, want 1", g.PrivateSubnetCount())
+		}
+		if g.PublicSubnetCount() != 1 {
+			t.Errorf("PublicSubnetCount() = %d, want 1", g.PublicSubnetCount())
+		}
+	})
+}
+
+func Test_formatTransitiveExplanationAndSource(t *testing.T) {
+	wantSource := "hop-1 -> relay-1"
+	if got := formatTransitivePathSource("hop-1", "relay-1"); got != wantSource {
+		t.Errorf("formatTransitivePathSource() = %q, want %q", got, wantSource)
+	}
+
+	wantExp := "External host can reach production host prod-1 on port 22. Two-hop path: internet -> relay-1 -> prod-1."
+	if got := formatTransitiveExplanation("External host", "prod-1", "internet", "relay-1", 22); got != wantExp {
+		t.Errorf("formatTransitiveExplanation() = %q, want %q", got, wantExp)
+	}
+}
+
+func Test_formatTransitiveRemediation(t *testing.T) {
+	wantInternet := "Remove SSH ingress from 0.0.0.0/0 on relay-1 or remove its access to production host prod-1."
+	if got := formatTransitiveInternetRemediation("0.0.0.0/0", "relay-1", "prod-1"); got != wantInternet {
+		t.Errorf("formatTransitiveInternetRemediation() = %q, want %q", got, wantInternet)
+	}
+
+	wantInternal := "Remove SSH access from src-1 to relay-1 or from relay-1 to production host prod-1."
+	if got := formatTransitiveInternalRemediation("src-1", "relay-1", "prod-1"); got != wantInternal {
+		t.Errorf("formatTransitiveInternalRemediation() = %q, want %q", got, wantInternal)
+	}
+}
+
+func Test_RouteTargetConstructors(t *testing.T) {
+	sink := newSinkRouteTarget("igw-1")
+	if !sink.IsSink() || sink.IsGated() || sink.IsNonSink() || sink.TargetID != "igw-1" {
+		t.Errorf("newSinkRouteTarget() = %+v, want IsSink()=true", sink)
+	}
+
+	nonSink := newNonSinkRouteTarget("local")
+	if !nonSink.IsNonSink() || nonSink.IsSink() || nonSink.IsGated() || nonSink.TargetID != "local" {
+		t.Errorf("newNonSinkRouteTarget() = %+v, want IsNonSink()=true", nonSink)
+	}
+
+	gated := newGatedRouteTarget("test reason", "tgw-1")
+	if !gated.IsGated() || gated.IsSink() || gated.IsNonSink() || gated.TargetID != "tgw-1" || gated.Reason != "test reason" {
+		t.Errorf("newGatedRouteTarget() = %+v, want IsGated()=true", gated)
+	}
+}
+
+func Test_intProp(t *testing.T) {
+	tests := []struct {
+		name string
+		m    map[string]any
+		key  string
+		want int
+	}{
+		{"nil map", nil, "port", 0},
+		{"missing key", map[string]any{}, "port", 0},
+		{"int value", map[string]any{"port": 22}, "port", 22},
+		{"float64 value", map[string]any{"port": float64(80)}, "port", 80},
+		{"int64 value", map[string]any{"port": int64(443)}, "port", 443},
+		{"string value", map[string]any{"port": "22"}, "port", 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := intProp(tt.m, tt.key); got != tt.want {
+				t.Errorf("intProp(%v, %q) = %d, want %d", tt.m, tt.key, got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_formatDatabaseExplanationsAndRemediations(t *testing.T) {
+	wantCrossExp := "Host i-app (vpc:vpc-1) can reach database host i-db (vpc:vpc-2) via peering."
+	if got := formatCrossVPCDatabaseExplanation("i-app", "vpc-1", "i-db", "vpc-2", "peering"); got != wantCrossExp {
+		t.Errorf("formatCrossVPCDatabaseExplanation() = %q, want %q", got, wantCrossExp)
+	}
+
+	wantCrossRem := "Remove cross-VPC ingress to database SG sg-db. Restrict to application-tier SG references within the same VPC."
+	if got := formatCrossVPCDatabaseRemediation("sg-db"); got != wantCrossRem {
+		t.Errorf("formatCrossVPCDatabaseRemediation() = %q, want %q", got, wantCrossRem)
+	}
+
+	wantInternetExp := "Database host i-db accepts traffic from 0.0.0.0/0 on port 5432 via sg-db."
+	if got := formatInternetDatabaseExplanation("i-db", "0.0.0.0/0", 5432, "sg-db"); got != wantInternetExp {
+		t.Errorf("formatInternetDatabaseExplanation() = %q, want %q", got, wantInternetExp)
+	}
+
+	wantInternetRem := "Remove internet ingress on sg-db. Database hosts must not be reachable from the internet."
+	if got := formatInternetDatabaseRemediation("sg-db"); got != wantInternetRem {
+		t.Errorf("formatInternetDatabaseRemediation() = %q, want %q", got, wantInternetRem)
+	}
+}
+
+func Test_formatCrossEnvExplanationAndRemediation(t *testing.T) {
+	wantExp := "Host prod-1 (production) can reach dev-1 (development) via peering."
+	if got := formatCrossEnvExplanation("prod-1", "production", "dev-1", "development", "peering"); got != wantExp {
+		t.Errorf("formatCrossEnvExplanation() = %q, want %q", got, wantExp)
+	}
+
+	wantRem := "Remove cross-environment ingress rule on sg-cross. Ensure production and development VPCs have no peering or broad CIDR rules."
+	if got := formatCrossEnvRemediation("sg-cross"); got != wantRem {
+		t.Errorf("formatCrossEnvRemediation() = %q, want %q", got, wantRem)
+	}
+}
+
+func Test_formatTransitiveHopLead(t *testing.T) {
+	wantInternet := "Host relay-1 is SSH-accessible from the internet and"
+	if got := formatTransitiveInternetHopLead("relay-1"); got != wantInternet {
+		t.Errorf("formatTransitiveInternetHopLead() = %q, want %q", got, wantInternet)
+	}
+
+	wantInternal := "Host src-1 can reach relay-1, which"
+	if got := formatTransitiveInternalHopLead("src-1", "relay-1"); got != wantInternal {
+		t.Errorf("formatTransitiveInternalHopLead() = %q, want %q", got, wantInternal)
+	}
+}
+
+func TestGraph_HostAndHasHostAndHasSubnet(t *testing.T) {
+	var nilGraph *Graph
+	if nilGraph.Host("i-1") != nil {
+		t.Error("expected nil host from nil graph")
+	}
+	if nilGraph.HasHost("i-1") {
+		t.Error("expected false HasHost from nil graph")
+	}
+	if nilGraph.HasSubnet("sub-1") {
+		t.Error("expected false HasSubnet from nil graph")
+	}
+
+	g := NewGraph()
+	if g.Host("") != nil || g.HasHost("") || g.HasSubnet("") {
+		t.Error("expected nil / false on empty ID")
+	}
+
+	h := &Host{ID: "i-host1"}
+	s := &Subnet{ID: "sub-1"}
+	g.Hosts[h.ID] = h
+	g.Subnets[s.ID] = s
+
+	if got := g.Host("i-host1"); got != h {
+		t.Errorf("g.Host(i-host1) = %v, want %v", got, h)
+	}
+	if !g.HasHost("i-host1") {
+		t.Error("expected g.HasHost(i-host1) to be true")
+	}
+	if g.HasHost("i-missing") {
+		t.Error("expected g.HasHost(i-missing) to be false")
+	}
+
+	if !g.HasSubnet("sub-1") {
+		t.Error("expected g.HasSubnet(sub-1) to be true")
+	}
+	if g.HasSubnet("sub-missing") {
+		t.Error("expected g.HasSubnet(sub-missing) to be false")
+	}
+}
+
+func Test_formatEgressBypassExplanation(t *testing.T) {
+	want := "Isolated host iso-1 can reach host-1 on port 443. host-1's subnet routes 0.0.0.0/0 to nat:nat-1. Two-hop path: iso-1 → host-1 → internet."
+	if got := formatEgressBypassExplanation("iso-1", "host-1", "0.0.0.0/0", "nat:nat-1", 443); got != want {
+		t.Errorf("formatEgressBypassExplanation() = %q, want %q", got, want)
+	}
+}
+
+func Test_formatEgressGatedExplanation(t *testing.T) {
+	want := "Isolated host iso-1 can reach host-1 on port 443. host-1's subnet routes 0.0.0.0/0 to tgw:tgw-1 (TGW route table not resolved)."
+	if got := formatEgressGatedExplanation("iso-1", "host-1", "0.0.0.0/0", "tgw:tgw-1", "TGW route table not resolved", 443); got != want {
+		t.Errorf("formatEgressGatedExplanation() = %q, want %q", got, want)
+	}
+}
+
+func TestGraph_RouteTableCountAndHasRouteTables(t *testing.T) {
+	var nilGraph *Graph
+	if nilGraph.RouteTableCount() != 0 {
+		t.Errorf("nilGraph.RouteTableCount() = %d, want 0", nilGraph.RouteTableCount())
+	}
+	if nilGraph.HasRouteTables() {
+		t.Error("expected false HasRouteTables from nil graph")
+	}
+
+	g := NewGraph()
+	if g.RouteTableCount() != 0 {
+		t.Errorf("empty graph RouteTableCount() = %d, want 0", g.RouteTableCount())
+	}
+	if g.HasRouteTables() {
+		t.Error("expected false HasRouteTables on empty graph")
+	}
+
+	g.Routes["rt-1"] = []Route{{Destination: "0.0.0.0/0", TargetType: "igw"}}
+	if g.RouteTableCount() != 1 {
+		t.Errorf("g.RouteTableCount() = %d, want 1", g.RouteTableCount())
+	}
+	if !g.HasRouteTables() {
+		t.Error("expected true HasRouteTables")
+	}
+}
+
+func Test_formatSSHExplanations(t *testing.T) {
+	wantExt := "Production host prod-1 accepts SSH from the internet (0.0.0.0/0) on sg-1. No bastion in the path."
+	if got := formatExternalSSHExplanation("prod-1", "0.0.0.0/0", "sg-1"); got != wantExt {
+		t.Errorf("formatExternalSSHExplanation() = %q, want %q", got, wantExt)
+	}
+
+	wantCross := "Host src-1 (vpc:vpc-1) can SSH to production host prod-1 (vpc:vpc-2) via VPC peering. Security group sg-1 allows SSH from 10.0.0.0/8. No bastion in the path."
+	if got := formatCrossVPCSSHExplanation("src-1", "vpc-1", "prod-1", "vpc-2", "sg-1", "10.0.0.0/8"); got != wantCross {
+		t.Errorf("formatCrossVPCSSHExplanation() = %q, want %q", got, wantCross)
+	}
+
+	wantInt := "Host src-1 can SSH to production host prod-1 via sg-1 allowing SSH from 10.0.0.0/8. No bastion in the path."
+	if got := formatInternalSSHExplanation("src-1", "prod-1", "sg-1", "10.0.0.0/8"); got != wantInt {
+		t.Errorf("formatInternalSSHExplanation() = %q, want %q", got, wantInt)
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -616,4 +616,29 @@ func Test_renderGenericScope(t *testing.T) {
 	})
 }
 
+func TestFormatSolverCompletion(t *testing.T) {
+	got := FormatSolverCompletion(42)
+	want := "Solver: graph-search (completed in 42ms)"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func Test_verdictCounterexampleHeader(t *testing.T) {
+	t.Run("gated result", func(t *testing.T) {
+		r := &network.ProofResult{Result: "EVIDENCE_GATED"}
+		if got := verdictCounterexampleHeader(r); got != "EVIDENCE GATED:" {
+			t.Errorf("got %q, want EVIDENCE GATED:", got)
+		}
+	})
+
+	t.Run("SAT or other result", func(t *testing.T) {
+		r := &network.ProofResult{Result: "SAT"}
+		if got := verdictCounterexampleHeader(r); got != "COUNTEREXAMPLE:" {
+			t.Errorf("got %q, want COUNTEREXAMPLE:", got)
+		}
+	})
+}
+
+
 

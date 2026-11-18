@@ -71,12 +71,7 @@ func NetworkEnumerate(ctx context.Context, cfg NetworkEnumerateConfig) (*network
 	}
 	paths := g.EnumerateSSHPaths(cfg.Port)
 
-	return &network.EnumerateResult{
-		Scope:           "production",
-		Port:            cfg.Port,
-		ProductionHosts: len(g.ProductionHosts()),
-		Paths:           paths,
-	}, nil
+	return network.NewEnumerateResult("production", cfg.Port, g.ProductionHostCount(), paths), nil
 }
 
 // NetworkProve loads observations and runs a network safety property proof.

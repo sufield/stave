@@ -10,7 +10,6 @@ import (
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/coverage"
-	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/core/report"
 )
 
@@ -133,11 +132,6 @@ type FindingMarshaler interface {
 // EnrichFunc produces an EnrichedResult from an evaluation result.
 // Implementations close over the enricher and sanitizer.
 type EnrichFunc func(result *evaluation.ComplianceReport) (EnrichedResult, error)
-
-// ContentHasher computes reproducible digests over file system paths.
-// Canonical definition lives in core/ports; this alias preserves backward
-// compatibility for existing app-layer consumers.
-type ContentHasher = ports.ContentHasher
 
 // SnapshotFile represents a discovered snapshot file with its metadata.
 // This type is defined in contracts (not in the adapter) so that both the app

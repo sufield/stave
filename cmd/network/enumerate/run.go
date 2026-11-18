@@ -1,7 +1,9 @@
 package enumerate
 
 import (
+	"context"
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -13,16 +15,16 @@ func run(cmd *cobra.Command, o *options) error {
 	if err != nil {
 		return err
 	}
+	return executeAndRender(cmd.Context(), cmd.OutOrStdout(), o.ToConfig(), renderer)
+}
 
-	result, err := stave.NetworkEnumerate(cmd.Context(), stave.NetworkEnumerateConfig{
-		SnapshotsDir: o.observations,
-		Port:         o.port,
-	})
+func executeAndRender(ctx context.Context, w io.Writer, cfg stave.NetworkEnumerateConfig, r Renderer) error {
+	result, err := stave.NetworkEnumerate(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("network enumerate: %w", err)
 	}
 
-	if err := renderer.Render(cmd.OutOrStdout(), result); err != nil {
+	if err := r.Render(w, result); err != nil {
 		return fmt.Errorf("render output: %w", err)
 	}
 	return nil

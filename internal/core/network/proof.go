@@ -23,6 +23,7 @@ package network
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -74,6 +75,31 @@ func (r *ProofResult) IsUNSAT() bool {
 // IsEvidenceGated reports whether the proof was blocked by unresolved evidence.
 func (r *ProofResult) IsEvidenceGated() bool {
 	return r != nil && r.Result == "EVIDENCE_GATED"
+}
+
+// ScopeCount returns the number of entries in the scope map, or 0 if nil.
+func (r *ProofResult) ScopeCount() int {
+	if r == nil {
+		return 0
+	}
+	return len(r.Scope)
+}
+
+// HasScopeKey reports whether key is present in the proof result scope.
+func (r *ProofResult) HasScopeKey(key string) bool {
+	if r == nil || r.Scope == nil {
+		return false
+	}
+	_, ok := r.Scope[key]
+	return ok
+}
+
+// ScopeValue returns the integer value for key in the scope, or 0 if missing or receiver is nil.
+func (r *ProofResult) ScopeValue(key string) int {
+	if r == nil || r.Scope == nil {
+		return 0
+	}
+	return r.Scope[key]
 }
 
 func newProofResult(property string, scope map[string]int) *ProofResult {
@@ -159,21 +185,32 @@ func newRouteCounterexample(sub *Subnet, route Route, pathType, explanation, rem
 	}
 	if sub != nil {
 		ce.RoutePath = &UnprotectedRoutePath{
-			RouteTableID: sub.RouteTableID,
+			RouteTableID: sub.SafeRouteTableID(),
 			Destination:  route.Destination,
 		}
 	}
 	return ce
 }
 
+// formatTransitivePathSource formats the composite source string for a two-hop path (e.g. "hop1 -> relay").
+func formatTransitivePathSource(hop1ID, relayID string) string {
+	return fmt.Sprintf("%s -> %s", hop1ID, relayID)
+}
+
+// formatTransitiveExplanation formats the explanation for a two-hop transitive path violation.
+func formatTransitiveExplanation(hop1Lead, dstID, hop1Path, relayID string, port int) string {
+	return fmt.Sprintf("%s can reach production host %s on port %d. Two-hop path: %s -> %s -> %s.",
+		hop1Lead, dstID, port, hop1Path, relayID, dstID)
+}
+
 // newTransitiveCounterexample constructs a Counterexample for a two-hop transitive path violation
 // (hop1 -> relay -> dst), formatting the explanation and remediation consistently.
 func newTransitiveCounterexample(hop1ID, hop1Path, hop1Lead string, relay, dst *Host, port int, relayMatch *RuleMatch, remediation string) *Counterexample {
 	relayID, dstID := relay.SafeID(), dst.SafeID()
-	explanation := fmt.Sprintf("%s can reach production host %s on port %d. Two-hop path: %s -> %s -> %s.",
-		hop1Lead, dstID, port, hop1Path, relayID, dstID)
+	explanation := formatTransitiveExplanation(hop1Lead, dstID, hop1Path, relayID, port)
+	source := formatTransitivePathSource(hop1ID, relayID)
 	return newSGCounterexample(
-		fmt.Sprintf("%s -> %s", hop1ID, relayID), dstID, port, "transitive", relayMatch,
+		source, dstID, port, "transitive", relayMatch,
 		explanation, remediation,
 	)
 }
@@ -188,12 +225,46 @@ type SSHPath struct {
 	RuleSource  string `json:"rule_source"`
 }
 
+// FormatEntry formats an enumerated SSH path line with a 1-based index prefix.
+func (p SSHPath) FormatEntry(index int) string {
+	return fmt.Sprintf("  %d. %s → %s  [%s]  sg:%s  via:%s",
+		index, p.Source, p.Destination, p.PathType, p.RuleSG, p.RuleSource)
+}
+
+// IsCrossVPC reports whether the path traverses VPC peering.
+func (p SSHPath) IsCrossVPC() bool {
+	return p.PathType == "cross-vpc"
+}
+
 // EnumerateResult is the output of SSH entry point enumeration.
 type EnumerateResult struct {
 	Scope           string    `json:"scope"`
 	Port            int       `json:"port"`
 	ProductionHosts int       `json:"production_hosts"`
 	Paths           []SSHPath `json:"paths"`
+}
+
+// NewEnumerateResult constructs an EnumerateResult for SSH entry point enumeration.
+func NewEnumerateResult(scope string, port, prodHosts int, paths []SSHPath) *EnumerateResult {
+	return &EnumerateResult{
+		Scope:           scope,
+		Port:            port,
+		ProductionHosts: prodHosts,
+		Paths:           paths,
+	}
+}
+
+// PathCount returns the number of enumerated SSH paths, or 0 if receiver is nil.
+func (r *EnumerateResult) PathCount() int {
+	if r == nil {
+		return 0
+	}
+	return len(r.Paths)
+}
+
+// HasPaths reports whether any SSH paths were found.
+func (r *EnumerateResult) HasPaths() bool {
+	return r.PathCount() > 0
 }
 
 // ErrVacuousProof is returned when a proof cannot run because the
@@ -216,6 +287,16 @@ var SupportedProperties = []string{
 	"firewall-mandatory",
 	"transitive-ssh",
 	"transitive-egress",
+}
+
+// IsSupportedProperty reports whether prop is one of the supported safety properties.
+func IsSupportedProperty(prop string) bool {
+	return slices.Contains(SupportedProperties, prop)
+}
+
+// SupportedPropertiesList returns a comma-separated list of supported safety properties.
+func SupportedPropertiesList() string {
+	return strings.Join(SupportedProperties, ", ")
 }
 
 // Supported properties: bastion-ssh, prod-dev-isolation, database-isolation,
@@ -241,7 +322,7 @@ func (g *Graph) Prove(property string, port int) (*ProofResult, error) {
 	case "transitive-egress":
 		return g.ProveTransitiveEgress()
 	default:
-		return nil, fmt.Errorf("unknown property %q (valid: %s)", property, strings.Join(SupportedProperties, ", "))
+		return nil, fmt.Errorf("unknown property %q (valid: %s)", property, SupportedPropertiesList())
 	}
 }
 
@@ -296,7 +377,7 @@ func newInternalBastionBypassCounterexample(src, dst *Host, port int, match *Rul
 		return nil
 	}
 	return newSGCounterexample(
-		src.ID, dst.ID, port, match.PathType, match,
+		src.SafeID(), dst.SafeID(), port, match.PathType, match,
 		match.Explanation(src, dst),
 		match.Remediation(bastions),
 	)
@@ -336,7 +417,7 @@ func newExternalBypassCounterexample(dst *Host, port int, match *RuleMatch) *Cou
 		return nil
 	}
 	return newSGCounterexample(
-		match.RuleSource+" (internet)", dst.ID, port, match.PathType, match,
+		match.InternetSource(), dst.SafeID(), port, match.PathType, match,
 		match.Explanation(nil, dst),
 		match.Remediation(nil),
 	)
@@ -368,33 +449,57 @@ func (g *Graph) ProveProdDevIsolation() (*ProofResult, error) {
 	return result.unsat("Production and development environments are network-isolated.", start)
 }
 
+// formatCrossEnvExplanation formats the explanation for a cross-environment reachability violation.
+func formatCrossEnvExplanation(srcID, srcEnv, dstID, dstEnv, pathType string) string {
+	return fmt.Sprintf("Host %s (%s) can reach %s (%s) via %s.", srcID, srcEnv, dstID, dstEnv, pathType)
+}
+
+// formatCrossEnvRemediation formats the remediation advice for a cross-environment reachability violation.
+func formatCrossEnvRemediation(sgID string) string {
+	return fmt.Sprintf("Remove cross-environment ingress rule on %s. Ensure production and development VPCs have no peering or broad CIDR rules.", sgID)
+}
+
 // newCrossEnvBypassCounterexample constructs a Counterexample for a cross-environment reachability violation.
 // Safe on nil src, dst, or match.
 func newCrossEnvBypassCounterexample(src, dst *Host, match *RuleMatch) *Counterexample {
 	if src == nil || dst == nil || match == nil {
 		return nil
 	}
+	srcID, dstID := src.SafeID(), dst.SafeID()
 	return newSGCounterexample(
-		src.ID, dst.ID, match.Port, match.PathType, match,
-		fmt.Sprintf("Host %s (%s) can reach %s (%s) via %s.", src.ID, src.Environment(), dst.ID, dst.Environment(), match.PathType),
-		fmt.Sprintf("Remove cross-environment ingress rule on %s. Ensure production and development VPCs have no peering or broad CIDR rules.", match.SecurityGroupID),
+		srcID, dstID, match.Port, match.PathType, match,
+		formatCrossEnvExplanation(srcID, src.Environment(), dstID, dst.Environment(), match.PathType),
+		formatCrossEnvRemediation(match.SecurityGroupID),
 	)
 }
 
-// findAnyReachabilityPath searches for the first reachability rule match between any
-// source host and destination host on any port. Safe on nil receiver or nil slices.
-func (g *Graph) findAnyReachabilityPath(sources, destinations []*Host) (*Host, *Host, *RuleMatch) {
+// ReachabilityPath searches for the first authorized reachability match from sources
+// to destinations on the specified port. If port is 0, any port is matched.
+// Safe on nil receiver or nil slices.
+func (g *Graph) ReachabilityPath(sources, destinations []*Host, port int) (*Host, *Host, *RuleMatch) {
 	if g == nil {
 		return nil, nil, nil
 	}
 	for _, src := range sources {
 		for _, dst := range destinations {
-			if match := g.ReachabilityAnyPort(src, dst); match != nil {
+			var match *RuleMatch
+			if port == 0 {
+				match = g.ReachabilityAnyPort(src, dst)
+			} else {
+				match = g.Reachability(src, dst, port)
+			}
+			if match != nil {
 				return src, dst, match
 			}
 		}
 	}
 	return nil, nil, nil
+}
+
+// findAnyReachabilityPath searches for the first reachability rule match between any
+// source host and destination host on any port. Safe on nil receiver or nil slices.
+func (g *Graph) findAnyReachabilityPath(sources, destinations []*Host) (*Host, *Host, *RuleMatch) {
+	return g.ReachabilityPath(sources, destinations, 0)
 }
 
 func (g *Graph) findCrossEnvBypass(prod, dev []*Host) (*Host, *Host, *RuleMatch) {
@@ -420,13 +525,30 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 
 	result := newProofResult("database-isolation", map[string]int{"database_hosts": len(dbHosts)})
 
-	for _, dst := range dbHosts {
-		if ce, reason := g.findDatabaseBypass(dst); ce != nil {
-			return result.sat(ce, reason, start)
-		}
+	if ce, reason := g.findDatabaseTierBypass(dbHosts); ce != nil {
+		return result.sat(ce, reason, start)
 	}
 
 	return result.unsat("All database hosts are isolated within their VPC — no cross-VPC or internet paths exist.", start)
+}
+
+func (g *Graph) findDatabaseTierBypass(dbHosts []*Host) (*Counterexample, string) {
+	for _, dst := range dbHosts {
+		if ce, reason := g.findDatabaseBypass(dst); ce != nil {
+			return ce, reason
+		}
+	}
+	return nil, ""
+}
+
+// formatCrossVPCDatabaseExplanation formats the explanation for a cross-VPC database reachability violation.
+func formatCrossVPCDatabaseExplanation(srcID, srcVPC, dstID, dstVPC, pathType string) string {
+	return fmt.Sprintf("Host %s (vpc:%s) can reach database host %s (vpc:%s) via %s.", srcID, srcVPC, dstID, dstVPC, pathType)
+}
+
+// formatCrossVPCDatabaseRemediation formats the remediation advice for a cross-VPC database reachability violation.
+func formatCrossVPCDatabaseRemediation(sgID string) string {
+	return fmt.Sprintf("Remove cross-VPC ingress to database SG %s. Restrict to application-tier SG references within the same VPC.", sgID)
 }
 
 // newCrossVPCDatabaseBypassCounterexample constructs a Counterexample for a cross-VPC database reachability violation.
@@ -435,11 +557,23 @@ func newCrossVPCDatabaseBypassCounterexample(src, dst *Host, match *RuleMatch) *
 	if src == nil || dst == nil || match == nil {
 		return nil
 	}
+	srcID, srcVPC := src.SafeID(), src.SafeVPCID()
+	dstID, dstVPC := dst.SafeID(), dst.SafeVPCID()
 	return newSGCounterexample(
-		src.ID, dst.ID, match.Port, match.PathType, match,
-		fmt.Sprintf("Host %s (vpc:%s) can reach database host %s (vpc:%s) via %s.", src.ID, src.VPCID, dst.ID, dst.VPCID, match.PathType),
-		fmt.Sprintf("Remove cross-VPC ingress to database SG %s. Restrict to application-tier SG references within the same VPC.", match.SecurityGroupID),
+		srcID, dstID, match.Port, match.PathType, match,
+		formatCrossVPCDatabaseExplanation(srcID, srcVPC, dstID, dstVPC, match.PathType),
+		formatCrossVPCDatabaseRemediation(match.SecurityGroupID),
 	)
+}
+
+// formatInternetDatabaseExplanation formats the explanation for an internet database reachability violation.
+func formatInternetDatabaseExplanation(dstID, ruleSource string, port int, sgID string) string {
+	return fmt.Sprintf("Database host %s accepts traffic from %s on port %d via %s.", dstID, ruleSource, port, sgID)
+}
+
+// formatInternetDatabaseRemediation formats the remediation advice for an internet database reachability violation.
+func formatInternetDatabaseRemediation(sgID string) string {
+	return fmt.Sprintf("Remove internet ingress on %s. Database hosts must not be reachable from the internet.", sgID)
 }
 
 // newInternetDatabaseBypassCounterexample constructs a Counterexample for an internet database reachability violation.
@@ -448,10 +582,11 @@ func newInternetDatabaseBypassCounterexample(dst *Host, match *RuleMatch) *Count
 	if dst == nil || match == nil {
 		return nil
 	}
+	dstID := dst.SafeID()
 	return newSGCounterexample(
-		match.RuleSource+" (internet)", dst.ID, match.Port, match.PathType, match,
-		fmt.Sprintf("Database host %s accepts traffic from %s on port %d via %s.", dst.ID, match.RuleSource, match.Port, match.SecurityGroupID),
-		fmt.Sprintf("Remove internet ingress on %s. Database hosts must not be reachable from the internet.", match.SecurityGroupID),
+		match.InternetSource(), dstID, match.Port, match.PathType, match,
+		formatInternetDatabaseExplanation(dstID, match.RuleSource, match.Port, match.SecurityGroupID),
+		formatInternetDatabaseRemediation(match.SecurityGroupID),
 	)
 }
 
@@ -584,6 +719,26 @@ func (g *Graph) findTransitiveInternetBypass(relay, dst *Host, port int, relayMa
 	return newTransitiveInternetBypassCounterexample(relay, dst, port, match, relayMatch)
 }
 
+// formatTransitiveInternetRemediation formats remediation advice for an internet-facing transitive SSH relay.
+func formatTransitiveInternetRemediation(ruleSource, relayID, dstID string) string {
+	return fmt.Sprintf("Remove SSH ingress from %s on %s or remove its access to production host %s.", ruleSource, relayID, dstID)
+}
+
+// formatTransitiveInternalRemediation formats remediation advice for an internal transitive SSH relay.
+func formatTransitiveInternalRemediation(srcID, relayID, dstID string) string {
+	return fmt.Sprintf("Remove SSH access from %s to %s or from %s to production host %s.", srcID, relayID, relayID, dstID)
+}
+
+// formatTransitiveInternetHopLead formats the lead-in clause of an internet-facing transitive explanation.
+func formatTransitiveInternetHopLead(relayID string) string {
+	return fmt.Sprintf("Host %s is SSH-accessible from the internet and", relayID)
+}
+
+// formatTransitiveInternalHopLead formats the lead-in clause of an internal transitive explanation.
+func formatTransitiveInternalHopLead(srcID, relayID string) string {
+	return fmt.Sprintf("Host %s can reach %s, which", srcID, relayID)
+}
+
 // newTransitiveInternetBypassCounterexample constructs a Counterexample for an internet-facing transitive SSH relay violation.
 // Safe on nil relay, dst, match, or relayMatch.
 func newTransitiveInternetBypassCounterexample(relay, dst *Host, port int, match, relayMatch *RuleMatch) *Counterexample {
@@ -594,9 +749,9 @@ func newTransitiveInternetBypassCounterexample(relay, dst *Host, port int, match
 	return newTransitiveCounterexample(
 		match.RuleSource,
 		"internet",
-		fmt.Sprintf("Host %s is SSH-accessible from the internet and", relayID),
+		formatTransitiveInternetHopLead(relayID),
 		relay, dst, port, relayMatch,
-		fmt.Sprintf("Remove SSH ingress from %s on %s or remove its access to production host %s.", match.RuleSource, relayID, dstID),
+		formatTransitiveInternetRemediation(match.RuleSource, relayID, dstID),
 	)
 }
 
@@ -618,9 +773,9 @@ func newTransitiveInternalBypassCounterexample(src, relay, dst *Host, port int, 
 	return newTransitiveCounterexample(
 		srcID,
 		srcID,
-		fmt.Sprintf("Host %s can reach %s, which", srcID, relayID),
+		formatTransitiveInternalHopLead(srcID, relayID),
 		relay, dst, port, relayMatch,
-		fmt.Sprintf("Remove SSH access from %s to %s or from %s to production host %s.", srcID, relayID, relayID, dstID),
+		formatTransitiveInternalRemediation(srcID, relayID, dstID),
 	)
 }
 
@@ -669,17 +824,27 @@ func (g *Graph) findSubnetBypassingRoute(sub *Subnet) (Route, bool) {
 	return Route{}, false
 }
 
+// formatFirewallBypassExplanation formats the explanation of a direct IGW firewall bypass.
+func formatFirewallBypassExplanation(subnetID, dest, igwID, rtID string) string {
+	return fmt.Sprintf("Subnet %s has a %s route to IGW %s in route table %s without passing through a Network Firewall endpoint.", subnetID, dest, igwID, rtID)
+}
+
+// formatFirewallBypassRemediation formats the remediation advice for a direct IGW firewall bypass.
+func formatFirewallBypassRemediation(dest, rtID, igwID string) string {
+	return fmt.Sprintf("Change the %s route in %s to target a Network Firewall endpoint instead of %s.", dest, rtID, igwID)
+}
+
 // newFirewallBypassCounterexample constructs a Counterexample for a direct-to-IGW firewall bypass.
 // Safe on nil sub.
 func newFirewallBypassCounterexample(sub *Subnet, route Route) *Counterexample {
 	if sub == nil {
 		return nil
 	}
-	return newRouteCounterexample(
-		sub, route, "direct-igw",
-		fmt.Sprintf("Subnet %s has a %s route to IGW %s in route table %s without passing through a Network Firewall endpoint.", sub.ID, route.Destination, route.TargetID, sub.RouteTableID),
-		fmt.Sprintf("Change the %s route in %s to target a Network Firewall endpoint instead of %s.", route.Destination, sub.RouteTableID, route.TargetID),
-	)
+	subID := sub.SafeID()
+	rtID := sub.SafeRouteTableID()
+	explanation := formatFirewallBypassExplanation(subID, route.Destination, route.TargetID, rtID)
+	remediation := formatFirewallBypassRemediation(route.Destination, rtID, route.TargetID)
+	return newRouteCounterexample(sub, route, "direct-igw", explanation, remediation)
 }
 
 func (g *Graph) findSubnetFirewallBypass(sub *Subnet) *Counterexample {
@@ -711,25 +876,45 @@ func (t RouteTarget) IsSink() bool    { return t.Class == routeSink }
 func (t RouteTarget) IsGated() bool   { return t.Class == routeGated }
 func (t RouteTarget) IsNonSink() bool { return t.Class == routeNonSink }
 
+// newSinkRouteTarget constructs a RouteTarget representing a definite internet egress sink.
+func newSinkRouteTarget(targetID string) RouteTarget {
+	return RouteTarget{Class: routeSink, TargetID: targetID}
+}
+
+// newNonSinkRouteTarget constructs a RouteTarget representing non-egress (local) routing.
+func newNonSinkRouteTarget(targetID string) RouteTarget {
+	return RouteTarget{Class: routeNonSink, TargetID: targetID}
+}
+
+// newGatedRouteTarget constructs a RouteTarget representing an unresolvable or ambiguous route target.
+func newGatedRouteTarget(reason, targetID string) RouteTarget {
+	return RouteTarget{Class: routeGated, Reason: reason, TargetID: targetID}
+}
+
+// IsEgress reports whether the route target is classified as an internet egress sink.
+func (r Route) IsEgress() bool {
+	return r.ClassifyTarget().IsSink()
+}
+
 // ClassifyTarget classifies a default-route target for the
 // transitive-egress prover. The default arm is Gated — an unrecognized
 // target_type can only ever widen the answer, never hide a path.
 func (r Route) ClassifyTarget() RouteTarget {
 	switch r.TargetType {
 	case "nat", "igw", "eigw":
-		return RouteTarget{Class: routeSink, TargetID: r.TargetID}
+		return newSinkRouteTarget(r.TargetID)
 	case "local":
-		return RouteTarget{Class: routeNonSink, TargetID: r.TargetID}
+		return newNonSinkRouteTarget(r.TargetID)
 	case "tgw":
-		return RouteTarget{Class: routeGated, Reason: "TGW route table not resolved", TargetID: r.TargetID}
+		return newGatedRouteTarget("TGW route table not resolved", r.TargetID)
 	case "vgw":
-		return RouteTarget{Class: routeGated, Reason: "on-premises egress not observable", TargetID: r.TargetID}
+		return newGatedRouteTarget("on-premises egress not observable", r.TargetID)
 	case "vpce":
-		return RouteTarget{Class: routeGated, Reason: "firewall policy not evaluated", TargetID: r.TargetID}
+		return newGatedRouteTarget("firewall policy not evaluated", r.TargetID)
 	case "instance", "eni":
-		return RouteTarget{Class: routeGated, Reason: "NAT instance or appliance forwarding not observable", TargetID: r.TargetID}
+		return newGatedRouteTarget("NAT instance or appliance forwarding not observable", r.TargetID)
 	default:
-		return RouteTarget{Class: routeGated, Reason: "unrecognized route target", TargetID: r.TargetID}
+		return newGatedRouteTarget("unrecognized route target", r.TargetID)
 	}
 }
 
@@ -778,32 +963,60 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 	return result.unsat("No isolated workload reaches the internet through an intermediate host, over security-group ingress reachability. Sound under that model: NACL denies and security-group egress rules are not evaluated, so a SAT counterexample may be blocked in practice, but UNSAT does not depend on them. Network-layer only — IAM-layer service paths (Lambda invoke, SSM, S3 replication, VPC endpoints to request-making services) are not evaluated. Single-region snapshot; run per region.", start)
 }
 
+// formatEgressReachabilityPrefix formats the reachability statement of a transitive egress explanation.
+func formatEgressReachabilityPrefix(isoID, targetID string, port int) string {
+	return fmt.Sprintf("Isolated host %s can reach %s on port %s.", isoID, targetID, FormatPort(port))
+}
+
+// formatRemoveAccessRemediation formats the remediation advice to remove network access between two hosts.
+func formatRemoveAccessRemediation(isoID, targetID string) string {
+	return fmt.Sprintf("Remove network access from %s to %s", isoID, targetID)
+}
+
+// formatEgressBypassRemediation formats the remediation advice for a transitive egress bypass.
+func formatEgressBypassRemediation(isoID, hostID string) string {
+	return fmt.Sprintf("%s, or remove %s's internet egress route.",
+		formatRemoveAccessRemediation(isoID, hostID), hostID)
+}
+
+// formatEgressGatedRemediation formats the remediation advice for a gated transitive egress path.
+func formatEgressGatedRemediation(targetType, targetID, isoID, hostID string) string {
+	return fmt.Sprintf("Provide observation for %s %s to settle the verdict, or remove network access from %s to %s.",
+		targetType, targetID, isoID, hostID)
+}
+
+// formatEgressBypassExplanation formats the explanation of a transitive egress bypass through an intermediate host.
+func formatEgressBypassExplanation(isoID, hostID, dest, target string, port int) string {
+	return fmt.Sprintf("%s %s's subnet routes %s to %s. Two-hop path: %s → %s → internet.",
+		formatEgressReachabilityPrefix(isoID, hostID, port),
+		hostID, dest, target, isoID, hostID)
+}
+
 func newEgressBypassCounterexample(iso *Host, s egressCandidate, match *RuleMatch) *Counterexample {
 	if iso == nil || s.host == nil || match == nil {
 		return nil
 	}
-	portStr := FormatPort(match.Port)
-	return newSGCounterexample(
-		iso.ID, s.host.ID, match.Port, "transitive-egress", match,
-		fmt.Sprintf("Isolated host %s can reach %s on port %s. %s's subnet routes %s to %s. Two-hop path: %s → %s → internet.",
-			iso.ID, s.host.ID, portStr, s.host.ID, s.route.Destination, s.route.Target(), iso.ID, s.host.ID),
-		fmt.Sprintf("Remove network access from %s to %s, or remove %s's internet egress route.",
-			iso.ID, s.host.ID, s.host.ID),
-	)
+	isoID, hostID := iso.SafeID(), s.HostID()
+	explanation := formatEgressBypassExplanation(isoID, hostID, s.RouteDestination(), s.RouteTarget(), match.Port)
+	remediation := formatEgressBypassRemediation(isoID, hostID)
+	return newSGCounterexample(isoID, hostID, match.Port, "transitive-egress", match, explanation, remediation)
+}
+
+// formatEgressGatedExplanation formats the explanation of a gated transitive egress path.
+func formatEgressGatedExplanation(isoID, hostID, dest, target, reason string, port int) string {
+	return fmt.Sprintf("%s %s's subnet routes %s to %s (%s).",
+		formatEgressReachabilityPrefix(isoID, hostID, port),
+		hostID, dest, target, reason)
 }
 
 func newEgressGatedCounterexample(iso *Host, gc egressCandidate, match *RuleMatch) *Counterexample {
 	if iso == nil || gc.host == nil || match == nil {
 		return nil
 	}
-	portStr := FormatPort(match.Port)
-	return newSGCounterexample(
-		iso.ID, gc.host.ID, match.Port, "gated-egress", match,
-		fmt.Sprintf("Isolated host %s can reach %s on port %s. %s's subnet routes %s to %s (%s).",
-			iso.ID, gc.host.ID, portStr, gc.host.ID, gc.route.Destination, gc.route.Target(), gc.target.Reason),
-		fmt.Sprintf("Provide observation for %s %s to settle the verdict, or remove network access from %s to %s.",
-			gc.route.TargetType, gc.target.TargetID, iso.ID, gc.host.ID),
-	)
+	isoID, hostID := iso.SafeID(), gc.HostID()
+	explanation := formatEgressGatedExplanation(isoID, hostID, gc.RouteDestination(), gc.RouteTarget(), gc.TargetReason(), match.Port)
+	remediation := formatEgressGatedRemediation(gc.RouteTargetType(), gc.TargetID(), isoID, hostID)
+	return newSGCounterexample(isoID, hostID, match.Port, "gated-egress", match, explanation, remediation)
 }
 
 func (g *Graph) findTransitiveEgressBypass(isolated []*Host, sinks []egressCandidate) *Counterexample {
@@ -871,6 +1084,46 @@ func newEgressCandidate(h *Host, route Route, target RouteTarget) egressCandidat
 	}
 }
 
+// HostID returns the candidate host's ID, or "" if host is nil.
+func (c egressCandidate) HostID() string {
+	return c.host.SafeID()
+}
+
+// RouteDestination returns the destination CIDR of the candidate's route.
+func (c egressCandidate) RouteDestination() string {
+	return c.route.Destination
+}
+
+// RouteTarget returns the formatted target of the candidate's route.
+func (c egressCandidate) RouteTarget() string {
+	return c.route.Target()
+}
+
+// RouteTargetType returns the target type of the candidate's route.
+func (c egressCandidate) RouteTargetType() string {
+	return c.route.TargetType
+}
+
+// TargetReason returns the resolution reason of the candidate's route target.
+func (c egressCandidate) TargetReason() string {
+	return c.target.Reason
+}
+
+// TargetID returns the target identifier of the candidate's route target.
+func (c egressCandidate) TargetID() string {
+	return c.target.TargetID
+}
+
+// IsSink reports whether the candidate route target is a definite internet sink.
+func (c egressCandidate) IsSink() bool {
+	return c.target.IsSink()
+}
+
+// IsGated reports whether the candidate route target depends on unobservable evidence.
+func (c egressCandidate) IsGated() bool {
+	return c.target.IsGated()
+}
+
 // hostEgressCandidate determines if a host has an egress candidate default route.
 // Returns false if the host is nil, isolated, lacks a route table, or has no non-local default route.
 func (g *Graph) hostEgressCandidate(h *Host) (egressCandidate, bool) {
@@ -932,9 +1185,9 @@ func (p *egressCandidatePartition) add(c egressCandidate) {
 	if p == nil {
 		return
 	}
-	if c.target.IsSink() {
+	if c.IsSink() {
 		p.sinks = append(p.sinks, c)
-	} else if c.target.IsGated() {
+	} else if c.IsGated() {
 		p.gated = append(p.gated, c)
 	}
 }

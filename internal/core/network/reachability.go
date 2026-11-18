@@ -22,10 +22,44 @@ func newRuleMatch(securityGroupID, ruleSource, pathType string, port int) *RuleM
 
 // hostIdentity extracts the ID and VPC ID of a host, or empty strings if nil.
 func hostIdentity(h *Host) (id string, vpcID string) {
-	if h != nil {
-		return h.SafeID(), h.VPCID
+	return h.SafeID(), h.SafeVPCID()
+}
+
+// IsExternal reports whether the rule match represents direct public internet ingress.
+func (m *RuleMatch) IsExternal() bool {
+	return m != nil && m.PathType == "external"
+}
+
+// IsCrossVPC reports whether the rule match represents cross-VPC traffic.
+func (m *RuleMatch) IsCrossVPC() bool {
+	return m != nil && m.PathType == "cross-vpc"
+}
+
+// InternetSource returns the rule source formatted as an internet origin label.
+// Safe on nil receiver.
+func (m *RuleMatch) InternetSource() string {
+	if m == nil {
+		return ""
 	}
-	return "", ""
+	return m.RuleSource + " (internet)"
+}
+
+// formatExternalSSHExplanation formats the explanation of a direct internet SSH bypass.
+func formatExternalSSHExplanation(dstID, ruleSource, sgID string) string {
+	return fmt.Sprintf("Production host %s accepts SSH from the internet (%s) on %s. No bastion in the path.",
+		dstID, ruleSource, sgID)
+}
+
+// formatCrossVPCSSHExplanation formats the explanation of a cross-VPC SSH bypass.
+func formatCrossVPCSSHExplanation(srcID, srcVPC, dstID, dstVPC, sgID, ruleSource string) string {
+	return fmt.Sprintf("Host %s (vpc:%s) can SSH to production host %s (vpc:%s) via VPC peering. Security group %s allows SSH from %s. No bastion in the path.",
+		srcID, srcVPC, dstID, dstVPC, sgID, ruleSource)
+}
+
+// formatInternalSSHExplanation formats the explanation of an internal same-VPC SSH bypass.
+func formatInternalSSHExplanation(srcID, dstID, sgID, ruleSource string) string {
+	return fmt.Sprintf("Host %s can SSH to production host %s via %s allowing SSH from %s. No bastion in the path.",
+		srcID, dstID, sgID, ruleSource)
 }
 
 // Explanation formats the counterexample explanation describing why src can reach dst.
@@ -36,16 +70,13 @@ func (m *RuleMatch) Explanation(src, dst *Host) string {
 	}
 	srcID, srcVPC := hostIdentity(src)
 	dstID, dstVPC := hostIdentity(dst)
-	switch m.PathType {
-	case "external":
-		return fmt.Sprintf("Production host %s accepts SSH from the internet (%s) on %s. No bastion in the path.",
-			dstID, m.RuleSource, m.SecurityGroupID)
-	case "cross-vpc":
-		return fmt.Sprintf("Host %s (vpc:%s) can SSH to production host %s (vpc:%s) via VPC peering. Security group %s allows SSH from %s. No bastion in the path.",
-			srcID, srcVPC, dstID, dstVPC, m.SecurityGroupID, m.RuleSource)
+	switch {
+	case m.IsExternal():
+		return formatExternalSSHExplanation(dstID, m.RuleSource, m.SecurityGroupID)
+	case m.IsCrossVPC():
+		return formatCrossVPCSSHExplanation(srcID, srcVPC, dstID, dstVPC, m.SecurityGroupID, m.RuleSource)
 	default:
-		return fmt.Sprintf("Host %s can SSH to production host %s via %s allowing SSH from %s. No bastion in the path.",
-			srcID, dstID, m.SecurityGroupID, m.RuleSource)
+		return formatInternalSSHExplanation(srcID, dstID, m.SecurityGroupID, m.RuleSource)
 	}
 }
 
@@ -55,7 +86,7 @@ func (m *RuleMatch) Remediation(bastions []*Host) string {
 	if m == nil {
 		return ""
 	}
-	if m.PathType == "external" {
+	if m.IsExternal() {
 		return fmt.Sprintf("Remove SSH ingress from %s on %s. Restrict to bastion SG reference only.",
 			m.RuleSource, m.SecurityGroupID)
 	}
@@ -141,7 +172,7 @@ func (g *Graph) findInternalSSHPath(src, dst *Host, port int) (SSHPath, bool) {
 		return SSHPath{}, false
 	}
 	if match := g.Reachability(src, dst, port); match != nil {
-		return match.SSHPath(src.ID, dst.ID), true
+		return match.SSHPath(src.SafeID(), dst.SafeID()), true
 	}
 	return SSHPath{}, false
 }
@@ -166,7 +197,7 @@ func (g *Graph) findExternalSSHPath(dst *Host, match *RuleMatch) (SSHPath, bool)
 	if g == nil || dst == nil || match == nil {
 		return SSHPath{}, false
 	}
-	return match.SSHPath(match.RuleSource, dst.ID), true
+	return match.SSHPath(match.RuleSource, dst.SafeID()), true
 }
 
 // enumerateExternalSSHPaths finds all direct public internet SSH ingress paths to dst.
@@ -243,4 +274,10 @@ func (g *Graph) findInternetRuleAnyPort(dst *Host) *RuleMatch {
 // Safe on nil receiver or nil host.
 func (g *Graph) IsPubliclyAccessible(h *Host, port int) bool {
 	return g.findInternetRule(h, port) != nil
+}
+
+// IsPubliclyAccessibleAnyPort reports whether h is accessible from the public internet
+// on any port. Safe on nil receiver or nil host.
+func (g *Graph) IsPubliclyAccessibleAnyPort(h *Host) bool {
+	return g.findInternetRuleAnyPort(h) != nil
 }

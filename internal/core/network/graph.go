@@ -26,6 +26,22 @@ func (h *Host) SafeID() string {
 	return h.ID
 }
 
+// SafeVPCID returns the host's VPC ID, or an empty string if receiver is nil.
+func (h *Host) SafeVPCID() string {
+	if h == nil {
+		return ""
+	}
+	return h.VPCID
+}
+
+// SafeSubnetID returns the host's Subnet ID, or an empty string if receiver is nil.
+func (h *Host) SafeSubnetID() string {
+	if h == nil {
+		return ""
+	}
+	return h.SubnetID
+}
+
 // Tag returns the tag value for key, or an empty string if untagged or receiver is nil.
 func (h *Host) Tag(key string) string {
 	if h == nil {
@@ -48,13 +64,13 @@ func (h *Host) IsIsolated() bool     { return h.Tag("stave:network-zone") == "is
 // HasVPC reports whether the host is assigned to a non-empty VPC.
 // Safe on nil receiver.
 func (h *Host) HasVPC() bool {
-	return h != nil && h.VPCID != ""
+	return h.SafeVPCID() != ""
 }
 
 // HasSubnet reports whether the host is assigned to a non-empty subnet.
 // Safe on nil receiver.
 func (h *Host) HasSubnet() bool {
-	return h != nil && h.SubnetID != ""
+	return h.SafeSubnetID() != ""
 }
 
 // IsCrossVPC reports whether both hosts are assigned to VPCs and reside in different VPCs.
@@ -114,6 +130,21 @@ func (h *Host) HasSecurityGroup(sgID string) bool {
 	return slices.Contains(h.SGIDs, sgID)
 }
 
+// SecurityGroupCount returns the number of security groups assigned to the host.
+// Safe on nil receiver.
+func (h *Host) SecurityGroupCount() int {
+	if h == nil {
+		return 0
+	}
+	return len(h.SGIDs)
+}
+
+// HasSecurityGroups reports whether the host has at least one assigned security group.
+// Safe on nil receiver.
+func (h *Host) HasSecurityGroups() bool {
+	return h.SecurityGroupCount() > 0
+}
+
 // SGRule is a single security group rule.
 type SGRule struct {
 	Direction   string // "ingress" | "egress"
@@ -126,6 +157,11 @@ type SGRule struct {
 // IsIngress reports whether the security group rule applies to inbound traffic.
 func (r SGRule) IsIngress() bool {
 	return r.Direction == "ingress"
+}
+
+// IsEgress reports whether the security group rule applies to outbound traffic.
+func (r SGRule) IsEgress() bool {
+	return r.Direction == "egress"
 }
 
 // IsCIDR reports whether the security group rule source is a CIDR block.
@@ -154,10 +190,15 @@ func (r SGRule) HasBroadInternalCIDR() bool {
 	return r.IsCIDR() && broadInternalCIDRs[r.SourceValue]
 }
 
+// IsInternetCIDR reports whether the security group rule source is a universal internet CIDR ("0.0.0.0/0" or "::/0").
+func (r SGRule) IsInternetCIDR() bool {
+	return r.IsCIDR() && (r.SourceValue == "0.0.0.0/0" || r.SourceValue == "::/0")
+}
+
 // IsInternetIngress reports whether the security group rule permits inbound
 // traffic from the public internet ("0.0.0.0/0" or "::/0").
 func (r SGRule) IsInternetIngress() bool {
-	return r.IsIngress() && r.IsCIDR() && (r.SourceValue == "0.0.0.0/0" || r.SourceValue == "::/0")
+	return r.IsIngress() && r.IsInternetCIDR()
 }
 
 // MatchesPort reports whether the security group rule matches the specified port.
@@ -260,6 +301,22 @@ func (s *Subnet) SafeID() string {
 	return s.ID
 }
 
+// SafeVPCID returns the subnet's VPC ID, or an empty string if receiver is nil.
+func (s *Subnet) SafeVPCID() string {
+	if s == nil {
+		return ""
+	}
+	return s.VPCID
+}
+
+// SafeRouteTableID returns the subnet's RouteTableID, or an empty string if receiver is nil.
+func (s *Subnet) SafeRouteTableID() string {
+	if s == nil {
+		return ""
+	}
+	return s.RouteTableID
+}
+
 // Tag returns the tag value for key, or an empty string if untagged or receiver is nil.
 func (s *Subnet) Tag(key string) string {
 	if s == nil {
@@ -272,10 +329,14 @@ func (s *Subnet) Tag(key string) string {
 // Safe on nil receiver.
 func (s *Subnet) IsPrivate() bool { return s.Tag("stave:subnet-type") == "private" }
 
+// IsPublic returns true if the subnet is tagged stave:subnet-type=public.
+// Safe on nil receiver.
+func (s *Subnet) IsPublic() bool { return s.Tag("stave:subnet-type") == "public" }
+
 // HasRouteTable reports whether the subnet is associated with a route table.
 // Safe on nil receiver.
 func (s *Subnet) HasRouteTable() bool {
-	return s != nil && s.RouteTableID != ""
+	return s.SafeRouteTableID() != ""
 }
 
 // HasInternetEgress reports whether the subnet has a default route to an internet sink
@@ -285,10 +346,16 @@ func (s *Subnet) HasInternetEgress(g *Graph) bool {
 		return false
 	}
 	route, ok := g.DefaultRouteForSubnet(s)
-	if !ok {
-		return false
+	return ok && route.IsEgress()
+}
+
+// DefaultRouteTarget returns the formatted target string of the subnet's default route in g,
+// or false if no default route exists. Safe on nil receiver or nil graph.
+func (s *Subnet) DefaultRouteTarget(g *Graph) (string, bool) {
+	if s == nil || g == nil {
+		return "", false
 	}
-	return route.ClassifyTarget().IsSink()
+	return g.SubnetDefaultRouteTarget(s)
 }
 
 // HasDefaultRoute reports whether the subnet is associated with a route table
@@ -328,6 +395,16 @@ func (r Route) IsNATGateway() bool {
 // IsLocal reports whether the route target is local VPC routing ("local").
 func (r Route) IsLocal() bool {
 	return r.TargetType == "local"
+}
+
+// IsVPCEndpoint reports whether the route target is a VPC endpoint ("vpce").
+func (r Route) IsVPCEndpoint() bool {
+	return r.TargetType == "vpce"
+}
+
+// IsTransitGateway reports whether the route target is a Transit Gateway ("tgw").
+func (r Route) IsTransitGateway() bool {
+	return r.TargetType == "tgw"
 }
 
 // Target returns the formatted route target string (e.g. "nat:nat-01", "igw:igw-01").
@@ -439,6 +516,22 @@ func stringProp(props map[string]any, key string) string {
 	return s
 }
 
+func intProp(props map[string]any, key string) int {
+	if props == nil {
+		return 0
+	}
+	switch v := props[key].(type) {
+	case int:
+		return v
+	case float64:
+		return int(v)
+	case int64:
+		return int(v)
+	default:
+		return 0
+	}
+}
+
 func parseHost(a *asset.Asset) *Host {
 	if a == nil {
 		return nil
@@ -471,9 +564,7 @@ func parseSGRule(rm map[string]any) SGRule {
 	rule.Protocol = stringProp(rm, "protocol")
 	rule.SourceType = stringProp(rm, "source_type")
 	rule.SourceValue = stringProp(rm, "source_value")
-	if p, ok := rm["from_port"].(float64); ok {
-		rule.Port = int(p)
-	}
+	rule.Port = intProp(rm, "from_port")
 	return rule
 }
 
@@ -595,6 +686,54 @@ func (g *Graph) PrivateSubnets() []*Subnet {
 	return g.filterSubnets((*Subnet).IsPrivate)
 }
 
+// PublicSubnets returns all subnets tagged stave:subnet-type=public.
+// Safe on nil receiver.
+func (g *Graph) PublicSubnets() []*Subnet {
+	return g.filterSubnets((*Subnet).IsPublic)
+}
+
+// ProductionHostCount returns the number of hosts in the production environment.
+// Safe on nil receiver.
+func (g *Graph) ProductionHostCount() int {
+	return len(g.ProductionHosts())
+}
+
+// BastionHostCount returns the number of bastion hosts in the graph.
+// Safe on nil receiver.
+func (g *Graph) BastionHostCount() int {
+	return len(g.BastionHosts())
+}
+
+// DevelopmentHostCount returns the number of hosts in the development environment.
+// Safe on nil receiver.
+func (g *Graph) DevelopmentHostCount() int {
+	return len(g.DevelopmentHosts())
+}
+
+// DatabaseHostCount returns the number of database-tier hosts in the graph.
+// Safe on nil receiver.
+func (g *Graph) DatabaseHostCount() int {
+	return len(g.DatabaseHosts())
+}
+
+// IsolatedHostCount returns the number of isolated network-zone hosts in the graph.
+// Safe on nil receiver.
+func (g *Graph) IsolatedHostCount() int {
+	return len(g.IsolatedHosts())
+}
+
+// PrivateSubnetCount returns the number of private subnets in the graph.
+// Safe on nil receiver.
+func (g *Graph) PrivateSubnetCount() int {
+	return len(g.PrivateSubnets())
+}
+
+// PublicSubnetCount returns the number of public subnets in the graph.
+// Safe on nil receiver.
+func (g *Graph) PublicSubnetCount() int {
+	return len(g.PublicSubnets())
+}
+
 func (g *Graph) filterSubnets(predicate func(*Subnet) bool) []*Subnet {
 	if g == nil {
 		return nil
@@ -626,12 +765,47 @@ func (g *Graph) SubnetCount() int {
 	return len(g.Subnets)
 }
 
+// RouteTableCount returns the total number of route tables in the graph.
+// Safe on nil receiver.
+func (g *Graph) RouteTableCount() int {
+	if g == nil {
+		return 0
+	}
+	return len(g.Routes)
+}
+
+// HasRouteTables reports whether the graph contains any route tables.
+// Safe on nil receiver.
+func (g *Graph) HasRouteTables() bool {
+	return g.RouteTableCount() > 0
+}
+
+// Host returns the host with the given ID, or nil if not found or receiver is nil.
+func (g *Graph) Host(id string) *Host {
+	if g == nil || id == "" {
+		return nil
+	}
+	return g.Hosts[id]
+}
+
+// HasHost reports whether the graph contains a host with the given ID.
+// Safe on nil receiver or empty ID.
+func (g *Graph) HasHost(id string) bool {
+	return g.Host(id) != nil
+}
+
 // Subnet returns the subnet with the given ID, or nil if not found or receiver is nil.
 func (g *Graph) Subnet(id string) *Subnet {
 	if g == nil || id == "" {
 		return nil
 	}
 	return g.Subnets[id]
+}
+
+// HasSubnet reports whether the graph contains a subnet with the given ID.
+// Safe on nil receiver or empty ID.
+func (g *Graph) HasSubnet(id string) bool {
+	return g.Subnet(id) != nil
 }
 
 // HasFirewall reports whether targetID is registered as a firewall endpoint.
@@ -655,10 +829,7 @@ func (g *Graph) FirewallCount() int {
 // SubnetForHost returns the subnet associated with the given host.
 // Safe on nil receiver or nil host.
 func (g *Graph) SubnetForHost(h *Host) *Subnet {
-	if !h.HasSubnet() {
-		return nil
-	}
-	return g.Subnet(h.SubnetID)
+	return g.Subnet(h.SafeSubnetID())
 }
 
 // RoutesForSubnet returns all routes associated with the subnet's route table.
@@ -667,7 +838,7 @@ func (g *Graph) RoutesForSubnet(sub *Subnet) []Route {
 	if g == nil || !sub.HasRouteTable() {
 		return nil
 	}
-	return g.Routes[sub.RouteTableID]
+	return g.Routes[sub.SafeRouteTableID()]
 }
 
 // RouteCountForSubnet returns the number of routes associated with the subnet's route table.
@@ -695,6 +866,15 @@ func (g *Graph) DefaultRouteForSubnet(sub *Subnet) (Route, bool) {
 		}
 	}
 	return Route{}, false
+}
+
+// SubnetDefaultRouteTarget returns the formatted target string (e.g. "igw:igw-01") of the subnet's
+// default route, or false if no default route exists. Safe on nil receiver or nil subnet.
+func (g *Graph) SubnetDefaultRouteTarget(sub *Subnet) (string, bool) {
+	if route, ok := g.DefaultRouteForSubnet(sub); ok {
+		return route.Target(), true
+	}
+	return "", false
 }
 
 // SubnetHasInternetEgress reports whether sub has a default route to an internet sink.
@@ -818,26 +998,53 @@ func (g *Graph) VPCsConnected(vpc1, vpc2 string) bool {
 // respective VPCs are connected via VPC peering or Transit Gateway.
 // Safe on nil receiver, src, or dst.
 func (g *Graph) CanRouteCrossVPC(src, dst *Host) bool {
-	return g != nil && src.IsCrossVPC(dst) && g.VPCsConnected(src.VPCID, dst.VPCID)
+	return g != nil && src.IsCrossVPC(dst) && g.VPCsConnected(src.SafeVPCID(), dst.SafeVPCID())
+}
+
+// PeeringCount returns the number of VPC peerings in the graph.
+// Safe on nil receiver.
+func (g *Graph) PeeringCount() int {
+	if g == nil {
+		return 0
+	}
+	return len(g.Peerings)
+}
+
+// HasPeerings reports whether the graph contains any VPC peering connections.
+// Safe on nil receiver.
+func (g *Graph) HasPeerings() bool {
+	return g.PeeringCount() > 0
+}
+
+// TGWAttachmentCount returns the number of Transit Gateway attachments in the graph.
+// Safe on nil receiver.
+func (g *Graph) TGWAttachmentCount() int {
+	if g == nil {
+		return 0
+	}
+	return len(g.TGWAttachments)
+}
+
+// HasTGWAttachments reports whether the graph contains any Transit Gateway attachments.
+// Safe on nil receiver.
+func (g *Graph) HasTGWAttachments() bool {
+	return g.TGWAttachmentCount() > 0
 }
 
 func (g *Graph) vpcsArePeered(vpc1, vpc2 string) bool {
-	if g == nil {
+	if !g.HasPeerings() {
 		return false
 	}
-	for _, p := range g.Peerings {
-		if p.Connects(vpc1, vpc2) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(g.Peerings, func(p VPCPeering) bool {
+		return p.Connects(vpc1, vpc2)
+	})
 }
 
 func (g *Graph) tgwVPCMap() map[string][]string {
-	if g == nil {
+	if !g.HasTGWAttachments() {
 		return nil
 	}
-	tgws := make(map[string][]string)
+	tgws := make(map[string][]string, g.TGWAttachmentCount())
 	for _, att := range g.TGWAttachments {
 		tgws[att.TransitGatewayID] = append(tgws[att.TransitGatewayID], att.VPCID)
 	}

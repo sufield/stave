@@ -9,40 +9,24 @@ import (
 	"github.com/sufield/stave/pkg/stave"
 )
 
-func TestNewRenderer_KnownFormats(t *testing.T) {
+func TestValidateFormat_KnownFormats(t *testing.T) {
 	t.Parallel()
-	cases := []struct {
-		format string
-		want   any
-	}{
-		{"json", JSONRenderer{}},
-		{"", JSONRenderer{}},
-		{"JSON", JSONRenderer{}},
-		{"  json  ", JSONRenderer{}},
-	}
-	for _, tc := range cases {
-		t.Run(tc.format, func(t *testing.T) {
+	for _, format := range []string{"json", "", "JSON", "  json  "} {
+		t.Run(format, func(t *testing.T) {
 			t.Parallel()
-			r, err := NewRenderer(tc.format)
-			if err != nil {
-				t.Fatalf("NewRenderer(%q): unexpected error: %v", tc.format, err)
-			}
-			if got, want := r, tc.want; got != want {
-				t.Errorf("NewRenderer(%q) = %T, want %T", tc.format, got, want)
+			if err := validateFormat(format); err != nil {
+				t.Fatalf("validateFormat(%q): unexpected error: %v", format, err)
 			}
 		})
 	}
 }
 
-func TestNewRenderer_UnknownFormatErrors(t *testing.T) {
+func TestValidateFormat_UnknownFormatErrors(t *testing.T) {
 	t.Parallel()
-	r, err := NewRenderer("yaml")
+	err := validateFormat("yaml")
 	if err == nil {
-		t.Fatalf("NewRenderer(\"yaml\"): want error, got %T", r)
+		t.Fatal("validateFormat(\"yaml\"): want error, got nil")
 	}
-	// Unknown formats must wrap stave.ErrInvalidInput so the CLI
-	// surface maps them to exit code 2 — same contract the previous
-	// validation switch enforced.
 	if !errors.Is(err, stave.ErrInvalidInput) {
 		t.Errorf("error should wrap stave.ErrInvalidInput, got: %v", err)
 	}
@@ -51,25 +35,13 @@ func TestNewRenderer_UnknownFormatErrors(t *testing.T) {
 	}
 }
 
-func TestRenderers_NonEmptyOutput(t *testing.T) {
+func TestRenderJSON_NonEmptyOutput(t *testing.T) {
 	t.Parallel()
-	out := &stave.InvariantExport{}
-	cases := []struct {
-		name     string
-		renderer Renderer
-	}{
-		{"json", JSONRenderer{}},
+	var buf bytes.Buffer
+	if err := renderJSON(&buf, &stave.InvariantExport{}); err != nil {
+		t.Fatalf("renderJSON: unexpected error: %v", err)
 	}
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-			var buf bytes.Buffer
-			if err := tc.renderer.Render(&buf, out); err != nil {
-				t.Fatalf("Render: unexpected error: %v", err)
-			}
-			if buf.Len() == 0 {
-				t.Errorf("Render produced empty output")
-			}
-		})
+	if buf.Len() == 0 {
+		t.Errorf("renderJSON produced empty output")
 	}
 }
