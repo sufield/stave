@@ -26,19 +26,24 @@ func (h *Host) SafeID() string {
 	return h.ID
 }
 
-// Environment returns the host's environment tag value, or "" if untagged or receiver is nil.
-func (h *Host) Environment() string {
+// Tag returns the tag value for key, or an empty string if untagged or receiver is nil.
+func (h *Host) Tag(key string) string {
 	if h == nil {
 		return ""
 	}
-	return h.Tags["stave:environment"]
+	return h.Tags[key]
+}
+
+// Environment returns the host's environment tag value, or "" if untagged or receiver is nil.
+func (h *Host) Environment() string {
+	return h.Tag("stave:environment")
 }
 
 func (h *Host) IsProduction() bool   { return h.Environment() == "production" }
-func (h *Host) IsBastion() bool      { return h != nil && h.Tags["stave:role"] == "bastion" }
+func (h *Host) IsBastion() bool      { return h.Tag("stave:role") == "bastion" }
 func (h *Host) IsDevelopment() bool  { return h.Environment() == "development" }
-func (h *Host) IsDatabaseTier() bool { return h.Tags["stave:tier"] == "database" }
-func (h *Host) IsIsolated() bool     { return h.Tags["stave:network-zone"] == "isolated" }
+func (h *Host) IsDatabaseTier() bool { return h.Tag("stave:tier") == "database" }
+func (h *Host) IsIsolated() bool     { return h.Tag("stave:network-zone") == "isolated" }
 
 // IsCrossVPC reports whether both hosts are assigned to VPCs and reside in different VPCs.
 func (h *Host) IsCrossVPC(other *Host) bool {
@@ -235,8 +240,25 @@ type Subnet struct {
 	Tags         map[string]string
 }
 
+// SafeID returns the subnet's ID, or an empty string if receiver is nil.
+func (s *Subnet) SafeID() string {
+	if s == nil {
+		return ""
+	}
+	return s.ID
+}
+
+// Tag returns the tag value for key, or an empty string if untagged or receiver is nil.
+func (s *Subnet) Tag(key string) string {
+	if s == nil {
+		return ""
+	}
+	return s.Tags[key]
+}
+
 // IsPrivate returns true if the subnet is tagged stave:subnet-type=private.
-func (s *Subnet) IsPrivate() bool { return s.Tags["stave:subnet-type"] == "private" }
+// Safe on nil receiver.
+func (s *Subnet) IsPrivate() bool { return s.Tag("stave:subnet-type") == "private" }
 
 // HasRouteTable reports whether the subnet is associated with a route table.
 // Safe on nil receiver.
@@ -255,6 +277,17 @@ func (s *Subnet) HasInternetEgress(g *Graph) bool {
 		return false
 	}
 	return route.ClassifyTarget().IsSink()
+}
+
+// HasDefaultRoute reports whether the subnet is associated with a route table
+// that defines a default route (0.0.0.0/0 or ::/0) within the given graph.
+// Safe on nil receiver or nil graph.
+func (s *Subnet) HasDefaultRoute(g *Graph) bool {
+	if s == nil || g == nil {
+		return false
+	}
+	_, ok := g.DefaultRouteForSubnet(s)
+	return ok
 }
 
 // Route is a single route in a route table.
@@ -586,6 +619,12 @@ func (g *Graph) DefaultRouteForSubnet(sub *Subnet) (Route, bool) {
 // Safe on nil receiver or nil subnet.
 func (g *Graph) SubnetHasInternetEgress(sub *Subnet) bool {
 	return sub.HasInternetEgress(g)
+}
+
+// SubnetHasDefaultRoute reports whether sub has a default route in its route table.
+// Safe on nil receiver or nil subnet.
+func (g *Graph) SubnetHasDefaultRoute(sub *Subnet) bool {
+	return sub.HasDefaultRoute(g)
 }
 
 func parseSubnet(a *asset.Asset) *Subnet {

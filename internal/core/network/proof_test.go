@@ -466,6 +466,40 @@ func TestProveProdDevIsolation_VacuousNoDev(t *testing.T) {
 	}
 }
 
+func Test_newCrossEnvBypassCounterexample(t *testing.T) {
+	src := &Host{ID: "i-dev", Tags: map[string]string{"stave:environment": "development"}}
+	dst := &Host{ID: "i-prod", Tags: map[string]string{"stave:environment": "production"}}
+	match := &RuleMatch{SecurityGroupID: "sg-prod", RuleSource: "10.0.0.0/8", PathType: "cross-vpc", Port: 443}
+
+	t.Run("returns nil on nil arguments", func(t *testing.T) {
+		if ce := newCrossEnvBypassCounterexample(nil, dst, match); ce != nil {
+			t.Errorf("expected nil for nil src, got %+v", ce)
+		}
+		if ce := newCrossEnvBypassCounterexample(src, nil, match); ce != nil {
+			t.Errorf("expected nil for nil dst, got %+v", ce)
+		}
+		if ce := newCrossEnvBypassCounterexample(src, dst, nil); ce != nil {
+			t.Errorf("expected nil for nil match, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with source, destination, and explanation", func(t *testing.T) {
+		ce := newCrossEnvBypassCounterexample(src, dst, match)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "i-dev" || ce.Destination != "i-prod" || ce.Port != 443 || ce.PathType != "cross-vpc" {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+		if !strings.Contains(ce.Explanation, "Host i-dev (development) can reach i-prod (production) via cross-vpc.") {
+			t.Errorf("unexpected explanation: %q", ce.Explanation)
+		}
+		if !strings.Contains(ce.Remediation, "Remove cross-environment ingress rule on sg-prod.") {
+			t.Errorf("unexpected remediation: %q", ce.Remediation)
+		}
+	})
+}
+
 func prodDevIsolatedSnapshot() asset.Snapshot {
 	return asset.Snapshot{
 		Assets: []asset.Asset{
@@ -2962,6 +2996,49 @@ func TestSubnet_HasInternetEgress(t *testing.T) {
 	}
 }
 
+func TestSubnet_HasDefaultRoute(t *testing.T) {
+	subNAT := &Subnet{ID: "sub-nat", RouteTableID: "rt-nat"}
+	subIGW := &Subnet{ID: "sub-igw", RouteTableID: "rt-igw"}
+	subTGW := &Subnet{ID: "sub-tgw", RouteTableID: "rt-tgw"}
+	subLocal := &Subnet{ID: "sub-local", RouteTableID: "rt-local"}
+	subNoRT := &Subnet{ID: "sub-nort"}
+
+	g := &Graph{
+		Routes: map[string][]Route{
+			"rt-nat":   {{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"}},
+			"rt-igw":   {{Destination: "::/0", TargetType: "igw", TargetID: "igw-01"}},
+			"rt-tgw":   {{Destination: "0.0.0.0/0", TargetType: "tgw", TargetID: "tgw-01"}},
+			"rt-local": {{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}},
+		},
+	}
+
+	tests := []struct {
+		name string
+		s    *Subnet
+		g    *Graph
+		want bool
+	}{
+		{"nil subnet", nil, g, false},
+		{"nil graph", subNAT, nil, false},
+		{"subnet with no route table", subNoRT, g, false},
+		{"subnet with local non-default route", subLocal, g, false},
+		{"subnet with IPv4 default route (nat)", subNAT, g, true},
+		{"subnet with IPv6 default route (igw)", subIGW, g, true},
+		{"subnet with TGW default route", subTGW, g, true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.s.HasDefaultRoute(tc.g); got != tc.want {
+				t.Errorf("Subnet.HasDefaultRoute() = %v, want %v", got, tc.want)
+			}
+			if got := tc.g.SubnetHasDefaultRoute(tc.s); got != tc.want {
+				t.Errorf("Graph.SubnetHasDefaultRoute() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestGraph_IsPubliclyAccessible(t *testing.T) {
 	hostIPv4 := &Host{ID: "i-ipv4", SGIDs: []string{"sg-ipv4"}}
 	hostIPv6 := &Host{ID: "i-ipv6", SGIDs: []string{"sg-ipv6"}}
@@ -4627,6 +4704,36 @@ func TestGraph_findSubnetFirewallBypass(t *testing.T) {
 	})
 }
 
+func Test_newFirewallBypassCounterexample(t *testing.T) {
+	sub := &Subnet{ID: "subnet-priv-1", RouteTableID: "rt-1"}
+	route := Route{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-bypass"}
+
+	t.Run("returns nil for nil subnet", func(t *testing.T) {
+		if ce := newFirewallBypassCounterexample(nil, route); ce != nil {
+			t.Errorf("expected nil for nil subnet, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with direct-igw path and route evidence", func(t *testing.T) {
+		ce := newFirewallBypassCounterexample(sub, route)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "subnet-priv-1" || ce.Destination != "igw-bypass" || ce.PathType != "direct-igw" {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+		if ce.RoutePath == nil || ce.RoutePath.RouteTableID != "rt-1" || ce.RoutePath.Destination != "0.0.0.0/0" {
+			t.Errorf("unexpected RoutePath: %+v", ce.RoutePath)
+		}
+		if !strings.Contains(ce.Explanation, "Subnet subnet-priv-1 has a 0.0.0.0/0 route to IGW igw-bypass") {
+			t.Errorf("unexpected explanation: %q", ce.Explanation)
+		}
+		if !strings.Contains(ce.Remediation, "Change the 0.0.0.0/0 route in rt-1 to target a Network Firewall endpoint instead of igw-bypass.") {
+			t.Errorf("unexpected remediation: %q", ce.Remediation)
+		}
+	})
+}
+
 func TestGraph_findHostBastionBypass(t *testing.T) {
 	prodHost := &Host{
 		ID:    "i-prod",
@@ -5270,6 +5377,75 @@ func TestGraph_findTransitiveEgressGated(t *testing.T) {
 	})
 }
 
+func Test_newEgressBypassCounterexample(t *testing.T) {
+	iso := &Host{ID: "i-iso"}
+	sink := egressCandidate{
+		host:  &Host{ID: "i-sink"},
+		route: Route{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+	}
+	match := &RuleMatch{SecurityGroupID: "sg-sink", RuleSource: "sg-iso", Port: 443}
+
+	t.Run("returns nil on nil arguments", func(t *testing.T) {
+		if ce := newEgressBypassCounterexample(nil, sink, match); ce != nil {
+			t.Errorf("expected nil for nil iso, got %+v", ce)
+		}
+		if ce := newEgressBypassCounterexample(iso, egressCandidate{}, match); ce != nil {
+			t.Errorf("expected nil for empty candidate, got %+v", ce)
+		}
+		if ce := newEgressBypassCounterexample(iso, sink, nil); ce != nil {
+			t.Errorf("expected nil for nil match, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with transitive-egress path type", func(t *testing.T) {
+		ce := newEgressBypassCounterexample(iso, sink, match)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.PathType != "transitive-egress" {
+			t.Errorf("PathType = %q, want transitive-egress", ce.PathType)
+		}
+		if ce.Source != "i-iso" || ce.Destination != "i-sink" || ce.Port != 443 {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+	})
+}
+
+func Test_newEgressGatedCounterexample(t *testing.T) {
+	iso := &Host{ID: "i-iso"}
+	gated := egressCandidate{
+		host:   &Host{ID: "i-gated"},
+		route:  Route{Destination: "0.0.0.0/0", TargetType: "tgw", TargetID: "tgw-01"},
+		target: RouteTarget{Class: routeGated, Reason: "TGW route table not resolved", TargetID: "tgw-01"},
+	}
+	match := &RuleMatch{SecurityGroupID: "sg-gated", RuleSource: "sg-iso", Port: 80}
+
+	t.Run("returns nil on nil arguments", func(t *testing.T) {
+		if ce := newEgressGatedCounterexample(nil, gated, match); ce != nil {
+			t.Errorf("expected nil for nil iso, got %+v", ce)
+		}
+		if ce := newEgressGatedCounterexample(iso, egressCandidate{}, match); ce != nil {
+			t.Errorf("expected nil for empty candidate, got %+v", ce)
+		}
+		if ce := newEgressGatedCounterexample(iso, gated, nil); ce != nil {
+			t.Errorf("expected nil for nil match, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with gated-egress path type", func(t *testing.T) {
+		ce := newEgressGatedCounterexample(iso, gated, match)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.PathType != "gated-egress" {
+			t.Errorf("PathType = %q, want gated-egress", ce.PathType)
+		}
+		if ce.Source != "i-iso" || ce.Destination != "i-gated" || ce.Port != 80 {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+	})
+}
+
 func TestNewGraph(t *testing.T) {
 	g := NewGraph()
 	if g == nil {
@@ -5667,6 +5843,87 @@ func TestGraph_findInternetDatabaseBypass(t *testing.T) {
 	})
 }
 
+func Test_newCrossVPCDatabaseBypassCounterexample(t *testing.T) {
+	src := &Host{ID: "i-app", VPCID: "vpc-app"}
+	dst := &Host{ID: "i-db", VPCID: "vpc-db"}
+	match := &RuleMatch{SecurityGroupID: "sg-db", RuleSource: "10.0.0.0/8", PathType: "cross-vpc", Port: 5432}
+
+	t.Run("returns nil on nil arguments", func(t *testing.T) {
+		if ce := newCrossVPCDatabaseBypassCounterexample(nil, dst, match); ce != nil {
+			t.Errorf("expected nil for nil src, got %+v", ce)
+		}
+		if ce := newCrossVPCDatabaseBypassCounterexample(src, nil, match); ce != nil {
+			t.Errorf("expected nil for nil dst, got %+v", ce)
+		}
+		if ce := newCrossVPCDatabaseBypassCounterexample(src, dst, nil); ce != nil {
+			t.Errorf("expected nil for nil match, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with source, destination, and remediation", func(t *testing.T) {
+		ce := newCrossVPCDatabaseBypassCounterexample(src, dst, match)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "i-app" || ce.Destination != "i-db" || ce.Port != 5432 || ce.PathType != "cross-vpc" {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+		if !strings.Contains(ce.Explanation, "Host i-app (vpc:vpc-app) can reach database host i-db (vpc:vpc-db) via cross-vpc.") {
+			t.Errorf("unexpected explanation: %q", ce.Explanation)
+		}
+		if !strings.Contains(ce.Remediation, "Remove cross-VPC ingress to database SG sg-db.") {
+			t.Errorf("unexpected remediation: %q", ce.Remediation)
+		}
+	})
+}
+
+func Test_newInternetDatabaseBypassCounterexample(t *testing.T) {
+	dst := &Host{ID: "i-db", VPCID: "vpc-db"}
+	match := &RuleMatch{SecurityGroupID: "sg-db", RuleSource: "0.0.0.0/0", PathType: "external", Port: 5432}
+
+	t.Run("returns nil on nil arguments", func(t *testing.T) {
+		if ce := newInternetDatabaseBypassCounterexample(nil, match); ce != nil {
+			t.Errorf("expected nil for nil dst, got %+v", ce)
+		}
+		if ce := newInternetDatabaseBypassCounterexample(dst, nil); ce != nil {
+			t.Errorf("expected nil for nil match, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with source, destination, and remediation", func(t *testing.T) {
+		ce := newInternetDatabaseBypassCounterexample(dst, match)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "0.0.0.0/0 (internet)" || ce.Destination != "i-db" || ce.Port != 5432 || ce.PathType != "external" {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+		if !strings.Contains(ce.Explanation, "Database host i-db accepts traffic from 0.0.0.0/0 on port 5432 via sg-db.") {
+			t.Errorf("unexpected explanation: %q", ce.Explanation)
+		}
+		if !strings.Contains(ce.Remediation, "Remove internet ingress on sg-db. Database hosts must not be reachable from the internet.") {
+			t.Errorf("unexpected remediation: %q", ce.Remediation)
+		}
+	})
+}
+
+func Test_newEgressCandidate(t *testing.T) {
+	h := &Host{ID: "i-egress"}
+	route := Route{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"}
+	target := RouteTarget{Class: routeSink, TargetID: "nat-01"}
+
+	c := newEgressCandidate(h, route, target)
+	if c.host != h {
+		t.Errorf("c.host = %v, want %v", c.host, h)
+	}
+	if c.route != route {
+		t.Errorf("c.route = %+v, want %+v", c.route, route)
+	}
+	if c.target != target {
+		t.Errorf("c.target = %+v, want %+v", c.target, target)
+	}
+}
+
 func TestGraph_hostEgressCandidate(t *testing.T) {
 	t.Run("handles nil receiver or nil host gracefully", func(t *testing.T) {
 		var nilGraph *Graph
@@ -5954,3 +6211,191 @@ func Test_egressCandidatePartition(t *testing.T) {
 		}
 	})
 }
+
+func TestHost_Tag(t *testing.T) {
+	t.Run("nil host returns empty string", func(t *testing.T) {
+		var nilHost *Host
+		if val := nilHost.Tag("stave:role"); val != "" {
+			t.Errorf("nilHost.Tag() = %q, want empty string", val)
+		}
+	})
+
+	t.Run("nil tags map returns empty string", func(t *testing.T) {
+		h := &Host{ID: "i-nil-tags"}
+		if val := h.Tag("stave:role"); val != "" {
+			t.Errorf("h.Tag() = %q, want empty string", val)
+		}
+	})
+
+	t.Run("missing key returns empty string", func(t *testing.T) {
+		h := &Host{ID: "i-1", Tags: map[string]string{"env": "prod"}}
+		if val := h.Tag("other"); val != "" {
+			t.Errorf("h.Tag() = %q, want empty string", val)
+		}
+	})
+
+	t.Run("existing tag returns value", func(t *testing.T) {
+		h := &Host{ID: "i-1", Tags: map[string]string{"env": "prod"}}
+		if val := h.Tag("env"); val != "prod" {
+			t.Errorf("h.Tag() = %q, want prod", val)
+		}
+	})
+}
+
+func TestHost_TagPredicates_NilSafe(t *testing.T) {
+	var nilHost *Host
+
+	if nilHost.IsProduction() {
+		t.Error("nilHost.IsProduction() should be false")
+	}
+	if nilHost.IsBastion() {
+		t.Error("nilHost.IsBastion() should be false")
+	}
+	if nilHost.IsDevelopment() {
+		t.Error("nilHost.IsDevelopment() should be false")
+	}
+	if nilHost.IsDatabaseTier() {
+		t.Error("nilHost.IsDatabaseTier() should be false")
+	}
+	if nilHost.IsIsolated() {
+		t.Error("nilHost.IsIsolated() should be false")
+	}
+}
+
+func Test_newInternalBastionBypassCounterexample(t *testing.T) {
+	src := &Host{ID: "i-src"}
+	dst := &Host{ID: "i-dst"}
+	match := &RuleMatch{SecurityGroupID: "sg-prod", RuleSource: "10.0.0.0/16", PathType: "vpc-peering", Port: 22}
+	bastions := []*Host{{ID: "i-bastion"}}
+
+	t.Run("returns nil on nil arguments", func(t *testing.T) {
+		if ce := newInternalBastionBypassCounterexample(nil, dst, 22, match, bastions); ce != nil {
+			t.Errorf("expected nil for nil src, got %+v", ce)
+		}
+		if ce := newInternalBastionBypassCounterexample(src, nil, 22, match, bastions); ce != nil {
+			t.Errorf("expected nil for nil dst, got %+v", ce)
+		}
+		if ce := newInternalBastionBypassCounterexample(src, dst, 22, nil, bastions); ce != nil {
+			t.Errorf("expected nil for nil match, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with correct fields", func(t *testing.T) {
+		ce := newInternalBastionBypassCounterexample(src, dst, 22, match, bastions)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "i-src" || ce.Destination != "i-dst" || ce.Port != 22 || ce.PathType != "vpc-peering" {
+			t.Errorf("unexpected counterexample fields: %+v", ce)
+		}
+		if ce.RuleSG != "sg-prod" || ce.RuleSource != "10.0.0.0/16" {
+			t.Errorf("unexpected rule fields: %+v", ce)
+		}
+	})
+}
+
+func Test_newExternalBypassCounterexample(t *testing.T) {
+	dst := &Host{ID: "i-dst"}
+	match := &RuleMatch{SecurityGroupID: "sg-prod", RuleSource: "0.0.0.0/0", PathType: "external", Port: 22}
+
+	t.Run("returns nil on nil arguments", func(t *testing.T) {
+		if ce := newExternalBypassCounterexample(nil, 22, match); ce != nil {
+			t.Errorf("expected nil for nil dst, got %+v", ce)
+		}
+		if ce := newExternalBypassCounterexample(dst, 22, nil); ce != nil {
+			t.Errorf("expected nil for nil match, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with internet label and correct fields", func(t *testing.T) {
+		ce := newExternalBypassCounterexample(dst, 22, match)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "0.0.0.0/0 (internet)" || ce.Destination != "i-dst" || ce.Port != 22 || ce.PathType != "external" {
+			t.Errorf("unexpected counterexample fields: %+v", ce)
+		}
+		if ce.RuleSG != "sg-prod" || ce.RuleSource != "0.0.0.0/0" {
+			t.Errorf("unexpected rule fields: %+v", ce)
+		}
+	})
+}
+
+func TestSubnet_SafeID(t *testing.T) {
+	t.Run("returns empty string for nil subnet", func(t *testing.T) {
+		var nilSubnet *Subnet
+		if id := nilSubnet.SafeID(); id != "" {
+			t.Errorf("nilSubnet.SafeID() = %q, want empty string", id)
+		}
+	})
+
+	t.Run("returns ID for non-nil subnet", func(t *testing.T) {
+		s := &Subnet{ID: "subnet-12345"}
+		if id := s.SafeID(); id != "subnet-12345" {
+			t.Errorf("s.SafeID() = %q, want subnet-12345", id)
+		}
+	})
+}
+
+func TestSubnet_Tag(t *testing.T) {
+	t.Run("nil subnet returns empty string", func(t *testing.T) {
+		var nilSubnet *Subnet
+		if val := nilSubnet.Tag("stave:subnet-type"); val != "" {
+			t.Errorf("nilSubnet.Tag() = %q, want empty string", val)
+		}
+	})
+
+	t.Run("nil tags map returns empty string", func(t *testing.T) {
+		s := &Subnet{ID: "subnet-1"}
+		if val := s.Tag("stave:subnet-type"); val != "" {
+			t.Errorf("s.Tag() = %q, want empty string", val)
+		}
+	})
+
+	t.Run("missing key returns empty string", func(t *testing.T) {
+		s := &Subnet{ID: "subnet-1", Tags: map[string]string{"env": "prod"}}
+		if val := s.Tag("stave:subnet-type"); val != "" {
+			t.Errorf("s.Tag() = %q, want empty string", val)
+		}
+	})
+
+	t.Run("existing tag returns value", func(t *testing.T) {
+		s := &Subnet{ID: "subnet-1", Tags: map[string]string{"stave:subnet-type": "private"}}
+		if val := s.Tag("stave:subnet-type"); val != "private" {
+			t.Errorf("s.Tag() = %q, want private", val)
+		}
+	})
+}
+
+func TestSubnet_IsPrivate(t *testing.T) {
+	t.Run("nil subnet returns false", func(t *testing.T) {
+		var nilSubnet *Subnet
+		if nilSubnet.IsPrivate() {
+			t.Error("nilSubnet.IsPrivate() should be false")
+		}
+	})
+
+	t.Run("subnet tagged private returns true", func(t *testing.T) {
+		s := &Subnet{Tags: map[string]string{"stave:subnet-type": "private"}}
+		if !s.IsPrivate() {
+			t.Error("s.IsPrivate() should be true")
+		}
+	})
+
+	t.Run("subnet tagged public returns false", func(t *testing.T) {
+		s := &Subnet{Tags: map[string]string{"stave:subnet-type": "public"}}
+		if s.IsPrivate() {
+			t.Error("s.IsPrivate() should be false")
+		}
+	})
+
+	t.Run("untagged subnet returns false", func(t *testing.T) {
+		s := &Subnet{}
+		if s.IsPrivate() {
+			t.Error("s.IsPrivate() should be false")
+		}
+	})
+}
+
+
+
