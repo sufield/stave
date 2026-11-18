@@ -320,3 +320,215 @@ func Test_renderUnsat(t *testing.T) {
 		}
 	})
 }
+
+func Test_renderProofSummary(t *testing.T) {
+	t.Run("nil result outputs nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderProofSummary(&buf, nil)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for nil result, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders header and scope", func(t *testing.T) {
+		res := &network.ProofResult{
+			Property:        "bastion-ssh",
+			Result:          "UNSAT",
+			ProductionHosts: 3,
+		}
+		var buf bytes.Buffer
+		renderProofSummary(&buf, res)
+		out := buf.String()
+		if !strings.Contains(out, "Bastion SSH Routing Proof") {
+			t.Errorf("missing header in %q", out)
+		}
+		if !strings.Contains(out, "Production hosts: 3\n") {
+			t.Errorf("missing scope in %q", out)
+		}
+	})
+}
+
+func Test_renderVerdict(t *testing.T) {
+	t.Run("nil result outputs nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderVerdict(&buf, nil)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for nil result, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders UNSAT verdict", func(t *testing.T) {
+		res := &network.ProofResult{
+			Result:         "UNSAT",
+			Interpretation: "All paths safe",
+		}
+		var buf bytes.Buffer
+		renderVerdict(&buf, res)
+		if !strings.Contains(buf.String(), "No violation exists.") {
+			t.Errorf("expected UNSAT verdict text, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders EVIDENCE_GATED verdict", func(t *testing.T) {
+		res := &network.ProofResult{
+			Result: "EVIDENCE_GATED",
+			Counterexample: &network.Counterexample{
+				Source:      "i-src",
+				Destination: "i-dst",
+			},
+		}
+		var buf bytes.Buffer
+		renderVerdict(&buf, res)
+		if !strings.Contains(buf.String(), "EVIDENCE GATED:") {
+			t.Errorf("expected EVIDENCE GATED header, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders SAT verdict with counterexample", func(t *testing.T) {
+		res := &network.ProofResult{
+			Result: "SAT",
+			Counterexample: &network.Counterexample{
+				Source:      "i-src",
+				Destination: "i-dst",
+			},
+		}
+		var buf bytes.Buffer
+		renderVerdict(&buf, res)
+		if !strings.Contains(buf.String(), "COUNTEREXAMPLE:") {
+			t.Errorf("expected COUNTEREXAMPLE header, got %q", buf.String())
+		}
+	})
+}
+
+func Test_renderCounterexamplePath(t *testing.T) {
+	t.Run("nil counterexample outputs nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderCounterexamplePath(&buf, nil)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for nil counterexample, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders source destination port and path", func(t *testing.T) {
+		ce := &network.Counterexample{
+			Source:      "i-app",
+			Destination: "i-db",
+			Port:        5432,
+			PathType:    "sg-ref",
+		}
+		var buf bytes.Buffer
+		renderCounterexamplePath(&buf, ce)
+		out := buf.String()
+		if !strings.Contains(out, "Source:      i-app") {
+			t.Errorf("missing Source in %q", out)
+		}
+		if !strings.Contains(out, "Destination: i-db") {
+			t.Errorf("missing Destination in %q", out)
+		}
+		if !strings.Contains(out, "Port:        5432") {
+			t.Errorf("missing Port in %q", out)
+		}
+		if !strings.Contains(out, "Path:        sg-ref") {
+			t.Errorf("missing Path in %q", out)
+		}
+	})
+}
+
+func Test_renderRemediation(t *testing.T) {
+	t.Run("nil counterexample outputs nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderRemediation(&buf, nil)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for nil counterexample, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders explanation and remediation block", func(t *testing.T) {
+		ce := &network.Counterexample{
+			Explanation: "Host i-app can reach database i-db.",
+			Remediation: "Remove ingress rule on sg-db.",
+		}
+		var buf bytes.Buffer
+		renderRemediation(&buf, ce)
+		out := buf.String()
+		if !strings.Contains(out, "Host i-app can reach database i-db.") {
+			t.Errorf("missing Explanation in %q", out)
+		}
+		if !strings.Contains(out, "REMEDIATION:") {
+			t.Errorf("missing REMEDIATION header in %q", out)
+		}
+		if !strings.Contains(out, "Remove ingress rule on sg-db.") {
+			t.Errorf("missing Remediation in %q", out)
+		}
+	})
+}
+
+func Test_renderRouteViolation(t *testing.T) {
+	t.Run("nil path outputs nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderRouteViolation(&buf, nil)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for nil route path, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders route table and destination", func(t *testing.T) {
+		p := &network.UnprotectedRoutePath{
+			RouteTableID: "rtb-public",
+			Destination:  "0.0.0.0/0",
+		}
+		var buf bytes.Buffer
+		renderRouteViolation(&buf, p)
+		out := buf.String()
+		if !strings.Contains(out, "Route table: rtb-public") {
+			t.Errorf("missing Route table in %q", out)
+		}
+		if !strings.Contains(out, "Destination: 0.0.0.0/0") {
+			t.Errorf("missing Destination in %q", out)
+		}
+	})
+}
+
+func Test_renderSGExposure(t *testing.T) {
+	t.Run("nil counterexample outputs nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderSGExposure(&buf, nil)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for nil counterexample, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders structured SGExposure fields", func(t *testing.T) {
+		ce := &network.Counterexample{
+			SGExposure: &network.SecurityGroupIngressExposure{
+				SecurityGroupID: "sg-app",
+				RuleSource:      "0.0.0.0/0",
+			},
+		}
+		var buf bytes.Buffer
+		renderSGExposure(&buf, ce)
+		out := buf.String()
+		if !strings.Contains(out, "Rule SG:     sg-app") {
+			t.Errorf("missing Rule SG in %q", out)
+		}
+		if !strings.Contains(out, "Rule source: 0.0.0.0/0") {
+			t.Errorf("missing Rule source in %q", out)
+		}
+	})
+
+	t.Run("renders legacy RuleSG and RuleSource fields", func(t *testing.T) {
+		ce := &network.Counterexample{
+			RuleSG:     "sg-legacy",
+			RuleSource: "10.0.0.0/8",
+		}
+		var buf bytes.Buffer
+		renderSGExposure(&buf, ce)
+		out := buf.String()
+		if !strings.Contains(out, "Rule SG:     sg-legacy") {
+			t.Errorf("missing Rule SG in %q", out)
+		}
+		if !strings.Contains(out, "Rule source: 10.0.0.0/8") {
+			t.Errorf("missing Rule source in %q", out)
+		}
+	})
+}

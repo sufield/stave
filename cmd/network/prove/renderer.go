@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/sufield/stave/internal/core/network"
 )
+
+// ValidFormats contains the supported output format names.
+var ValidFormats = []string{"json", "text"}
 
 // Renderer is the format-dispatch interface for `stave network prove`.
 type Renderer interface {
@@ -21,7 +25,7 @@ func NewRenderer(format string) (Renderer, error) {
 	case "text", "":
 		return textRenderer{}, nil
 	}
-	return nil, fmt.Errorf("unknown format %q (valid: json, text)", format)
+	return nil, fmt.Errorf("unknown format %q (valid: %s)", format, strings.Join(ValidFormats, ", "))
 }
 
 type jsonRenderer struct{}
@@ -95,10 +99,18 @@ func renderUnsat(w io.Writer, r *network.ProofResult) {
 	fmt.Fprintln(w, "  No violation exists.")
 }
 
-func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
+func renderProofSummary(w io.Writer, r *network.ProofResult) {
+	if r == nil {
+		return
+	}
 	renderHeader(w, r.Property, r.Result)
 	renderScope(w, r)
+}
 
+func renderVerdict(w io.Writer, r *network.ProofResult) {
+	if r == nil {
+		return
+	}
 	switch r.Result {
 	case "UNSAT":
 		renderUnsat(w, r)
@@ -107,6 +119,14 @@ func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
 	default:
 		renderCounterexample(w, "COUNTEREXAMPLE:", r.Counterexample)
 	}
+}
+
+func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
+	if r == nil {
+		return nil
+	}
+	renderProofSummary(w, r)
+	renderVerdict(w, r)
 	return nil
 }
 
@@ -115,22 +135,42 @@ func renderCounterexample(w io.Writer, header string, ce *network.Counterexample
 		return
 	}
 	fmt.Fprintf(w, "  %s\n", header)
+	renderCounterexamplePath(w, ce)
+	renderRemediation(w, ce)
+}
+
+func renderCounterexamplePath(w io.Writer, ce *network.Counterexample) {
+	if ce == nil {
+		return
+	}
 	fmt.Fprintf(w, "    Source:      %s\n", ce.Source)
 	fmt.Fprintf(w, "    Destination: %s\n", ce.Destination)
 	renderPort(w, ce)
 	fmt.Fprintf(w, "    Path:        %s\n", ce.PathType)
 	renderViolation(w, ce)
 	fmt.Fprintln(w)
+}
+
+func renderRemediation(w io.Writer, ce *network.Counterexample) {
+	if ce == nil {
+		return
+	}
 	fmt.Fprintf(w, "  %s\n", ce.Explanation)
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "  REMEDIATION:")
 	fmt.Fprintf(w, "    %s\n", ce.Remediation)
 }
 
-func renderViolation(w io.Writer, ce *network.Counterexample) {
-	if ce.RoutePath != nil {
-		fmt.Fprintf(w, "    Route table: %s\n", ce.RoutePath.RouteTableID)
-		fmt.Fprintf(w, "    Destination: %s\n", ce.RoutePath.Destination)
+func renderRouteViolation(w io.Writer, p *network.UnprotectedRoutePath) {
+	if p == nil {
+		return
+	}
+	fmt.Fprintf(w, "    Route table: %s\n", p.RouteTableID)
+	fmt.Fprintf(w, "    Destination: %s\n", p.Destination)
+}
+
+func renderSGExposure(w io.Writer, ce *network.Counterexample) {
+	if ce == nil {
 		return
 	}
 	if ce.SGExposure != nil {
@@ -150,11 +190,19 @@ func renderViolation(w io.Writer, ce *network.Counterexample) {
 	}
 }
 
+func renderViolation(w io.Writer, ce *network.Counterexample) {
+	if ce == nil {
+		return
+	}
+	if ce.RoutePath != nil {
+		renderRouteViolation(w, ce.RoutePath)
+		return
+	}
+	renderSGExposure(w, ce)
+}
+
 func renderPort(w io.Writer, ce *network.Counterexample) {
-	switch {
-	case ce.Port > 0:
-		fmt.Fprintf(w, "    Port:        %d\n", ce.Port)
-	case ce.PathType != "direct-igw":
-		fmt.Fprintf(w, "    Port:        all\n")
+	if ce.PathType != "direct-igw" {
+		fmt.Fprintf(w, "    Port:        %s\n", network.FormatPort(ce.Port))
 	}
 }

@@ -18,6 +18,14 @@ type Host struct {
 	Tags      map[string]string
 }
 
+// SafeID returns the host's ID, or an empty string if receiver is nil.
+func (h *Host) SafeID() string {
+	if h == nil {
+		return ""
+	}
+	return h.ID
+}
+
 // Environment returns the host's environment tag value, or "" if untagged or receiver is nil.
 func (h *Host) Environment() string {
 	if h == nil {
@@ -68,6 +76,16 @@ func (h *Host) IsTrusted(targets ...*Host) bool {
 		return true
 	}
 	return slices.ContainsFunc(targets, h.SameHost)
+}
+
+// CanOriginateInternalSSHTo reports whether h is eligible to originate internal SSH
+// to the destination host (i.e. is non-nil, distinct from dst, and not a production host).
+// Safe on nil receiver or nil dst.
+func (h *Host) CanOriginateInternalSSHTo(dst *Host) bool {
+	if h == nil || h.SameHost(dst) || h.IsProduction() {
+		return false
+	}
+	return true
 }
 
 // HasSecurityGroup reports whether h is associated with the specified security group ID.
@@ -125,24 +143,38 @@ func (r SGRule) IsInternetIngress() bool {
 	return r.IsIngress() && r.IsCIDR() && (r.SourceValue == "0.0.0.0/0" || r.SourceValue == "::/0")
 }
 
+// MatchesPort reports whether the security group rule matches the specified port.
+func (r SGRule) MatchesPort(port int) bool {
+	return r.Port == port
+}
+
 // IsInternetIngressOnPort reports whether the security group rule permits inbound
 // traffic from the public internet on the specified port.
 func (r SGRule) IsInternetIngressOnPort(port int) bool {
-	return r.Port == port && r.IsInternetIngress()
+	return r.MatchesPort(port) && r.IsInternetIngress()
 }
 
 // IsIngressOnPort reports whether the security group rule permits inbound
 // traffic on the specified port.
 func (r SGRule) IsIngressOnPort(port int) bool {
-	return r.Port == port && r.IsIngress()
+	return r.MatchesPort(port) && r.IsIngress()
+}
+
+// formatPrefixed formats an identifier with an optional type prefix (e.g. "prefix:value").
+// If either prefix or value is empty, the non-empty part is returned without a colon separator.
+func formatPrefixed(prefix, value string) string {
+	if prefix == "" {
+		return value
+	}
+	if value == "" {
+		return prefix
+	}
+	return prefix + ":" + value
 }
 
 // RuleSource returns the formatted source identifier (e.g. "sg:sg-12345" or "cidr:10.0.0.0/8").
 func (r SGRule) RuleSource() string {
-	if r.SourceType != "" {
-		return r.SourceType + ":" + r.SourceValue
-	}
-	return r.SourceValue
+	return formatPrefixed(r.SourceType, r.SourceValue)
 }
 
 // IsInternal reports whether the security group rule permits internal access
@@ -212,6 +244,19 @@ func (s *Subnet) HasRouteTable() bool {
 	return s != nil && s.RouteTableID != ""
 }
 
+// HasInternetEgress reports whether the subnet has a default route to an internet sink
+// (igw, nat, or eigw) within the given graph. Safe on nil receiver or nil graph.
+func (s *Subnet) HasInternetEgress(g *Graph) bool {
+	if s == nil || g == nil {
+		return false
+	}
+	route, ok := g.DefaultRouteForSubnet(s)
+	if !ok {
+		return false
+	}
+	return route.ClassifyTarget().IsSink()
+}
+
 // Route is a single route in a route table.
 type Route struct {
 	Destination string // "0.0.0.0/0", "::/0", etc.
@@ -232,13 +277,7 @@ func (r Route) IsInternetGateway() bool {
 
 // Target returns the formatted route target string (e.g. "nat:nat-01", "igw:igw-01").
 func (r Route) Target() string {
-	if r.TargetType == "" && r.TargetID == "" {
-		return ""
-	}
-	if r.TargetID == "" {
-		return r.TargetType
-	}
-	return r.TargetType + ":" + r.TargetID
+	return formatPrefixed(r.TargetType, r.TargetID)
 }
 
 // TGWAttachment is a Transit Gateway VPC attachment.
@@ -259,43 +298,53 @@ type Graph struct {
 	TGWAttachments []TGWAttachment
 }
 
-// BuildGraph extracts network topology from observation snapshots.
-func BuildGraph(snapshots []asset.Snapshot) *Graph {
-	g := &Graph{
+// NewGraph allocates an initialized Graph with empty collections.
+func NewGraph() *Graph {
+	return &Graph{
 		Hosts:     make(map[string]*Host),
 		SGRules:   make(map[string][]SGRule),
 		Subnets:   make(map[string]*Subnet),
 		Routes:    make(map[string][]Route),
 		Firewalls: make(map[string]bool),
 	}
+}
+
+// BuildGraph extracts network topology from observation snapshots.
+func BuildGraph(snapshots []asset.Snapshot) *Graph {
+	g := NewGraph()
 	if GraphTypes.Instance == "" {
 		return g
 	}
 	for i := range snapshots {
 		for j := range snapshots[i].Assets {
-			a := &snapshots[i].Assets[j] //nolint:gosec // index is within range
-			if a.Type == "" {
-				continue
-			}
-			switch string(a.Type) {
-			case GraphTypes.Instance:
-				g.extractHost(a)
-			case GraphTypes.SecurityGroup:
-				g.extractSGRules(a)
-			case GraphTypes.PeeringConnection:
-				g.extractPeering(a)
-			case GraphTypes.Subnet:
-				g.extractSubnet(a)
-			case GraphTypes.RouteTable:
-				g.extractRouteTable(a)
-			case GraphTypes.Firewall:
-				g.extractFirewall(a)
-			case GraphTypes.TransitGateway:
-				g.extractTGWAttachment(a)
-			}
+			g.extractAsset(&snapshots[i].Assets[j]) //nolint:gosec // index is within range
 		}
 	}
 	return g
+}
+
+// extractAsset routes an asset to its specialized topology extractor.
+// Safe on nil receiver or nil asset.
+func (g *Graph) extractAsset(a *asset.Asset) {
+	if g == nil || a == nil || a.Type == "" {
+		return
+	}
+	switch string(a.Type) {
+	case GraphTypes.Instance:
+		g.extractHost(a)
+	case GraphTypes.SecurityGroup:
+		g.extractSGRules(a)
+	case GraphTypes.PeeringConnection:
+		g.extractPeering(a)
+	case GraphTypes.Subnet:
+		g.extractSubnet(a)
+	case GraphTypes.RouteTable:
+		g.extractRouteTable(a)
+	case GraphTypes.Firewall:
+		g.extractFirewall(a)
+	case GraphTypes.TransitGateway:
+		g.extractTGWAttachment(a)
+	}
 }
 
 func extractTags(props map[string]any) map[string]string {
@@ -373,16 +422,31 @@ func parseSGRule(rm map[string]any) SGRule {
 	return rule
 }
 
-func (g *Graph) extractSGRules(a *asset.Asset) {
+func parseSGRules(a *asset.Asset) (string, []SGRule) {
+	if a == nil {
+		return "", nil
+	}
 	sgID := string(a.ID)
-	if sg, ok := nested(a.Properties, "network", "security_group"); ok {
-		if rules, ok := sg["rules"].([]any); ok {
-			for _, r := range rules {
-				if rm, ok := r.(map[string]any); ok {
-					g.SGRules[sgID] = append(g.SGRules[sgID], parseSGRule(rm))
-				}
-			}
+	sg, ok := nested(a.Properties, "network", "security_group")
+	if !ok {
+		return sgID, nil
+	}
+	rawRules, ok := sg["rules"].([]any)
+	if !ok {
+		return sgID, nil
+	}
+	var rules []SGRule
+	for _, r := range rawRules {
+		if rm, ok := r.(map[string]any); ok {
+			rules = append(rules, parseSGRule(rm))
 		}
+	}
+	return sgID, rules
+}
+
+func (g *Graph) extractSGRules(a *asset.Asset) {
+	if sgID, rules := parseSGRules(a); sgID != "" && len(rules) > 0 {
+		g.SGRules[sgID] = append(g.SGRules[sgID], rules...)
 	}
 }
 
@@ -428,6 +492,9 @@ func (g *Graph) allHosts() []*Host {
 }
 
 func (g *Graph) filterHosts(predicate func(*Host) bool) []*Host {
+	if g == nil {
+		return nil
+	}
 	var out []*Host
 	for _, h := range g.Hosts {
 		if predicate(h) {
@@ -438,32 +505,41 @@ func (g *Graph) filterHosts(predicate func(*Host) bool) []*Host {
 }
 
 // ProductionHosts returns all hosts tagged stave:environment=production.
+// Safe on nil receiver.
 func (g *Graph) ProductionHosts() []*Host {
 	return g.filterHosts((*Host).IsProduction)
 }
 
 // BastionHosts returns all hosts tagged stave:role=bastion.
+// Safe on nil receiver.
 func (g *Graph) BastionHosts() []*Host {
 	return g.filterHosts((*Host).IsBastion)
 }
 
 // DevelopmentHosts returns all hosts tagged stave:environment=development.
+// Safe on nil receiver.
 func (g *Graph) DevelopmentHosts() []*Host {
 	return g.filterHosts((*Host).IsDevelopment)
 }
 
 // DatabaseHosts returns all hosts tagged stave:tier=database.
+// Safe on nil receiver.
 func (g *Graph) DatabaseHosts() []*Host {
 	return g.filterHosts((*Host).IsDatabaseTier)
 }
 
 // IsolatedHosts returns all hosts tagged stave:network-zone=isolated.
+// Safe on nil receiver.
 func (g *Graph) IsolatedHosts() []*Host {
 	return g.filterHosts((*Host).IsIsolated)
 }
 
 // PrivateSubnets returns all subnets tagged stave:subnet-type=private.
+// Safe on nil receiver.
 func (g *Graph) PrivateSubnets() []*Subnet {
+	if g == nil {
+		return nil
+	}
 	var out []*Subnet
 	for _, s := range g.Subnets {
 		if s.IsPrivate() {
@@ -489,6 +565,27 @@ func (g *Graph) RoutesForSubnet(sub *Subnet) []Route {
 		return nil
 	}
 	return g.Routes[sub.RouteTableID]
+}
+
+// DefaultRouteForSubnet returns the first default route (0.0.0.0/0 or ::/0)
+// associated with the subnet's route table, or false if none exists.
+// Safe on nil receiver or nil subnet.
+func (g *Graph) DefaultRouteForSubnet(sub *Subnet) (Route, bool) {
+	if g == nil || !sub.HasRouteTable() {
+		return Route{}, false
+	}
+	for _, route := range g.RoutesForSubnet(sub) {
+		if route.IsDefaultRoute() {
+			return route, true
+		}
+	}
+	return Route{}, false
+}
+
+// SubnetHasInternetEgress reports whether sub has a default route to an internet sink.
+// Safe on nil receiver or nil subnet.
+func (g *Graph) SubnetHasInternetEgress(sub *Subnet) bool {
+	return sub.HasInternetEgress(g)
 }
 
 func parseSubnet(a *asset.Asset) *Subnet {
@@ -520,24 +617,48 @@ func parseRoute(rm map[string]any) Route {
 	return route
 }
 
-func (g *Graph) extractRouteTable(a *asset.Asset) {
+func parseRouteTableRoutes(a *asset.Asset) (string, []Route) {
+	if a == nil {
+		return "", nil
+	}
 	rtID := string(a.ID)
-	if rt, ok := nested(a.Properties, "network", "route_table"); ok {
-		if routes, ok := rt["routes"].([]any); ok {
-			for _, r := range routes {
-				if rm, ok := r.(map[string]any); ok {
-					g.Routes[rtID] = append(g.Routes[rtID], parseRoute(rm))
-				}
-			}
+	rt, ok := nested(a.Properties, "network", "route_table")
+	if !ok {
+		return rtID, nil
+	}
+	rawRoutes, ok := rt["routes"].([]any)
+	if !ok {
+		return rtID, nil
+	}
+	var routes []Route
+	for _, r := range rawRoutes {
+		if rm, ok := r.(map[string]any); ok {
+			routes = append(routes, parseRoute(rm))
 		}
+	}
+	return rtID, routes
+}
+
+func (g *Graph) extractRouteTable(a *asset.Asset) {
+	if rtID, routes := parseRouteTableRoutes(a); rtID != "" && len(routes) > 0 {
+		g.Routes[rtID] = append(g.Routes[rtID], routes...)
 	}
 }
 
+func parseFirewallEndpoints(a *asset.Asset) []string {
+	if a == nil {
+		return nil
+	}
+	fw, ok := nested(a.Properties, "network", "firewall")
+	if !ok {
+		return nil
+	}
+	return extractStringSlice(fw, "endpoints")
+}
+
 func (g *Graph) extractFirewall(a *asset.Asset) {
-	if fw, ok := nested(a.Properties, "network", "firewall"); ok {
-		for _, epID := range extractStringSlice(fw, "endpoints") {
-			g.Firewalls[epID] = true
-		}
+	for _, epID := range parseFirewallEndpoints(a) {
+		g.Firewalls[epID] = true
 	}
 }
 

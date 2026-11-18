@@ -21,22 +21,28 @@ type NetworkProveConfig struct {
 	Port         int
 }
 
+// DefaultSSHPort is the default port for SSH reachability and safety properties.
+const DefaultSSHPort = 22
+
+func normalizePort(port int) int {
+	if port <= 0 {
+		return DefaultSSHPort
+	}
+	return port
+}
+
 // NetworkEnumerate loads observations and enumerates all SSH paths to
 // production hosts.
 func NetworkEnumerate(ctx context.Context, cfg NetworkEnumerateConfig) (*network.EnumerateResult, error) {
 	if cfg.SnapshotsDir == "" {
 		return nil, errors.New("network enumerate: --observations is required")
 	}
-	if cfg.Port == 0 {
-		cfg.Port = 22
-	}
+	cfg.Port = normalizePort(cfg.Port)
 
-	snapshots, err := loadSnapshots(ctx, cfg.SnapshotsDir)
+	g, err := loadNetworkGraph(ctx, cfg.SnapshotsDir)
 	if err != nil {
 		return nil, fmt.Errorf("network enumerate: %w", err)
 	}
-
-	g := network.BuildGraph(snapshots)
 	paths := g.EnumerateSSHPaths(cfg.Port)
 
 	return &network.EnumerateResult{
@@ -52,36 +58,24 @@ func NetworkProve(ctx context.Context, cfg NetworkProveConfig) (*network.ProofRe
 	if cfg.SnapshotsDir == "" {
 		return nil, errors.New("network prove: --observations is required")
 	}
-	if cfg.Port == 0 {
-		cfg.Port = 22
-	}
+	cfg.Port = normalizePort(cfg.Port)
 
-	snapshots, err := loadSnapshots(ctx, cfg.SnapshotsDir)
+	g, err := loadNetworkGraph(ctx, cfg.SnapshotsDir)
 	if err != nil {
 		return nil, fmt.Errorf("network prove: %w", err)
 	}
 
-	g := network.BuildGraph(snapshots)
-
-	var r *network.ProofResult
-	switch cfg.Property {
-	case "bastion-ssh", "":
-		r, err = g.ProveBastionSSH(cfg.Port)
-	case "prod-dev-isolation":
-		r, err = g.ProveProdDevIsolation()
-	case "database-isolation":
-		r, err = g.ProveDatabaseIsolation()
-	case "firewall-mandatory":
-		r, err = g.ProveFirewallMandatory()
-	case "transitive-ssh":
-		r, err = g.ProveTransitiveSSH(cfg.Port)
-	case "transitive-egress":
-		r, err = g.ProveTransitiveEgress()
-	default:
-		return nil, fmt.Errorf("network prove: unknown property %q (valid: bastion-ssh, prod-dev-isolation, database-isolation, firewall-mandatory, transitive-ssh, transitive-egress)", cfg.Property)
-	}
+	r, err := g.Prove(cfg.Property, cfg.Port)
 	if err != nil {
 		return nil, fmt.Errorf("network prove: %w", err)
 	}
 	return r, nil
+}
+
+func loadNetworkGraph(ctx context.Context, dir string) (*network.Graph, error) {
+	snapshots, err := loadSnapshots(ctx, dir)
+	if err != nil {
+		return nil, err
+	}
+	return network.BuildGraph(snapshots), nil
 }

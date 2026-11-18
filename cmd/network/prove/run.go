@@ -14,11 +14,7 @@ func run(cmd *cobra.Command, o *options) error {
 		return err
 	}
 
-	result, err := stave.NetworkProve(cmd.Context(), stave.NetworkProveConfig{
-		SnapshotsDir: o.observations,
-		Property:     o.property,
-		Port:         o.port,
-	})
+	result, err := stave.NetworkProve(cmd.Context(), o.ToConfig())
 	if err != nil {
 		return fmt.Errorf("network prove: %w", err)
 	}

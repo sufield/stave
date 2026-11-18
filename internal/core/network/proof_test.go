@@ -3,9 +3,11 @@ package network
 import (
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func TestProveBastionSSH_Enforced(t *testing.T) {
@@ -2845,6 +2847,121 @@ func TestGraph_RoutesForSubnet(t *testing.T) {
 	}
 }
 
+func TestGraph_DefaultRouteForSubnet(t *testing.T) {
+	defaultRoute := Route{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"}
+	localRoute := Route{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}
+
+	subWithDefault := &Subnet{ID: "subnet-a", RouteTableID: "rt-a"}
+	subLocalOnly := &Subnet{ID: "subnet-b", RouteTableID: "rt-b"}
+	subWithoutRT := &Subnet{ID: "subnet-c", RouteTableID: ""}
+
+	g := &Graph{
+		Routes: map[string][]Route{
+			"rt-a": {localRoute, defaultRoute},
+			"rt-b": {localRoute},
+		},
+	}
+
+	tests := []struct {
+		name      string
+		g         *Graph
+		subnet    *Subnet
+		wantRoute Route
+		wantOK    bool
+	}{
+		{
+			name:      "subnet with default route",
+			g:         g,
+			subnet:    subWithDefault,
+			wantRoute: defaultRoute,
+			wantOK:    true,
+		},
+		{
+			name:      "subnet with only local routes",
+			g:         g,
+			subnet:    subLocalOnly,
+			wantRoute: Route{},
+			wantOK:    false,
+		},
+		{
+			name:      "subnet without route table",
+			g:         g,
+			subnet:    subWithoutRT,
+			wantRoute: Route{},
+			wantOK:    false,
+		},
+		{
+			name:      "nil subnet",
+			g:         g,
+			subnet:    nil,
+			wantRoute: Route{},
+			wantOK:    false,
+		},
+		{
+			name:      "nil graph",
+			g:         nil,
+			subnet:    subWithDefault,
+			wantRoute: Route{},
+			wantOK:    false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			gotRoute, gotOK := tc.g.DefaultRouteForSubnet(tc.subnet)
+			if gotOK != tc.wantOK {
+				t.Fatalf("DefaultRouteForSubnet() ok = %v, want %v", gotOK, tc.wantOK)
+			}
+			if gotRoute != tc.wantRoute {
+				t.Errorf("DefaultRouteForSubnet() route = %+v, want %+v", gotRoute, tc.wantRoute)
+			}
+		})
+	}
+}
+
+func TestSubnet_HasInternetEgress(t *testing.T) {
+	subNAT := &Subnet{ID: "sub-nat", RouteTableID: "rt-nat"}
+	subIGW := &Subnet{ID: "sub-igw", RouteTableID: "rt-igw"}
+	subTGW := &Subnet{ID: "sub-tgw", RouteTableID: "rt-tgw"}
+	subLocal := &Subnet{ID: "sub-local", RouteTableID: "rt-local"}
+	subNoRT := &Subnet{ID: "sub-nort"}
+
+	g := &Graph{
+		Routes: map[string][]Route{
+			"rt-nat":   {{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"}},
+			"rt-igw":   {{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-01"}},
+			"rt-tgw":   {{Destination: "0.0.0.0/0", TargetType: "tgw", TargetID: "tgw-01"}},
+			"rt-local": {{Destination: "10.0.0.0/16", TargetType: "local", TargetID: "local"}},
+		},
+	}
+
+	tests := []struct {
+		name string
+		s    *Subnet
+		g    *Graph
+		want bool
+	}{
+		{"nil subnet", nil, g, false},
+		{"nil graph", subNAT, nil, false},
+		{"subnet with no route table", subNoRT, g, false},
+		{"subnet with local default route only", subLocal, g, false},
+		{"subnet with gated TGW default route", subTGW, g, false},
+		{"subnet with NAT default route (sink)", subNAT, g, true},
+		{"subnet with IGW default route (sink)", subIGW, g, true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.s.HasInternetEgress(tc.g); got != tc.want {
+				t.Errorf("Subnet.HasInternetEgress() = %v, want %v", got, tc.want)
+			}
+			if got := tc.g.SubnetHasInternetEgress(tc.s); got != tc.want {
+				t.Errorf("Graph.SubnetHasInternetEgress() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestGraph_IsPubliclyAccessible(t *testing.T) {
 	hostIPv4 := &Host{ID: "i-ipv4", SGIDs: []string{"sg-ipv4"}}
 	hostIPv6 := &Host{ID: "i-ipv6", SGIDs: []string{"sg-ipv6"}}
@@ -3789,15 +3906,21 @@ func Test_newTransitiveCounterexample(t *testing.T) {
 	})
 }
 
-func Test_formatPort(t *testing.T) {
-	if got := formatPort(0); got != "all" {
-		t.Errorf("formatPort(0) = %q, want all", got)
+func TestFormatPort(t *testing.T) {
+	tests := []struct {
+		port int
+		want string
+	}{
+		{port: 0, want: "all"},
+		{port: 22, want: "22"},
+		{port: 80, want: "80"},
+		{port: 443, want: "443"},
+		{port: 8080, want: "8080"},
 	}
-	if got := formatPort(22); got != "22" {
-		t.Errorf("formatPort(22) = %q, want 22", got)
-	}
-	if got := formatPort(443); got != "443" {
-		t.Errorf("formatPort(443) = %q, want 443", got)
+	for _, tc := range tests {
+		if got := FormatPort(tc.port); got != tc.want {
+			t.Errorf("FormatPort(%d) = %q, want %q", tc.port, got, tc.want)
+		}
 	}
 }
 
@@ -3852,6 +3975,59 @@ func TestGraph_findFirstEgressPath(t *testing.T) {
 		gotIso, _, gotMatch := nilGraph.findFirstEgressPath([]*Host{iso}, []egressCandidate{sinkCandidate})
 		if gotMatch != nil || gotIso != nil {
 			t.Errorf("expected nil for nil graph, got match=%+v, iso=%+v", gotMatch, gotIso)
+		}
+	})
+}
+
+func TestGraph_findHostEgressCandidatePath(t *testing.T) {
+	iso := &Host{ID: "i-iso", VPCID: "vpc-1", SGIDs: []string{"sg-iso"}}
+	sinkHost := &Host{ID: "i-sink", VPCID: "vpc-1", SGIDs: []string{"sg-sink"}}
+	otherHost := &Host{ID: "i-other", VPCID: "vpc-1", SGIDs: []string{"sg-other"}}
+
+	g := &Graph{
+		Hosts: map[string]*Host{"i-iso": iso, "i-sink": sinkHost, "i-other": otherHost},
+		SGRules: map[string][]SGRule{
+			"sg-sink": {
+				{Direction: "ingress", Protocol: "tcp", Port: 80, SourceType: "sg", SourceValue: "sg-iso"},
+			},
+		},
+	}
+	sinkCandidate := egressCandidate{
+		host:  sinkHost,
+		route: Route{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-1"},
+	}
+	otherCandidate := egressCandidate{
+		host:  otherHost,
+		route: Route{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-1"},
+	}
+
+	t.Run("handles nil receiver or nil host gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if _, match, ok := nilGraph.findHostEgressCandidatePath(iso, []egressCandidate{sinkCandidate}); ok || match != nil {
+			t.Error("expected false, nil for nil graph")
+		}
+		if _, match, ok := g.findHostEgressCandidatePath(nil, []egressCandidate{sinkCandidate}); ok || match != nil {
+			t.Error("expected false, nil for nil host")
+		}
+	})
+
+	t.Run("finds first matching candidate", func(t *testing.T) {
+		c, match, ok := g.findHostEgressCandidatePath(iso, []egressCandidate{otherCandidate, sinkCandidate})
+		if !ok || match == nil {
+			t.Fatal("expected ok=true, non-nil match")
+		}
+		if c.host != sinkHost {
+			t.Errorf("c.host = %v, want %v", c.host, sinkHost)
+		}
+		if match.Port != 80 {
+			t.Errorf("match.Port = %d, want 80", match.Port)
+		}
+	})
+
+	t.Run("returns false when no candidate is reachable", func(t *testing.T) {
+		_, match, ok := g.findHostEgressCandidatePath(iso, []egressCandidate{otherCandidate})
+		if ok || match != nil {
+			t.Errorf("expected ok=false, nil match, got ok=%v, match=%v", ok, match)
 		}
 	})
 }
@@ -4044,4 +4220,1737 @@ func Test_newBastionProofResult(t *testing.T) {
 	if res.ProductionHosts != 10 || res.BastionHosts != 3 {
 		t.Errorf("got prod/bastion = %d/%d, want 10/3", res.ProductionHosts, res.BastionHosts)
 	}
+}
+
+func Test_parseRouteTableRoutes(t *testing.T) {
+	t.Run("nil asset returns empty string and nil routes", func(t *testing.T) {
+		rtID, routes := parseRouteTableRoutes(nil)
+		if rtID != "" || routes != nil {
+			t.Errorf("parseRouteTableRoutes(nil) = (%q, %v), want empty, nil", rtID, routes)
+		}
+	})
+
+	t.Run("missing network/route_table returns rtID and nil routes", func(t *testing.T) {
+		a := &asset.Asset{ID: "rt-missing"}
+		rtID, routes := parseRouteTableRoutes(a)
+		if rtID != "rt-missing" || routes != nil {
+			t.Errorf("parseRouteTableRoutes(missing) = (%q, %v), want 'rt-missing', nil", rtID, routes)
+		}
+	})
+
+	t.Run("parses valid route table asset", func(t *testing.T) {
+		a := &asset.Asset{
+			ID: "rt-123",
+			Properties: map[string]any{
+				"network": map[string]any{
+					"route_table": map[string]any{
+						"routes": []any{
+							map[string]any{
+								"destination": "0.0.0.0/0",
+								"target_type": "IGW",
+								"target_id":   "igw-abc",
+							},
+							map[string]any{
+								"destination": "10.0.0.0/16",
+								"target_type": "local",
+								"target_id":   "",
+							},
+						},
+					},
+				},
+			},
+		}
+		rtID, routes := parseRouteTableRoutes(a)
+		if rtID != "rt-123" {
+			t.Errorf("rtID = %q, want 'rt-123'", rtID)
+		}
+		if len(routes) != 2 {
+			t.Fatalf("len(routes) = %d, want 2", len(routes))
+		}
+		if routes[0].Destination != "0.0.0.0/0" || routes[0].TargetType != "igw" || routes[0].TargetID != "igw-abc" {
+			t.Errorf("routes[0] = %+v, want destination 0.0.0.0/0, target_type igw, target_id igw-abc", routes[0])
+		}
+		if routes[1].Destination != "10.0.0.0/16" || routes[1].TargetType != "local" || routes[1].TargetID != "" {
+			t.Errorf("routes[1] = %+v, want destination 10.0.0.0/16, target_type local", routes[1])
+		}
+	})
+}
+
+func Test_parseFirewallEndpoints(t *testing.T) {
+	t.Run("nil asset returns nil", func(t *testing.T) {
+		if got := parseFirewallEndpoints(nil); got != nil {
+			t.Errorf("parseFirewallEndpoints(nil) = %v, want nil", got)
+		}
+	})
+
+	t.Run("missing network/firewall returns nil", func(t *testing.T) {
+		a := &asset.Asset{ID: "fw-missing"}
+		if got := parseFirewallEndpoints(a); got != nil {
+			t.Errorf("parseFirewallEndpoints(missing) = %v, want nil", got)
+		}
+	})
+
+	t.Run("parses valid firewall asset endpoints", func(t *testing.T) {
+		a := &asset.Asset{
+			ID: "fw-1",
+			Properties: map[string]any{
+				"network": map[string]any{
+					"firewall": map[string]any{
+						"endpoints": []any{"vpce-1", "vpce-2"},
+					},
+				},
+			},
+		}
+		got := parseFirewallEndpoints(a)
+		if len(got) != 2 || got[0] != "vpce-1" || got[1] != "vpce-2" {
+			t.Errorf("parseFirewallEndpoints = %v, want [vpce-1, vpce-2]", got)
+		}
+	})
+}
+
+func TestGraph_findCrossEnvBypass(t *testing.T) {
+	prodHost := &Host{
+		ID:    "i-prod",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-prod"},
+		Tags:  map[string]string{"stave:environment": "production"},
+	}
+	devHost := &Host{
+		ID:    "i-dev",
+		VPCID: "vpc-dev",
+		SGIDs: []string{"sg-dev"},
+		Tags:  map[string]string{"stave:environment": "development"},
+	}
+
+	t.Run("handles nil graph gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		src, dst, match := nilGraph.findCrossEnvBypass([]*Host{prodHost}, []*Host{devHost})
+		if src != nil || dst != nil || match != nil {
+			t.Errorf("expected all nil, got src=%v, dst=%v, match=%v", src, dst, match)
+		}
+	})
+
+	t.Run("returns nil when no cross-environment path exists", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-dev": devHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {},
+				"sg-dev":  {},
+			},
+		}
+		src, dst, match := g.findCrossEnvBypass([]*Host{prodHost}, []*Host{devHost})
+		if src != nil || dst != nil || match != nil {
+			t.Errorf("expected all nil, got src=%v, dst=%v, match=%v", src, dst, match)
+		}
+	})
+
+	t.Run("finds prod to dev bypass", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-dev": devHost},
+			SGRules: map[string][]SGRule{
+				"sg-dev": {
+					{Direction: "ingress", Protocol: "tcp", Port: 80, SourceType: "sg", SourceValue: "sg-prod"},
+				},
+			},
+		}
+		src, dst, match := g.findCrossEnvBypass([]*Host{prodHost}, []*Host{devHost})
+		if match == nil {
+			t.Fatal("expected non-nil match")
+		}
+		if src != prodHost || dst != devHost {
+			t.Errorf("got src=%v, dst=%v, want src=prodHost, dst=devHost", src, dst)
+		}
+	})
+
+	t.Run("finds dev to prod bypass", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-dev": devHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-dev"},
+				},
+			},
+		}
+		src, dst, match := g.findCrossEnvBypass([]*Host{prodHost}, []*Host{devHost})
+		if match == nil {
+			t.Fatal("expected non-nil match")
+		}
+		if src != devHost || dst != prodHost {
+			t.Errorf("got src=%v, dst=%v, want src=devHost, dst=prodHost", src, dst)
+		}
+	})
+}
+
+func TestGraph_findAnyReachabilityPath(t *testing.T) {
+	h1 := &Host{ID: "i-h1", SGIDs: []string{"sg-1"}}
+	h2 := &Host{ID: "i-h2", SGIDs: []string{"sg-2"}}
+
+	t.Run("handles nil receiver gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		src, dst, match := nilGraph.findAnyReachabilityPath([]*Host{h1}, []*Host{h2})
+		if src != nil || dst != nil || match != nil {
+			t.Errorf("expected all nil for nil graph, got src=%v, dst=%v, match=%v", src, dst, match)
+		}
+	})
+
+	t.Run("handles empty source or destination slices", func(t *testing.T) {
+		g := NewGraph()
+		src, dst, match := g.findAnyReachabilityPath(nil, []*Host{h2})
+		if src != nil || dst != nil || match != nil {
+			t.Errorf("expected all nil for nil sources, got src=%v, dst=%v, match=%v", src, dst, match)
+		}
+		src, dst, match = g.findAnyReachabilityPath([]*Host{h1}, nil)
+		if src != nil || dst != nil || match != nil {
+			t.Errorf("expected all nil for nil destinations, got src=%v, dst=%v, match=%v", src, dst, match)
+		}
+	})
+
+	t.Run("finds first reachability match between bipartite hosts", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-h1": h1, "i-h2": h2},
+			SGRules: map[string][]SGRule{
+				"sg-2": {
+					{Direction: "ingress", Protocol: "tcp", Port: 8080, SourceType: "sg", SourceValue: "sg-1"},
+				},
+			},
+		}
+		src, dst, match := g.findAnyReachabilityPath([]*Host{h1}, []*Host{h2})
+		if match == nil {
+			t.Fatal("expected match, got nil")
+		}
+		if src != h1 || dst != h2 {
+			t.Errorf("got src=%v, dst=%v, want h1, h2", src, dst)
+		}
+		if match.Port != 8080 {
+			t.Errorf("match.Port = %d, want 8080", match.Port)
+		}
+	})
+}
+
+func Test_parseSGRules(t *testing.T) {
+	t.Run("nil asset returns empty string and nil rules", func(t *testing.T) {
+		sgID, rules := parseSGRules(nil)
+		if sgID != "" || rules != nil {
+			t.Errorf("parseSGRules(nil) = (%q, %v), want empty, nil", sgID, rules)
+		}
+	})
+
+	t.Run("missing network/security_group returns sgID and nil rules", func(t *testing.T) {
+		a := &asset.Asset{ID: "sg-missing"}
+		sgID, rules := parseSGRules(a)
+		if sgID != "sg-missing" || rules != nil {
+			t.Errorf("parseSGRules(missing) = (%q, %v), want 'sg-missing', nil", sgID, rules)
+		}
+	})
+
+	t.Run("parses valid security group asset rules", func(t *testing.T) {
+		a := &asset.Asset{
+			ID: "sg-123",
+			Properties: map[string]any{
+				"network": map[string]any{
+					"security_group": map[string]any{
+						"rules": []any{
+							map[string]any{
+								"direction":    "ingress",
+								"protocol":     "tcp",
+								"source_type":  "cidr",
+								"source_value": "0.0.0.0/0",
+								"from_port":    float64(22),
+							},
+						},
+					},
+				},
+			},
+		}
+		sgID, rules := parseSGRules(a)
+		if sgID != "sg-123" {
+			t.Errorf("sgID = %q, want 'sg-123'", sgID)
+		}
+		if len(rules) != 1 {
+			t.Fatalf("len(rules) = %d, want 1", len(rules))
+		}
+		if rules[0].Direction != "ingress" || rules[0].Port != 22 || rules[0].SourceValue != "0.0.0.0/0" {
+			t.Errorf("rules[0] = %+v, want ingress port 22 cidr 0.0.0.0/0", rules[0])
+		}
+	})
+}
+
+func TestGraph_findDatabaseBypass(t *testing.T) {
+	dbHost := &Host{
+		ID:    "i-db",
+		VPCID: "vpc-db",
+		SGIDs: []string{"sg-db"},
+		Tags:  map[string]string{"stave:tier": "database"},
+	}
+	appHost := &Host{
+		ID:    "i-app",
+		VPCID: "vpc-app",
+		SGIDs: []string{"sg-app"},
+		Tags:  map[string]string{"stave:tier": "app"},
+	}
+
+	t.Run("handles nil receiver or nil dst gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce, reason := nilGraph.findDatabaseBypass(dbHost); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil graph, got %+v, %q", ce, reason)
+		}
+		g := &Graph{}
+		if ce, reason := g.findDatabaseBypass(nil); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil dst, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("returns nil when database host is isolated", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-db": dbHost, "i-app": appHost},
+			SGRules: map[string][]SGRule{
+				"sg-db":  {},
+				"sg-app": {},
+			},
+		}
+		if ce, reason := g.findDatabaseBypass(dbHost); ce != nil || reason != "" {
+			t.Errorf("expected nil, got ce=%+v, reason=%q", ce, reason)
+		}
+	})
+
+	t.Run("finds cross-VPC bypass", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-db": dbHost, "i-app": appHost},
+			SGRules: map[string][]SGRule{
+				"sg-db": {
+					{Direction: "ingress", Protocol: "tcp", Port: 5432, SourceType: "sg", SourceValue: "sg-app"},
+				},
+			},
+		}
+		ce, reason := g.findDatabaseBypass(dbHost)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "i-app" || ce.Destination != "i-db" || ce.Port != 5432 {
+			t.Errorf("got ce=%+v, want Source=i-app, Destination=i-db, Port=5432", ce)
+		}
+		if reason != "Database isolation violated — a host outside the database VPC can reach a database host." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+
+	t.Run("finds internet bypass", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-db": dbHost},
+			SGRules: map[string][]SGRule{
+				"sg-db": {
+					{Direction: "ingress", Protocol: "tcp", Port: 5432, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+				},
+			},
+		}
+		ce, reason := g.findDatabaseBypass(dbHost)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Destination != "i-db" || ce.Port != 5432 {
+			t.Errorf("got ce=%+v, want Destination=i-db, Port=5432", ce)
+		}
+		if reason != "Database isolation violated — database host is directly accessible from the internet." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+}
+
+func TestGraph_findSubnetFirewallBypass(t *testing.T) {
+	sub := &Subnet{
+		ID:           "subnet-priv-1",
+		VPCID:        "vpc-1",
+		RouteTableID: "rt-1",
+		Tags:         map[string]string{"stave:subnet-type": "private"},
+	}
+
+	t.Run("handles nil receiver or nil subnet gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce := nilGraph.findSubnetFirewallBypass(sub); ce != nil {
+			t.Errorf("expected nil for nil graph, got %+v", ce)
+		}
+		g := &Graph{}
+		if ce := g.findSubnetFirewallBypass(nil); ce != nil {
+			t.Errorf("expected nil for nil subnet, got %+v", ce)
+		}
+	})
+
+	t.Run("returns nil when subnet has no default route", func(t *testing.T) {
+		g := &Graph{
+			Subnets: map[string]*Subnet{"subnet-priv-1": sub},
+			Routes: map[string][]Route{
+				"rt-1": {
+					{Destination: "10.0.0.0/16", TargetType: "local"},
+				},
+			},
+		}
+		if ce := g.findSubnetFirewallBypass(sub); ce != nil {
+			t.Errorf("expected nil for non-default route, got %+v", ce)
+		}
+	})
+
+	t.Run("returns nil when default route routes through firewall", func(t *testing.T) {
+		g := &Graph{
+			Subnets: map[string]*Subnet{"subnet-priv-1": sub},
+			Routes: map[string][]Route{
+				"rt-1": {
+					{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-fw"},
+				},
+			},
+			Firewalls: map[string]bool{"igw-fw": true},
+		}
+		if ce := g.findSubnetFirewallBypass(sub); ce != nil {
+			t.Errorf("expected nil when firewall protects route, got %+v", ce)
+		}
+	})
+
+	t.Run("finds firewall bypass when default route targets IGW without firewall", func(t *testing.T) {
+		g := &Graph{
+			Subnets: map[string]*Subnet{"subnet-priv-1": sub},
+			Routes: map[string][]Route{
+				"rt-1": {
+					{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-bypass"},
+				},
+			},
+			Firewalls: map[string]bool{"other-fw": true},
+		}
+		ce := g.findSubnetFirewallBypass(sub)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "subnet-priv-1" || ce.Destination != "igw-bypass" || ce.PathType != "direct-igw" {
+			t.Errorf("got ce=%+v, want Source=subnet-priv-1, Destination=igw-bypass, PathType=direct-igw", ce)
+		}
+		if ce.RoutePath == nil || ce.RoutePath.RouteTableID != "rt-1" || ce.RoutePath.Destination != "0.0.0.0/0" {
+			t.Errorf("got RoutePath=%+v, want RouteTableID=rt-1, Destination=0.0.0.0/0", ce.RoutePath)
+		}
+	})
+}
+
+func TestGraph_findHostBastionBypass(t *testing.T) {
+	prodHost := &Host{
+		ID:    "i-prod",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-prod"},
+		Tags:  map[string]string{"stave:environment": "production"},
+	}
+	bastionHost := &Host{
+		ID:    "i-bastion",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-bastion"},
+		Tags:  map[string]string{"stave:role": "bastion"},
+	}
+	untrustedHost := &Host{
+		ID:    "i-untrusted",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-untrusted"},
+		Tags:  map[string]string{"stave:environment": "development"},
+	}
+
+	t.Run("handles nil receiver or nil dst gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce, reason := nilGraph.findHostBastionBypass(prodHost, 22, []*Host{bastionHost}); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil graph, got %+v, %q", ce, reason)
+		}
+		g := &Graph{}
+		if ce, reason := g.findHostBastionBypass(nil, 22, []*Host{bastionHost}); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil dst, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("returns nil when only bastion can access production host", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-bastion": bastionHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-bastion"},
+				},
+			},
+		}
+		if ce, reason := g.findHostBastionBypass(prodHost, 22, []*Host{bastionHost}); ce != nil || reason != "" {
+			t.Errorf("expected nil when bastion only, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("finds internal bypass from untrusted host", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-untrusted": untrustedHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-untrusted"},
+				},
+			},
+		}
+		ce, reason := g.findHostBastionBypass(prodHost, 22, []*Host{bastionHost})
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "i-untrusted" || ce.Destination != "i-prod" || ce.Port != 22 {
+			t.Errorf("got ce=%+v, want Source=i-untrusted, Destination=i-prod, Port=22", ce)
+		}
+		if reason != "Bastion bypass exists — a non-bastion host can SSH to production without traversing a bastion." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+
+	t.Run("finds external internet bypass", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+				},
+			},
+		}
+		ce, reason := g.findHostBastionBypass(prodHost, 22, []*Host{bastionHost})
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Destination != "i-prod" || ce.Port != 22 {
+			t.Errorf("got ce=%+v, want Destination=i-prod, Port=22", ce)
+		}
+		if reason != "Bastion bypass exists — production host is directly SSH-accessible from the internet." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+}
+
+func TestGraph_findInternalBastionSSHBypass(t *testing.T) {
+	prodHost := &Host{
+		ID:    "i-prod",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-prod"},
+		Tags:  map[string]string{"stave:environment": "production"},
+	}
+	bastionHost := &Host{
+		ID:    "i-bastion",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-bastion"},
+		Tags:  map[string]string{"stave:role": "bastion"},
+	}
+	untrustedHost := &Host{
+		ID:    "i-untrusted",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-untrusted"},
+		Tags:  map[string]string{"stave:environment": "development"},
+	}
+
+	t.Run("handles nil receiver, nil src, or nil dst gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce, reason := nilGraph.findInternalBastionSSHBypass(untrustedHost, prodHost, 22, []*Host{bastionHost}); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil graph, got %+v, %q", ce, reason)
+		}
+		g := &Graph{}
+		if ce, reason := g.findInternalBastionSSHBypass(nil, prodHost, 22, []*Host{bastionHost}); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil src, got %+v, %q", ce, reason)
+		}
+		if ce, reason := g.findInternalBastionSSHBypass(untrustedHost, nil, 22, []*Host{bastionHost}); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil dst, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("returns nil when src is trusted", func(t *testing.T) {
+		g := &Graph{}
+		// Bastion is trusted
+		if ce, reason := g.findInternalBastionSSHBypass(bastionHost, prodHost, 22, []*Host{bastionHost}); ce != nil || reason != "" {
+			t.Errorf("expected nil for bastion host, got %+v, %q", ce, reason)
+		}
+		// Another prod host is trusted
+		peerProd := &Host{ID: "i-peer-prod", Tags: map[string]string{"stave:environment": "production"}}
+		if ce, reason := g.findInternalBastionSSHBypass(peerProd, prodHost, 22, []*Host{bastionHost}); ce != nil || reason != "" {
+			t.Errorf("expected nil for peer production host, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("finds internal bypass when untrusted host has reachability to production", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{
+				"i-prod":      prodHost,
+				"i-untrusted": untrustedHost,
+			},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-untrusted"},
+				},
+			},
+		}
+		ce, reason := g.findInternalBastionSSHBypass(untrustedHost, prodHost, 22, []*Host{bastionHost})
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "i-untrusted" || ce.Destination != "i-prod" || ce.Port != 22 {
+			t.Errorf("got ce=%+v, want Source=i-untrusted, Destination=i-prod, Port=22", ce)
+		}
+		if reason != "Bastion bypass exists — a non-bastion host can SSH to production without traversing a bastion." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+
+	t.Run("returns nil when untrusted host cannot reach production on port", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{
+				"i-prod":      prodHost,
+				"i-untrusted": untrustedHost,
+			},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 80, SourceType: "sg", SourceValue: "sg-untrusted"},
+				},
+			},
+		}
+		if ce, reason := g.findInternalBastionSSHBypass(untrustedHost, prodHost, 22, []*Host{bastionHost}); ce != nil || reason != "" {
+			t.Errorf("expected nil when port does not match, got %+v, %q", ce, reason)
+		}
+	})
+}
+
+func TestGraph_findHostTransitiveSSHBypass(t *testing.T) {
+	prodHost := &Host{
+		ID:    "i-prod",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-prod"},
+		Tags:  map[string]string{"stave:environment": "production"},
+	}
+	relayHost := &Host{
+		ID:    "i-relay",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-relay"},
+		Tags:  map[string]string{"stave:environment": "development"},
+	}
+	internalHost := &Host{
+		ID:    "i-internal",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-internal"},
+		Tags:  map[string]string{"stave:environment": "development"},
+	}
+
+	t.Run("handles nil receiver or nil dst gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce, reason := nilGraph.findHostTransitiveSSHBypass(prodHost, 22); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil graph, got %+v, %q", ce, reason)
+		}
+		g := &Graph{}
+		if ce, reason := g.findHostTransitiveSSHBypass(nil, 22); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil dst, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("returns nil when no relay can reach production host", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-relay": relayHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod":  {},
+				"sg-relay": {},
+			},
+		}
+		if ce, reason := g.findHostTransitiveSSHBypass(prodHost, 22); ce != nil || reason != "" {
+			t.Errorf("expected nil when no relay path, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("finds transitive internet bypass", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-relay": relayHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-relay"},
+				},
+				"sg-relay": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+				},
+			},
+		}
+		ce, reason := g.findHostTransitiveSSHBypass(prodHost, 22)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Destination != "i-prod" || ce.Port != 22 {
+			t.Errorf("got ce=%+v, want Destination=i-prod, Port=22", ce)
+		}
+		if reason != "Transitive SSH path exists — a non-bastion host reachable from the internet can relay SSH to production." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+
+	t.Run("finds transitive internal bypass", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-relay": relayHost, "i-internal": internalHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-relay"},
+				},
+				"sg-relay": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-internal"},
+				},
+			},
+		}
+		ce, reason := g.findHostTransitiveSSHBypass(prodHost, 22)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Destination != "i-prod" || ce.Port != 22 {
+			t.Errorf("got ce=%+v, want Destination=i-prod, Port=22", ce)
+		}
+		if reason != "Transitive SSH path exists — a non-bastion host can relay SSH to production via an intermediate host." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+}
+
+func TestGraph_findRelayCandidateTransitiveSSHBypass(t *testing.T) {
+	prodHost := &Host{
+		ID:    "i-prod",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-prod"},
+		Tags:  map[string]string{"stave:environment": "production"},
+	}
+	relayHost := &Host{
+		ID:    "i-relay",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-relay"},
+		Tags:  map[string]string{"stave:environment": "development"},
+	}
+	bastionHost := &Host{
+		ID:    "i-bastion",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-bastion"},
+		Tags:  map[string]string{"stave:role": "bastion"},
+	}
+
+	t.Run("handles nil receiver, nil relay, or nil dst gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce, reason := nilGraph.findRelayCandidateTransitiveSSHBypass(relayHost, prodHost, 22); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil graph, got %+v, %q", ce, reason)
+		}
+		g := &Graph{}
+		if ce, reason := g.findRelayCandidateTransitiveSSHBypass(nil, prodHost, 22); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil relay, got %+v, %q", ce, reason)
+		}
+		if ce, reason := g.findRelayCandidateTransitiveSSHBypass(relayHost, nil, 22); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil dst, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("returns nil when relay is trusted", func(t *testing.T) {
+		g := &Graph{}
+		if ce, reason := g.findRelayCandidateTransitiveSSHBypass(bastionHost, prodHost, 22); ce != nil || reason != "" {
+			t.Errorf("expected nil for bastion relay, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("returns nil when relay cannot reach production on port", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-relay": relayHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 80, SourceType: "sg", SourceValue: "sg-relay"},
+				},
+			},
+		}
+		if ce, reason := g.findRelayCandidateTransitiveSSHBypass(relayHost, prodHost, 22); ce != nil || reason != "" {
+			t.Errorf("expected nil when port does not match, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("finds transitive bypass when relay can reach production and is reachable from internet", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-relay": relayHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-relay"},
+				},
+				"sg-relay": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+				},
+			},
+		}
+		ce, reason := g.findRelayCandidateTransitiveSSHBypass(relayHost, prodHost, 22)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Destination != "i-prod" || ce.Port != 22 {
+			t.Errorf("got ce=%+v, want Destination=i-prod, Port=22", ce)
+		}
+		if reason != "Transitive SSH path exists — a non-bastion host reachable from the internet can relay SSH to production." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+}
+
+func TestGraph_Prove(t *testing.T) {
+	t.Run("handles nil graph gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		res, err := nilGraph.Prove("bastion-ssh", 22)
+		if err == nil || res != nil {
+			t.Errorf("expected error for nil graph, got res=%v, err=%v", res, err)
+		}
+	})
+
+	t.Run("returns error on unknown property", func(t *testing.T) {
+		g := &Graph{}
+		res, err := g.Prove("unknown-property", 22)
+		if err == nil || res != nil {
+			t.Fatalf("expected error for unknown property, got res=%v, err=%v", res, err)
+		}
+		if !strings.Contains(err.Error(), "unknown property \"unknown-property\"") {
+			t.Errorf("err = %q, want containing 'unknown property'", err.Error())
+		}
+	})
+
+	t.Run("dispatches to all valid properties", func(t *testing.T) {
+		g := &Graph{}
+		properties := []string{
+			"",
+			"bastion-ssh",
+			"prod-dev-isolation",
+			"database-isolation",
+			"firewall-mandatory",
+			"transitive-ssh",
+			"transitive-egress",
+		}
+		for _, prop := range properties {
+			t.Run("property="+prop, func(t *testing.T) {
+				// On an empty graph, all provers return a vacuous proof error.
+				res, err := g.Prove(prop, 0)
+				if res != nil {
+					t.Errorf("expected nil result on empty graph, got %+v", res)
+				}
+				if !errors.Is(err, ErrVacuousProof) {
+					t.Errorf("expected ErrVacuousProof, got %v", err)
+				}
+			})
+		}
+	})
+}
+
+func TestGraph_NilGuards(t *testing.T) {
+	var nilGraph *Graph
+
+	if got := nilGraph.PrivateSubnets(); got != nil {
+		t.Errorf("nilGraph.PrivateSubnets() = %v, want nil", got)
+	}
+	if got := nilGraph.ProductionHosts(); got != nil {
+		t.Errorf("nilGraph.ProductionHosts() = %v, want nil", got)
+	}
+	if got := nilGraph.BastionHosts(); got != nil {
+		t.Errorf("nilGraph.BastionHosts() = %v, want nil", got)
+	}
+	if got := nilGraph.DevelopmentHosts(); got != nil {
+		t.Errorf("nilGraph.DevelopmentHosts() = %v, want nil", got)
+	}
+	if got := nilGraph.DatabaseHosts(); got != nil {
+		t.Errorf("nilGraph.DatabaseHosts() = %v, want nil", got)
+	}
+	if got := nilGraph.IsolatedHosts(); got != nil {
+		t.Errorf("nilGraph.IsolatedHosts() = %v, want nil", got)
+	}
+}
+
+func Test_newRuleMatch(t *testing.T) {
+	match := newRuleMatch("sg-12345", "10.0.0.0/8", "cidr", 22)
+	if match == nil {
+		t.Fatal("expected non-nil RuleMatch")
+	}
+	if match.SecurityGroupID != "sg-12345" {
+		t.Errorf("SecurityGroupID = %q, want sg-12345", match.SecurityGroupID)
+	}
+	if match.RuleSource != "10.0.0.0/8" {
+		t.Errorf("RuleSource = %q, want 10.0.0.0/8", match.RuleSource)
+	}
+	if match.PathType != "cidr" {
+		t.Errorf("PathType = %q, want cidr", match.PathType)
+	}
+	if match.Port != 22 {
+		t.Errorf("Port = %d, want 22", match.Port)
+	}
+}
+
+func TestGraph_findTransitiveInternalHostBypass(t *testing.T) {
+	prodHost := &Host{
+		ID:    "i-prod",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-prod"},
+		Tags:  map[string]string{"stave:environment": "production"},
+	}
+	relayHost := &Host{
+		ID:    "i-relay",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-relay"},
+		Tags:  map[string]string{"stave:environment": "development"},
+	}
+	internalHost := &Host{
+		ID:    "i-internal",
+		VPCID: "vpc-prod",
+		SGIDs: []string{"sg-internal"},
+		Tags:  map[string]string{"stave:environment": "development"},
+	}
+	relayMatch := newRuleMatch("sg-prod", "sg:sg-relay", "sg-ref", 22)
+
+	t.Run("handles nil receiver or arguments gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce := nilGraph.findTransitiveInternalHostBypass(relayHost, prodHost, 22, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil graph, got %+v", ce)
+		}
+		g := &Graph{}
+		if ce := g.findTransitiveInternalHostBypass(nil, prodHost, 22, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil relay, got %+v", ce)
+		}
+		if ce := g.findTransitiveInternalHostBypass(relayHost, nil, 22, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil dst, got %+v", ce)
+		}
+		if ce := g.findTransitiveInternalHostBypass(relayHost, prodHost, 22, nil); ce != nil {
+			t.Errorf("expected nil for nil relayMatch, got %+v", ce)
+		}
+	})
+
+	t.Run("returns nil when no internal host can reach relay", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-relay": relayHost, "i-internal": internalHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod":  {},
+				"sg-relay": {},
+			},
+		}
+		if ce := g.findTransitiveInternalHostBypass(relayHost, prodHost, 22, relayMatch); ce != nil {
+			t.Errorf("expected nil when no internal reachability, got %+v", ce)
+		}
+	})
+
+	t.Run("finds internal host counterexample", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-relay": relayHost, "i-internal": internalHost},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-relay"},
+				},
+				"sg-relay": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-internal"},
+				},
+			},
+		}
+		ce := g.findTransitiveInternalHostBypass(relayHost, prodHost, 22, relayMatch)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Destination != "i-prod" || ce.Port != 22 {
+			t.Errorf("got ce=%+v, want Destination=i-prod, Port=22", ce)
+		}
+	})
+}
+
+func TestGraph_extractAsset(t *testing.T) {
+	t.Run("handles nil receiver or nil asset gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		nilGraph.extractAsset(&asset.Asset{Type: kernel.AssetType(GraphTypes.Instance)})
+
+		g := NewGraph()
+		g.extractAsset(nil)
+		g.extractAsset(&asset.Asset{})
+		g.extractAsset(&asset.Asset{Type: kernel.AssetType("unknown_asset_type")})
+		if len(g.Hosts) != 0 {
+			t.Errorf("expected 0 hosts, got %d", len(g.Hosts))
+		}
+	})
+
+	t.Run("dispatches known asset type to extractor", func(t *testing.T) {
+		g := NewGraph()
+		a := &asset.Asset{
+			ID:   "i-test-1",
+			Type: kernel.AssetType(GraphTypes.Instance),
+			Properties: map[string]any{
+				"compute": map[string]any{
+					"instance": map[string]any{
+						"vpc_id": "vpc-test",
+					},
+				},
+			},
+		}
+		g.extractAsset(a)
+		if h, ok := g.Hosts["i-test-1"]; !ok || h.VPCID != "vpc-test" {
+			t.Errorf("host not extracted as expected: %+v", h)
+		}
+	})
+}
+
+func TestGraph_findTransitiveEgressBypass(t *testing.T) {
+	isoHost := &Host{ID: "i-iso", SGIDs: []string{"sg-iso"}}
+	sinkHost := &Host{ID: "i-sink", SGIDs: []string{"sg-sink"}}
+	sinks := []egressCandidate{
+		{
+			host:   sinkHost,
+			route:  Route{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-1"},
+			target: RouteTarget{Class: routeSink, TargetID: "nat-1"},
+		},
+	}
+
+	t.Run("handles nil receiver or empty candidates gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce := nilGraph.findTransitiveEgressBypass([]*Host{isoHost}, sinks); ce != nil {
+			t.Errorf("expected nil for nil graph, got %+v", ce)
+		}
+		g := &Graph{}
+		if ce := g.findTransitiveEgressBypass(nil, sinks); ce != nil {
+			t.Errorf("expected nil for nil isolated hosts, got %+v", ce)
+		}
+		if ce := g.findTransitiveEgressBypass([]*Host{isoHost}, nil); ce != nil {
+			t.Errorf("expected nil for nil sinks, got %+v", ce)
+		}
+	})
+
+	t.Run("returns nil when no path reaches sink", func(t *testing.T) {
+		g := &Graph{
+			Hosts:   map[string]*Host{"i-iso": isoHost, "i-sink": sinkHost},
+			SGRules: map[string][]SGRule{"sg-sink": {}},
+		}
+		if ce := g.findTransitiveEgressBypass([]*Host{isoHost}, sinks); ce != nil {
+			t.Errorf("expected nil when no path, got %+v", ce)
+		}
+	})
+
+	t.Run("returns counterexample when isolated host reaches sink", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-iso": isoHost, "i-sink": sinkHost},
+			SGRules: map[string][]SGRule{
+				"sg-sink": {
+					{Direction: "ingress", Protocol: "tcp", Port: 443, SourceType: "sg", SourceValue: "sg-iso"},
+				},
+			},
+		}
+		ce := g.findTransitiveEgressBypass([]*Host{isoHost}, sinks)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.PathType != "transitive-egress" || ce.Source != "i-iso" || ce.Destination != "i-sink" || ce.Port != 443 {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+	})
+}
+
+func TestGraph_findTransitiveEgressGated(t *testing.T) {
+	isoHost := &Host{ID: "i-iso", SGIDs: []string{"sg-iso"}}
+	gatedHost := &Host{ID: "i-gated", SGIDs: []string{"sg-gated"}}
+	gated := []egressCandidate{
+		{
+			host:   gatedHost,
+			route:  Route{Destination: "0.0.0.0/0", TargetType: "tgw", TargetID: "tgw-1"},
+			target: RouteTarget{Class: routeGated, Reason: "TGW route table not resolved", TargetID: "tgw-1"},
+		},
+	}
+
+	t.Run("handles nil receiver or empty candidates gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce := nilGraph.findTransitiveEgressGated([]*Host{isoHost}, gated); ce != nil {
+			t.Errorf("expected nil for nil graph, got %+v", ce)
+		}
+		g := &Graph{}
+		if ce := g.findTransitiveEgressGated(nil, gated); ce != nil {
+			t.Errorf("expected nil for nil isolated hosts, got %+v", ce)
+		}
+		if ce := g.findTransitiveEgressGated([]*Host{isoHost}, nil); ce != nil {
+			t.Errorf("expected nil for nil gated, got %+v", ce)
+		}
+	})
+
+	t.Run("returns counterexample when isolated host reaches gated target", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-iso": isoHost, "i-gated": gatedHost},
+			SGRules: map[string][]SGRule{
+				"sg-gated": {
+					{Direction: "ingress", Protocol: "tcp", Port: 80, SourceType: "sg", SourceValue: "sg-iso"},
+				},
+			},
+		}
+		ce := g.findTransitiveEgressGated([]*Host{isoHost}, gated)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.PathType != "gated-egress" || ce.Source != "i-iso" || ce.Destination != "i-gated" || ce.Port != 80 {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+	})
+}
+
+func TestNewGraph(t *testing.T) {
+	g := NewGraph()
+	if g == nil {
+		t.Fatal("expected non-nil Graph")
+	}
+	if g.Hosts == nil {
+		t.Error("Hosts map should be initialized")
+	}
+	if g.SGRules == nil {
+		t.Error("SGRules map should be initialized")
+	}
+	if g.Subnets == nil {
+		t.Error("Subnets map should be initialized")
+	}
+	if g.Routes == nil {
+		t.Error("Routes map should be initialized")
+	}
+	if g.Firewalls == nil {
+		t.Error("Firewalls map should be initialized")
+	}
+}
+
+func TestGraph_findRelayTransitiveSSHBypass(t *testing.T) {
+	prodHost := &Host{ID: "i-prod", SGIDs: []string{"sg-prod"}, Tags: map[string]string{"stave:environment": "production"}}
+	relayHost := &Host{ID: "i-relay", SGIDs: []string{"sg-relay"}, Tags: map[string]string{"stave:environment": "development"}}
+	internalHost := &Host{ID: "i-internal", SGIDs: []string{"sg-internal"}, Tags: map[string]string{"stave:environment": "development"}}
+	relayMatch := newRuleMatch("sg-prod", "sg:sg-relay", "sg-ref", 22)
+
+	t.Run("handles nil receiver or arguments gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if ce, reason := nilGraph.findRelayTransitiveSSHBypass(relayHost, prodHost, 22, relayMatch); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil graph, got %+v, %q", ce, reason)
+		}
+		g := NewGraph()
+		if ce, reason := g.findRelayTransitiveSSHBypass(nil, prodHost, 22, relayMatch); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil relay, got %+v, %q", ce, reason)
+		}
+		if ce, reason := g.findRelayTransitiveSSHBypass(relayHost, nil, 22, relayMatch); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil dst, got %+v, %q", ce, reason)
+		}
+		if ce, reason := g.findRelayTransitiveSSHBypass(relayHost, prodHost, 22, nil); ce != nil || reason != "" {
+			t.Errorf("expected nil for nil relayMatch, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("returns nil when relay has no ingress bypasses", func(t *testing.T) {
+		g := &Graph{
+			Hosts:   map[string]*Host{"i-prod": prodHost, "i-relay": relayHost},
+			SGRules: map[string][]SGRule{"sg-prod": {}, "sg-relay": {}},
+		}
+		if ce, reason := g.findRelayTransitiveSSHBypass(relayHost, prodHost, 22, relayMatch); ce != nil || reason != "" {
+			t.Errorf("expected nil when no bypasses, got %+v, %q", ce, reason)
+		}
+	})
+
+	t.Run("finds internet ingress bypass", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-relay": relayHost},
+			SGRules: map[string][]SGRule{
+				"sg-relay": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "cidr", SourceValue: "0.0.0.0/0"},
+				},
+			},
+		}
+		ce, reason := g.findRelayTransitiveSSHBypass(relayHost, prodHost, 22, relayMatch)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if reason != "Transitive SSH path exists — a non-bastion host reachable from the internet can relay SSH to production." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+
+	t.Run("finds internal host ingress bypass", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{"i-prod": prodHost, "i-relay": relayHost, "i-internal": internalHost},
+			SGRules: map[string][]SGRule{
+				"sg-relay": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-internal"},
+				},
+			},
+		}
+		ce, reason := g.findRelayTransitiveSSHBypass(relayHost, prodHost, 22, relayMatch)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if reason != "Transitive SSH path exists — a non-bastion host can relay SSH to production via an intermediate host." {
+			t.Errorf("unexpected reason: %q", reason)
+		}
+	})
+}
+
+func Test_formatPrefixed(t *testing.T) {
+	tests := []struct {
+		prefix string
+		value  string
+		want   string
+	}{
+		{"", "", ""},
+		{"nat", "", "nat"},
+		{"", "10.0.0.0/8", "10.0.0.0/8"},
+		{"sg", "sg-12345", "sg:sg-12345"},
+		{"nat", "nat-01", "nat:nat-01"},
+		{"cidr", "0.0.0.0/0", "cidr:0.0.0.0/0"},
+	}
+
+	for _, tc := range tests {
+		if got := formatPrefixed(tc.prefix, tc.value); got != tc.want {
+			t.Errorf("formatPrefixed(%q, %q) = %q, want %q", tc.prefix, tc.value, got, tc.want)
+		}
+	}
+}
+
+func TestHost_CanOriginateInternalSSHTo(t *testing.T) {
+	dst := &Host{ID: "i-dst", Tags: map[string]string{"stave:environment": "production"}}
+	prodSrc := &Host{ID: "i-prod-src", Tags: map[string]string{"stave:environment": "production"}}
+	devSrc := &Host{ID: "i-dev-src", Tags: map[string]string{"stave:environment": "development"}}
+	sameSrc := &Host{ID: "i-dst", Tags: map[string]string{"stave:environment": "development"}}
+
+	tests := []struct {
+		name string
+		src  *Host
+		dst  *Host
+		want bool
+	}{
+		{"nil receiver", nil, dst, false},
+		{"nil dst with dev src", devSrc, nil, true},
+		{"same host", sameSrc, dst, false},
+		{"production source", prodSrc, dst, false},
+		{"development source to production destination", devSrc, dst, true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.src.CanOriginateInternalSSHTo(tc.dst); got != tc.want {
+				t.Errorf("CanOriginateInternalSSHTo() = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSGRule_MatchesPort(t *testing.T) {
+	rule := SGRule{Port: 22}
+
+	if !rule.MatchesPort(22) {
+		t.Error("expected rule with port 22 to match 22")
+	}
+	if rule.MatchesPort(80) {
+		t.Error("expected rule with port 22 not to match 80")
+	}
+	if rule.MatchesPort(0) {
+		t.Error("expected rule with port 22 not to match 0")
+	}
+}
+
+func Test_newSSHPath(t *testing.T) {
+	p := newSSHPath("i-src", "i-dst", 22, "sg-ref", "sg-12345", "sg:sg-client")
+	if p.Source != "i-src" {
+		t.Errorf("Source = %q, want i-src", p.Source)
+	}
+	if p.Destination != "i-dst" {
+		t.Errorf("Destination = %q, want i-dst", p.Destination)
+	}
+	if p.Port != 22 {
+		t.Errorf("Port = %d, want 22", p.Port)
+	}
+	if p.PathType != "sg-ref" {
+		t.Errorf("PathType = %q, want sg-ref", p.PathType)
+	}
+	if p.RuleSG != "sg-12345" {
+		t.Errorf("RuleSG = %q, want sg-12345", p.RuleSG)
+	}
+	if p.RuleSource != "sg:sg-client" {
+		t.Errorf("RuleSource = %q, want sg:sg-client", p.RuleSource)
+	}
+}
+
+func TestGraph_findSubnetBypassingRoute(t *testing.T) {
+	sub := &Subnet{
+		ID:           "subnet-priv-1",
+		VPCID:        "vpc-1",
+		RouteTableID: "rt-1",
+		Tags:         map[string]string{"stave:subnet-type": "private"},
+	}
+
+	t.Run("handles nil receiver or nil subnet gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		if _, ok := nilGraph.findSubnetBypassingRoute(sub); ok {
+			t.Error("expected false for nil graph")
+		}
+		g := NewGraph()
+		if _, ok := g.findSubnetBypassingRoute(nil); ok {
+			t.Error("expected false for nil subnet")
+		}
+	})
+
+	t.Run("returns false when default route routes through firewall", func(t *testing.T) {
+		g := &Graph{
+			Subnets: map[string]*Subnet{"subnet-priv-1": sub},
+			Routes: map[string][]Route{
+				"rt-1": {
+					{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-fw"},
+				},
+			},
+			Firewalls: map[string]bool{"igw-fw": true},
+		}
+		if _, ok := g.findSubnetBypassingRoute(sub); ok {
+			t.Error("expected false when firewall protects default route")
+		}
+	})
+
+	t.Run("returns bypassing route when default route targets IGW without firewall", func(t *testing.T) {
+		bypassRoute := Route{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-bypass"}
+		g := &Graph{
+			Subnets: map[string]*Subnet{"subnet-priv-1": sub},
+			Routes: map[string][]Route{
+				"rt-1": {bypassRoute},
+			},
+			Firewalls: map[string]bool{"igw-fw": true},
+		}
+		route, ok := g.findSubnetBypassingRoute(sub)
+		if !ok {
+			t.Fatal("expected true when default route bypasses firewall")
+		}
+		if route.TargetID != "igw-bypass" {
+			t.Errorf("TargetID = %q, want igw-bypass", route.TargetID)
+		}
+	})
+}
+
+func TestHost_SafeID(t *testing.T) {
+	t.Run("returns empty string for nil host", func(t *testing.T) {
+		var nilHost *Host
+		if id := nilHost.SafeID(); id != "" {
+			t.Errorf("nilHost.SafeID() = %q, want empty string", id)
+		}
+	})
+
+	t.Run("returns ID for non-nil host", func(t *testing.T) {
+		h := &Host{ID: "i-0987654321"}
+		if id := h.SafeID(); id != "i-0987654321" {
+			t.Errorf("h.SafeID() = %q, want i-0987654321", id)
+		}
+	})
+}
+
+func Test_hostIdentity(t *testing.T) {
+	t.Run("returns empty strings for nil host", func(t *testing.T) {
+		id, vpc := hostIdentity(nil)
+		if id != "" || vpc != "" {
+			t.Errorf("hostIdentity(nil) = (%q, %q), want empty strings", id, vpc)
+		}
+	})
+
+	t.Run("returns ID and VPCID for non-nil host", func(t *testing.T) {
+		h := &Host{ID: "i-012345", VPCID: "vpc-abcdef"}
+		id, vpc := hostIdentity(h)
+		if id != "i-012345" {
+			t.Errorf("id = %q, want i-012345", id)
+		}
+		if vpc != "vpc-abcdef" {
+			t.Errorf("vpc = %q, want vpc-abcdef", vpc)
+		}
+	})
+}
+
+func TestGraph_findCrossVPCDatabaseBypass(t *testing.T) {
+	t.Run("handles nil receiver or nil dst gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		dst := &Host{ID: "db-1", VPCID: "vpc-db"}
+		if ce, reason := nilGraph.findCrossVPCDatabaseBypass(dst); ce != nil || reason != "" {
+			t.Error("expected nil for nil graph")
+		}
+		g := NewGraph()
+		if ce, reason := g.findCrossVPCDatabaseBypass(nil); ce != nil || reason != "" {
+			t.Error("expected nil for nil dst")
+		}
+	})
+
+	t.Run("detects cross-vpc bypass", func(t *testing.T) {
+		g := BuildGraph([]asset.Snapshot{databaseExposedSnapshot()})
+		dbHosts := g.DatabaseHosts()
+		if len(dbHosts) == 0 {
+			t.Fatal("expected database hosts")
+		}
+		ce, reason := g.findCrossVPCDatabaseBypass(dbHosts[0])
+		if ce == nil {
+			t.Fatal("expected cross-vpc counterexample")
+		}
+		if ce.PathType != "cross-vpc" {
+			t.Errorf("PathType = %q, want cross-vpc", ce.PathType)
+		}
+		if reason == "" {
+			t.Error("expected non-empty reason")
+		}
+	})
+}
+
+func TestGraph_findCrossVPCHostBypass(t *testing.T) {
+	t.Run("handles nil receiver, nil src, or nil dst gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		src := &Host{ID: "src-1", VPCID: "vpc-app"}
+		dst := &Host{ID: "db-1", VPCID: "vpc-db"}
+		if ce, reason := nilGraph.findCrossVPCHostBypass(src, dst); ce != nil || reason != "" {
+			t.Error("expected nil for nil graph")
+		}
+		g := NewGraph()
+		if ce, reason := g.findCrossVPCHostBypass(nil, dst); ce != nil || reason != "" {
+			t.Error("expected nil for nil src")
+		}
+		if ce, reason := g.findCrossVPCHostBypass(src, nil); ce != nil || reason != "" {
+			t.Error("expected nil for nil dst")
+		}
+	})
+
+	t.Run("returns nil when src is internal to dst", func(t *testing.T) {
+		g := NewGraph()
+		src := &Host{ID: "db-replica", VPCID: "vpc-db"}
+		dst := &Host{ID: "db-primary", VPCID: "vpc-db"}
+		if ce, reason := g.findCrossVPCHostBypass(src, dst); ce != nil || reason != "" {
+			t.Errorf("expected nil for internal hosts, got ce=%v, reason=%q", ce, reason)
+		}
+	})
+
+	t.Run("detects cross-vpc reachability to database host", func(t *testing.T) {
+		g := BuildGraph([]asset.Snapshot{databaseExposedSnapshot()})
+		dbHosts := g.DatabaseHosts()
+		if len(dbHosts) == 0 {
+			t.Fatal("expected database hosts")
+		}
+		dst := dbHosts[0]
+		var found bool
+		for _, src := range g.allHosts() {
+			if ce, reason := g.findCrossVPCHostBypass(src, dst); ce != nil {
+				found = true
+				if ce.PathType != "cross-vpc" {
+					t.Errorf("PathType = %q, want cross-vpc", ce.PathType)
+				}
+				if ce.Destination != dst.ID {
+					t.Errorf("Destination = %q, want %q", ce.Destination, dst.ID)
+				}
+				if reason == "" {
+					t.Error("expected non-empty reason")
+				}
+				break
+			}
+		}
+		if !found {
+			t.Fatal("expected to find cross-vpc host bypass in exposed snapshot")
+		}
+	})
+
+	t.Run("returns nil when no reachability exists between cross-vpc hosts", func(t *testing.T) {
+		g := NewGraph()
+		src := &Host{ID: "app-1", VPCID: "vpc-app", SGIDs: []string{"sg-app"}}
+		dst := &Host{ID: "db-1", VPCID: "vpc-db", SGIDs: []string{"sg-db"}}
+		g.Hosts[src.ID] = src
+		g.Hosts[dst.ID] = dst
+		// No security group rules permitting access
+		if ce, reason := g.findCrossVPCHostBypass(src, dst); ce != nil || reason != "" {
+			t.Errorf("expected nil when no reachability exists, got ce=%v, reason=%q", ce, reason)
+		}
+	})
+}
+
+func TestGraph_findInternetDatabaseBypass(t *testing.T) {
+	t.Run("handles nil receiver or nil dst gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		dst := &Host{ID: "db-1", VPCID: "vpc-db"}
+		if ce, reason := nilGraph.findInternetDatabaseBypass(dst); ce != nil || reason != "" {
+			t.Error("expected nil for nil graph")
+		}
+		g := NewGraph()
+		if ce, reason := g.findInternetDatabaseBypass(nil); ce != nil || reason != "" {
+			t.Error("expected nil for nil dst")
+		}
+	})
+
+	t.Run("detects internet bypass", func(t *testing.T) {
+		g := BuildGraph([]asset.Snapshot{databaseExternalIngressSnapshot()})
+		dbHosts := g.DatabaseHosts()
+		if len(dbHosts) == 0 {
+			t.Fatal("expected database hosts")
+		}
+		ce, reason := g.findInternetDatabaseBypass(dbHosts[0])
+		if ce == nil {
+			t.Fatal("expected internet ingress counterexample")
+		}
+		if ce.PathType != "external" {
+			t.Errorf("PathType = %q, want external", ce.PathType)
+		}
+		if reason == "" {
+			t.Error("expected non-empty reason")
+		}
+	})
+}
+
+func TestGraph_hostEgressCandidate(t *testing.T) {
+	t.Run("handles nil receiver or nil host gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		h := &Host{ID: "h-1", SubnetID: "sub-1"}
+		if _, ok := nilGraph.hostEgressCandidate(h); ok {
+			t.Error("expected false for nil graph")
+		}
+		g := NewGraph()
+		if _, ok := g.hostEgressCandidate(nil); ok {
+			t.Error("expected false for nil host")
+		}
+	})
+
+	t.Run("returns false for isolated host", func(t *testing.T) {
+		g := NewGraph()
+		h := &Host{ID: "h-iso", Tags: map[string]string{"stave:network-zone": "isolated"}}
+		if _, ok := g.hostEgressCandidate(h); ok {
+			t.Error("expected false for isolated host")
+		}
+	})
+
+	t.Run("returns false when host has no route table", func(t *testing.T) {
+		g := NewGraph()
+		h := &Host{ID: "h-noroute", SubnetID: "sub-noroute"}
+		g.Hosts[h.ID] = h
+		g.Subnets["sub-noroute"] = &Subnet{ID: "sub-noroute"}
+		if _, ok := g.hostEgressCandidate(h); ok {
+			t.Error("expected false for host without route table")
+		}
+	})
+
+	t.Run("returns false when host only has local default route", func(t *testing.T) {
+		g := NewGraph()
+		h := &Host{ID: "h-local", SubnetID: "sub-local"}
+		g.Hosts[h.ID] = h
+		g.Subnets["sub-local"] = &Subnet{ID: "sub-local", RouteTableID: "rt-local"}
+		g.Routes["rt-local"] = []Route{
+			{Destination: "0.0.0.0/0", TargetType: "local", TargetID: "local"},
+		}
+		if _, ok := g.hostEgressCandidate(h); ok {
+			t.Error("expected false for local-only route target")
+		}
+	})
+
+	t.Run("returns sink candidate when host has NAT default route", func(t *testing.T) {
+		g := NewGraph()
+		h := &Host{ID: "h-nat", SubnetID: "sub-nat"}
+		g.Hosts[h.ID] = h
+		g.Subnets["sub-nat"] = &Subnet{ID: "sub-nat", RouteTableID: "rt-nat"}
+		g.Routes["rt-nat"] = []Route{
+			{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-01"},
+		}
+		c, ok := g.hostEgressCandidate(h)
+		if !ok {
+			t.Fatal("expected true for host with NAT default route")
+		}
+		if !c.target.IsSink() {
+			t.Error("expected candidate target to be a sink")
+		}
+		if c.host.ID != "h-nat" {
+			t.Errorf("host.ID = %q, want h-nat", c.host.ID)
+		}
+	})
+
+	t.Run("returns gated candidate when host has TGW default route", func(t *testing.T) {
+		g := NewGraph()
+		h := &Host{ID: "h-tgw", SubnetID: "sub-tgw"}
+		g.Hosts[h.ID] = h
+		g.Subnets["sub-tgw"] = &Subnet{ID: "sub-tgw", RouteTableID: "rt-tgw"}
+		g.Routes["rt-tgw"] = []Route{
+			{Destination: "0.0.0.0/0", TargetType: "tgw", TargetID: "tgw-01"},
+		}
+		c, ok := g.hostEgressCandidate(h)
+		if !ok {
+			t.Fatal("expected true for host with TGW default route")
+		}
+		if !c.target.IsGated() {
+			t.Error("expected candidate target to be gated")
+		}
+	})
+}
+
+func TestGraph_enumerateHostSSHPaths(t *testing.T) {
+	t.Run("handles nil receiver or nil dst gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		dst := &Host{ID: "i-dst"}
+		if paths := nilGraph.enumerateHostSSHPaths(dst, 22); paths != nil {
+			t.Errorf("enumerateHostSSHPaths on nil graph = %v, want nil", paths)
+		}
+		g := NewGraph()
+		if paths := g.enumerateHostSSHPaths(nil, 22); paths != nil {
+			t.Errorf("enumerateHostSSHPaths with nil dst = %v, want nil", paths)
+		}
+	})
+
+	t.Run("enumerates paths for host in bypassed snapshot", func(t *testing.T) {
+		g := BuildGraph([]asset.Snapshot{bastionBypassedSnapshot()})
+		prodHosts := g.ProductionHosts()
+		if len(prodHosts) == 0 {
+			t.Fatal("expected production hosts in bypassed snapshot")
+		}
+		paths := g.enumerateHostSSHPaths(prodHosts[0], 22)
+		if len(paths) == 0 {
+			t.Fatal("expected at least one SSH path for bypassed production host")
+		}
+	})
+
+	t.Run("returns empty slice when host has no paths", func(t *testing.T) {
+		g := NewGraph()
+		h := &Host{ID: "i-isolated", VPCID: "vpc-1"}
+		g.Hosts[h.ID] = h
+		paths := g.enumerateHostSSHPaths(h, 22)
+		if len(paths) != 0 {
+			t.Errorf("enumerateHostSSHPaths = %v, want empty", paths)
+		}
+	})
+}
+
+func TestGraph_findInternalSSHPath(t *testing.T) {
+	t.Run("handles nil receiver or nil hosts gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		src := &Host{ID: "i-src"}
+		dst := &Host{ID: "i-dst"}
+		if _, ok := nilGraph.findInternalSSHPath(src, dst, 22); ok {
+			t.Error("expected false for nil graph")
+		}
+		g := NewGraph()
+		if _, ok := g.findInternalSSHPath(nil, dst, 22); ok {
+			t.Error("expected false for nil src")
+		}
+		if _, ok := g.findInternalSSHPath(src, nil, 22); ok {
+			t.Error("expected false for nil dst")
+		}
+	})
+
+	t.Run("returns false when src cannot originate to dst", func(t *testing.T) {
+		g := NewGraph()
+		src := &Host{ID: "i-prod1", Tags: map[string]string{"stave:environment": "production"}}
+		dst := &Host{ID: "i-prod2", Tags: map[string]string{"stave:environment": "production"}}
+		if _, ok := g.findInternalSSHPath(src, dst, 22); ok {
+			t.Error("expected false when src cannot originate to dst")
+		}
+	})
+
+	t.Run("returns authorized path when reachability exists", func(t *testing.T) {
+		src := &Host{ID: "i-dev", VPCID: "vpc-1", SGIDs: []string{"sg-dev"}, Tags: map[string]string{"stave:environment": "development"}}
+		dst := &Host{ID: "i-prod", VPCID: "vpc-1", SGIDs: []string{"sg-prod"}, Tags: map[string]string{"stave:environment": "production"}}
+		g := &Graph{
+			Hosts: map[string]*Host{"i-dev": src, "i-prod": dst},
+			SGRules: map[string][]SGRule{
+				"sg-prod": {
+					{Direction: "ingress", Protocol: "tcp", Port: 22, SourceType: "sg", SourceValue: "sg-dev"},
+				},
+			},
+		}
+		path, ok := g.findInternalSSHPath(src, dst, 22)
+		if !ok {
+			t.Fatal("expected authorized internal SSH path")
+		}
+		if path.Source != "i-dev" || path.Destination != "i-prod" {
+			t.Errorf("path = %+v, want source i-dev, dest i-prod", path)
+		}
+		if path.Port != 22 {
+			t.Errorf("path.Port = %d, want 22", path.Port)
+		}
+	})
+}
+
+func TestGraph_findExternalSSHPath(t *testing.T) {
+	t.Run("handles nil receiver, nil dst, or nil match gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		dst := &Host{ID: "i-dst"}
+		match := newRuleMatch("sg-1", "0.0.0.0/0", "external", 22)
+		if _, ok := nilGraph.findExternalSSHPath(dst, match); ok {
+			t.Error("expected false for nil graph")
+		}
+		g := NewGraph()
+		if _, ok := g.findExternalSSHPath(nil, match); ok {
+			t.Error("expected false for nil dst")
+		}
+		if _, ok := g.findExternalSSHPath(dst, nil); ok {
+			t.Error("expected false for nil match")
+		}
+	})
+
+	t.Run("converts rule match into external SSHPath", func(t *testing.T) {
+		g := NewGraph()
+		dst := &Host{ID: "i-prod-01"}
+		match := newRuleMatch("sg-prod", "0.0.0.0/0", "external", 22)
+		path, ok := g.findExternalSSHPath(dst, match)
+		if !ok {
+			t.Fatal("expected ok = true")
+		}
+		if path.Source != "0.0.0.0/0" {
+			t.Errorf("Source = %q, want 0.0.0.0/0", path.Source)
+		}
+		if path.Destination != "i-prod-01" {
+			t.Errorf("Destination = %q, want i-prod-01", path.Destination)
+		}
+		if path.Port != 22 {
+			t.Errorf("Port = %d, want 22", path.Port)
+		}
+		if path.PathType != "external" {
+			t.Errorf("PathType = %q, want external", path.PathType)
+		}
+	})
+}
+
+func Test_egressCandidatePartition(t *testing.T) {
+	t.Run("zero value partition IsEmpty reports true", func(t *testing.T) {
+		var p egressCandidatePartition
+		if !p.IsEmpty() {
+			t.Error("expected IsEmpty() == true for zero value partition")
+		}
+	})
+
+	t.Run("partition with sinks only IsEmpty reports false", func(t *testing.T) {
+		p := egressCandidatePartition{
+			sinks: []egressCandidate{{host: &Host{ID: "i-sink"}}},
+		}
+		if p.IsEmpty() {
+			t.Error("expected IsEmpty() == false when sinks exist")
+		}
+	})
+
+	t.Run("partition with gated only IsEmpty reports false", func(t *testing.T) {
+		p := egressCandidatePartition{
+			gated: []egressCandidate{{host: &Host{ID: "i-gated"}}},
+		}
+		if p.IsEmpty() {
+			t.Error("expected IsEmpty() == false when gated candidates exist")
+		}
+	})
+
+	t.Run("partition with both sinks and gated IsEmpty reports false", func(t *testing.T) {
+		p := egressCandidatePartition{
+			sinks: []egressCandidate{{host: &Host{ID: "i-sink"}}},
+			gated: []egressCandidate{{host: &Host{ID: "i-gated"}}},
+		}
+		if p.IsEmpty() {
+			t.Error("expected IsEmpty() == false when sinks and gated candidates exist")
+		}
+	})
+
+	t.Run("nil graph findEgressCandidates returns empty partition", func(t *testing.T) {
+		var nilGraph *Graph
+		p := nilGraph.findEgressCandidates()
+		if !p.IsEmpty() {
+			t.Errorf("expected empty partition for nil graph, got %+v", p)
+		}
+	})
+
+	t.Run("populates sinks and gated according to route target classification", func(t *testing.T) {
+		g := NewGraph()
+		// Host 1: default route to igw (sink)
+		g.Hosts["i-sink"] = &Host{ID: "i-sink", SubnetID: "sub-igw"}
+		g.Subnets["sub-igw"] = &Subnet{ID: "sub-igw", RouteTableID: "rtb-igw"}
+		g.Routes["rtb-igw"] = []Route{
+			{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-1"},
+		}
+
+		// Host 2: default route to tgw (gated)
+		g.Hosts["i-gated"] = &Host{ID: "i-gated", SubnetID: "sub-tgw"}
+		g.Subnets["sub-tgw"] = &Subnet{ID: "sub-tgw", RouteTableID: "rtb-tgw"}
+		g.Routes["rtb-tgw"] = []Route{
+			{Destination: "0.0.0.0/0", TargetType: "tgw", TargetID: "tgw-1"},
+		}
+
+		// Host 3: isolated host (should be skipped)
+		g.Hosts["i-iso"] = &Host{
+			ID:       "i-iso",
+			SubnetID: "sub-igw",
+			Tags:     map[string]string{"stave:network-zone": "isolated"},
+		}
+
+		p := g.findEgressCandidates()
+		if p.IsEmpty() {
+			t.Fatal("expected non-empty candidate partition")
+		}
+		if len(p.sinks) != 1 || p.sinks[0].host.ID != "i-sink" {
+			t.Errorf("expected 1 sink (i-sink), got %+v", p.sinks)
+		}
+		if len(p.gated) != 1 || p.gated[0].host.ID != "i-gated" {
+			t.Errorf("expected 1 gated (i-gated), got %+v", p.gated)
+		}
+	})
 }
