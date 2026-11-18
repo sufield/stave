@@ -1,7 +1,9 @@
 package prove
 
 import (
+	"context"
 	"fmt"
+	"io"
 
 	"github.com/spf13/cobra"
 
@@ -13,13 +15,16 @@ func run(cmd *cobra.Command, o *options) error {
 	if err != nil {
 		return err
 	}
+	return executeAndRender(cmd.Context(), cmd.OutOrStdout(), o.ToConfig(), renderer)
+}
 
-	result, err := stave.NetworkProve(cmd.Context(), o.ToConfig())
+func executeAndRender(ctx context.Context, w io.Writer, cfg stave.NetworkProveConfig, r Renderer) error {
+	result, err := stave.NetworkProve(ctx, cfg)
 	if err != nil {
 		return fmt.Errorf("network prove: %w", err)
 	}
 
-	if err := renderer.Render(cmd.OutOrStdout(), result); err != nil {
+	if err := r.Render(w, result); err != nil {
 		return fmt.Errorf("render output: %w", err)
 	}
 	return nil

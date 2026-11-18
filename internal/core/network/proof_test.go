@@ -6397,5 +6397,431 @@ func TestSubnet_IsPrivate(t *testing.T) {
 	})
 }
 
+func Test_newTransitiveInternetBypassCounterexample(t *testing.T) {
+	relay := &Host{ID: "i-relay"}
+	dst := &Host{ID: "i-prod"}
+	match := &RuleMatch{RuleSource: "0.0.0.0/0"}
+	relayMatch := &RuleMatch{SecurityGroupID: "sg-prod", RuleSource: "sg:sg-relay", PathType: "sg-ref", Port: 22}
+
+	t.Run("returns nil on nil arguments", func(t *testing.T) {
+		if ce := newTransitiveInternetBypassCounterexample(nil, dst, 22, match, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil relay, got %+v", ce)
+		}
+		if ce := newTransitiveInternetBypassCounterexample(relay, nil, 22, match, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil dst, got %+v", ce)
+		}
+		if ce := newTransitiveInternetBypassCounterexample(relay, dst, 22, nil, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil match, got %+v", ce)
+		}
+		if ce := newTransitiveInternetBypassCounterexample(relay, dst, 22, match, nil); ce != nil {
+			t.Errorf("expected nil for nil relayMatch, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with two-hop internet path", func(t *testing.T) {
+		ce := newTransitiveInternetBypassCounterexample(relay, dst, 22, match, relayMatch)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "0.0.0.0/0 -> i-relay" || ce.Destination != "i-prod" || ce.PathType != "transitive" || ce.Port != 22 {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+		if !strings.Contains(ce.Explanation, "Host i-relay is SSH-accessible from the internet and can reach production host i-prod") {
+			t.Errorf("unexpected explanation: %q", ce.Explanation)
+		}
+		if !strings.Contains(ce.Remediation, "Remove SSH ingress from 0.0.0.0/0 on i-relay or remove its access to production host i-prod.") {
+			t.Errorf("unexpected remediation: %q", ce.Remediation)
+		}
+	})
+}
+
+func Test_newTransitiveInternalBypassCounterexample(t *testing.T) {
+	src := &Host{ID: "i-src"}
+	relay := &Host{ID: "i-relay"}
+	dst := &Host{ID: "i-prod"}
+	match := &RuleMatch{SecurityGroupID: "sg-relay", RuleSource: "10.0.0.0/16", PathType: "vpc-peering", Port: 22}
+	relayMatch := &RuleMatch{SecurityGroupID: "sg-prod", RuleSource: "sg:sg-relay", PathType: "sg-ref", Port: 22}
+
+	t.Run("returns nil on nil arguments", func(t *testing.T) {
+		if ce := newTransitiveInternalBypassCounterexample(nil, relay, dst, 22, match, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil src, got %+v", ce)
+		}
+		if ce := newTransitiveInternalBypassCounterexample(src, nil, dst, 22, match, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil relay, got %+v", ce)
+		}
+		if ce := newTransitiveInternalBypassCounterexample(src, relay, nil, 22, match, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil dst, got %+v", ce)
+		}
+		if ce := newTransitiveInternalBypassCounterexample(src, relay, dst, 22, nil, relayMatch); ce != nil {
+			t.Errorf("expected nil for nil match, got %+v", ce)
+		}
+		if ce := newTransitiveInternalBypassCounterexample(src, relay, dst, 22, match, nil); ce != nil {
+			t.Errorf("expected nil for nil relayMatch, got %+v", ce)
+		}
+	})
+
+	t.Run("formats counterexample with two-hop internal path", func(t *testing.T) {
+		ce := newTransitiveInternalBypassCounterexample(src, relay, dst, 22, match, relayMatch)
+		if ce == nil {
+			t.Fatal("expected non-nil counterexample")
+		}
+		if ce.Source != "i-src -> i-relay" || ce.Destination != "i-prod" || ce.PathType != "transitive" || ce.Port != 22 {
+			t.Errorf("unexpected counterexample: %+v", ce)
+		}
+		if !strings.Contains(ce.Explanation, "Host i-src can reach i-relay, which can reach production host i-prod") {
+			t.Errorf("unexpected explanation: %q", ce.Explanation)
+		}
+		if !strings.Contains(ce.Remediation, "Remove SSH access from i-src to i-relay or from i-relay to production host i-prod.") {
+			t.Errorf("unexpected remediation: %q", ce.Remediation)
+		}
+	})
+}
+
+func TestSupportedProperties(t *testing.T) {
+	expected := []string{
+		"bastion-ssh",
+		"prod-dev-isolation",
+		"database-isolation",
+		"firewall-mandatory",
+		"transitive-ssh",
+		"transitive-egress",
+	}
+	if len(SupportedProperties) != len(expected) {
+		t.Fatalf("len(SupportedProperties) = %d, want %d", len(SupportedProperties), len(expected))
+	}
+	for i, p := range expected {
+		if SupportedProperties[i] != p {
+			t.Errorf("SupportedProperties[%d] = %q, want %q", i, SupportedProperties[i], p)
+		}
+	}
+}
+
+func TestGraph_HasFirewall(t *testing.T) {
+	t.Run("nil graph returns false", func(t *testing.T) {
+		var nilGraph *Graph
+		if nilGraph.HasFirewall("vpce-123") {
+			t.Error("nilGraph.HasFirewall() should be false")
+		}
+	})
+
+	t.Run("nil Firewalls map returns false", func(t *testing.T) {
+		g := &Graph{}
+		if g.HasFirewall("vpce-123") {
+			t.Error("g.HasFirewall() should be false when map is nil")
+		}
+	})
+
+	t.Run("empty targetID returns false", func(t *testing.T) {
+		g := &Graph{Firewalls: map[string]bool{"vpce-123": true}}
+		if g.HasFirewall("") {
+			t.Error("g.HasFirewall(\"\") should be false")
+		}
+	})
+
+	t.Run("returns true when firewall exists", func(t *testing.T) {
+		g := &Graph{Firewalls: map[string]bool{"vpce-123": true}}
+		if !g.HasFirewall("vpce-123") {
+			t.Error("expected true for existing firewall")
+		}
+		if g.HasFirewall("vpce-other") {
+			t.Error("expected false for missing firewall")
+		}
+	})
+}
+
+func TestGraph_FirewallCount(t *testing.T) {
+	t.Run("nil graph returns 0", func(t *testing.T) {
+		var nilGraph *Graph
+		if nilGraph.FirewallCount() != 0 {
+			t.Errorf("nilGraph.FirewallCount() = %d, want 0", nilGraph.FirewallCount())
+		}
+	})
+
+	t.Run("returns count of firewall endpoints", func(t *testing.T) {
+		g := &Graph{Firewalls: map[string]bool{"vpce-1": true, "vpce-2": true}}
+		if g.FirewallCount() != 2 {
+			t.Errorf("g.FirewallCount() = %d, want 2", g.FirewallCount())
+		}
+	})
+}
+
+func TestCounterexample_IsDirectIGW(t *testing.T) {
+	t.Run("nil counterexample returns false", func(t *testing.T) {
+		var nilCE *Counterexample
+		if nilCE.IsDirectIGW() {
+			t.Error("nilCE.IsDirectIGW() should be false")
+		}
+	})
+
+	t.Run("non-direct-igw path returns false", func(t *testing.T) {
+		ce := &Counterexample{PathType: "ingress"}
+		if ce.IsDirectIGW() {
+			t.Error("expected false for ingress path type")
+		}
+	})
+
+	t.Run("direct-igw path returns true", func(t *testing.T) {
+		ce := &Counterexample{PathType: "direct-igw"}
+		if !ce.IsDirectIGW() {
+			t.Error("expected true for direct-igw path type")
+		}
+	})
+}
+
+func TestProofResult_Predicates(t *testing.T) {
+	t.Run("nil result returns false for all predicates", func(t *testing.T) {
+		var nilRes *ProofResult
+		if nilRes.IsSAT() {
+			t.Error("nilRes.IsSAT() should be false")
+		}
+		if nilRes.IsUNSAT() {
+			t.Error("nilRes.IsUNSAT() should be false")
+		}
+		if nilRes.IsEvidenceGated() {
+			t.Error("nilRes.IsEvidenceGated() should be false")
+		}
+	})
+
+	t.Run("SAT result", func(t *testing.T) {
+		r := &ProofResult{Result: "SAT"}
+		if !r.IsSAT() {
+			t.Error("expected IsSAT() to be true")
+		}
+		if r.IsUNSAT() {
+			t.Error("expected IsUNSAT() to be false")
+		}
+		if r.IsEvidenceGated() {
+			t.Error("expected IsEvidenceGated() to be false")
+		}
+	})
+
+	t.Run("UNSAT result", func(t *testing.T) {
+		r := &ProofResult{Result: "UNSAT"}
+		if r.IsSAT() {
+			t.Error("expected IsSAT() to be false")
+		}
+		if !r.IsUNSAT() {
+			t.Error("expected IsUNSAT() to be true")
+		}
+		if r.IsEvidenceGated() {
+			t.Error("expected IsEvidenceGated() to be false")
+		}
+	})
+
+	t.Run("EVIDENCE_GATED result", func(t *testing.T) {
+		r := &ProofResult{Result: "EVIDENCE_GATED"}
+		if r.IsSAT() {
+			t.Error("expected IsSAT() to be false")
+		}
+		if r.IsUNSAT() {
+			t.Error("expected IsUNSAT() to be false")
+		}
+		if !r.IsEvidenceGated() {
+			t.Error("expected IsEvidenceGated() to be true")
+		}
+	})
+}
+
+func TestGraph_SubnetQueries(t *testing.T) {
+	t.Run("nil graph returns zero counts and nil subnet", func(t *testing.T) {
+		var nilGraph *Graph
+		if nilGraph.HostCount() != 0 {
+			t.Errorf("nilGraph.HostCount() = %d, want 0", nilGraph.HostCount())
+		}
+		if nilGraph.SubnetCount() != 0 {
+			t.Errorf("nilGraph.SubnetCount() = %d, want 0", nilGraph.SubnetCount())
+		}
+		if nilGraph.Subnet("sub-1") != nil {
+			t.Error("nilGraph.Subnet() should return nil")
+		}
+		if nilGraph.PrivateSubnets() != nil {
+			t.Error("nilGraph.PrivateSubnets() should return nil")
+		}
+	})
+
+	t.Run("populated graph returns counts and lookup", func(t *testing.T) {
+		s1 := &Subnet{ID: "sub-1", Tags: map[string]string{"stave:subnet-type": "private"}}
+		s2 := &Subnet{ID: "sub-2", Tags: map[string]string{"stave:subnet-type": "public"}}
+		h1 := &Host{ID: "host-1", SubnetID: "sub-1"}
+		g := &Graph{
+			Hosts:   map[string]*Host{"host-1": h1},
+			Subnets: map[string]*Subnet{"sub-1": s1, "sub-2": s2},
+		}
+
+		if g.HostCount() != 1 {
+			t.Errorf("g.HostCount() = %d, want 1", g.HostCount())
+		}
+		if g.SubnetCount() != 2 {
+			t.Errorf("g.SubnetCount() = %d, want 2", g.SubnetCount())
+		}
+		if g.Subnet("sub-1") != s1 {
+			t.Errorf("g.Subnet(\"sub-1\") = %v, want %v", g.Subnet("sub-1"), s1)
+		}
+		if g.Subnet("") != nil {
+			t.Error("g.Subnet(\"\") should return nil")
+		}
+		if g.Subnet("sub-missing") != nil {
+			t.Error("g.Subnet(\"sub-missing\") should return nil")
+		}
+		if len(g.PrivateSubnets()) != 1 {
+			t.Errorf("len(g.PrivateSubnets()) = %d, want 1", len(g.PrivateSubnets()))
+		}
+	})
+}
+
+func TestHost_VPCAndSubnetPredicates(t *testing.T) {
+	t.Run("nil host", func(t *testing.T) {
+		var nilHost *Host
+		if nilHost.HasVPC() {
+			t.Error("nilHost.HasVPC() should be false")
+		}
+		if nilHost.HasSubnet() {
+			t.Error("nilHost.HasSubnet() should be false")
+		}
+	})
+
+	t.Run("empty fields", func(t *testing.T) {
+		h := &Host{ID: "host-1"}
+		if h.HasVPC() {
+			t.Error("h.HasVPC() should be false for empty VPCID")
+		}
+		if h.HasSubnet() {
+			t.Error("h.HasSubnet() should be false for empty SubnetID")
+		}
+	})
+
+	t.Run("populated fields", func(t *testing.T) {
+		h := &Host{ID: "host-1", VPCID: "vpc-1", SubnetID: "sub-1"}
+		if !h.HasVPC() {
+			t.Error("expected HasVPC() to be true")
+		}
+		if !h.HasSubnet() {
+			t.Error("expected HasSubnet() to be true")
+		}
+	})
+}
+
+func TestRoute_TargetTypePredicates(t *testing.T) {
+	t.Run("NAT gateway route", func(t *testing.T) {
+		r := Route{TargetType: "nat"}
+		if !r.IsNATGateway() {
+			t.Error("expected IsNATGateway() to be true")
+		}
+		if r.IsLocal() {
+			t.Error("expected IsLocal() to be false")
+		}
+	})
+
+	t.Run("Local route", func(t *testing.T) {
+		r := Route{TargetType: "local"}
+		if !r.IsLocal() {
+			t.Error("expected IsLocal() to be true")
+		}
+		if r.IsNATGateway() {
+			t.Error("expected IsNATGateway() to be false")
+		}
+	})
+}
+
+func TestGraph_RouteCountForSubnet(t *testing.T) {
+	t.Run("nil graph or subnet returns 0 and false", func(t *testing.T) {
+		var nilGraph *Graph
+		if nilGraph.RouteCountForSubnet(&Subnet{RouteTableID: "rt-1"}) != 0 {
+			t.Error("nilGraph.RouteCountForSubnet() should be 0")
+		}
+		if nilGraph.HasRoutes(&Subnet{RouteTableID: "rt-1"}) {
+			t.Error("nilGraph.HasRoutes() should be false")
+		}
+
+		g := &Graph{Routes: map[string][]Route{"rt-1": {{Destination: "0.0.0.0/0"}}}}
+		if g.RouteCountForSubnet(nil) != 0 {
+			t.Error("g.RouteCountForSubnet(nil) should be 0")
+		}
+		if g.HasRoutes(nil) {
+			t.Error("g.HasRoutes(nil) should be false")
+		}
+	})
+
+	t.Run("subnet without route table returns 0", func(t *testing.T) {
+		g := &Graph{}
+		sub := &Subnet{ID: "sub-1"}
+		if g.RouteCountForSubnet(sub) != 0 {
+			t.Errorf("g.RouteCountForSubnet() = %d, want 0", g.RouteCountForSubnet(sub))
+		}
+		if g.HasRoutes(sub) {
+			t.Error("g.HasRoutes() should be false")
+		}
+	})
+
+	t.Run("subnet with routes returns count and true", func(t *testing.T) {
+		g := &Graph{
+			Routes: map[string][]Route{
+				"rt-1": {
+					{Destination: "10.0.0.0/16", TargetType: "local"},
+					{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-1"},
+				},
+			},
+		}
+		sub := &Subnet{ID: "sub-1", RouteTableID: "rt-1"}
+		if g.RouteCountForSubnet(sub) != 2 {
+			t.Errorf("g.RouteCountForSubnet() = %d, want 2", g.RouteCountForSubnet(sub))
+		}
+		if !g.HasRoutes(sub) {
+			t.Error("g.HasRoutes() should be true")
+		}
+	})
+}
+
+func Test_egressCandidatePartition_CountsAndAdd(t *testing.T) {
+	t.Run("empty partition", func(t *testing.T) {
+		var p egressCandidatePartition
+		if !p.IsEmpty() {
+			t.Error("expected IsEmpty() to be true")
+		}
+		if p.SinkCount() != 0 {
+			t.Errorf("SinkCount() = %d, want 0", p.SinkCount())
+		}
+		if p.GatedCount() != 0 {
+			t.Errorf("GatedCount() = %d, want 0", p.GatedCount())
+		}
+		if p.Total() != 0 {
+			t.Errorf("Total() = %d, want 0", p.Total())
+		}
+	})
+
+	t.Run("adding sink and gated candidates", func(t *testing.T) {
+		var p egressCandidatePartition
+		c1 := egressCandidate{
+			host:   &Host{ID: "host-sink"},
+			route:  Route{TargetType: "igw"},
+			target: RouteTarget{Class: routeSink},
+		}
+		c2 := egressCandidate{
+			host:   &Host{ID: "host-gated"},
+			route:  Route{TargetType: "tgw"},
+			target: RouteTarget{Class: routeGated},
+		}
+
+		p.add(c1)
+		p.add(c2)
+
+		if p.IsEmpty() {
+			t.Error("expected IsEmpty() to be false")
+		}
+		if p.SinkCount() != 1 {
+			t.Errorf("SinkCount() = %d, want 1", p.SinkCount())
+		}
+		if p.GatedCount() != 1 {
+			t.Errorf("GatedCount() = %d, want 1", p.GatedCount())
+		}
+		if p.Total() != 2 {
+			t.Errorf("Total() = %d, want 2", p.Total())
+		}
+	})
+}
+
+
+
+
 
 

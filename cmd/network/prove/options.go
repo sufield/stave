@@ -40,14 +40,21 @@ func addFlags(cmd *cobra.Command, o *options) {
 	_ = cmd.MarkFlagRequired("observations")
 }
 
+// IsValidProperty reports whether prop is one of the supported safety properties.
+func IsValidProperty(prop string) bool {
+	return slices.Contains(ValidProperties, prop)
+}
+
 func (o *options) Validate() error {
-	if !slices.Contains(ValidProperties, o.property) {
+	if !IsValidProperty(o.property) {
 		return &ui.UserError{
 			Err: fmt.Errorf("unknown --property %q (valid: %s)", o.property, strings.Join(ValidProperties, ", ")),
 		}
 	}
-	if _, err := NewRenderer(o.format); err != nil {
-		return &ui.UserError{Err: err}
+	if !IsValidFormat(o.format) {
+		return &ui.UserError{
+			Err: fmt.Errorf("unknown format %q (valid: %s)", o.format, strings.Join(ValidFormats, ", ")),
+		}
 	}
 	return nil
 }

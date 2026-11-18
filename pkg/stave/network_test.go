@@ -68,3 +68,68 @@ func Test_normalizePort(t *testing.T) {
 		})
 	}
 }
+
+func TestNetworkEnumerateConfig_Validate(t *testing.T) {
+	t.Run("empty SnapshotsDir returns error", func(t *testing.T) {
+		cfg := NetworkEnumerateConfig{SnapshotsDir: ""}
+		if err := cfg.Validate(); err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+
+	t.Run("valid SnapshotsDir returns nil", func(t *testing.T) {
+		cfg := NetworkEnumerateConfig{SnapshotsDir: "/path/to/obs"}
+		if err := cfg.Validate(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+}
+
+func TestNetworkEnumerateConfig_NormalizedPort(t *testing.T) {
+	t.Run("defaults when zero or negative", func(t *testing.T) {
+		cfg := NetworkEnumerateConfig{Port: 0}
+		if p := cfg.NormalizedPort(); p != DefaultSSHPort {
+			t.Errorf("NormalizedPort() = %d, want %d", p, DefaultSSHPort)
+		}
+	})
+
+	t.Run("preserves positive port", func(t *testing.T) {
+		cfg := NetworkEnumerateConfig{Port: 2222}
+		if p := cfg.NormalizedPort(); p != 2222 {
+			t.Errorf("NormalizedPort() = %d, want 2222", p)
+		}
+	})
+}
+
+func TestNetworkProveConfig_Validate(t *testing.T) {
+	t.Run("empty SnapshotsDir returns error", func(t *testing.T) {
+		cfg := NetworkProveConfig{SnapshotsDir: ""}
+		if err := cfg.Validate(); err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+
+	t.Run("valid SnapshotsDir returns nil", func(t *testing.T) {
+		cfg := NetworkProveConfig{SnapshotsDir: "/path/to/obs"}
+		if err := cfg.Validate(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+}
+
+func TestNetworkProveConfig_NormalizedPort(t *testing.T) {
+	t.Run("defaults when zero or negative", func(t *testing.T) {
+		cfg := NetworkProveConfig{Port: -1}
+		if p := cfg.NormalizedPort(); p != DefaultSSHPort {
+			t.Errorf("NormalizedPort() = %d, want %d", p, DefaultSSHPort)
+		}
+	})
+
+	t.Run("preserves positive port", func(t *testing.T) {
+		cfg := NetworkProveConfig{Port: 443}
+		if p := cfg.NormalizedPort(); p != 443 {
+			t.Errorf("NormalizedPort() = %d, want 443", p)
+		}
+	})
+}
+

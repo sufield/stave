@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -58,6 +59,21 @@ func (r *ProofResult) unsat(interpretation string, start time.Time) (*ProofResul
 
 func (r *ProofResult) gated(ce *Counterexample, interpretation string, start time.Time) (*ProofResult, error) {
 	return r.finish("EVIDENCE_GATED", interpretation, ce, start)
+}
+
+// IsSAT reports whether the proof found a counterexample violating the property.
+func (r *ProofResult) IsSAT() bool {
+	return r != nil && r.Result == "SAT"
+}
+
+// IsUNSAT reports whether the proof confirmed that no violation exists.
+func (r *ProofResult) IsUNSAT() bool {
+	return r != nil && r.Result == "UNSAT"
+}
+
+// IsEvidenceGated reports whether the proof was blocked by unresolved evidence.
+func (r *ProofResult) IsEvidenceGated() bool {
+	return r != nil && r.Result == "EVIDENCE_GATED"
 }
 
 func newProofResult(property string, scope map[string]int) *ProofResult {
@@ -102,6 +118,11 @@ type Counterexample struct {
 
 	SGExposure *SecurityGroupIngressExposure `json:"sg_exposure,omitempty"`
 	RoutePath  *UnprotectedRoutePath         `json:"route_path,omitempty"`
+}
+
+// IsDirectIGW reports whether the counterexample represents a direct Internet Gateway bypass path.
+func (ce *Counterexample) IsDirectIGW() bool {
+	return ce != nil && ce.PathType == "direct-igw"
 }
 
 // newSGCounterexample constructs a Counterexample for a security group ingress violation,
@@ -187,6 +208,16 @@ func vacuousErr(format string, a ...any) error {
 }
 
 // Prove runs the proof for the specified safety property on the network graph.
+// SupportedProperties lists all safety properties supported by the network graph prover.
+var SupportedProperties = []string{
+	"bastion-ssh",
+	"prod-dev-isolation",
+	"database-isolation",
+	"firewall-mandatory",
+	"transitive-ssh",
+	"transitive-egress",
+}
+
 // Supported properties: bastion-ssh, prod-dev-isolation, database-isolation,
 // firewall-mandatory, transitive-ssh, transitive-egress.
 func (g *Graph) Prove(property string, port int) (*ProofResult, error) {
@@ -210,7 +241,7 @@ func (g *Graph) Prove(property string, port int) (*ProofResult, error) {
 	case "transitive-egress":
 		return g.ProveTransitiveEgress()
 	default:
-		return nil, fmt.Errorf("unknown property %q (valid: bastion-ssh, prod-dev-isolation, database-isolation, firewall-mandatory, transitive-ssh, transitive-egress)", property)
+		return nil, fmt.Errorf("unknown property %q (valid: %s)", property, strings.Join(SupportedProperties, ", "))
 	}
 }
 
@@ -550,6 +581,15 @@ func (g *Graph) findTransitiveInternetBypass(relay, dst *Host, port int, relayMa
 	if match == nil || relayMatch == nil {
 		return nil
 	}
+	return newTransitiveInternetBypassCounterexample(relay, dst, port, match, relayMatch)
+}
+
+// newTransitiveInternetBypassCounterexample constructs a Counterexample for an internet-facing transitive SSH relay violation.
+// Safe on nil relay, dst, match, or relayMatch.
+func newTransitiveInternetBypassCounterexample(relay, dst *Host, port int, match, relayMatch *RuleMatch) *Counterexample {
+	if relay == nil || dst == nil || match == nil || relayMatch == nil {
+		return nil
+	}
 	relayID, dstID := relay.SafeID(), dst.SafeID()
 	return newTransitiveCounterexample(
 		match.RuleSource,
@@ -563,6 +603,15 @@ func (g *Graph) findTransitiveInternetBypass(relay, dst *Host, port int, relayMa
 func (g *Graph) findTransitiveInternalBypass(src, relay, dst *Host, port int, relayMatch *RuleMatch) *Counterexample {
 	match := g.Reachability(src, relay, port)
 	if match == nil || relayMatch == nil {
+		return nil
+	}
+	return newTransitiveInternalBypassCounterexample(src, relay, dst, port, match, relayMatch)
+}
+
+// newTransitiveInternalBypassCounterexample constructs a Counterexample for an internal transitive SSH relay violation.
+// Safe on nil src, relay, dst, match, or relayMatch.
+func newTransitiveInternalBypassCounterexample(src, relay, dst *Host, port int, match, relayMatch *RuleMatch) *Counterexample {
+	if src == nil || relay == nil || dst == nil || match == nil || relayMatch == nil {
 		return nil
 	}
 	srcID, relayID, dstID := src.SafeID(), relay.SafeID(), dst.SafeID()
@@ -581,7 +630,7 @@ func (g *Graph) RouteBypassesFirewall(route Route) bool {
 	if g == nil {
 		return false
 	}
-	return route.IsInternetGateway() && !g.Firewalls[route.TargetID]
+	return route.IsInternetGateway() && !g.HasFirewall(route.TargetID)
 }
 
 // ProveFirewallMandatory checks that all private subnets route internet
@@ -594,11 +643,11 @@ func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
 	if len(privateSubnets) == 0 {
 		return nil, vacuousErr("no subnets tagged stave:subnet-type=private")
 	}
-	if len(g.Firewalls) == 0 {
+	if g.FirewallCount() == 0 {
 		return nil, vacuousErr("no firewall endpoints found — cannot prove firewall routing")
 	}
 
-	result := newProofResult("firewall-mandatory", map[string]int{"private_subnets": len(privateSubnets), "firewall_endpoints": len(g.Firewalls)})
+	result := newProofResult("firewall-mandatory", map[string]int{"private_subnets": len(privateSubnets), "firewall_endpoints": g.FirewallCount()})
 
 	for _, sub := range privateSubnets {
 		if !sub.HasRouteTable() {
@@ -712,7 +761,11 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 		return nil, vacuousErr("no non-isolated hosts in subnets with internet egress routes")
 	}
 
-	result := newProofResult("transitive-egress", map[string]int{"isolated_hosts": len(isolated), "sink_hosts": len(candidates.sinks), "gated_hosts": len(candidates.gated)})
+	result := newProofResult("transitive-egress", map[string]int{
+		"isolated_hosts": len(isolated),
+		"sink_hosts":     candidates.SinkCount(),
+		"gated_hosts":    candidates.GatedCount(),
+	})
 
 	if ce := g.findTransitiveEgressBypass(isolated, candidates.sinks); ce != nil {
 		return result.sat(ce, "Transitive internet egress path exists — an isolated workload can reach a host with internet egress.", start)
@@ -844,8 +897,46 @@ type egressCandidatePartition struct {
 }
 
 // IsEmpty reports whether no candidates exist in either partition.
-func (p egressCandidatePartition) IsEmpty() bool {
+func (p *egressCandidatePartition) IsEmpty() bool {
+	if p == nil {
+		return true
+	}
 	return len(p.sinks) == 0 && len(p.gated) == 0
+}
+
+// SinkCount returns the number of sink candidates.
+func (p *egressCandidatePartition) SinkCount() int {
+	if p == nil {
+		return 0
+	}
+	return len(p.sinks)
+}
+
+// GatedCount returns the number of gated candidates.
+func (p *egressCandidatePartition) GatedCount() int {
+	if p == nil {
+		return 0
+	}
+	return len(p.gated)
+}
+
+// Total returns the total number of candidates across both partitions.
+func (p *egressCandidatePartition) Total() int {
+	if p == nil {
+		return 0
+	}
+	return len(p.sinks) + len(p.gated)
+}
+
+func (p *egressCandidatePartition) add(c egressCandidate) {
+	if p == nil {
+		return
+	}
+	if c.target.IsSink() {
+		p.sinks = append(p.sinks, c)
+	} else if c.target.IsGated() {
+		p.gated = append(p.gated, c)
+	}
 }
 
 // findEgressCandidates identifies all non-isolated hosts with default routes,
@@ -856,14 +947,8 @@ func (g *Graph) findEgressCandidates() egressCandidatePartition {
 	}
 	var p egressCandidatePartition
 	for _, h := range g.allHosts() {
-		c, ok := g.hostEgressCandidate(h)
-		if !ok {
-			continue
-		}
-		if c.target.IsSink() {
-			p.sinks = append(p.sinks, c)
-		} else if c.target.IsGated() {
-			p.gated = append(p.gated, c)
+		if c, ok := g.hostEgressCandidate(h); ok {
+			p.add(c)
 		}
 	}
 	return p

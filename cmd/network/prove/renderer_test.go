@@ -532,3 +532,88 @@ func Test_renderSGExposure(t *testing.T) {
 		}
 	})
 }
+
+func Test_renderPort(t *testing.T) {
+	t.Run("nil counterexample outputs nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderPort(&buf, nil)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for nil counterexample, got %q", buf.String())
+		}
+	})
+
+	t.Run("direct-igw path outputs nothing", func(t *testing.T) {
+		ce := &network.Counterexample{
+			PathType: "direct-igw",
+			Port:     22,
+		}
+		var buf bytes.Buffer
+		renderPort(&buf, ce)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for direct-igw, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders formatted port for other path types", func(t *testing.T) {
+		ce := &network.Counterexample{
+			PathType: "cross-vpc",
+			Port:     5432,
+		}
+		var buf bytes.Buffer
+		renderPort(&buf, ce)
+		out := buf.String()
+		if !strings.Contains(out, "Port:        5432") {
+			t.Errorf("expected formatted port in output, got %q", out)
+		}
+	})
+}
+
+func TestPropertyTitle(t *testing.T) {
+	t.Run("returns mapped title for known property", func(t *testing.T) {
+		if title := PropertyTitle("bastion-ssh"); title != "Bastion SSH Routing Proof" {
+			t.Errorf("PropertyTitle(bastion-ssh) = %q, want Bastion SSH Routing Proof", title)
+		}
+	})
+
+	t.Run("returns property key for unknown property", func(t *testing.T) {
+		if title := PropertyTitle("custom-prop"); title != "custom-prop" {
+			t.Errorf("PropertyTitle(custom-prop) = %q, want custom-prop", title)
+		}
+	})
+}
+
+func Test_renderGenericScope(t *testing.T) {
+	t.Run("empty scope outputs nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderGenericScope(&buf, nil)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders sorted scope keys deterministically", func(t *testing.T) {
+		scope := map[string]int{
+			"zebra_hosts": 10,
+			"alpha_hosts": 2,
+			"beta_hosts":  5,
+		}
+		var buf bytes.Buffer
+		renderGenericScope(&buf, scope)
+		lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+		expected := []string{
+			"  alpha_hosts: 2",
+			"  beta_hosts: 5",
+			"  zebra_hosts: 10",
+		}
+		if len(lines) != len(expected) {
+			t.Fatalf("got %d lines, want %d", len(lines), len(expected))
+		}
+		for i, exp := range expected {
+			if lines[i] != exp {
+				t.Errorf("line %d = %q, want %q", i, lines[i], exp)
+			}
+		}
+	})
+}
+
+

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 
 	"github.com/sufield/stave/internal/core/network"
@@ -11,6 +12,11 @@ import (
 
 // ValidFormats contains the supported output format names.
 var ValidFormats = []string{"json", "text"}
+
+// IsValidFormat reports whether format is one of the supported output formats (or empty for default).
+func IsValidFormat(format string) bool {
+	return format == "" || slices.Contains(ValidFormats, format)
+}
 
 // Renderer is the format-dispatch interface for `stave network prove`.
 type Renderer interface {
@@ -47,11 +53,16 @@ var propertyTitles = map[string]string{
 	"transitive-egress":  "Transitive Internet Egress Proof",
 }
 
-func formatTitle(property, result string) string {
-	title := propertyTitles[property]
-	if title == "" {
-		title = property
+// PropertyTitle returns the human-readable display title for property.
+func PropertyTitle(property string) string {
+	if title, ok := propertyTitles[property]; ok {
+		return title
 	}
+	return property
+}
+
+func formatTitle(property, result string) string {
+	title := PropertyTitle(property)
 	switch result {
 	case "SAT":
 		title += " — VIOLATION FOUND"
@@ -66,6 +77,20 @@ func renderHeader(w io.Writer, property, result string) {
 	fmt.Fprintln(w, formatTitle(property, result))
 	fmt.Fprintln(w, "═══════════════════════════════════════════")
 	fmt.Fprintln(w)
+}
+
+func renderGenericScope(w io.Writer, scope map[string]int) {
+	if len(scope) == 0 {
+		return
+	}
+	keys := make([]string, 0, len(scope))
+	for k := range scope {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+	for _, k := range keys {
+		fmt.Fprintf(w, "  %s: %d\n", k, scope[k])
+	}
 }
 
 func renderScope(w io.Writer, r *network.ProofResult) {
@@ -83,9 +108,7 @@ func renderScope(w io.Writer, r *network.ProofResult) {
 		fmt.Fprintf(w, "  SSH paths:        %d\n", r.SSHPaths)
 	}
 	// Generic scope fields.
-	for k, v := range r.Scope {
-		fmt.Fprintf(w, "  %s: %d\n", k, v)
-	}
+	renderGenericScope(w, r.Scope)
 	fmt.Fprintln(w)
 }
 
@@ -111,10 +134,10 @@ func renderVerdict(w io.Writer, r *network.ProofResult) {
 	if r == nil {
 		return
 	}
-	switch r.Result {
-	case "UNSAT":
+	switch {
+	case r.IsUNSAT():
 		renderUnsat(w, r)
-	case "EVIDENCE_GATED":
+	case r.IsEvidenceGated():
 		renderCounterexample(w, "EVIDENCE GATED:", r.Counterexample)
 	default:
 		renderCounterexample(w, "COUNTEREXAMPLE:", r.Counterexample)
@@ -202,7 +225,8 @@ func renderViolation(w io.Writer, ce *network.Counterexample) {
 }
 
 func renderPort(w io.Writer, ce *network.Counterexample) {
-	if ce.PathType != "direct-igw" {
-		fmt.Fprintf(w, "    Port:        %s\n", network.FormatPort(ce.Port))
+	if ce == nil || ce.IsDirectIGW() {
+		return
 	}
+	fmt.Fprintf(w, "    Port:        %s\n", network.FormatPort(ce.Port))
 }

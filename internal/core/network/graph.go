@@ -45,15 +45,27 @@ func (h *Host) IsDevelopment() bool  { return h.Environment() == "development" }
 func (h *Host) IsDatabaseTier() bool { return h.Tag("stave:tier") == "database" }
 func (h *Host) IsIsolated() bool     { return h.Tag("stave:network-zone") == "isolated" }
 
+// HasVPC reports whether the host is assigned to a non-empty VPC.
+// Safe on nil receiver.
+func (h *Host) HasVPC() bool {
+	return h != nil && h.VPCID != ""
+}
+
+// HasSubnet reports whether the host is assigned to a non-empty subnet.
+// Safe on nil receiver.
+func (h *Host) HasSubnet() bool {
+	return h != nil && h.SubnetID != ""
+}
+
 // IsCrossVPC reports whether both hosts are assigned to VPCs and reside in different VPCs.
 func (h *Host) IsCrossVPC(other *Host) bool {
-	return h != nil && other != nil && h.VPCID != "" && other.VPCID != "" && h.VPCID != other.VPCID
+	return h.HasVPC() && other.HasVPC() && h.VPCID != other.VPCID
 }
 
 // SameVPC reports whether both hosts are assigned to the same non-empty VPC.
 // Safe on nil receiver.
 func (h *Host) SameVPC(other *Host) bool {
-	return h != nil && other != nil && h.VPCID != "" && h.VPCID == other.VPCID
+	return h.HasVPC() && other.HasVPC() && h.VPCID == other.VPCID
 }
 
 // SameHost reports whether both hosts represent the same compute resource.
@@ -306,6 +318,16 @@ func (r Route) IsDefaultRoute() bool {
 // IsInternetGateway reports whether the route target is an internet gateway ("igw").
 func (r Route) IsInternetGateway() bool {
 	return r.TargetType == "igw"
+}
+
+// IsNATGateway reports whether the route target is a NAT gateway ("nat").
+func (r Route) IsNATGateway() bool {
+	return r.TargetType == "nat"
+}
+
+// IsLocal reports whether the route target is local VPC routing ("local").
+func (r Route) IsLocal() bool {
+	return r.TargetType == "local"
 }
 
 // Target returns the formatted route target string (e.g. "nat:nat-01", "igw:igw-01").
@@ -570,25 +592,73 @@ func (g *Graph) IsolatedHosts() []*Host {
 // PrivateSubnets returns all subnets tagged stave:subnet-type=private.
 // Safe on nil receiver.
 func (g *Graph) PrivateSubnets() []*Subnet {
+	return g.filterSubnets((*Subnet).IsPrivate)
+}
+
+func (g *Graph) filterSubnets(predicate func(*Subnet) bool) []*Subnet {
 	if g == nil {
 		return nil
 	}
 	var out []*Subnet
 	for _, s := range g.Subnets {
-		if s.IsPrivate() {
+		if predicate(s) {
 			out = append(out, s)
 		}
 	}
 	return out
 }
 
+// HostCount returns the total number of hosts in the graph.
+// Safe on nil receiver.
+func (g *Graph) HostCount() int {
+	if g == nil {
+		return 0
+	}
+	return len(g.Hosts)
+}
+
+// SubnetCount returns the total number of subnets in the graph.
+// Safe on nil receiver.
+func (g *Graph) SubnetCount() int {
+	if g == nil {
+		return 0
+	}
+	return len(g.Subnets)
+}
+
+// Subnet returns the subnet with the given ID, or nil if not found or receiver is nil.
+func (g *Graph) Subnet(id string) *Subnet {
+	if g == nil || id == "" {
+		return nil
+	}
+	return g.Subnets[id]
+}
+
+// HasFirewall reports whether targetID is registered as a firewall endpoint.
+// Safe on nil receiver, uninitialized map, or empty targetID.
+func (g *Graph) HasFirewall(targetID string) bool {
+	if g == nil || g.Firewalls == nil || targetID == "" {
+		return false
+	}
+	return g.Firewalls[targetID]
+}
+
+// FirewallCount returns the number of firewall endpoints in the graph.
+// Safe on nil receiver.
+func (g *Graph) FirewallCount() int {
+	if g == nil {
+		return 0
+	}
+	return len(g.Firewalls)
+}
+
 // SubnetForHost returns the subnet associated with the given host.
 // Safe on nil receiver or nil host.
 func (g *Graph) SubnetForHost(h *Host) *Subnet {
-	if g == nil || h == nil || h.SubnetID == "" {
+	if !h.HasSubnet() {
 		return nil
 	}
-	return g.Subnets[h.SubnetID]
+	return g.Subnet(h.SubnetID)
 }
 
 // RoutesForSubnet returns all routes associated with the subnet's route table.
@@ -598,6 +668,18 @@ func (g *Graph) RoutesForSubnet(sub *Subnet) []Route {
 		return nil
 	}
 	return g.Routes[sub.RouteTableID]
+}
+
+// RouteCountForSubnet returns the number of routes associated with the subnet's route table.
+// Safe on nil receiver or nil subnet.
+func (g *Graph) RouteCountForSubnet(sub *Subnet) int {
+	return len(g.RoutesForSubnet(sub))
+}
+
+// HasRoutes reports whether the subnet has any routes configured in its route table.
+// Safe on nil receiver or nil subnet.
+func (g *Graph) HasRoutes(sub *Subnet) bool {
+	return g.RouteCountForSubnet(sub) > 0
 }
 
 // DefaultRouteForSubnet returns the first default route (0.0.0.0/0 or ::/0)

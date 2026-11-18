@@ -77,6 +77,21 @@ func TestValidProperties(t *testing.T) {
 	}
 }
 
+func TestIsValidProperty(t *testing.T) {
+	for _, p := range ValidProperties {
+		if !IsValidProperty(p) {
+			t.Errorf("IsValidProperty(%q) = false, want true", p)
+		}
+	}
+
+	invalid := []string{"", "unknown", "ssh", "bastion", "prod"}
+	for _, p := range invalid {
+		if IsValidProperty(p) {
+			t.Errorf("IsValidProperty(%q) = true, want false", p)
+		}
+	}
+}
+
 func TestValidFormats(t *testing.T) {
 	expected := []string{"json", "text"}
 	if len(ValidFormats) != len(expected) {
@@ -87,6 +102,31 @@ func TestValidFormats(t *testing.T) {
 			t.Errorf("ValidFormats[%d] = %q, want %q", i, ValidFormats[i], f)
 		}
 	}
+}
+
+func TestIsValidFormat(t *testing.T) {
+	t.Run("empty format is valid default", func(t *testing.T) {
+		if !IsValidFormat("") {
+			t.Error("IsValidFormat(\"\") = false, want true")
+		}
+	})
+
+	t.Run("valid format names", func(t *testing.T) {
+		for _, f := range ValidFormats {
+			if !IsValidFormat(f) {
+				t.Errorf("IsValidFormat(%q) = false, want true", f)
+			}
+		}
+	})
+
+	t.Run("invalid format names", func(t *testing.T) {
+		invalid := []string{"yaml", "xml", "csv", "html"}
+		for _, f := range invalid {
+			if IsValidFormat(f) {
+				t.Errorf("IsValidFormat(%q) = true, want false", f)
+			}
+		}
+	})
 }
 
 func TestDefaultConstants(t *testing.T) {
