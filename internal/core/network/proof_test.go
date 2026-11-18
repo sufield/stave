@@ -1,6 +1,8 @@
 package network
 
 import (
+	"errors"
+	"slices"
 	"testing"
 
 	"github.com/sufield/stave/internal/core/asset"
@@ -3212,7 +3214,204 @@ func TestRuleMatch_Remediation(t *testing.T) {
 	}
 }
 
-func TestGraph_findRule(t *testing.T) {
+func TestRuleMatch_SSHPath(t *testing.T) {
+	match := &RuleMatch{
+		SecurityGroupID: "sg-target",
+		RuleSource:      "10.0.0.0/8",
+		PathType:        "cidr",
+		Port:            22,
+	}
+
+	t.Run("populates all fields when match is non-nil", func(t *testing.T) {
+		got := match.SSHPath("i-src", "i-dst")
+		want := SSHPath{
+			Source:      "i-src",
+			Destination: "i-dst",
+			Port:        22,
+			PathType:    "cidr",
+			RuleSG:      "sg-target",
+			RuleSource:  "10.0.0.0/8",
+		}
+		if got != want {
+			t.Errorf("SSHPath() = %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("handles nil receiver safely", func(t *testing.T) {
+		var nilMatch *RuleMatch
+		got := nilMatch.SSHPath("i-src", "i-dst")
+		want := SSHPath{
+			Source:      "i-src",
+			Destination: "i-dst",
+		}
+		if got != want {
+			t.Errorf("nil.SSHPath() = %+v, want %+v", got, want)
+		}
+	})
+}
+
+func TestGraph_allHosts(t *testing.T) {
+	t.Run("returns all hosts when graph is non-nil", func(t *testing.T) {
+		g := &Graph{
+			Hosts: map[string]*Host{
+				"h1": {ID: "h1"},
+				"h2": {ID: "h2"},
+			},
+		}
+		hosts := g.allHosts()
+		if len(hosts) != 2 {
+			t.Fatalf("allHosts() returned %d hosts, want 2", len(hosts))
+		}
+	})
+
+	t.Run("returns nil when graph is nil", func(t *testing.T) {
+		var nilGraph *Graph
+		if got := nilGraph.allHosts(); got != nil {
+			t.Errorf("nil.allHosts() = %v, want nil", got)
+		}
+	})
+}
+
+func Test_extractTags(t *testing.T) {
+	t.Run("extracts and lowers string tags", func(t *testing.T) {
+		props := map[string]any{
+			"tags": map[string]any{
+				"Environment": "Production",
+				"Role":        "BASTION",
+				"Invalid":     12345,
+			},
+		}
+		got := extractTags(props)
+		if got["Environment"] != "production" {
+			t.Errorf("expected production, got %q", got["Environment"])
+		}
+		if got["Role"] != "bastion" {
+			t.Errorf("expected bastion, got %q", got["Role"])
+		}
+		if _, exists := got["Invalid"]; exists {
+			t.Errorf("expected non-string tag to be skipped, got %v", got["Invalid"])
+		}
+	})
+
+	t.Run("returns empty non-nil map when tags key is missing or non-map", func(t *testing.T) {
+		got := extractTags(map[string]any{"tags": "not-a-map"})
+		if got == nil || len(got) != 0 {
+			t.Errorf("expected empty non-nil map, got %v", got)
+		}
+
+		gotNil := extractTags(nil)
+		if gotNil == nil || len(gotNil) != 0 {
+			t.Errorf("expected empty non-nil map for nil props, got %v", gotNil)
+		}
+	})
+}
+
+func Test_extractStringSlice(t *testing.T) {
+	t.Run("extracts string slice from map", func(t *testing.T) {
+		props := map[string]any{
+			"endpoints": []any{"vpce-1", "vpce-2", 999, "vpce-3"},
+		}
+		got := extractStringSlice(props, "endpoints")
+		want := []string{"vpce-1", "vpce-2", "vpce-3"}
+		if !slices.Equal(got, want) {
+			t.Errorf("extractStringSlice = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("returns nil for missing key or nil map or invalid type", func(t *testing.T) {
+		if got := extractStringSlice(nil, "key"); got != nil {
+			t.Errorf("expected nil for nil map, got %v", got)
+		}
+		if got := extractStringSlice(map[string]any{}, "missing"); got != nil {
+			t.Errorf("expected nil for missing key, got %v", got)
+		}
+		if got := extractStringSlice(map[string]any{"key": "not-a-slice"}, "key"); got != nil {
+			t.Errorf("expected nil for non-slice, got %v", got)
+		}
+	})
+}
+
+func Test_stringProp(t *testing.T) {
+	t.Run("returns string when key exists and is string", func(t *testing.T) {
+		props := map[string]any{"vpc_id": "vpc-12345", "count": 42}
+		if got := stringProp(props, "vpc_id"); got != "vpc-12345" {
+			t.Errorf("stringProp = %q, want vpc-12345", got)
+		}
+	})
+
+	t.Run("returns empty string when key is missing, nil map, or not a string", func(t *testing.T) {
+		props := map[string]any{"count": 42}
+		if got := stringProp(props, "missing"); got != "" {
+			t.Errorf("expected empty string for missing key, got %q", got)
+		}
+		if got := stringProp(props, "count"); got != "" {
+			t.Errorf("expected empty string for non-string, got %q", got)
+		}
+		if got := stringProp(nil, "key"); got != "" {
+			t.Errorf("expected empty string for nil map, got %q", got)
+		}
+	})
+}
+
+func TestBuildGraph_EmptyAssetType(t *testing.T) {
+	snapshots := []asset.Snapshot{
+		{
+			Assets: []asset.Asset{
+				{ID: "empty-type", Type: ""},
+			},
+		},
+	}
+	g := BuildGraph(snapshots)
+	if len(g.Hosts) != 0 || len(g.Subnets) != 0 || len(g.Routes) != 0 {
+		t.Errorf("expected empty graph for asset with empty type, got %+v", g)
+	}
+}
+
+func Test_parseRoute(t *testing.T) {
+	rm := map[string]any{
+		"destination": "0.0.0.0/0",
+		"target_type": "IGW",
+		"target_id":   "igw-12345",
+	}
+	route := parseRoute(rm)
+	if route.Destination != "0.0.0.0/0" {
+		t.Errorf("expected 0.0.0.0/0, got %q", route.Destination)
+	}
+	if route.TargetType != "igw" {
+		t.Errorf("expected lowered target type 'igw', got %q", route.TargetType)
+	}
+	if route.TargetID != "igw-12345" {
+		t.Errorf("expected igw-12345, got %q", route.TargetID)
+	}
+}
+
+func Test_parseSGRule(t *testing.T) {
+	rm := map[string]any{
+		"direction":    "ingress",
+		"protocol":     "tcp",
+		"source_type":  "cidr",
+		"source_value": "10.0.0.0/8",
+		"from_port":    float64(443),
+	}
+	rule := parseSGRule(rm)
+	if rule.Direction != "ingress" {
+		t.Errorf("expected ingress, got %q", rule.Direction)
+	}
+	if rule.Protocol != "tcp" {
+		t.Errorf("expected tcp, got %q", rule.Protocol)
+	}
+	if rule.SourceType != "cidr" {
+		t.Errorf("expected cidr, got %q", rule.SourceType)
+	}
+	if rule.SourceValue != "10.0.0.0/8" {
+		t.Errorf("expected 10.0.0.0/8, got %q", rule.SourceValue)
+	}
+	if rule.Port != 443 {
+		t.Errorf("expected port 443, got %d", rule.Port)
+	}
+}
+
+func TestGraph_Reachability(t *testing.T) {
 	src := &Host{ID: "i-src", VPCID: "vpc-1", SGIDs: []string{"sg-client"}}
 	dst := &Host{ID: "i-dst", VPCID: "vpc-1", SGIDs: []string{"sg-server"}}
 	g := &Graph{
@@ -3237,8 +3436,8 @@ func TestGraph_findRule(t *testing.T) {
 		},
 	}
 
-	t.Run("matching port returns RuleMatch", func(t *testing.T) {
-		match := g.findRule(src, dst, 22)
+	t.Run("Reachability returns RuleMatch on matching port", func(t *testing.T) {
+		match := g.Reachability(src, dst, 22)
 		if match == nil {
 			t.Fatal("expected non-nil RuleMatch")
 		}
@@ -3256,27 +3455,27 @@ func TestGraph_findRule(t *testing.T) {
 		}
 	})
 
-	t.Run("unmatched port returns nil", func(t *testing.T) {
-		if match := g.findRule(src, dst, 443); match != nil {
+	t.Run("Reachability returns nil on unmatched port", func(t *testing.T) {
+		if match := g.Reachability(src, dst, 443); match != nil {
 			t.Errorf("expected nil RuleMatch for unmatched port, got %+v", match)
 		}
 	})
 
-	t.Run("nil receiver or hosts return nil", func(t *testing.T) {
+	t.Run("Reachability safe on nil receiver or hosts", func(t *testing.T) {
 		var nilGraph *Graph
-		if match := nilGraph.findRule(src, dst, 22); match != nil {
+		if match := nilGraph.Reachability(src, dst, 22); match != nil {
 			t.Errorf("expected nil for nil graph, got %+v", match)
 		}
-		if match := g.findRule(nil, dst, 22); match != nil {
+		if match := g.Reachability(nil, dst, 22); match != nil {
 			t.Errorf("expected nil for nil src, got %+v", match)
 		}
-		if match := g.findRule(src, nil, 22); match != nil {
+		if match := g.Reachability(src, nil, 22); match != nil {
 			t.Errorf("expected nil for nil dst, got %+v", match)
 		}
 	})
 
-	t.Run("findRuleAnyPort returns first matching rule", func(t *testing.T) {
-		match := g.findRuleAnyPort(src, dst)
+	t.Run("ReachabilityAnyPort returns first matching rule", func(t *testing.T) {
+		match := g.ReachabilityAnyPort(src, dst)
 		if match == nil {
 			t.Fatal("expected non-nil RuleMatch")
 		}
@@ -3285,10 +3484,14 @@ func TestGraph_findRule(t *testing.T) {
 		}
 	})
 
-	t.Run("findRuleAnyPort returns nil when no rule matches", func(t *testing.T) {
+	t.Run("ReachabilityAnyPort returns nil when no rule matches", func(t *testing.T) {
 		unrelated := &Host{ID: "i-other", VPCID: "vpc-99"}
-		if match := g.findRuleAnyPort(unrelated, dst); match != nil {
+		if match := g.ReachabilityAnyPort(unrelated, dst); match != nil {
 			t.Errorf("expected nil RuleMatch, got %+v", match)
+		}
+		var nilGraph *Graph
+		if match := nilGraph.ReachabilityAnyPort(src, dst); match != nil {
+			t.Errorf("expected nil for nil graph, got %+v", match)
 		}
 	})
 }
@@ -3393,4 +3596,452 @@ func TestGraph_findInternetRule(t *testing.T) {
 			t.Errorf("expected nil RuleMatch, got %+v", match)
 		}
 	})
+
+	t.Run("findInternetRulesMatching returns all matching rules", func(t *testing.T) {
+		matches := g.findInternetRulesMatching(dst, SGRule.IsInternetIngress)
+		if len(matches) != 2 {
+			t.Fatalf("expected 2 matches, got %d", len(matches))
+		}
+		if matches[0].RuleSource != "0.0.0.0/0" || matches[0].Port != 22 {
+			t.Errorf("matches[0] = %+v, want 0.0.0.0/0 port 22", matches[0])
+		}
+		if matches[1].RuleSource != "::/0" || matches[1].Port != 80 {
+			t.Errorf("matches[1] = %+v, want ::/0 port 80", matches[1])
+		}
+	})
+
+	t.Run("findInternetRulesMatching returns nil on nil graph or dst", func(t *testing.T) {
+		var nilGraph *Graph
+		if matches := nilGraph.findInternetRulesMatching(dst, SGRule.IsInternetIngress); matches != nil {
+			t.Errorf("expected nil for nil graph, got %+v", matches)
+		}
+		if matches := g.findInternetRulesMatching(nil, SGRule.IsInternetIngress); matches != nil {
+			t.Errorf("expected nil for nil dst, got %+v", matches)
+		}
+	})
+
+	t.Run("enumerateExternalSSHPaths preserves IPv6 rule source", func(t *testing.T) {
+		v4Paths := g.enumerateExternalSSHPaths(dst, 22)
+		if len(v4Paths) != 1 {
+			t.Fatalf("expected 1 IPv4 path, got %d", len(v4Paths))
+		}
+		if v4Paths[0].Source != "0.0.0.0/0" || v4Paths[0].RuleSource != "0.0.0.0/0" {
+			t.Errorf("v4Paths[0] source = %q, want 0.0.0.0/0", v4Paths[0].Source)
+		}
+
+		v6Paths := g.enumerateExternalSSHPaths(dst, 80)
+		if len(v6Paths) != 1 {
+			t.Fatalf("expected 1 IPv6 path, got %d", len(v6Paths))
+		}
+		if v6Paths[0].Source != "::/0" || v6Paths[0].RuleSource != "::/0" {
+			t.Errorf("v6Paths[0] source = %q, want ::/0", v6Paths[0].Source)
+		}
+	})
+}
+
+func Test_newRouteCounterexample(t *testing.T) {
+	sub := &Subnet{
+		ID:           "subnet-priv-01",
+		VPCID:        "vpc-1",
+		RouteTableID: "rt-priv-01",
+	}
+	route := Route{
+		Destination: "0.0.0.0/0",
+		TargetType:  "igw",
+		TargetID:    "igw-01",
+	}
+
+	t.Run("populates Counterexample and RoutePath with evidence", func(t *testing.T) {
+		ce := newRouteCounterexample(sub, route, "direct-igw", "expl", "remed")
+		if ce.Source != "subnet-priv-01" {
+			t.Errorf("Source = %q, want subnet-priv-01", ce.Source)
+		}
+		if ce.Destination != "igw-01" {
+			t.Errorf("Destination = %q, want igw-01", ce.Destination)
+		}
+		if ce.PathType != "direct-igw" {
+			t.Errorf("PathType = %q, want direct-igw", ce.PathType)
+		}
+		if ce.Explanation != "expl" || ce.Remediation != "remed" {
+			t.Errorf("unexpected explanation/remediation: %q / %q", ce.Explanation, ce.Remediation)
+		}
+		if ce.RoutePath == nil {
+			t.Fatal("expected non-nil RoutePath")
+		}
+		if ce.RoutePath.RouteTableID != "rt-priv-01" {
+			t.Errorf("RouteTableID = %q, want rt-priv-01", ce.RoutePath.RouteTableID)
+		}
+		if ce.RoutePath.Destination != "0.0.0.0/0" {
+			t.Errorf("RoutePath.Destination = %q, want 0.0.0.0/0", ce.RoutePath.Destination)
+		}
+	})
+
+	t.Run("handles nil subnet gracefully", func(t *testing.T) {
+		ce := newRouteCounterexample(nil, route, "direct-igw", "expl", "remed")
+		if ce.Source != "" {
+			t.Errorf("Source = %q, want empty", ce.Source)
+		}
+		if ce.Destination != "igw-01" {
+			t.Errorf("Destination = %q, want igw-01", ce.Destination)
+		}
+		if ce.RoutePath != nil {
+			t.Errorf("expected nil RoutePath for nil subnet, got %+v", ce.RoutePath)
+		}
+	})
+}
+
+func TestGraph_tgwVPCMap(t *testing.T) {
+	t.Run("groups VPCs by transit gateway ID", func(t *testing.T) {
+		g := &Graph{
+			TGWAttachments: []TGWAttachment{
+				{AttachmentID: "att-1", TransitGatewayID: "tgw-1", VPCID: "vpc-a"},
+				{AttachmentID: "att-2", TransitGatewayID: "tgw-1", VPCID: "vpc-b"},
+				{AttachmentID: "att-3", TransitGatewayID: "tgw-2", VPCID: "vpc-c"},
+			},
+		}
+		m := g.tgwVPCMap()
+		if len(m) != 2 {
+			t.Fatalf("expected 2 TGWs, got %d", len(m))
+		}
+		if !slices.Equal(m["tgw-1"], []string{"vpc-a", "vpc-b"}) {
+			t.Errorf("tgw-1 = %v, want [vpc-a vpc-b]", m["tgw-1"])
+		}
+		if !slices.Equal(m["tgw-2"], []string{"vpc-c"}) {
+			t.Errorf("tgw-2 = %v, want [vpc-c]", m["tgw-2"])
+		}
+		if !g.vpcsConnectedViaTGW("vpc-a", "vpc-b") {
+			t.Error("expected vpc-a and vpc-b to be connected via tgw-1")
+		}
+		if g.vpcsConnectedViaTGW("vpc-a", "vpc-c") {
+			t.Error("expected vpc-a and vpc-c not to be connected across different tgws")
+		}
+	})
+
+	t.Run("handles nil receiver or empty attachments", func(t *testing.T) {
+		var nilGraph *Graph
+		if m := nilGraph.tgwVPCMap(); m != nil {
+			t.Errorf("expected nil for nil graph, got %v", m)
+		}
+		if nilGraph.vpcsConnectedViaTGW("vpc-a", "vpc-b") {
+			t.Error("expected false for nil graph")
+		}
+
+		emptyGraph := &Graph{}
+		if m := emptyGraph.tgwVPCMap(); len(m) != 0 {
+			t.Errorf("expected empty map for empty attachments, got %v", m)
+		}
+		if emptyGraph.vpcsConnectedViaTGW("vpc-a", "vpc-b") {
+			t.Error("expected false for empty attachments")
+		}
+		if emptyGraph.vpcsConnectedViaTGW("", "vpc-b") || emptyGraph.vpcsConnectedViaTGW("vpc-a", "") {
+			t.Error("expected false for empty VPC IDs")
+		}
+	})
+}
+
+func Test_newTransitiveCounterexample(t *testing.T) {
+	relay := &Host{ID: "i-relay", VPCID: "vpc-1"}
+	dst := &Host{ID: "i-prod", VPCID: "vpc-1"}
+	relayMatch := &RuleMatch{
+		SecurityGroupID: "sg-prod",
+		RuleSource:      "sg:sg-relay",
+		PathType:        "sg-ref",
+		Port:            22,
+	}
+
+	t.Run("formats two-hop path, explanation, and evidence", func(t *testing.T) {
+		ce := newTransitiveCounterexample(
+			"0.0.0.0/0",
+			"internet",
+			"Host i-relay is SSH-accessible from the internet and",
+			relay, dst, 22, relayMatch,
+			"remediation instruction",
+		)
+		if ce.Source != "0.0.0.0/0 -> i-relay" {
+			t.Errorf("Source = %q, want 0.0.0.0/0 -> i-relay", ce.Source)
+		}
+		if ce.Destination != "i-prod" {
+			t.Errorf("Destination = %q, want i-prod", ce.Destination)
+		}
+		if ce.PathType != "transitive" {
+			t.Errorf("PathType = %q, want transitive", ce.PathType)
+		}
+		wantExpl := "Host i-relay is SSH-accessible from the internet and can reach production host i-prod on port 22. Two-hop path: internet -> i-relay -> i-prod."
+		if ce.Explanation != wantExpl {
+			t.Errorf("Explanation = %q, want %q", ce.Explanation, wantExpl)
+		}
+		if ce.Remediation != "remediation instruction" {
+			t.Errorf("Remediation = %q, want remediation instruction", ce.Remediation)
+		}
+		if ce.RuleSG != "sg-prod" || ce.RuleSource != "sg:sg-relay" {
+			t.Errorf("RuleSG / RuleSource = %q / %q, want sg-prod / sg:sg-relay", ce.RuleSG, ce.RuleSource)
+		}
+	})
+
+	t.Run("handles nil relay or dst gracefully", func(t *testing.T) {
+		ce := newTransitiveCounterexample("src", "src", "lead", nil, nil, 22, nil, "rem")
+		if ce.Source != "src -> " {
+			t.Errorf("Source = %q, want src -> ", ce.Source)
+		}
+		if ce.Destination != "" {
+			t.Errorf("Destination = %q, want empty", ce.Destination)
+		}
+	})
+}
+
+func Test_formatPort(t *testing.T) {
+	if got := formatPort(0); got != "all" {
+		t.Errorf("formatPort(0) = %q, want all", got)
+	}
+	if got := formatPort(22); got != "22" {
+		t.Errorf("formatPort(22) = %q, want 22", got)
+	}
+	if got := formatPort(443); got != "443" {
+		t.Errorf("formatPort(443) = %q, want 443", got)
+	}
+}
+
+func TestGraph_findFirstEgressPath(t *testing.T) {
+	iso := &Host{ID: "i-iso", VPCID: "vpc-1", SGIDs: []string{"sg-iso"}}
+	sinkHost := &Host{ID: "i-sink", VPCID: "vpc-1", SGIDs: []string{"sg-sink"}}
+	otherHost := &Host{ID: "i-other", VPCID: "vpc-1", SGIDs: []string{"sg-other"}}
+
+	g := &Graph{
+		Hosts: map[string]*Host{"i-iso": iso, "i-sink": sinkHost, "i-other": otherHost},
+		SGRules: map[string][]SGRule{
+			"sg-sink": {
+				{Direction: "ingress", Protocol: "tcp", Port: 80, SourceType: "sg", SourceValue: "sg-iso"},
+			},
+		},
+	}
+
+	sinkCandidate := egressCandidate{
+		host:  sinkHost,
+		route: Route{Destination: "0.0.0.0/0", TargetType: "igw", TargetID: "igw-1"},
+	}
+	otherCandidate := egressCandidate{
+		host:  otherHost,
+		route: Route{Destination: "0.0.0.0/0", TargetType: "nat", TargetID: "nat-1"},
+	}
+
+	t.Run("finds first matching path", func(t *testing.T) {
+		gotIso, gotC, gotMatch := g.findFirstEgressPath([]*Host{iso}, []egressCandidate{otherCandidate, sinkCandidate})
+		if gotMatch == nil {
+			t.Fatal("expected non-nil match")
+		}
+		if gotIso != iso {
+			t.Errorf("gotIso = %v, want %v", gotIso, iso)
+		}
+		if gotC.host != sinkHost {
+			t.Errorf("gotC.host = %v, want %v", gotC.host, sinkHost)
+		}
+	})
+
+	t.Run("returns nil match when no path exists", func(t *testing.T) {
+		gotIso, _, gotMatch := g.findFirstEgressPath([]*Host{iso}, []egressCandidate{otherCandidate})
+		if gotMatch != nil {
+			t.Errorf("expected nil match, got %+v", gotMatch)
+		}
+		if gotIso != nil {
+			t.Errorf("expected nil iso, got %v", gotIso)
+		}
+	})
+
+	t.Run("handles nil graph gracefully", func(t *testing.T) {
+		var nilGraph *Graph
+		gotIso, _, gotMatch := nilGraph.findFirstEgressPath([]*Host{iso}, []egressCandidate{sinkCandidate})
+		if gotMatch != nil || gotIso != nil {
+			t.Errorf("expected nil for nil graph, got match=%+v, iso=%+v", gotMatch, gotIso)
+		}
+	})
+}
+
+func Test_parseHost(t *testing.T) {
+	t.Run("nil asset returns nil", func(t *testing.T) {
+		if got := parseHost(nil); got != nil {
+			t.Errorf("parseHost(nil) = %v, want nil", got)
+		}
+	})
+
+	t.Run("parses valid host asset", func(t *testing.T) {
+		a := &asset.Asset{
+			ID: "i-0123456789abcdef0",
+			Properties: map[string]any{
+				"tags": map[string]any{
+					"stave:environment": "production",
+				},
+				"compute": map[string]any{
+					"instance": map[string]any{
+						"vpc_id":          "vpc-100",
+						"subnet_id":       "subnet-200",
+						"private_ip":      "10.0.1.5",
+						"public_ip":       "54.1.2.3",
+						"security_groups": []any{"sg-1", "sg-2"},
+					},
+				},
+			},
+		}
+		got := parseHost(a)
+		if got == nil {
+			t.Fatal("expected non-nil Host")
+		}
+		if got.ID != "i-0123456789abcdef0" {
+			t.Errorf("got ID = %q, want i-0123456789abcdef0", got.ID)
+		}
+		if got.VPCID != "vpc-100" || got.SubnetID != "subnet-200" {
+			t.Errorf("got VPCID/SubnetID = %s/%s, want vpc-100/subnet-200", got.VPCID, got.SubnetID)
+		}
+		if got.PrivateIP != "10.0.1.5" || got.PublicIP != "54.1.2.3" {
+			t.Errorf("got IPs = %s/%s, want 10.0.1.5/54.1.2.3", got.PrivateIP, got.PublicIP)
+		}
+		if len(got.SGIDs) != 2 || got.SGIDs[0] != "sg-1" || got.SGIDs[1] != "sg-2" {
+			t.Errorf("got SGIDs = %v, want [sg-1 sg-2]", got.SGIDs)
+		}
+		if got.Tags["stave:environment"] != "production" {
+			t.Errorf("got Tags = %v, want stave:environment=production", got.Tags)
+		}
+	})
+}
+
+func Test_parsePeering(t *testing.T) {
+	t.Run("nil asset returns empty peering", func(t *testing.T) {
+		got := parsePeering(nil)
+		if got != (VPCPeering{}) {
+			t.Errorf("parsePeering(nil) = %+v, want empty", got)
+		}
+	})
+
+	t.Run("parses valid peering asset", func(t *testing.T) {
+		a := &asset.Asset{
+			ID: "pcx-12345",
+			Properties: map[string]any{
+				"network": map[string]any{
+					"peering": map[string]any{
+						"requester_vpc": "vpc-a",
+						"accepter_vpc":  "vpc-b",
+					},
+				},
+			},
+		}
+		got := parsePeering(a)
+		if got.PeeringID != "pcx-12345" || got.RequesterVPC != "vpc-a" || got.AccepterVPC != "vpc-b" {
+			t.Errorf("got %+v, want PeeringID=pcx-12345, RequesterVPC=vpc-a, AccepterVPC=vpc-b", got)
+		}
+	})
+}
+
+func Test_parseSubnet(t *testing.T) {
+	t.Run("nil asset returns nil", func(t *testing.T) {
+		if got := parseSubnet(nil); got != nil {
+			t.Errorf("parseSubnet(nil) = %v, want nil", got)
+		}
+	})
+
+	t.Run("parses valid subnet asset", func(t *testing.T) {
+		a := &asset.Asset{
+			ID: "subnet-123",
+			Properties: map[string]any{
+				"tags": map[string]any{
+					"stave:subnet-type": "private",
+				},
+				"network": map[string]any{
+					"subnet": map[string]any{
+						"vpc_id":         "vpc-1",
+						"route_table_id": "rt-1",
+					},
+				},
+			},
+		}
+		got := parseSubnet(a)
+		if got == nil {
+			t.Fatal("expected non-nil Subnet")
+		}
+		if got.ID != "subnet-123" || got.VPCID != "vpc-1" || got.RouteTableID != "rt-1" {
+			t.Errorf("got %+v, want ID=subnet-123, VPCID=vpc-1, RouteTableID=rt-1", got)
+		}
+		if !got.IsPrivate() {
+			t.Error("expected IsPrivate() to be true")
+		}
+	})
+}
+
+func Test_parseTGWAttachment(t *testing.T) {
+	t.Run("nil asset returns false", func(t *testing.T) {
+		got, ok := parseTGWAttachment(nil)
+		if ok || got != (TGWAttachment{}) {
+			t.Errorf("parseTGWAttachment(nil) = (%+v, %v), want empty, false", got, ok)
+		}
+	})
+
+	t.Run("missing network/transit_gateway returns false", func(t *testing.T) {
+		a := &asset.Asset{ID: "tgw-att-0"}
+		got, ok := parseTGWAttachment(a)
+		if ok || got != (TGWAttachment{}) {
+			t.Errorf("parseTGWAttachment(missing) = (%+v, %v), want empty, false", got, ok)
+		}
+	})
+
+	t.Run("parses valid attachment asset", func(t *testing.T) {
+		a := &asset.Asset{
+			ID: "tgw-att-123",
+			Properties: map[string]any{
+				"network": map[string]any{
+					"transit_gateway": map[string]any{
+						"transit_gateway_id": "tgw-999",
+						"vpc_id":             "vpc-888",
+					},
+				},
+			},
+		}
+		got, ok := parseTGWAttachment(a)
+		if !ok {
+			t.Fatal("expected ok = true")
+		}
+		if got.AttachmentID != "tgw-att-123" || got.TransitGatewayID != "tgw-999" || got.VPCID != "vpc-888" {
+			t.Errorf("got %+v, want AttachmentID=tgw-att-123, TransitGatewayID=tgw-999, VPCID=vpc-888", got)
+		}
+	})
+}
+
+func Test_vacuousErr(t *testing.T) {
+	t.Run("wraps ErrVacuousProof without params", func(t *testing.T) {
+		err := vacuousErr("simple reason")
+		if !errors.Is(err, ErrVacuousProof) {
+			t.Errorf("expected errors.Is(err, ErrVacuousProof) to be true, got %v", err)
+		}
+		if got := err.Error(); got != "vacuous proof: simple reason" {
+			t.Errorf("err.Error() = %q, want 'vacuous proof: simple reason'", got)
+		}
+	})
+
+	t.Run("formats string with params", func(t *testing.T) {
+		err := vacuousErr("subnet %s missing %s", "sub-1", "routes")
+		if !errors.Is(err, ErrVacuousProof) {
+			t.Errorf("expected errors.Is(err, ErrVacuousProof) to be true, got %v", err)
+		}
+		if got := err.Error(); got != "vacuous proof: subnet sub-1 missing routes" {
+			t.Errorf("err.Error() = %q, want 'vacuous proof: subnet sub-1 missing routes'", got)
+		}
+	})
+}
+
+func Test_newProofResult(t *testing.T) {
+	scope := map[string]int{"hosts": 5, "endpoints": 2}
+	res := newProofResult("database-isolation", scope)
+	if res.Property != "database-isolation" {
+		t.Errorf("Property = %q, want database-isolation", res.Property)
+	}
+	if res.Scope["hosts"] != 5 || res.Scope["endpoints"] != 2 {
+		t.Errorf("Scope mismatch: %+v", res.Scope)
+	}
+}
+
+func Test_newBastionProofResult(t *testing.T) {
+	res := newBastionProofResult("bastion-ssh", 10, 3)
+	if res.Property != "bastion-ssh" {
+		t.Errorf("Property = %q, want bastion-ssh", res.Property)
+	}
+	if res.ProductionHosts != 10 || res.BastionHosts != 3 {
+		t.Errorf("got prod/bastion = %d/%d, want 10/3", res.ProductionHosts, res.BastionHosts)
+	}
 }

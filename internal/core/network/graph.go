@@ -103,6 +103,16 @@ func (r SGRule) IsSecurityGroup() bool {
 	return r.SourceType == "sg"
 }
 
+// broadInternalCIDRs are CIDRs that cover entire RFC1918 ranges.
+// Soufflé can't do CIDR math; we match the same set here.
+var broadInternalCIDRs = map[string]bool{
+	"10.0.0.0/8":     true,
+	"172.16.0.0/12":  true,
+	"192.168.0.0/16": true,
+	"0.0.0.0/0":      true,
+	"::/0":           true,
+}
+
 // HasBroadInternalCIDR reports whether the security group rule source is a broad
 // internal CIDR block (RFC1918 range or 0.0.0.0/0 / ::/0).
 func (r SGRule) HasBroadInternalCIDR() bool {
@@ -264,6 +274,9 @@ func BuildGraph(snapshots []asset.Snapshot) *Graph {
 	for i := range snapshots {
 		for j := range snapshots[i].Assets {
 			a := &snapshots[i].Assets[j] //nolint:gosec // index is within range
+			if a.Type == "" {
+				continue
+			}
 			switch string(a.Type) {
 			case GraphTypes.Instance:
 				g.extractHost(a)
@@ -272,53 +285,92 @@ func BuildGraph(snapshots []asset.Snapshot) *Graph {
 			case GraphTypes.PeeringConnection:
 				g.extractPeering(a)
 			case GraphTypes.Subnet:
-				if GraphTypes.Subnet != "" {
-					g.extractSubnet(a)
-				}
+				g.extractSubnet(a)
 			case GraphTypes.RouteTable:
-				if GraphTypes.RouteTable != "" {
-					g.extractRouteTable(a)
-				}
+				g.extractRouteTable(a)
 			case GraphTypes.Firewall:
-				if GraphTypes.Firewall != "" {
-					g.extractFirewall(a)
-				}
+				g.extractFirewall(a)
 			case GraphTypes.TransitGateway:
-				if GraphTypes.TransitGateway != "" {
-					g.extractTGWAttachment(a)
-				}
+				g.extractTGWAttachment(a)
 			}
 		}
 	}
 	return g
 }
 
-func (g *Graph) extractHost(a *asset.Asset) {
+func extractTags(props map[string]any) map[string]string {
+	tags := make(map[string]string)
+	if rawTags, ok := props["tags"].(map[string]any); ok {
+		for k, v := range rawTags {
+			if s, ok := v.(string); ok {
+				tags[k] = strings.ToLower(s)
+			}
+		}
+	}
+	return tags
+}
+
+func extractStringSlice(props map[string]any, key string) []string {
+	if props == nil {
+		return nil
+	}
+	raw, ok := props[key].([]any)
+	if !ok {
+		return nil
+	}
+	var items []string
+	for _, item := range raw {
+		if s, ok := item.(string); ok {
+			items = append(items, s)
+		}
+	}
+	return items
+}
+
+func stringProp(props map[string]any, key string) string {
+	if props == nil {
+		return ""
+	}
+	s, _ := props[key].(string)
+	return s
+}
+
+func parseHost(a *asset.Asset) *Host {
+	if a == nil {
+		return nil
+	}
 	h := &Host{
 		ID:   string(a.ID),
-		Tags: make(map[string]string),
+		Tags: extractTags(a.Properties),
 	}
 	if compute, ok := nested(a.Properties, "compute", "instance"); ok {
-		h.VPCID, _ = compute["vpc_id"].(string)
-		h.SubnetID, _ = compute["subnet_id"].(string)
-		h.PrivateIP, _ = compute["private_ip"].(string)
-		h.PublicIP, _ = compute["public_ip"].(string)
-		if sgs, ok := compute["security_groups"].([]any); ok {
-			for _, sg := range sgs {
-				if s, ok := sg.(string); ok {
-					h.SGIDs = append(h.SGIDs, s)
-				}
-			}
-		}
+		h.VPCID = stringProp(compute, "vpc_id")
+		h.SubnetID = stringProp(compute, "subnet_id")
+		h.PrivateIP = stringProp(compute, "private_ip")
+		h.PublicIP = stringProp(compute, "public_ip")
+		h.SGIDs = extractStringSlice(compute, "security_groups")
 	}
-	if tags, ok := a.Properties["tags"].(map[string]any); ok {
-		for k, v := range tags {
-			if s, ok := v.(string); ok {
-				h.Tags[k] = strings.ToLower(s)
-			}
-		}
+	return h
+}
+
+func (g *Graph) extractHost(a *asset.Asset) {
+	if h := parseHost(a); h != nil {
+		g.Hosts[h.ID] = h
 	}
-	g.Hosts[h.ID] = h
+}
+
+func parseSGRule(rm map[string]any) SGRule {
+	rule := SGRule{
+		Protocol: "tcp",
+	}
+	rule.Direction = stringProp(rm, "direction")
+	rule.Protocol = stringProp(rm, "protocol")
+	rule.SourceType = stringProp(rm, "source_type")
+	rule.SourceValue = stringProp(rm, "source_value")
+	if p, ok := rm["from_port"].(float64); ok {
+		rule.Port = int(p)
+	}
+	return rule
 }
 
 func (g *Graph) extractSGRules(a *asset.Asset) {
@@ -326,33 +378,28 @@ func (g *Graph) extractSGRules(a *asset.Asset) {
 	if sg, ok := nested(a.Properties, "network", "security_group"); ok {
 		if rules, ok := sg["rules"].([]any); ok {
 			for _, r := range rules {
-				rm, ok := r.(map[string]any)
-				if !ok {
-					continue
+				if rm, ok := r.(map[string]any); ok {
+					g.SGRules[sgID] = append(g.SGRules[sgID], parseSGRule(rm))
 				}
-				rule := SGRule{
-					Protocol: "tcp",
-				}
-				rule.Direction, _ = rm["direction"].(string)
-				rule.Protocol, _ = rm["protocol"].(string)
-				rule.SourceType, _ = rm["source_type"].(string)
-				rule.SourceValue, _ = rm["source_value"].(string)
-				if p, ok := rm["from_port"].(float64); ok {
-					rule.Port = int(p)
-				}
-				g.SGRules[sgID] = append(g.SGRules[sgID], rule)
 			}
 		}
 	}
 }
 
-func (g *Graph) extractPeering(a *asset.Asset) {
+func parsePeering(a *asset.Asset) VPCPeering {
+	if a == nil {
+		return VPCPeering{}
+	}
 	p := VPCPeering{PeeringID: string(a.ID)}
 	if net, ok := nested(a.Properties, "network", "peering"); ok {
-		p.RequesterVPC, _ = net["requester_vpc"].(string)
-		p.AccepterVPC, _ = net["accepter_vpc"].(string)
+		p.RequesterVPC = stringProp(net, "requester_vpc")
+		p.AccepterVPC = stringProp(net, "accepter_vpc")
 	}
-	g.Peerings = append(g.Peerings, p)
+	return p
+}
+
+func (g *Graph) extractPeering(a *asset.Asset) {
+	g.Peerings = append(g.Peerings, parsePeering(a))
 }
 
 // nested navigates a property map by keys, returning the final map.
@@ -366,6 +413,18 @@ func nested(props map[string]any, keys ...string) (map[string]any, bool) {
 		m = next
 	}
 	return m, true
+}
+
+// allHosts returns all hosts in the graph as a slice. Safe on nil receiver.
+func (g *Graph) allHosts() []*Host {
+	if g == nil {
+		return nil
+	}
+	out := make([]*Host, 0, len(g.Hosts))
+	for _, h := range g.Hosts {
+		out = append(out, h)
+	}
+	return out
 }
 
 func (g *Graph) filterHosts(predicate func(*Host) bool) []*Host {
@@ -432,30 +491,33 @@ func (g *Graph) RoutesForSubnet(sub *Subnet) []Route {
 	return g.Routes[sub.RouteTableID]
 }
 
-// IsPubliclyAccessible reports whether h is accessible from the public internet
-// on the specified port.
-// Safe on nil receiver or nil host.
-func (g *Graph) IsPubliclyAccessible(h *Host, port int) bool {
-	return g.findInternetRule(h, port) != nil
+func parseSubnet(a *asset.Asset) *Subnet {
+	if a == nil {
+		return nil
+	}
+	s := &Subnet{
+		ID:   string(a.ID),
+		Tags: extractTags(a.Properties),
+	}
+	if net, ok := nested(a.Properties, "network", "subnet"); ok {
+		s.VPCID = stringProp(net, "vpc_id")
+		s.RouteTableID = stringProp(net, "route_table_id")
+	}
+	return s
 }
 
 func (g *Graph) extractSubnet(a *asset.Asset) {
-	s := &Subnet{
-		ID:   string(a.ID),
-		Tags: make(map[string]string),
+	if s := parseSubnet(a); s != nil {
+		g.Subnets[s.ID] = s
 	}
-	if net, ok := nested(a.Properties, "network", "subnet"); ok {
-		s.VPCID, _ = net["vpc_id"].(string)
-		s.RouteTableID, _ = net["route_table_id"].(string)
-	}
-	if tags, ok := a.Properties["tags"].(map[string]any); ok {
-		for k, v := range tags {
-			if sv, ok := v.(string); ok {
-				s.Tags[k] = strings.ToLower(sv)
-			}
-		}
-	}
-	g.Subnets[s.ID] = s
+}
+
+func parseRoute(rm map[string]any) Route {
+	route := Route{}
+	route.Destination = stringProp(rm, "destination")
+	route.TargetType = strings.ToLower(stringProp(rm, "target_type"))
+	route.TargetID = stringProp(rm, "target_id")
+	return route
 }
 
 func (g *Graph) extractRouteTable(a *asset.Asset) {
@@ -463,16 +525,9 @@ func (g *Graph) extractRouteTable(a *asset.Asset) {
 	if rt, ok := nested(a.Properties, "network", "route_table"); ok {
 		if routes, ok := rt["routes"].([]any); ok {
 			for _, r := range routes {
-				rm, ok := r.(map[string]any)
-				if !ok {
-					continue
+				if rm, ok := r.(map[string]any); ok {
+					g.Routes[rtID] = append(g.Routes[rtID], parseRoute(rm))
 				}
-				route := Route{}
-				route.Destination, _ = rm["destination"].(string)
-				route.TargetType, _ = rm["target_type"].(string)
-				route.TargetType = strings.ToLower(route.TargetType)
-				route.TargetID, _ = rm["target_id"].(string)
-				g.Routes[rtID] = append(g.Routes[rtID], route)
 			}
 		}
 	}
@@ -480,21 +535,30 @@ func (g *Graph) extractRouteTable(a *asset.Asset) {
 
 func (g *Graph) extractFirewall(a *asset.Asset) {
 	if fw, ok := nested(a.Properties, "network", "firewall"); ok {
-		if endpoints, ok := fw["endpoints"].([]any); ok {
-			for _, ep := range endpoints {
-				if epID, ok := ep.(string); ok {
-					g.Firewalls[epID] = true
-				}
-			}
+		for _, epID := range extractStringSlice(fw, "endpoints") {
+			g.Firewalls[epID] = true
 		}
 	}
 }
 
+func parseTGWAttachment(a *asset.Asset) (TGWAttachment, bool) {
+	if a == nil {
+		return TGWAttachment{}, false
+	}
+	tgw, ok := nested(a.Properties, "network", "transit_gateway")
+	if !ok {
+		return TGWAttachment{}, false
+	}
+	att := TGWAttachment{
+		AttachmentID:     string(a.ID),
+		TransitGatewayID: stringProp(tgw, "transit_gateway_id"),
+		VPCID:            stringProp(tgw, "vpc_id"),
+	}
+	return att, true
+}
+
 func (g *Graph) extractTGWAttachment(a *asset.Asset) {
-	if tgw, ok := nested(a.Properties, "network", "transit_gateway"); ok {
-		att := TGWAttachment{AttachmentID: string(a.ID)}
-		att.TransitGatewayID, _ = tgw["transit_gateway_id"].(string)
-		att.VPCID, _ = tgw["vpc_id"].(string)
+	if att, ok := parseTGWAttachment(a); ok {
 		g.TGWAttachments = append(g.TGWAttachments, att)
 	}
 }
@@ -527,15 +591,22 @@ func (g *Graph) vpcsArePeered(vpc1, vpc2 string) bool {
 	return false
 }
 
-func (g *Graph) vpcsConnectedViaTGW(vpc1, vpc2 string) bool {
-	if g == nil || vpc1 == "" || vpc2 == "" {
-		return false
+func (g *Graph) tgwVPCMap() map[string][]string {
+	if g == nil {
+		return nil
 	}
 	tgws := make(map[string][]string)
 	for _, att := range g.TGWAttachments {
 		tgws[att.TransitGatewayID] = append(tgws[att.TransitGatewayID], att.VPCID)
 	}
-	for _, vpcs := range tgws {
+	return tgws
+}
+
+func (g *Graph) vpcsConnectedViaTGW(vpc1, vpc2 string) bool {
+	if g == nil || vpc1 == "" || vpc2 == "" {
+		return false
+	}
+	for _, vpcs := range g.tgwVPCMap() {
 		if slices.Contains(vpcs, vpc1) && slices.Contains(vpcs, vpc2) {
 			return true
 		}

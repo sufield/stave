@@ -40,6 +40,41 @@ type ProofResult struct {
 	SolveTimeMs     int64           `json:"solve_time_ms"`
 }
 
+func (r *ProofResult) finish(result, interpretation string, ce *Counterexample, start time.Time) (*ProofResult, error) {
+	r.Result = result
+	r.Interpretation = interpretation
+	r.Counterexample = ce
+	r.SolveTimeMs = time.Since(start).Milliseconds()
+	return r, nil
+}
+
+func (r *ProofResult) sat(ce *Counterexample, interpretation string, start time.Time) (*ProofResult, error) {
+	return r.finish("SAT", interpretation, ce, start)
+}
+
+func (r *ProofResult) unsat(interpretation string, start time.Time) (*ProofResult, error) {
+	return r.finish("UNSAT", interpretation, nil, start)
+}
+
+func (r *ProofResult) gated(ce *Counterexample, interpretation string, start time.Time) (*ProofResult, error) {
+	return r.finish("EVIDENCE_GATED", interpretation, ce, start)
+}
+
+func newProofResult(property string, scope map[string]int) *ProofResult {
+	return &ProofResult{
+		Property: property,
+		Scope:    scope,
+	}
+}
+
+func newBastionProofResult(property string, prodHosts, bastionHosts int) *ProofResult {
+	return &ProofResult{
+		Property:        property,
+		ProductionHosts: prodHosts,
+		BastionHosts:    bastionHosts,
+	}
+}
+
 // SecurityGroupIngressExposure captures evidence where network traffic is admitted
 // across isolation boundaries by a security group rule.
 type SecurityGroupIngressExposure struct {
@@ -91,6 +126,52 @@ func newSGCounterexample(source, destination string, port int, pathType string, 
 	return ce
 }
 
+// newRouteCounterexample constructs a Counterexample for an unprotected route violation,
+// populating the RoutePath model with route table and destination CIDR evidence.
+func newRouteCounterexample(sub *Subnet, route Route, pathType, explanation, remediation string) *Counterexample {
+	ce := &Counterexample{
+		Destination: route.TargetID,
+		PathType:    pathType,
+		Explanation: explanation,
+		Remediation: remediation,
+	}
+	if sub != nil {
+		ce.Source = sub.ID
+		ce.RoutePath = &UnprotectedRoutePath{
+			RouteTableID: sub.RouteTableID,
+			Destination:  route.Destination,
+		}
+	}
+	return ce
+}
+
+// newTransitiveCounterexample constructs a Counterexample for a two-hop transitive path violation
+// (hop1 -> relay -> dst), formatting the explanation and remediation consistently.
+func newTransitiveCounterexample(hop1ID, hop1Path, hop1Lead string, relay, dst *Host, port int, relayMatch *RuleMatch, remediation string) *Counterexample {
+	relayID, dstID := "", ""
+	if relay != nil {
+		relayID = relay.ID
+	}
+	if dst != nil {
+		dstID = dst.ID
+	}
+	explanation := hop1Lead + " can reach production host " + dstID + " on port " + strconv.Itoa(port) + ". Two-hop path: " + hop1Path + " -> " + relayID + " -> " + dstID + "."
+	return newSGCounterexample(
+		hop1ID+" -> "+relayID, dstID, port, "transitive", relayMatch,
+		explanation, remediation,
+	)
+}
+
+// SSHPath describes a network path to a host on port 22.
+type SSHPath struct {
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
+	Port        int    `json:"port"`
+	PathType    string `json:"path_type"` // "sg-ref" | "cidr" | "cross-vpc"
+	RuleSG      string `json:"rule_sg"`
+	RuleSource  string `json:"rule_source"`
+}
+
 // EnumerateResult is the output of SSH entry point enumeration.
 type EnumerateResult struct {
 	Scope           string    `json:"scope"`
@@ -102,6 +183,13 @@ type EnumerateResult struct {
 // ErrVacuousProof is returned when a proof cannot run because the
 // scope sets (production hosts, bastion hosts) are empty.
 var ErrVacuousProof = errors.New("vacuous proof")
+
+func vacuousErr(format string, a ...any) error {
+	if len(a) > 0 {
+		format = fmt.Sprintf(format, a...)
+	}
+	return fmt.Errorf("%w: %s", ErrVacuousProof, format)
+}
 
 // ProveBastionSSH checks whether all SSH paths to production hosts
 // traverse a bastion. Returns UNSAT if bastion routing holds,
@@ -116,17 +204,13 @@ func (g *Graph) ProveBastionSSH(port int) (*ProofResult, error) {
 	bastions := g.BastionHosts()
 
 	if len(prod) == 0 {
-		return nil, fmt.Errorf("%w: no hosts tagged stave:environment=production — cannot prove bastion routing", ErrVacuousProof)
+		return nil, vacuousErr("no hosts tagged stave:environment=production — cannot prove bastion routing")
 	}
 	if len(bastions) == 0 {
-		return nil, fmt.Errorf("%w: no hosts tagged stave:role=bastion — cannot prove bastion routing", ErrVacuousProof)
+		return nil, vacuousErr("no hosts tagged stave:role=bastion — cannot prove bastion routing")
 	}
 
-	result := &ProofResult{
-		Property:        "bastion-ssh",
-		ProductionHosts: len(prod),
-		BastionHosts:    len(bastions),
-	}
+	result := newBastionProofResult("bastion-ssh", len(prod), len(bastions))
 
 	// Find all SSH paths to production from non-bastion, non-production sources.
 	for _, dst := range prod {
@@ -134,35 +218,25 @@ func (g *Graph) ProveBastionSSH(port int) (*ProofResult, error) {
 			if src.IsTrusted(dst) {
 				continue
 			}
-			if match := g.findRule(src, dst, port); match != nil {
+			if match := g.Reachability(src, dst, port); match != nil {
 				result.SSHPaths++
-				result.Counterexample = newSGCounterexample(
+				ce := newSGCounterexample(
 					src.ID, dst.ID, port, match.PathType, match,
 					match.Explanation(src, dst),
 					match.Remediation(bastions),
 				)
-				result.Result = "SAT"
-				result.Interpretation = "Bastion bypass exists — a non-bastion host can SSH to production without traversing a bastion."
-				result.SolveTimeMs = time.Since(start).Milliseconds()
-				return result, nil
+				return result.sat(ce, "Bastion bypass exists — a non-bastion host can SSH to production without traversing a bastion.", start)
 			}
 		}
 
 		// Check external entry (0.0.0.0/0).
 		if ce := g.findExternalBypass(dst, port); ce != nil {
 			result.SSHPaths++
-			result.Counterexample = ce
-			result.Result = "SAT"
-			result.Interpretation = "Bastion bypass exists — production host is directly SSH-accessible from the internet."
-			result.SolveTimeMs = time.Since(start).Milliseconds()
-			return result, nil
+			return result.sat(ce, "Bastion bypass exists — production host is directly SSH-accessible from the internet.", start)
 		}
 	}
 
-	result.Result = "UNSAT"
-	result.Interpretation = "All SSH paths to production traverse a bastion host."
-	result.SolveTimeMs = time.Since(start).Milliseconds()
-	return result, nil
+	return result.unsat("All SSH paths to production traverse a bastion host.", start)
 }
 
 func (g *Graph) findExternalBypass(dst *Host, port int) *Counterexample {
@@ -187,43 +261,34 @@ func (g *Graph) ProveProdDevIsolation() (*ProofResult, error) {
 	dev := g.DevelopmentHosts()
 
 	if len(prod) == 0 {
-		return nil, fmt.Errorf("%w: no hosts tagged stave:environment=production", ErrVacuousProof)
+		return nil, vacuousErr("no hosts tagged stave:environment=production")
 	}
 	if len(dev) == 0 {
-		return nil, fmt.Errorf("%w: no hosts tagged stave:environment=development", ErrVacuousProof)
+		return nil, vacuousErr("no hosts tagged stave:environment=development")
 	}
 
-	result := &ProofResult{
-		Property: "prod-dev-isolation",
-		Scope:    map[string]int{"production_hosts": len(prod), "development_hosts": len(dev)},
-	}
+	result := newProofResult("prod-dev-isolation", map[string]int{"production_hosts": len(prod), "development_hosts": len(dev)})
 
 	// Check both directions: prod→dev and dev→prod.
 	pairs := [][2][]*Host{{prod, dev}, {dev, prod}}
 	for _, pair := range pairs {
 		for _, src := range pair[0] {
 			for _, dst := range pair[1] {
-				match := g.findRuleAnyPort(src, dst)
+				match := g.ReachabilityAnyPort(src, dst)
 				if match == nil {
 					continue
 				}
-				result.Result = "SAT"
-				result.Interpretation = "Production-development isolation violated — a cross-environment path exists."
-				result.Counterexample = newSGCounterexample(
+				ce := newSGCounterexample(
 					src.ID, dst.ID, match.Port, match.PathType, match,
 					"Host "+src.ID+" ("+src.Environment()+") can reach "+dst.ID+" ("+dst.Environment()+") via "+match.PathType+".",
 					"Remove cross-environment ingress rule on "+match.SecurityGroupID+". Ensure production and development VPCs have no peering or broad CIDR rules.",
 				)
-				result.SolveTimeMs = time.Since(start).Milliseconds()
-				return result, nil
+				return result.sat(ce, "Production-development isolation violated — a cross-environment path exists.", start)
 			}
 		}
 	}
 
-	result.Result = "UNSAT"
-	result.Interpretation = "Production and development environments are network-isolated."
-	result.SolveTimeMs = time.Since(start).Milliseconds()
-	return result, nil
+	return result.unsat("Production and development environments are network-isolated.", start)
 }
 
 // ProveDatabaseIsolation checks that no host outside the database VPC
@@ -234,13 +299,10 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 
 	dbHosts := g.DatabaseHosts()
 	if len(dbHosts) == 0 {
-		return nil, fmt.Errorf("%w: no hosts tagged stave:tier=database", ErrVacuousProof)
+		return nil, vacuousErr("no hosts tagged stave:tier=database")
 	}
 
-	result := &ProofResult{
-		Property: "database-isolation",
-		Scope:    map[string]int{"database_hosts": len(dbHosts)},
-	}
+	result := newProofResult("database-isolation", map[string]int{"database_hosts": len(dbHosts)})
 
 	for _, dst := range dbHosts {
 		// Check cross-VPC reachability from any non-same-VPC host.
@@ -248,37 +310,28 @@ func (g *Graph) ProveDatabaseIsolation() (*ProofResult, error) {
 			if src.IsInternal(dst) {
 				continue
 			}
-			if match := g.findRuleAnyPort(src, dst); match != nil {
-				result.Result = "SAT"
-				result.Interpretation = "Database isolation violated — a host outside the database VPC can reach a database host."
-				result.Counterexample = newSGCounterexample(
+			if match := g.ReachabilityAnyPort(src, dst); match != nil {
+				ce := newSGCounterexample(
 					src.ID, dst.ID, match.Port, match.PathType, match,
 					"Host "+src.ID+" (vpc:"+src.VPCID+") can reach database host "+dst.ID+" (vpc:"+dst.VPCID+") via "+match.PathType+".",
 					"Remove cross-VPC ingress to database SG "+match.SecurityGroupID+". Restrict to application-tier SG references within the same VPC.",
 				)
-				result.SolveTimeMs = time.Since(start).Milliseconds()
-				return result, nil
+				return result.sat(ce, "Database isolation violated — a host outside the database VPC can reach a database host.", start)
 			}
 		}
 
 		// Check external entry (0.0.0.0/0 or ::/0 on any port).
 		if match := g.findInternetRuleAnyPort(dst); match != nil {
-			result.Result = "SAT"
-			result.Interpretation = "Database isolation violated — database host is directly accessible from the internet."
-			result.Counterexample = newSGCounterexample(
+			ce := newSGCounterexample(
 				match.RuleSource+" (internet)", dst.ID, match.Port, match.PathType, match,
 				"Database host "+dst.ID+" accepts traffic from "+match.RuleSource+" on port "+strconv.Itoa(match.Port)+" via "+match.SecurityGroupID+".",
 				"Remove internet ingress on "+match.SecurityGroupID+". Database hosts must not be reachable from the internet.",
 			)
-			result.SolveTimeMs = time.Since(start).Milliseconds()
-			return result, nil
+			return result.sat(ce, "Database isolation violated — database host is directly accessible from the internet.", start)
 		}
 	}
 
-	result.Result = "UNSAT"
-	result.Interpretation = "All database hosts are isolated within their VPC — no cross-VPC or internet paths exist."
-	result.SolveTimeMs = time.Since(start).Milliseconds()
-	return result, nil
+	return result.unsat("All database hosts are isolated within their VPC — no cross-VPC or internet paths exist.", start)
 }
 
 // ProveTransitiveSSH checks whether any non-bastion host can act as an
@@ -291,32 +344,24 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 	bastions := g.BastionHosts()
 
 	if len(prod) == 0 {
-		return nil, fmt.Errorf("%w: no hosts tagged stave:environment=production — cannot prove transitive SSH", ErrVacuousProof)
+		return nil, vacuousErr("no hosts tagged stave:environment=production — cannot prove transitive SSH")
 	}
 
-	result := &ProofResult{
-		Property:        "transitive-ssh",
-		ProductionHosts: len(prod),
-		BastionHosts:    len(bastions),
-	}
+	result := newBastionProofResult("transitive-ssh", len(prod), len(bastions))
 
 	for _, dst := range prod {
 		for _, relay := range g.allHosts() {
 			if relay.IsTrusted(dst) {
 				continue
 			}
-			relayMatch := g.findRule(relay, dst, port)
+			relayMatch := g.Reachability(relay, dst, port)
 			if relayMatch == nil {
 				continue
 			}
 
 			// Relay can reach prod. Check if relay is reachable from the internet.
 			if ce := g.findTransitiveInternetBypass(relay, dst, port, relayMatch); ce != nil {
-				result.Result = "SAT"
-				result.Interpretation = "Transitive SSH path exists — a non-bastion host reachable from the internet can relay SSH to production."
-				result.Counterexample = ce
-				result.SolveTimeMs = time.Since(start).Milliseconds()
-				return result, nil
+				return result.sat(ce, "Transitive SSH path exists — a non-bastion host reachable from the internet can relay SSH to production.", start)
 			}
 
 			// Check if any other non-prod, non-bastion host can reach the relay.
@@ -325,20 +370,13 @@ func (g *Graph) ProveTransitiveSSH(port int) (*ProofResult, error) {
 					continue
 				}
 				if ce := g.findTransitiveInternalBypass(src, relay, dst, port, relayMatch); ce != nil {
-					result.Result = "SAT"
-					result.Interpretation = "Transitive SSH path exists — a non-bastion host can relay SSH to production via an intermediate host."
-					result.Counterexample = ce
-					result.SolveTimeMs = time.Since(start).Milliseconds()
-					return result, nil
+					return result.sat(ce, "Transitive SSH path exists — a non-bastion host can relay SSH to production via an intermediate host.", start)
 				}
 			}
 		}
 	}
 
-	result.Result = "UNSAT"
-	result.Interpretation = "No transitive SSH paths to production exist — no non-bastion relay can bridge to production."
-	result.SolveTimeMs = time.Since(start).Milliseconds()
-	return result, nil
+	return result.unsat("No transitive SSH paths to production exist — no non-bastion relay can bridge to production.", start)
 }
 
 func (g *Graph) findTransitiveInternetBypass(relay, dst *Host, port int, relayMatch *RuleMatch) *Counterexample {
@@ -346,22 +384,43 @@ func (g *Graph) findTransitiveInternetBypass(relay, dst *Host, port int, relayMa
 	if match == nil || relayMatch == nil {
 		return nil
 	}
-	return newSGCounterexample(
-		match.RuleSource+" -> "+relay.ID, dst.ID, port, "transitive", relayMatch,
-		"Host "+relay.ID+" is SSH-accessible from the internet and can reach production host "+dst.ID+" on port "+strconv.Itoa(port)+". Two-hop path: internet -> "+relay.ID+" -> "+dst.ID+".",
-		"Remove SSH ingress from "+match.RuleSource+" on "+relay.ID+" or remove its access to production host "+dst.ID+".",
+	relayID, dstID := "", ""
+	if relay != nil {
+		relayID = relay.ID
+	}
+	if dst != nil {
+		dstID = dst.ID
+	}
+	return newTransitiveCounterexample(
+		match.RuleSource,
+		"internet",
+		"Host "+relayID+" is SSH-accessible from the internet and",
+		relay, dst, port, relayMatch,
+		"Remove SSH ingress from "+match.RuleSource+" on "+relayID+" or remove its access to production host "+dstID+".",
 	)
 }
 
 func (g *Graph) findTransitiveInternalBypass(src, relay, dst *Host, port int, relayMatch *RuleMatch) *Counterexample {
-	match := g.findRule(src, relay, port)
+	match := g.Reachability(src, relay, port)
 	if match == nil || relayMatch == nil {
 		return nil
 	}
-	return newSGCounterexample(
-		src.ID+" -> "+relay.ID, dst.ID, port, "transitive", relayMatch,
-		"Host "+src.ID+" can reach "+relay.ID+", which can reach production host "+dst.ID+" on port "+strconv.Itoa(port)+". Two-hop path: "+src.ID+" -> "+relay.ID+" -> "+dst.ID+".",
-		"Remove SSH access from "+src.ID+" to "+relay.ID+" or from "+relay.ID+" to production host "+dst.ID+".",
+	srcID, relayID, dstID := "", "", ""
+	if src != nil {
+		srcID = src.ID
+	}
+	if relay != nil {
+		relayID = relay.ID
+	}
+	if dst != nil {
+		dstID = dst.ID
+	}
+	return newTransitiveCounterexample(
+		srcID,
+		srcID,
+		"Host "+srcID+" can reach "+relayID+", which",
+		relay, dst, port, relayMatch,
+		"Remove SSH access from "+srcID+" to "+relayID+" or from "+relayID+" to production host "+dstID+".",
 	)
 }
 
@@ -382,49 +441,34 @@ func (g *Graph) ProveFirewallMandatory() (*ProofResult, error) {
 
 	privateSubnets := g.PrivateSubnets()
 	if len(privateSubnets) == 0 {
-		return nil, fmt.Errorf("%w: no subnets tagged stave:subnet-type=private", ErrVacuousProof)
+		return nil, vacuousErr("no subnets tagged stave:subnet-type=private")
 	}
 	if len(g.Firewalls) == 0 {
-		return nil, fmt.Errorf("%w: no firewall endpoints found — cannot prove firewall routing", ErrVacuousProof)
+		return nil, vacuousErr("no firewall endpoints found — cannot prove firewall routing")
 	}
 
-	result := &ProofResult{
-		Property: "firewall-mandatory",
-		Scope:    map[string]int{"private_subnets": len(privateSubnets), "firewall_endpoints": len(g.Firewalls)},
-	}
+	result := newProofResult("firewall-mandatory", map[string]int{"private_subnets": len(privateSubnets), "firewall_endpoints": len(g.Firewalls)})
 
 	for _, sub := range privateSubnets {
 		if !sub.HasRouteTable() {
-			return nil, fmt.Errorf("%w: subnet %s has no route table association — cannot prove firewall routing", ErrVacuousProof, sub.ID)
+			return nil, vacuousErr("subnet %s has no route table association — cannot prove firewall routing", sub.ID)
 		}
 		for _, route := range g.RoutesForSubnet(sub) {
 			if !route.IsDefaultRoute() {
 				continue
 			}
 			if g.RouteBypassesFirewall(route) {
-				result.Result = "SAT"
-				result.Interpretation = "Firewall bypass exists — private subnet routes internet traffic directly to an internet gateway."
-				result.Counterexample = &Counterexample{
-					Source:      sub.ID,
-					Destination: route.TargetID,
-					PathType:    "direct-igw",
-					RoutePath: &UnprotectedRoutePath{
-						RouteTableID: sub.RouteTableID,
-						Destination:  route.Destination,
-					},
-					Explanation: "Subnet " + sub.ID + " has a " + route.Destination + " route to IGW " + route.TargetID + " in route table " + sub.RouteTableID + " without passing through a Network Firewall endpoint.",
-					Remediation: "Change the " + route.Destination + " route in " + sub.RouteTableID + " to target a Network Firewall endpoint instead of " + route.TargetID + ".",
-				}
-				result.SolveTimeMs = time.Since(start).Milliseconds()
-				return result, nil
+				ce := newRouteCounterexample(
+					sub, route, "direct-igw",
+					"Subnet "+sub.ID+" has a "+route.Destination+" route to IGW "+route.TargetID+" in route table "+sub.RouteTableID+" without passing through a Network Firewall endpoint.",
+					"Change the "+route.Destination+" route in "+sub.RouteTableID+" to target a Network Firewall endpoint instead of "+route.TargetID+".",
+				)
+				return result.sat(ce, "Firewall bypass exists — private subnet routes internet traffic directly to an internet gateway.", start)
 			}
 		}
 	}
 
-	result.Result = "UNSAT"
-	result.Interpretation = "All private subnets route internet traffic through a Network Firewall endpoint."
-	result.SolveTimeMs = time.Since(start).Milliseconds()
-	return result, nil
+	return result.unsat("All private subnets route internet traffic through a Network Firewall endpoint.", start)
 }
 
 // routeTargetClass is the sink classification for a default-route target.
@@ -490,67 +534,58 @@ func (g *Graph) ProveTransitiveEgress() (*ProofResult, error) {
 
 	isolated := g.IsolatedHosts()
 	if len(isolated) == 0 {
-		return nil, fmt.Errorf("%w: no hosts tagged stave:network-zone=isolated", ErrVacuousProof)
+		return nil, vacuousErr("no hosts tagged stave:network-zone=isolated")
 	}
 
 	sinks, gated := g.findEgressCandidates()
 	if len(sinks) == 0 && len(gated) == 0 {
-		return nil, fmt.Errorf("%w: no non-isolated hosts in subnets with internet egress routes", ErrVacuousProof)
+		return nil, vacuousErr("no non-isolated hosts in subnets with internet egress routes")
 	}
 
-	result := &ProofResult{
-		Property: "transitive-egress",
-		Scope:    map[string]int{"isolated_hosts": len(isolated), "sink_hosts": len(sinks), "gated_hosts": len(gated)},
+	result := newProofResult("transitive-egress", map[string]int{"isolated_hosts": len(isolated), "sink_hosts": len(sinks), "gated_hosts": len(gated)})
+
+	if iso, s, match := g.findFirstEgressPath(isolated, sinks); match != nil {
+		portStr := formatPort(match.Port)
+		ce := newSGCounterexample(
+			iso.ID, s.host.ID, match.Port, "transitive-egress", match,
+			"Isolated host "+iso.ID+" can reach "+s.host.ID+" on port "+portStr+". "+s.host.ID+"'s subnet routes "+s.route.Destination+" to "+s.route.Target()+". Two-hop path: "+iso.ID+" → "+s.host.ID+" → internet.",
+			"Remove network access from "+iso.ID+" to "+s.host.ID+", or remove "+s.host.ID+"'s internet egress route.",
+		)
+		return result.sat(ce, "Transitive internet egress path exists — an isolated workload can reach a host with internet egress.", start)
 	}
 
+	if iso, gc, match := g.findFirstEgressPath(isolated, gated); match != nil {
+		portStr := formatPort(match.Port)
+		ce := newSGCounterexample(
+			iso.ID, gc.host.ID, match.Port, "gated-egress", match,
+			"Isolated host "+iso.ID+" can reach "+gc.host.ID+" on port "+portStr+". "+gc.host.ID+"'s subnet routes "+gc.route.Destination+" to "+gc.route.Target()+" ("+gc.target.Reason+").",
+			"Provide observation for "+gc.route.TargetType+" "+gc.target.TargetID+" to settle the verdict, or remove network access from "+iso.ID+" to "+gc.host.ID+".",
+		)
+		return result.gated(ce, "A path reaches a route target the snapshot cannot resolve. The verdict depends on an observation not yet available.", start)
+	}
+
+	return result.unsat("No isolated workload reaches the internet through an intermediate host, over security-group ingress reachability. Sound under that model: NACL denies and security-group egress rules are not evaluated, so a SAT counterexample may be blocked in practice, but UNSAT does not depend on them. Network-layer only — IAM-layer service paths (Lambda invoke, SSM, S3 replication, VPC endpoints to request-making services) are not evaluated. Single-region snapshot; run per region.", start)
+}
+
+func formatPort(port int) string {
+	if port == 0 {
+		return "all"
+	}
+	return strconv.Itoa(port)
+}
+
+func (g *Graph) findFirstEgressPath(isolated []*Host, candidates []egressCandidate) (*Host, egressCandidate, *RuleMatch) {
+	if g == nil {
+		return nil, egressCandidate{}, nil
+	}
 	for _, iso := range isolated {
-		for _, s := range sinks {
-			match := g.findRuleAnyPort(iso, s.host)
-			if match == nil {
-				continue
+		for _, c := range candidates {
+			if match := g.ReachabilityAnyPort(iso, c.host); match != nil {
+				return iso, c, match
 			}
-			portStr := strconv.Itoa(match.Port)
-			if match.Port == 0 {
-				portStr = "all"
-			}
-			result.Result = "SAT"
-			result.Interpretation = "Transitive internet egress path exists — an isolated workload can reach a host with internet egress."
-			result.Counterexample = newSGCounterexample(
-				iso.ID, s.host.ID, match.Port, "transitive-egress", match,
-				"Isolated host "+iso.ID+" can reach "+s.host.ID+" on port "+portStr+". "+s.host.ID+"'s subnet routes "+s.route.Destination+" to "+s.route.Target()+". Two-hop path: "+iso.ID+" → "+s.host.ID+" → internet.",
-				"Remove network access from "+iso.ID+" to "+s.host.ID+", or remove "+s.host.ID+"'s internet egress route.",
-			)
-			result.SolveTimeMs = time.Since(start).Milliseconds()
-			return result, nil
 		}
 	}
-
-	for _, iso := range isolated {
-		for _, gc := range gated {
-			match := g.findRuleAnyPort(iso, gc.host)
-			if match == nil {
-				continue
-			}
-			portStr := strconv.Itoa(match.Port)
-			if match.Port == 0 {
-				portStr = "all"
-			}
-			result.Result = "EVIDENCE_GATED"
-			result.Interpretation = "A path reaches a route target the snapshot cannot resolve. The verdict depends on an observation not yet available."
-			result.Counterexample = newSGCounterexample(
-				iso.ID, gc.host.ID, match.Port, "gated-egress", match,
-				"Isolated host "+iso.ID+" can reach "+gc.host.ID+" on port "+portStr+". "+gc.host.ID+"'s subnet routes "+gc.route.Destination+" to "+gc.route.Target()+" ("+gc.target.Reason+").",
-				"Provide observation for "+gc.route.TargetType+" "+gc.target.TargetID+" to settle the verdict, or remove network access from "+iso.ID+" to "+gc.host.ID+".",
-			)
-			result.SolveTimeMs = time.Since(start).Milliseconds()
-			return result, nil
-		}
-	}
-
-	result.Result = "UNSAT"
-	result.Interpretation = "No isolated workload reaches the internet through an intermediate host, over security-group ingress reachability. Sound under that model: NACL denies and security-group egress rules are not evaluated, so a SAT counterexample may be blocked in practice, but UNSAT does not depend on them. Network-layer only — IAM-layer service paths (Lambda invoke, SSM, S3 replication, VPC endpoints to request-making services) are not evaluated. Single-region snapshot; run per region."
-	result.SolveTimeMs = time.Since(start).Milliseconds()
-	return result, nil
+	return nil, egressCandidate{}, nil
 }
 
 type egressCandidate struct {

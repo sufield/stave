@@ -1,15 +1,5 @@
 package network
 
-// SSHPath describes a network path to a host on port 22.
-type SSHPath struct {
-	Source      string `json:"source"`
-	Destination string `json:"destination"`
-	Port        int    `json:"port"`
-	PathType    string `json:"path_type"` // "sg-ref" | "cidr" | "cross-vpc"
-	RuleSG      string `json:"rule_sg"`
-	RuleSource  string `json:"rule_source"`
-}
-
 // RuleMatch is the authorization evidence for network reachability between hosts.
 type RuleMatch struct {
 	SecurityGroupID string
@@ -63,20 +53,40 @@ func (m *RuleMatch) Remediation(bastions []*Host) string {
 	return rem
 }
 
-// broadInternalCIDRs are CIDRs that cover entire RFC1918 ranges.
-// Soufflé can't do CIDR math; we match the same set here.
-var broadInternalCIDRs = map[string]bool{
-	"10.0.0.0/8":     true,
-	"172.16.0.0/12":  true,
-	"192.168.0.0/16": true,
-	"0.0.0.0/0":      true,
-	"::/0":           true,
+// SSHPath constructs an SSHPath from authorization evidence between source and destination.
+// Safe on nil receiver.
+func (m *RuleMatch) SSHPath(source, destination string) SSHPath {
+	if m == nil {
+		return SSHPath{Source: source, Destination: destination}
+	}
+	return SSHPath{
+		Source:      source,
+		Destination: destination,
+		Port:        m.Port,
+		PathType:    m.PathType,
+		RuleSG:      m.SecurityGroupID,
+		RuleSource:  m.RuleSource,
+	}
+}
+
+// Reachability reports authorization evidence for traffic from src to dst on the given port.
+// Returns a RuleMatch with security group and path details, or nil if traffic is not authorized.
+// Safe on nil receiver, src, or dst.
+func (g *Graph) Reachability(src, dst *Host, port int) *RuleMatch {
+	return g.findRuleMatching(src, dst, func(r SGRule) bool { return r.IsIngressOnPort(port) })
+}
+
+// ReachabilityAnyPort reports authorization evidence for traffic from src to dst on any port.
+// Returns a RuleMatch with security group and path details, or nil if no traffic is authorized.
+// Safe on nil receiver, src, or dst.
+func (g *Graph) ReachabilityAnyPort(src, dst *Host) *RuleMatch {
+	return g.findRuleMatching(src, dst, SGRule.IsIngress)
 }
 
 // CanReach reports whether src can reach dst on the given port via SG rules.
 // Safe on nil receiver, src, or dst.
 func (g *Graph) CanReach(src, dst *Host, port int) (bool, string) {
-	if match := g.findRule(src, dst, port); match != nil {
+	if match := g.Reachability(src, dst, port); match != nil {
 		return true, match.PathType
 	}
 	return false, ""
@@ -99,15 +109,8 @@ func (g *Graph) enumerateInternalSSHPaths(dst *Host, port int) []SSHPath {
 		if src.SameHost(dst) || src.IsProduction() {
 			continue
 		}
-		if match := g.findRule(src, dst, port); match != nil {
-			paths = append(paths, SSHPath{
-				Source:      src.ID,
-				Destination: dst.ID,
-				Port:        port,
-				PathType:    match.PathType,
-				RuleSG:      match.SecurityGroupID,
-				RuleSource:  match.RuleSource,
-			})
+		if match := g.Reachability(src, dst, port); match != nil {
+			paths = append(paths, match.SSHPath(src.ID, dst.ID))
 		}
 	}
 	return paths
@@ -116,34 +119,13 @@ func (g *Graph) enumerateInternalSSHPaths(dst *Host, port int) []SSHPath {
 // enumerateExternalSSHPaths finds all direct public internet SSH ingress paths to dst.
 func (g *Graph) enumerateExternalSSHPaths(dst *Host, port int) []SSHPath {
 	var paths []SSHPath
-	for _, dstSG := range dst.SGIDs {
-		for _, rule := range g.SGRules[dstSG] {
-			if rule.IsInternetIngressOnPort(port) {
-				paths = append(paths, SSHPath{
-					Source:      "0.0.0.0/0",
-					Destination: dst.ID,
-					Port:        port,
-					PathType:    "external",
-					RuleSG:      dstSG,
-					RuleSource:  "0.0.0.0/0",
-				})
-			}
-		}
+	for _, match := range g.findInternetRulesMatching(dst, func(r SGRule) bool { return r.IsInternetIngressOnPort(port) }) {
+		paths = append(paths, match.SSHPath(match.RuleSource, dst.ID))
 	}
 	return paths
 }
 
-func (g *Graph) allHosts() []*Host {
-	out := make([]*Host, 0, len(g.Hosts))
-	for _, h := range g.Hosts {
-		out = append(out, h)
-	}
-	return out
-}
-
-// findRule finds the security group rule authorizing traffic from src to dst on the given port.
-// Safe on nil receiver, src, or dst.
-func (g *Graph) findRule(src, dst *Host, port int) *RuleMatch {
+func (g *Graph) findRuleMatching(src, dst *Host, filter func(SGRule) bool) *RuleMatch {
 	if g == nil || src == nil || dst == nil {
 		return nil
 	}
@@ -151,33 +133,7 @@ func (g *Graph) findRule(src, dst *Host, port int) *RuleMatch {
 	canCrossVPC := g.CanRouteCrossVPC(src, dst)
 	for _, dstSG := range dst.SGIDs {
 		for _, rule := range g.SGRules[dstSG] {
-			if !rule.IsIngressOnPort(port) {
-				continue
-			}
-			if ok, pathType := rule.Allows(src, dst, canCrossVPC); ok {
-				return &RuleMatch{
-					SecurityGroupID: dstSG,
-					RuleSource:      rule.RuleSource(),
-					PathType:        pathType,
-					Port:            port,
-				}
-			}
-		}
-	}
-	return nil
-}
-
-// findRuleAnyPort finds a security group rule authorizing traffic from src to dst on any port.
-// Safe on nil receiver, src, or dst.
-func (g *Graph) findRuleAnyPort(src, dst *Host) *RuleMatch {
-	if g == nil || src == nil || dst == nil {
-		return nil
-	}
-
-	canCrossVPC := g.CanRouteCrossVPC(src, dst)
-	for _, dstSG := range dst.SGIDs {
-		for _, rule := range g.SGRules[dstSG] {
-			if !rule.IsIngress() {
+			if !filter(rule) {
 				continue
 			}
 			if ok, pathType := rule.Allows(src, dst, canCrossVPC); ok {
@@ -189,6 +145,35 @@ func (g *Graph) findRuleAnyPort(src, dst *Host) *RuleMatch {
 				}
 			}
 		}
+	}
+	return nil
+}
+
+func (g *Graph) findInternetRulesMatching(dst *Host, filter func(SGRule) bool) []*RuleMatch {
+	if g == nil || dst == nil {
+		return nil
+	}
+
+	var matches []*RuleMatch
+	for _, dstSG := range dst.SGIDs {
+		for _, rule := range g.SGRules[dstSG] {
+			if filter(rule) {
+				matches = append(matches, &RuleMatch{
+					SecurityGroupID: dstSG,
+					RuleSource:      rule.SourceValue,
+					PathType:        "external",
+					Port:            rule.Port,
+				})
+			}
+		}
+	}
+	return matches
+}
+
+func (g *Graph) findInternetRuleMatching(dst *Host, filter func(SGRule) bool) *RuleMatch {
+	matches := g.findInternetRulesMatching(dst, filter)
+	if len(matches) > 0 {
+		return matches[0]
 	}
 	return nil
 }
@@ -196,43 +181,18 @@ func (g *Graph) findRuleAnyPort(src, dst *Host) *RuleMatch {
 // findInternetRule finds the security group rule authorizing public internet ingress to dst on the given port.
 // Safe on nil receiver or nil dst.
 func (g *Graph) findInternetRule(dst *Host, port int) *RuleMatch {
-	if g == nil || dst == nil {
-		return nil
-	}
-
-	for _, dstSG := range dst.SGIDs {
-		for _, rule := range g.SGRules[dstSG] {
-			if rule.IsInternetIngressOnPort(port) {
-				return &RuleMatch{
-					SecurityGroupID: dstSG,
-					RuleSource:      rule.SourceValue,
-					PathType:        "external",
-					Port:            port,
-				}
-			}
-		}
-	}
-	return nil
+	return g.findInternetRuleMatching(dst, func(r SGRule) bool { return r.IsInternetIngressOnPort(port) })
 }
 
 // findInternetRuleAnyPort finds a security group rule authorizing public internet ingress to dst on any port.
 // Safe on nil receiver or nil dst.
 func (g *Graph) findInternetRuleAnyPort(dst *Host) *RuleMatch {
-	if g == nil || dst == nil {
-		return nil
-	}
+	return g.findInternetRuleMatching(dst, SGRule.IsInternetIngress)
+}
 
-	for _, dstSG := range dst.SGIDs {
-		for _, rule := range g.SGRules[dstSG] {
-			if rule.IsInternetIngress() {
-				return &RuleMatch{
-					SecurityGroupID: dstSG,
-					RuleSource:      rule.SourceValue,
-					PathType:        "external",
-					Port:            rule.Port,
-				}
-			}
-		}
-	}
-	return nil
+// IsPubliclyAccessible reports whether h is accessible from the public internet
+// on the specified port.
+// Safe on nil receiver or nil host.
+func (g *Graph) IsPubliclyAccessible(h *Host, port int) bool {
+	return g.findInternetRule(h, port) != nil
 }

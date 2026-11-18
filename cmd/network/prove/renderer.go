@@ -43,23 +43,31 @@ var propertyTitles = map[string]string{
 	"transitive-egress":  "Transitive Internet Egress Proof",
 }
 
-func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
-	title := propertyTitles[r.Property]
+func formatTitle(property, result string) string {
+	title := propertyTitles[property]
 	if title == "" {
-		title = r.Property
+		title = property
 	}
-	switch r.Result {
+	switch result {
 	case "SAT":
 		title += " — VIOLATION FOUND"
 	case "EVIDENCE_GATED":
 		title += " — EVIDENCE GATED"
 	}
+	return title
+}
 
+func renderHeader(w io.Writer, property, result string) {
 	fmt.Fprintln(w, "═══════════════════════════════════════════")
-	fmt.Fprintln(w, title)
+	fmt.Fprintln(w, formatTitle(property, result))
 	fmt.Fprintln(w, "═══════════════════════════════════════════")
 	fmt.Fprintln(w)
+}
 
+func renderScope(w io.Writer, r *network.ProofResult) {
+	if r == nil {
+		return
+	}
 	// Bastion-specific scope fields.
 	if r.ProductionHosts > 0 {
 		fmt.Fprintf(w, "  Production hosts: %d\n", r.ProductionHosts)
@@ -75,41 +83,48 @@ func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
 		fmt.Fprintf(w, "  %s: %d\n", k, v)
 	}
 	fmt.Fprintln(w)
+}
+
+func renderUnsat(w io.Writer, r *network.ProofResult) {
+	if r == nil {
+		return
+	}
+	fmt.Fprintf(w, "  PROOF: %s\n", r.Interpretation)
+	fmt.Fprintf(w, "  Solver: graph-search (completed in %dms)\n", r.SolveTimeMs)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "  No violation exists.")
+}
+
+func (textRenderer) Render(w io.Writer, r *network.ProofResult) error {
+	renderHeader(w, r.Property, r.Result)
+	renderScope(w, r)
 
 	switch r.Result {
 	case "UNSAT":
-		fmt.Fprintf(w, "  PROOF: %s\n", r.Interpretation)
-		fmt.Fprintf(w, "  Solver: graph-search (completed in %dms)\n", r.SolveTimeMs)
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "  No violation exists.")
+		renderUnsat(w, r)
 	case "EVIDENCE_GATED":
-		ce := r.Counterexample
-		fmt.Fprintln(w, "  EVIDENCE GATED:")
-		fmt.Fprintf(w, "    Source:      %s\n", ce.Source)
-		fmt.Fprintf(w, "    Destination: %s\n", ce.Destination)
-		renderPort(w, ce)
-		fmt.Fprintf(w, "    Path:        %s\n", ce.PathType)
-		renderViolation(w, ce)
-		fmt.Fprintln(w)
-		fmt.Fprintf(w, "  %s\n", ce.Explanation)
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "  REMEDIATION:")
-		fmt.Fprintf(w, "    %s\n", ce.Remediation)
+		renderCounterexample(w, "EVIDENCE GATED:", r.Counterexample)
 	default:
-		ce := r.Counterexample
-		fmt.Fprintln(w, "  COUNTEREXAMPLE:")
-		fmt.Fprintf(w, "    Source:      %s\n", ce.Source)
-		fmt.Fprintf(w, "    Destination: %s\n", ce.Destination)
-		renderPort(w, ce)
-		fmt.Fprintf(w, "    Path:        %s\n", ce.PathType)
-		renderViolation(w, ce)
-		fmt.Fprintln(w)
-		fmt.Fprintf(w, "  %s\n", ce.Explanation)
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "  REMEDIATION:")
-		fmt.Fprintf(w, "    %s\n", ce.Remediation)
+		renderCounterexample(w, "COUNTEREXAMPLE:", r.Counterexample)
 	}
 	return nil
+}
+
+func renderCounterexample(w io.Writer, header string, ce *network.Counterexample) {
+	if ce == nil {
+		return
+	}
+	fmt.Fprintf(w, "  %s\n", header)
+	fmt.Fprintf(w, "    Source:      %s\n", ce.Source)
+	fmt.Fprintf(w, "    Destination: %s\n", ce.Destination)
+	renderPort(w, ce)
+	fmt.Fprintf(w, "    Path:        %s\n", ce.PathType)
+	renderViolation(w, ce)
+	fmt.Fprintln(w)
+	fmt.Fprintf(w, "  %s\n", ce.Explanation)
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "  REMEDIATION:")
+	fmt.Fprintf(w, "    %s\n", ce.Remediation)
 }
 
 func renderViolation(w io.Writer, ce *network.Counterexample) {
