@@ -2,6 +2,25 @@ package network
 
 import "fmt"
 
+const (
+	// PathTypeSGRef indicates reachability authorized via a security group reference.
+	PathTypeSGRef = "sg-ref"
+	// PathTypeCIDR indicates reachability authorized via a broad internal CIDR rule within the same VPC.
+	PathTypeCIDR = "cidr"
+	// PathTypeCrossVPC indicates reachability authorized across peered or TGW-connected VPCs.
+	PathTypeCrossVPC = "cross-vpc"
+	// PathTypeExternal indicates direct public internet ingress.
+	PathTypeExternal = "external"
+	// PathTypeDirectIGW indicates a direct subnet route to an Internet Gateway bypassing a firewall.
+	PathTypeDirectIGW = "direct-igw"
+	// PathTypeTransitive indicates a multi-hop transitive SSH relay path.
+	PathTypeTransitive = "transitive"
+	// PathTypeTransitiveEgress indicates a two-hop transitive internet egress path via a sink host.
+	PathTypeTransitiveEgress = "transitive-egress"
+	// PathTypeGatedEgress indicates a transitive egress path blocked on an unobservable route target.
+	PathTypeGatedEgress = "gated-egress"
+)
+
 // RuleMatch is the authorization evidence for network reachability between hosts.
 type RuleMatch struct {
 	SecurityGroupID string
@@ -27,12 +46,12 @@ func hostIdentity(h *Host) (id string, vpcID string) {
 
 // IsExternal reports whether the rule match represents direct public internet ingress.
 func (m *RuleMatch) IsExternal() bool {
-	return m != nil && m.PathType == "external"
+	return m != nil && m.PathType == PathTypeExternal
 }
 
 // IsCrossVPC reports whether the rule match represents cross-VPC traffic.
 func (m *RuleMatch) IsCrossVPC() bool {
-	return m != nil && m.PathType == "cross-vpc"
+	return m != nil && m.PathType == PathTypeCrossVPC
 }
 
 // InternetSource returns the rule source formatted as an internet origin label.
@@ -80,6 +99,21 @@ func (m *RuleMatch) Explanation(src, dst *Host) string {
 	}
 }
 
+// formatExternalSSHRemediation formats corrective advice for direct public internet SSH ingress.
+func formatExternalSSHRemediation(ruleSource, sgID string) string {
+	return fmt.Sprintf("Remove SSH ingress from %s on %s. Restrict to bastion SG reference only.",
+		ruleSource, sgID)
+}
+
+// formatInternalSSHRemediation formats corrective advice for internal non-bastion SSH ingress.
+func formatInternalSSHRemediation(ruleSource, sgID string, hasBastions bool) string {
+	rem := fmt.Sprintf("Remove SSH ingress rule (%s) on %s.", ruleSource, sgID)
+	if hasBastions {
+		rem += " Replace with SSH from bastion SG only."
+	}
+	return rem
+}
+
 // Remediation formats the recommended corrective action to eliminate the bypass.
 // Safe on nil receiver.
 func (m *RuleMatch) Remediation(bastions []*Host) string {
@@ -87,14 +121,9 @@ func (m *RuleMatch) Remediation(bastions []*Host) string {
 		return ""
 	}
 	if m.IsExternal() {
-		return fmt.Sprintf("Remove SSH ingress from %s on %s. Restrict to bastion SG reference only.",
-			m.RuleSource, m.SecurityGroupID)
+		return formatExternalSSHRemediation(m.RuleSource, m.SecurityGroupID)
 	}
-	rem := fmt.Sprintf("Remove SSH ingress rule (%s) on %s.", m.RuleSource, m.SecurityGroupID)
-	if len(bastions) > 0 {
-		rem += " Replace with SSH from bastion SG only."
-	}
-	return rem
+	return formatInternalSSHRemediation(m.RuleSource, m.SecurityGroupID, len(bastions) > 0)
 }
 
 // newSSHPath constructs an SSHPath describing an authorized network path.
@@ -214,6 +243,18 @@ func (g *Graph) enumerateExternalSSHPaths(dst *Host, port int) []SSHPath {
 	return paths
 }
 
+func (g *Graph) findRuleInSG(src, dst *Host, sgID string, canCrossVPC bool, filter func(SGRule) bool) *RuleMatch {
+	for _, rule := range g.RulesForSG(sgID) {
+		if !filter(rule) {
+			continue
+		}
+		if ok, pathType := rule.Allows(src, dst, canCrossVPC); ok {
+			return newRuleMatch(sgID, rule.RuleSource(), pathType, rule.Port)
+		}
+	}
+	return nil
+}
+
 func (g *Graph) findRuleMatching(src, dst *Host, filter func(SGRule) bool) *RuleMatch {
 	if g == nil || src == nil || dst == nil {
 		return nil
@@ -221,16 +262,21 @@ func (g *Graph) findRuleMatching(src, dst *Host, filter func(SGRule) bool) *Rule
 
 	canCrossVPC := g.CanRouteCrossVPC(src, dst)
 	for _, dstSG := range dst.SGIDs {
-		for _, rule := range g.SGRules[dstSG] {
-			if !filter(rule) {
-				continue
-			}
-			if ok, pathType := rule.Allows(src, dst, canCrossVPC); ok {
-				return newRuleMatch(dstSG, rule.RuleSource(), pathType, rule.Port)
-			}
+		if match := g.findRuleInSG(src, dst, dstSG, canCrossVPC, filter); match != nil {
+			return match
 		}
 	}
 	return nil
+}
+
+func (g *Graph) findInternetRulesInSG(sgID string, filter func(SGRule) bool) []*RuleMatch {
+	var matches []*RuleMatch
+	for _, rule := range g.RulesForSG(sgID) {
+		if filter(rule) {
+			matches = append(matches, newRuleMatch(sgID, rule.SourceValue, PathTypeExternal, rule.Port))
+		}
+	}
+	return matches
 }
 
 func (g *Graph) findInternetRulesMatching(dst *Host, filter func(SGRule) bool) []*RuleMatch {
@@ -240,11 +286,7 @@ func (g *Graph) findInternetRulesMatching(dst *Host, filter func(SGRule) bool) [
 
 	var matches []*RuleMatch
 	for _, dstSG := range dst.SGIDs {
-		for _, rule := range g.SGRules[dstSG] {
-			if filter(rule) {
-				matches = append(matches, newRuleMatch(dstSG, rule.SourceValue, "external", rule.Port))
-			}
-		}
+		matches = append(matches, g.findInternetRulesInSG(dstSG, filter)...)
 	}
 	return matches
 }
@@ -267,17 +309,4 @@ func (g *Graph) findInternetRule(dst *Host, port int) *RuleMatch {
 // Safe on nil receiver or nil dst.
 func (g *Graph) findInternetRuleAnyPort(dst *Host) *RuleMatch {
 	return g.findInternetRuleMatching(dst, SGRule.IsInternetIngress)
-}
-
-// IsPubliclyAccessible reports whether h is accessible from the public internet
-// on the specified port.
-// Safe on nil receiver or nil host.
-func (g *Graph) IsPubliclyAccessible(h *Host, port int) bool {
-	return g.findInternetRule(h, port) != nil
-}
-
-// IsPubliclyAccessibleAnyPort reports whether h is accessible from the public internet
-// on any port. Safe on nil receiver or nil host.
-func (g *Graph) IsPubliclyAccessibleAnyPort(h *Host) bool {
-	return g.findInternetRuleAnyPort(h) != nil
 }

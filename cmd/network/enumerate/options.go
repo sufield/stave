@@ -13,7 +13,7 @@ import (
 
 const (
 	// DefaultPort is the default port to enumerate.
-	DefaultPort = 22
+	DefaultPort = stave.DefaultSSHPort
 	// DefaultFormat is the default output format for network enumeration.
 	DefaultFormat = "text"
 )

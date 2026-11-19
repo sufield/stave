@@ -17,9 +17,9 @@ var ValidProperties = network.SupportedProperties
 
 const (
 	// DefaultProperty is the default safety property verified when none is specified.
-	DefaultProperty = "bastion-ssh"
+	DefaultProperty = network.PropertyBastionSSH
 	// DefaultPort is the default port verified for network safety properties.
-	DefaultPort = 22
+	DefaultPort = network.DefaultSSHPort
 	// DefaultFormat is the default output format for the network prover.
 	DefaultFormat = "text"
 )

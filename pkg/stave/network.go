@@ -22,7 +22,7 @@ type NetworkProveConfig struct {
 }
 
 // DefaultSSHPort is the default port for SSH reachability and safety properties.
-const DefaultSSHPort = 22
+const DefaultSSHPort = network.DefaultSSHPort
 
 func normalizePort(port int) int {
 	if port <= 0 {

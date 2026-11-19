@@ -3,6 +3,7 @@ package prove
 import (
 	"bytes"
 	"encoding/json"
+	"slices"
 	"strings"
 	"testing"
 
@@ -224,23 +225,25 @@ func Test_renderCounterexample_NilSafe(t *testing.T) {
 	}
 }
 
-func Test_formatTitle(t *testing.T) {
+func TestFormatTitle(t *testing.T) {
 	tests := []struct {
+		name     string
 		property string
 		result   string
 		want     string
 	}{
-		{"bastion-ssh", "UNSAT", "Bastion SSH Routing Proof"},
-		{"bastion-ssh", "SAT", "Bastion SSH Routing Proof — VIOLATION FOUND"},
-		{"transitive-egress", "EVIDENCE_GATED", "Transitive Internet Egress Proof — EVIDENCE GATED"},
-		{"unknown-prop", "SAT", "unknown-prop — VIOLATION FOUND"},
+		{"empty property", "", "SAT", ""},
+		{"bastion-ssh UNSAT", "bastion-ssh", "UNSAT", "Bastion SSH Routing Proof"},
+		{"bastion-ssh SAT", "bastion-ssh", "SAT", "Bastion SSH Routing Proof — VIOLATION FOUND"},
+		{"transitive-egress EVIDENCE_GATED", "transitive-egress", "EVIDENCE_GATED", "Transitive Internet Egress Proof — EVIDENCE GATED"},
+		{"unknown-prop SAT", "unknown-prop", "SAT", "unknown-prop — VIOLATION FOUND"},
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.property+"_"+tt.result, func(t *testing.T) {
-			got := formatTitle(tt.property, tt.result)
+		t.Run(tt.name, func(t *testing.T) {
+			got := FormatTitle(tt.property, tt.result)
 			if got != tt.want {
-				t.Errorf("formatTitle(%q, %q) = %q, want %q", tt.property, tt.result, got, tt.want)
+				t.Errorf("FormatTitle(%q, %q) = %q, want %q", tt.property, tt.result, got, tt.want)
 			}
 		})
 	}
@@ -290,6 +293,57 @@ func Test_renderScope(t *testing.T) {
 			t.Errorf("missing private_subnets in %q", out)
 		}
 	})
+}
+
+func Test_renderBastionScope(t *testing.T) {
+	t.Run("nil result writes nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderBastionScope(&buf, nil)
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for nil result, got %q", buf.String())
+		}
+	})
+
+	t.Run("zero counts write nothing", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderBastionScope(&buf, &network.ProofResult{})
+		if buf.Len() != 0 {
+			t.Errorf("expected empty output for zero counts, got %q", buf.String())
+		}
+	})
+
+	t.Run("renders present counts", func(t *testing.T) {
+		var buf bytes.Buffer
+		renderBastionScope(&buf, &network.ProofResult{
+			ProductionHosts: 5,
+			BastionHosts:    2,
+			SSHPaths:        3,
+		})
+		out := buf.String()
+		if !strings.Contains(out, "Production hosts: 5\n") || !strings.Contains(out, "Bastion hosts:    2\n") || !strings.Contains(out, "SSH paths:        3\n") {
+			t.Errorf("unexpected renderBastionScope output: %q", out)
+		}
+	})
+}
+
+func Test_sortedScopeKeys(t *testing.T) {
+	if got := sortedScopeKeys(nil); got != nil {
+		t.Errorf("sortedScopeKeys(nil) = %v, want nil", got)
+	}
+	if got := sortedScopeKeys(map[string]int{}); got != nil {
+		t.Errorf("sortedScopeKeys(empty) = %v, want nil", got)
+	}
+
+	scope := map[string]int{
+		"zebra":  1,
+		"apple":  2,
+		"banana": 3,
+	}
+	got := sortedScopeKeys(scope)
+	want := []string{"apple", "banana", "zebra"}
+	if !slices.Equal(got, want) {
+		t.Errorf("sortedScopeKeys() = %v, want %v", got, want)
+	}
 }
 
 func Test_renderUnsat(t *testing.T) {
@@ -624,7 +678,21 @@ func TestFormatSolverCompletion(t *testing.T) {
 	}
 }
 
+func TestFormatUnsatProofBanner(t *testing.T) {
+	got := FormatUnsatProofBanner("All paths are secure")
+	want := "PROOF: All paths are secure"
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
 func Test_verdictCounterexampleHeader(t *testing.T) {
+	t.Run("nil result", func(t *testing.T) {
+		if got := verdictCounterexampleHeader(nil); got != "" {
+			t.Errorf("got %q, want empty string", got)
+		}
+	})
+
 	t.Run("gated result", func(t *testing.T) {
 		r := &network.ProofResult{Result: "EVIDENCE_GATED"}
 		if got := verdictCounterexampleHeader(r); got != "EVIDENCE GATED:" {

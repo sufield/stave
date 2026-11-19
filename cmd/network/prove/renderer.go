@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"slices"
 	"strings"
 
@@ -45,12 +46,12 @@ func (jsonRenderer) Render(w io.Writer, r *network.ProofResult) error {
 type textRenderer struct{}
 
 var propertyTitles = map[string]string{
-	"bastion-ssh":        "Bastion SSH Routing Proof",
-	"prod-dev-isolation": "Production-Development Isolation Proof",
-	"database-isolation": "Database Tier Isolation Proof",
-	"firewall-mandatory": "Firewall Mandatory Routing Proof",
-	"transitive-ssh":     "Transitive SSH Routing Proof",
-	"transitive-egress":  "Transitive Internet Egress Proof",
+	network.PropertyBastionSSH:        "Bastion SSH Routing Proof",
+	network.PropertyProdDevIsolation:  "Production-Development Isolation Proof",
+	network.PropertyDatabaseIsolation: "Database Tier Isolation Proof",
+	network.PropertyFirewallMandatory: "Firewall Mandatory Routing Proof",
+	network.PropertyTransitiveSSH:     "Transitive SSH Routing Proof",
+	network.PropertyTransitiveEgress:  "Transitive Internet Egress Proof",
 }
 
 // PropertyTitle returns the human-readable display title for property.
@@ -61,12 +62,17 @@ func PropertyTitle(property string) string {
 	return property
 }
 
-func formatTitle(property, result string) string {
+// FormatTitle returns the formatted banner title combining the property name and result verdict.
+// Safe on empty property.
+func FormatTitle(property, result string) string {
 	title := PropertyTitle(property)
+	if title == "" {
+		return ""
+	}
 	switch result {
-	case "SAT":
+	case network.VerdictSAT:
 		title += " — VIOLATION FOUND"
-	case "EVIDENCE_GATED":
+	case network.VerdictEvidenceGated:
 		title += " — EVIDENCE GATED"
 	}
 	return title
@@ -74,30 +80,28 @@ func formatTitle(property, result string) string {
 
 func renderHeader(w io.Writer, property, result string) {
 	fmt.Fprintln(w, "═══════════════════════════════════════════")
-	fmt.Fprintln(w, formatTitle(property, result))
+	fmt.Fprintln(w, FormatTitle(property, result))
 	fmt.Fprintln(w, "═══════════════════════════════════════════")
 	fmt.Fprintln(w)
 }
 
-func renderGenericScope(w io.Writer, scope map[string]int) {
+func sortedScopeKeys(scope map[string]int) []string {
 	if len(scope) == 0 {
-		return
+		return nil
 	}
-	keys := make([]string, 0, len(scope))
-	for k := range scope {
-		keys = append(keys, k)
-	}
-	slices.Sort(keys)
-	for _, k := range keys {
+	return slices.Sorted(maps.Keys(scope))
+}
+
+func renderGenericScope(w io.Writer, scope map[string]int) {
+	for _, k := range sortedScopeKeys(scope) {
 		fmt.Fprintf(w, "  %s: %d\n", k, scope[k])
 	}
 }
 
-func renderScope(w io.Writer, r *network.ProofResult) {
+func renderBastionScope(w io.Writer, r *network.ProofResult) {
 	if r == nil {
 		return
 	}
-	// Bastion-specific scope fields.
 	if r.ProductionHosts > 0 {
 		fmt.Fprintf(w, "  Production hosts: %d\n", r.ProductionHosts)
 	}
@@ -107,6 +111,14 @@ func renderScope(w io.Writer, r *network.ProofResult) {
 	if r.SSHPaths > 0 {
 		fmt.Fprintf(w, "  SSH paths:        %d\n", r.SSHPaths)
 	}
+}
+
+func renderScope(w io.Writer, r *network.ProofResult) {
+	if r == nil {
+		return
+	}
+	// Bastion-specific scope fields.
+	renderBastionScope(w, r)
 	// Generic scope fields.
 	if r.ScopeCount() > 0 {
 		renderGenericScope(w, r.Scope)
@@ -119,11 +131,16 @@ func FormatSolverCompletion(solveTimeMs int64) string {
 	return fmt.Sprintf("Solver: graph-search (completed in %dms)", solveTimeMs)
 }
 
+// FormatUnsatProofBanner formats the proof interpretation line.
+func FormatUnsatProofBanner(interpretation string) string {
+	return "PROOF: " + interpretation
+}
+
 func renderUnsat(w io.Writer, r *network.ProofResult) {
 	if r == nil {
 		return
 	}
-	fmt.Fprintf(w, "  PROOF: %s\n", r.Interpretation)
+	fmt.Fprintf(w, "  %s\n", FormatUnsatProofBanner(r.Interpretation))
 	fmt.Fprintf(w, "  %s\n", FormatSolverCompletion(r.SolveTimeMs))
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "  No violation exists.")
@@ -137,7 +154,13 @@ func renderProofSummary(w io.Writer, r *network.ProofResult) {
 	renderScope(w, r)
 }
 
+// verdictCounterexampleHeader returns the section header string based on whether
+// the proof result indicates evidence gating or a concrete counterexample.
+// Returns empty string if r is nil.
 func verdictCounterexampleHeader(r *network.ProofResult) string {
+	if r == nil {
+		return ""
+	}
 	if r.IsEvidenceGated() {
 		return "EVIDENCE GATED:"
 	}
@@ -207,20 +230,15 @@ func renderSGExposure(w io.Writer, ce *network.Counterexample) {
 	if ce == nil {
 		return
 	}
+	ruleSG, ruleSource := ce.RuleSG, ce.RuleSource
 	if ce.SGExposure != nil {
-		if ce.SGExposure.SecurityGroupID != "" {
-			fmt.Fprintf(w, "    Rule SG:     %s\n", ce.SGExposure.SecurityGroupID)
-		}
-		if ce.SGExposure.RuleSource != "" {
-			fmt.Fprintf(w, "    Rule source: %s\n", ce.SGExposure.RuleSource)
-		}
-		return
+		ruleSG, ruleSource = ce.SGExposure.SecurityGroupID, ce.SGExposure.RuleSource
 	}
-	if ce.RuleSG != "" {
-		fmt.Fprintf(w, "    Rule SG:     %s\n", ce.RuleSG)
+	if ruleSG != "" {
+		fmt.Fprintf(w, "    Rule SG:     %s\n", ruleSG)
 	}
-	if ce.RuleSource != "" {
-		fmt.Fprintf(w, "    Rule source: %s\n", ce.RuleSource)
+	if ruleSource != "" {
+		fmt.Fprintf(w, "    Rule source: %s\n", ruleSource)
 	}
 }
 
