@@ -139,34 +139,11 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 		}
 
 		for _, a := range snap.Assets {
-			for _, svc := range services {
-				if _, ok := have[svc]; ok {
-					continue
-				}
-				for _, prefix := range []string{"aws_", "gcp_", "azure_"} {
-					target := prefix + svc
-					if a.Type == target || strings.HasPrefix(a.Type, target+"_") || strings.HasPrefix(a.Type, target+".") {
-						have[svc] = struct{}{}
-						break
-					}
-				}
-			}
+			matchAssetServices(a.Type, services, have)
 		}
-
 		for _, s := range snap.Snapshots {
 			for _, a := range s.Assets {
-				for _, svc := range services {
-					if _, ok := have[svc]; ok {
-						continue
-					}
-					for _, prefix := range []string{"aws_", "gcp_", "azure_"} {
-						target := prefix + svc
-						if a.Type == target || strings.HasPrefix(a.Type, target+"_") || strings.HasPrefix(a.Type, target+".") {
-							have[svc] = struct{}{}
-							break
-						}
-					}
-				}
+				matchAssetServices(a.Type, services, have)
 			}
 		}
 	}
@@ -180,4 +157,19 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 		}
 	}
 	return out
+}
+
+func matchAssetServices(assetType string, services []string, have map[string]struct{}) {
+	for _, svc := range services {
+		if _, ok := have[svc]; ok {
+			continue
+		}
+		for _, prefix := range []string{"aws_", "gcp_", "azure_"} {
+			target := prefix + svc
+			if assetType == target || strings.HasPrefix(assetType, target+"_") || strings.HasPrefix(assetType, target+".") {
+				have[svc] = struct{}{}
+				break
+			}
+		}
+	}
 }

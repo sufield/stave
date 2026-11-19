@@ -564,94 +564,44 @@ func mergeEdgeProperties(dst, src map[string]any) {
 					"existing_type", fmt.Sprintf("%T", existing))
 			}
 		}
-		// Build a fresh set seeded from any existing entries. The
-		// expected shape is map[string]struct{} (the dedup
-		// accumulator); legacy edges that landed here pre-stamped
-		// with []string or a single string are also recovered
-		// rather than silently discarded — the warn block above
-		// already names the type-mismatch case for triage, but
-		// data preservation across producer-version skew is the
-		// safer default than data loss.
 		newSet := make(map[string]struct{})
-		switch existing := dst[pluralKey].(type) {
-		case map[string]struct{}:
-			for k := range existing {
-				newSet[k] = struct{}{}
-			}
-		case []string:
-			for _, s := range existing {
-				newSet[s] = struct{}{}
-			}
-		case []any:
-			for _, s := range existing {
-				if s == nil {
-					continue
-				}
-				newSet[fmt.Sprint(s)] = struct{}{}
-			}
-		case string:
-			if existing != "" {
-				newSet[existing] = struct{}{}
-			}
-		}
-		// Multi-element property values must add each element to
-		// the accumulator individually. The earlier `fmt.Sprint(pv)`
-		// path coerced an entire []string into a single bracketed
-		// string ("[a b c]"), so a downstream consumer expecting
-		// separate entries saw one literal "[a b c]" entry instead
-		// of three distinct values. Type-switch on slice shapes so
-		// the per-element enumeration runs once at the merge site
-		// rather than every consumer reparsing the bracketed form.
-		switch typed := pv.(type) {
-		case nil:
-			// Skip nil values rather than letting fmt.Sprint
-			// inject the literal "<nil>" into the accumulator
-			// set. A nil pollutes downstream consumers with a
-			// sentinel string that looks like a real value but
-			// corresponds to no observed data.
-		case []string:
-			for _, s := range typed {
-				if s != "" {
-					newSet[s] = struct{}{}
-				}
-			}
-		case []any:
-			for _, elem := range typed {
-				if elem == nil {
-					continue
-				}
-				newSet[fmt.Sprint(elem)] = struct{}{}
-			}
-		default:
-			newSet[fmt.Sprint(pv)] = struct{}{}
-		}
-		// Singular-rescue: also fold the existing scalar (set on the
-		// first-edge write or by an earlier merge) into the plural
-		// set so the union spans both the singular contract and
-		// every duplicate's contribution. Apply the same per-element
-		// expansion as the src-pv branch above so a singular value
-		// that is itself a slice does not collapse into a literal
-		// "[a b c]" string under fmt.Sprint.
-		if existing, ok := dst[pk]; ok && existing != nil {
-			switch typed := existing.(type) {
-			case []string:
-				for _, s := range typed {
-					if s != "" {
-						newSet[s] = struct{}{}
-					}
-				}
-			case []any:
-				for _, elem := range typed {
-					if elem == nil {
-						continue
-					}
-					newSet[fmt.Sprint(elem)] = struct{}{}
-				}
-			default:
-				newSet[fmt.Sprint(existing)] = struct{}{}
-			}
+		collectIntoSet(newSet, dst[pluralKey]) // seed from existing plural
+		collectIntoSet(newSet, pv)             // add src value
+		if existing, ok := dst[pk]; ok {
+			collectIntoSet(newSet, existing) // fold singular value
 		}
 		dst[pluralKey] = newSet
+	}
+}
+
+// collectIntoSet adds the string representation(s) of v into set,
+// expanding slices element-wise and preserving existing accumulator entries.
+func collectIntoSet(set map[string]struct{}, v any) {
+	switch typed := v.(type) {
+	case nil:
+	case map[string]struct{}:
+		for k := range typed {
+			set[k] = struct{}{}
+		}
+	case []string:
+		for _, s := range typed {
+			if s != "" {
+				set[s] = struct{}{}
+			}
+		}
+	case []any:
+		for _, elem := range typed {
+			if elem == nil {
+				continue
+			}
+			set[fmt.Sprint(elem)] = struct{}{}
+		}
+	case string:
+		if typed != "" {
+			set[typed] = struct{}{}
+		}
+	default:
+		set[fmt.Sprint(v)] = struct{}{}
 	}
 }
 
