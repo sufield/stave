@@ -14,17 +14,22 @@ export pathway with a working example AND a committed golden output.
 | **Prolog** | `prolog-proof-trees` | Trace the proof chain anchored at "anonymous reaches X via action Y" through the Cognito identity pool → IAM role → resource edges. | Prolog facts derived from `stave export-sir --format jsonl` | `examples/prolog-proof-trees/expected/output.txt` — committed multi-line proof tree (rooted at `anonymous reaches <arn>`, leaves at IAM grants + resources). |
 | **PRISM** (risk model) | `prism-risk-prioritization` | Per attack shape (e.g. `cognito_unauth`, `cognito_self_reg`), what's the probability of successful exploitation given the observed configuration? | observation snapshot directory | `examples/prism-risk-prioritization/expected/output.txt` — committed step probabilities and aggregate P (e.g. `cognito_unauth P = 41.2%`). |
 
-## Engines without working examples (gap)
+## Engines with working examples (specs not yet written)
+
+| Engine | Example | Question | Fixture | Golden answer source |
+|---|---|---|---|---|
+| **PySAT** (SAT) | `sat-control-regression` | Can all member controls of a compound chain fail simultaneously on this fixture? | JSONL facts from `stave export-sir --format jsonl` per fixture | `examples/sat-control-regression/expected/output.txt` — per-fixture SAFE/UNSAFE verdicts with fired compound names and member controls. |
+| **TLA+** (temporal) | `tlaplus-temporal-safety` | How many reachable states violate safety invariants, and what's the drift margin to the nearest new violation? | JSONL facts from `stave export-sir --format jsonl` via `temporal_check.py`; `.tla` + `.cfg` for TLC | `examples/tlaplus-temporal-safety/expected/output.txt` — per-fixture state counts, initial violations, drift margins, and UNSAFE/AT_RISK verdicts. |
+| **Game theory** (cost) | `game-theory-cost` | What's the cheapest attack path, and which remediation has the highest ROI? | JSONL facts from `stave export-sir --format jsonl` via `cost_model.py` | `examples/game-theory-cost/expected/output.txt` — per-fixture attack paths with dollar costs, remediation ROI rankings, and CRITICAL/HIGH/MEDIUM/MINIMAL verdicts. |
+| **Evidence packs** (HIPAA/CIS/NIST) | `compliance-evidence` | What's the compliance posture per framework for this fixture? | Assessment output from `stave apply` per (fixture, framework) pair | `examples/compliance-evidence/expected/cognito-writeup-hipaa-technical/executive-summary.md` — single-document PASS/FAIL with control counts and non-compliant citations. |
+
+## Export-format engines without fixture-tied goldens (gap)
 
 | Engine | Status | What's missing |
 |---|---|---|
-| **PySAT** | Code in `examples/engines/pysat/compound_sat.py` (Iter 5 of an earlier brief). No fixture-tied expected output committed. | A `expected/output.txt` produced by running the script on a specific fixture. The Python script does not have a committed reference output beyond what appears as "SAFE" / "UNSAFE" rows in the per-example `multi-engine-results.md` files, which are auto-generated and not the kind of stable golden we can pin a trial against. |
-| **TLA+** | Referenced in `multi-engine-results.md` as `AT_RISK` / `UNSAFE today` but no `.tla` spec file ships in `examples/`. | A `.tla` specification file plus a TLC config plus a captured TLC output. The verdicts that appear in `multi-engine-results.md` are produced by a small Python BFS, not by TLC itself. |
-| **Game theory** | Same as TLA+ — appears in `multi-engine-results.md` as `$300 attack today` etc. but no Lean-style spec or game-theoretic solver wired. | A solver invocation (e.g. nashpy, gambit) with a payoff matrix derived from the snapshot. The Python in `examples/game-theory-cost/` outputs textual costs but is not adversary-modelled in a verifiable way. |
-| **STIX 2.1** | `docs/ontology/examples/chain.stix.json` is a static handwritten example, not a tool-produced artifact. The graph exporter in `internal/adapters/graph/marshal_stix.go` ships, but there is no committed fixture → STIX round-trip with an asserted output. | A `stave export ... --format stix` invocation with a committed expected STIX document the trial agent could reproduce. |
-| **JSON-LD / GraphML** | Exporters at `internal/adapters/graph/export_jsonld.go` and `export_graphml.go` ship. No fixture-tied expected output. | Same as STIX — a committed round-trip with an asserted comparison. |
-| **OSCAL / OCSF compliance mapping** | Examples at `docs/ontology/examples/assessment.oscal.json` and `finding.ocsf.json` are handwritten reference shapes; no fixture-tied tool output to compare against. | A `stave ... --format oscal` or `--format ocsf` invocation with a committed expected document. |
-| **HIPAA / CIS / NIST evidence packs** | `examples/compliance-evidence/` ships per-control evidence dirs (`expected/cognito-writeup-hipaa-technical/` etc.). The generation pipeline runs but the output shape is per-control evidence directories rather than one verdict to compare — not the kind of single-answer golden a trial spec pins against. | A flattened single-document per fixture (e.g. "HIPAA technical safeguards: PASS / FAIL with citations") that the trial could compare to. |
+| **STIX 2.1** | Graph exporter in `internal/adapters/graph/marshal_stix.go` ships. `stave graph export --format stix` works. No committed fixture → STIX round-trip with an asserted output. | A `stave graph export --format stix` invocation on a specific fixture with a committed expected STIX document. |
+| **JSON-LD / GraphML** | Exporters at `internal/adapters/graph/export_jsonld.go` and `export_graphml.go` ship. `stave graph export --format jsonld|graphml` works. No fixture-tied expected output. | Same as STIX — a committed round-trip with an asserted comparison. |
+| **OSCAL / OCSF** | `stave export oscal` and `stave export ocsf` commands ship. No fixture-tied tool output to compare against. | A `stave export oscal` or `stave export ocsf` invocation on a specific fixture with a committed expected document. |
 
 ## How the inventory was done
 
@@ -45,7 +50,7 @@ that re-derives the output, the script was spot-checked but not
 re-run end-to-end during inventory (the golden file is the
 artifact; the script is the producer).
 
-The five engines in the first table each have:
+The nine engines in the first two tables each have:
 
 1. A reproducible input pipeline (`stave export-sir --format <...>`
    plus an example-local conversion script when needed).
@@ -53,13 +58,14 @@ The five engines in the first table each have:
    diffed against.
 3. A reasoning chain documented in the example's `README.md`.
 
-The seven gap entries all have at least one of those three missing.
-Writing a spec for an engine in the gap list would require
-inventing a golden answer, which the brief explicitly forbids.
+The three gap entries have working Go exporters but no committed
+fixture-tied golden output. Writing a spec for an engine in the
+gap list would require inventing a golden answer, which the brief
+explicitly forbids.
 
 ## Trial packages
 
-Five trial packages under `reasoning-specs/trials/<name>/`, one per
+Trial packages under `reasoning-specs/trials/<name>/`, one per
 spec. Each package contains:
 
 - `spec.yaml` — the reasoning spec the trial agent reads
