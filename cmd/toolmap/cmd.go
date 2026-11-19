@@ -3,6 +3,7 @@
 package toolmap
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -100,7 +101,7 @@ func run(w io.Writer, opts *options) error {
 		return showCapability(w, registry, opts)
 	}
 
-	result, err := toolmap.Analyze(registry, opts.ChainsDir, stave.LoadControlsFromDisk, opts.ControlsDir)
+	result, err := toolmap.Analyze(context.Background(), registry, opts.ChainsDir, stave.LoadControlsFromDisk, opts.ControlsDir)
 	if err != nil {
 		return fmt.Errorf("analyze: %w", err)
 	}

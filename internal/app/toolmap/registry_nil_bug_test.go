@@ -1,6 +1,7 @@
 package toolmap
 
 import (
+	"context"
 	"testing"
 )
 
@@ -23,7 +24,7 @@ func TestRegistry_NilReceiverGuards(t *testing.T) {
 		t.Errorf("expected false, empty Tool for nil registry, got %v, %v", tool, ok)
 	}
 
-	res, err := Analyze(r, "chains", nil, "controls")
+	res, err := Analyze(context.Background(), r, "chains", nil, "controls")
 	if err == nil || res != nil {
 		t.Errorf("expected error from Analyze with nil registry")
 	}

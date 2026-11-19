@@ -1,6 +1,7 @@
 package stave
 
 import (
+	"context"
 	"fmt"
 	"slices"
 
@@ -14,7 +15,7 @@ import (
 // catalog: the embedded builtin catalog when useBuiltin is true, otherwise the
 // controls under controlsDir. Used by `stave compliance` to verify a framework
 // mapping references only real controls.
-func CatalogControlIDs(controlsDir string, useBuiltin bool) ([]string, error) {
+func CatalogControlIDs(ctx context.Context, controlsDir string, useBuiltin bool) ([]string, error) {
 	var ids []string
 	if useBuiltin {
 		store := builtin.NewControlStore(controldata.FS, "embedded",
@@ -28,7 +29,7 @@ func CatalogControlIDs(controlsDir string, useBuiltin bool) ([]string, error) {
 			ids = append(ids, string(controls[i].ID))
 		}
 	} else {
-		controls, err := applycore.LoadControls(controlsDir)
+		controls, err := applycore.LoadControls(ctx, controlsDir)
 		if err != nil {
 			return nil, fmt.Errorf("load controls from %q: %w", controlsDir, err)
 		}

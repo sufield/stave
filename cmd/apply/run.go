@@ -33,7 +33,7 @@ func runApply(ctx context.Context, opts *Options, cs cobraState) error {
 	}
 
 	if opts.Auto {
-		if autoErr := printAutoPlan(cs.Stderr, opts); autoErr != nil {
+		if autoErr := printAutoPlan(ctx, cs.Stderr, opts); autoErr != nil {
 			return fmt.Errorf("auto plan: %w", autoErr)
 		}
 	}

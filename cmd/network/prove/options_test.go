@@ -223,8 +223,7 @@ func TestOptions_Validate(t *testing.T) {
 				t.Fatalf("Validate() err = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.wantErr {
-				var userErr *ui.UserError
-				if !errors.As(err, &userErr) {
+				if _, ok := errors.AsType[*ui.UserError](err); !ok {
 					t.Errorf("expected *ui.UserError, got %T (%v)", err, err)
 				}
 				if !strings.Contains(err.Error(), tt.errContains) {

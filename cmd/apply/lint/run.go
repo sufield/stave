@@ -34,7 +34,7 @@ func runValidate(ctx context.Context, in Input) error {
 	in.Rt.Quiet = in.Quiet
 
 	if in.Opts.InputPath != "" {
-		return runValidateSingleFile(in)
+		return runValidateSingleFile(ctx, in)
 	}
 	return runValidateProject(ctx, in)
 }
@@ -85,7 +85,7 @@ func runValidateProject(ctx context.Context, in Input) error {
 }
 
 // runValidateSingleFile validates a single input document (the --in path).
-func runValidateSingleFile(in Input) error {
+func runValidateSingleFile(ctx context.Context, in Input) error {
 	data, source, err := ui.ReadInput(in.Stdin, in.Opts.InputPath)
 	if err != nil {
 		return fmt.Errorf("read input %q: %w", source, err)
@@ -115,7 +115,7 @@ func runValidateSingleFile(in Input) error {
 	}
 
 	if slices.Contains(in.Opts.Check, "collector-contract") && isObservationKind(kind) {
-		ccRes, cerr := stave.ValidateContentContract(data, in.Format, in.Opts.FixHints)
+		ccRes, cerr := stave.ValidateContentContract(ctx, data, in.Format, in.Opts.FixHints)
 		if cerr != nil {
 			return fmt.Errorf("contract check: %w", cerr)
 		}

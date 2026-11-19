@@ -445,7 +445,7 @@ func filterByLifecycle(controls []policy.ControlDefinition, exclude []string) []
 
 // LoadControls loads the control catalog for read-only inspection
 // (e.g. fingerprint explain). Empty dir uses the embedded catalog.
-func LoadControls(dir string) ([]policy.ControlDefinition, error) {
+func LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, error) {
 	libraryOnce.Do(func() {
 		aws.Register()
 		lib, err := pack.NewLibrary()
@@ -463,7 +463,7 @@ func LoadControls(dir string) ([]policy.ControlDefinition, error) {
 		return nil, err
 	}
 	if repo != nil {
-		controls, err = appcontracts.LoadControls(context.Background(), repo, dir)
+		controls, err = appcontracts.LoadControls(ctx, repo, dir)
 		if err != nil {
 			return nil, fmt.Errorf("load controls from dir: %w", err)
 		}

@@ -32,7 +32,7 @@ type FingerprintControlEntry struct {
 // FingerprintExplain loads the control catalog and returns the
 // policy fingerprint preimage with diagnostic flags.
 func FingerprintExplain(ctx context.Context, cfg Config) (*FingerprintExplainResult, error) {
-	controls, err := applycore.LoadControls(cfg.ControlsDir)
+	controls, err := applycore.LoadControls(ctx, cfg.ControlsDir)
 	if err != nil {
 		return nil, fmt.Errorf("load controls: %w", err)
 	}

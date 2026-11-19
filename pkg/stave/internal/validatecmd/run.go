@@ -292,9 +292,9 @@ func writeContractReport(w io.Writer, r *collectorcontract.Report, format string
 
 // ValidateContentContract runs the collector contract against raw observation
 // data (single-file mode). Parses the observation, validates, renders output.
-func ValidateContentContract(data []byte, format string, fixHints bool) (Result, error) {
+func ValidateContentContract(ctx context.Context, data []byte, format string, fixHints bool) (Result, error) {
 	loader := observations.NewObservationLoader()
-	snap, err := loader.LoadSnapshotFromReader(context.Background(), bytes.NewReader(data), "stdin")
+	snap, err := loader.LoadSnapshotFromReader(ctx, bytes.NewReader(data), "stdin")
 	if err != nil {
 		return Result{}, fmt.Errorf("parse observation for contract check: %w", err)
 	}

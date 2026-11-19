@@ -1,6 +1,7 @@
 package discover
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -25,8 +26,8 @@ func (m manifest) HasUnmatchedServices() bool {
 	return len(m.ServicesUnmatched) > 0
 }
 
-func catalogMeta(o *options) ([]pack.ControlMeta, error) {
-	sums, err := stave.CatalogControlSummaries(o.controls, !o.controlsSet)
+func catalogMeta(ctx context.Context, o *options) ([]pack.ControlMeta, error) {
+	sums, err := stave.CatalogControlSummaries(ctx, o.controls, !o.controlsSet)
 	if err != nil {
 		return nil, fmt.Errorf("load control catalog: %w", err)
 	}
@@ -38,7 +39,7 @@ func catalogMeta(o *options) ([]pack.ControlMeta, error) {
 }
 
 func run(cmd *cobra.Command, o *options) error {
-	metas, err := catalogMeta(o)
+	metas, err := catalogMeta(cmd.Context(), o)
 	if err != nil {
 		return err
 	}

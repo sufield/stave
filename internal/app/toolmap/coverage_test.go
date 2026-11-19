@@ -1,6 +1,7 @@
 package toolmap
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -50,7 +51,7 @@ unsafe_predicate:
 `)
 
 	r := NewRegistry()
-	result, err := Analyze(r, chainsDir, testControlLoader, controlsDir)
+	result, err := Analyze(context.Background(), r, chainsDir, testControlLoader, controlsDir)
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
@@ -90,7 +91,7 @@ func TestAnalyze_EmptyDirs(t *testing.T) {
 	controlsDir := t.TempDir()
 
 	r := NewRegistry()
-	result, err := Analyze(r, chainsDir, testControlLoader, controlsDir)
+	result, err := Analyze(context.Background(), r, chainsDir, testControlLoader, controlsDir)
 	if err != nil {
 		t.Fatalf("analyze: %v", err)
 	}
@@ -127,7 +128,7 @@ type testRuleDTO struct {
 	All   []testRuleDTO      `yaml:"all,omitempty"`
 }
 
-func testControlLoader(rootDir string) ([]policy.ControlDefinition, error) {
+func testControlLoader(_ context.Context, rootDir string) ([]policy.ControlDefinition, error) {
 	var all []policy.ControlDefinition
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {

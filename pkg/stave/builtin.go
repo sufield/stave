@@ -52,7 +52,7 @@ func LoadSnapshots(ctx context.Context, dir string) ([]asset.Snapshot, error) {
 // LoadControlsFromDisk loads all control definitions from a root
 // directory by walking its subdirectories. The alias resolver is wired
 // automatically.
-func LoadControlsFromDisk(rootDir string) ([]policy.ControlDefinition, error) {
+func LoadControlsFromDisk(ctx context.Context, rootDir string) ([]policy.ControlDefinition, error) {
 	loader := ctlloader.NewControlLoader(ctlloader.WithAliasResolver(builtinpredicate.ResolverFunc()))
 	var dirs []string
 	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
@@ -73,7 +73,7 @@ func LoadControlsFromDisk(rootDir string) ([]policy.ControlDefinition, error) {
 
 	var all []policy.ControlDefinition
 	for _, d := range dirs {
-		controls, loadErr := loader.LoadControls(context.Background(), d)
+		controls, loadErr := loader.LoadControls(ctx, d)
 		if loadErr != nil {
 			continue
 		}

@@ -97,8 +97,7 @@ func TestOptions_Validate(t *testing.T) {
 				t.Fatalf("Validate() err = %v, wantErr %v", err, tt.wantErr)
 			}
 			if tt.wantErr {
-				var uerr *ui.UserError
-				if !errors.As(err, &uerr) {
+				if _, ok := errors.AsType[*ui.UserError](err); !ok {
 					t.Errorf("expected *ui.UserError, got %T", err)
 				}
 			}

@@ -13,15 +13,15 @@ import (
 // control IDs via the pkg/stave facade. Returns nil when neither is set (the
 // eval then runs every control, unchanged). An unknown pack surfaces as a
 // UserError → exit 2.
-func resolvePackAllowlist(opts *Options, cfg RunConfig) ([]string, error) {
-	packIDs, err := stave.ResolvePackControls(opts.Packs, cfg.ControlsDir, cfg.UseBuiltinCatalog)
+func resolvePackAllowlist(ctx context.Context, opts *Options, cfg RunConfig) ([]string, error) {
+	packIDs, err := stave.ResolvePackControls(ctx, opts.Packs, cfg.ControlsDir, cfg.UseBuiltinCatalog)
 	if err != nil {
 		if errors.Is(err, stave.ErrInvalidInput) {
 			return nil, &ui.UserError{Err: err}
 		}
 		return nil, &ui.UserError{Err: fmt.Errorf("resolve --pack: %w", err)}
 	}
-	svcIDs, err := stave.ResolveServiceControls(opts.Services, cfg.ControlsDir, cfg.UseBuiltinCatalog)
+	svcIDs, err := stave.ResolveServiceControls(ctx, opts.Services, cfg.ControlsDir, cfg.UseBuiltinCatalog)
 	if err != nil {
 		return nil, &ui.UserError{Err: fmt.Errorf("resolve --services: %w", err)}
 	}
@@ -56,7 +56,7 @@ func runStandardApply(ctx context.Context, cs cobraState, opts *Options, sio Sta
 		return decorateError(pcErr)
 	}
 
-	packAllow, packErr := resolvePackAllowlist(opts, cfg)
+	packAllow, packErr := resolvePackAllowlist(ctx, opts, cfg)
 	if packErr != nil {
 		return packErr
 	}

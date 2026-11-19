@@ -1,6 +1,7 @@
 package toolmap
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -15,7 +16,7 @@ import (
 )
 
 // ControlLoaderFunc loads all controls from a root directory.
-type ControlLoaderFunc func(rootDir string) ([]policy.ControlDefinition, error)
+type ControlLoaderFunc func(ctx context.Context, rootDir string) ([]policy.ControlDefinition, error)
 
 // ChainIDs represents a domain collection of kernel.ChainID items with query methods.
 type ChainIDs []kernel.ChainID
@@ -130,7 +131,7 @@ func (cr *CoverageResult) IsFullyCovered() bool {
 //  2. Does any control's predicate reference the field path?
 //
 // A prerequisite with both is "covered". Anything missing is a gap.
-func Analyze(registry *Registry, chainsDir string, loadControls ControlLoaderFunc, controlsDir string) (*CoverageResult, error) {
+func Analyze(ctx context.Context, registry *Registry, chainsDir string, loadControls ControlLoaderFunc, controlsDir string) (*CoverageResult, error) {
 	if registry == nil {
 		return nil, errors.New("toolmap: registry is nil")
 	}
@@ -139,7 +140,7 @@ func Analyze(registry *Registry, chainsDir string, loadControls ControlLoaderFun
 		return nil, fmt.Errorf("load chains: %w", err)
 	}
 
-	controls, err := loadControls(controlsDir)
+	controls, err := loadControls(ctx, controlsDir)
 	if err != nil {
 		return nil, fmt.Errorf("load controls: %w", err)
 	}

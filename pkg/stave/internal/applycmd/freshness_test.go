@@ -1,6 +1,7 @@
 package applycmd
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -58,7 +59,7 @@ func TestAnnotateFreshness(t *testing.T) {
 
 		report := testReport(3)
 		now := time.Date(2026, 1, 12, 0, 0, 0, 0, time.UTC) // 48h after capture
-		err := annotateFreshness(report, dir, "24h", false, now)
+		err := annotateFreshness(context.Background(), report, dir, "24h", false, now)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -89,7 +90,7 @@ func TestAnnotateFreshness(t *testing.T) {
 
 		report := testReport(2)
 		now := time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC) // 1h after capture
-		err := annotateFreshness(report, dir, "24h", false, now)
+		err := annotateFreshness(context.Background(), report, dir, "24h", false, now)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -112,7 +113,7 @@ func TestAnnotateFreshness(t *testing.T) {
 	t.Run("skip-freshness preserves original confidence", func(t *testing.T) {
 		t.Parallel()
 		report := testReport(1)
-		err := annotateFreshness(report, "/nonexistent", "24h", true, time.Now())
+		err := annotateFreshness(context.Background(), report, "/nonexistent", "24h", true, time.Now())
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -132,7 +133,7 @@ func TestAnnotateFreshness(t *testing.T) {
 
 		report := testReport(1)
 		now := time.Date(2026, 1, 15, 0, 5, 0, 0, time.UTC) // 5 min after
-		err := annotateFreshness(report, dir, "24h", false, now)
+		err := annotateFreshness(context.Background(), report, dir, "24h", false, now)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -153,7 +154,7 @@ func TestAnnotateFreshness(t *testing.T) {
 			Severity: 4,
 		}}
 		now := time.Date(2026, 1, 12, 0, 0, 0, 0, time.UTC)
-		err := annotateFreshness(report, dir, "24h", false, now)
+		err := annotateFreshness(context.Background(), report, dir, "24h", false, now)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -165,7 +166,7 @@ func TestAnnotateFreshness(t *testing.T) {
 	t.Run("bad threshold returns ErrInvalidInput", func(t *testing.T) {
 		t.Parallel()
 		report := testReport(0)
-		err := annotateFreshness(report, "/some/dir", "not-a-duration", false, time.Now())
+		err := annotateFreshness(context.Background(), report, "/some/dir", "not-a-duration", false, time.Now())
 		if err == nil {
 			t.Fatal("expected error for bad threshold")
 		}
@@ -174,7 +175,7 @@ func TestAnnotateFreshness(t *testing.T) {
 	t.Run("stdin observations are skipped", func(t *testing.T) {
 		t.Parallel()
 		report := testReport(1)
-		err := annotateFreshness(report, "-", "24h", false, time.Now())
+		err := annotateFreshness(context.Background(), report, "-", "24h", false, time.Now())
 		if err != nil {
 			t.Fatal(err)
 		}

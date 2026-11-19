@@ -35,7 +35,7 @@ func run(cmd *cobra.Command, opts *options) error {
 	// Mapping-integrity self-check: cross-reference the mapping against the real
 	// catalog. Premise-independent (does not compare against controls' own
 	// compliance: keys — those are a separate CCM/SOC2 attribution layer).
-	catalogIDs, err := stave.CatalogControlIDs(opts.controls, !opts.controlsSet)
+	catalogIDs, err := stave.CatalogControlIDs(cmd.Context(), opts.controls, !opts.controlsSet)
 	if err != nil {
 		return fmt.Errorf("load control catalog for mapping verification: %w", err)
 	}

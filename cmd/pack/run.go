@@ -1,6 +1,7 @@
 package pack
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -11,8 +12,8 @@ import (
 )
 
 // catalogMeta loads the active catalog as pack.ControlMeta for resolution.
-func catalogMeta(o *options) ([]pack.ControlMeta, error) {
-	sums, err := stave.CatalogControlSummaries(o.controls, !o.controlsSet)
+func catalogMeta(ctx context.Context, o *options) ([]pack.ControlMeta, error) {
+	sums, err := stave.CatalogControlSummaries(ctx, o.controls, !o.controlsSet)
 	if err != nil {
 		return nil, fmt.Errorf("load control catalog: %w", err)
 	}
@@ -35,7 +36,7 @@ func runList(cmd *cobra.Command, o *options) error {
 	if err != nil {
 		return fmt.Errorf("load packs: %w", err)
 	}
-	metas, err := catalogMeta(o)
+	metas, err := catalogMeta(cmd.Context(), o)
 	if err != nil {
 		return err
 	}
@@ -71,7 +72,7 @@ func runShow(cmd *cobra.Command, o *options, name string) error {
 	if err != nil {
 		return &ui.UserError{Err: err} // unknown pack → exit 2
 	}
-	metas, err := catalogMeta(o)
+	metas, err := catalogMeta(cmd.Context(), o)
 	if err != nil {
 		return err
 	}

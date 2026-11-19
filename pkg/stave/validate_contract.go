@@ -10,8 +10,8 @@ import (
 // ValidateContentContract runs the collector contract check against raw
 // observation data (the --in single-file path). Returns rendered output
 // and an exit-code sentinel.
-func ValidateContentContract(data []byte, format string, fixHints bool) (ValidateProjectResult, error) {
-	return validatecmd.ValidateContentContract(data, format, fixHints) //nolint:wrapcheck // engine wraps; preserve exit-code sentinels.
+func ValidateContentContract(ctx context.Context, data []byte, format string, fixHints bool) (ValidateProjectResult, error) {
+	return validatecmd.ValidateContentContract(ctx, data, format, fixHints) //nolint:wrapcheck // engine wraps; preserve exit-code sentinels.
 }
 
 // ContractViolationCount loads observations from obsDir and returns the

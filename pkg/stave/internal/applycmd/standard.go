@@ -235,7 +235,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 	if err = annotateReachability(report, req.ObservationsDir); err != nil {
 		return StandardResult{}, err
 	}
-	if err = annotateFreshness(report, req.ObservationsDir, req.FreshnessThreshold, req.SkipFreshness, now); err != nil {
+	if err = annotateFreshness(ctx, report, req.ObservationsDir, req.FreshnessThreshold, req.SkipFreshness, now); err != nil {
 		return StandardResult{}, err
 	}
 
@@ -519,7 +519,7 @@ func annotateReachability(report *evaluation.ComplianceReport, obsDir string) er
 // most recent snapshot is older than the threshold, downgrade every
 // finding's Confidence to LOW and record the reason. Verdicts, exit
 // codes, and SecurityState are unaffected.
-func annotateFreshness(report *evaluation.ComplianceReport, obsDir string, thresholdStr string, skip bool, now time.Time) error {
+func annotateFreshness(ctx context.Context, report *evaluation.ComplianceReport, obsDir string, thresholdStr string, skip bool, now time.Time) error {
 	if skip || obsDir == "" || obsDir == "-" {
 		return nil
 	}
@@ -528,7 +528,7 @@ func annotateFreshness(report *evaluation.ComplianceReport, obsDir string, thres
 		return fmt.Errorf("parse --freshness-threshold %q: %w: %w", thresholdStr, err, ErrInvalidInput)
 	}
 
-	loaded, err := observations.NewObservationLoader().LoadSnapshots(context.Background(), obsDir)
+	loaded, err := observations.NewObservationLoader().LoadSnapshots(ctx, obsDir)
 	if err != nil {
 		slog.Warn("freshness check: could not load snapshots", "error", err)
 		return nil

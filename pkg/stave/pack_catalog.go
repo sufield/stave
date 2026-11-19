@@ -2,6 +2,7 @@ package stave
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"slices"
 	"strings"
@@ -22,7 +23,7 @@ type ControlSummary struct {
 // CatalogControlSummaries returns the (id, severity) of every control in the
 // active catalog — the embedded builtin catalog when useBuiltin is true,
 // otherwise the controls under controlsDir. Sorted by ID.
-func CatalogControlSummaries(controlsDir string, useBuiltin bool) ([]ControlSummary, error) {
+func CatalogControlSummaries(ctx context.Context, controlsDir string, useBuiltin bool) ([]ControlSummary, error) {
 	var out []ControlSummary
 	if useBuiltin {
 		store := builtin.NewControlStore(controldata.FS, "embedded",
@@ -36,7 +37,7 @@ func CatalogControlSummaries(controlsDir string, useBuiltin bool) ([]ControlSumm
 			out = append(out, ControlSummary{ID: string(controls[i].ID), Severity: controls[i].Severity.String()})
 		}
 	} else {
-		controls, err := applycore.LoadControls(controlsDir)
+		controls, err := applycore.LoadControls(ctx, controlsDir)
 		if err != nil {
 			return nil, fmt.Errorf("load controls from %q: %w", controlsDir, err)
 		}
@@ -53,11 +54,11 @@ func CatalogControlSummaries(controlsDir string, useBuiltin bool) ([]ControlSumm
 // their control IDs, resolved against the active catalog. Returns nil for an
 // empty packNames (callers then evaluate every control). An unknown pack name
 // is an ErrInvalidInput so the CLI maps it to exit 2.
-func ResolvePackControls(packNames []string, controlsDir string, useBuiltin bool) ([]string, error) {
+func ResolvePackControls(ctx context.Context, packNames []string, controlsDir string, useBuiltin bool) ([]string, error) {
 	if len(packNames) == 0 {
 		return nil, nil
 	}
-	sums, err := CatalogControlSummaries(controlsDir, useBuiltin)
+	sums, err := CatalogControlSummaries(ctx, controlsDir, useBuiltin)
 	if err != nil {
 		return nil, err
 	}
@@ -102,8 +103,8 @@ type AutoPlanResult struct {
 
 // AutoPlanSummary resolves packs and/or services into a plan summary:
 // which controls would evaluate and their severity breakdown per service.
-func AutoPlanSummary(packNames, services []string, controlsDir string, useBuiltin bool) (*AutoPlanResult, error) {
-	sums, err := CatalogControlSummaries(controlsDir, useBuiltin)
+func AutoPlanSummary(ctx context.Context, packNames, services []string, controlsDir string, useBuiltin bool) (*AutoPlanResult, error) {
+	sums, err := CatalogControlSummaries(ctx, controlsDir, useBuiltin)
 	if err != nil {
 		return nil, fmt.Errorf("load control catalog: %w", err)
 	}
@@ -168,11 +169,11 @@ func AutoPlanSummary(packNames, services []string, controlsDir string, useBuilti
 // given AWS services (matched by control-ID domain, e.g. CTL.IAM.* -> iam).
 // Empty services returns nil (the caller then evaluates every control). Used by
 // `apply --services` for per-service-group evaluation.
-func ResolveServiceControls(services []string, controlsDir string, useBuiltin bool) ([]string, error) {
+func ResolveServiceControls(ctx context.Context, services []string, controlsDir string, useBuiltin bool) ([]string, error) {
 	if len(services) == 0 {
 		return nil, nil
 	}
-	sums, err := CatalogControlSummaries(controlsDir, useBuiltin)
+	sums, err := CatalogControlSummaries(ctx, controlsDir, useBuiltin)
 	if err != nil {
 		return nil, err
 	}

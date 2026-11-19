@@ -2,6 +2,7 @@ package apply
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"io"
 	"slices"
@@ -13,8 +14,8 @@ import (
 // printAutoPlan resolves services to controls, builds a severity-weighted
 // plan preview, and prints it to w (typically stderr) before the standard
 // evaluation runs. This is the "discover→plan" part of --auto.
-func printAutoPlan(w io.Writer, opts *Options) error {
-	result, err := stave.AutoPlanSummary(opts.Packs, opts.Services, opts.ControlsDir, !opts.controlsSet)
+func printAutoPlan(ctx context.Context, w io.Writer, opts *Options) error {
+	result, err := stave.AutoPlanSummary(ctx, opts.Packs, opts.Services, opts.ControlsDir, !opts.controlsSet)
 	if err != nil {
 		return fmt.Errorf("auto plan: %w", err)
 	}
