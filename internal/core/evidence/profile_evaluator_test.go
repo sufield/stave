@@ -3,6 +3,8 @@ package evidence
 import (
 	"testing"
 	"time"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 func testProfile(reqs ...Requirement) *FrameworkProfile {
@@ -25,7 +27,7 @@ func testPkg(records ...*EvidenceRecord) *EvidencePackage {
 
 func rec(controlID, resource string, verdict EvidenceVerdict) *EvidenceRecord {
 	return &EvidenceRecord{
-		ControlID:   controlID,
+		ControlID:   kernel.ControlID(controlID),
 		ResourceARN: resource,
 		Verdict:     verdict,
 	}
@@ -38,7 +40,7 @@ func TestEvaluateProfile_AllPass_ThresholdAll(t *testing.T) {
 	)
 	profile := testProfile(Requirement{
 		ID:            "R1",
-		ControlIDs:    []string{"CTL.A", "CTL.B"},
+		ControlIDs:    []kernel.ControlID{"CTL.A", "CTL.B"},
 		PassThreshold: PassThreshold{Mode: ThresholdAll},
 	})
 
@@ -66,7 +68,7 @@ func TestEvaluateProfile_OneFail_ThresholdAll(t *testing.T) {
 	)
 	profile := testProfile(Requirement{
 		ID:            "R1",
-		ControlIDs:    []string{"CTL.A", "CTL.B"},
+		ControlIDs:    []kernel.ControlID{"CTL.A", "CTL.B"},
 		PassThreshold: PassThreshold{Mode: ThresholdAll},
 	})
 
@@ -89,7 +91,7 @@ func TestEvaluateProfile_ThresholdAny_OnePassAmongFails(t *testing.T) {
 	)
 	profile := testProfile(Requirement{
 		ID:            "R1",
-		ControlIDs:    []string{"CTL.A", "CTL.B", "CTL.C"},
+		ControlIDs:    []kernel.ControlID{"CTL.A", "CTL.B", "CTL.C"},
 		PassThreshold: PassThreshold{Mode: ThresholdAny},
 	})
 
@@ -102,15 +104,15 @@ func TestEvaluateProfile_ThresholdAny_OnePassAmongFails(t *testing.T) {
 func TestEvaluateProfile_PercentMet(t *testing.T) {
 	// 9 pass, 1 fail = 90% — threshold percent:80 should be met
 	var records []*EvidenceRecord
-	var ids []string
+	var ids []kernel.ControlID
 	for i := range 10 {
-		id := "CTL." + string(rune('A'+i))
+		id := kernel.ControlID("CTL." + string(rune('A'+i)))
 		ids = append(ids, id)
 		v := VerdictPass
 		if i == 9 {
 			v = VerdictFail
 		}
-		records = append(records, rec(id, "arn:1", v))
+		records = append(records, rec(string(id), "arn:1", v))
 	}
 	pkg := testPkg(records...)
 	profile := testProfile(Requirement{
@@ -128,15 +130,15 @@ func TestEvaluateProfile_PercentMet(t *testing.T) {
 func TestEvaluateProfile_PercentNotMet(t *testing.T) {
 	// 7 pass, 3 fail = 70% — threshold percent:80 should not be met
 	var records []*EvidenceRecord
-	var ids []string
+	var ids []kernel.ControlID
 	for i := range 10 {
-		id := "CTL." + string(rune('A'+i))
+		id := kernel.ControlID("CTL." + string(rune('A'+i)))
 		ids = append(ids, id)
 		v := VerdictPass
 		if i >= 7 {
 			v = VerdictFail
 		}
-		records = append(records, rec(id, "arn:1", v))
+		records = append(records, rec(string(id), "arn:1", v))
 	}
 	pkg := testPkg(records...)
 	profile := testProfile(Requirement{
@@ -155,7 +157,7 @@ func TestEvaluateProfile_NoEvidence(t *testing.T) {
 	pkg := testPkg() // empty
 	profile := testProfile(Requirement{
 		ID:            "R1",
-		ControlIDs:    []string{"CTL.A", "CTL.B"},
+		ControlIDs:    []kernel.ControlID{"CTL.A", "CTL.B"},
 		PassThreshold: PassThreshold{Mode: ThresholdAll},
 	})
 
@@ -172,7 +174,7 @@ func TestEvaluateProfile_IncompleteEvidence(t *testing.T) {
 	)
 	profile := testProfile(Requirement{
 		ID:            "R1",
-		ControlIDs:    []string{"CTL.A", "CTL.B"},
+		ControlIDs:    []kernel.ControlID{"CTL.A", "CTL.B"},
 		PassThreshold: PassThreshold{Mode: ThresholdAll},
 	})
 
@@ -188,9 +190,9 @@ func TestEvaluateProfile_MixedRequirements(t *testing.T) {
 		rec("CTL.B", "arn:1", VerdictFail),
 	)
 	profile := testProfile(
-		Requirement{ID: "R1", ControlIDs: []string{"CTL.A"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
-		Requirement{ID: "R2", ControlIDs: []string{"CTL.B"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
-		Requirement{ID: "R3", ControlIDs: []string{"CTL.MISSING"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
+		Requirement{ID: "R1", ControlIDs: []kernel.ControlID{"CTL.A"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
+		Requirement{ID: "R2", ControlIDs: []kernel.ControlID{"CTL.B"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
+		Requirement{ID: "R3", ControlIDs: []kernel.ControlID{"CTL.MISSING"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
 	)
 
 	result := EvaluateProfile(pkg, profile)
@@ -214,8 +216,8 @@ func TestEvaluateProfile_CoveragePercent(t *testing.T) {
 		rec("CTL.B", "arn:1", VerdictFail),
 	)
 	profile := testProfile(
-		Requirement{ID: "R1", ControlIDs: []string{"CTL.A"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
-		Requirement{ID: "R2", ControlIDs: []string{"CTL.B"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
+		Requirement{ID: "R1", ControlIDs: []kernel.ControlID{"CTL.A"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
+		Requirement{ID: "R2", ControlIDs: []kernel.ControlID{"CTL.B"}, PassThreshold: PassThreshold{Mode: ThresholdAll}},
 	)
 
 	result := EvaluateProfile(pkg, profile)
@@ -233,7 +235,7 @@ func TestEvaluateProfile_MultipleResources_WorstVerdictWins(t *testing.T) {
 	)
 	profile := testProfile(Requirement{
 		ID:            "R1",
-		ControlIDs:    []string{"CTL.A"},
+		ControlIDs:    []kernel.ControlID{"CTL.A"},
 		PassThreshold: PassThreshold{Mode: ThresholdAll},
 	})
 
@@ -253,7 +255,7 @@ func TestEvaluateProfile_AllNotApplicable(t *testing.T) {
 	)
 	profile := testProfile(Requirement{
 		ID:            "R1",
-		ControlIDs:    []string{"CTL.A"},
+		ControlIDs:    []kernel.ControlID{"CTL.A"},
 		PassThreshold: PassThreshold{Mode: ThresholdAll},
 	})
 
@@ -266,8 +268,8 @@ func TestEvaluateProfile_AllNotApplicable(t *testing.T) {
 func TestEvaluateProfile_EmptyPackage(t *testing.T) {
 	pkg := testPkg()
 	profile := testProfile(
-		Requirement{ID: "R1", ControlIDs: []string{"CTL.A"}},
-		Requirement{ID: "R2", ControlIDs: []string{"CTL.B"}},
+		Requirement{ID: "R1", ControlIDs: []kernel.ControlID{"CTL.A"}},
+		Requirement{ID: "R2", ControlIDs: []kernel.ControlID{"CTL.B"}},
 	)
 
 	result := EvaluateProfile(pkg, profile)
@@ -297,7 +299,7 @@ func TestEvaluateProfile_SingleControl_PassAndFail_Fails(t *testing.T) {
 	)
 	profile := testProfile(Requirement{
 		ID:            "R1",
-		ControlIDs:    []string{"CTL.A"},
+		ControlIDs:    []kernel.ControlID{"CTL.A"},
 		PassThreshold: PassThreshold{Mode: ThresholdAll},
 	})
 

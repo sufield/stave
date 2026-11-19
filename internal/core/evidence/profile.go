@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // ThresholdMode defines how pass/fail is determined for a requirement.
@@ -70,7 +72,7 @@ type Requirement struct {
 	ID            string
 	Description   string
 	Section       string
-	ControlIDs    []string
+	ControlIDs    []kernel.ControlID
 	PassThreshold PassThreshold
 }
 

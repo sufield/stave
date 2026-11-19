@@ -71,7 +71,7 @@ func findingToInput(
 	snap *asset.Snapshot,
 ) evidence.FindingInput {
 	return evidence.FindingInput{
-		ControlID:         string(f.ControlID),
+		ControlID:         f.ControlID,
 		ControlName:       f.ControlName,
 		ResourceARN:       string(f.AssetID),
 		Verdict:           "VIOLATION",
@@ -90,7 +90,7 @@ func checkToInput(
 	snap *asset.Snapshot,
 ) evidence.FindingInput {
 	return evidence.FindingInput{
-		ControlID:         string(c.ControlID),
+		ControlID:         c.ControlID,
 		ControlName:       ctl.Name,
 		ResourceARN:       string(c.AssetID),
 		Verdict:           string(c.Verdict),

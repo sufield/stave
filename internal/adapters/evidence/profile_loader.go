@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	coreevidence "github.com/sufield/stave/internal/core/evidence"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"gopkg.in/yaml.v3"
 )
@@ -137,20 +138,24 @@ func parseProfile(data []byte, filename string) (*coreevidence.FrameworkProfile,
 		if err != nil {
 			return nil, fmt.Errorf("%s: requirement %q: %w", filename, r.ID, err)
 		}
+		cids := make([]kernel.ControlID, len(r.Controls))
+		for j, c := range r.Controls {
+			cids[j] = kernel.ControlID(c)
+		}
 		reqs = append(reqs, coreevidence.Requirement{
 			ID:            r.ID,
 			Description:   r.Description,
 			Section:       r.Section,
-			ControlIDs:    r.Controls,
+			ControlIDs:    cids,
 			PassThreshold: threshold,
 		})
 	}
 
 	// Enhanced format: sections[] with required_controls[]
 	for _, s := range dto.Sections {
-		var controlIDs []string
+		var controlIDs []kernel.ControlID
 		for _, rc := range s.RequiredControls {
-			controlIDs = append(controlIDs, rc.ControlID)
+			controlIDs = append(controlIDs, kernel.ControlID(rc.ControlID))
 		}
 		reqs = append(reqs, coreevidence.Requirement{
 			ID:            s.ID,

@@ -6,6 +6,7 @@ import (
 
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/evidence"
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 var testTime = time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC)
@@ -20,7 +21,7 @@ func testPkg(records ...*evidence.EvidenceRecord) *evidence.EvidencePackage {
 
 func rec(controlID, resource string, verdict evidence.EvidenceVerdict, severity string) *evidence.EvidenceRecord {
 	return &evidence.EvidenceRecord{
-		ControlID:   controlID,
+		ControlID:   kernel.ControlID(controlID),
 		ControlName: controlID + " name",
 		ResourceARN: resource,
 		Verdict:     verdict,
@@ -41,7 +42,7 @@ func TestBuildExport_BasicStructure(t *testing.T) {
 		ID: "test", Name: "Test", Version: "1.0",
 		Requirements: []evidence.Requirement{{
 			ID:            "R1",
-			ControlIDs:    []string{"CTL.A", "CTL.B"},
+			ControlIDs:    []kernel.ControlID{"CTL.A", "CTL.B"},
 			PassThreshold: evidence.PassThreshold{Mode: evidence.ThresholdAll},
 		}},
 	}
@@ -132,7 +133,7 @@ func TestBuildExport_GapsPopulated(t *testing.T) {
 		ID: "test", Name: "Test", Version: "1.0",
 		Requirements: []evidence.Requirement{{
 			ID:            "R1",
-			ControlIDs:    []string{"CTL.A"},
+			ControlIDs:    []kernel.ControlID{"CTL.A"},
 			PassThreshold: evidence.PassThreshold{Mode: evidence.ThresholdAll},
 		}},
 	}

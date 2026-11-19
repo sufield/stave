@@ -3,6 +3,8 @@ package evidence
 import (
 	"cmp"
 	"slices"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // CompositeAssessment holds per-framework results and cross-framework
@@ -38,7 +40,7 @@ func (r CompositeGapReport) HasUniqueGaps() bool {
 
 // SharedGap is a finding that violates requirements in 2+ frameworks.
 type SharedGap struct {
-	ControlID          string               `json:"control_id"`
+	ControlID          kernel.ControlID     `json:"control_id"`
 	ControlName        string               `json:"control_name"`
 	ResourceARN        string               `json:"resource_arn"`
 	Severity           string               `json:"severity"`
@@ -58,7 +60,7 @@ type FrameworkViolation struct {
 
 // UniqueGap is a finding that violates requirements in only one framework.
 type UniqueGap struct {
-	ControlID         string `json:"control_id"`
+	ControlID         kernel.ControlID `json:"control_id"`
 	ResourceARN       string `json:"resource_arn"`
 	Severity          string `json:"severity"`
 	FindingID         string `json:"finding_id"`
@@ -85,11 +87,11 @@ type GapImpactSummary struct {
 // implemented.
 func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 	type gapKey struct {
-		controlID   string
+		controlID   kernel.ControlID
 		resourceARN string
 	}
 	type gapEntry struct {
-		controlID   string
+		controlID   kernel.ControlID
 		controlName string
 		resourceARN string
 		severity    string
@@ -138,7 +140,7 @@ func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 	// Partition into shared and unique.
 	var shared []SharedGap
 	var unique []UniqueGap
-	uniqueControlIDs := make(map[string]struct{})
+	uniqueControlIDs := make(map[kernel.ControlID]struct{})
 
 	for _, entry := range gaps {
 		uniqueControlIDs[entry.controlID] = struct{}{}
@@ -230,7 +232,7 @@ func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 func findingIDFromRecord(rec *EvidenceRecord) string {
 	// EvidenceRecord doesn't have FindingID directly — derive from
 	// control + resource as a stable key.
-	return rec.ControlID + "@" + rec.ResourceARN
+	return string(rec.ControlID) + "@" + rec.ResourceARN
 }
 
 func deduplicateViolations(vs []FrameworkViolation) []FrameworkViolation {

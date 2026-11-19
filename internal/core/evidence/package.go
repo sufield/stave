@@ -1,6 +1,10 @@
 package evidence
 
-import "time"
+import (
+	"time"
+
+	"github.com/sufield/stave/internal/core/kernel"
+)
 
 // EvidencePackage is the complete collection of evidence records from a
 // single assessment run. It aggregates pass, fail, and incomplete verdicts
@@ -53,7 +57,7 @@ func (p *EvidencePackage) TotalRecords() int {
 
 // FindByControlID returns all evidence records for the given control ID.
 // Returns nil if no records match, or if the receiver is nil.
-func (p *EvidencePackage) FindByControlID(controlID string) []*EvidenceRecord {
+func (p *EvidencePackage) FindByControlID(controlID kernel.ControlID) []*EvidenceRecord {
 	if p == nil {
 		return nil
 	}

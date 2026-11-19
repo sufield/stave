@@ -275,10 +275,11 @@ func buildExport(
 		// Build per-control summaries from evidence records
 		ctlCounts := make(map[string]*ControlSummary)
 		for _, rec := range ra.Evidence {
-			cs, ok := ctlCounts[rec.ControlID]
+			cid := string(rec.ControlID)
+			cs, ok := ctlCounts[cid]
 			if !ok {
-				cs = &ControlSummary{ID: rec.ControlID}
-				ctlCounts[rec.ControlID] = cs
+				cs = &ControlSummary{ID: cid}
+				ctlCounts[cid] = cs
 			}
 			cs.Add(rec)
 		}
@@ -294,10 +295,10 @@ func buildExport(
 		for _, rec := range ra.Evidence {
 			if rec.IsGap() {
 				re.Gaps = append(re.Gaps, GapExport{
-					ControlID:   rec.ControlID,
+					ControlID:   string(rec.ControlID),
 					ResourceARN: rec.ResourceARN,
 					Severity: policy.ParseSeverityLax(rec.Severity, slog.Default(), map[string]string{
-						"control_id":   rec.ControlID,
+						"control_id":   string(rec.ControlID),
 						"resource_arn": rec.ResourceARN,
 						"site":         "compliance export gap",
 					}),
@@ -338,7 +339,7 @@ func buildExport(
 			continue
 		}
 		recSev := policy.ParseSeverityLax(rec.Severity, slog.Default(), map[string]string{
-			"control_id":   rec.ControlID,
+			"control_id":   string(rec.ControlID),
 			"resource_arn": rec.ResourceARN,
 			"site":         "compliance export evidence record",
 		})
@@ -347,7 +348,7 @@ func buildExport(
 		}
 
 		er := EvidenceRecordExport{
-			ControlID:   rec.ControlID,
+			ControlID:   string(rec.ControlID),
 			ControlName: rec.ControlName,
 			ResourceARN: rec.ResourceARN,
 			Verdict:     rec.Verdict.String(),
@@ -387,7 +388,7 @@ func computeRequirementSLA(ra *evidence.RequirementAssessment, findings []evalua
 	// Build set of control IDs mapped to this requirement via evidence records.
 	reqControlIDs := make(map[string]struct{})
 	for _, rec := range ra.Evidence {
-		reqControlIDs[rec.ControlID] = struct{}{}
+		reqControlIDs[string(rec.ControlID)] = struct{}{}
 	}
 
 	var detected, withinSLA, breached int

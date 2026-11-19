@@ -125,7 +125,7 @@ func buildScorecardView(reports []*stave.ComplianceReport) scorecardView {
 				for _, e := range ra.Evidence {
 					if e.IsFail() {
 						rv.Fails = append(rv.Fails, failCtl{
-							ControlID: html.EscapeString(e.ControlID),
+							ControlID: html.EscapeString(string(e.ControlID)),
 							Asset:     html.EscapeString(e.ResourceARN),
 							Name:      html.EscapeString(e.ControlName),
 						})

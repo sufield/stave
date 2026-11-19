@@ -4,6 +4,8 @@ import (
 	"cmp"
 	"slices"
 	"time"
+
+	"github.com/sufield/stave/internal/core/kernel"
 )
 
 // ComplianceMapping projects a control's framework citations onto
@@ -18,7 +20,7 @@ type ComplianceMapping map[string]string
 // It is decoupled from the evaluation package to keep the evidence
 // package dependency-free within core.
 type FindingInput struct {
-	ControlID         string
+	ControlID         kernel.ControlID
 	ControlName       string
 	ResourceARN       string
 	Verdict           string // "VIOLATION", "PASS", "INCONCLUSIVE", etc.

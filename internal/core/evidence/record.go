@@ -4,7 +4,11 @@
 // trace.
 package evidence
 
-import "time"
+import (
+	"time"
+
+	"github.com/sufield/stave/internal/core/kernel"
+)
 
 // EvidenceVerdict is the outcome of a control evaluation for evidence purposes.
 type EvidenceVerdict int
@@ -35,7 +39,7 @@ func (v EvidenceVerdict) String() string {
 // EvidenceRecord is the typed evidence artifact for a single control
 // evaluation against a specific compliance citation.
 type EvidenceRecord struct {
-	ControlID      string          `json:"control_id"`
+	ControlID      kernel.ControlID `json:"control_id"`
 	ControlName    string          `json:"control_name"`
 	ResourceARN    string          `json:"resource_arn"`
 	SnapshotID     string          `json:"snapshot_id"`

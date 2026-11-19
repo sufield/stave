@@ -201,11 +201,11 @@ func renderOSCAL(
 			// Build observations from evidence records.
 			var obsRefs []oscalObsRef
 			for _, rec := range req.Evidence {
-				obsUUID := uuidV5("observation", rec.ControlID, rec.ResourceARN, pkg.SnapshotID)
+				obsUUID := uuidV5("observation", string(rec.ControlID), rec.ResourceARN, pkg.SnapshotID)
 
 				obs := oscalObservation{
 					UUID:        obsUUID,
-					Title:       rec.ControlID + " on " + rec.ResourceARN,
+					Title:       string(rec.ControlID) + " on " + rec.ResourceARN,
 					Description: rec.ReasoningTrace.FindingMessage,
 					Methods:     []string{"EXAMINE", "TEST"},
 					Types:       []string{"finding"},
@@ -214,7 +214,7 @@ func renderOSCAL(
 						{
 							Description: "Stave control evaluation",
 							Props: []oscalProp{
-								{Name: "control-id", Value: rec.ControlID},
+								{Name: "control-id", Value: string(rec.ControlID)},
 								{Name: "verdict", Value: rec.Verdict.String()},
 								{Name: "severity", Value: rec.Severity},
 							},

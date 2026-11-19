@@ -252,7 +252,7 @@ func buildControlFacts(controls []controldef.ControlDefinition) []ControlFact {
 			ID:              string(ctl.ID),
 			Type:            ctl.Type.String(),
 			Severity:        ctl.Severity.String(),
-			Predicate:       predicateFactFromTopLevel(&ctl.UnsafePredicate, string(ctl.ID)),
+			Predicate:       predicateFactFromTopLevel(&ctl.UnsafePredicate, ctl.ID),
 			IntentRationale: ctl.IntentRationale,
 			Source:          SourceRef{Kind: "control", ID: string(ctl.ID)},
 		}
@@ -261,7 +261,7 @@ func buildControlFacts(controls []controldef.ControlDefinition) []ControlFact {
 			fact.ThresholdHours = &h
 		}
 		if !ctl.ForbiddenState.IsEmpty() {
-			fb := forbiddenStateFact(&ctl.ForbiddenState, string(ctl.ID))
+			fb := forbiddenStateFact(&ctl.ForbiddenState, ctl.ID)
 			fact.ForbiddenState = &fb
 		}
 		out = append(out, fact)
@@ -277,7 +277,7 @@ func buildControlFacts(controls []controldef.ControlDefinition) []ControlFact {
 // they already know. The Path prefix differs ("forbidden_state"
 // rather than "unsafe_predicate") so a SourceRef trace can tell
 // the two sources apart.
-func forbiddenStateFact(p *controldef.UnsafePredicate, controlID string) PredicateFact {
+func forbiddenStateFact(p *controldef.UnsafePredicate, controlID kernel.ControlID) PredicateFact {
 	if p == nil || p.IsEmpty() {
 		return PredicateFact{}
 	}
@@ -301,14 +301,14 @@ func forbiddenStateFact(p *controldef.UnsafePredicate, controlID string) Predica
 					Logic: "any",
 					Rules: rulesFrom(p.Any, controlID, []string{"forbidden_state", "any"}),
 				},
-				Source: SourceRef{Kind: "control", ID: controlID, Path: []string{"forbidden_state", "any"}},
+				Source: SourceRef{Kind: "control", ID: string(controlID), Path: []string{"forbidden_state", "any"}},
 			},
 			{
 				Nested: &PredicateFact{
 					Logic: "all",
 					Rules: rulesFrom(p.All, controlID, []string{"forbidden_state", "all"}),
 				},
-				Source: SourceRef{Kind: "control", ID: controlID, Path: []string{"forbidden_state", "all"}},
+				Source: SourceRef{Kind: "control", ID: string(controlID), Path: []string{"forbidden_state", "all"}},
 			},
 		},
 	}
@@ -320,7 +320,7 @@ func forbiddenStateFact(p *controldef.UnsafePredicate, controlID string) Predica
 // branch as a nested rule under an outer "all" — the Z3 translator
 // handles either shape uniformly. The common case (only one of Any
 // / All set) emits a flat node.
-func predicateFactFromTopLevel(p *controldef.UnsafePredicate, controlID string) PredicateFact {
+func predicateFactFromTopLevel(p *controldef.UnsafePredicate, controlID kernel.ControlID) PredicateFact {
 	if p == nil || p.IsEmpty() {
 		return PredicateFact{}
 	}
@@ -345,20 +345,20 @@ func predicateFactFromTopLevel(p *controldef.UnsafePredicate, controlID string) 
 					Logic: "any",
 					Rules: rulesFrom(p.Any, controlID, []string{"unsafe_predicate", "any"}),
 				},
-				Source: SourceRef{Kind: "control", ID: controlID, Path: []string{"unsafe_predicate", "any"}},
+				Source: SourceRef{Kind: "control", ID: string(controlID), Path: []string{"unsafe_predicate", "any"}},
 			},
 			{
 				Nested: &PredicateFact{
 					Logic: "all",
 					Rules: rulesFrom(p.All, controlID, []string{"unsafe_predicate", "all"}),
 				},
-				Source: SourceRef{Kind: "control", ID: controlID, Path: []string{"unsafe_predicate", "all"}},
+				Source: SourceRef{Kind: "control", ID: string(controlID), Path: []string{"unsafe_predicate", "all"}},
 			},
 		},
 	}
 }
 
-func rulesFrom(rules []controldef.PredicateRule, controlID string, base []string) []RuleFact {
+func rulesFrom(rules []controldef.PredicateRule, controlID kernel.ControlID, base []string) []RuleFact {
 	if len(rules) == 0 {
 		return nil
 	}
@@ -370,8 +370,8 @@ func rulesFrom(rules []controldef.PredicateRule, controlID string, base []string
 	return out
 }
 
-func ruleFactFrom(r *controldef.PredicateRule, controlID string, path []string) RuleFact {
-	src := SourceRef{Kind: "control", ID: controlID, Path: path}
+func ruleFactFrom(r *controldef.PredicateRule, controlID kernel.ControlID, path []string) RuleFact {
+	src := SourceRef{Kind: "control", ID: string(controlID), Path: path}
 
 	// Nested any/all blocks take precedence over the field shape
 	// because controldef accepts either, but never both, on a single
