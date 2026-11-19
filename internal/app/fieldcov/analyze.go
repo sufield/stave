@@ -551,65 +551,18 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 		FrameworkCoverage: make(map[policy.ComplianceFramework]*FrameworkCoverage),
 	}
 
-	var silentRisk, incomplete ControlResults
-	for i := range results {
-		r := &results[i]
-		switch r.Classification {
-		case Evaluable:
-			report.Summary.Evaluable++
-		case Incomplete:
-			report.Summary.Incomplete++
-			incomplete = append(incomplete, *r)
-		case SilentRisk:
-			report.Summary.SilentRisk++
-			silentRisk = append(silentRisk, *r)
-		case NoAssets:
-			report.Summary.NoAssets++
-		case NotApplicable:
-			report.Summary.NotApplicable++
-		}
-		report.Summary.Total++
-
-		// Framework coverage.
-		for _, fw := range r.Frameworks {
-			fc, ok := report.FrameworkCoverage[fw]
-			if !ok {
-				fc = &FrameworkCoverage{}
-				report.FrameworkCoverage[fw] = fc
-			}
-			fc.Total++
-			switch r.Classification {
-			case Evaluable:
-				fc.Evaluable++
-			case Incomplete:
-				fc.Incomplete++
-			case SilentRisk:
-				fc.SilentRisk++
-			}
-		}
-	}
-
-	// Compute coverage percentages.
-	for _, fc := range report.FrameworkCoverage {
-		if fc.Total > 0 {
-			fc.CoveragePct = float64(fc.Evaluable) / float64(fc.Total) * 100
-		}
-	}
+	silentRisk, incomplete := classifyResults(report, results)
 
 	// Sort by severity (critical first) and ControlID as tie-breaker.
 	sevOrder := policy.SeverityOrderOf
-	slices.SortFunc(silentRisk, func(a, b ControlResult) int {
+	bySeverity := func(a, b ControlResult) int {
 		if sa, sb := sevOrder(a.Severity.String()), sevOrder(b.Severity.String()); sa != sb {
 			return cmp.Compare(sa, sb)
 		}
 		return cmp.Compare(a.ControlID, b.ControlID)
-	})
-	slices.SortFunc(incomplete, func(a, b ControlResult) int {
-		if sa, sb := sevOrder(a.Severity.String()), sevOrder(b.Severity.String()); sa != sb {
-			return cmp.Compare(sa, sb)
-		}
-		return cmp.Compare(a.ControlID, b.ControlID)
-	})
+	}
+	slices.SortFunc(silentRisk, bySeverity)
+	slices.SortFunc(incomplete, bySeverity)
 
 	report.SilentRisk = silentRisk
 	report.IncompleteResults = incomplete
@@ -670,6 +623,51 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	}
 
 	return report
+}
+
+func classifyResults(report *Report, results []ControlResult) (silentRisk, incomplete ControlResults) {
+	for i := range results {
+		r := &results[i]
+		switch r.Classification {
+		case Evaluable:
+			report.Summary.Evaluable++
+		case Incomplete:
+			report.Summary.Incomplete++
+			incomplete = append(incomplete, *r)
+		case SilentRisk:
+			report.Summary.SilentRisk++
+			silentRisk = append(silentRisk, *r)
+		case NoAssets:
+			report.Summary.NoAssets++
+		case NotApplicable:
+			report.Summary.NotApplicable++
+		}
+		report.Summary.Total++
+
+		for _, fw := range r.Frameworks {
+			fc, ok := report.FrameworkCoverage[fw]
+			if !ok {
+				fc = &FrameworkCoverage{}
+				report.FrameworkCoverage[fw] = fc
+			}
+			fc.Total++
+			switch r.Classification {
+			case Evaluable:
+				fc.Evaluable++
+			case Incomplete:
+				fc.Incomplete++
+			case SilentRisk:
+				fc.SilentRisk++
+			}
+		}
+	}
+
+	for _, fc := range report.FrameworkCoverage {
+		if fc.Total > 0 {
+			fc.CoveragePct = float64(fc.Evaluable) / float64(fc.Total) * 100
+		}
+	}
+	return silentRisk, incomplete
 }
 
 // deriveAssetType guesses asset type from field path prefix.

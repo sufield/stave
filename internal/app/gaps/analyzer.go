@@ -78,52 +78,16 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 		}
 	}
 
+	chainByID := make(map[kernel.ChainID]*policy.ChainDefinition, len(chains))
+	for i := range chains {
+		chainByID[chains[i].ID] = &chains[i]
+	}
+
 	intentSet := intentPaths()
 	gaps := make([]FieldGap, 0, len(missing))
 	for k, count := range missing {
-		// Restrict controls_blocked to controls applicable to
-		// the gap's asset type. PathToControls is keyed only on
-		// path, so we have to filter here per (path, type).
-		var controlsBlocked []kernel.ControlID
-		for _, id := range idx.PathToControls[k.p] {
-			if at, ok := controlAppliesTo[id]; ok {
-				_, ok2 := at[k.t]
-				if len(at) == 0 || ok2 {
-					controlsBlocked = append(controlsBlocked, id)
-				}
-			}
-		}
-		// Same intersection for chains: a chain is blocked by
-		// this gap only when some chain member both reads the
-		// path AND applies to the gap's asset type.
-		var chainsBlocked []kernel.ChainID
-		for _, chainID := range idx.PathToChains[k.p] {
-			// Find the chain definition and check membership.
-			for ci := range chains {
-				if chains[ci].ID != chainID {
-					continue
-				}
-				blocks := false
-				for _, member := range chains[ci].ControlIDs {
-					var reads bool
-					if rp, ok := controlReadsPath[member]; ok {
-						_, reads = rp[k.p]
-					}
-					var applies bool
-					if at, ok := controlAppliesTo[member]; ok {
-						_, applies = at[k.t]
-					}
-					if reads && applies {
-						blocks = true
-						break
-					}
-				}
-				if blocks {
-					chainsBlocked = append(chainsBlocked, chainID)
-				}
-				break
-			}
-		}
+		controlsBlocked := blockedControls(k.p, k.t, idx.PathToControls, controlAppliesTo)
+		chainsBlocked := blockedChains(k.p, k.t, idx.PathToChains, chainByID, controlReadsPath, controlAppliesTo)
 		_, isIntent := intentSet[k.p]
 		gaps = append(gaps, FieldGap{
 			PropertyPath:         PropertyPath(k.p),
@@ -149,6 +113,55 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 		Gaps:    gaps,
 		Summary: buildSummary(gaps, indeterminateCount(controls), topN),
 	}
+}
+
+func blockedControls(
+	path string,
+	assetType kernel.AssetType,
+	pathToControls map[string][]kernel.ControlID,
+	controlAppliesTo map[kernel.ControlID]map[kernel.AssetType]struct{},
+) []kernel.ControlID {
+	var out []kernel.ControlID
+	for _, id := range pathToControls[path] {
+		if at, ok := controlAppliesTo[id]; ok {
+			if _, ok2 := at[assetType]; len(at) == 0 || ok2 {
+				out = append(out, id)
+			}
+		}
+	}
+	return out
+}
+
+func blockedChains(
+	path string,
+	assetType kernel.AssetType,
+	pathToChains map[string][]kernel.ChainID,
+	chainByID map[kernel.ChainID]*policy.ChainDefinition,
+	controlReadsPath map[kernel.ControlID]map[string]struct{},
+	controlAppliesTo map[kernel.ControlID]map[kernel.AssetType]struct{},
+) []kernel.ChainID {
+	var out []kernel.ChainID
+	for _, chainID := range pathToChains[path] {
+		ch, ok := chainByID[chainID]
+		if !ok {
+			continue
+		}
+		for _, member := range ch.ControlIDs {
+			var reads bool
+			if rp, ok := controlReadsPath[member]; ok {
+				_, reads = rp[path]
+			}
+			var applies bool
+			if at, ok := controlAppliesTo[member]; ok {
+				_, applies = at[assetType]
+			}
+			if reads && applies {
+				out = append(out, chainID)
+				break
+			}
+		}
+	}
+	return out
 }
 
 // hasProperty returns true when the path resolves to a non-null

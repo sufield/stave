@@ -48,27 +48,9 @@ func computeTeamTrends(
 		teamLookup[manifest.Teams[i].ID] = &manifest.Teams[i]
 	}
 
-	// If we have history, compute earlier scores for trajectory.
 	var earlierScores map[teams.TeamID]float64
 	if len(assessments) > 1 {
-		earliest := assessments[0]
-		earlierScores = make(map[teams.TeamID]float64)
-		earlierByTeam := make(map[teams.TeamID]int)
-		earlierTotalByTeam := make(map[teams.TeamID]int)
-		for i := range earliest.Findings {
-			f := &earliest.Findings[i]
-			owner := manifest.ResolveOwner(nil, string(f.AssetID), f.ControlID)
-			earlierByTeam[owner.TeamID]++
-		}
-		// Estimate per-team score from violation count change.
-		for tid := range earlierByTeam {
-			total := earlierTotalByTeam[tid]
-			if total == 0 {
-				total = max(earlierByTeam[tid], 1)
-			}
-			rate := float64(earlierByTeam[tid]) / float64(total)
-			earlierScores[tid] = (1.0 - rate) * 100
-		}
+		earlierScores = baselineScores(assessments[0], manifest)
 	}
 
 	// Compute team trends.
@@ -166,6 +148,21 @@ func computeTeamTrends(
 	}
 
 	return trends, summary
+}
+
+func baselineScores(earliest *report.Assessment, manifest *teams.Manifest) map[teams.TeamID]float64 {
+	byTeam := make(map[teams.TeamID]int)
+	for i := range earliest.Findings {
+		f := &earliest.Findings[i]
+		owner := manifest.ResolveOwner(nil, string(f.AssetID), f.ControlID)
+		byTeam[owner.TeamID]++
+	}
+	scores := make(map[teams.TeamID]float64, len(byTeam))
+	for tid, count := range byTeam {
+		total := max(count, 1)
+		scores[tid] = (1.0 - float64(count)/float64(total)) * 100
+	}
+	return scores
 }
 
 // computeRollup aggregates team trends for a hierarchy group.

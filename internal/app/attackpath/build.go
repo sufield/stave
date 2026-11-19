@@ -237,42 +237,7 @@ func Build(input BuildInput) *Graph {
 		annotateTools(nodes, input.Chains, input.Tools)
 	}
 
-	// Derive edges: postcondition of A matches precondition of B.
-	// Only active, annotated chains produce edges.
-	var edges []Edge
-	for i := range input.Chains {
-		a := &input.Chains[i]
-		if _, ok := activeChains[a.ID]; !ok || len(a.Postconditions) == 0 {
-			continue
-		}
-		for j := range input.Chains {
-			b := &input.Chains[j]
-			_, isActiveB := activeChains[b.ID]
-			if a.ID == b.ID || !isActiveB || len(b.Preconditions) == 0 {
-				continue
-			}
-			for _, post := range a.Postconditions {
-				for _, pre := range b.Preconditions {
-					if post == pre {
-						edges = append(edges, Edge{
-							FromChain:     a.ID,
-							ToChain:       b.ID,
-							ViaCapability: CapabilityID(post),
-							Description:   capLabel(CapabilityID(post)) + " enables " + strings.ReplaceAll(string(b.ID), "_", " "),
-						})
-					}
-				}
-			}
-		}
-	}
-
-	slices.SortFunc(edges, func(a, b Edge) int {
-		return cmp.Or(
-			cmp.Compare(string(a.FromChain), string(b.FromChain)),
-			cmp.Compare(string(a.ToChain), string(b.ToChain)),
-			cmp.Compare(string(a.ViaCapability), string(b.ViaCapability)),
-		)
-	})
+	edges := deriveEdges(input.Chains, activeChains)
 
 	// Build capability list from referenced capabilities.
 	var caps []Capability
@@ -294,6 +259,42 @@ func Build(input BuildInput) *Graph {
 		Edges:        edges,
 		Assets:       []AssetRef{}, // populated by caller if snapshot data available
 	}
+}
+
+func deriveEdges(chains []policy.ChainDefinition, active map[kernel.ChainID]struct{}) []Edge {
+	var edges []Edge
+	for i := range chains {
+		a := &chains[i]
+		if _, ok := active[a.ID]; !ok || len(a.Postconditions) == 0 {
+			continue
+		}
+		for j := range chains {
+			b := &chains[j]
+			if _, ok := active[b.ID]; a.ID == b.ID || !ok || len(b.Preconditions) == 0 {
+				continue
+			}
+			for _, post := range a.Postconditions {
+				for _, pre := range b.Preconditions {
+					if post == pre {
+						edges = append(edges, Edge{
+							FromChain:     a.ID,
+							ToChain:       b.ID,
+							ViaCapability: CapabilityID(post),
+							Description:   capLabel(CapabilityID(post)) + " enables " + strings.ReplaceAll(string(b.ID), "_", " "),
+						})
+					}
+				}
+			}
+		}
+	}
+	slices.SortFunc(edges, func(a, b Edge) int {
+		return cmp.Or(
+			cmp.Compare(string(a.FromChain), string(b.FromChain)),
+			cmp.Compare(string(a.ToChain), string(b.ToChain)),
+			cmp.Compare(string(a.ViaCapability), string(b.ViaCapability)),
+		)
+	})
+	return edges
 }
 
 var (

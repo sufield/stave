@@ -1575,6 +1575,52 @@ func scanAssumeStatement(assetIdx, policyIdx, stmtIdx int, assumerID string, raw
 	return out
 }
 
+func scanTrustAdmissions(assetIdx int, identity map[string]any) map[string]string {
+	trustJSON, _ := identity["trust_policy_json"].(string)
+	trimmed := strings.TrimSpace(trustJSON)
+	if trimmed == "" {
+		return nil
+	}
+	var doc struct {
+		Statement []struct {
+			Effect    string `json:"Effect"`
+			Action    any    `json:"Action"`
+			Principal any    `json:"Principal"`
+		} `json:"Statement"`
+	}
+	if err := json.Unmarshal([]byte(trimmed), &doc); err != nil {
+		return nil
+	}
+	evidBase := fmt.Sprintf("assets[%d].properties.identity.trust_policy_json", assetIdx)
+	admitted := make(map[string]string)
+	for si, stmt := range doc.Statement {
+		if !strings.EqualFold(stmt.Effect, "Allow") {
+			continue
+		}
+		hasAssume := false
+		for _, act := range coerceStringList(stmt.Action) {
+			if act == "sts:AssumeRole" || act == "sts:*" || act == "*" {
+				hasAssume = true
+				break
+			}
+		}
+		if !hasAssume {
+			continue
+		}
+		pmap, ok := stmt.Principal.(map[string]any)
+		if !ok {
+			continue
+		}
+		for _, principal := range coerceStringList(pmap["AWS"]) {
+			if principal == "" || principal == "*" {
+				continue
+			}
+			admitted[principal] = fmt.Sprintf("%s.Statement[%d]", evidBase, si)
+		}
+	}
+	return admitted
+}
+
 func assumeEdgeFacts(assets []sir.AssetFact) []Fact {
 	var requests []assumeRequest
 	trustAdmits := make(map[string]map[string]string, len(assets)) // target → assumer → evid
@@ -1593,52 +1639,7 @@ func assumeEdgeFacts(assets []sir.AssetFact) []Fact {
 		if a.Type != "aws_iam_role" {
 			continue
 		}
-		trustJSON, _ := identity["trust_policy_json"].(string)
-		trimmed := strings.TrimSpace(trustJSON)
-		if trimmed == "" {
-			continue
-		}
-		var doc struct {
-			Statement []struct {
-				Effect    string `json:"Effect"`
-				Action    any    `json:"Action"`
-				Principal any    `json:"Principal"`
-			} `json:"Statement"`
-		}
-		if err := json.Unmarshal([]byte(trimmed), &doc); err != nil {
-			continue
-		}
-		evidBase := fmt.Sprintf("assets[%d].properties.identity.trust_policy_json", i)
-		admitted := trustAdmits[a.ID]
-		if admitted == nil {
-			admitted = make(map[string]string)
-		}
-		for si, stmt := range doc.Statement {
-			if !strings.EqualFold(stmt.Effect, "Allow") {
-				continue
-			}
-			hasAssume := false
-			for _, act := range coerceStringList(stmt.Action) {
-				if act == "sts:AssumeRole" || act == "sts:*" || act == "*" {
-					hasAssume = true
-					break
-				}
-			}
-			if !hasAssume {
-				continue
-			}
-			pmap, ok := stmt.Principal.(map[string]any)
-			if !ok {
-				continue
-			}
-			for _, principal := range coerceStringList(pmap["AWS"]) {
-				if principal == "" || principal == "*" {
-					continue
-				}
-				admitted[principal] = fmt.Sprintf("%s.Statement[%d]", evidBase, si)
-			}
-		}
-		if len(admitted) > 0 {
+		if admitted := scanTrustAdmissions(i, identity); len(admitted) > 0 {
 			trustAdmits[a.ID] = admitted
 		}
 	}

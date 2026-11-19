@@ -11,6 +11,7 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/adapters/observations"
 	"github.com/sufield/stave/internal/core/asset"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/platform/fsutil"
 )
 
@@ -55,49 +56,21 @@ func Test(controlPath, passFixture, failFixture, snapshotPath string, verbose bo
 	failed := 0
 
 	if passFixture != "" {
-		assets, loadErr := loadFixture(passFixture)
+		p, f, loadErr := testFixture(&buf, &ctl, celEval, passFixture, false, "pass")
 		if loadErr != nil {
-			return nil, fmt.Errorf("load pass fixture: %w", loadErr)
+			return nil, loadErr
 		}
-		for _, a := range assets {
-			unsafe, evalErr := celEval(&ctl, a, nil)
-			if evalErr != nil {
-				fmt.Fprintf(&buf, "X %s -- pass fixture: ERROR  %v\n", ctl.ID, evalErr)
-				failed++
-				continue
-			}
-			if unsafe {
-				fmt.Fprintf(&buf, "X %s -- pass fixture: FAIL (got verdict=fail, expected pass)\n", ctl.ID)
-				writeTrace(&buf, a)
-				failed++
-			} else {
-				fmt.Fprintf(&buf, "  %s -- pass fixture: PASS (verdict=pass as expected)\n", ctl.ID)
-				passed++
-			}
-		}
+		passed += p
+		failed += f
 	}
 
 	if failFixture != "" {
-		assets, loadErr := loadFixture(failFixture)
+		p, f, loadErr := testFixture(&buf, &ctl, celEval, failFixture, true, "fail")
 		if loadErr != nil {
-			return nil, fmt.Errorf("load fail fixture: %w", loadErr)
+			return nil, loadErr
 		}
-		for _, a := range assets {
-			unsafe, evalErr := celEval(&ctl, a, nil)
-			if evalErr != nil {
-				fmt.Fprintf(&buf, "X %s -- fail fixture: ERROR  %v\n", ctl.ID, evalErr)
-				failed++
-				continue
-			}
-			if !unsafe {
-				fmt.Fprintf(&buf, "X %s -- fail fixture: FAIL (got verdict=pass, expected fail)\n", ctl.ID)
-				writeTrace(&buf, a)
-				failed++
-			} else {
-				fmt.Fprintf(&buf, "  %s -- fail fixture: PASS (verdict=fail as expected)\n", ctl.ID)
-				passed++
-			}
-		}
+		passed += p
+		failed += f
 	}
 
 	if snapshotPath != "" {
@@ -135,6 +108,42 @@ func Test(controlPath, passFixture, failFixture, snapshotPath string, verbose bo
 		return buf.Bytes(), fmt.Errorf("%d assertion(s) failed", failed)
 	}
 	return buf.Bytes(), nil
+}
+
+func testFixture(
+	buf *bytes.Buffer,
+	ctl *policy.ControlDefinition,
+	celEval policy.PredicateEval,
+	fixturePath string,
+	expectUnsafe bool,
+	label string,
+) (passed, failed int, _ error) {
+	assets, loadErr := loadFixture(fixturePath)
+	if loadErr != nil {
+		return 0, 0, fmt.Errorf("load %s fixture: %w", label, loadErr)
+	}
+	expectVerdict := "pass"
+	gotVerdict := "fail"
+	if expectUnsafe {
+		expectVerdict, gotVerdict = gotVerdict, expectVerdict
+	}
+	for _, a := range assets {
+		unsafe, evalErr := celEval(ctl, a, nil)
+		if evalErr != nil {
+			fmt.Fprintf(buf, "X %s -- %s fixture: ERROR  %v\n", ctl.ID, label, evalErr)
+			failed++
+			continue
+		}
+		if unsafe != expectUnsafe {
+			fmt.Fprintf(buf, "X %s -- %s fixture: FAIL (got verdict=%s, expected %s)\n", ctl.ID, label, gotVerdict, expectVerdict)
+			writeTrace(buf, a)
+			failed++
+		} else {
+			fmt.Fprintf(buf, "  %s -- %s fixture: PASS (verdict=%s as expected)\n", ctl.ID, label, expectVerdict)
+			passed++
+		}
+	}
+	return passed, failed, nil
 }
 
 func loadFixture(path string) ([]asset.Asset, error) {

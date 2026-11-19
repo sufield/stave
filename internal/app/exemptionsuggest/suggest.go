@@ -21,6 +21,16 @@ type findingKey struct {
 	AssetType kernel.AssetType
 }
 
+type findingMeta struct {
+	controlID   kernel.ControlID
+	assetID     asset.ID
+	severity    policy.Severity
+	ownerTeamID teams.TeamID
+	firstSeen   time.Time
+	lastSeen    time.Time
+	appearances []bool
+}
+
 // Pattern describes the temporal behavior of a finding.
 type Pattern string
 
@@ -162,62 +172,7 @@ func Suggest(in Input) *Result {
 		}
 	}
 
-	// Build per-finding timeline: track first seen, last seen, presence
-	// in each assessment, and metadata.
-	type findingMeta struct {
-		controlID   kernel.ControlID
-		assetID     asset.ID
-		severity    policy.Severity
-		ownerTeamID teams.TeamID
-		firstSeen   time.Time
-		lastSeen    time.Time
-		appearances []bool // true for each assessment where present
-	}
-	meta := make(map[findingKey]*findingMeta)
-	assessmentCount := len(filtered)
-
-	for _, a := range sorted {
-		presentThisRun := make(map[findingKey]struct{})
-		for i := range a.Findings {
-			f := &a.Findings[i]
-			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID, AssetType: f.AssetType}
-			presentThisRun[k] = struct{}{}
-
-			m, exists := meta[k]
-			if !exists {
-				m = &findingMeta{
-					controlID:   f.ControlID,
-					assetID:     f.AssetID,
-					severity:    f.ControlSeverity,
-					ownerTeamID: teams.TeamID(f.OwnerKey()),
-					firstSeen:   a.Run.EvalTime,
-					appearances: make([]bool, assessmentCount),
-				}
-				meta[k] = m
-			} else if m.firstSeen.IsZero() {
-				m.firstSeen = a.Run.EvalTime
-			}
-		}
-
-		for k, m := range meta {
-			if _, present := presentThisRun[k]; !present {
-				m.firstSeen = time.Time{}
-			}
-		}
-	}
-
-	for idx, a := range filtered {
-		for i := range a.Findings {
-			f := &a.Findings[i]
-			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID, AssetType: f.AssetType}
-			m := meta[k]
-			m.lastSeen = a.Run.EvalTime
-			m.appearances[idx] = true
-			if k := f.OwnerKey(); k != "" {
-				m.ownerTeamID = teams.TeamID(k)
-			}
-		}
-	}
+	meta := buildTimeline(sorted, filtered)
 
 	// Classify findings.
 	var oscillating, chronic []Candidate
@@ -233,7 +188,7 @@ func Suggest(in Input) *Result {
 		}
 
 		// Must be in the latest assessment (still active).
-		if !m.appearances[assessmentCount-1] {
+		if !m.appearances[len(filtered)-1] {
 			continue
 		}
 
@@ -302,6 +257,56 @@ func Suggest(in Input) *Result {
 		WindowDays:   int(in.Window.Hours() / 24),
 		MinDwellDays: int(in.MinDwell.Hours() / 24),
 	}
+}
+
+func buildTimeline(sorted, filtered []*report.Assessment) map[findingKey]*findingMeta {
+	meta := make(map[findingKey]*findingMeta)
+	assessmentCount := len(filtered)
+
+	for _, a := range sorted {
+		presentThisRun := make(map[findingKey]struct{})
+		for i := range a.Findings {
+			f := &a.Findings[i]
+			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID, AssetType: f.AssetType}
+			presentThisRun[k] = struct{}{}
+
+			m, exists := meta[k]
+			if !exists {
+				m = &findingMeta{
+					controlID:   f.ControlID,
+					assetID:     f.AssetID,
+					severity:    f.ControlSeverity,
+					ownerTeamID: teams.TeamID(f.OwnerKey()),
+					firstSeen:   a.Run.EvalTime,
+					appearances: make([]bool, assessmentCount),
+				}
+				meta[k] = m
+			} else if m.firstSeen.IsZero() {
+				m.firstSeen = a.Run.EvalTime
+			}
+		}
+
+		for k, m := range meta {
+			if _, present := presentThisRun[k]; !present {
+				m.firstSeen = time.Time{}
+			}
+		}
+	}
+
+	for idx, a := range filtered {
+		for i := range a.Findings {
+			f := &a.Findings[i]
+			k := findingKey{ControlID: f.ControlID, AssetID: f.AssetID, AssetType: f.AssetType}
+			m := meta[k]
+			m.lastSeen = a.Run.EvalTime
+			m.appearances[idx] = true
+			if k := f.OwnerKey(); k != "" {
+				m.ownerTeamID = teams.TeamID(k)
+			}
+		}
+	}
+
+	return meta
 }
 
 // countCycles counts the number of times a finding disappeared and
