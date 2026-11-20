@@ -174,61 +174,7 @@ func Suggest(in Input) *Result {
 
 	meta := buildTimeline(sorted, filtered)
 
-	// Classify findings.
-	var oscillating, chronic []Candidate
-
-	for k, m := range meta {
-		// Skip if already exempted.
-		exemptKey := string(k.ControlID) + "@" + string(k.AssetID)
-		if k.AssetType != "" {
-			exemptKey = string(k.ControlID) + "@" + string(k.AssetType) + "@" + string(k.AssetID)
-		}
-		if _, ok := in.ExemptedKeys[exemptKey]; ok {
-			continue
-		}
-
-		// Must be in the latest assessment (still active).
-		if !m.appearances[len(filtered)-1] {
-			continue
-		}
-
-		dwellDays := DwellDays(in.EvalTime.Sub(m.firstSeen).Hours() / 24)
-
-		// Count oscillation cycles (gaps where finding disappeared then returned).
-		cycles := countCycles(m.appearances)
-
-		cmd := ExemptCommand(fmt.Sprintf("stave exempt acknowledge --control-id %s --asset-id %s --reason \"<reason>\" --approver \"<approver>\" --expires %s",
-			k.ControlID, k.AssetID, in.EvalTime.AddDate(0, 0, 30).Format("2006-01-02")))
-
-		if cycles >= 2 {
-			oscillating = append(oscillating, Candidate{
-				ControlID:   k.ControlID,
-				AssetID:     k.AssetID,
-				AssetType:   k.AssetType,
-				Severity:    m.severity,
-				Pattern:     PatternOscillating,
-				DwellDays:   dwellDays,
-				Cycles:      cycles,
-				OwnerTeamID: m.ownerTeamID,
-				ExemptCmd:   cmd,
-			})
-			continue
-		}
-
-		// Chronic: open longer than min-dwell threshold.
-		if dwellDays.IsLongStanding(in.MinDwell.Hours() / 24) {
-			chronic = append(chronic, Candidate{
-				ControlID:   k.ControlID,
-				AssetID:     k.AssetID,
-				AssetType:   k.AssetType,
-				Severity:    m.severity,
-				Pattern:     PatternChronic,
-				DwellDays:   dwellDays,
-				OwnerTeamID: m.ownerTeamID,
-				ExemptCmd:   cmd,
-			})
-		}
-	}
+	oscillating, chronic := classifyFindings(meta, filtered, in)
 
 	// Sort by severity (critical first) then by dwell time (longest first).
 	sortCandidates := func(s []Candidate) {
@@ -257,6 +203,43 @@ func Suggest(in Input) *Result {
 		WindowDays:   int(in.Window.Hours() / 24),
 		MinDwellDays: int(in.MinDwell.Hours() / 24),
 	}
+}
+
+func classifyFindings(meta map[findingKey]*findingMeta, filtered []*report.Assessment, in Input) (oscillating, chronic []Candidate) {
+	for k, m := range meta {
+		exemptKey := string(k.ControlID) + "@" + string(k.AssetID)
+		if k.AssetType != "" {
+			exemptKey = string(k.ControlID) + "@" + string(k.AssetType) + "@" + string(k.AssetID)
+		}
+		if _, ok := in.ExemptedKeys[exemptKey]; ok {
+			continue
+		}
+		if !m.appearances[len(filtered)-1] {
+			continue
+		}
+
+		dwellDays := DwellDays(in.EvalTime.Sub(m.firstSeen).Hours() / 24)
+		cycles := countCycles(m.appearances)
+		cmd := ExemptCommand(fmt.Sprintf("stave exempt acknowledge --control-id %s --asset-id %s --reason \"<reason>\" --approver \"<approver>\" --expires %s",
+			k.ControlID, k.AssetID, in.EvalTime.AddDate(0, 0, 30).Format("2006-01-02")))
+
+		if cycles >= 2 {
+			oscillating = append(oscillating, Candidate{
+				ControlID: k.ControlID, AssetID: k.AssetID, AssetType: k.AssetType,
+				Severity: m.severity, Pattern: PatternOscillating,
+				DwellDays: dwellDays, Cycles: cycles, OwnerTeamID: m.ownerTeamID, ExemptCmd: cmd,
+			})
+			continue
+		}
+		if dwellDays.IsLongStanding(in.MinDwell.Hours() / 24) {
+			chronic = append(chronic, Candidate{
+				ControlID: k.ControlID, AssetID: k.AssetID, AssetType: k.AssetType,
+				Severity: m.severity, Pattern: PatternChronic,
+				DwellDays: dwellDays, OwnerTeamID: m.ownerTeamID, ExemptCmd: cmd,
+			})
+		}
+	}
+	return
 }
 
 func buildTimeline(sorted, filtered []*report.Assessment) map[findingKey]*findingMeta {

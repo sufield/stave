@@ -94,20 +94,7 @@ func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) 
 		r.TopExposures = exposures
 	}
 	if r.HasChainFindings() {
-		chains := make([]findings.CompoundFinding, len(r.ChainFindings))
-		for i := range r.ChainFindings {
-			cf := r.ChainFindings[i]
-			cf.AssetID = asset.ID(s.ID(string(cf.AssetID)))
-			if cf.HasContributingAssets() {
-				contrib := make([]asset.ID, len(cf.ContributingAssets))
-				for j, a := range cf.ContributingAssets {
-					contrib[j] = asset.ID(s.ID(string(a)))
-				}
-				cf.ContributingAssets = contrib
-			}
-			chains[i] = cf
-		}
-		r.ChainFindings = chains
+		r.ChainFindings = sanitizeChainFindings(s, r.ChainFindings)
 	}
 	if r.HasIssues() {
 		issues := make([]evaluation.Issue, len(r.Issues))
@@ -124,6 +111,23 @@ func sanitizeResultSidecars(s kernel.Sanitizer, r *evaluation.ComplianceReport) 
 	if r.Metadata.ResolvedPaths.Observations != "" {
 		r.Metadata.ResolvedPaths.Observations = s.Path(r.Metadata.ResolvedPaths.Observations)
 	}
+}
+
+func sanitizeChainFindings(s kernel.Sanitizer, in []findings.CompoundFinding) []findings.CompoundFinding {
+	out := make([]findings.CompoundFinding, len(in))
+	for i := range in {
+		cf := in[i]
+		cf.AssetID = asset.ID(s.ID(string(cf.AssetID)))
+		if cf.HasContributingAssets() {
+			contrib := make([]asset.ID, len(cf.ContributingAssets))
+			for j, a := range cf.ContributingAssets {
+				contrib[j] = asset.ID(s.ID(string(a)))
+			}
+			cf.ContributingAssets = contrib
+		}
+		out[i] = cf
+	}
+	return out
 }
 
 // PrepareFindings enriches findings from the result and optionally sanitizes them.

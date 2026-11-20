@@ -95,29 +95,7 @@ func DetectChains(
 			continue
 		}
 		for _, ci := range chainIdxs {
-			chain := &chains[ci]
-			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
-			if scope == "" {
-				continue // not evaluable (e.g. account-scoped chain, no account_id)
-			}
-			b := buckets[ci]
-			if b == nil {
-				b = &chainBuckets{
-					byScope:         make(map[string]map[kernel.ControlID]struct{}),
-					assetsByScope:   make(map[string]map[asset.ID]struct{}),
-					resolvedByScope: make(map[string]struct{}),
-				}
-				buckets[ci] = b
-			}
-			if b.byScope[scope] == nil {
-				b.byScope[scope] = make(map[kernel.ControlID]struct{})
-				b.assetsByScope[scope] = make(map[asset.ID]struct{})
-			}
-			b.byScope[scope][f.ControlID] = struct{}{}
-			b.assetsByScope[scope][f.AssetID] = struct{}{}
-			if resolved {
-				b.resolvedByScope[scope] = struct{}{}
-			}
+			bucketFailure(f, &chains[ci], buckets, ci, scopeResolver)
 		}
 	}
 
@@ -154,6 +132,31 @@ func DetectChains(
 	})
 
 	return findings
+}
+
+func bucketFailure(f *FailingControl, chain *policy.ChainDefinition, buckets []*chainBuckets, ci int, scopeResolver ScopeResolver) {
+	scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
+	if scope == "" {
+		return
+	}
+	b := buckets[ci]
+	if b == nil {
+		b = &chainBuckets{
+			byScope:         make(map[string]map[kernel.ControlID]struct{}),
+			assetsByScope:   make(map[string]map[asset.ID]struct{}),
+			resolvedByScope: make(map[string]struct{}),
+		}
+		buckets[ci] = b
+	}
+	if b.byScope[scope] == nil {
+		b.byScope[scope] = make(map[kernel.ControlID]struct{})
+		b.assetsByScope[scope] = make(map[asset.ID]struct{})
+	}
+	b.byScope[scope][f.ControlID] = struct{}{}
+	b.assetsByScope[scope][f.AssetID] = struct{}{}
+	if resolved {
+		b.resolvedByScope[scope] = struct{}{}
+	}
 }
 
 // emitChainFinding turns one (chain, scope, bucket) into a
@@ -383,6 +386,61 @@ func DetectNearMisses(
 	chains []policy.ChainDefinition,
 	scopeResolver ScopeResolver,
 ) []findingsdata.NearMissChain {
+	buckets := bucketFailuresByChain(failures, chains, scopeResolver)
+
+	var nearMisses []findingsdata.NearMissChain
+	for i := range chains {
+		b := buckets[i]
+		if b == nil || chains[i].EscalationThreshold <= 1 {
+			continue
+		}
+		nearMisses = append(nearMisses, chainNearMisses(&chains[i], b)...)
+	}
+
+	slices.SortFunc(nearMisses, func(a, b findingsdata.NearMissChain) int {
+		if c := cmp.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
+			return c
+		}
+		if c := cmp.Compare(a.ScopeID, b.ScopeID); c != 0 {
+			return c
+		}
+		return cmp.Compare(string(a.MissingControl), string(b.MissingControl))
+	})
+	return nearMisses
+}
+
+func chainNearMisses(chain *policy.ChainDefinition, b *chainBuckets) []findingsdata.NearMissChain {
+	var out []findingsdata.NearMissChain
+	for scope, scopeFailing := range b.byScope {
+		var failing, holding []kernel.ControlID
+		for _, cid := range chain.ControlIDs {
+			if _, ok := scopeFailing[cid]; ok {
+				failing = append(failing, cid)
+			} else {
+				holding = append(holding, cid)
+			}
+		}
+		if len(failing) == chain.EscalationThreshold-1 && len(failing) > 0 {
+			for _, missing := range holding {
+				out = append(out, findingsdata.NearMissChain{
+					ChainID:         chain.ID,
+					Description:     chain.Description,
+					ControlsFailing: failing,
+					MissingControl:  missing,
+					Severity:        chain.CompoundSeverity,
+					ScopeID:         scope,
+				})
+			}
+		}
+	}
+	return out
+}
+
+func bucketFailuresByChain(
+	failures []FailingControl,
+	chains []policy.ChainDefinition,
+	scopeResolver ScopeResolver,
+) []*chainBuckets {
 	controlToChains := make(map[kernel.ControlID][]int, len(chains))
 	for i := range chains {
 		for _, cid := range chains[i].ControlIDs {
@@ -397,7 +455,7 @@ func DetectNearMisses(
 			chain := &chains[ci]
 			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
 			if scope == "" {
-				continue // not evaluable (e.g. account-scoped chain, no account_id)
+				continue
 			}
 			b := buckets[ci]
 			if b == nil {
@@ -419,56 +477,7 @@ func DetectNearMisses(
 			}
 		}
 	}
-
-	var nearMisses []findingsdata.NearMissChain
-	for i := range chains {
-		b := buckets[i]
-		if b == nil {
-			continue
-		}
-		chain := &chains[i]
-		// Threshold-1 chains have no one-away state: they're either
-		// safe (0 failing) or exploitable (1 failing). The near-miss
-		// condition (len(failing) == threshold-1 AND len(failing) > 0)
-		// is contradictory for threshold=1.
-		if chain.EscalationThreshold <= 1 {
-			continue
-		}
-		for scope, scopeFailing := range b.byScope {
-			var failing, holding []kernel.ControlID
-			for _, cid := range chain.ControlIDs {
-				if _, ok := scopeFailing[cid]; ok {
-					failing = append(failing, cid)
-				} else {
-					holding = append(holding, cid)
-				}
-			}
-			// Near miss: exactly one control short of threshold.
-			if len(failing) == chain.EscalationThreshold-1 && len(failing) > 0 {
-				for _, missing := range holding {
-					nearMisses = append(nearMisses, findingsdata.NearMissChain{
-						ChainID:         chain.ID,
-						Description:     chain.Description,
-						ControlsFailing: failing,
-						MissingControl:  missing,
-						Severity:        chain.CompoundSeverity,
-						ScopeID:         scope,
-					})
-				}
-			}
-		}
-	}
-
-	slices.SortFunc(nearMisses, func(a, b findingsdata.NearMissChain) int {
-		if c := cmp.Compare(string(a.ChainID), string(b.ChainID)); c != 0 {
-			return c
-		}
-		if c := cmp.Compare(a.ScopeID, b.ScopeID); c != 0 {
-			return c
-		}
-		return cmp.Compare(string(a.MissingControl), string(b.MissingControl))
-	})
-	return nearMisses
+	return buckets
 }
 
 func buildNarrative(chain *policy.ChainDefinition, failing []kernel.ControlID) string {
@@ -501,26 +510,28 @@ func AnnotateDependencies(
 	for i := range findings {
 		f := &findings[i]
 		chain := chainByID[f.ChainID]
-		if chain == nil || len(chain.ImplicitDependencies) == 0 {
-			continue
-		}
-		for _, dep := range chain.ImplicitDependencies {
-			status := resolver.Status(dep.Source)
-			switch dep.Fallback {
-			case policy.FallbackFailClosed:
-				if status == policy.DependencyNotRun || status == policy.DependencyRanEmpty || status == policy.DependencyUnknown {
-					if dep.Diagnostic != "" {
-						f.DependencyDiagnostics = append(f.DependencyDiagnostics, dep.Diagnostic)
-					}
-				}
-			case policy.FallbackCrossValidate:
-				if status != policy.DependencyRanOK && dep.Diagnostic != "" {
-					f.DependencyDiagnostics = append(f.DependencyDiagnostics, dep.Diagnostic)
-				}
-			case policy.FallbackFailOpen:
-				// Intentional: no annotation.
-			}
+		if chain != nil && len(chain.ImplicitDependencies) > 0 {
+			annotateFindingDependencies(f, chain, resolver)
 		}
 	}
 	return findings
+}
+
+func annotateFindingDependencies(f *findingsdata.CompoundFinding, chain *policy.ChainDefinition, resolver policy.DependencyResolver) {
+	for _, dep := range chain.ImplicitDependencies {
+		status := resolver.Status(dep.Source)
+		switch dep.Fallback {
+		case policy.FallbackFailClosed:
+			if status == policy.DependencyNotRun || status == policy.DependencyRanEmpty || status == policy.DependencyUnknown {
+				if dep.Diagnostic != "" {
+					f.DependencyDiagnostics = append(f.DependencyDiagnostics, dep.Diagnostic)
+				}
+			}
+		case policy.FallbackCrossValidate:
+			if status != policy.DependencyRanOK && dep.Diagnostic != "" {
+				f.DependencyDiagnostics = append(f.DependencyDiagnostics, dep.Diagnostic)
+			}
+		case policy.FallbackFailOpen:
+		}
+	}
 }

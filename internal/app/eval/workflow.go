@@ -500,11 +500,10 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 		}
 	}
 
-	// Graph-originating chain findings (from Soufflé) have empty
-	// ControlsFailing — the chain was detected by graph query, not
-	// CEL predicate evaluation. Match individual findings by AssetID:
-	// the graph chain identifies the asset at risk, so every finding
-	// on that asset becomes a chain member.
+	annotateGraphChains(report)
+}
+
+func annotateGraphChains(report *evaluation.ComplianceReport) {
 	for i := range report.ChainFindings {
 		cf := &report.ChainFindings[i]
 		if cf.HasControlsFailing() {

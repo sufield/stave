@@ -109,69 +109,9 @@ func RankExposures(
 
 	ranks := make([]findingsdata.ExposureRank, 0, len(inputs))
 	for i := range inputs {
-		f := &inputs[i]
-
-		base := f.ControlSeverity.Weight()
-		blast := 1.0
-		if controlLookup != nil {
-			if ctl, ok := controlLookup[f.ControlID]; ok {
-				if bi := ctl.BaseImpact(); bi > 0 {
-					base = bi
-				}
-				if bm := ctl.BlastMultiplier(); bm > 0 {
-					blast = bm
-				}
-			}
+		if r, ok := scoreExposure(&inputs[i], i, controlLookup); ok {
+			ranks = append(ranks, r)
 		}
-		if f.SharedRoleCount > 1 {
-			blast = max(blast, SharedRoleBlastMultiplier(f.SharedRoleCount))
-		}
-		// Skip findings whose effective base score is non-positive.
-		// Severity.Weight() returns 0 for SeverityNone (and a control
-		// override could push it negative); a 0-weight finding scores 0
-		// and crowds the rank tail with rows operators can't act on.
-		// Log so a misconfigured upstream is visible rather than
-		// silently producing a 0-score entry that survives the sort.
-		if base <= 0 {
-			slog.Warn("exposure rank: skipping finding with non-positive base score",
-				"control_id", f.ControlID, "asset_id", f.AssetID,
-				"severity", f.ControlSeverity.String(), "base", base)
-			continue
-		}
-
-		daysBlind := f.UnsafeDurationHours / 24.0
-		durFactor := DurationFactor(f.UnsafeDurationHours)
-		expMult := exposureMultiplier(f.Exposure)
-		chainBonus := ChainBonus(f.ChainMembershipCount)
-		blindMult := BlindMultiplier(daysBlind)
-
-		// Cap the raw exposure score so a worst-case finding (high
-		// base × long duration × public × silent-killer chain) does
-		// not produce a 4-digit number that destabilizes the rank
-		// distribution — every other finding is functionally zero
-		// once one entry exceeds the catastrophic threshold by 10x.
-		// Capping preserves the ordering for entries below the cap
-		// and groups everything at-or-above into a tied "ceiling"
-		// bucket that the caller resolves via the deterministic
-		// tiebreakers.
-		score := min(float64(base)*durFactor*blast*expMult*chainBonus*blindMult, float64(ScoreCatastrophic))
-
-		ranks = append(ranks, findingsdata.ExposureRank{
-			FindingIndex:  i,
-			ControlID:     f.ControlID,
-			AssetID:       f.AssetID,
-			ExposureScore: kernel.ExposureScore(score),
-			SilentKiller:  daysBlind > silentKillerDaysThreshold,
-			Breakdown: findingsdata.ScoreBreakdown{
-				BaseScore:          base,
-				DurationFactor:     durFactor,
-				BlastMultiplier:    kernel.BlastRadius(blast),
-				ExposureMultiplier: expMult,
-				ChainBonus:         chainBonus,
-				BlindMultiplier:    blindMult,
-				DaysBlind:          daysBlind,
-			},
-		})
 	}
 
 	slices.SortFunc(ranks, func(a, b findingsdata.ExposureRank) int {
@@ -190,4 +130,53 @@ func RankExposures(
 		ranks = ranks[:topN]
 	}
 	return ranks
+}
+
+func scoreExposure(f *RankInput, index int, controlLookup map[kernel.ControlID]*policy.ControlDefinition) (findingsdata.ExposureRank, bool) {
+	base := f.ControlSeverity.Weight()
+	blast := 1.0
+	if controlLookup != nil {
+		if ctl, ok := controlLookup[f.ControlID]; ok {
+			if bi := ctl.BaseImpact(); bi > 0 {
+				base = bi
+			}
+			if bm := ctl.BlastMultiplier(); bm > 0 {
+				blast = bm
+			}
+		}
+	}
+	if f.SharedRoleCount > 1 {
+		blast = max(blast, SharedRoleBlastMultiplier(f.SharedRoleCount))
+	}
+	if base <= 0 {
+		slog.Warn("exposure rank: skipping finding with non-positive base score",
+			"control_id", f.ControlID, "asset_id", f.AssetID,
+			"severity", f.ControlSeverity.String(), "base", base)
+		return findingsdata.ExposureRank{}, false
+	}
+
+	daysBlind := f.UnsafeDurationHours / 24.0
+	durFactor := DurationFactor(f.UnsafeDurationHours)
+	expMult := exposureMultiplier(f.Exposure)
+	chainBonus := ChainBonus(f.ChainMembershipCount)
+	blindMult := BlindMultiplier(daysBlind)
+
+	score := min(float64(base)*durFactor*blast*expMult*chainBonus*blindMult, float64(ScoreCatastrophic))
+
+	return findingsdata.ExposureRank{
+		FindingIndex:  index,
+		ControlID:     f.ControlID,
+		AssetID:       f.AssetID,
+		ExposureScore: kernel.ExposureScore(score),
+		SilentKiller:  daysBlind > silentKillerDaysThreshold,
+		Breakdown: findingsdata.ScoreBreakdown{
+			BaseScore:          base,
+			DurationFactor:     durFactor,
+			BlastMultiplier:    kernel.BlastRadius(blast),
+			ExposureMultiplier: expMult,
+			ChainBonus:         chainBonus,
+			BlindMultiplier:    blindMult,
+			DaysBlind:          daysBlind,
+		},
+	}, true
 }

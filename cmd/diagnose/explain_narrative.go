@@ -199,28 +199,30 @@ func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth 
 		// Section 4: Steps.
 		writeNarrativeSteps(w, pb.Narrative.Steps)
 
-		// Section 5: Chain context.
 		if pb.Narrative.HasChainContext() {
-			cc := pb.Narrative.ChainContext
-			fmt.Fprintln(w, "\nCOMPOUND CHAIN CONTEXT")
-			fmt.Fprintln(w, strings.Repeat("\u2500", 64))
-			fmt.Fprintf(w, "Chain: %s (ACTIVE)\n", cc.ChainID)
-			for i := range cc.MemberControls {
-				m := &cc.MemberControls[i]
-				fmt.Fprintf(w, "  %s %s  %s\n", m.StatusIcon(), m.ControlID, m.Status)
-			}
-			if cc.HasChainNarrative() {
-				fmt.Fprintf(w, "\n%s\n", cc.ChainNarrative)
-			}
-			if cc.HasDeactivationOrder() {
-				fmt.Fprintln(w, "\nRecommended deactivation order:")
-				for i, id := range cc.DeactivationOrder {
-					fmt.Fprintf(w, "  %d. %s\n", i+1, id)
-				}
-			}
+			writeChainContext(w, pb.Narrative.ChainContext)
 		}
 
 		fmt.Fprintln(w)
+	}
+}
+
+func writeChainContext(w io.Writer, cc *narrative.ChainContext) {
+	fmt.Fprintln(w, "\nCOMPOUND CHAIN CONTEXT")
+	fmt.Fprintln(w, strings.Repeat("─", 64))
+	fmt.Fprintf(w, "Chain: %s (ACTIVE)\n", cc.ChainID)
+	for i := range cc.MemberControls {
+		m := &cc.MemberControls[i]
+		fmt.Fprintf(w, "  %s %s  %s\n", m.StatusIcon(), m.ControlID, m.Status)
+	}
+	if cc.HasChainNarrative() {
+		fmt.Fprintf(w, "\n%s\n", cc.ChainNarrative)
+	}
+	if cc.HasDeactivationOrder() {
+		fmt.Fprintln(w, "\nRecommended deactivation order:")
+		for i, id := range cc.DeactivationOrder {
+			fmt.Fprintf(w, "  %d. %s\n", i+1, id)
+		}
 	}
 }
 
@@ -250,52 +252,54 @@ func writeNarrativeSteps(w io.Writer, steps narrative.Steps) {
 
 func writeMarkdownPlaybooks(w io.Writer, playbooks []narrative.Playbook, depth string) {
 	for pi := range playbooks {
-		pb := &playbooks[pi]
-
-		fmt.Fprintf(w, "# %s — %s\n\n", pb.ControlID, pb.ControlName)
-		fmt.Fprintf(w, "**Asset:** %s  \n", pb.AssetID)
-		fmt.Fprintf(w, "**Severity:** %s  \n", pb.Severity)
-		fmt.Fprintf(w, "**Finding ID:** %s  \n\n", pb.FindingID)
-
-		if depth != "brief" && pb.Narrative.HasWhyThisMatters() {
-			fmt.Fprintf(w, "## Why This Matters\n\n%s\n\n", pb.Narrative.WhyThisMatters)
-		}
-
-		if depth != "brief" && pb.Narrative.HasCurrentState() {
-			fmt.Fprintln(w, "## Current State")
-			fmt.Fprintln(w, "| Property | Current | Required |")
-			fmt.Fprintln(w, "|---|---|---|")
-			for _, s := range pb.Narrative.CurrentState {
-				fmt.Fprintf(w, "| %s | %s | %s |\n", s.PropertyPath, s.CurrentValue, s.RequiredValue)
-			}
-			fmt.Fprintln(w)
-		}
-
-		fmt.Fprintln(w, "## Remediation Steps")
-		for _, s := range pb.Narrative.Steps {
-			safe := ""
-			if s.SafeDefault {
-				safe = " [SAFE DEFAULT]"
-			}
-			fmt.Fprintf(w, "### Step %d: %s%s\n\n", s.StepNumber, s.Title, safe)
-			if s.HasCaution() {
-				fmt.Fprintf(w, "> **CAUTION:** %s\n\n", s.Caution)
-			}
-			if s.HasAction() {
-				fmt.Fprintf(w, "%s\n\n", s.Action)
-			}
-		}
-
-		if depth != "brief" && pb.Narrative.HasChainContext() {
-			cc := pb.Narrative.ChainContext
-			fmt.Fprintf(w, "## Chain Context: %s\n\n", cc.ChainID)
-			for i := range cc.MemberControls {
-				m := &cc.MemberControls[i]
-				fmt.Fprintf(w, "- [%s] %s (%s)\n", m.StatusGlyph(), m.ControlID, m.Status)
-			}
-			fmt.Fprintln(w)
-		}
-
-		fmt.Fprintln(w, "---")
+		writeMarkdownPlaybook(w, &playbooks[pi], depth)
 	}
+}
+
+func writeMarkdownPlaybook(w io.Writer, pb *narrative.Playbook, depth string) {
+	fmt.Fprintf(w, "# %s — %s\n\n", pb.ControlID, pb.ControlName)
+	fmt.Fprintf(w, "**Asset:** %s  \n", pb.AssetID)
+	fmt.Fprintf(w, "**Severity:** %s  \n", pb.Severity)
+	fmt.Fprintf(w, "**Finding ID:** %s  \n\n", pb.FindingID)
+
+	if depth != "brief" && pb.Narrative.HasWhyThisMatters() {
+		fmt.Fprintf(w, "## Why This Matters\n\n%s\n\n", pb.Narrative.WhyThisMatters)
+	}
+
+	if depth != "brief" && pb.Narrative.HasCurrentState() {
+		fmt.Fprintln(w, "## Current State")
+		fmt.Fprintln(w, "| Property | Current | Required |")
+		fmt.Fprintln(w, "|---|---|---|")
+		for _, s := range pb.Narrative.CurrentState {
+			fmt.Fprintf(w, "| %s | %s | %s |\n", s.PropertyPath, s.CurrentValue, s.RequiredValue)
+		}
+		fmt.Fprintln(w)
+	}
+
+	fmt.Fprintln(w, "## Remediation Steps")
+	for _, s := range pb.Narrative.Steps {
+		safe := ""
+		if s.SafeDefault {
+			safe = " [SAFE DEFAULT]"
+		}
+		fmt.Fprintf(w, "### Step %d: %s%s\n\n", s.StepNumber, s.Title, safe)
+		if s.HasCaution() {
+			fmt.Fprintf(w, "> **CAUTION:** %s\n\n", s.Caution)
+		}
+		if s.HasAction() {
+			fmt.Fprintf(w, "%s\n\n", s.Action)
+		}
+	}
+
+	if depth != "brief" && pb.Narrative.HasChainContext() {
+		cc := pb.Narrative.ChainContext
+		fmt.Fprintf(w, "## Chain Context: %s\n\n", cc.ChainID)
+		for i := range cc.MemberControls {
+			m := &cc.MemberControls[i]
+			fmt.Fprintf(w, "- [%s] %s (%s)\n", m.StatusGlyph(), m.ControlID, m.Status)
+		}
+		fmt.Fprintln(w)
+	}
+
+	fmt.Fprintln(w, "---")
 }

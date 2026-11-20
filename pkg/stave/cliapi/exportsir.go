@@ -167,26 +167,7 @@ func ValidateSIRCompleteness(
 
 	var warnings []ValidationWarning
 	for i := range findings {
-		f := &findings[i]
-		celPaths, ok := pathsByControl[f.ControlID]
-		if !ok || len(celPaths) == 0 {
-			continue
-		}
-		assetPaths := factPathsByAsset[string(f.AssetID)]
-		for _, celPath := range celPaths {
-			if pathCovered(celPath, assetPaths) {
-				continue
-			}
-			warnings = append(warnings, ValidationWarning{
-				ControlID: string(f.ControlID),
-				AssetID:   string(f.AssetID),
-				CELPath:   celPath,
-				Message: fmt.Sprintf(
-					"Control %s evaluates %s but no SIR fact covers this property path. "+
-						"SMT queries cannot distinguish vulnerable from remediated for this control.",
-					f.ControlID, celPath),
-			})
-		}
+		warnings = checkFindingSIRCoverage(&findings[i], pathsByControl, factPathsByAsset, warnings)
 	}
 
 	slices.SortFunc(warnings, func(a, b ValidationWarning) int {
@@ -198,6 +179,34 @@ func ValidateSIRCompleteness(
 	})
 
 	return warnings
+}
+
+func checkFindingSIRCoverage(
+	f *evaluation.Finding,
+	pathsByControl map[kernel.ControlID][]string,
+	factPathsByAsset map[string]map[string]struct{},
+	out []ValidationWarning,
+) []ValidationWarning {
+	celPaths, ok := pathsByControl[f.ControlID]
+	if !ok || len(celPaths) == 0 {
+		return out
+	}
+	assetPaths := factPathsByAsset[string(f.AssetID)]
+	for _, celPath := range celPaths {
+		if pathCovered(celPath, assetPaths) {
+			continue
+		}
+		out = append(out, ValidationWarning{
+			ControlID: string(f.ControlID),
+			AssetID:   string(f.AssetID),
+			CELPath:   celPath,
+			Message: fmt.Sprintf(
+				"Control %s evaluates %s but no SIR fact covers this property path. "+
+					"SMT queries cannot distinguish vulnerable from remediated for this control.",
+				f.ControlID, celPath),
+		})
+	}
+	return out
 }
 
 // extractPredicateFieldPaths walks an UnsafePredicate AST and returns every

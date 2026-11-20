@@ -202,30 +202,34 @@ func collectPresentAssetTypes(snapshots []asset.Snapshot) map[string]struct{} {
 func collectDiscriminatorValues(snapshots []asset.Snapshot) map[string]sets.Set[string] {
 	values := make(map[string]sets.Set[string])
 	for _, snap := range snapshots {
-		for _, a := range snap.Assets {
-			if a.Properties == nil {
-				continue
-			}
-			for domain, v := range a.Properties {
-				domainMap, ok := v.(map[string]any)
-				if !ok {
-					continue
-				}
-				kind, ok := domainMap["kind"].(string)
-				if !ok {
-					continue
-				}
-				path := "properties." + domain + ".kind"
-				s, ok := values[path]
-				if !ok {
-					s = sets.New[string]()
-					values[path] = s
-				}
-				s.Add(kind)
-			}
+		for i := range snap.Assets {
+			collectAssetDiscriminators(&snap.Assets[i], values)
 		}
 	}
 	return values
+}
+
+func collectAssetDiscriminators(a *asset.Asset, values map[string]sets.Set[string]) {
+	if a.Properties == nil {
+		return
+	}
+	for domain, v := range a.Properties {
+		domainMap, ok := v.(map[string]any)
+		if !ok {
+			continue
+		}
+		kind, ok := domainMap["kind"].(string)
+		if !ok {
+			continue
+		}
+		path := "properties." + domain + ".kind"
+		s, ok := values[path]
+		if !ok {
+			s = sets.New[string]()
+			values[path] = s
+		}
+		s.Add(kind)
+	}
 }
 
 // walkProperties recursively walks a nested map and collects all leaf paths.

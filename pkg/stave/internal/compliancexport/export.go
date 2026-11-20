@@ -262,57 +262,9 @@ func buildExport(
 		},
 	}
 
-	// Build requirements
 	for i := range assessment.Requirements {
-		ra := &assessment.Requirements[i]
-		re := RequirementExport{
-			ID:          ra.RequirementID,
-			Description: ra.Description,
-			Section:     ra.Section,
-			Status:      RequirementStatus(ra.Status.String()),
-		}
-
-		// Build per-control summaries from evidence records
-		ctlCounts := make(map[string]*ControlSummary)
-		for _, rec := range ra.Evidence {
-			cid := string(rec.ControlID)
-			cs, ok := ctlCounts[cid]
-			if !ok {
-				cs = &ControlSummary{ID: cid}
-				ctlCounts[cid] = cs
-			}
-			cs.Add(rec)
-		}
-		for _, cs := range ctlCounts {
-			re.Controls = append(re.Controls, *cs)
-		}
-
-		// Build gaps from failing/incomplete evidence. Routes
-		// severity parsing through policy.ParseSeverityLax so the
-		// "unrecognised severity → SeverityNone + warn" policy lives
-		// on the type and the export adapter only declares its
-		// row-level context.
-		for _, rec := range ra.Evidence {
-			if rec.IsGap() {
-				re.Gaps = append(re.Gaps, GapExport{
-					ControlID:   string(rec.ControlID),
-					ResourceARN: rec.ResourceARN,
-					Severity: policy.ParseSeverityLax(rec.Severity, slog.Default(), map[string]string{
-						"control_id":   string(rec.ControlID),
-						"resource_arn": rec.ResourceARN,
-						"site":         "compliance export gap",
-					}),
-					Message: rec.ReasoningTrace.FindingMessage,
-				})
-			}
-		}
-
-		// Compute SLA compliance for this requirement from findings.
-		if sla := computeRequirementSLA(ra, findings, profile.FrameworkKey); sla != nil {
-			re.SLACompliance = sla
-		}
-
-		export.Requirements = append(export.Requirements, re)
+		export.Requirements = append(export.Requirements,
+			buildRequirementExport(&assessment.Requirements[i], findings, profile.FrameworkKey))
 	}
 
 	// Parse the minimum-severity threshold once; sentinels (""/"all")
@@ -376,6 +328,46 @@ func buildExport(
 	}
 
 	return export
+}
+
+func buildRequirementExport(ra *evidence.RequirementAssessment, findings []evaluation.Finding, frameworkKey string) RequirementExport {
+	re := RequirementExport{
+		ID:          ra.RequirementID,
+		Description: ra.Description,
+		Section:     ra.Section,
+		Status:      RequirementStatus(ra.Status.String()),
+	}
+	ctlCounts := make(map[string]*ControlSummary)
+	for _, rec := range ra.Evidence {
+		cid := string(rec.ControlID)
+		cs, ok := ctlCounts[cid]
+		if !ok {
+			cs = &ControlSummary{ID: cid}
+			ctlCounts[cid] = cs
+		}
+		cs.Add(rec)
+	}
+	for _, cs := range ctlCounts {
+		re.Controls = append(re.Controls, *cs)
+	}
+	for _, rec := range ra.Evidence {
+		if rec.IsGap() {
+			re.Gaps = append(re.Gaps, GapExport{
+				ControlID:   string(rec.ControlID),
+				ResourceARN: rec.ResourceARN,
+				Severity: policy.ParseSeverityLax(rec.Severity, slog.Default(), map[string]string{
+					"control_id":   string(rec.ControlID),
+					"resource_arn": rec.ResourceARN,
+					"site":         "compliance export gap",
+				}),
+				Message: rec.ReasoningTrace.FindingMessage,
+			})
+		}
+	}
+	if sla := computeRequirementSLA(ra, findings, frameworkKey); sla != nil {
+		re.SLACompliance = sla
+	}
+	return re
 }
 
 // computeRequirementSLA builds SLA compliance data for a requirement from

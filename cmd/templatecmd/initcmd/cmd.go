@@ -76,61 +76,9 @@ func runInit(w io.Writer, name string, opts *options) error {
 		return fmt.Errorf("template %q not found", name)
 	}
 
-	// Parse --param flags into map
-	paramMap := make(map[string]any, len(opts.Params))
-	for _, p := range opts.Params {
-		k, v, ok := strings.Cut(p, "=")
-		if !ok {
-			return fmt.Errorf("invalid --param %q: must be KEY=VALUE", p)
-		}
-		// Handle list parameters (comma-separated)
-		for _, param := range target.Parameters {
-			if param.Name == k && param.Type == "list" {
-				paramMap[k] = strings.Split(v, ",")
-				goto next
-			}
-		}
-		paramMap[k] = v
-	next:
-	}
-
-	// Validate options constraints
-	for _, p := range target.Parameters {
-		val, ok := paramMap[p.Name]
-		if !ok || len(p.Options) == 0 {
-			continue
-		}
-		s, isStr := val.(string)
-		if !isStr {
-			continue
-		}
-		valid := false
-		for _, opt := range p.Options {
-			if strings.EqualFold(s, opt) {
-				valid = true
-				break
-			}
-		}
-		if !valid {
-			return fmt.Errorf("invalid value %q for parameter %s\n  Allowed values: %s",
-				s, p.Name, strings.Join(p.Options, ", "))
-		}
-	}
-
-	// Validate required params
-	for _, p := range target.Parameters {
-		if p.Required {
-			if _, ok := paramMap[p.Name]; !ok {
-				return fmt.Errorf("required parameter %q not provided (use --param %s=VALUE)", p.Name, p.Name)
-			}
-		}
-	}
-
-	// Apply defaults for missing optional params
-	for _, p := range target.Parameters {
-		if _, ok := paramMap[p.Name]; !ok && p.Default != nil {
-			paramMap[p.Name] = p.Default
-		}
+	paramMap, err := resolveParams(opts.Params, target.Parameters)
+	if err != nil {
+		return err
 	}
 
 	// Build values file
@@ -155,5 +103,67 @@ func runInit(w io.Writer, name string, opts *options) error {
 	fmt.Fprintf(w, "\nWritten: %s\n", opts.Output)
 	fmt.Fprintf(w, "To run: stave apply --values %s --snapshot ./observations\n", opts.Output)
 
+	return nil
+}
+
+func resolveParams(raw []string, defs []tmpl.Parameter) (map[string]any, error) {
+	paramMap := make(map[string]any, len(raw))
+	for _, p := range raw {
+		k, v, ok := strings.Cut(p, "=")
+		if !ok {
+			return nil, fmt.Errorf("invalid --param %q: must be KEY=VALUE", p)
+		}
+		for _, param := range defs {
+			if param.Name == k && param.Type == "list" {
+				paramMap[k] = strings.Split(v, ",")
+				goto next
+			}
+		}
+		paramMap[k] = v
+	next:
+	}
+
+	if err := validateParamOptions(paramMap, defs); err != nil {
+		return nil, err
+	}
+
+	for _, p := range defs {
+		if p.Required {
+			if _, ok := paramMap[p.Name]; !ok {
+				return nil, fmt.Errorf("required parameter %q not provided (use --param %s=VALUE)", p.Name, p.Name)
+			}
+		}
+	}
+
+	for _, p := range defs {
+		if _, ok := paramMap[p.Name]; !ok && p.Default != nil {
+			paramMap[p.Name] = p.Default
+		}
+	}
+	return paramMap, nil
+}
+
+func validateParamOptions(paramMap map[string]any, defs []tmpl.Parameter) error {
+	for _, p := range defs {
+		val, ok := paramMap[p.Name]
+		if !ok || len(p.Options) == 0 {
+			continue
+		}
+		s, isStr := val.(string)
+		if !isStr {
+			continue
+		}
+		valid := false
+		for _, opt := range p.Options {
+			if strings.EqualFold(s, opt) {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return fmt.Errorf("invalid value %q for parameter %s\n  Allowed values: %s",
+				s, p.Name, strings.Join(p.Options, ", "))
+		}
+	}
 	return nil
 }

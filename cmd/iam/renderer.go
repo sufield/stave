@@ -63,18 +63,7 @@ func renderProperties(w io.Writer, props map[string]any, indent string) {
 	}
 
 	if trust, ok := identity["trust"].(map[string]any); ok {
-		fmt.Fprintf(w, "%strust:\n", indent)
-		for k, v := range trust {
-			switch val := v.(type) {
-			case map[string]any:
-				fmt.Fprintf(w, "%s  %s:\n", indent, k)
-				for kk, vv := range val {
-					fmt.Fprintf(w, "%s    %-34s %v\n", indent, kk+":", vv)
-				}
-			default:
-				fmt.Fprintf(w, "%s  %-36s %v\n", indent, k+":", val)
-			}
-		}
+		renderTrustSection(w, trust, indent)
 	}
 
 	if cicd, ok := identity["cicd"].(map[string]any); ok {
@@ -91,6 +80,21 @@ func renderProperties(w io.Writer, props map[string]any, indent string) {
 
 	if cicdRole, ok := identity["cicd_role"]; ok {
 		fmt.Fprintf(w, "%s%-38s %v\n", indent, "cicd_role:", cicdRole)
+	}
+}
+
+func renderTrustSection(w io.Writer, trust map[string]any, indent string) {
+	fmt.Fprintf(w, "%strust:\n", indent)
+	for k, v := range trust {
+		switch val := v.(type) {
+		case map[string]any:
+			fmt.Fprintf(w, "%s  %s:\n", indent, k)
+			for kk, vv := range val {
+				fmt.Fprintf(w, "%s    %-34s %v\n", indent, kk+":", vv)
+			}
+		default:
+			fmt.Fprintf(w, "%s  %-36s %v\n", indent, k+":", val)
+		}
 	}
 }
 

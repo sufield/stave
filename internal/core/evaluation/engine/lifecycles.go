@@ -218,105 +218,85 @@ func recordAssetObservation(
 	mutexes map[kernel.ControlID]*sync.Mutex,
 ) error {
 	for i := range controls {
-		ctl := &controls[i]
-		// Asset-type gate. Skip silently when the control declares its
-		// applicable types and the current asset is not in the list. No
-		// finding, no lifecycle entry, no inconclusive — the control is
-		// absent from output for this asset, identical to the asset
-		// being outside the control's declared scope.
-		if !ctl.AppliesToAssetType(a.Type) {
-			continue
+		if err := recordAssetForControl(a, snap, &controls[i], celEval, lifecyclesByControl, mutexes); err != nil {
+			return err
 		}
+	}
+	return nil
+}
 
-		// CEL evaluation runs FIRST and OUTSIDE the lock — this is the
-		// expensive call we parallelise across cores. The earlier shape
-		// did the map work inside the loop body intertwined with the
-		// eval; with parallel callers, that pattern would either serialise
-		// every eval on a shared lock or require per-lifecycle locking
-		// that's harder to reason about.
-		isUnsafe, evalErr := checkUnsafe(ctl, a, snap, celEval)
+func recordAssetForControl(
+	a asset.Asset,
+	snap asset.Snapshot,
+	ctl *policy.ControlDefinition,
+	celEval policy.PredicateEval,
+	lifecyclesByControl map[kernel.ControlID]map[asset.ID]*asset.ExposureLifecycle,
+	mutexes map[kernel.ControlID]*sync.Mutex,
+) error {
+	if !ctl.AppliesToAssetType(a.Type) {
+		return nil
+	}
 
-		mu := mutexes[ctl.ID]
-		lcs := lifecyclesByControl[ctl.ID]
-		if mu == nil || lcs == nil {
-			// BuildLifecyclesPerControl pre-registers a map AND a mutex
-			// for every control ID up front, so this branch only fires
-			// when the caller passed a control whose ID wasn't in the
-			// pre-registration set — typically a hand-built test
-			// fixture or a future caller that forgets the initialisation
-			// step. Skip + warn instead of panicking on a nil map write.
-			slog.Warn("recordAssetObservation: control ID not pre-registered in lifecycles map; skipping",
-				"control", ctl.ID, "asset", a.ID)
-			continue
-		}
+	isUnsafe, evalErr := checkUnsafe(ctl, a, snap, celEval)
 
-		mu.Lock()
-		t, exists := lcs[a.ID]
-		if !exists {
-			newLC, lcErr := asset.NewExposureLifecycle(a)
-			if lcErr != nil {
-				mu.Unlock()
-				// Empty asset ID means upstream produced a
-				// malformed observation row. Skip this asset
-				// only — the rest of the assessment must keep
-				// running so a single bad row doesn't blank the
-				// whole report.
-				if errors.Is(lcErr, asset.ErrEmptyAssetID) {
-					slog.Warn("skipping asset with empty ID",
-						"control", ctl.ID, "asset_type", a.Type)
-					continue
-				}
-				return fmt.Errorf("build exposure lifecycle for asset %s (control %s): %w", a.ID, ctl.ID, lcErr)
-			}
-			t = newLC
-			lcs[a.ID] = t
-		}
-		mu.Unlock()
+	mu := mutexes[ctl.ID]
+	lcs := lifecyclesByControl[ctl.ID]
+	if mu == nil || lcs == nil {
+		slog.Warn("recordAssetObservation: control ID not pre-registered in lifecycles map; skipping",
+			"control", ctl.ID, "asset", a.ID)
+		return nil
+	}
 
-		if evalErr != nil {
-			// Per AGENTS.md, core/ avoids stderr-level side effects:
-			// the inconclusive condition is the return-value channel
-			// (RecordInconclusive below) and operators see it in the
-			// assessment output. Diagnostic detail is logged at Info
-			// so operators with -v can correlate the underlying CEL
-			// error with the inconclusive verdict without the message
-			// implying an actionable Error/Warn.
-			errStr := evalErr.Error()
-			category := "inconclusive"
-			if strings.Contains(errStr, "compile") || strings.Contains(errStr, "parse") || strings.Contains(errStr, "undeclared") {
-				category = "compilation_failed"
-			}
-			slog.Info("control evaluation inconclusive",
-				"control", ctl.ID, "asset", a.ID, "category", category, "error", evalErr)
-			mu.Lock()
-			recErr := t.RecordInconclusive(snap.CapturedAt)
+	mu.Lock()
+	t, exists := lcs[a.ID]
+	if !exists {
+		newLC, lcErr := asset.NewExposureLifecycle(a)
+		if lcErr != nil {
 			mu.Unlock()
-			if recErr != nil {
-				return fmt.Errorf("record inconclusive for control %s, asset %s: %w", ctl.ID, a.ID, recErr)
-			}
-			continue
-		}
-		mu.Lock()
-		err := t.RecordCheck(snap.CapturedAt, isUnsafe)
-		mu.Unlock()
-		if err != nil {
-			// A lifecycle with an empty ID is upstream-input malformed —
-			// the previous shape panicked here and aborted the whole
-			// assessment. Skip just this lifecycle and keep going so
-			// one bad observation row no longer blanks the entire run.
-			if errors.Is(err, asset.ErrEmptyAssetID) {
-				slog.Warn("skipping lifecycle with empty asset ID",
+			if errors.Is(lcErr, asset.ErrEmptyAssetID) {
+				slog.Warn("skipping asset with empty ID",
 					"control", ctl.ID, "asset_type", a.Type)
-				continue
+				return nil
 			}
-			return fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
+			return fmt.Errorf("build exposure lifecycle for asset %s (control %s): %w", a.ID, ctl.ID, lcErr)
 		}
+		t = newLC
+		lcs[a.ID] = t
+	}
+	mu.Unlock()
+
+	if evalErr != nil {
+		errStr := evalErr.Error()
+		category := "inconclusive"
+		if strings.Contains(errStr, "compile") || strings.Contains(errStr, "parse") || strings.Contains(errStr, "undeclared") {
+			category = "compilation_failed"
+		}
+		slog.Info("control evaluation inconclusive",
+			"control", ctl.ID, "asset", a.ID, "category", category, "error", evalErr)
 		mu.Lock()
-		setErr := t.SetAsset(a)
+		recErr := t.RecordInconclusive(snap.CapturedAt)
 		mu.Unlock()
-		if setErr != nil {
-			return fmt.Errorf("set asset for control %s, asset %s: %w", ctl.ID, a.ID, setErr)
+		if recErr != nil {
+			return fmt.Errorf("record inconclusive for control %s, asset %s: %w", ctl.ID, a.ID, recErr)
 		}
+		return nil
+	}
+	mu.Lock()
+	err := t.RecordCheck(snap.CapturedAt, isUnsafe)
+	mu.Unlock()
+	if err != nil {
+		if errors.Is(err, asset.ErrEmptyAssetID) {
+			slog.Warn("skipping lifecycle with empty asset ID",
+				"control", ctl.ID, "asset_type", a.Type)
+			return nil
+		}
+		return fmt.Errorf("record observation for control %s, asset %s: %w", ctl.ID, a.ID, err)
+	}
+	mu.Lock()
+	setErr := t.SetAsset(a)
+	mu.Unlock()
+	if setErr != nil {
+		return fmt.Errorf("set asset for control %s, asset %s: %w", ctl.ID, a.ID, setErr)
 	}
 	return nil
 }

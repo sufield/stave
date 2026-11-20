@@ -103,64 +103,64 @@ func kindOrder(k string) int {
 // from the control ID prefix. CTL.S3.PUBLIC.001 -> service=s3,
 // category=public. Each group becomes one capability listing the
 // number of member controls and the asset types they apply to.
+type controlGroupKey struct {
+	service, category string
+}
+
 func buildControlGroups(controls []policy.ControlDefinition) []Capability {
-	type groupKey struct {
-		service, category string
-	}
-	groups := map[groupKey][]*policy.ControlDefinition{}
+	groups := map[controlGroupKey][]*policy.ControlDefinition{}
 	for i := range controls {
 		c := &controls[i]
 		svc, cat := parseControlID(string(c.ID))
 		if svc == "" {
 			continue
 		}
-		k := groupKey{svc, cat}
+		k := controlGroupKey{svc, cat}
 		groups[k] = append(groups[k], c)
 	}
 	out := make([]Capability, 0, len(groups))
 	for k, members := range groups {
-		ids := make([]string, 0, len(members))
-		assetTypes := map[string]struct{}{}
-		var maxSev policy.Severity
-		titleParts := map[string]struct{}{}
-		var descs []string
-		for _, m := range members {
-			ids = append(ids, string(m.ID))
-			for _, at := range m.ApplicableAssetTypes {
-				assetTypes[string(at)] = struct{}{}
-			}
-			if m.Severity > maxSev {
-				maxSev = m.Severity
-			}
-			if m.Name != "" {
-				titleParts[m.Name] = struct{}{}
-			}
-			if m.Description != "" {
-				descs = append(descs, m.Description)
-			}
-		}
-		slices.Sort(ids)
-		atList := make([]string, 0, len(assetTypes))
-		for at := range assetTypes {
-			atList = append(atList, at)
-		}
-		slices.Sort(atList)
-
-		out = append(out, Capability{
-			ID:          fmt.Sprintf("%s.%s", k.service, k.category),
-			Kind:        "control_group",
-			Title:       titleForGroup(k.service, k.category, len(members)),
-			Description: summariseFirst(descs),
-			Service:     k.service,
-			Category:    k.category,
-			AssetTypes:  atList,
-			Severity:    maxSev.String(),
-			ControlIDs:  ids,
-			Keywords:    extractKeywordsFromControls(members),
-			ExampleCmd:  "stave apply --controls controls --observations ./snapshots --max-unsafe 168h",
-		})
+		out = append(out, buildOneControlGroup(k, members))
 	}
 	return out
+}
+
+func buildOneControlGroup(k controlGroupKey, members []*policy.ControlDefinition) Capability {
+	ids := make([]string, 0, len(members))
+	assetTypes := map[string]struct{}{}
+	var maxSev policy.Severity
+	var descs []string
+	for _, m := range members {
+		ids = append(ids, string(m.ID))
+		for _, at := range m.ApplicableAssetTypes {
+			assetTypes[string(at)] = struct{}{}
+		}
+		if m.Severity > maxSev {
+			maxSev = m.Severity
+		}
+		if m.Description != "" {
+			descs = append(descs, m.Description)
+		}
+	}
+	slices.Sort(ids)
+	atList := make([]string, 0, len(assetTypes))
+	for at := range assetTypes {
+		atList = append(atList, at)
+	}
+	slices.Sort(atList)
+	return Capability{
+		ID:          fmt.Sprintf("%s.%s", k.service, k.category),
+		Kind:        "control_group",
+		Title:       titleForGroup(k.service, k.category, len(members)),
+		Description: summariseFirst(descs),
+		Service:     k.service,
+		Category:    k.category,
+		AssetTypes:  atList,
+		Severity:    maxSev.String(),
+		ControlIDs:  ids,
+		Keywords:    extractKeywordsFromControls(members),
+		ExampleCmd:  "stave apply --controls controls --observations ./snapshots --max-unsafe 168h",
+	}
 }
 
 func buildChainCaps(chains []policy.ChainDefinition) []Capability {

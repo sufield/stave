@@ -301,20 +301,8 @@ func (s *assessmentSession) beginTrace(resourceID, policyID string) ports.Assess
 // (Ctrl-C, server timeouts) at the next control boundary instead of
 // running the catalog to completion.
 func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts ...AssessmentOptions) (evaluation.ComplianceReport, error) {
-	if ctx == nil {
-		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor.Assess requires a non-nil context")
-	}
-	if err := ctx.Err(); err != nil {
-		return evaluation.ComplianceReport{}, fmt.Errorf("assess: %w", err)
-	}
-	if a.clock == nil {
-		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a Clock")
-	}
-	if a.predicateEval == nil {
-		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a PredicateEval")
-	}
-	if a.predicateParser == nil {
-		return evaluation.ComplianceReport{}, errors.New("precondition failed: Assessor requires a PredicateParser")
+	if err := a.checkPreconditions(ctx); err != nil {
+		return evaluation.ComplianceReport{}, err
 	}
 	var opt AssessmentOptions
 	if len(opts) > 0 {
@@ -421,6 +409,25 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 
 	report := sess.compileReport()
 	return report, nil
+}
+
+func (a *Assessor) checkPreconditions(ctx context.Context) error {
+	if ctx == nil {
+		return errors.New("precondition failed: Assessor.Assess requires a non-nil context")
+	}
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("assess: %w", err)
+	}
+	if a.clock == nil {
+		return errors.New("precondition failed: Assessor requires a Clock")
+	}
+	if a.predicateEval == nil {
+		return errors.New("precondition failed: Assessor requires a PredicateEval")
+	}
+	if a.predicateParser == nil {
+		return errors.New("precondition failed: Assessor requires a PredicateParser")
+	}
+	return nil
 }
 
 // applyControl evaluates a single control across the asset set.

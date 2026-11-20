@@ -364,23 +364,7 @@ func buildFindingProperties(f *remediation.Finding, alts []map[string]any) map[s
 		props["finding_id"] = f.FindingID
 	}
 	if f.HasNearMissChains() {
-		nm := make([]map[string]any, len(f.NearMissChains))
-		for i, n := range f.NearMissChains {
-			entry := map[string]any{
-				"chain_id":        string(n.ChainID),
-				"chain_severity":  n.ChainSeverity.String(),
-				"missing_control": string(n.MissingControl),
-			}
-			if n.HasControlsFailing() {
-				ids := make([]string, len(n.ControlsFailing))
-				for j, cid := range n.ControlsFailing {
-					ids[j] = string(cid)
-				}
-				entry["controls_failing"] = ids
-			}
-			nm[i] = entry
-		}
-		props["stave/near_miss_chains"] = nm
+		props["stave/near_miss_chains"] = marshalNearMissChains(f.NearMissChains)
 	}
 	if f.HasReasoningTrace() {
 		trace := make([]map[string]any, len(f.ReasoningTrace))
@@ -417,6 +401,26 @@ func buildFindingProperties(f *remediation.Finding, alts []map[string]any) map[s
 	return props
 }
 
+func marshalNearMissChains(chains []evaluation.NearMissEntry) []map[string]any {
+	nm := make([]map[string]any, len(chains))
+	for i, n := range chains {
+		entry := map[string]any{
+			"chain_id":        string(n.ChainID),
+			"chain_severity":  n.ChainSeverity.String(),
+			"missing_control": string(n.MissingControl),
+		}
+		if n.HasControlsFailing() {
+			ids := make([]string, len(n.ControlsFailing))
+			for j, cid := range n.ControlsFailing {
+				ids[j] = string(cid)
+			}
+			entry["controls_failing"] = ids
+		}
+		nm[i] = entry
+	}
+	return nm
+}
+
 // buildChainResults converts compound chain findings to SARIF results
 // and rules. Returns the results and any new rules (keyed by ChainID)
 // that don't already exist in the rule index.
@@ -430,79 +434,85 @@ func buildChainResults(chainFindings []findings.CompoundFinding, existingRules m
 	chainRuleIndex := make(map[kernel.ChainID]int)
 
 	for i := range chainFindings {
-		cf := &chainFindings[i]
-
-		ruleID := kernel.ControlID(cf.ChainID)
-		ruleIdx, ruleExists := existingRules[ruleID]
-		if !ruleExists {
-			if idx, seen := chainRuleIndex[cf.ChainID]; seen {
-				ruleIdx = idx
-			} else {
-				ruleIdx = len(existingRules) + len(newRules)
-				chainRuleIndex[cf.ChainID] = ruleIdx
-				newRules = append(newRules, sarifRule{
-					ID:   ruleID,
-					Name: "Compound Chain: " + string(cf.ChainID),
-					ShortDescription: sarifMessage{
-						Text: cf.Description,
-					},
-					Properties: map[string]any{
-						"tags": []string{"severity:" + cf.Severity.String(), "compound-chain"},
-					},
-				})
-			}
-		}
-
-		props := map[string]any{
-			"stave/severity":       cf.Severity.String(),
-			"stave/compound_score": cf.CompoundScore,
-		}
-		if cf.HasControlsFailing() {
-			ids := make([]string, len(cf.ControlsFailing))
-			for j, cid := range cf.ControlsFailing {
-				ids[j] = string(cid)
-			}
-			props["stave/controls_failing"] = ids
-		}
-		if cf.HasMissingSafeguards() {
-			ids := make([]string, len(cf.MissingSafeguards))
-			for j, cid := range cf.MissingSafeguards {
-				ids[j] = string(cid)
-			}
-			props["stave/missing_safeguards"] = ids
-		}
-		if cf.HasAttackStages() {
-			stages := make([]string, len(cf.AttackStages))
-			for j, s := range cf.AttackStages {
-				stages[j] = string(s)
-			}
-			props["stave/attack_stages"] = stages
-		}
-
-		result := sarifResult{
-			RuleID:    ruleID,
-			RuleIndex: ruleIdx,
-			Level:     cf.Severity.SARIFLevel(),
-			Message: sarifMessage{
-				Text: cf.Narrative,
-			},
-			Locations: []sarifLocation{
-				{
-					LogicalLocations: []sarifLogicalLocation{
-						{
-							Name:               string(cf.AssetID),
-							FullyQualifiedName: string(cf.AssetID),
-							Kind:               "resource",
-						},
-					},
-				},
-			},
-			Properties: props,
+		result, rule := buildOneChainResult(&chainFindings[i], existingRules, chainRuleIndex, len(newRules))
+		if rule != nil {
+			newRules = append(newRules, *rule)
 		}
 		results = append(results, result)
 	}
 
 	return results, newRules
+}
+
+func buildOneChainResult(cf *findings.CompoundFinding, existingRules map[kernel.ControlID]int, chainRuleIndex map[kernel.ChainID]int, newRuleCount int) (sarifResult, *sarifRule) {
+	ruleID := kernel.ControlID(cf.ChainID)
+	ruleIdx, ruleExists := existingRules[ruleID]
+	var newRule *sarifRule
+	if !ruleExists {
+		if idx, seen := chainRuleIndex[cf.ChainID]; seen {
+			ruleIdx = idx
+		} else {
+			ruleIdx = len(existingRules) + newRuleCount
+			chainRuleIndex[cf.ChainID] = ruleIdx
+			newRule = &sarifRule{
+				ID:   ruleID,
+				Name: "Compound Chain: " + string(cf.ChainID),
+				ShortDescription: sarifMessage{
+					Text: cf.Description,
+				},
+				Properties: map[string]any{
+					"tags": []string{"severity:" + cf.Severity.String(), "compound-chain"},
+				},
+			}
+		}
+	}
+
+	props := map[string]any{
+		"stave/severity":       cf.Severity.String(),
+		"stave/compound_score": cf.CompoundScore,
+	}
+	if cf.HasControlsFailing() {
+		ids := make([]string, len(cf.ControlsFailing))
+		for j, cid := range cf.ControlsFailing {
+			ids[j] = string(cid)
+		}
+		props["stave/controls_failing"] = ids
+	}
+	if cf.HasMissingSafeguards() {
+		ids := make([]string, len(cf.MissingSafeguards))
+		for j, cid := range cf.MissingSafeguards {
+			ids[j] = string(cid)
+		}
+		props["stave/missing_safeguards"] = ids
+	}
+	if cf.HasAttackStages() {
+		stages := make([]string, len(cf.AttackStages))
+		for j, s := range cf.AttackStages {
+			stages[j] = string(s)
+		}
+		props["stave/attack_stages"] = stages
+	}
+
+	return sarifResult{
+		RuleID:    ruleID,
+		RuleIndex: ruleIdx,
+		Level:     cf.Severity.SARIFLevel(),
+		Message: sarifMessage{
+			Text: cf.Narrative,
+		},
+		Locations: []sarifLocation{
+			{
+				LogicalLocations: []sarifLogicalLocation{
+					{
+						Name:               string(cf.AssetID),
+						FullyQualifiedName: string(cf.AssetID),
+						Kind:               "resource",
+					},
+				},
+			},
+		},
+		Properties: props,
+	}, newRule
 }
 
 // buildIndeterminateResults converts indeterminate findings to SARIF results

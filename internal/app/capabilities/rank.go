@@ -38,55 +38,12 @@ func Rank(catalog []Capability, query string) []Hit {
 	phrase := toLowerTrim(query)
 
 	out := make([]Hit, 0, 32)
+	multiWord := len(strings.Fields(phrase)) > 1
 	for i := range catalog {
 		c := &catalog[i]
-		score := 0.0
-		var matched []string
-
-		// Phrase bonus — verbatim multi-word match.
-		if len(strings.Fields(phrase)) > 1 {
-			if strutil.ContainsFold(c.Title, phrase) {
-				score += 5
-				matched = append(matched, "phrase:title")
-			} else if strutil.ContainsFold(c.UseWhen, phrase) {
-				score += 4
-				matched = append(matched, "phrase:use_when")
-			}
-		}
-
-		// Per-token scoring against title / use_when / keywords / description.
-		titleHits := 0
-		for _, tok := range expanded {
-			if tok == "" {
-				continue
-			}
-			if strutil.ContainsFold(c.Title, tok) {
-				score += 3
-				titleHits++
-			}
-			if strutil.ContainsFold(c.UseWhen, tok) {
-				score += 2
-			}
-			for _, kw := range c.Keywords {
-				if strings.EqualFold(kw, tok) || strutil.ContainsFold(kw, tok) {
-					score += 1
-					break
-				}
-			}
-			if strutil.ContainsFold(c.Description, tok) {
-				score += 0.5
-			}
-		}
-
-		// Threshold of 2.0 filters single-token keyword (1.0) or
-		// single-token description (0.5) noise. Requires at least a
-		// title hit, a use_when hit, two keyword hits, or a phrase
-		// match to surface.
+		score, matched := scoreCapability(c, phrase, expanded, multiWord)
 		if score < 2.0 {
 			continue
-		}
-		if titleHits > 0 {
-			matched = append(matched, fmt.Sprintf("title×%d", titleHits))
 		}
 		out = append(out, Hit{Capability: *c, Score: score, MatchedOn: matched})
 	}
@@ -97,6 +54,48 @@ func Rank(catalog []Capability, query string) []Hit {
 		return cmp.Compare(a.Capability.ID, b.Capability.ID)
 	})
 	return out
+}
+
+func scoreCapability(c *Capability, phrase string, tokens []string, multiWord bool) (float64, []string) {
+	score := 0.0
+	var matched []string
+
+	if multiWord {
+		if strutil.ContainsFold(c.Title, phrase) {
+			score += 5
+			matched = append(matched, "phrase:title")
+		} else if strutil.ContainsFold(c.UseWhen, phrase) {
+			score += 4
+			matched = append(matched, "phrase:use_when")
+		}
+	}
+
+	titleHits := 0
+	for _, tok := range tokens {
+		if tok == "" {
+			continue
+		}
+		if strutil.ContainsFold(c.Title, tok) {
+			score += 3
+			titleHits++
+		}
+		if strutil.ContainsFold(c.UseWhen, tok) {
+			score += 2
+		}
+		for _, kw := range c.Keywords {
+			if strings.EqualFold(kw, tok) || strutil.ContainsFold(kw, tok) {
+				score += 1
+				break
+			}
+		}
+		if strutil.ContainsFold(c.Description, tok) {
+			score += 0.5
+		}
+	}
+	if titleHits > 0 {
+		matched = append(matched, fmt.Sprintf("title×%d", titleHits))
+	}
+	return score, matched
 }
 
 // tokeniseQuery splits a free-form query into lowercase alphanumeric

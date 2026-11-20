@@ -448,29 +448,7 @@ func (f *AcceptanceFile) ValidateWithCatalog(knownIDs map[kernel.ControlID]struc
 func (f *AcceptanceFile) Validate() []string {
 	var errs []string
 	for i := range f.Acknowledgments {
-		a := &f.Acknowledgments[i]
-		if a.ControlID == "" {
-			errs = append(errs, fmt.Sprintf("acknowledgment[%d]: control_id required", i))
-		}
-		if a.AssetID == "" {
-			errs = append(errs, fmt.Sprintf("acknowledgment[%d]: asset_id required", i))
-		}
-		if a.Reason == "" {
-			errs = append(errs, fmt.Sprintf("acknowledgment[%d]: reason required", i))
-		}
-		if a.Approver == "" {
-			errs = append(errs, fmt.Sprintf("acknowledgment[%d]: approver required", i))
-		}
-		if a.ExpiryDate != "" {
-			if _, err := time.Parse("2006-01-02", a.ExpiryDate); err != nil {
-				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: invalid expiry_date %q", i, a.ExpiryDate))
-			}
-		}
-		if a.ReviewBy != "" {
-			if _, err := time.Parse("2006-01-02", a.ReviewBy); err != nil {
-				errs = append(errs, fmt.Sprintf("acknowledgment[%d]: invalid review_by %q", i, a.ReviewBy))
-			}
-		}
+		errs = validateAcknowledgment(&f.Acknowledgments[i], i, errs)
 	}
 	for i, e := range f.Exceptions {
 		if e.ControlID == "" {
@@ -488,6 +466,32 @@ func (f *AcceptanceFile) Validate() []string {
 	for i, e := range f.Exemptions {
 		if e.AssetPattern == "" {
 			errs = append(errs, fmt.Sprintf("exemption[%d]: asset_pattern required", i))
+		}
+	}
+	return errs
+}
+
+func validateAcknowledgment(a *AcknowledgmentEntry, i int, errs []string) []string {
+	if a.ControlID == "" {
+		errs = append(errs, fmt.Sprintf("acknowledgment[%d]: control_id required", i))
+	}
+	if a.AssetID == "" {
+		errs = append(errs, fmt.Sprintf("acknowledgment[%d]: asset_id required", i))
+	}
+	if a.Reason == "" {
+		errs = append(errs, fmt.Sprintf("acknowledgment[%d]: reason required", i))
+	}
+	if a.Approver == "" {
+		errs = append(errs, fmt.Sprintf("acknowledgment[%d]: approver required", i))
+	}
+	if a.ExpiryDate != "" {
+		if _, err := time.Parse("2006-01-02", a.ExpiryDate); err != nil {
+			errs = append(errs, fmt.Sprintf("acknowledgment[%d]: invalid expiry_date %q", i, a.ExpiryDate))
+		}
+	}
+	if a.ReviewBy != "" {
+		if _, err := time.Parse("2006-01-02", a.ReviewBy); err != nil {
+			errs = append(errs, fmt.Sprintf("acknowledgment[%d]: invalid review_by %q", i, a.ReviewBy))
 		}
 	}
 	return errs

@@ -112,72 +112,65 @@ func stringifyValue(v any) any {
 		}
 		return cp
 	default:
-		rv := reflect.ValueOf(v)
-		switch rv.Kind() {
-		case reflect.String:
-			return rv.String()
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			return rv.Int()
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			return rv.Uint()
-		case reflect.Float32, reflect.Float64:
-			return rv.Float()
-		case reflect.Slice:
-			if rv.IsNil() {
-				return nil
-			}
-			n := rv.Len()
-			cp := make([]any, n)
-			for i := range n {
-				cp[i] = stringifyValue(rv.Index(i).Interface())
-			}
-			return cp
-		case reflect.Array:
-			n := rv.Len()
-			cp := make([]any, n)
-			for i := range n {
-				cp[i] = stringifyValue(rv.Index(i).Interface())
-			}
-			return cp
-		case reflect.Map:
-			if rv.IsNil() {
-				return nil
-			}
-			n := rv.Len()
-			out := make(map[string]any, n)
-			iter := rv.MapRange()
-			for iter.Next() {
-				k := iter.Key()
-				v := iter.Value()
-				var keyStr string
-				if k.Kind() == reflect.String {
-					keyStr = k.String()
-				} else {
-					keyStr = fmt.Sprintf("%v", k.Interface())
-				}
-				out[keyStr] = stringifyValue(v.Interface())
-			}
-			return out
-		case reflect.Pointer, reflect.Interface:
-			if rv.IsNil() {
-				return nil
-			}
-			return stringifyValue(rv.Elem().Interface())
-		case reflect.Struct:
-			// Producer leaks: a custom struct (or pointer/interface
-			// wrapping one) escaped into the activation map. CEL
-			// cannot dereference fields on Go structs and the
-			// previous pass-through silently let the value reach
-			// the evaluator as `dyn` — predicates against it
-			// returned undefined-behaviour results that varied
-			// across cel-go releases. Render to a stringified
-			// fingerprint with %+v so the value appears in CEL as
-			// a comparable scalar; predicates that depend on
-			// internal struct fields will visibly fail to match
-			// rather than evaluating against a phantom value.
-			return fmt.Sprintf("%+v", v)
-		default:
-			return v
+		return stringifyReflect(v)
+	}
+}
+
+func stringifyReflect(v any) any {
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.String:
+		return rv.String()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return rv.Int()
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return rv.Uint()
+	case reflect.Float32, reflect.Float64:
+		return rv.Float()
+	case reflect.Slice:
+		if rv.IsNil() {
+			return nil
 		}
+		n := rv.Len()
+		cp := make([]any, n)
+		for i := range n {
+			cp[i] = stringifyValue(rv.Index(i).Interface())
+		}
+		return cp
+	case reflect.Array:
+		n := rv.Len()
+		cp := make([]any, n)
+		for i := range n {
+			cp[i] = stringifyValue(rv.Index(i).Interface())
+		}
+		return cp
+	case reflect.Map:
+		if rv.IsNil() {
+			return nil
+		}
+		n := rv.Len()
+		out := make(map[string]any, n)
+		iter := rv.MapRange()
+		for iter.Next() {
+			k := iter.Key()
+			v := iter.Value()
+			var keyStr string
+			if k.Kind() == reflect.String {
+				keyStr = k.String()
+			} else {
+				keyStr = fmt.Sprintf("%v", k.Interface())
+			}
+			out[keyStr] = stringifyValue(v.Interface())
+		}
+		return out
+	case reflect.Pointer, reflect.Interface:
+		if rv.IsNil() {
+			return nil
+		}
+		return stringifyValue(rv.Elem().Interface())
+	case reflect.Struct:
+		return fmt.Sprintf("%+v", v)
+	default:
+		return v
 	}
 }

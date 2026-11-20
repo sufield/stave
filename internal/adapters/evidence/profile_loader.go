@@ -132,23 +132,12 @@ func parseProfile(data []byte, filename string) (*coreevidence.FrameworkProfile,
 	// Convert requirements from either format.
 	var reqs []coreevidence.Requirement
 
-	// Original format: requirements[]
 	for _, r := range dto.Requirements {
-		threshold, err := coreevidence.ParsePassThreshold(r.PassThreshold)
+		req, err := convertYAMLRequirement(r, filename)
 		if err != nil {
-			return nil, fmt.Errorf("%s: requirement %q: %w", filename, r.ID, err)
+			return nil, err
 		}
-		cids := make([]kernel.ControlID, len(r.Controls))
-		for j, c := range r.Controls {
-			cids[j] = kernel.ControlID(c)
-		}
-		reqs = append(reqs, coreevidence.Requirement{
-			ID:            r.ID,
-			Description:   r.Description,
-			Section:       r.Section,
-			ControlIDs:    cids,
-			PassThreshold: threshold,
-		})
+		reqs = append(reqs, req)
 	}
 
 	// Enhanced format: sections[] with required_controls[]
@@ -194,5 +183,23 @@ func parseProfile(data []byte, filename string) (*coreevidence.FrameworkProfile,
 		Description:  dto.Description,
 		FrameworkKey: dto.FrameworkKey,
 		Requirements: reqs,
+	}, nil
+}
+
+func convertYAMLRequirement(r yamlRequirement, filename string) (coreevidence.Requirement, error) {
+	threshold, err := coreevidence.ParsePassThreshold(r.PassThreshold)
+	if err != nil {
+		return coreevidence.Requirement{}, fmt.Errorf("%s: requirement %q: %w", filename, r.ID, err)
+	}
+	cids := make([]kernel.ControlID, len(r.Controls))
+	for j, c := range r.Controls {
+		cids[j] = kernel.ControlID(c)
+	}
+	return coreevidence.Requirement{
+		ID:            r.ID,
+		Description:   r.Description,
+		Section:       r.Section,
+		ControlIDs:    cids,
+		PassThreshold: threshold,
 	}, nil
 }

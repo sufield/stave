@@ -273,29 +273,26 @@ func writeEdgeGroup(buf *bytes.Buffer, grp *edgeGroup) {
 			if i > 0 {
 				buf.WriteString(", ")
 			}
-			props := grp.edgeProps[i]
-			if len(props) > 0 || grp.shortcut {
-				buf.WriteString("{\"@id\": ")
-				encodeJSONString(buf, obj)
-				if grp.shortcut {
-					buf.WriteString(", \"isAlgorithmShortcut\": true")
-				}
-				keys := sortedPropKeys(props)
-				for _, k := range keys {
-					buf.WriteString(", ")
-					encodeJSONString(buf, k)
-					buf.WriteString(": ")
-					encodeJSONValue(buf, props[k])
-				}
-				buf.WriteString("}")
-			} else {
-				buf.WriteString("{\"@id\": ")
-				encodeJSONString(buf, obj)
-				buf.WriteString("}")
-			}
+			writeEdgeObject(buf, obj, grp.edgeProps[i], grp.shortcut)
 		}
 		buf.WriteString("]")
 	}
+}
+
+func writeEdgeObject(buf *bytes.Buffer, obj string, props map[string]any, shortcut bool) {
+	buf.WriteString("{\"@id\": ")
+	encodeJSONString(buf, obj)
+	if shortcut {
+		buf.WriteString(", \"isAlgorithmShortcut\": true")
+	}
+	keys := sortedPropKeys(props)
+	for _, k := range keys {
+		buf.WriteString(", ")
+		encodeJSONString(buf, k)
+		buf.WriteString(": ")
+		encodeJSONValue(buf, props[k])
+	}
+	buf.WriteString("}")
 }
 
 // encodeJSONString writes a JSON-quoted string. Routes through

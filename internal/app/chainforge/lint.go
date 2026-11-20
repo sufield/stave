@@ -82,8 +82,24 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]st
 		}
 	}
 
-	// Validate implicit dependencies.
-	for i, dep := range chain.ImplicitDependencies {
+	lintImplicitDependencies(chain.ImplicitDependencies, &result)
+
+	// Warnings.
+	if len(chain.Preconditions) == 0 {
+		result.Warnings = append(result.Warnings, "no preconditions defined (chain will not produce attack path edges)")
+	}
+	if len(chain.Postconditions) == 0 {
+		result.Warnings = append(result.Warnings, "no postconditions defined")
+	}
+	if chain.Description == "" {
+		result.Warnings = append(result.Warnings, "missing description/narrative")
+	}
+
+	return result
+}
+
+func lintImplicitDependencies(deps []policy.ImplicitDependency, result *LintResult) {
+	for i, dep := range deps {
 		prefix := fmt.Sprintf("implicit_dependencies[%d]", i)
 		if dep.Source == "" {
 			result.Errors = append(result.Errors, prefix+": source is required")
@@ -102,19 +118,6 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]st
 				"%s: invalid fallback %q (must be fail_closed, fail_open, or cross_validate)", prefix, dep.Fallback))
 		}
 	}
-
-	// Warnings.
-	if len(chain.Preconditions) == 0 {
-		result.Warnings = append(result.Warnings, "no preconditions defined (chain will not produce attack path edges)")
-	}
-	if len(chain.Postconditions) == 0 {
-		result.Warnings = append(result.Warnings, "no postconditions defined")
-	}
-	if chain.Description == "" {
-		result.Warnings = append(result.Warnings, "missing description/narrative")
-	}
-
-	return result
 }
 
 // LintChainRaw wraps LintChain and adds a raw-bytes check for the

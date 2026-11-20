@@ -262,47 +262,7 @@ func (m *Mapping) Evaluate(violated map[string]bool) Report {
 	}
 	for di := range m.Domains {
 		for ci := range m.Domains[di].Controls {
-			c := &m.Domains[di].Controls[ci]
-			switch c.Coverage {
-			case coverageFull, coveragePartial:
-				res := ControlResult{
-					ID: c.ID, Title: c.Title, Type: c.Type,
-					Bucket: BucketCovered, Partial: c.Coverage == coveragePartial,
-					StaveControls: c.StaveControls,
-					Confidence:    c.ConfidenceOrDefault(),
-					Uncovered:     c.UncoveredAspects,
-				}
-				var failed []string
-				for _, sc := range c.StaveControls {
-					if violated[sc] {
-						failed = append(failed, sc)
-					}
-				}
-				if len(failed) > 0 {
-					res.Status = StatusFail
-					res.FailedControls = failed
-					rep.Failed++
-				} else {
-					res.Status = StatusPass
-					rep.Passed++
-				}
-				rep.Covered = append(rep.Covered, res)
-			case coverageNone:
-				rep.Gaps = append(rep.Gaps, ControlResult{
-					ID: c.ID, Title: c.Title, Type: c.Type,
-					Status: StatusNotVerified, Bucket: BucketGap, Detail: c.Notes,
-				})
-			case coverageOOSRuntime, coverageOOSOrgnztnl:
-				kind := "ORGANIZATIONAL"
-				if c.Coverage == coverageOOSRuntime {
-					kind = "RUNTIME"
-				}
-				rep.OutOfScope = append(rep.OutOfScope, ControlResult{
-					ID: c.ID, Title: c.Title, Type: c.Type,
-					Status: StatusOutOfScope, Bucket: BucketOutOfScope,
-					OutOfScopeKind: kind, Detail: c.Notes,
-				})
-			}
+			classifyMappingControl(&m.Domains[di].Controls[ci], violated, &rep)
 		}
 	}
 	byID := func(s []ControlResult) {
@@ -318,4 +278,47 @@ func (m *Mapping) Evaluate(violated map[string]bool) Report {
 		rep.CoveragePercent = float64(rep.Verified) / float64(rep.InScope) * 100
 	}
 	return rep
+}
+
+func classifyMappingControl(c *MappedControl, violated map[string]bool, rep *Report) {
+	switch c.Coverage {
+	case coverageFull, coveragePartial:
+		res := ControlResult{
+			ID: c.ID, Title: c.Title, Type: c.Type,
+			Bucket: BucketCovered, Partial: c.Coverage == coveragePartial,
+			StaveControls: c.StaveControls,
+			Confidence:    c.ConfidenceOrDefault(),
+			Uncovered:     c.UncoveredAspects,
+		}
+		var failed []string
+		for _, sc := range c.StaveControls {
+			if violated[sc] {
+				failed = append(failed, sc)
+			}
+		}
+		if len(failed) > 0 {
+			res.Status = StatusFail
+			res.FailedControls = failed
+			rep.Failed++
+		} else {
+			res.Status = StatusPass
+			rep.Passed++
+		}
+		rep.Covered = append(rep.Covered, res)
+	case coverageNone:
+		rep.Gaps = append(rep.Gaps, ControlResult{
+			ID: c.ID, Title: c.Title, Type: c.Type,
+			Status: StatusNotVerified, Bucket: BucketGap, Detail: c.Notes,
+		})
+	case coverageOOSRuntime, coverageOOSOrgnztnl:
+		kind := "ORGANIZATIONAL"
+		if c.Coverage == coverageOOSRuntime {
+			kind = "RUNTIME"
+		}
+		rep.OutOfScope = append(rep.OutOfScope, ControlResult{
+			ID: c.ID, Title: c.Title, Type: c.Type,
+			Status: StatusOutOfScope, Bucket: BucketOutOfScope,
+			OutOfScopeKind: kind, Detail: c.Notes,
+		})
+	}
 }

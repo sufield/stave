@@ -176,6 +176,10 @@ func (m *CompiledModel) collectUniverse(exports *Exports) {
 		m.Resources[r] = m.Ctx.Const("r:"+r, m.ResourceSort).(z3.Uninterpreted)
 	}
 
+	walkStatements(exports, addPrincipal, addAction, addResource)
+}
+
+func walkStatements(exports *Exports, addPrincipal, addAction, addResource func(string)) {
 	walkDoc := func(stmts []PolicyStatement, sourceAsset string) {
 		addResource(sourceAsset)
 		for i := range stmts {
@@ -202,28 +206,32 @@ func (m *CompiledModel) collectUniverse(exports *Exports) {
 	}
 
 	if exports.Policies != nil {
-		for i := range exports.Policies.ResourcePolicies {
-			d := &exports.Policies.ResourcePolicies[i]
-			walkDoc(d.Statements, d.SourceAssetID)
-		}
-		for i := range exports.Policies.KMSKeyPolicies {
-			d := &exports.Policies.KMSKeyPolicies[i]
-			walkDoc(d.Statements, d.SourceAssetID)
-		}
-		for i := range exports.Policies.TrustPolicies {
-			d := &exports.Policies.TrustPolicies[i]
-			walkDoc(d.Statements, d.SourceAssetID)
-			addPrincipal(d.SourceAssetID)
-		}
-		for _, edge := range exports.Policies.AssetRelationships {
-			addPrincipal(edge.FromAssetID)
-			addResource(edge.ToAssetID)
-		}
+		walkPolicies(exports.Policies, walkDoc, addPrincipal, addResource)
 	}
 	if exports.Graph != nil {
 		for i := range exports.Graph.Assets {
 			addResource(exports.Graph.Assets[i].ID)
 		}
+	}
+}
+
+func walkPolicies(pol *PolicyExport, walkDoc func([]PolicyStatement, string), addPrincipal, addResource func(string)) {
+	for i := range pol.ResourcePolicies {
+		d := &pol.ResourcePolicies[i]
+		walkDoc(d.Statements, d.SourceAssetID)
+	}
+	for i := range pol.KMSKeyPolicies {
+		d := &pol.KMSKeyPolicies[i]
+		walkDoc(d.Statements, d.SourceAssetID)
+	}
+	for i := range pol.TrustPolicies {
+		d := &pol.TrustPolicies[i]
+		walkDoc(d.Statements, d.SourceAssetID)
+		addPrincipal(d.SourceAssetID)
+	}
+	for _, edge := range pol.AssetRelationships {
+		addPrincipal(edge.FromAssetID)
+		addResource(edge.ToAssetID)
 	}
 }
 

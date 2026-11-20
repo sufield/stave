@@ -318,23 +318,7 @@ func identityFacts(identities []sir.IdentityFact) []Fact {
 	for i := range identities {
 		id := &identities[i]
 		evid := fmt.Sprintf("identities[%d]", i)
-		for ci, chain := range id.RoleChains {
-			cevid := fmt.Sprintf("%s.role_chains[%d]", evid, ci)
-			for hi, hop := range chain.Hops {
-				hevid := fmt.Sprintf("%s.hops[%d]", cevid, hi)
-				pred := "can_assume"
-				if hop.HopType != "" && hop.HopType != "assume_role" {
-					pred = "can_" + hop.HopType
-				}
-				out = append(out, Fact{Subject: hop.From, Predicate: pred, Object: hop.To, Source: "role_chain", Evidence: hevid})
-				if hop.CrossAccount {
-					out = append(out, Fact{Subject: hop.From, Predicate: "cross_account_assumes", Object: hop.To, Source: "role_chain", Evidence: hevid + ".cross_account"})
-				}
-			}
-			if chain.TransitiveLevel != "" {
-				out = append(out, Fact{Subject: chain.FinalRoleARN, Predicate: "has_privilege_level", Object: chain.TransitiveLevel, Source: "role_chain", Evidence: cevid + ".transitive_level"})
-			}
-		}
+		out = append(out, roleChainFacts(id.RoleChains, evid)...)
 		for vi := range id.Validity {
 			vw := &id.Validity[vi]
 			vevid := fmt.Sprintf("%s.validity[%d]", evid, vi)
@@ -348,6 +332,28 @@ func identityFacts(identities []sir.IdentityFact) []Fact {
 					out = append(out, Fact{Subject: id.PrincipalID, Predicate: "has_permission_resource", Object: perm.Resource, Source: "permission", Evidence: pevid + ".resource"})
 				}
 			}
+		}
+	}
+	return out
+}
+
+func roleChainFacts(chains []sir.RoleChainFact, evid string) []Fact {
+	var out []Fact
+	for ci, chain := range chains {
+		cevid := fmt.Sprintf("%s.role_chains[%d]", evid, ci)
+		for hi, hop := range chain.Hops {
+			hevid := fmt.Sprintf("%s.hops[%d]", cevid, hi)
+			pred := "can_assume"
+			if hop.HopType != "" && hop.HopType != "assume_role" {
+				pred = "can_" + hop.HopType
+			}
+			out = append(out, Fact{Subject: hop.From, Predicate: pred, Object: hop.To, Source: "role_chain", Evidence: hevid})
+			if hop.CrossAccount {
+				out = append(out, Fact{Subject: hop.From, Predicate: "cross_account_assumes", Object: hop.To, Source: "role_chain", Evidence: hevid + ".cross_account"})
+			}
+		}
+		if chain.TransitiveLevel != "" {
+			out = append(out, Fact{Subject: chain.FinalRoleARN, Predicate: "has_privilege_level", Object: chain.TransitiveLevel, Source: "role_chain", Evidence: cevid + ".transitive_level"})
 		}
 	}
 	return out
@@ -476,49 +482,57 @@ func iamPolicyFacts(assets []sir.AssetFact) []Fact {
 	var out []Fact
 	for i := range assets {
 		a := &assets[i]
-		if a.Type != "aws_iam_role" && a.Type != "aws_iam_user" {
-			continue
+		if a.Type == "aws_iam_role" || a.Type == "aws_iam_user" {
+			out = append(out, iamAllowStatementFacts(a, i)...)
 		}
-		policies, ok := navMap(a.Properties, "identity", "policies")
+	}
+	return out
+}
+
+func iamAllowStatementFacts(a *sir.AssetFact, assetIndex int) []Fact {
+	policies, ok := navMap(a.Properties, "identity", "policies")
+	if !ok {
+		return nil
+	}
+	attached, ok := policies["attached_policies"].([]any)
+	if !ok {
+		return nil
+	}
+	var out []Fact
+	for pi, p := range attached {
+		policy, ok := p.(map[string]any)
 		if !ok {
 			continue
 		}
-		attached, ok := policies["attached_policies"].([]any)
+		stmts, ok := policy["statements"].([]any)
 		if !ok {
 			continue
 		}
-		for pi, p := range attached {
-			policy, ok := p.(map[string]any)
+		for si, s := range stmts {
+			stmt, ok := s.(map[string]any)
 			if !ok {
 				continue
 			}
-			stmts, ok := policy["statements"].([]any)
-			if !ok {
+			if effect, _ := stmt["Effect"].(string); effect != "Allow" {
 				continue
 			}
-			for si, s := range stmts {
-				stmt, ok := s.(map[string]any)
-				if !ok {
-					continue
-				}
-				if effect, _ := stmt["Effect"].(string); effect != "Allow" {
-					continue
-				}
-				evid := fmt.Sprintf("assets[%d].properties.identity.policies.attached_policies[%d].statements[%d]", i, pi, si)
-				for _, action := range coerceStringList(stmt["Action"]) {
-					out = append(out, Fact{
-						Subject: a.ID, Predicate: "has_action", Object: action,
-						Source: "iam_policy", Evidence: evid + ".Action",
-					})
-				}
-				for _, resource := range coerceStringList(stmt["Resource"]) {
-					out = append(out, Fact{
-						Subject: a.ID, Predicate: "has_resource", Object: resource,
-						Source: "iam_policy", Evidence: evid + ".Resource",
-					})
-				}
-			}
+			evid := fmt.Sprintf("assets[%d].properties.identity.policies.attached_policies[%d].statements[%d]", assetIndex, pi, si)
+			out = append(out, stmtFieldFacts(a.ID, evid, stmt, "Action", "has_action")...)
+			out = append(out, stmtFieldFacts(a.ID, evid, stmt, "Resource", "has_resource")...)
 		}
+	}
+	return out
+}
+
+func stmtFieldFacts(subject, evid string, stmt map[string]any, key, predicate string) []Fact {
+	vals := coerceStringList(stmt[key])
+	if len(vals) == 0 {
+		return nil
+	}
+	out := make([]Fact, len(vals))
+	evidKey := evid + "." + key
+	for i, val := range vals {
+		out[i] = Fact{Subject: subject, Predicate: predicate, Object: val, Source: "iam_policy", Evidence: evidKey}
 	}
 	return out
 }
@@ -666,45 +680,46 @@ func propertyFacts(assets []sir.AssetFact) []Fact {
 	for i := range assets {
 		a := &assets[i]
 		for _, rule := range propertyAllowlist {
-			if len(rule.assetTypes) > 0 {
-				match := slices.Contains(rule.assetTypes, a.Type)
-				if !match {
-					continue
-				}
+			if f, ok := matchPropertyRule(a, rule, i); ok {
+				out = append(out, f)
 			}
-			block, ok := a.Properties[rule.blockKey].(map[string]any)
-			if !ok {
-				continue
-			}
-			var value any = block
-			for _, k := range rule.keys {
-				m, ok := value.(map[string]any)
-				if !ok {
-					value = nil
-					break
-				}
-				value = m[k]
-			}
-			if value == nil {
-				continue
-			}
-			// Reject nested maps / slices — only scalars project.
-			switch value.(type) {
-			case map[string]any, []any:
-				continue
-			}
-			obj := scalarString(value)
-			if obj == "" {
-				continue
-			}
-			evid := fmt.Sprintf("assets[%d].properties.%s.%s", i, rule.blockKey, strings.Join(rule.keys, "."))
-			out = append(out, Fact{
-				Subject: a.ID, Predicate: rule.predicateName, Object: obj,
-				Source: "property", Evidence: evid,
-			})
 		}
 	}
 	return out
+}
+
+func matchPropertyRule(a *sir.AssetFact, rule propertyPath, assetIndex int) (Fact, bool) {
+	if len(rule.assetTypes) > 0 && !slices.Contains(rule.assetTypes, a.Type) {
+		return Fact{}, false
+	}
+	block, ok := a.Properties[rule.blockKey].(map[string]any)
+	if !ok {
+		return Fact{}, false
+	}
+	var value any = block
+	for _, k := range rule.keys {
+		m, ok := value.(map[string]any)
+		if !ok {
+			return Fact{}, false
+		}
+		value = m[k]
+	}
+	if value == nil {
+		return Fact{}, false
+	}
+	switch value.(type) {
+	case map[string]any, []any:
+		return Fact{}, false
+	}
+	obj := scalarString(value)
+	if obj == "" {
+		return Fact{}, false
+	}
+	evid := fmt.Sprintf("assets[%d].properties.%s.%s", assetIndex, rule.blockKey, strings.Join(rule.keys, "."))
+	return Fact{
+		Subject: a.ID, Predicate: rule.predicateName, Object: obj,
+		Source: "property", Evidence: evid,
+	}, true
 }
 
 // denyPolicyFacts walks IAM Deny statements on role / user
@@ -725,48 +740,43 @@ func denyPolicyFacts(assets []sir.AssetFact) []Fact {
 	var out []Fact
 	for i := range assets {
 		a := &assets[i]
-		if a.Type != "aws_iam_role" && a.Type != "aws_iam_user" {
-			continue
+		if a.Type == "aws_iam_role" || a.Type == "aws_iam_user" {
+			out = append(out, iamDenyStatementFacts(a, i)...)
 		}
-		policies, ok := navMap(a.Properties, "identity", "policies")
+	}
+	return out
+}
+
+func iamDenyStatementFacts(a *sir.AssetFact, assetIndex int) []Fact {
+	policies, ok := navMap(a.Properties, "identity", "policies")
+	if !ok {
+		return nil
+	}
+	attached, ok := policies["attached_policies"].([]any)
+	if !ok {
+		return nil
+	}
+	var out []Fact
+	for pi, p := range attached {
+		policy, ok := p.(map[string]any)
 		if !ok {
 			continue
 		}
-		attached, ok := policies["attached_policies"].([]any)
+		stmts, ok := policy["statements"].([]any)
 		if !ok {
 			continue
 		}
-		for pi, p := range attached {
-			policy, ok := p.(map[string]any)
+		for si, s := range stmts {
+			stmt, ok := s.(map[string]any)
 			if !ok {
 				continue
 			}
-			stmts, ok := policy["statements"].([]any)
-			if !ok {
+			if effect, _ := stmt["Effect"].(string); effect != "Deny" {
 				continue
 			}
-			for si, s := range stmts {
-				stmt, ok := s.(map[string]any)
-				if !ok {
-					continue
-				}
-				if effect, _ := stmt["Effect"].(string); effect != "Deny" {
-					continue
-				}
-				evid := fmt.Sprintf("assets[%d].policies.attached_policies[%d].statements[%d]", i, pi, si)
-				for _, action := range coerceStringList(stmt["Action"]) {
-					out = append(out, Fact{
-						Subject: a.ID, Predicate: "has_deny_action", Object: action,
-						Source: "iam_policy", Evidence: evid + ".Action",
-					})
-				}
-				for _, resource := range coerceStringList(stmt["Resource"]) {
-					out = append(out, Fact{
-						Subject: a.ID, Predicate: "has_deny_resource", Object: resource,
-						Source: "iam_policy", Evidence: evid + ".Resource",
-					})
-				}
-			}
+			evid := fmt.Sprintf("assets[%d].policies.attached_policies[%d].statements[%d]", assetIndex, pi, si)
+			out = append(out, stmtFieldFacts(a.ID, evid, stmt, "Action", "has_deny_action")...)
+			out = append(out, stmtFieldFacts(a.ID, evid, stmt, "Resource", "has_deny_resource")...)
 		}
 	}
 	return out
@@ -795,71 +805,80 @@ func conditionFacts(assets []sir.AssetFact) []Fact {
 	var out []Fact
 	for i := range assets {
 		a := &assets[i]
-		if a.Type != "aws_iam_role" && a.Type != "aws_iam_user" {
-			continue
+		if a.Type == "aws_iam_role" || a.Type == "aws_iam_user" {
+			out = append(out, iamConditionFacts(a, i)...)
 		}
-		policies, ok := navMap(a.Properties, "identity", "policies")
+	}
+	return out
+}
+
+func iamConditionFacts(a *sir.AssetFact, assetIndex int) []Fact {
+	policies, ok := navMap(a.Properties, "identity", "policies")
+	if !ok {
+		return nil
+	}
+	attached, ok := policies["attached_policies"].([]any)
+	if !ok {
+		return nil
+	}
+	var out []Fact
+	for pi, p := range attached {
+		policy, ok := p.(map[string]any)
 		if !ok {
 			continue
 		}
-		attached, ok := policies["attached_policies"].([]any)
+		stmts, ok := policy["statements"].([]any)
 		if !ok {
 			continue
 		}
-		for pi, p := range attached {
-			policy, ok := p.(map[string]any)
+		for si, s := range stmts {
+			stmt, ok := s.(map[string]any)
 			if !ok {
 				continue
 			}
-			stmts, ok := policy["statements"].([]any)
-			if !ok {
+			cond, ok := stmt["Condition"].(map[string]any)
+			if !ok || len(cond) == 0 {
 				continue
 			}
-			for si, s := range stmts {
-				stmt, ok := s.(map[string]any)
-				if !ok {
-					continue
-				}
-				cond, ok := stmt["Condition"].(map[string]any)
-				if !ok || len(cond) == 0 {
-					continue
-				}
-				evid := fmt.Sprintf("assets[%d].policies.attached_policies[%d].statements[%d].Condition", i, pi, si)
-				ops := make([]string, 0, len(cond))
-				for op := range cond {
-					ops = append(ops, op)
-				}
-				slices.Sort(ops)
-				for _, op := range ops {
-					keys, ok := cond[op].(map[string]any)
-					if !ok {
-						continue
-					}
-					keyNames := make([]string, 0, len(keys))
-					for k := range keys {
-						keyNames = append(keyNames, k)
-					}
-					slices.Sort(keyNames)
-					for _, k := range keyNames {
-						out = append(out, Fact{
-							Subject: a.ID, Predicate: "has_condition", Object: op + ":" + k,
-							Source: "iam_policy", Evidence: evid,
-						})
-						// Ternary (asset, key, value) compressed into the
-						// binary "<op>:<key>=<value>" form. Same key=value
-						// concatenation pattern as has_tag — `=` is not a
-						// valid character in IAM condition keys, so the
-						// split point is unambiguous. Emits one fact per
-						// value (conditions can carry array values).
-						for _, val := range coerceConditionValueList(keys[k]) {
-							out = append(out, Fact{
-								Subject: a.ID, Predicate: "has_condition_value",
-								Object: op + ":" + k + "=" + val,
-								Source: "iam_policy", Evidence: evid,
-							})
-						}
-					}
-				}
+			evid := fmt.Sprintf("assets[%d].policies.attached_policies[%d].statements[%d].Condition", assetIndex, pi, si)
+			out = append(out, conditionBlockFacts(a.ID, "iam_policy", evid, cond, coerceConditionValueList)...)
+		}
+	}
+	return out
+}
+
+// conditionBlockFacts walks a Condition map (operator → key → values)
+// and emits has_condition / has_condition_value facts. coerceValues
+// controls scalar rendering: conditionFacts passes coerceConditionValueList
+// (handles bool/float64), resourcePolicyStatementFacts passes coerceStringList.
+func conditionBlockFacts(subject, source, evid string, cond map[string]any, coerceValues func(any) []string) []Fact {
+	ops := make([]string, 0, len(cond))
+	for op := range cond {
+		ops = append(ops, op)
+	}
+	slices.Sort(ops)
+	var out []Fact
+	for _, op := range ops {
+		keys, ok := cond[op].(map[string]any)
+		if !ok {
+			continue
+		}
+		keyNames := make([]string, 0, len(keys))
+		for k := range keys {
+			keyNames = append(keyNames, k)
+		}
+		slices.Sort(keyNames)
+		for _, k := range keyNames {
+			out = append(out, Fact{
+				Subject: subject, Predicate: "has_condition", Object: op + ":" + k,
+				Source: source, Evidence: evid,
+			})
+			for _, val := range coerceValues(keys[k]) {
+				out = append(out, Fact{
+					Subject: subject, Predicate: "has_condition_value",
+					Object: op + ":" + k + "=" + val,
+					Source: source, Evidence: evid,
+				})
 			}
 		}
 	}
@@ -941,60 +960,57 @@ func stringifiedPolicyFacts(assets []sir.AssetFact) []Fact {
 	for i := range assets {
 		a := &assets[i]
 		for _, rule := range stringifiedPolicyAllowlist {
-			if len(rule.assetTypes) > 0 {
-				match := slices.Contains(rule.assetTypes, a.Type)
-				if !match {
-					continue
-				}
-			}
-			block, ok := a.Properties[rule.blockKey].(map[string]any)
-			if !ok {
-				continue
-			}
-			var raw any = block
-			for _, k := range rule.keys {
-				m, mok := raw.(map[string]any)
-				if !mok {
-					raw = nil
-					break
-				}
-				raw = m[k]
-			}
-			jsonStr, ok := raw.(string)
-			if !ok || jsonStr == "" {
-				continue
-			}
-			var policy map[string]any
-			if err := json.Unmarshal([]byte(jsonStr), &policy); err != nil {
-				if len(rule.assetTypes) > 0 {
-					// Asset-type-scoped field that is present but not valid JSON
-					// is a real malformed policy (not a cross-asset scalar that
-					// merely shares the field name). Fail-visible: emit a
-					// diagnostic fact so condition-based detections see the gap
-					// instead of silently finding zero conditions.
-					out = append(out, Fact{
-						Subject: a.ID, Predicate: "has_malformed_policy",
-						Object: rule.dotPath, Source: "stringified_policy",
-						Evidence: fmt.Sprintf("assets[%d].properties.%s present but not valid JSON: %v",
-							i, rule.dotPath, err),
-					})
-				}
-				continue
-			}
-			stmts, ok := policy["Statement"].([]any)
-			if !ok {
-				continue
-			}
-			for si, sRaw := range stmts {
-				stmt, ok := sRaw.(map[string]any)
-				if !ok {
-					continue
-				}
-				stmtBase := fmt.Sprintf("assets[%d].properties.%s → (parsed JSON) → Statement[%d]",
-					i, rule.dotPath, si)
-				out = append(out, resourcePolicyStatementFacts(a.ID, stmtBase, stmt)...)
-			}
+			out = append(out, matchStringifiedPolicy(a, i, rule)...)
 		}
+	}
+	return out
+}
+
+func matchStringifiedPolicy(a *sir.AssetFact, assetIndex int, rule stringifiedPolicyPath) []Fact {
+	if len(rule.assetTypes) > 0 && !slices.Contains(rule.assetTypes, a.Type) {
+		return nil
+	}
+	block, ok := a.Properties[rule.blockKey].(map[string]any)
+	if !ok {
+		return nil
+	}
+	var raw any = block
+	for _, k := range rule.keys {
+		m, mok := raw.(map[string]any)
+		if !mok {
+			return nil
+		}
+		raw = m[k]
+	}
+	jsonStr, ok := raw.(string)
+	if !ok || jsonStr == "" {
+		return nil
+	}
+	var policy map[string]any
+	if err := json.Unmarshal([]byte(jsonStr), &policy); err != nil {
+		if len(rule.assetTypes) > 0 {
+			return []Fact{{
+				Subject: a.ID, Predicate: "has_malformed_policy",
+				Object: rule.dotPath, Source: "stringified_policy",
+				Evidence: fmt.Sprintf("assets[%d].properties.%s present but not valid JSON: %v",
+					assetIndex, rule.dotPath, err),
+			}}
+		}
+		return nil
+	}
+	stmts, ok := policy["Statement"].([]any)
+	if !ok {
+		return nil
+	}
+	var out []Fact
+	for si, sRaw := range stmts {
+		stmt, ok := sRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+		stmtBase := fmt.Sprintf("assets[%d].properties.%s → (parsed JSON) → Statement[%d]",
+			assetIndex, rule.dotPath, si)
+		out = append(out, resourcePolicyStatementFacts(a.ID, stmtBase, stmt)...)
 	}
 	return out
 }
@@ -1035,37 +1051,7 @@ func resourcePolicyStatementFacts(subject, stmtBase string, stmt map[string]any)
 	if !ok || len(cond) == 0 {
 		return out
 	}
-	evid := stmtBase + ".Condition"
-	ops := make([]string, 0, len(cond))
-	for op := range cond {
-		ops = append(ops, op)
-	}
-	slices.Sort(ops)
-	for _, op := range ops {
-		keys, ok := cond[op].(map[string]any)
-		if !ok {
-			continue
-		}
-		keyNames := make([]string, 0, len(keys))
-		for k := range keys {
-			keyNames = append(keyNames, k)
-		}
-		slices.Sort(keyNames)
-		for _, k := range keyNames {
-			out = append(out, Fact{
-				Subject: subject, Predicate: "has_condition", Object: op + ":" + k,
-				Source: "stringified_policy", Evidence: evid,
-			})
-			for _, val := range coerceStringList(keys[k]) {
-				out = append(out, Fact{
-					Subject: subject, Predicate: "has_condition_value",
-					Object: op + ":" + k + "=" + val,
-					Source: "stringified_policy", Evidence: evid,
-				})
-			}
-		}
-	}
-	return out
+	return append(out, conditionBlockFacts(subject, "stringified_policy", stmtBase+".Condition", cond, coerceStringList)...)
 }
 
 // dataEventLoggingFacts walks CloudTrail trail assets and emits
@@ -1098,48 +1084,58 @@ func dataEventLoggingFacts(assets []sir.AssetFact) []Fact {
 	var out []Fact
 	for i := range assets {
 		a := &assets[i]
-		if a.Type != "aws_cloudtrail_trail" {
-			continue
+		if a.Type == "aws_cloudtrail_trail" {
+			out = append(out, trailDataEventFacts(a, i)...)
 		}
-		trail, ok := a.Properties["trail"].(map[string]any)
+	}
+	return out
+}
+
+func trailDataEventFacts(a *sir.AssetFact, assetIndex int) []Fact {
+	trail, ok := a.Properties["trail"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	selectors, ok := trail["event_selectors"].([]any)
+	if !ok {
+		return nil
+	}
+	var out []Fact
+	for ei, sel := range selectors {
+		s, ok := sel.(map[string]any)
 		if !ok {
 			continue
 		}
-		selectors, ok := trail["event_selectors"].([]any)
+		dr, ok := s["data_resources"].([]any)
 		if !ok {
 			continue
 		}
-		for ei, sel := range selectors {
-			s, ok := sel.(map[string]any)
-			if !ok {
+		out = collectDataResourceFacts(dr, assetIndex, ei, out)
+	}
+	return out
+}
+
+func collectDataResourceFacts(dr []any, assetIndex, ei int, out []Fact) []Fact {
+	for di, raw := range dr {
+		resource, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		values, ok := resource["values"].([]any)
+		if !ok {
+			continue
+		}
+		evid := fmt.Sprintf("assets[%d].properties.trail.event_selectors[%d].data_resources[%d].values", assetIndex, ei, di)
+		for _, v := range values {
+			bucketARN, ok := v.(string)
+			if !ok || bucketARN == "" {
 				continue
 			}
-			dr, ok := s["data_resources"].([]any)
-			if !ok {
-				continue
-			}
-			for di, raw := range dr {
-				resource, ok := raw.(map[string]any)
-				if !ok {
-					continue
-				}
-				values, ok := resource["values"].([]any)
-				if !ok {
-					continue
-				}
-				evid := fmt.Sprintf("assets[%d].properties.trail.event_selectors[%d].data_resources[%d].values", i, ei, di)
-				for _, v := range values {
-					bucketARN, ok := v.(string)
-					if !ok || bucketARN == "" {
-						continue
-					}
-					bucketARN = strings.TrimSuffix(bucketARN, "/")
-					out = append(out, Fact{
-						Subject: bucketARN, Predicate: "has_data_event_logging", Object: "true",
-						Source: "cloudtrail", Evidence: evid,
-					})
-				}
-			}
+			bucketARN = strings.TrimSuffix(bucketARN, "/")
+			out = append(out, Fact{
+				Subject: bucketARN, Predicate: "has_data_event_logging", Object: "true",
+				Source: "cloudtrail", Evidence: evid,
+			})
 		}
 	}
 	return out
@@ -1188,40 +1184,43 @@ func dataEventLoggingFacts(assets []sir.AssetFact) []Fact {
 func tagFacts(assets []sir.AssetFact) []Fact {
 	var out []Fact
 	for i := range assets {
-		a := &assets[i]
-		// Stable order across the asset's property blocks.
-		blockNames := make([]string, 0, len(a.Properties))
-		for name := range a.Properties {
-			blockNames = append(blockNames, name)
+		out = collectAssetTagFacts(&assets[i], i, out)
+	}
+	return out
+}
+
+func collectAssetTagFacts(a *sir.AssetFact, assetIndex int, out []Fact) []Fact {
+	blockNames := make([]string, 0, len(a.Properties))
+	for name := range a.Properties {
+		blockNames = append(blockNames, name)
+	}
+	slices.Sort(blockNames)
+	for _, blockName := range blockNames {
+		block, ok := a.Properties[blockName].(map[string]any)
+		if !ok {
+			continue
 		}
-		slices.Sort(blockNames)
-		for _, blockName := range blockNames {
-			block, ok := a.Properties[blockName].(map[string]any)
-			if !ok {
+		tags, ok := block["tags"].(map[string]any)
+		if !ok {
+			continue
+		}
+		keys := make([]string, 0, len(tags))
+		for k := range tags {
+			keys = append(keys, k)
+		}
+		slices.Sort(keys)
+		for _, k := range keys {
+			value, ok := tags[k].(string)
+			if !ok || value == "" {
 				continue
 			}
-			tags, ok := block["tags"].(map[string]any)
-			if !ok {
-				continue
-			}
-			keys := make([]string, 0, len(tags))
-			for k := range tags {
-				keys = append(keys, k)
-			}
-			slices.Sort(keys)
-			for _, k := range keys {
-				value, ok := tags[k].(string)
-				if !ok || value == "" {
-					continue
-				}
-				out = append(out, Fact{
-					Subject:   a.ID,
-					Predicate: "has_tag",
-					Object:    k + "=" + value,
-					Source:    "tag",
-					Evidence:  fmt.Sprintf("assets[%d].properties.%s.tags.%s", i, blockName, k),
-				})
-			}
+			out = append(out, Fact{
+				Subject:   a.ID,
+				Predicate: "has_tag",
+				Object:    k + "=" + value,
+				Source:    "tag",
+				Evidence:  fmt.Sprintf("assets[%d].properties.%s.tags.%s", assetIndex, blockName, k),
+			})
 		}
 	}
 	return out
@@ -1273,32 +1272,37 @@ func delegationPrincipalFacts(assets []sir.AssetFact) []Fact {
 		}
 		evid := fmt.Sprintf("assets[%d].properties.delegation.external_principals", i)
 		for pi, raw := range principals {
-			p, ok := raw.(map[string]any)
-			if !ok {
-				continue
-			}
-			arn, ok := p["principal_arn"].(string)
-			if !ok || arn == "" {
-				continue
-			}
-			elemEvid := fmt.Sprintf("%s[%d]", evid, pi)
-			out = append(out, Fact{
-				Subject: a.ID, Predicate: "has_delegated_principal", Object: arn,
-				Source: "delegation", Evidence: elemEvid + ".principal_arn",
-			})
-			if known, ok := p["is_known_vendor"].(bool); ok && !known {
-				out = append(out, Fact{
-					Subject: a.ID, Predicate: "has_unknown_delegated_principal", Object: arn,
-					Source: "delegation", Evidence: elemEvid + ".is_known_vendor",
-				})
-			}
-			if exceeded, ok := p["scope_exceeded"].(bool); ok && exceeded {
-				out = append(out, Fact{
-					Subject: a.ID, Predicate: "has_delegation_scope_exceeded_for", Object: arn,
-					Source: "delegation", Evidence: elemEvid + ".scope_exceeded",
-				})
-			}
+			out = delegationPrincipalFact(a.ID, raw, evid, pi, out)
 		}
+	}
+	return out
+}
+
+func delegationPrincipalFact(assetID string, raw any, evid string, pi int, out []Fact) []Fact {
+	p, ok := raw.(map[string]any)
+	if !ok {
+		return out
+	}
+	arn, ok := p["principal_arn"].(string)
+	if !ok || arn == "" {
+		return out
+	}
+	elemEvid := fmt.Sprintf("%s[%d]", evid, pi)
+	out = append(out, Fact{
+		Subject: assetID, Predicate: "has_delegated_principal", Object: arn,
+		Source: "delegation", Evidence: elemEvid + ".principal_arn",
+	})
+	if known, ok := p["is_known_vendor"].(bool); ok && !known {
+		out = append(out, Fact{
+			Subject: assetID, Predicate: "has_unknown_delegated_principal", Object: arn,
+			Source: "delegation", Evidence: elemEvid + ".is_known_vendor",
+		})
+	}
+	if exceeded, ok := p["scope_exceeded"].(bool); ok && exceeded {
+		out = append(out, Fact{
+			Subject: assetID, Predicate: "has_delegation_scope_exceeded_for", Object: arn,
+			Source: "delegation", Evidence: elemEvid + ".scope_exceeded",
+		})
 	}
 	return out
 }
@@ -2084,31 +2088,7 @@ func SerializeSMT2(facts []Fact, w io.Writer, opts SMT2Options) error {
 
 	bw.writeLine("; --- Facts ---")
 	for _, f := range facts {
-		// Correlation comments — the solver ignores `;` lines, so
-		// verdicts are unaffected. Humans and tooling tracing a
-		// witness back to its originating fact / projector / file
-		// read these. fact_id leads the block because it's the
-		// canonical correlation key.
-		if f.FactID != "" {
-			bw.writeLine(";; fact_id: " + f.FactID)
-		}
-		if f.Provenance != nil {
-			bw.writeLine(";; projector: " + f.Provenance.Projector)
-			if f.Provenance.PropertyPath != "" {
-				bw.writeLine(";; path: " + f.Provenance.PropertyPath)
-			}
-			if f.Provenance.CapturedAt != "" {
-				bw.writeLine(";; captured: " + f.Provenance.CapturedAt)
-			}
-		}
-		if f.Freshness != nil {
-			// Two integer specifiers, so Sprintf is the natural
-			// fit (perfsprint flags the single-%s case, not
-			// multi-arg formatters).
-			days := f.Freshness.AgeSeconds / 86400
-			bw.writeLine(fmt.Sprintf(";; age: %ds (%dd)", f.Freshness.AgeSeconds, days))
-		}
-		bw.writeLine(fmt.Sprintf("(assert (%s %s %s))", smt2Symbol(f.Predicate), smt2Quote(f.Subject), smt2Quote(f.Object)))
+		writeSMT2Fact(bw, &f)
 	}
 
 	if opts.ClosedWorld {
@@ -2122,6 +2102,26 @@ func SerializeSMT2(facts []Fact, w io.Writer, opts SMT2Options) error {
 		}
 	}
 	return bw.err
+}
+
+func writeSMT2Fact(bw *bufferedWriter, f *Fact) {
+	if f.FactID != "" {
+		bw.writeLine(";; fact_id: " + f.FactID)
+	}
+	if f.Provenance != nil {
+		bw.writeLine(";; projector: " + f.Provenance.Projector)
+		if f.Provenance.PropertyPath != "" {
+			bw.writeLine(";; path: " + f.Provenance.PropertyPath)
+		}
+		if f.Provenance.CapturedAt != "" {
+			bw.writeLine(";; captured: " + f.Provenance.CapturedAt)
+		}
+	}
+	if f.Freshness != nil {
+		days := f.Freshness.AgeSeconds / 86400
+		bw.writeLine(fmt.Sprintf(";; age: %ds (%dd)", f.Freshness.AgeSeconds, days))
+	}
+	bw.writeLine(fmt.Sprintf("(assert (%s %s %s))", smt2Symbol(f.Predicate), smt2Quote(f.Subject), smt2Quote(f.Object)))
 }
 
 // allDeclaredPredicates returns the sorted union of the baseline

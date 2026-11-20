@@ -119,26 +119,7 @@ func walkProperties(props map[string]any, prefix string, paths map[string]*pathI
 		fullPath := prefix + "." + key
 		switch v := val.(type) {
 		case map[string]any:
-			isTagMap := true
-			for _, mv := range v {
-				if _, ok := mv.(string); !ok {
-					isTagMap = false
-					break
-				}
-			}
-			if isTagMap && len(v) > 0 {
-				ensurePath(paths, fullPath, "map", total)
-				for mk, mv := range v {
-					tagPath := fullPath + "[" + mk + "]"
-					info := ensurePath(paths, tagPath, "string", total)
-					if s, ok := mv.(string); ok {
-						info.values[s]++
-					}
-				}
-			} else {
-				ensurePath(paths, fullPath, "object", total)
-				walkProperties(v, fullPath, paths, total)
-			}
+			walkMapProperty(v, fullPath, paths, total)
 		case bool:
 			ensurePath(paths, fullPath, "bool", total)
 		case float64:
@@ -154,6 +135,28 @@ func walkProperties(props map[string]any, prefix string, paths map[string]*pathI
 			}
 			ensurePath(paths, fullPath, fmt.Sprintf("%T", val), total)
 		}
+	}
+}
+
+func walkMapProperty(v map[string]any, fullPath string, paths map[string]*pathInfo, total int) {
+	isTagMap := true
+	for _, mv := range v {
+		if _, ok := mv.(string); !ok {
+			isTagMap = false
+			break
+		}
+	}
+	if isTagMap && len(v) > 0 {
+		ensurePath(paths, fullPath, "map", total)
+		for mk, mv := range v {
+			info := ensurePath(paths, fullPath+"["+mk+"]", "string", total)
+			if s, ok := mv.(string); ok {
+				info.values[s]++
+			}
+		}
+	} else {
+		ensurePath(paths, fullPath, "object", total)
+		walkProperties(v, fullPath, paths, total)
 	}
 }
 

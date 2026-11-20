@@ -160,34 +160,7 @@ func writeBisectText(stdout, stderr io.Writer, result appbisect.Result) {
 	fmt.Fprintln(stdout)
 
 	for i, w := range result.Windows {
-		if len(result.Windows) > 1 {
-			label := ""
-			if i == 0 {
-				label = " (earliest)"
-			}
-			if w.IsOngoing {
-				label = " (current)"
-			}
-			fmt.Fprintf(stdout, "Window %d%s:\n", i+1, label)
-		}
-
-		if w.EntryBefore.IsZero() {
-			fmt.Fprintf(stdout, "  Violation predates the archive (present in earliest snapshot)\n")
-			fmt.Fprintf(stdout, "  First observed: %s\n", w.EntryAfter.Format("2006-01-02T15:04:05Z"))
-		} else {
-			fmt.Fprintf(stdout, "  The change occurred between %s and %s.\n",
-				w.EntryBefore.Format("2006-01-02T15:04:05Z"),
-				w.EntryAfter.Format("2006-01-02T15:04:05Z"))
-		}
-
-		if w.IsOngoing {
-			fmt.Fprintf(stdout, "  Status: ongoing (not yet remediated)\n")
-		} else {
-			fmt.Fprintf(stdout, "  Remediated between %s and %s.\n",
-				w.ExitBefore.Format("2006-01-02T15:04:05Z"),
-				w.ExitAfter.Format("2006-01-02T15:04:05Z"))
-		}
-		fmt.Fprintln(stdout)
+		writeBisectWindow(stdout, w, i, len(result.Windows))
 	}
 
 	if result.Delta != nil && len(result.Delta.Changes) > 0 {
@@ -217,3 +190,35 @@ func writeBisectText(stdout, stderr io.Writer, result appbisect.Result) {
 	fmt.Fprintln(stdout, "specific events within a window. To narrow the window, collect")
 	fmt.Fprintln(stdout, "snapshots at higher frequency for this resource.")
 }
+
+func writeBisectWindow(w io.Writer, win appbisect.ViolationWindow, index, total int) {
+	if total > 1 {
+		label := ""
+		if index == 0 {
+			label = " (earliest)"
+		}
+		if win.IsOngoing {
+			label = " (current)"
+		}
+		fmt.Fprintf(w, "Window %d%s:\n", index+1, label)
+	}
+
+	if win.EntryBefore.IsZero() {
+		fmt.Fprintf(w, "  Violation predates the archive (present in earliest snapshot)\n")
+		fmt.Fprintf(w, "  First observed: %s\n", win.EntryAfter.Format("2006-01-02T15:04:05Z"))
+	} else {
+		fmt.Fprintf(w, "  The change occurred between %s and %s.\n",
+			win.EntryBefore.Format("2006-01-02T15:04:05Z"),
+			win.EntryAfter.Format("2006-01-02T15:04:05Z"))
+	}
+
+	if win.IsOngoing {
+		fmt.Fprintf(w, "  Status: ongoing (not yet remediated)\n")
+	} else {
+		fmt.Fprintf(w, "  Remediated between %s and %s.\n",
+			win.ExitBefore.Format("2006-01-02T15:04:05Z"),
+			win.ExitAfter.Format("2006-01-02T15:04:05Z"))
+	}
+	fmt.Fprintln(w)
+}
+

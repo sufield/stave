@@ -34,24 +34,7 @@ func renderTrendTable(out io.Writer, r *trendReport) error {
 	fmt.Fprintf(w, "period: %s -> %s  |  Runs: %d\n\n",
 		r.Period.Start.Format("2006-01-02"), r.Period.End.Format("2006-01-02"), r.Period.RunCount)
 
-	// Violation rate over time.
-	fmt.Fprintln(w, "VIOLATION RATE OVER TIME")
-	fmt.Fprintln(w, sep)
-	for i := range r.Runs {
-		run := &r.Runs[i]
-		barWidth := 20
-		filled := 0
-		if run.ViolationRate > 0 {
-			filled = min(int(run.ViolationRate*float64(barWidth)), barWidth)
-			if filled == 0 && run.ViolationCount > 0 {
-				filled = 1
-			}
-		}
-		bar := strings.Repeat("#", filled) + strings.Repeat(".", barWidth-filled)
-		fmt.Fprintf(w, "  Run %-3d (%s)  %s  %d violations  (%.1f%%)\n",
-			i+1, run.CapturedAt.Format("2006-01-02"), bar, run.ViolationCount, run.ViolationRate*100)
-	}
-	fmt.Fprintf(w, "\nDirection: %s\n\n", strings.ToUpper(r.Summary.Direction))
+	renderViolationRate(w, sep, r.Runs, r.Summary.Direction)
 
 	// MTTR.
 	if r.HasMTTR() {
@@ -91,28 +74,8 @@ func renderTrendTable(out io.Writer, r *trendReport) error {
 	fmt.Fprintf(w, "  Net change: %.1f violations/run (last %d runs)\n", r.Velocity.AvgNetChange, r.Velocity.WindowRuns)
 	fmt.Fprintf(w, "  Direction:  %s\n\n", strings.ToUpper(r.Velocity.Direction))
 
-	// SLA compliance rate.
 	if r.HasSLATrend() {
-		fmt.Fprintf(w, "SLA COMPLIANCE RATE (last %d runs where SLA profile was active)\n", len(r.SLATrend))
-		fmt.Fprintln(w, sep)
-		for i := range r.SLATrend {
-			m := &r.SLATrend[i]
-			barWidth := 20
-			filled := min(int(m.CompliancePercent/100*float64(barWidth)), barWidth)
-			bar := strings.Repeat("#", filled) + strings.Repeat(".", barWidth-filled)
-			fmt.Fprintf(w, "  Run %-3d (%s)  %s  %.0f%%\n",
-				i+1, m.CapturedAt.Format("2006-01-02"), bar, m.CompliancePercent)
-		}
-		first := r.SLATrend[0].CompliancePercent
-		last := r.SLATrend[len(r.SLATrend)-1].CompliancePercent
-		netChange := last - first
-		direction := "STABLE"
-		if netChange > 1 {
-			direction = "IMPROVING"
-		} else if netChange < -1 {
-			direction = "REGRESSING"
-		}
-		fmt.Fprintf(w, "\nNet change: %+.0f%%  Direction: %s\n\n", netChange, direction)
+		renderSLATrend(w, sep, r.SLATrend)
 	}
 
 	// Projection.
@@ -128,35 +91,80 @@ func renderTrendTable(out io.Writer, r *trendReport) error {
 	// Per-team trends.
 	if r.HasTeamPostureTrends() {
 		fmt.Fprintln(w)
-		fmt.Fprintln(w, "PER-TEAM POSTURE TREND")
-		fmt.Fprintln(w, sep)
-		ts := r.TeamSummary
-		fmt.Fprintf(w, "  Teams tracked: %d  (improving: %d, stable: %d, regressing: %d)\n\n",
-			ts.TeamsTracked, ts.TeamsImproving, ts.TeamsStable, ts.TeamsRegressing)
-
-		fmt.Fprintf(w, "  %-16s %5s %6s  %-12s %7s %5s %4s %4s\n",
-			"Team", "Score", "Delta", "Trajectory", "MTTR", "SLA%", "Open", "Crit")
-		fmt.Fprintf(w, "  %-16s %5s %6s  %-12s %7s %5s %4s %4s\n",
-			strings.Repeat("-", 16), "-----", "------", strings.Repeat("-", 12),
-			"-------", "-----", "----", "----")
-		for i := range r.TeamTrends {
-			t := &r.TeamTrends[i]
-			arrow := t.Symbol()
-			name := t.Name
-			if name == "" {
-				name = string(t.ID)
-			}
-			if len(name) > 16 {
-				name = name[:16]
-			}
-			fmt.Fprintf(w, "  %-16s %5.1f %+6.1f  %-12s %6.1fh %4.0f%% %4d %4d",
-				name, t.PostureScore, t.ScoreDelta, t.Trajectory+" "+arrow, t.MTTRHours, t.SLACompPct, t.OpenFindings, t.CriticalOpen)
-			if t.Trajectory == trajectoryRegressing {
-				_, _ = fmt.Fprint(w, "  !!")
-			}
-			fmt.Fprintln(w)
-		}
+		renderTeamTrends(w, sep, r)
 	}
 
 	return w.err
+}
+
+func renderViolationRate(w io.Writer, sep string, runs []runMetrics, direction string) {
+	fmt.Fprintln(w, "VIOLATION RATE OVER TIME")
+	fmt.Fprintln(w, sep)
+	for i := range runs {
+		run := &runs[i]
+		barWidth := 20
+		filled := 0
+		if run.ViolationRate > 0 {
+			filled = min(int(run.ViolationRate*float64(barWidth)), barWidth)
+			if filled == 0 && run.ViolationCount > 0 {
+				filled = 1
+			}
+		}
+		bar := strings.Repeat("#", filled) + strings.Repeat(".", barWidth-filled)
+		fmt.Fprintf(w, "  Run %-3d (%s)  %s  %d violations  (%.1f%%)\n",
+			i+1, run.CapturedAt.Format("2006-01-02"), bar, run.ViolationCount, run.ViolationRate*100)
+	}
+	fmt.Fprintf(w, "\nDirection: %s\n\n", strings.ToUpper(direction))
+}
+
+func renderSLATrend(w io.Writer, sep string, trend []slaTrendMetric) {
+	fmt.Fprintf(w, "SLA COMPLIANCE RATE (last %d runs where SLA profile was active)\n", len(trend))
+	fmt.Fprintln(w, sep)
+	for i := range trend {
+		m := &trend[i]
+		barWidth := 20
+		filled := min(int(m.CompliancePercent/100*float64(barWidth)), barWidth)
+		bar := strings.Repeat("#", filled) + strings.Repeat(".", barWidth-filled)
+		fmt.Fprintf(w, "  Run %-3d (%s)  %s  %.0f%%\n",
+			i+1, m.CapturedAt.Format("2006-01-02"), bar, m.CompliancePercent)
+	}
+	netChange := trend[len(trend)-1].CompliancePercent - trend[0].CompliancePercent
+	direction := "STABLE"
+	if netChange > 1 {
+		direction = "IMPROVING"
+	} else if netChange < -1 {
+		direction = "REGRESSING"
+	}
+	fmt.Fprintf(w, "\nNet change: %+.0f%%  Direction: %s\n\n", netChange, direction)
+}
+
+func renderTeamTrends(w io.Writer, sep string, r *trendReport) {
+	fmt.Fprintln(w, "PER-TEAM POSTURE TREND")
+	fmt.Fprintln(w, sep)
+	ts := r.TeamSummary
+	fmt.Fprintf(w, "  Teams tracked: %d  (improving: %d, stable: %d, regressing: %d)\n\n",
+		ts.TeamsTracked, ts.TeamsImproving, ts.TeamsStable, ts.TeamsRegressing)
+
+	fmt.Fprintf(w, "  %-16s %5s %6s  %-12s %7s %5s %4s %4s\n",
+		"Team", "Score", "Delta", "Trajectory", "MTTR", "SLA%", "Open", "Crit")
+	fmt.Fprintf(w, "  %-16s %5s %6s  %-12s %7s %5s %4s %4s\n",
+		strings.Repeat("-", 16), "-----", "------", strings.Repeat("-", 12),
+		"-------", "-----", "----", "----")
+	for i := range r.TeamTrends {
+		t := &r.TeamTrends[i]
+		arrow := t.Symbol()
+		name := t.Name
+		if name == "" {
+			name = string(t.ID)
+		}
+		if len(name) > 16 {
+			name = name[:16]
+		}
+		fmt.Fprintf(w, "  %-16s %5.1f %+6.1f  %-12s %6.1fh %4.0f%% %4d %4d",
+			name, t.PostureScore, t.ScoreDelta, t.Trajectory+" "+arrow, t.MTTRHours, t.SLACompPct, t.OpenFindings, t.CriticalOpen)
+		if t.Trajectory == trajectoryRegressing {
+			_, _ = fmt.Fprint(w, "  !!")
+		}
+		fmt.Fprintln(w)
+	}
 }

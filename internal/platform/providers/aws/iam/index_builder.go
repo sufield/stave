@@ -49,12 +49,50 @@ func BuildResourceAccessIndexFromSnapshots(snaps []asset.Snapshot) *access.Resou
 		return nil
 	}
 
-	// S3 bucket ARNs (arn:aws:s3:::bucket-name) lack account IDs.
-	// Build per-snapshot account inference: when a snapshot contains
-	// exactly one account, use it for S3 resources in that snapshot.
-	// Per-snapshot inference (not merged) handles multi-account
-	// observation sets where each snapshot captures one account.
-	snapAccounts := make([]string, len(snaps))
+	snapAccounts := inferSnapAccounts(snaps)
+
+	idx := access.NewResourceAccessIndex()
+	found := false
+	for s := range snaps {
+		snap := &snaps[s]
+		for i := range snap.Assets {
+			if indexAssetResourcePolicies(idx, &snap.Assets[i], snapAccounts[s]) {
+				found = true
+			}
+		}
+	}
+	if !found {
+		return nil
+	}
+	return idx
+}
+
+func indexAssetResourcePolicies(idx *access.ResourceAccessIndex, a *asset.Asset, snapAccount string) bool {
+	accountID := ExtractAccountID(string(a.ID))
+	if accountID == "" && snapAccount != "" {
+		accountID = snapAccount
+	}
+	found := false
+	for _, path := range resourcePolicyPaths {
+		policyJSON := props.GetString(a.Properties, path)
+		if policyJSON == "" {
+			continue
+		}
+		found = true
+		if addErr := AddResourcePolicy(idx, string(a.ID), policyJSON, accountID); addErr != nil {
+			slog.Debug("aws/iam: skip resource policy annotation",
+				"asset", a.ID, "path", strings.Join(path, "."), "err", addErr)
+		}
+	}
+	return found
+}
+
+// inferSnapAccounts returns a per-snapshot account ID when a snapshot
+// contains exactly one account. S3 bucket ARNs lack account IDs;
+// per-snapshot inference fills the gap without merging across
+// multi-account observation sets.
+func inferSnapAccounts(snaps []asset.Snapshot) []string {
+	accounts := make([]string, len(snaps))
 	for s := range snaps {
 		snap := &snaps[s]
 		seen := make(map[string]struct{})
@@ -65,44 +103,9 @@ func BuildResourceAccessIndexFromSnapshots(snaps []asset.Snapshot) *access.Resou
 		}
 		if len(seen) == 1 {
 			for a := range seen {
-				snapAccounts[s] = a
+				accounts[s] = a
 			}
 		}
 	}
-
-	idx := access.NewResourceAccessIndex()
-	found := false
-	for s := range snaps {
-		snap := &snaps[s]
-		if len(snap.Assets) == 0 {
-			continue
-		}
-		for i := range snap.Assets {
-			a := &snap.Assets[i]
-			accountID := ExtractAccountID(string(a.ID))
-			if accountID == "" && snapAccounts[s] != "" {
-				accountID = snapAccounts[s]
-			}
-			for _, path := range resourcePolicyPaths {
-				policyJSON := props.GetString(a.Properties, path)
-				if policyJSON == "" {
-					continue
-				}
-				found = true
-				// AddResourcePolicy errors are non-fatal: malformed JSON
-				// skips that policy but the asset observation is valid.
-				// Log so operators can trace why an asset has no
-				// reachability data — silent skips have masked extractor
-				// bugs in the past.
-				if addErr := AddResourcePolicy(idx, string(a.ID), policyJSON, accountID); addErr != nil {
-					slog.Debug("aws/iam: skip resource policy annotation",
-						"asset", a.ID, "path", strings.Join(path, "."), "err", addErr)
-				}
-			}
-		}
-	}
-	if !found {
-		return nil
-	}
-	return idx
+	return accounts
 }

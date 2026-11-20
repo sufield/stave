@@ -186,23 +186,27 @@ func renderPrincipalTable(w io.Writer, result iam.ResolvedPermissions, cfg Princ
 	}
 
 	if cfg.ShowChains && result.HasRoleChains() {
-		fmt.Fprintf(w, "\nROLE CHAINS (%d found)\n", len(result.RoleChains))
-		fmt.Fprintln(w, strings.Repeat("-", 70))
-		for i, chain := range result.RoleChains {
-			var hops []string
-			for _, h := range chain.Hops {
-				suffix := ""
-				if h.IsCrossAccount {
-					suffix = " [cross-account]"
-				}
-				hops = append(hops, shortARN(h.ToARN)+suffix)
-			}
-			fmt.Fprintf(w, "Chain %d (depth %d): %s → %s\n",
-				i+1, len(chain.Hops),
-				shortARN(result.PrincipalARN),
-				strings.Join(hops, " → "))
-		}
+		renderRoleChains(w, result.PrincipalARN, result.RoleChains)
 	}
 
 	return nil
+}
+
+func renderRoleChains(w io.Writer, principalARN string, chains []iam.RoleChain) {
+	fmt.Fprintf(w, "\nROLE CHAINS (%d found)\n", len(chains))
+	fmt.Fprintln(w, strings.Repeat("-", 70))
+	for i, chain := range chains {
+		var hops []string
+		for _, h := range chain.Hops {
+			suffix := ""
+			if h.IsCrossAccount {
+				suffix = " [cross-account]"
+			}
+			hops = append(hops, shortARN(h.ToARN)+suffix)
+		}
+		fmt.Fprintf(w, "Chain %d (depth %d): %s → %s\n",
+			i+1, len(chain.Hops),
+			shortARN(principalARN),
+			strings.Join(hops, " → "))
+	}
 }

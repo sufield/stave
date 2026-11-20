@@ -127,72 +127,60 @@ func computeAssetStates(
 
 	for _, snap := range snapshots {
 		for _, a := range snap.Assets {
-			// Vendor applicability filter — a control scoped to
-			// one vendor must not produce risk signals against
-			// assets of another vendor.
-			if !kernel.AppliesToVendor(ctlTags, a.Vendor) {
-				continue
-			}
-
-			// Asset-type applicability filter — mirrors the gate
-			// in engine/lifecycles.go. Without this, controls
-			// with applicable_asset_types declarations produce
-			// risk signals on unrelated asset types.
-			if !ctl.AppliesToAssetType(a.Type) {
-				continue
-			}
-
-			// Asset-level exemptions: an exempted asset must not
-			// surface as a risk signal, mirroring the main
-			// finding pipeline's exemption check in
-			// engine/assessor.go.
-			if exemptions != nil && exemptions.ShouldExempt(a.ID) != nil {
-				continue
-			}
-
-			st, ok := states[a.ID]
-			if !ok {
-				st = &assetState{AssetType: a.Type}
-				states[a.ID] = st
-			}
-
-			// Record that we observed the asset in this snapshot
-			// regardless of whether the evaluator runs or returns an
-			// error. The main lifecycle's RecordInconclusive does the
-			// same — it advances lastObservedAt while preserving the
-			// exposure window — and the risk view must agree with the
-			// main view about which snapshots saw which assets.
-			if snap.CapturedAt.After(st.LastObservedAt) || st.LastObservedAt.IsZero() {
-				st.LastObservedAt = snap.CapturedAt
-			}
-
-			if eval == nil {
-				continue
-			}
-			result, evalErr := eval(ctl, a, snap.Identities)
-			if evalErr != nil {
-				// Inconclusive evaluation — freeze streak, do not reset.
-				// LastObservedAt above keeps the asset in the risk
-				// view so coverage does not diverge from the main
-				// lifecycle, which records inconclusives explicitly.
-				continue
-			}
-
-			if result {
-				if st.FirstUnsafeAt.IsZero() {
-					st.FirstUnsafeAt = snap.CapturedAt
-				}
-				st.LastSeenUnsafe = snap.CapturedAt
-				st.CurrentlyUnsafe = true
-			} else {
-				// Confirmed safe — reset streak.
-				st.FirstUnsafeAt = time.Time{}
-				st.LastSeenUnsafe = time.Time{}
-				st.CurrentlyUnsafe = false
-			}
+			updateAssetState(states, ctl, ctlTags, exemptions, eval, snap, a)
 		}
 	}
 	return states
+}
+
+func updateAssetState(
+	states map[asset.ID]*assetState,
+	ctl *policy.ControlDefinition,
+	ctlTags []kernel.ScopeTag,
+	exemptions *policy.ExemptionConfig,
+	eval policy.PredicateEval,
+	snap asset.Snapshot,
+	a asset.Asset,
+) {
+	if !kernel.AppliesToVendor(ctlTags, a.Vendor) {
+		return
+	}
+	if !ctl.AppliesToAssetType(a.Type) {
+		return
+	}
+	if exemptions != nil && exemptions.ShouldExempt(a.ID) != nil {
+		return
+	}
+
+	st, ok := states[a.ID]
+	if !ok {
+		st = &assetState{AssetType: a.Type}
+		states[a.ID] = st
+	}
+
+	if snap.CapturedAt.After(st.LastObservedAt) || st.LastObservedAt.IsZero() {
+		st.LastObservedAt = snap.CapturedAt
+	}
+
+	if eval == nil {
+		return
+	}
+	result, evalErr := eval(ctl, a, snap.Identities)
+	if evalErr != nil {
+		return
+	}
+
+	if result {
+		if st.FirstUnsafeAt.IsZero() {
+			st.FirstUnsafeAt = snap.CapturedAt
+		}
+		st.LastSeenUnsafe = snap.CapturedAt
+		st.CurrentlyUnsafe = true
+	} else {
+		st.FirstUnsafeAt = time.Time{}
+		st.LastSeenUnsafe = time.Time{}
+		st.CurrentlyUnsafe = false
+	}
 }
 
 func classifyStatus(evalTime, dueAt time.Time) findingsdata.ThresholdStatus {

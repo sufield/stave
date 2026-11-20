@@ -295,35 +295,11 @@ func hydrateGraphFromSIR(g *GraphExport, doc *sir.Document) {
 		}
 	}
 
-	// Transitive reachability: every IdentityFact's RoleChains is
-	// one path from the principal to a final role. Hops are
-	// already in source order; the path walker captures them
-	// verbatim plus the per-path metadata (cross-account,
-	// transitive-level, termination-reason).
 	for i := range doc.Identities {
 		id := &doc.Identities[i]
 		for j := range id.RoleChains {
-			ch := &id.RoleChains[j]
-			hops := make([]string, 0, len(ch.Hops))
-			hopTypes := make([]string, 0, len(ch.Hops))
-			anyCrossAccount := false
-			for k := range ch.Hops {
-				h := &ch.Hops[k]
-				hops = append(hops, h.To)
-				hopTypes = append(hopTypes, h.HopType)
-				if h.CrossAccount {
-					anyCrossAccount = true
-				}
-			}
-			g.TransitiveReachability = append(g.TransitiveReachability, ReachabilityPath{
-				FromPrincipal:     id.PrincipalID,
-				FinalRole:         ch.FinalRoleARN,
-				Hops:              hops,
-				HopTypes:          hopTypes,
-				CrossAccountHop:   anyCrossAccount,
-				TransitiveLevel:   ch.TransitiveLevel,
-				TerminationReason: ch.TerminationReason,
-			})
+			g.TransitiveReachability = append(g.TransitiveReachability,
+				buildReachabilityPath(id.PrincipalID, &id.RoleChains[j]))
 		}
 	}
 
@@ -333,6 +309,29 @@ func hydrateGraphFromSIR(g *GraphExport, doc *sir.Document) {
 			cmp.Compare(a.FinalRole, b.FinalRole),
 		)
 	})
+}
+
+func buildReachabilityPath(principalID string, ch *sir.RoleChainFact) ReachabilityPath {
+	hops := make([]string, 0, len(ch.Hops))
+	hopTypes := make([]string, 0, len(ch.Hops))
+	anyCrossAccount := false
+	for k := range ch.Hops {
+		h := &ch.Hops[k]
+		hops = append(hops, h.To)
+		hopTypes = append(hopTypes, h.HopType)
+		if h.CrossAccount {
+			anyCrossAccount = true
+		}
+	}
+	return ReachabilityPath{
+		FromPrincipal:     principalID,
+		FinalRole:         ch.FinalRoleARN,
+		Hops:              hops,
+		HopTypes:          hopTypes,
+		CrossAccountHop:   anyCrossAccount,
+		TransitiveLevel:   ch.TransitiveLevel,
+		TerminationReason: ch.TerminationReason,
+	}
 }
 
 // buildLifecycle materialises the per-finding lifecycle envelope

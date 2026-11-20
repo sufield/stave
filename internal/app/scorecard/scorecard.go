@@ -224,64 +224,7 @@ func Compute(findings []remediation.Finding, frameworks ComplianceFrameworks) *R
 	report := &Report{}
 
 	for _, fw := range frameworks {
-		var perControl remediation.FindingSet
-		bestFinding := make(map[kernel.ControlID]remediation.Finding)
-		for i := range findings {
-			f := &findings[i]
-			if !hasFrameworkCompliance(f, fw) {
-				continue
-			}
-			cid := f.ControlID
-			existing, ok := bestFinding[cid]
-			if !ok || f.ControlSeverity > existing.ControlSeverity {
-				bestFinding[cid] = *f
-			}
-		}
-		seen := make(map[kernel.ControlID]struct{})
-		for i := range findings {
-			f := &findings[i]
-			if !hasFrameworkCompliance(f, fw) {
-				continue
-			}
-			cid := f.ControlID
-			if _, ok := seen[cid]; ok {
-				continue
-			}
-			seen[cid] = struct{}{}
-			perControl = append(perControl, bestFinding[cid])
-		}
-		slices.SortFunc(perControl, func(a, b remediation.Finding) int {
-			if n := b.ControlSeverity.Compare(a.ControlSeverity); n != 0 {
-				return n
-			}
-			return cmp.Compare(string(a.ControlID), string(b.ControlID))
-		})
-		total := len(perControl)
-		failing := total
-		critical := perControl.CountCritical()
-		topFailing := perControl.Headline()
-
-		// Approximate total controls from findings (we only see failures).
-		// In practice, the caller would provide control catalog count.
-		passing := 0
-		if total > 0 {
-			passing = 0 // all observed controls are failing
-		}
-
-		readiness := ReadinessPercentage(100.0)
-		if total > 0 {
-			readiness = ReadinessPercentage(float64(passing) / float64(total) * 100)
-		}
-
-		report.Frameworks = append(report.Frameworks, FrameworkScore{
-			Framework:        fw,
-			ReadinessPct:     readiness,
-			ControlsTotal:    total,
-			ControlsPassing:  passing,
-			ControlsFailing:  failing,
-			CriticalFindings: critical,
-			NextAction:       topFailing,
-		})
+		report.Frameworks = append(report.Frameworks, scoreFramework(findings, fw))
 	}
 
 	// Sort by readiness ascending (worst first).
@@ -293,6 +236,55 @@ func Compute(findings []remediation.Finding, frameworks ComplianceFrameworks) *R
 	})
 
 	return report
+}
+
+func scoreFramework(findings []remediation.Finding, fw policy.ComplianceFramework) FrameworkScore {
+	bestFinding := make(map[kernel.ControlID]remediation.Finding)
+	for i := range findings {
+		f := &findings[i]
+		if !hasFrameworkCompliance(f, fw) {
+			continue
+		}
+		cid := f.ControlID
+		existing, ok := bestFinding[cid]
+		if !ok || f.ControlSeverity > existing.ControlSeverity {
+			bestFinding[cid] = *f
+		}
+	}
+	var perControl remediation.FindingSet
+	seen := make(map[kernel.ControlID]struct{})
+	for i := range findings {
+		f := &findings[i]
+		if !hasFrameworkCompliance(f, fw) {
+			continue
+		}
+		cid := f.ControlID
+		if _, ok := seen[cid]; ok {
+			continue
+		}
+		seen[cid] = struct{}{}
+		perControl = append(perControl, bestFinding[cid])
+	}
+	slices.SortFunc(perControl, func(a, b remediation.Finding) int {
+		if n := b.ControlSeverity.Compare(a.ControlSeverity); n != 0 {
+			return n
+		}
+		return cmp.Compare(string(a.ControlID), string(b.ControlID))
+	})
+	total := len(perControl)
+	readiness := ReadinessPercentage(100.0)
+	if total > 0 {
+		readiness = 0
+	}
+	return FrameworkScore{
+		Framework:        fw,
+		ReadinessPct:     readiness,
+		ControlsTotal:    total,
+		ControlsPassing:  0,
+		ControlsFailing:  total,
+		CriticalFindings: perControl.CountCritical(),
+		NextAction:       perControl.Headline(),
+	}
 }
 
 func hasFrameworkCompliance(f *remediation.Finding, target policy.ComplianceFramework) bool {

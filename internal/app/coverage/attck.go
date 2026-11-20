@@ -246,21 +246,11 @@ func Build(input BuildInput) *CoverageReport {
 		}
 
 		if hasOverlay && len(ctls) > 0 {
-			passing := 0
-			failing := 0
-			for _, cid := range ctls {
-				if _, ok := failingControls[cid]; ok {
-					failing++
-				} else {
-					passing++
-				}
-			}
+			passing, failing := countPosture(ctls, failingControls)
 			tc.PassingCount = &passing
 			tc.FailingCount = &failing
-			if len(ctls) > 0 {
-				pct := float64(passing) / float64(len(ctls)) * 100
-				tc.CoveragePercent = &pct
-			}
+			pct := float64(passing) / float64(len(ctls)) * 100
+			tc.CoveragePercent = &pct
 			totalPassing += passing
 			totalControls += len(ctls)
 		}
@@ -277,15 +267,7 @@ func Build(input BuildInput) *CoverageReport {
 			ControlCount: len(ctls),
 		}
 		if hasOverlay {
-			passing := 0
-			failing := 0
-			for _, cid := range ctls {
-				if _, ok := failingControls[cid]; ok {
-					failing++
-				} else {
-					passing++
-				}
-			}
+			passing, failing := countPosture(ctls, failingControls)
 			so.PassingCount = &passing
 			so.FailingCount = &failing
 		}
@@ -320,6 +302,17 @@ func Build(input BuildInput) *CoverageReport {
 }
 
 // NavigatorLayer produces an ATT&CK Navigator layer JSON.
+func countPosture(ctls []kernel.ControlID, failing map[kernel.ControlID]struct{}) (passing, failCount int) {
+	for _, cid := range ctls {
+		if _, ok := failing[cid]; ok {
+			failCount++
+		} else {
+			passing++
+		}
+	}
+	return
+}
+
 func NavigatorLayer(report *CoverageReport) map[string]any {
 	if report == nil {
 		return nil

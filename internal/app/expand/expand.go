@@ -118,34 +118,7 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 
 	have := make(map[string]struct{})
 	for _, f := range files {
-		data, readErr := fsutil.ReadFileLimited(filepath.Clean(f))
-		if readErr != nil {
-			continue
-		}
-
-		var snap struct {
-			Assets []struct {
-				Type string `json:"type"`
-			} `json:"assets"`
-			Snapshots []struct {
-				Assets []struct {
-					Type string `json:"type"`
-				} `json:"assets"`
-			} `json:"snapshots"`
-		}
-
-		if err := json.Unmarshal(data, &snap); err != nil {
-			continue
-		}
-
-		for _, a := range snap.Assets {
-			matchAssetServices(a.Type, services, have)
-		}
-		for _, s := range snap.Snapshots {
-			for _, a := range s.Assets {
-				matchAssetServices(a.Type, services, have)
-			}
-		}
+		scanSnapshotFile(f, services, have)
 	}
 
 	out := &SnapshotStatus{}
@@ -157,6 +130,34 @@ func ScanSnapshots(dir string, services []string) *SnapshotStatus {
 		}
 	}
 	return out
+}
+
+func scanSnapshotFile(path string, services []string, have map[string]struct{}) {
+	data, readErr := fsutil.ReadFileLimited(filepath.Clean(path))
+	if readErr != nil {
+		return
+	}
+	var snap struct {
+		Assets []struct {
+			Type string `json:"type"`
+		} `json:"assets"`
+		Snapshots []struct {
+			Assets []struct {
+				Type string `json:"type"`
+			} `json:"assets"`
+		} `json:"snapshots"`
+	}
+	if err := json.Unmarshal(data, &snap); err != nil {
+		return
+	}
+	for _, a := range snap.Assets {
+		matchAssetServices(a.Type, services, have)
+	}
+	for _, s := range snap.Snapshots {
+		for _, a := range s.Assets {
+			matchAssetServices(a.Type, services, have)
+		}
+	}
 }
 
 func matchAssetServices(assetType string, services []string, have map[string]struct{}) {

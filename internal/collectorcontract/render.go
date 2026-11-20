@@ -32,55 +32,7 @@ func WriteText(w io.Writer, r *Report, fixHints bool) error {
 	fmt.Fprintf(w, "  Coverage:      %d%%\n", r.CoveragePercent())
 
 	if fixHints && len(r.Violations) > 0 {
-		type fieldGroup struct {
-			field     string
-			status    Status
-			count     int
-			hint      string
-			consumers []string
-		}
-		groups := make(map[string]*fieldGroup)
-		var order []string
-		for _, v := range r.Violations {
-			key := v.Field + ":" + fmt.Sprint(v.Status)
-			if g, ok := groups[key]; ok {
-				g.count++
-			} else {
-				groups[key] = &fieldGroup{
-					field:     v.Field,
-					status:    v.Status,
-					count:     1,
-					hint:      v.FixHint,
-					consumers: v.Consumers,
-				}
-				order = append(order, key)
-			}
-		}
-
-		fmt.Fprintf(w, "\nTop issues (--fix-hints):\n")
-		for _, key := range order {
-			g := groups[key]
-			statusLabel := "unknown"
-			switch g.status {
-			case StatusMissing:
-				statusLabel = "missing"
-			case StatusWrongType:
-				statusLabel = "wrong type"
-			case StatusNull:
-				statusLabel = "null (not_evaluated)"
-			}
-			fmt.Fprintf(w, "  %s — %s on %d observation%s\n", g.field, statusLabel, g.count, plural(g.count))
-			if len(g.consumers) > 0 {
-				fmt.Fprintf(w, "    Affects: %s\n", joinMax(g.consumers, 3))
-			}
-			if g.hint != "" {
-				hint := g.hint
-				if len(hint) > 120 {
-					hint = hint[:117] + "..."
-				}
-				fmt.Fprintf(w, "    Hint: %s\n", hint)
-			}
-		}
+		writeFixHints(w, r.Violations)
 	}
 
 	if r.HasViolations() {
@@ -93,6 +45,58 @@ func WriteText(w io.Writer, r *Report, fixHints bool) error {
 		fmt.Fprintf(w, "\nResult: collector contract clean\n")
 	}
 	return nil
+}
+
+func writeFixHints(w io.Writer, violations []FieldResult) {
+	type fieldGroup struct {
+		field     string
+		status    Status
+		count     int
+		hint      string
+		consumers []string
+	}
+	groups := make(map[string]*fieldGroup)
+	var order []string
+	for _, v := range violations {
+		key := v.Field + ":" + fmt.Sprint(v.Status)
+		if g, ok := groups[key]; ok {
+			g.count++
+		} else {
+			groups[key] = &fieldGroup{
+				field:     v.Field,
+				status:    v.Status,
+				count:     1,
+				hint:      v.FixHint,
+				consumers: v.Consumers,
+			}
+			order = append(order, key)
+		}
+	}
+
+	fmt.Fprintf(w, "\nTop issues (--fix-hints):\n")
+	for _, key := range order {
+		g := groups[key]
+		statusLabel := "unknown"
+		switch g.status {
+		case StatusMissing:
+			statusLabel = "missing"
+		case StatusWrongType:
+			statusLabel = "wrong type"
+		case StatusNull:
+			statusLabel = "null (not_evaluated)"
+		}
+		fmt.Fprintf(w, "  %s — %s on %d observation%s\n", g.field, statusLabel, g.count, plural(g.count))
+		if len(g.consumers) > 0 {
+			fmt.Fprintf(w, "    Affects: %s\n", joinMax(g.consumers, 3))
+		}
+		if g.hint != "" {
+			hint := g.hint
+			if len(hint) > 120 {
+				hint = hint[:117] + "..."
+			}
+			fmt.Fprintf(w, "    Hint: %s\n", hint)
+		}
+	}
 }
 
 // WriteJSON renders the contract check as JSON.

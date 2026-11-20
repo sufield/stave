@@ -85,57 +85,23 @@ type GapImpactSummary struct {
 // metadata. Removed: the per-assessment EvidencePackage is already
 // reachable via assessments[i] when (if ever) the enrichment is
 // implemented.
+type gapKey struct {
+	controlID   kernel.ControlID
+	resourceARN string
+}
+
+type gapEntry struct {
+	controlID   kernel.ControlID
+	controlName string
+	resourceARN string
+	severity    string
+	findingID   string
+	remediation string
+	violations  []FrameworkViolation
+}
+
 func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
-	type gapKey struct {
-		controlID   kernel.ControlID
-		resourceARN string
-	}
-	type gapEntry struct {
-		controlID   kernel.ControlID
-		controlName string
-		resourceARN string
-		severity    string
-		findingID   string
-		remediation string
-		violations  []FrameworkViolation
-	}
-
-	gaps := make(map[gapKey]*gapEntry)
-
-	// Collect all failing (control, resource) pairs across frameworks.
-	for _, assessment := range assessments {
-		for ri := range assessment.Requirements {
-			req := &assessment.Requirements[ri]
-			if !req.IsActionable() {
-				continue
-			}
-			for _, rec := range req.Evidence {
-				if !rec.IsFail() {
-					continue
-				}
-				key := gapKey{controlID: rec.ControlID, resourceARN: rec.ResourceARN}
-				entry, ok := gaps[key]
-				if !ok {
-					entry = &gapEntry{
-						controlID:   rec.ControlID,
-						controlName: rec.ControlName,
-						resourceARN: rec.ResourceARN,
-						severity:    rec.Severity,
-						findingID:   findingIDFromRecord(rec),
-					}
-					if rec.ReasoningTrace.FindingMessage != "" {
-						entry.remediation = rec.ReasoningTrace.FindingMessage
-					}
-					gaps[key] = entry
-				}
-				entry.violations = append(entry.violations, FrameworkViolation{
-					Framework:       assessment.FrameworkID,
-					RequirementID:   req.RequirementID,
-					RequirementDesc: req.Description,
-				})
-			}
-		}
-	}
+	gaps := collectGapEntries(assessments)
 
 	// Partition into shared and unique.
 	var shared []SharedGap
@@ -226,6 +192,48 @@ func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 		SharedGaps:          shared,
 		UniqueGaps:          unique,
 		TopNSharedGapImpact: topN,
+	}
+}
+
+func collectGapEntries(assessments []*ProfileAssessment) map[gapKey]*gapEntry {
+	gaps := make(map[gapKey]*gapEntry)
+	for _, assessment := range assessments {
+		for ri := range assessment.Requirements {
+			req := &assessment.Requirements[ri]
+			if !req.IsActionable() {
+				continue
+			}
+			collectRequirementGaps(assessment.FrameworkID, req, gaps)
+		}
+	}
+	return gaps
+}
+
+func collectRequirementGaps(frameworkID string, req *RequirementAssessment, gaps map[gapKey]*gapEntry) {
+	for _, rec := range req.Evidence {
+		if !rec.IsFail() {
+			continue
+		}
+		key := gapKey{controlID: rec.ControlID, resourceARN: rec.ResourceARN}
+		entry, ok := gaps[key]
+		if !ok {
+			entry = &gapEntry{
+				controlID:   rec.ControlID,
+				controlName: rec.ControlName,
+				resourceARN: rec.ResourceARN,
+				severity:    rec.Severity,
+				findingID:   findingIDFromRecord(rec),
+			}
+			if rec.ReasoningTrace.FindingMessage != "" {
+				entry.remediation = rec.ReasoningTrace.FindingMessage
+			}
+			gaps[key] = entry
+		}
+		entry.violations = append(entry.violations, FrameworkViolation{
+			Framework:       frameworkID,
+			RequirementID:   req.RequirementID,
+			RequirementDesc: req.Description,
+		})
 	}
 }
 

@@ -89,32 +89,7 @@ func renderCompositeTable(w io.Writer, export CompositeEvidenceExport) {
 	}
 
 	if export.Composite.HasSharedGaps() {
-		fmt.Fprintln(w, "\nSHARED GAPS — Fix these first (highest cross-framework ROI)")
-		fmt.Fprintln(w, strings.Repeat("-", 70))
-		limit := min(len(export.Composite.SharedGaps), 10)
-		for i := range limit {
-			g := &export.Composite.SharedGaps[i]
-			fwNames := make([]string, len(g.ViolatedFrameworks))
-			for j, v := range g.ViolatedFrameworks {
-				fwNames[j] = v.Framework
-			}
-			fmt.Fprintf(w, "  %d. %s  [%s]  closes %d obligations  (%s)\n",
-				i+1, g.ControlID, strings.ToUpper(g.Severity),
-				g.ObligationsClosed, strings.Join(fwNames, ", "))
-			if g.ResourceARN != "" {
-				fmt.Fprintf(w, "     %s\n", g.ResourceARN)
-			}
-			if g.RemediationAction != "" {
-				action := g.RemediationAction
-				if len(action) > 70 {
-					action = action[:67] + "..."
-				}
-				fmt.Fprintf(w, "     Fix: %s\n", action)
-			}
-			for _, v := range g.ViolatedFrameworks {
-				fmt.Fprintf(w, "     Satisfies: %s %s\n", v.Framework, v.RequirementID)
-			}
-		}
+		renderSharedGaps(w, export.Composite.SharedGaps)
 	}
 
 	if export.Composite.HasTopNImpact() {
@@ -146,4 +121,33 @@ func renderCompositeTable(w io.Writer, export CompositeEvidenceExport) {
 
 	fmt.Fprintf(w, "\nUnique gaps: %d  Shared gaps: %d\n",
 		export.Composite.UniqueGapCount, len(export.Composite.SharedGaps))
+}
+
+func renderSharedGaps(w io.Writer, gaps []evidence.SharedGap) {
+	fmt.Fprintln(w, "\nSHARED GAPS — Fix these first (highest cross-framework ROI)")
+	fmt.Fprintln(w, strings.Repeat("-", 70))
+	limit := min(len(gaps), 10)
+	for i := range limit {
+		g := &gaps[i]
+		fwNames := make([]string, len(g.ViolatedFrameworks))
+		for j, v := range g.ViolatedFrameworks {
+			fwNames[j] = v.Framework
+		}
+		fmt.Fprintf(w, "  %d. %s  [%s]  closes %d obligations  (%s)\n",
+			i+1, g.ControlID, strings.ToUpper(g.Severity),
+			g.ObligationsClosed, strings.Join(fwNames, ", "))
+		if g.ResourceARN != "" {
+			fmt.Fprintf(w, "     %s\n", g.ResourceARN)
+		}
+		if g.RemediationAction != "" {
+			action := g.RemediationAction
+			if len(action) > 70 {
+				action = action[:67] + "..."
+			}
+			fmt.Fprintf(w, "     Fix: %s\n", action)
+		}
+		for _, v := range g.ViolatedFrameworks {
+			fmt.Fprintf(w, "     Satisfies: %s %s\n", v.Framework, v.RequirementID)
+		}
+	}
 }

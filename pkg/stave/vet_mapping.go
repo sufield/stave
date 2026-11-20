@@ -179,63 +179,49 @@ func mappingStructuralFindings(m mappingDoc) []mappingFinding {
 		"field": {}, "static": {}, "extract": {}, "computed": {},
 	}
 	for i := range m.Operations {
-		op := &m.Operations[i]
-		opLabel := fmt.Sprintf("operations[%d]", i)
-		if op.Kind == "" {
-			out = append(out, mappingFinding{Severity: "error", Path: opLabel, Message: "missing kind"})
-			continue
+		out = validateOperation(&m.Operations[i], fmt.Sprintf("operations[%d]", i), knownKinds, out)
+	}
+	return out
+}
+
+func validateOperation(op *mappingOperation, opLabel string, knownKinds map[string]struct{}, out []mappingFinding) []mappingFinding {
+	if op.Kind == "" {
+		return append(out, mappingFinding{Severity: "error", Path: opLabel, Message: "missing kind"})
+	}
+	if _, ok := knownKinds[op.Kind]; !ok {
+		return append(out, mappingFinding{
+			Severity: "error", Path: opLabel,
+			Message: fmt.Sprintf("unknown kind %q (want field | static | extract | computed)", op.Kind),
+		})
+	}
+	if op.Path == "" {
+		out = append(out, mappingFinding{Severity: "error", Path: opLabel, Message: "missing path"})
+	}
+	switch op.Kind {
+	case "field":
+		if op.Column == "" {
+			out = append(out, mappingFinding{Severity: "error", Path: opLabel, Message: "field operation requires column"})
 		}
-		if _, ok := knownKinds[op.Kind]; !ok {
+	case "static":
+		if op.Value == nil {
+			out = append(out, mappingFinding{Severity: "error", Path: opLabel, Message: "static operation requires value"})
+		}
+	case "extract":
+		if op.Column == "" {
+			out = append(out, mappingFinding{Severity: "error", Path: opLabel, Message: "extract operation requires column"})
+		}
+		if op.JSONPath == "" {
+			out = append(out, mappingFinding{Severity: "error", Path: opLabel, Message: "extract operation requires json_path"})
+		}
+	case "computed":
+		if op.Op != "any" && op.Op != "all" {
 			out = append(out, mappingFinding{
 				Severity: "error", Path: opLabel,
-				Message: fmt.Sprintf("unknown kind %q (want field | static | extract | computed)", op.Kind),
+				Message: fmt.Sprintf("computed operation requires op: any | all (got %q)", op.Op),
 			})
-			continue
 		}
-		if op.Path == "" {
-			out = append(out, mappingFinding{Severity: "error", Path: opLabel, Message: "missing path"})
-		}
-		switch op.Kind {
-		case "field":
-			if op.Column == "" {
-				out = append(out, mappingFinding{
-					Severity: "error", Path: opLabel,
-					Message: "field operation requires column",
-				})
-			}
-		case "static":
-			if op.Value == nil {
-				out = append(out, mappingFinding{
-					Severity: "error", Path: opLabel,
-					Message: "static operation requires value",
-				})
-			}
-		case "extract":
-			if op.Column == "" {
-				out = append(out, mappingFinding{
-					Severity: "error", Path: opLabel,
-					Message: "extract operation requires column",
-				})
-			}
-			if op.JSONPath == "" {
-				out = append(out, mappingFinding{
-					Severity: "error", Path: opLabel,
-					Message: "extract operation requires json_path",
-				})
-			}
-		case "computed":
-			if op.Op != "any" && op.Op != "all" {
-				out = append(out, mappingFinding{
-					Severity: "error", Path: opLabel,
-					Message: fmt.Sprintf("computed operation requires op: any | all (got %q)", op.Op),
-				})
-			}
-			if len(op.Inputs) == 0 {
-				out = append(out, mappingFinding{
-					Severity: "error", Path: opLabel,
-					Message: "computed operation requires non-empty inputs",
-				})
-			}
+		if len(op.Inputs) == 0 {
+			out = append(out, mappingFinding{Severity: "error", Path: opLabel, Message: "computed operation requires non-empty inputs"})
 		}
 	}
 	return out

@@ -183,53 +183,11 @@ func Build(input BuildInput) *Graph {
 		activeChains[f.ChainID] = struct{}{}
 	}
 
-	// Collect capabilities referenced by active annotated chains.
 	capSet := make(map[CapabilityID]struct{})
-	var nodes []ChainNode
+	nodes := make([]ChainNode, 0, len(input.Chains))
 	for i := range input.Chains {
-		ch := &input.Chains[i]
-		status := NodeStatusInactive
-		if _, ok := activeChains[ch.ID]; ok {
-			status = NodeStatusActive
-		}
-
-		var members []MemberControl
-		for _, cid := range ch.ControlIDs {
-			mc := MemberControl{ControlID: cid}
-			if ctl, ok := input.ControlLookup[string(cid)]; ok && ctl != nil && ctl.Remediation != nil {
-				mc.Remediation = ctl.Remediation.Action
-			}
-			members = append(members, mc)
-		}
-
-		pre := make([]CapabilityID, len(ch.Preconditions))
-		for j, p := range ch.Preconditions {
-			pre[j] = CapabilityID(p)
-		}
-		post := make([]CapabilityID, len(ch.Postconditions))
-		for j, p := range ch.Postconditions {
-			post[j] = CapabilityID(p)
-		}
-
-		node := ChainNode{
-			ChainID:        ch.ID,
-			Name:           strings.ReplaceAll(string(ch.ID), "_", " "),
-			Severity:       ch.CompoundSeverity,
-			Status:         status,
-			Preconditions:  pre,
-			Postconditions: post,
-			MemberControls: members,
-		}
+		node := buildChainNode(&input.Chains[i], activeChains, input.ControlLookup, capSet)
 		nodes = append(nodes, node)
-
-		if status.IsActive() {
-			for _, c := range ch.Preconditions {
-				capSet[CapabilityID(c)] = struct{}{}
-			}
-			for _, c := range ch.Postconditions {
-				capSet[CapabilityID(c)] = struct{}{}
-			}
-		}
 	}
 
 	// Annotate nodes with matching offensive tools.
@@ -258,6 +216,50 @@ func Build(input BuildInput) *Graph {
 		ChainNodes:   nodes,
 		Edges:        edges,
 		Assets:       []AssetRef{}, // populated by caller if snapshot data available
+	}
+}
+
+func buildChainNode(ch *policy.ChainDefinition, activeChains map[kernel.ChainID]struct{}, controlLookup map[string]*policy.ControlDefinition, capSet map[CapabilityID]struct{}) ChainNode {
+	status := NodeStatusInactive
+	if _, ok := activeChains[ch.ID]; ok {
+		status = NodeStatusActive
+	}
+
+	var members []MemberControl
+	for _, cid := range ch.ControlIDs {
+		mc := MemberControl{ControlID: cid}
+		if ctl, ok := controlLookup[string(cid)]; ok && ctl != nil && ctl.Remediation != nil {
+			mc.Remediation = ctl.Remediation.Action
+		}
+		members = append(members, mc)
+	}
+
+	pre := make([]CapabilityID, len(ch.Preconditions))
+	for j, p := range ch.Preconditions {
+		pre[j] = CapabilityID(p)
+	}
+	post := make([]CapabilityID, len(ch.Postconditions))
+	for j, p := range ch.Postconditions {
+		post[j] = CapabilityID(p)
+	}
+
+	if status.IsActive() {
+		for _, c := range ch.Preconditions {
+			capSet[CapabilityID(c)] = struct{}{}
+		}
+		for _, c := range ch.Postconditions {
+			capSet[CapabilityID(c)] = struct{}{}
+		}
+	}
+
+	return ChainNode{
+		ChainID:        ch.ID,
+		Name:           strings.ReplaceAll(string(ch.ID), "_", " "),
+		Severity:       ch.CompoundSeverity,
+		Status:         status,
+		Preconditions:  pre,
+		Postconditions: post,
+		MemberControls: members,
 	}
 }
 

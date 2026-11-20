@@ -31,35 +31,11 @@ func WriteTable(w io.Writer, r *Report) {
 	fmt.Fprintln(w)
 
 	if len(r.SilentRisk) > 0 {
-		fmt.Fprintln(w, "SILENT RISK — controls that may produce false PASS verdicts")
-		fmt.Fprintln(w, strings.Repeat("-", 72))
-		fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n", "Control", "Missing Field", "Severity", "Frameworks")
-		fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n",
-			strings.Repeat("-", 28), strings.Repeat("-", 28), strings.Repeat("-", 8), strings.Repeat("-", 10))
-		for i := range r.SilentRisk {
-			cr := &r.SilentRisk[i]
-			for _, f := range cr.MissingFields {
-				fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n",
-					cr.ControlID, f, strings.ToUpper(cr.Severity.String()), strings.Join(shortFrameworks(cr.Frameworks), " "))
-			}
-		}
-		fmt.Fprintln(w)
+		writeControlGapTable(w, "SILENT RISK — controls that may produce false PASS verdicts", r.SilentRisk)
 	}
 
 	if len(r.IncompleteResults) > 0 {
-		fmt.Fprintln(w, "INCOMPLETE — controls that will fire INCOMPLETE verdicts")
-		fmt.Fprintln(w, strings.Repeat("-", 72))
-		fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n", "Control", "Missing Field", "Severity", "Frameworks")
-		fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n",
-			strings.Repeat("-", 28), strings.Repeat("-", 28), strings.Repeat("-", 8), strings.Repeat("-", 10))
-		for i := range r.IncompleteResults {
-			cr := &r.IncompleteResults[i]
-			for _, f := range cr.MissingFields {
-				fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n",
-					cr.ControlID, f, strings.ToUpper(cr.Severity.String()), strings.Join(shortFrameworks(cr.Frameworks), " "))
-			}
-		}
-		fmt.Fprintln(w)
+		writeControlGapTable(w, "INCOMPLETE — controls that will fire INCOMPLETE verdicts", r.IncompleteResults)
 	}
 
 	if len(r.ShoppingList) > 0 {
@@ -105,6 +81,22 @@ func WriteTable(w io.Writer, r *Report) {
 				fc.Incomplete, fc.SilentRisk, fc.CoveragePct)
 		}
 	}
+}
+
+func writeControlGapTable(w io.Writer, heading string, results []ControlResult) {
+	fmt.Fprintln(w, heading)
+	fmt.Fprintln(w, strings.Repeat("-", 72))
+	fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n", "Control", "Missing Field", "Severity", "Frameworks")
+	fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n",
+		strings.Repeat("-", 28), strings.Repeat("-", 28), strings.Repeat("-", 8), strings.Repeat("-", 10))
+	for i := range results {
+		cr := &results[i]
+		for _, f := range cr.MissingFields {
+			fmt.Fprintf(w, "  %-30s %-30s %-8s %s\n",
+				cr.ControlID, f, strings.ToUpper(cr.Severity.String()), strings.Join(shortFrameworks(cr.Frameworks), " "))
+		}
+	}
+	fmt.Fprintln(w)
 }
 
 func pct(n, total int) float64 {

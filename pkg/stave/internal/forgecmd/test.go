@@ -74,30 +74,11 @@ func Test(controlPath, passFixture, failFixture, snapshotPath string, verbose bo
 	}
 
 	if snapshotPath != "" {
-		snaps, loadErr := observations.LoadBundle(snapshotPath)
+		p, loadErr := testSnapshot(&buf, &ctl, celEval, snapshotPath, verbose)
 		if loadErr != nil {
-			return nil, fmt.Errorf("load snapshot: %w", loadErr)
+			return nil, loadErr
 		}
-		if len(snaps) > 0 {
-			snap := snaps[len(snaps)-1]
-			matchCount := 0
-			for i := range snap.Assets {
-				unsafe, evalErr := celEval(&ctl, snap.Assets[i], nil)
-				if evalErr != nil {
-					continue
-				}
-				matchCount++
-				verdict := "pass"
-				if unsafe {
-					verdict = "fail"
-				}
-				if verbose {
-					fmt.Fprintf(&buf, "  %s -- snapshot: %s  %s\n", ctl.ID, verdict, snap.Assets[i].ID)
-				}
-			}
-			fmt.Fprintf(&buf, "  %s -- snapshot: evaluated %d assets\n", ctl.ID, matchCount)
-			passed++
-		}
+		passed += p
 	}
 
 	elapsed := time.Since(start)
@@ -108,6 +89,34 @@ func Test(controlPath, passFixture, failFixture, snapshotPath string, verbose bo
 		return buf.Bytes(), fmt.Errorf("%d assertion(s) failed", failed)
 	}
 	return buf.Bytes(), nil
+}
+
+func testSnapshot(buf *bytes.Buffer, ctl *policy.ControlDefinition, celEval policy.PredicateEval, snapshotPath string, verbose bool) (int, error) {
+	snaps, loadErr := observations.LoadBundle(snapshotPath)
+	if loadErr != nil {
+		return 0, fmt.Errorf("load snapshot: %w", loadErr)
+	}
+	if len(snaps) == 0 {
+		return 0, nil
+	}
+	snap := snaps[len(snaps)-1]
+	matchCount := 0
+	for i := range snap.Assets {
+		unsafe, evalErr := celEval(ctl, snap.Assets[i], nil)
+		if evalErr != nil {
+			continue
+		}
+		matchCount++
+		if verbose {
+			verdict := "pass"
+			if unsafe {
+				verdict = "fail"
+			}
+			fmt.Fprintf(buf, "  %s -- snapshot: %s  %s\n", ctl.ID, verdict, snap.Assets[i].ID)
+		}
+	}
+	fmt.Fprintf(buf, "  %s -- snapshot: evaluated %d assets\n", ctl.ID, matchCount)
+	return 1, nil
 }
 
 func testFixture(

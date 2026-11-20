@@ -57,67 +57,12 @@ func computeTeamTrends(
 	var trends []teamTrend
 	for i := range manifest.Teams {
 		t := &manifest.Teams[i]
-		findings := teamFindings[t.ID]
-
 		if teamFilter != "" && string(t.ID) != teamFilter {
 			continue
 		}
-
-		// Posture score: simple (1 - violation_rate) * 100.
-		totalResources := max(len(findings), 1)
-		score := (1.0 - float64(len(findings))/float64(totalResources)) * 100
-		if len(findings) == 0 {
-			score = 100.0
+		if tt, ok := computeOneTeamTrend(t, teamFindings[t.ID], earlierScores, regressionOnly); ok {
+			trends = append(trends, tt)
 		}
-
-		// Delta and trajectory.
-		var delta float64
-		if es, ok := earlierScores[t.ID]; ok {
-			delta = score - es
-		} else if len(findings) == 0 && earlierScores != nil {
-			delta = 0 // no findings then or now
-		}
-		var stage teamTrend
-		stage.ClassifyTrajectory(delta, trajectoryThreshold)
-
-		// totalDwell stays inline because it isn't part of the
-		// SLASummaryStats shape; the rest of the team-side SLA
-		// aggregation comes from FindingSet.SLASummary in one pass.
-		stats := remediation.FindingSet(findings).SLASummary()
-		critical := stats.Critical
-		slaTotal := stats.SLATotal
-		slaWithin := stats.SLAWithinTarget
-		var totalDwell float64
-		for j := range findings {
-			totalDwell += findings[j].DwellHours()
-		}
-
-		mttr := 0.0
-		if len(findings) > 0 {
-			mttr = totalDwell / float64(len(findings))
-		}
-
-		slaPct := 100.0
-		if slaTotal > 0 {
-			slaPct = float64(slaWithin) / float64(slaTotal) * 100
-		}
-
-		if regressionOnly && !stage.IsRegressing() {
-			continue
-		}
-
-		trends = append(trends, teamTrend{
-			ID:           t.ID,
-			Name:         t.DisplayName,
-			Contact:      t.Contact,
-			PostureScore: score,
-			ScoreDelta:   delta,
-			Trajectory:   stage.Trajectory,
-			MTTRHours:    mttr,
-			SLACompPct:   slaPct,
-			OpenFindings: len(findings),
-			CriticalOpen: critical,
-		})
 	}
 
 	// Also include "unassigned" if there are unassigned findings.
@@ -148,6 +93,56 @@ func computeTeamTrends(
 	}
 
 	return trends, summary
+}
+
+func computeOneTeamTrend(t *teams.Team, findings []remediation.Finding, earlierScores map[teams.TeamID]float64, regressionOnly bool) (teamTrend, bool) {
+	totalResources := max(len(findings), 1)
+	score := (1.0 - float64(len(findings))/float64(totalResources)) * 100
+	if len(findings) == 0 {
+		score = 100.0
+	}
+
+	var delta float64
+	if es, ok := earlierScores[t.ID]; ok {
+		delta = score - es
+	} else if len(findings) == 0 && earlierScores != nil {
+		delta = 0
+	}
+	var stage teamTrend
+	stage.ClassifyTrajectory(delta, trajectoryThreshold)
+
+	if regressionOnly && !stage.IsRegressing() {
+		return teamTrend{}, false
+	}
+
+	stats := remediation.FindingSet(findings).SLASummary()
+	var totalDwell float64
+	for j := range findings {
+		totalDwell += findings[j].DwellHours()
+	}
+
+	mttr := 0.0
+	if len(findings) > 0 {
+		mttr = totalDwell / float64(len(findings))
+	}
+
+	slaPct := 100.0
+	if stats.SLATotal > 0 {
+		slaPct = float64(stats.SLAWithinTarget) / float64(stats.SLATotal) * 100
+	}
+
+	return teamTrend{
+		ID:           t.ID,
+		Name:         t.DisplayName,
+		Contact:      t.Contact,
+		PostureScore: score,
+		ScoreDelta:   delta,
+		Trajectory:   stage.Trajectory,
+		MTTRHours:    mttr,
+		SLACompPct:   slaPct,
+		OpenFindings: len(findings),
+		CriticalOpen: stats.Critical,
+	}, true
 }
 
 func baselineScores(earliest *report.Assessment, manifest *teams.Manifest) map[teams.TeamID]float64 {
@@ -239,45 +234,51 @@ func renderExecutiveSummary(w io.Writer, r *trendReport) error { //nolint:unpara
 		fmt.Fprintf(w, " %d of %d teams are improving, %d are stable, %d require attention.\n",
 			ts.TeamsImproving, ts.TeamsTracked, ts.TeamsStable, ts.TeamsRegressing)
 
-		// Attention required: regressing teams.
-		for i := range r.TeamTrends {
-			t := &r.TeamTrends[i]
-			if t.Trajectory != trajectoryRegressing {
-				continue
-			}
-			name := t.Name
-			if name == "" {
-				name = string(t.ID)
-			}
-			fmt.Fprintf(w, "\nATTENTION REQUIRED: %s (score %.1f, %+.1f). %d critical findings open.",
-				name, t.PostureScore, t.ScoreDelta, t.CriticalOpen)
-			if t.Contact != "" {
-				fmt.Fprintf(w, " Contact: %s.", t.Contact)
-			}
-			fmt.Fprintln(w)
-		}
-
-		// Top performer: best improving team.
-		var best *teamTrend
-		for i := range r.TeamTrends {
-			t := &r.TeamTrends[i]
-			if t.Trajectory == trajectoryImproving {
-				if best == nil || t.ScoreDelta > best.ScoreDelta {
-					best = t
-				}
-			}
-		}
-		if best != nil {
-			name := best.Name
-			if name == "" {
-				name = string(best.ID)
-			}
-			fmt.Fprintf(w, "\nTop performer: %s (score %.1f, %+.1f, MTTR %.1fh, %.0f%% SLA compliance).\n",
-				name, best.PostureScore, best.ScoreDelta, best.MTTRHours, best.SLACompPct)
-		}
+		writeRegressingAlerts(w, r.TeamTrends)
+		writeTopPerformer(w, r.TeamTrends)
 	} else {
 		fmt.Fprintln(w)
 	}
 
 	return nil
+}
+
+func writeRegressingAlerts(w io.Writer, trends []teamTrend) {
+	for i := range trends {
+		t := &trends[i]
+		if t.Trajectory != trajectoryRegressing {
+			continue
+		}
+		name := t.Name
+		if name == "" {
+			name = string(t.ID)
+		}
+		fmt.Fprintf(w, "\nATTENTION REQUIRED: %s (score %.1f, %+.1f). %d critical findings open.",
+			name, t.PostureScore, t.ScoreDelta, t.CriticalOpen)
+		if t.Contact != "" {
+			fmt.Fprintf(w, " Contact: %s.", t.Contact)
+		}
+		fmt.Fprintln(w)
+	}
+}
+
+func writeTopPerformer(w io.Writer, trends []teamTrend) {
+	var best *teamTrend
+	for i := range trends {
+		t := &trends[i]
+		if t.Trajectory == trajectoryImproving {
+			if best == nil || t.ScoreDelta > best.ScoreDelta {
+				best = t
+			}
+		}
+	}
+	if best == nil {
+		return
+	}
+	name := best.Name
+	if name == "" {
+		name = string(best.ID)
+	}
+	fmt.Fprintf(w, "\nTop performer: %s (score %.1f, %+.1f, MTTR %.1fh, %.0f%% SLA compliance).\n",
+		name, best.PostureScore, best.ScoreDelta, best.MTTRHours, best.SLACompPct)
 }

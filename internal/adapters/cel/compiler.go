@@ -301,34 +301,18 @@ func predicateToExpr(pred policy.UnsafePredicate, scopeVar string, depth int) (s
 	var parts []string
 
 	if len(pred.Any) > 0 {
-		anyExprs := make([]string, 0, len(pred.Any))
-		for i := range pred.Any {
-			e, err := ruleToExpr(&pred.Any[i], scopeVar, depth+1)
-			if err != nil {
-				return "", fmt.Errorf("any[%d]: %w", i, err)
-			}
-			if e != "" {
-				anyExprs = append(anyExprs, e)
-			}
-		}
-		if len(anyExprs) > 0 {
-			parts = append(parts, "("+strings.Join(anyExprs, " || ")+")")
+		if expr, err := compileRuleGroup(pred.Any, "any", " || ", scopeVar, depth+1); err != nil {
+			return "", err
+		} else if expr != "" {
+			parts = append(parts, expr)
 		}
 	}
 
 	if len(pred.All) > 0 {
-		allExprs := make([]string, 0, len(pred.All))
-		for i := range pred.All {
-			e, err := ruleToExpr(&pred.All[i], scopeVar, depth+1)
-			if err != nil {
-				return "", fmt.Errorf("all[%d]: %w", i, err)
-			}
-			if e != "" {
-				allExprs = append(allExprs, e)
-			}
-		}
-		if len(allExprs) > 0 {
-			parts = append(parts, "("+strings.Join(allExprs, " && ")+")")
+		if expr, err := compileRuleGroup(pred.All, "all", " && ", scopeVar, depth+1); err != nil {
+			return "", err
+		} else if expr != "" {
+			parts = append(parts, expr)
 		}
 	}
 
@@ -343,6 +327,23 @@ func predicateToExpr(pred policy.UnsafePredicate, scopeVar string, depth int) (s
 		return "", errors.New("empty predicate: at least one any/all rule must produce a non-empty expression")
 	}
 	return strings.Join(parts, " && "), nil
+}
+
+func compileRuleGroup(rules []policy.PredicateRule, label, joiner, scopeVar string, depth int) (string, error) {
+	exprs := make([]string, 0, len(rules))
+	for i := range rules {
+		e, err := ruleToExpr(&rules[i], scopeVar, depth)
+		if err != nil {
+			return "", fmt.Errorf("%s[%d]: %w", label, i, err)
+		}
+		if e != "" {
+			exprs = append(exprs, e)
+		}
+	}
+	if len(exprs) == 0 {
+		return "", nil
+	}
+	return "(" + strings.Join(exprs, joiner) + ")", nil
 }
 
 // resolveValueExprFn returns the CEL expression for a rule's right-hand
@@ -818,54 +819,49 @@ func parseRuleList(v any, breadcrumb string) ([]policy.PredicateRule, error) {
 
 	rules := make([]policy.PredicateRule, 0, len(list))
 	for i, item := range list {
-		ruleCrumb := fmt.Sprintf("%s[%d]", breadcrumb, i)
-		m, ok := item.(map[string]any)
-		if !ok {
-			return nil, fmt.Errorf("%s: rule must be a map, got %T", ruleCrumb, item)
+		rule, err := parseOneRule(item, fmt.Sprintf("%s[%d]", breadcrumb, i))
+		if err != nil {
+			return nil, err
 		}
-
-		rule := policy.PredicateRule{}
-
-		if field, ok := m["field"].(string); ok {
-			rule.Field = predicate.NewFieldPath(field)
-		}
-		if op, ok := m["op"].(string); ok {
-			rule.Op = predicate.Operator(op)
-		}
-		if val, hasVal := m["value"]; hasVal {
-			rule.Value = policy.NewOperand(val)
-		}
-		// `value_from_param` is the documented way to point a rule at
-		// a control parameter (e.g. min_retention_days). The YAML round
-		// trip into nested any_match blocks lost it because parseRuleList
-		// only forwarded `field`/`op`/`value` — nested rules using
-		// value_from_param compiled with no parameter binding and matched
-		// against the literal string "params.X". Forward it here so
-		// resolveValueExpr in ruleToExpr can emit the correct CEL.
-		if vfp, ok := m["value_from_param"].(string); ok {
-			rule.ValueFromParam = predicate.ParamRef(vfp)
-		}
-		// Handle nested any/all blocks within the rule. Extend the
-		// breadcrumb so a failure inside the recursion identifies
-		// the exact branch (`any[2].all[0]`).
-		if anyBlock, hasAny := m["any"]; hasAny {
-			nested, err := parseRuleList(anyBlock, ruleCrumb+".any")
-			if err != nil {
-				return nil, err
-			}
-			rule.Any = nested
-		}
-		if allBlock, hasAll := m["all"]; hasAll {
-			nested, err := parseRuleList(allBlock, ruleCrumb+".all")
-			if err != nil {
-				return nil, err
-			}
-			rule.All = nested
-		}
-
 		rules = append(rules, rule)
 	}
 	return rules, nil
+}
+
+func parseOneRule(item any, crumb string) (policy.PredicateRule, error) {
+	m, ok := item.(map[string]any)
+	if !ok {
+		return policy.PredicateRule{}, fmt.Errorf("%s: rule must be a map, got %T", crumb, item)
+	}
+
+	rule := policy.PredicateRule{}
+	if field, ok := m["field"].(string); ok {
+		rule.Field = predicate.NewFieldPath(field)
+	}
+	if op, ok := m["op"].(string); ok {
+		rule.Op = predicate.Operator(op)
+	}
+	if val, hasVal := m["value"]; hasVal {
+		rule.Value = policy.NewOperand(val)
+	}
+	if vfp, ok := m["value_from_param"].(string); ok {
+		rule.ValueFromParam = predicate.ParamRef(vfp)
+	}
+	if anyBlock, hasAny := m["any"]; hasAny {
+		nested, err := parseRuleList(anyBlock, crumb+".any")
+		if err != nil {
+			return policy.PredicateRule{}, err
+		}
+		rule.Any = nested
+	}
+	if allBlock, hasAll := m["all"]; hasAll {
+		nested, err := parseRuleList(allBlock, crumb+".all")
+		if err != nil {
+			return policy.PredicateRule{}, err
+		}
+		rule.All = nested
+	}
+	return rule, nil
 }
 
 // isEnumConstant returns true if v is a string of uppercase ASCII letters,

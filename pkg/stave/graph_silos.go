@@ -213,22 +213,7 @@ func indexChainConnectivity(chains []policy.ChainDefinition) (chainCount map[str
 		for svc := range services {
 			chainCount[svc]++
 		}
-		if len(services) > 1 {
-			svcs := make([]string, 0, len(services))
-			for s := range services {
-				svcs = append(svcs, s)
-			}
-			for _, a := range svcs {
-				for _, b := range svcs {
-					if a != b {
-						if connSet[a] == nil {
-							connSet[a] = make(map[string]bool)
-						}
-						connSet[a][b] = true
-					}
-				}
-			}
-		}
+		connectServices(services, connSet)
 	}
 
 	connections = make(map[string][]string)
@@ -238,6 +223,26 @@ func indexChainConnectivity(chains []policy.ChainDefinition) (chainCount map[str
 		}
 	}
 	return chainCount, connections
+}
+
+func connectServices(services map[string]bool, connSet map[string]map[string]bool) {
+	if len(services) <= 1 {
+		return
+	}
+	svcs := make([]string, 0, len(services))
+	for s := range services {
+		svcs = append(svcs, s)
+	}
+	for _, a := range svcs {
+		for _, b := range svcs {
+			if a != b {
+				if connSet[a] == nil {
+					connSet[a] = make(map[string]bool)
+				}
+				connSet[a][b] = true
+			}
+		}
+	}
 }
 
 func chainServices(ids []kernel.ControlID) map[string]bool {

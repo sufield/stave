@@ -516,41 +516,43 @@ func resolveExistingResourceInvocations(input RoleChainInput) []RoleChain {
 		return nil
 	}
 	var chains []RoleChain
-
 	for _, primitive := range invokeExistingPrimitives {
-		for _, grant := range resolved.EffectiveAllow {
-			if !triggerActionMatches(grant.Action, primitive.TriggerActions) {
-				continue
-			}
-			if grant.Resource == "" || grant.Resource == "*" {
-				continue
-			}
-			binding, _, hasBinding := lookupResourceRoleBinding(input.ResourceRoleBindings, grant.Resource)
-			if !hasBinding {
-				continue
-			}
-			if binding.ServiceKind != primitive.ServiceKind {
-				continue
-			}
-			targetRoleARN := binding.RoleARN
-			targetResolved, canonicalTargetRoleARN, inSnapshot := lookupResolved(input.ResolvedIndex, targetRoleARN)
-			if !inSnapshot {
-				continue
-			}
-			hop := RoleHop{
+		chains = matchInvokeExistingGrants(input, resolved, primitive, chains)
+	}
+	return chains
+}
+
+func matchInvokeExistingGrants(input RoleChainInput, resolved *ResolvedPermissions, primitive invokeExistingPrimitive, out []RoleChain) []RoleChain {
+	for _, grant := range resolved.EffectiveAllow {
+		if !triggerActionMatches(grant.Action, primitive.TriggerActions) {
+			continue
+		}
+		if grant.Resource == "" || grant.Resource == "*" {
+			continue
+		}
+		binding, _, hasBinding := lookupResourceRoleBinding(input.ResourceRoleBindings, grant.Resource)
+		if !hasBinding {
+			continue
+		}
+		if binding.ServiceKind != primitive.ServiceKind {
+			continue
+		}
+		targetResolved, canonicalTargetRoleARN, inSnapshot := lookupResolved(input.ResolvedIndex, binding.RoleARN)
+		if !inSnapshot {
+			continue
+		}
+		out = append(out, RoleChain{
+			Hops: []RoleHop{{
 				FromARN:        input.PrincipalARN,
 				ToARN:          canonicalTargetRoleARN,
 				IsCrossAccount: !principalInAccount(canonicalTargetRoleARN, input.AccountID),
 				Type:           primitive.HopType,
-			}
-			chains = append(chains, RoleChain{
-				Hops:            []RoleHop{hop},
-				FinalRoleARN:    canonicalTargetRoleARN,
-				TransitiveLevel: targetResolved.PrivilegeLevel,
-			})
-		}
+			}},
+			FinalRoleARN:    canonicalTargetRoleARN,
+			TransitiveLevel: targetResolved.PrivilegeLevel,
+		})
 	}
-	return chains
+	return out
 }
 
 // triggerActionMatches reports whether grantAction (an entry in

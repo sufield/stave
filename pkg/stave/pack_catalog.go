@@ -113,39 +113,9 @@ func AutoPlanSummary(ctx context.Context, packNames, services []string, controls
 		metas[i] = pack.ControlMeta{ID: s.ID, Severity: s.Severity}
 	}
 
-	seen := map[string]bool{}
-	var controlIDs []string
-	svcs := append([]string{}, services...)
-
-	if len(packNames) > 0 {
-		for _, name := range packNames {
-			p, perr := pack.Load(name)
-			if perr != nil {
-				return nil, fmt.Errorf("load pack %s: %w", name, perr)
-			}
-			for _, id := range p.Resolve(metas) {
-				if !seen[id] {
-					seen[id] = true
-					controlIDs = append(controlIDs, id)
-				}
-			}
-			if len(svcs) == 0 {
-				svcs = pack.ServicesForPack(p, metas)
-			}
-		}
-	} else {
-		all, lerr := pack.LoadAll()
-		if lerr != nil {
-			return nil, fmt.Errorf("load packs: %w", lerr)
-		}
-		for _, n := range pack.PacksForServices(svcs, all, metas) {
-			for _, id := range all[n].Resolve(metas) {
-				if !seen[id] {
-					seen[id] = true
-					controlIDs = append(controlIDs, id)
-				}
-			}
-		}
+	controlIDs, svcs, err := resolvePackControls(packNames, services, metas)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(svcs) == 0 || len(controlIDs) == 0 {
@@ -163,6 +133,43 @@ func AutoPlanSummary(ctx context.Context, packNames, services []string, controls
 	slices.SortFunc(result, func(a, b ServiceSeverityCounts) int { return cmp.Compare(a.Service, b.Service) })
 
 	return &AutoPlanResult{Services: svcs, ControlIDs: controlIDs, Counts: result}, nil
+}
+
+func resolvePackControls(packNames, services []string, metas []pack.ControlMeta) (controlIDs, svcs []string, _ error) {
+	seen := map[string]bool{}
+	svcs = append([]string{}, services...)
+
+	if len(packNames) > 0 {
+		for _, name := range packNames {
+			p, perr := pack.Load(name)
+			if perr != nil {
+				return nil, nil, fmt.Errorf("load pack %s: %w", name, perr)
+			}
+			for _, id := range p.Resolve(metas) {
+				if !seen[id] {
+					seen[id] = true
+					controlIDs = append(controlIDs, id)
+				}
+			}
+			if len(svcs) == 0 {
+				svcs = pack.ServicesForPack(p, metas)
+			}
+		}
+	} else {
+		all, lerr := pack.LoadAll()
+		if lerr != nil {
+			return nil, nil, fmt.Errorf("load packs: %w", lerr)
+		}
+		for _, n := range pack.PacksForServices(svcs, all, metas) {
+			for _, id := range all[n].Resolve(metas) {
+				if !seen[id] {
+					seen[id] = true
+					controlIDs = append(controlIDs, id)
+				}
+			}
+		}
+	}
+	return controlIDs, svcs, nil
 }
 
 // ResolveServiceControls returns the catalog control IDs belonging to any of the

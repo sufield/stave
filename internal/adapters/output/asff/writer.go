@@ -12,6 +12,7 @@ import (
 
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/remediation"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/report"
 	"github.com/sufield/stave/internal/platform/providers/aws/iam"
 )
@@ -98,31 +99,44 @@ func resolveProductARN(opts ASFFOptions, assessment *report.Assessment) (string,
 // deriveFromFindings extracts account ID and region from the first
 // finding whose asset ID is a parseable ARN with those fields.
 func deriveFromFindings(assessment *report.Assessment) (account, region string) {
-	for i := range assessment.Findings {
-		parsed := iam.ParseARN(string(assessment.Findings[i].AssetID))
-		if account == "" && parsed.AccountID != "" {
-			account = parsed.AccountID
-		}
-		if region == "" && parsed.Region != "" {
-			region = parsed.Region
-		}
-		if account != "" && region != "" {
-			return
-		}
+	account, region = scanARNsForContext(assessment.Findings, account, region)
+	if account != "" && region != "" {
+		return
 	}
-	for i := range assessment.ChainFindings {
-		parsed := iam.ParseARN(string(assessment.ChainFindings[i].AssetID))
-		if account == "" && parsed.AccountID != "" {
-			account = parsed.AccountID
-		}
-		if region == "" && parsed.Region != "" {
-			region = parsed.Region
-		}
-		if account != "" && region != "" {
-			return
-		}
-	}
+	account, region = scanChainARNsForContext(assessment.ChainFindings, account, region)
 	return
+}
+
+func scanARNsForContext(findings []remediation.Finding, account, region string) (string, string) {
+	for i := range findings {
+		parsed := iam.ParseARN(string(findings[i].AssetID))
+		if account == "" && parsed.AccountID != "" {
+			account = parsed.AccountID
+		}
+		if region == "" && parsed.Region != "" {
+			region = parsed.Region
+		}
+		if account != "" && region != "" {
+			return account, region
+		}
+	}
+	return account, region
+}
+
+func scanChainARNsForContext(chains []findings.CompoundFinding, account, region string) (string, string) {
+	for i := range chains {
+		parsed := iam.ParseARN(string(chains[i].AssetID))
+		if account == "" && parsed.AccountID != "" {
+			account = parsed.AccountID
+		}
+		if region == "" && parsed.Region != "" {
+			region = parsed.Region
+		}
+		if account != "" && region != "" {
+			return account, region
+		}
+	}
+	return account, region
 }
 
 func mapFinding(f *remediation.Finding, timestamp, version, productARN string) ASFFinding {
