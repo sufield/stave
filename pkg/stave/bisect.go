@@ -221,4 +221,3 @@ func writeBisectWindow(w io.Writer, win appbisect.ViolationWindow, index, total 
 	}
 	fmt.Fprintln(w)
 }
-

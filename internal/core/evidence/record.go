@@ -40,14 +40,14 @@ func (v EvidenceVerdict) String() string {
 // evaluation against a specific compliance citation.
 type EvidenceRecord struct {
 	ControlID      kernel.ControlID `json:"control_id"`
-	ControlName    string          `json:"control_name"`
-	ResourceARN    string          `json:"resource_arn"`
-	SnapshotID     string          `json:"snapshot_id"`
-	Verdict        EvidenceVerdict `json:"verdict"`
-	Severity       string          `json:"severity"`
-	Citations      []Citation      `json:"citations"`
-	ReasoningTrace ReasoningTrace  `json:"reasoning_trace"`
-	EvaluatedAt    time.Time       `json:"evaluated_at"`
+	ControlName    string           `json:"control_name"`
+	ResourceARN    string           `json:"resource_arn"`
+	SnapshotID     string           `json:"snapshot_id"`
+	Verdict        EvidenceVerdict  `json:"verdict"`
+	Severity       string           `json:"severity"`
+	Citations      []Citation       `json:"citations"`
+	ReasoningTrace ReasoningTrace   `json:"reasoning_trace"`
+	EvaluatedAt    time.Time        `json:"evaluated_at"`
 }
 
 // IsPass reports whether the record's verdict is a pass.

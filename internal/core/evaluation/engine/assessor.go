@@ -887,75 +887,64 @@ func applyAcknowledgments(
 		exceptedByAsset[ef.AssetID][ef.ControlID] = struct{}{}
 	}
 
-	var result []evaluation.Finding
-
+	result := make([]evaluation.Finding, 0, len(activeFindings))
 	for i := range activeFindings {
-		f := activeFindings[i]
-		rule := acks.FindRule(f.ControlID, f.AssetID)
-		if rule == nil {
-			result = append(result, f)
-			continue
-		}
+		result = append(result, applyOneAcknowledgment(&activeFindings[i], acks, now, failingByAsset, exceptedByAsset, coverage))
+	}
+	return result
+}
 
-		if rule.IsExpired(now) {
-			f.Status = evaluation.FindingSuppressed
-			f.Suppression = &evaluation.Suppression{
-				Kind:             "acknowledgment",
-				Rationale:        rule.Rationale,
-				AcknowledgedBy:   rule.AcknowledgedBy,
-				AcknowledgedDate: rule.AcknowledgedDate,
-				ExpiryDate:       rule.ExpiryDate,
-				Valid:            false,
-				InvalidReason:    evaluation.SuppressionInvalidExpired,
-			}
-			result = append(result, f)
-			continue
-		}
+func applyOneAcknowledgment(
+	f *evaluation.Finding,
+	acks *policy.AcknowledgmentConfig,
+	now time.Time,
+	failingByAsset map[asset.ID]map[kernel.ControlID]struct{},
+	exceptedByAsset map[asset.ID]map[kernel.ControlID]struct{},
+	coverage EvaluationCoverage,
+) evaluation.Finding {
+	rule := acks.FindRule(f.ControlID, f.AssetID)
+	if rule == nil {
+		return *f
+	}
 
-		assetFailing := failingByAsset[f.AssetID]
-		assetExcepted := exceptedByAsset[f.AssetID]
-		allCompPassing := true
-		for _, cc := range rule.CompensatingControls {
-			_, hasFailing := assetFailing[cc]
-			_, hasExcepted := assetExcepted[cc]
-			switch {
-			case hasFailing:
-				allCompPassing = false
-			case hasExcepted:
-				allCompPassing = false
-			case !coverage.Contains(f.AssetID, cc):
-				allCompPassing = false
-			}
-		}
-
-		if !allCompPassing {
-			f.Status = evaluation.FindingSuppressed
-			f.Suppression = &evaluation.Suppression{
-				Kind:             "acknowledgment",
-				Rationale:        rule.Rationale,
-				AcknowledgedBy:   rule.AcknowledgedBy,
-				AcknowledgedDate: rule.AcknowledgedDate,
-				ExpiryDate:       rule.ExpiryDate,
-				Valid:            false,
-				InvalidReason:    evaluation.SuppressionInvalidCompensatingFailing,
-			}
-			result = append(result, f)
-			continue
-		}
-
-		f.Status = evaluation.FindingSuppressed
-		f.Suppression = &evaluation.Suppression{
+	out := *f
+	if rule.IsExpired(now) {
+		out.Status = evaluation.FindingSuppressed
+		out.Suppression = &evaluation.Suppression{
 			Kind:             "acknowledgment",
 			Rationale:        rule.Rationale,
 			AcknowledgedBy:   rule.AcknowledgedBy,
 			AcknowledgedDate: rule.AcknowledgedDate,
 			ExpiryDate:       rule.ExpiryDate,
-			Valid:            true,
+			Valid:            false,
+			InvalidReason:    evaluation.SuppressionInvalidExpired,
 		}
-		result = append(result, f)
+		return out
 	}
 
-	return result
+	allCompPassing := true
+	for _, cc := range rule.CompensatingControls {
+		_, hasFailing := failingByAsset[out.AssetID][cc]
+		_, hasExcepted := exceptedByAsset[out.AssetID][cc]
+		if hasFailing || hasExcepted || !coverage.Contains(out.AssetID, cc) {
+			allCompPassing = false
+			break
+		}
+	}
+
+	out.Status = evaluation.FindingSuppressed
+	out.Suppression = &evaluation.Suppression{
+		Kind:             "acknowledgment",
+		Rationale:        rule.Rationale,
+		AcknowledgedBy:   rule.AcknowledgedBy,
+		AcknowledgedDate: rule.AcknowledgedDate,
+		ExpiryDate:       rule.ExpiryDate,
+		Valid:            allCompPassing,
+	}
+	if !allCompPassing {
+		out.Suppression.InvalidReason = evaluation.SuppressionInvalidCompensatingFailing
+	}
+	return out
 }
 
 // hasEmptyPolicy reports whether this assessor has no controls

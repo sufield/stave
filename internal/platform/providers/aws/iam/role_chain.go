@@ -209,28 +209,29 @@ func annotateScheduledDeletions(chains []RoleChain, deletions map[string]time.Ti
 		return
 	}
 	for i := range chains {
-		earliest := time.Time{}
-		// Check the starting principal too — if the assumer itself
-		// is scheduled for deletion, every chain it produces is
-		// stale on the same horizon.
-		if len(chains[i].Hops) > 0 {
-			if t, ok := lookupDeletion(deletions, chains[i].Hops[0].FromARN); ok {
-				earliest = t
-			}
-		}
-		for _, hop := range chains[i].Hops {
-			t, ok := lookupDeletion(deletions, hop.ToARN)
-			if !ok {
-				continue
-			}
-			if earliest.IsZero() || t.Before(earliest) {
-				earliest = t
-			}
-		}
-		if !earliest.IsZero() {
-			chains[i].ScheduledDeletionAt = earliest
+		if t := earliestChainDeletion(&chains[i], deletions); !t.IsZero() {
+			chains[i].ScheduledDeletionAt = t
 		}
 	}
+}
+
+func earliestChainDeletion(chain *RoleChain, deletions map[string]time.Time) time.Time {
+	var earliest time.Time
+	if len(chain.Hops) > 0 {
+		if t, ok := lookupDeletion(deletions, chain.Hops[0].FromARN); ok {
+			earliest = t
+		}
+	}
+	for _, hop := range chain.Hops {
+		t, ok := lookupDeletion(deletions, hop.ToARN)
+		if !ok {
+			continue
+		}
+		if earliest.IsZero() || t.Before(earliest) {
+			earliest = t
+		}
+	}
+	return earliest
 }
 
 // serviceExec describes one (action-set → service-principal → hop-kind)

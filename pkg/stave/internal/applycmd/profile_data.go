@@ -116,16 +116,7 @@ func loadControlsMulti(ctx context.Context, profiles []Profile) (string, []polic
 	var primaryDir string
 	var controls []policy.ControlDefinition
 	for _, prof := range profiles {
-		domain := profileControlDomain(prof)
-		var dir string
-		if useEmbedded {
-			dir = "embedded"
-			if domain != "" {
-				dir = filepath.Join("embedded", domain)
-			}
-		} else {
-			dir = filepath.Join(base, domain)
-		}
+		dir := controlDirForProfile(prof, base, useEmbedded)
 		if primaryDir == "" {
 			primaryDir = dir
 		}
@@ -133,27 +124,15 @@ func loadControlsMulti(ctx context.Context, profiles []Profile) (string, []polic
 			continue
 		}
 		seenDir[dir] = struct{}{}
-		var loaded []policy.ControlDefinition
-		var err error
-		if useEmbedded {
-			store := ctlbuiltin.NewControlStore(
-				ctlbuiltin.EmbeddedFS(), dir,
-				ctlbuiltin.WithAliasResolver(builtinpredicate.ResolverFunc()),
-			)
-			loaded, err = store.All()
-		} else {
-			loader := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()))
-			loaded, err = loader.LoadControls(ctx, dir)
-		}
+		loaded, err := loadControlDir(ctx, dir, useEmbedded)
 		if err != nil {
-			return "", nil, fmt.Errorf("load controls from %s: %w", dir, err)
+			return "", nil, err
 		}
 		for i := range loaded {
-			id := loaded[i].ID
-			if _, dup := seenCtl[id]; dup {
+			if _, dup := seenCtl[loaded[i].ID]; dup {
 				continue
 			}
-			seenCtl[id] = struct{}{}
+			seenCtl[loaded[i].ID] = struct{}{}
 			controls = append(controls, loaded[i])
 		}
 	}
@@ -183,6 +162,37 @@ func loadControlsMulti(ctx context.Context, profiles []Profile) (string, []polic
 		return "", nil, fmt.Errorf("%w: no %s controls found in %s", appeval.ErrNoControls, label, ctlDir)
 	}
 	return ctlDir, controls, nil
+}
+
+func controlDirForProfile(prof Profile, base string, useEmbedded bool) string {
+	domain := profileControlDomain(prof)
+	if useEmbedded {
+		if domain != "" {
+			return filepath.Join("embedded", domain)
+		}
+		return "embedded"
+	}
+	return filepath.Join(base, domain)
+}
+
+func loadControlDir(ctx context.Context, dir string, useEmbedded bool) ([]policy.ControlDefinition, error) {
+	if useEmbedded {
+		store := ctlbuiltin.NewControlStore(
+			ctlbuiltin.EmbeddedFS(), dir,
+			ctlbuiltin.WithAliasResolver(builtinpredicate.ResolverFunc()),
+		)
+		loaded, err := store.All()
+		if err != nil {
+			return nil, fmt.Errorf("load controls from %s: %w", dir, err)
+		}
+		return loaded, nil
+	}
+	loader := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()))
+	loaded, err := loader.LoadControls(ctx, dir)
+	if err != nil {
+		return nil, fmt.Errorf("load controls from %s: %w", dir, err)
+	}
+	return loaded, nil
 }
 
 func profileControlDomain(prof Profile) string {

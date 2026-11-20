@@ -145,12 +145,7 @@ func resolvePackControls(packNames, services []string, metas []pack.ControlMeta)
 			if perr != nil {
 				return nil, nil, fmt.Errorf("load pack %s: %w", name, perr)
 			}
-			for _, id := range p.Resolve(metas) {
-				if !seen[id] {
-					seen[id] = true
-					controlIDs = append(controlIDs, id)
-				}
-			}
+			controlIDs = appendResolved(p, metas, seen, controlIDs)
 			if len(svcs) == 0 {
 				svcs = pack.ServicesForPack(p, metas)
 			}
@@ -161,15 +156,20 @@ func resolvePackControls(packNames, services []string, metas []pack.ControlMeta)
 			return nil, nil, fmt.Errorf("load packs: %w", lerr)
 		}
 		for _, n := range pack.PacksForServices(svcs, all, metas) {
-			for _, id := range all[n].Resolve(metas) {
-				if !seen[id] {
-					seen[id] = true
-					controlIDs = append(controlIDs, id)
-				}
-			}
+			controlIDs = appendResolved(all[n], metas, seen, controlIDs)
 		}
 	}
 	return controlIDs, svcs, nil
+}
+
+func appendResolved(p *pack.Pack, metas []pack.ControlMeta, seen map[string]bool, out []string) []string {
+	for _, id := range p.Resolve(metas) {
+		if !seen[id] {
+			seen[id] = true
+			out = append(out, id)
+		}
+	}
+	return out
 }
 
 // ResolveServiceControls returns the catalog control IDs belonging to any of the

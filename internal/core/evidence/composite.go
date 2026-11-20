@@ -61,12 +61,12 @@ type FrameworkViolation struct {
 // UniqueGap is a finding that violates requirements in only one framework.
 type UniqueGap struct {
 	ControlID         kernel.ControlID `json:"control_id"`
-	ResourceARN       string `json:"resource_arn"`
-	Severity          string `json:"severity"`
-	FindingID         string `json:"finding_id"`
-	Framework         string `json:"framework"`
-	RequirementID     string `json:"requirement_id"`
-	RemediationAction string `json:"remediation_action,omitempty"`
+	ResourceARN       string           `json:"resource_arn"`
+	Severity          string           `json:"severity"`
+	FindingID         string           `json:"finding_id"`
+	Framework         string           `json:"framework"`
+	RequirementID     string           `json:"requirement_id"`
+	RemediationAction string           `json:"remediation_action,omitempty"`
 }
 
 // GapImpactSummary shows what fixing the top-N shared gaps achieves.

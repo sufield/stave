@@ -196,26 +196,7 @@ func ingestGraphFindings(dir string) ([]findings.CompoundFinding, error) {
 		if err != nil {
 			continue
 		}
-		for lineIdx, cols := range tuples {
-			if spec.Columns > 0 && len(cols) < spec.Columns {
-				slog.Warn("graph-findings: malformed Soufflé output line",
-					"relation", relation, "line", lineIdx+1,
-					"got", len(cols), "want", spec.Columns)
-				continue
-			}
-			resourceID := spec.Resource(cols)
-			cf := findings.CompoundFinding{
-				FindingID:     findings.StableChainFindingID(spec.ChainID, resourceID, "graph"),
-				ChainID:       spec.ChainID,
-				AssetID:       resourceID,
-				Description:   spec.Description,
-				Severity:      spec.Severity,
-				Narrative:     spec.Narrative(cols),
-				AttackStages:  spec.Stages,
-				CompoundScore: severityScore(spec.Severity),
-			}
-			result = append(result, cf)
-		}
+		result = convertGraphTuples(relation, spec, tuples, result)
 	}
 
 	// Warn about .csv files that have no registry entry — a new
@@ -233,6 +214,29 @@ func ingestGraphFindings(dir string) ([]findings.CompoundFinding, error) {
 	}
 
 	return result, nil
+}
+
+func convertGraphTuples(relation string, spec graphChainSpec, tuples [][]string, out []findings.CompoundFinding) []findings.CompoundFinding {
+	for lineIdx, cols := range tuples {
+		if spec.Columns > 0 && len(cols) < spec.Columns {
+			slog.Warn("graph-findings: malformed Soufflé output line",
+				"relation", relation, "line", lineIdx+1,
+				"got", len(cols), "want", spec.Columns)
+			continue
+		}
+		resourceID := spec.Resource(cols)
+		out = append(out, findings.CompoundFinding{
+			FindingID:     findings.StableChainFindingID(spec.ChainID, resourceID, "graph"),
+			ChainID:       spec.ChainID,
+			AssetID:       resourceID,
+			Description:   spec.Description,
+			Severity:      spec.Severity,
+			Narrative:     spec.Narrative(cols),
+			AttackStages:  spec.Stages,
+			CompoundScore: severityScore(spec.Severity),
+		})
+	}
+	return out
 }
 
 func readTSVFile(path string) ([][]string, error) {
