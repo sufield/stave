@@ -78,26 +78,8 @@ func runHistory(w io.Writer, opts *historyOptions) error {
 	}
 	defer f.Close()
 
-	var entries []HistoryEntry
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" {
-			continue
-		}
-		var entry HistoryEntry
-		if err := json.Unmarshal([]byte(line), &entry); err != nil {
-			continue
-		}
-		if opts.property != "" && entry.QueryName != opts.property {
-			continue
-		}
-		if opts.since != "" && entry.Timestamp < opts.since {
-			continue
-		}
-		entries = append(entries, entry)
-	}
-	if err := scanner.Err(); err != nil {
+	entries, err := parseHistoryEntries(f, opts.property, opts.since)
+	if err != nil {
 		return fmt.Errorf("read history: %w", err)
 	}
 
@@ -112,6 +94,32 @@ func runHistory(w io.Writer, opts *historyOptions) error {
 		renderHistoryText(w, summary)
 		return nil
 	}
+}
+
+func parseHistoryEntries(r io.Reader, property, since string) ([]HistoryEntry, error) {
+	var entries []HistoryEntry
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		var entry HistoryEntry
+		if err := json.Unmarshal([]byte(line), &entry); err != nil {
+			continue
+		}
+		if property != "" && entry.QueryName != property {
+			continue
+		}
+		if since != "" && entry.Timestamp < since {
+			continue
+		}
+		entries = append(entries, entry)
+	}
+	if err := scanner.Err(); err != nil {
+		return entries, fmt.Errorf("scan history: %w", err)
+	}
+	return entries, nil
 }
 
 func summarize(entries []HistoryEntry) *HistorySummary {

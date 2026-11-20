@@ -71,24 +71,7 @@ func LintWithFormat(controlPath string, semantic, strict bool, format string) ([
 			return nil, fmt.Errorf("encode lint JSON: %w", encErr)
 		}
 	} else {
-		for _, result := range results {
-			if len(result.Errors)+len(result.Warnings)+len(result.Infos) == 0 {
-				continue
-			}
-			fmt.Fprintf(&buf, "%s\n", result.ControlID)
-			for _, e := range result.Errors {
-				fmt.Fprintf(&buf, "  ERROR   %s\n", e)
-			}
-			for _, wn := range result.Warnings {
-				fmt.Fprintf(&buf, "  WARNING %s\n", wn)
-			}
-			for _, info := range result.Infos {
-				fmt.Fprintf(&buf, "  INFO    %s\n", info)
-			}
-			fmt.Fprintln(&buf)
-		}
-		fmt.Fprintf(&buf, "%d error(s), %d warning(s) across %d file(s)\n",
-			totalErrors, totalWarnings, len(paths))
+		writeLintText(&buf, results, totalErrors, totalWarnings, len(paths))
 	}
 
 	if totalErrors > 0 {
@@ -98,6 +81,27 @@ func LintWithFormat(controlPath string, semantic, strict bool, format string) ([
 		return buf.Bytes(), fmt.Errorf("%d lint warning(s) (--strict mode)", totalWarnings)
 	}
 	return buf.Bytes(), nil
+}
+
+func writeLintText(buf *bytes.Buffer, results []lintResult, totalErrors, totalWarnings, fileCount int) {
+	for _, result := range results {
+		if len(result.Errors)+len(result.Warnings)+len(result.Infos) == 0 {
+			continue
+		}
+		fmt.Fprintf(buf, "%s\n", result.ControlID)
+		for _, e := range result.Errors {
+			fmt.Fprintf(buf, "  ERROR   %s\n", e)
+		}
+		for _, wn := range result.Warnings {
+			fmt.Fprintf(buf, "  WARNING %s\n", wn)
+		}
+		for _, info := range result.Infos {
+			fmt.Fprintf(buf, "  INFO    %s\n", info)
+		}
+		fmt.Fprintln(buf)
+	}
+	fmt.Fprintf(buf, "%d error(s), %d warning(s) across %d file(s)\n",
+		totalErrors, totalWarnings, fileCount)
 }
 
 func lintControl(path string, celEval policy.PredicateEval, semantic bool) lintResult {

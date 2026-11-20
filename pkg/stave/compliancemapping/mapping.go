@@ -208,26 +208,29 @@ func collectMappingIssues(m *Mapping, catalogIDs map[string]bool, rep *Integrity
 	distinct := map[string]bool{}
 	for di := range m.Domains {
 		for ci := range m.Domains[di].Controls {
-			c := &m.Domains[di].Controls[ci]
-			if seen[c.ID] {
-				rep.DuplicateIDs = append(rep.DuplicateIDs, c.ID)
-			}
-			seen[c.ID] = true
-			if c.Confidence != "" && c.Confidence != ConfidenceDirect && c.Confidence != ConfidenceInferred {
-				rep.InvalidConfidence = append(rep.InvalidConfidence, ConfidenceIssue{FrameworkID: c.ID, Value: c.Confidence})
-			}
-			if c.Coverage == coveragePartial && strings.TrimSpace(c.UncoveredAspects) == "" {
-				rep.PartialNoReason = append(rep.PartialNoReason, c.ID)
-			}
-			for _, sc := range c.StaveControls {
-				distinct[sc] = true
-				if len(catalogIDs) > 0 && !catalogIDs[sc] {
-					rep.DanglingRefs = append(rep.DanglingRefs, DanglingRef{FrameworkID: c.ID, StaveControl: sc})
-				}
-			}
+			checkMappingControl(&m.Domains[di].Controls[ci], catalogIDs, seen, distinct, rep)
 		}
 	}
 	rep.ReferencedControl = len(distinct)
+}
+
+func checkMappingControl(c *MappedControl, catalogIDs map[string]bool, seen, distinct map[string]bool, rep *IntegrityReport) {
+	if seen[c.ID] {
+		rep.DuplicateIDs = append(rep.DuplicateIDs, c.ID)
+	}
+	seen[c.ID] = true
+	if c.Confidence != "" && c.Confidence != ConfidenceDirect && c.Confidence != ConfidenceInferred {
+		rep.InvalidConfidence = append(rep.InvalidConfidence, ConfidenceIssue{FrameworkID: c.ID, Value: c.Confidence})
+	}
+	if c.Coverage == coveragePartial && strings.TrimSpace(c.UncoveredAspects) == "" {
+		rep.PartialNoReason = append(rep.PartialNoReason, c.ID)
+	}
+	for _, sc := range c.StaveControls {
+		distinct[sc] = true
+		if len(catalogIDs) > 0 && !catalogIDs[sc] {
+			rep.DanglingRefs = append(rep.DanglingRefs, DanglingRef{FrameworkID: c.ID, StaveControl: sc})
+		}
+	}
 }
 
 // HasFailures reports whether any covered control failed — used to map to exit 3.

@@ -137,34 +137,7 @@ type Input struct {
 
 // Suggest analyzes assessment history and produces exemption candidates.
 func Suggest(in Input) *Result {
-	var valid []*report.Assessment
-	for _, a := range in.History {
-		if a != nil {
-			valid = append(valid, a)
-		}
-	}
-	if len(valid) == 0 {
-		return &Result{
-			WindowDays:   int(in.Window.Hours() / 24),
-			MinDwellDays: int(in.MinDwell.Hours() / 24),
-		}
-	}
-
-	// Sort history by time.
-	sorted := make([]*report.Assessment, len(valid))
-	copy(sorted, valid)
-	slices.SortFunc(sorted, func(a, b *report.Assessment) int {
-		return a.Run.EvalTime.Compare(b.Run.EvalTime)
-	})
-
-	// Apply window filter.
-	cutoff := in.EvalTime.Add(-in.Window)
-	filtered := make([]*report.Assessment, 0, len(sorted))
-	for _, a := range sorted {
-		if !a.Run.EvalTime.Before(cutoff) {
-			filtered = append(filtered, a)
-		}
-	}
+	sorted, filtered := prepareAssessments(in.History, in.EvalTime, in.Window)
 	if len(filtered) == 0 {
 		return &Result{
 			WindowDays:   int(in.Window.Hours() / 24),
@@ -203,6 +176,31 @@ func Suggest(in Input) *Result {
 		WindowDays:   int(in.Window.Hours() / 24),
 		MinDwellDays: int(in.MinDwell.Hours() / 24),
 	}
+}
+
+func prepareAssessments(history []*report.Assessment, evalTime time.Time, window time.Duration) (sorted, filtered []*report.Assessment) {
+	var valid []*report.Assessment
+	for _, a := range history {
+		if a != nil {
+			valid = append(valid, a)
+		}
+	}
+	if len(valid) == 0 {
+		return nil, nil
+	}
+	sorted = make([]*report.Assessment, len(valid))
+	copy(sorted, valid)
+	slices.SortFunc(sorted, func(a, b *report.Assessment) int {
+		return a.Run.EvalTime.Compare(b.Run.EvalTime)
+	})
+	cutoff := evalTime.Add(-window)
+	filtered = make([]*report.Assessment, 0, len(sorted))
+	for _, a := range sorted {
+		if !a.Run.EvalTime.Before(cutoff) {
+			filtered = append(filtered, a)
+		}
+	}
+	return sorted, filtered
 }
 
 func classifyFindings(meta map[findingKey]*findingMeta, filtered []*report.Assessment, in Input) (oscillating, chronic []Candidate) {

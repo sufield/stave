@@ -59,11 +59,17 @@ func ResolveAutoScope(summary snapshot.Summary, catalog ControlCatalog) (AutoSco
 			summary.Services, catalogServices)
 	}
 
-	matchedSet := make(map[string]bool, len(scope.MatchedServices))
-	for _, svc := range scope.MatchedServices {
+	scope.ChainIDs, scope.SkippedChains = filterChainsByServices(catalog.ChainDependencies(), scope.MatchedServices)
+
+	return scope, nil
+}
+
+func filterChainsByServices(chainDeps map[string][]string, matchedServices []string) (matched, skipped []string) {
+	matchedSet := make(map[string]bool, len(matchedServices))
+	for _, svc := range matchedServices {
 		matchedSet[svc] = true
 	}
-	for chainID, deps := range catalog.ChainDependencies() {
+	for chainID, deps := range chainDeps {
 		satisfied := true
 		for _, dep := range deps {
 			if !matchedSet[strings.ToLower(dep)] {
@@ -72,13 +78,12 @@ func ResolveAutoScope(summary snapshot.Summary, catalog ControlCatalog) (AutoSco
 			}
 		}
 		if satisfied {
-			scope.ChainIDs = append(scope.ChainIDs, chainID)
+			matched = append(matched, chainID)
 		} else {
-			scope.SkippedChains = append(scope.SkippedChains, chainID)
+			skipped = append(skipped, chainID)
 		}
 	}
-
-	return scope, nil
+	return
 }
 
 // extractCatalogPrefixes scans control IDs and returns a map of

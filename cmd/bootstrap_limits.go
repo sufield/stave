@@ -93,24 +93,7 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 		logger = slog.Default()
 	}
 
-	// Max input file size (default 256 MB). Cap reads via
-	// effectiveMaxConfigurableInputFileBytes so a 32-bit host clamps
-	// below math.MaxInt32 — the package constant is 4 GiB which
-	// exceeds the int range on those platforms.
-	maxBytes := effectiveMaxConfigurableInputFileBytes()
-	if raw := eval.MaxInputFileSize(); raw != "" {
-		if n, err := kernel.ParseByteSize(raw); err == nil {
-			if n > maxBytes {
-				logger.Warn("config: clamping max_input_file_size to configured maximum",
-					"requested", n, "max", maxBytes)
-				n = maxBytes
-			}
-			fsutil.SetMaxInputFileBytes(n)
-		} else {
-			logger.Warn("config: ignoring invalid max_input_file_size",
-				"value", raw, "error", err)
-		}
-	}
+	resolveMaxInputFileSize(eval, logger)
 
 	// Max gap threshold (default 12h) — flows through Assessor.ContinuityLimit
 	// which callers set from config. The exported DefaultContinuityLimit
@@ -160,4 +143,24 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 		}
 		contractvalidator.SetMaxValidationErrors(n)
 	}
+}
+
+func resolveMaxInputFileSize(eval *appconfig.GovernanceResolver, logger *slog.Logger) {
+	maxBytes := effectiveMaxConfigurableInputFileBytes()
+	raw := eval.MaxInputFileSize()
+	if raw == "" {
+		return
+	}
+	n, err := kernel.ParseByteSize(raw)
+	if err != nil {
+		logger.Warn("config: ignoring invalid max_input_file_size",
+			"value", raw, "error", err)
+		return
+	}
+	if n > maxBytes {
+		logger.Warn("config: clamping max_input_file_size to configured maximum",
+			"requested", n, "max", maxBytes)
+		n = maxBytes
+	}
+	fsutil.SetMaxInputFileBytes(n)
 }

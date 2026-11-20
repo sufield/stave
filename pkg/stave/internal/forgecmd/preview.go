@@ -58,28 +58,32 @@ func Preview(snapshotPath, assetType, field, op, value, predicateExpr string) ([
 	}
 
 	var buf bytes.Buffer
-	var failCount, passCount, errCount int
-	for i := range snap.Assets {
-		a := &snap.Assets[i]
+	failCount, passCount, errCount := evalPreviewAssets(&buf, snap.Assets, assetType, celEval, &ctl)
+	fmt.Fprintf(&buf, "\n%d FAIL  |  %d PASS  |  %d ERROR\n", failCount, passCount, errCount)
+	return buf.Bytes(), nil
+}
+
+func evalPreviewAssets(buf *bytes.Buffer, assets []asset.Asset, assetType string, celEval policy.PredicateEval, ctl *policy.ControlDefinition) (fail, pass, errCount int) {
+	for i := range assets {
+		a := &assets[i]
 		if assetType != "" && string(a.Type) != assetType {
 			continue
 		}
-		unsafe, evalErr := celEval(&ctl, *a, nil)
+		unsafe, evalErr := celEval(ctl, *a, nil)
 		if evalErr != nil {
-			fmt.Fprintf(&buf, "  ERROR  %s  %v\n", a.ID, evalErr)
+			fmt.Fprintf(buf, "  ERROR  %s  %v\n", a.ID, evalErr)
 			errCount++
 			continue
 		}
 		if unsafe {
-			fmt.Fprintf(&buf, "  FAIL   %s\n", a.ID)
-			failCount++
+			fmt.Fprintf(buf, "  FAIL   %s\n", a.ID)
+			fail++
 		} else {
-			fmt.Fprintf(&buf, "  PASS   %s\n", a.ID)
-			passCount++
+			fmt.Fprintf(buf, "  PASS   %s\n", a.ID)
+			pass++
 		}
 	}
-	fmt.Fprintf(&buf, "\n%d FAIL  |  %d PASS  |  %d ERROR\n", failCount, passCount, errCount)
-	return buf.Bytes(), nil
+	return
 }
 
 // LivePreview renders the wizard's live-preview block (step 8): it evaluates a

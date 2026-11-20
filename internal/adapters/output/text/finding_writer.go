@@ -262,18 +262,7 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 		return
 	}
 
-	// Partition findings by exploitability tier.
-	var exploitableFindings, oneAwayFindings, reachableFindings []remediation.Finding
-	for i := range enriched {
-		switch enriched[i].Exploitability {
-		case evaluation.ExploitabilityExploitable:
-			exploitableFindings = append(exploitableFindings, enriched[i])
-		case evaluation.ExploitabilityOneAway:
-			oneAwayFindings = append(oneAwayFindings, enriched[i])
-		default:
-			reachableFindings = append(reachableFindings, enriched[i])
-		}
-	}
+	exploitableFindings, oneAwayFindings, reachableFindings := partitionByExploitability(enriched)
 
 	num := 1
 	for i := range exploitableFindings {
@@ -302,6 +291,20 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 			num++
 		}
 	}
+}
+
+func partitionByExploitability(findings []remediation.Finding) (exploitable, oneAway, reachable []remediation.Finding) {
+	for i := range findings {
+		switch findings[i].Exploitability {
+		case evaluation.ExploitabilityExploitable:
+			exploitable = append(exploitable, findings[i])
+		case evaluation.ExploitabilityOneAway:
+			oneAway = append(oneAway, findings[i])
+		default:
+			reachable = append(reachable, findings[i])
+		}
+	}
+	return
 }
 
 func (w *FindingWriter) writeSkippedControls(d *drawer, result *evaluation.ComplianceReport) {

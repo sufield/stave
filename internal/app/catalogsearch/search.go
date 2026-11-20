@@ -85,24 +85,28 @@ func Search(controls []policy.ControlDefinition, f Filter) SearchResults {
 			continue
 		}
 
-		sr := SearchResult{
-			ControlID:   ctl.ID,
-			Name:        ctl.Name,
-			Severity:    ctl.Severity,
-			Domain:      kernel.AssetType(getDomain(ctl)),
-			AttackStage: ctl.AttackStage(),
-			Frameworks:  make([]policy.ComplianceFramework, 0, len(ctl.Compliance)),
-		}
-		for fw := range ctl.Compliance {
-			sr.Frameworks = append(sr.Frameworks, fw)
-		}
-		slices.SortFunc(sr.Frameworks, func(a, b policy.ComplianceFramework) int {
-			return strings.Compare(string(a), string(b))
-		})
-		results = append(results, sr)
+		results = append(results, buildSearchResult(ctl))
 	}
 
 	return results
+}
+
+func buildSearchResult(ctl *policy.ControlDefinition) SearchResult {
+	sr := SearchResult{
+		ControlID:   ctl.ID,
+		Name:        ctl.Name,
+		Severity:    ctl.Severity,
+		Domain:      kernel.AssetType(getDomain(ctl)),
+		AttackStage: ctl.AttackStage(),
+		Frameworks:  make([]policy.ComplianceFramework, 0, len(ctl.Compliance)),
+	}
+	for fw := range ctl.Compliance {
+		sr.Frameworks = append(sr.Frameworks, fw)
+	}
+	slices.SortFunc(sr.Frameworks, func(a, b policy.ComplianceFramework) int {
+		return strings.Compare(string(a), string(b))
+	})
+	return sr
 }
 
 func matchesQuery(ctl *policy.ControlDefinition, queryLower string) bool {

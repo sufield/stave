@@ -90,41 +90,12 @@ func RunGate(ctx context.Context, cfg GateRunConfig) (output []byte, warnings []
 		return nil, nil, false, fmt.Errorf("run gate: %w", err)
 	}
 
-	// Per-team gate: filter findings to one team and fold its verdict into
-	// the global result. Policies that derive their verdict from controls +
-	// observations (no evaluation file) skip the per-team filter.
-	teamRequested := cfg.Team != ""
-	policySupportsTeams := policy.RequiresTeamScope()
-	if teamRequested && !policySupportsTeams {
-		warnings = append(warnings, fmt.Sprintf(
-			"warning: --team flag ignored because policy %q does not require team scope", policy))
+	var teamWarns []string
+	teamWarns, err = applyTeamGate(cfg, policy, inPath, result)
+	if err != nil {
+		return nil, nil, false, err
 	}
-	if teamRequested && policySupportsTeams {
-		if cfg.TeamManifest == "" {
-			return nil, nil, false, fmt.Errorf("--team-manifest is required when using --team: %w", ErrInvalidInput)
-		}
-		manifest, manifestErr := teams.LoadManifest(cfg.TeamManifest)
-		if manifestErr != nil {
-			return nil, nil, false, fmt.Errorf("load team manifest: %w: %w", manifestErr, ErrInvalidInput)
-		}
-		evalData, readErr := fsutil.ReadFileLimited(inPath)
-		if readErr != nil {
-			return nil, nil, false, fmt.Errorf("read evaluation for team gate: %w: %w", readErr, ErrInvalidInput)
-		}
-		var evalDoc struct {
-			Findings []remediation.Finding `json:"findings"`
-		}
-		if unmarshalErr := json.Unmarshal(evalData, &evalDoc); unmarshalErr != nil {
-			return nil, nil, false, fmt.Errorf("parse evaluation for team gate: %w: %w", unmarshalErr, ErrInvalidInput)
-		}
-		teamResult := teamgate.Evaluate(teamgate.Input{
-			Findings:   evalDoc.Findings,
-			Manifest:   manifest,
-			TeamID:     teams.TeamID(cfg.Team),
-			Thresholds: teamgate.DefaultThresholds(),
-		})
-		result.MergeTeamVerdict(string(teamResult.TeamID), teamResult.Passed, teamResult.Reason.String())
-	}
+	warnings = append(warnings, teamWarns...)
 
 	out, err := gateRenderResult(format, cfg.Quiet, result)
 	if err != nil {
@@ -147,6 +118,41 @@ type gateJSONDoc struct {
 
 // gateRenderResult renders the gate verdict. Text honors quiet (exit-code
 // only); JSON always emits its wire format so downstream gates can parse it.
+func applyTeamGate(cfg GateRunConfig, policy appconfig.EnforcementGate, inPath string, result *GateResult) ([]string, error) {
+	if cfg.Team == "" {
+		return nil, nil
+	}
+	if !policy.RequiresTeamScope() {
+		return []string{fmt.Sprintf(
+			"warning: --team flag ignored because policy %q does not require team scope", policy)}, nil
+	}
+	if cfg.TeamManifest == "" {
+		return nil, fmt.Errorf("--team-manifest is required when using --team: %w", ErrInvalidInput)
+	}
+	manifest, manifestErr := teams.LoadManifest(cfg.TeamManifest)
+	if manifestErr != nil {
+		return nil, fmt.Errorf("load team manifest: %w: %w", manifestErr, ErrInvalidInput)
+	}
+	evalData, readErr := fsutil.ReadFileLimited(inPath)
+	if readErr != nil {
+		return nil, fmt.Errorf("read evaluation for team gate: %w: %w", readErr, ErrInvalidInput)
+	}
+	var evalDoc struct {
+		Findings []remediation.Finding `json:"findings"`
+	}
+	if unmarshalErr := json.Unmarshal(evalData, &evalDoc); unmarshalErr != nil {
+		return nil, fmt.Errorf("parse evaluation for team gate: %w: %w", unmarshalErr, ErrInvalidInput)
+	}
+	teamResult := teamgate.Evaluate(teamgate.Input{
+		Findings:   evalDoc.Findings,
+		Manifest:   manifest,
+		TeamID:     teams.TeamID(cfg.Team),
+		Thresholds: teamgate.DefaultThresholds(),
+	})
+	result.MergeTeamVerdict(string(teamResult.TeamID), teamResult.Passed, teamResult.Reason.String())
+	return nil, nil
+}
+
 func gateRenderResult(format string, quiet bool, result *GateResult) ([]byte, error) {
 	var buf bytes.Buffer
 	switch format {

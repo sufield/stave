@@ -6,7 +6,7 @@ are used, and whether the assumed role has admin-level permissions.
 
 ## Implementation
 
-**Source:** `iam-explainer/Stave/Extract/SupplyChain.lean`
+**Source:** `iam-lean/Stave/Extract/SupplyChain.lean`
 
 Pure function over already-collected IAM role JSON. No live API calls.
 

@@ -77,27 +77,8 @@ func DetectChains(
 	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
 	scopeResolver ScopeResolver,
 ) []findingsdata.CompoundFinding {
-	// Build the inverted index once.
-	controlToChains := make(map[kernel.ControlID][]int, len(chains))
-	for i := range chains {
-		for _, cid := range chains[i].ControlIDs {
-			controlToChains[cid] = append(controlToChains[cid], i)
-		}
-	}
-
-	// Walk failures once. Allocate per-chain buckets lazily so
-	// chains with zero matching failures pay nothing.
-	buckets := make([]*chainBuckets, len(chains))
-	for j := range failures {
-		f := &failures[j]
-		chainIdxs := controlToChains[f.ControlID]
-		if len(chainIdxs) == 0 {
-			continue
-		}
-		for _, ci := range chainIdxs {
-			bucketFailure(f, &chains[ci], buckets, ci, scopeResolver)
-		}
-	}
+	controlToChains := buildControlToChainIndex(chains)
+	buckets := bucketFailures(failures, chains, controlToChains, scopeResolver)
 
 	// Emit findings: iterate chains in catalog order (so iteration
 	// order is stable for the few cases where the terminal sort is
@@ -132,6 +113,28 @@ func DetectChains(
 	})
 
 	return findings
+}
+
+func buildControlToChainIndex(chains []policy.ChainDefinition) map[kernel.ControlID][]int {
+	controlToChains := make(map[kernel.ControlID][]int, len(chains))
+	for i := range chains {
+		for _, cid := range chains[i].ControlIDs {
+			controlToChains[cid] = append(controlToChains[cid], i)
+		}
+	}
+	return controlToChains
+}
+
+func bucketFailures(failures []FailingControl, chains []policy.ChainDefinition, controlToChains map[kernel.ControlID][]int, scopeResolver ScopeResolver) []*chainBuckets {
+	buckets := make([]*chainBuckets, len(chains))
+	for j := range failures {
+		f := &failures[j]
+		chainIdxs := controlToChains[f.ControlID]
+		for _, ci := range chainIdxs {
+			bucketFailure(f, &chains[ci], buckets, ci, scopeResolver)
+		}
+	}
+	return buckets
 }
 
 func bucketFailure(f *FailingControl, chain *policy.ChainDefinition, buckets []*chainBuckets, ci int, scopeResolver ScopeResolver) {

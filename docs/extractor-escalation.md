@@ -5,7 +5,7 @@ IAM permissions against 10 known escalation vectors.
 
 ## Implementation
 
-**Source:** `iam-explainer/Stave/Extract/Escalation.lean`
+**Source:** `iam-lean/Stave/Extract/Escalation.lean`
 (`Extract.Escalation` namespace)
 
 Pure function over already-collected IAM data. No live API calls.

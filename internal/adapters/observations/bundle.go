@@ -147,39 +147,29 @@ func ParseBundle(data []byte) ([]asset.Snapshot, error) {
 		return nil, errors.New("observation bundle contains no snapshots (expected a top-level `snapshots` array)")
 	}
 	for i := range bundle.Snapshots {
-		if bundle.Snapshots[i].CapturedAt.IsZero() {
-			return nil, fmt.Errorf("observation bundle snapshot %d is missing required `captured_at` timestamp", i)
-		}
-		// Mirror the strict single-file path (loader_core.go runs the
-		// obs.v0.1 JSON-Schema validator, which enforces assets[].id and
-		// assets[].type minLength:1, type pattern ^[a-z0-9][a-z0-9_.-]*$).
-		// The bundle path skips schema validation, so without these checks a
-		// missing or empty asset id/type loads silently as ""— matching no
-		// control's scope and producing a wrong COMPLIANT verdict. Reject it
-		// here so both intake paths agree.
-		//
-		// `id` needs an explicit presence check (not just the asset.ID
-		// UnmarshalJSON empty-string guard): a *missing* id key never invokes
-		// the unmarshaler, so the field stays the zero value "" and would slip
-		// through. The single-file schema rejects a missing id via
-		// `required:[id]`; this is the bundle path's equivalent.
-		for j := range bundle.Snapshots[i].Assets {
-			if bundle.Snapshots[i].Assets[j].ID == "" {
-				return nil, fmt.Errorf("observation bundle snapshot %d asset %d is missing required `id`", i, j)
-			}
-			if err := bundle.Snapshots[i].Assets[j].Type.Validate(); err != nil {
-				return nil, fmt.Errorf("observation bundle snapshot %d asset %d has invalid `type`: %w", i, j, err)
-			}
-		}
-		// Mirror loader_core.go: bundle and directory loaders must
-		// produce snapshots with the same shape, otherwise predicates
-		// that depend on type-coerced fields (asset.ID, kernel.AssetType)
-		// silently behave differently between the two intake paths.
-		if err := normalizeSnapshotTypes(&bundle.Snapshots[i]); err != nil {
-			return nil, fmt.Errorf("normalize snapshot %d: %w", i, err)
+		if err := validateBundleSnapshot(&bundle.Snapshots[i], i); err != nil {
+			return nil, err
 		}
 	}
 	return bundle.Snapshots, nil
+}
+
+func validateBundleSnapshot(snap *asset.Snapshot, idx int) error {
+	if snap.CapturedAt.IsZero() {
+		return fmt.Errorf("observation bundle snapshot %d is missing required `captured_at` timestamp", idx)
+	}
+	for j := range snap.Assets {
+		if snap.Assets[j].ID == "" {
+			return fmt.Errorf("observation bundle snapshot %d asset %d is missing required `id`", idx, j)
+		}
+		if err := snap.Assets[j].Type.Validate(); err != nil {
+			return fmt.Errorf("observation bundle snapshot %d asset %d has invalid `type`: %w", idx, j, err)
+		}
+	}
+	if err := normalizeSnapshotTypes(snap); err != nil {
+		return fmt.Errorf("normalize snapshot %d: %w", idx, err)
+	}
+	return nil
 }
 
 // LoadBundle reads and unmarshals an observation bundle from the given path.

@@ -54,6 +54,21 @@ func QueryShadow(model *compiler.CompiledModel) *QueryResult {
 
 	allowExpr := orOf(model.Ctx, allows)
 
+	shadows := findShadowedDenies(model, denyStmts, allowExpr)
+
+	r.SolveTimeMs = time.Since(start).Milliseconds()
+	if len(shadows) > 0 {
+		r.Result = "satisfiable"
+		r.Interpretation = fmt.Sprintf("%d Deny statement(s) shadowed: an Allow matches requests the Deny does not cover", len(shadows))
+		r.Witness = shadows[0].Witness
+	} else {
+		r.Result = "unsatisfiable"
+		r.Interpretation = "no Deny is shadowed: every Deny fully covers its scope against all Allows"
+	}
+	return r
+}
+
+func findShadowedDenies(model *compiler.CompiledModel, denyStmts []int, allowExpr z3.Bool) []ShadowedDeny {
 	var shadows []ShadowedDeny
 	for _, di := range denyStmts {
 		ds := &model.Stmt[di]
@@ -79,15 +94,5 @@ func QueryShadow(model *compiler.CompiledModel) *QueryResult {
 			shadows = append(shadows, sd)
 		}
 	}
-
-	r.SolveTimeMs = time.Since(start).Milliseconds()
-	if len(shadows) > 0 {
-		r.Result = "satisfiable"
-		r.Interpretation = fmt.Sprintf("%d Deny statement(s) shadowed: an Allow matches requests the Deny does not cover", len(shadows))
-		r.Witness = shadows[0].Witness
-	} else {
-		r.Result = "unsatisfiable"
-		r.Interpretation = "no Deny is shadowed: every Deny fully covers its scope against all Allows"
-	}
-	return r
+	return shadows
 }

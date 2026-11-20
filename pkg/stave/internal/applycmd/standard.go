@@ -539,29 +539,7 @@ func annotateFreshness(ctx context.Context, report *evaluation.ComplianceReport,
 
 	sr := staleness.Check(loaded.Snapshots, threshold, now)
 
-	staleCount := 0
-	if sr.IsStale() {
-		for i := range report.Findings {
-			report.Findings[i].Confidence = evaluation.ConfidenceLow
-			report.Findings[i].FreshnessReason = sr.Message
-		}
-		staleCount = len(report.Findings)
-		for i := range report.ChainFindings {
-			report.ChainFindings[i].Confidence = string(evaluation.ConfidenceLow)
-			report.ChainFindings[i].FreshnessReason = sr.Message
-		}
-	} else {
-		for i := range report.Findings {
-			if report.Findings[i].Confidence == "" {
-				report.Findings[i].Confidence = evaluation.ConfidenceHigh
-			}
-		}
-		for i := range report.ChainFindings {
-			if report.ChainFindings[i].Confidence == "" {
-				report.ChainFindings[i].Confidence = string(evaluation.ConfidenceHigh)
-			}
-		}
-	}
+	staleCount := applyFreshnessConfidence(report, sr)
 
 	report.InputFreshness = &evaluation.InputFreshness{
 		MostRecent:     sr.MostRecent.Format(time.RFC3339),
@@ -571,6 +549,31 @@ func annotateFreshness(ctx context.Context, report *evaluation.ComplianceReport,
 		StaleFindings:  staleCount,
 	}
 	return nil
+}
+
+func applyFreshnessConfidence(report *evaluation.ComplianceReport, sr *staleness.Result) int {
+	if sr.IsStale() {
+		for i := range report.Findings {
+			report.Findings[i].Confidence = evaluation.ConfidenceLow
+			report.Findings[i].FreshnessReason = sr.Message
+		}
+		for i := range report.ChainFindings {
+			report.ChainFindings[i].Confidence = string(evaluation.ConfidenceLow)
+			report.ChainFindings[i].FreshnessReason = sr.Message
+		}
+		return len(report.Findings)
+	}
+	for i := range report.Findings {
+		if report.Findings[i].Confidence == "" {
+			report.Findings[i].Confidence = evaluation.ConfidenceHigh
+		}
+	}
+	for i := range report.ChainFindings {
+		if report.ChainFindings[i].Confidence == "" {
+			report.ChainFindings[i].Confidence = string(evaluation.ConfidenceHigh)
+		}
+	}
+	return 0
 }
 
 // --- config loading (moved verbatim from cmd/apply/deps_project.go) ---

@@ -328,19 +328,7 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 		return evaluation.ComplianceReport{}, fmt.Errorf("lifecycle analysis failed: %w", err)
 	}
 
-	// Use the maximum asset count across snapshots as the
-	// pre-allocation hint. The earlier shape used sequenced[0]
-	// (the EARLIEST snapshot), which under-allocated whenever the
-	// asset count grew over the observation window — every
-	// subsequent append then forced a re-grow. Picking the max
-	// produces a one-shot allocation that fits any snapshot the
-	// session will see.
-	assetHint := 0
-	for i := range sequenced {
-		if n := len(sequenced[i].Assets); n > assetHint {
-			assetHint = n
-		}
-	}
+	assetHint := maxAssetCount(sequenced)
 
 	auditTime, refErr := a.referenceTime(sequenced)
 	if refErr != nil {
@@ -411,6 +399,16 @@ func (a *Assessor) Assess(ctx context.Context, snapshots []asset.Snapshot, opts 
 	return report, nil
 }
 
+func maxAssetCount(snaps []asset.Snapshot) int {
+	best := 0
+	for i := range snaps {
+		if n := len(snaps[i].Assets); n > best {
+			best = n
+		}
+	}
+	return best
+}
+
 func (a *Assessor) checkPreconditions(ctx context.Context) error {
 	if ctx == nil {
 		return errors.New("precondition failed: Assessor.Assess requires a non-nil context")
@@ -469,47 +467,9 @@ func (s *assessmentSession) applyControl(
 		// from the denominator and inflated the compliance percentage.
 		s.collector.RecordSeenAsset(id)
 
-		// 1. Check for organizational exemptions (Policy Overrides).
-		// ExemptionConfig.ShouldExempt is nil-safe on a nil receiver
-		// (returns nil), so a partially-wired Assessor with no
-		// exemptions configured does not panic here. See the
-		// nil-receiver contract documented on NewAssessor.
-		if rule := s.assessor.exemptions.ShouldExempt(id); rule != nil {
-			span.RecordStep("exemption_check", map[string]any{
-				"pattern": rule.Pattern,
-			}, map[string]any{
-				"exempted": true,
-				"reason":   rule.Reason,
-			})
-			span.SetVerdict(string(evaluation.VerdictSkipped), string(evaluation.ConfidenceHigh))
-			span.End()
-
-			if s.collector.RecordExemption(id) {
-				s.collector.RecordExemptedAsset(id, rule.Pattern, rule.Reason)
-			}
-			// A nil lifecycle here is unexpected — the lifecycle map is
-			// produced by BuildLifecyclesPerControl and the caller
-			// iterates its keys. Record the check with empty type
-			// metadata rather than panicking, and emit a debug log so
-			// the upstream invariant violation is traceable.
-			check := evaluation.ResourceCheck{
-				ControlID:  ctl.ID,
-				AssetID:    id,
-				Verdict:    evaluation.VerdictSkipped,
-				Confidence: evaluation.ConfidenceHigh,
-				Reason:     rule.Reason,
-			}
-			if lifecycle != nil {
-				check.AssetType = lifecycle.Asset().Type
-				check.AssetDomain = lifecycle.Asset().Type.Domain()
-			} else {
-				s.assessor.Logger().Debug("exemption check: nil lifecycle",
-					"control", ctl.ID, "asset", id)
-			}
-			s.collector.RecordCheck(check)
+		if s.applyExemption(ctl, id, lifecycle, span) {
 			continue
 		}
-		span.RecordStep("exemption_check", nil, map[string]any{"exempted": false})
 
 		// 2. Track evaluated snapshots through the collector's
 		//    mutex-protected entry points. The collector itself is
@@ -568,6 +528,42 @@ func (s *assessmentSession) applyControl(
 		}
 	}
 	return nil
+}
+
+func (s *assessmentSession) applyExemption(ctl *policy.ControlDefinition, id asset.ID, lifecycle *asset.ExposureLifecycle, span ports.AssessmentSpan) bool {
+	rule := s.assessor.exemptions.ShouldExempt(id)
+	if rule == nil {
+		span.RecordStep("exemption_check", nil, map[string]any{"exempted": false})
+		return false
+	}
+	span.RecordStep("exemption_check", map[string]any{
+		"pattern": rule.Pattern,
+	}, map[string]any{
+		"exempted": true,
+		"reason":   rule.Reason,
+	})
+	span.SetVerdict(string(evaluation.VerdictSkipped), string(evaluation.ConfidenceHigh))
+	span.End()
+
+	if s.collector.RecordExemption(id) {
+		s.collector.RecordExemptedAsset(id, rule.Pattern, rule.Reason)
+	}
+	check := evaluation.ResourceCheck{
+		ControlID:  ctl.ID,
+		AssetID:    id,
+		Verdict:    evaluation.VerdictSkipped,
+		Confidence: evaluation.ConfidenceHigh,
+		Reason:     rule.Reason,
+	}
+	if lifecycle != nil {
+		check.AssetType = lifecycle.Asset().Type
+		check.AssetDomain = lifecycle.Asset().Type.Domain()
+	} else {
+		s.assessor.Logger().Debug("exemption check: nil lifecycle",
+			"control", ctl.ID, "asset", id)
+	}
+	s.collector.RecordCheck(check)
+	return true
 }
 
 func (s *assessmentSession) compileReport() evaluation.ComplianceReport {

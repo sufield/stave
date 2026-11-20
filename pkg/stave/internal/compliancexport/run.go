@@ -94,20 +94,7 @@ func Run(ctx context.Context, cfg *Config) (Result, error) {
 		return Result{}, fmt.Errorf("load controls: %w", err)
 	}
 
-	// Collect controls matching any requested framework.
-	fwSet := make(map[policy.ComplianceFramework]struct{})
-	for _, p := range profiles {
-		fwSet[policy.ComplianceFramework(p.FrameworkKey)] = struct{}{}
-	}
-	var controls []policy.ControlDefinition
-	for i := range allControls {
-		for fw := range fwSet {
-			if allControls[i].HasCompliance(fw) {
-				controls = append(controls, allControls[i])
-				break
-			}
-		}
-	}
+	controls := filterByFrameworks(allControls, profiles)
 
 	celEval, err := stavecel.NewPredicateEval()
 	if err != nil {
@@ -169,6 +156,23 @@ func Run(ctx context.Context, cfg *Config) (Result, error) {
 
 // loadProfiles resolves the built-in and custom profiles named in cfg.
 // Returns ErrInput when a profile ID/file is invalid or none are given.
+func filterByFrameworks(allControls []policy.ControlDefinition, profiles []*evidence.FrameworkProfile) []policy.ControlDefinition {
+	fwSet := make(map[policy.ComplianceFramework]struct{}, len(profiles))
+	for _, p := range profiles {
+		fwSet[policy.ComplianceFramework(p.FrameworkKey)] = struct{}{}
+	}
+	var controls []policy.ControlDefinition
+	for i := range allControls {
+		for fw := range fwSet {
+			if allControls[i].HasCompliance(fw) {
+				controls = append(controls, allControls[i])
+				break
+			}
+		}
+	}
+	return controls
+}
+
 func loadProfiles(cfg *Config) ([]*evidence.FrameworkProfile, error) {
 	var profiles []*evidence.FrameworkProfile
 	for _, pid := range cfg.ProfileIDs {

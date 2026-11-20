@@ -5,7 +5,7 @@ compute instances that can both read the data and reach the internet.
 
 ## Implementation
 
-**Source:** `iam-explainer/Stave/Extract/Exfiltration.lean`
+**Source:** `iam-lean/Stave/Extract/Exfiltration.lean`
 (`Extract.Exfiltration` namespace)
 
 Pure function over already-collected data. No live API calls.

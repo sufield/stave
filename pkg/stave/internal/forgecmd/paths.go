@@ -94,6 +94,12 @@ func Paths(snapshotPath, assetType, filter string) ([]byte, error) {
 	fmt.Fprintf(&buf, "%s observation properties (from %d resources in snapshot):\n", label, len(assets))
 	fmt.Fprintln(&buf, strings.Repeat("-", 80))
 
+	writePathLines(&buf, sorted, paths)
+
+	return buf.Bytes(), nil
+}
+
+func writePathLines(buf *bytes.Buffer, sorted []string, paths map[string]*pathInfo) {
 	for _, p := range sorted {
 		info := paths[p]
 		line := fmt.Sprintf("%-60s %-10s", p, info.typeName)
@@ -108,10 +114,8 @@ func Paths(snapshotPath, assetType, filter string) ([]byte, error) {
 			slices.Sort(vals)
 			line += fmt.Sprintf("  %v", vals)
 		}
-		fmt.Fprintln(&buf, line)
+		fmt.Fprintln(buf, line)
 	}
-
-	return buf.Bytes(), nil
 }
 
 func walkProperties(props map[string]any, prefix string, paths map[string]*pathInfo, total int) {

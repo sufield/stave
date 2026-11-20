@@ -5,7 +5,7 @@ environments via `sts:AssumeRole` chains.
 
 ## Implementation
 
-**Source:** `iam-explainer/Stave/Extract/CrossEnv.lean`
+**Source:** `iam-lean/Stave/Extract/CrossEnv.lean`
 (`Extract.CrossEnv` namespace)
 
 Pure function over already-collected IAM role JSON. No live API calls.

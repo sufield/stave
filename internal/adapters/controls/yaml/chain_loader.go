@@ -49,24 +49,10 @@ func LoadChains(dir string, registry policy.CapabilityRegistry) ([]policy.ChainD
 			return nil, fmt.Errorf("read chain %q: %w", path, readErr)
 		}
 
-		var chain policy.ChainDefinition
-		if unmarshalErr := yamlv3.Unmarshal(data, &chain); unmarshalErr != nil {
-			return nil, fmt.Errorf("parse chain %q: %w", path, unmarshalErr)
+		chain, parseErr := parseAndValidateChain(data, path, registry, idSources)
+		if parseErr != nil {
+			return nil, parseErr
 		}
-
-		if validateErr := chain.Validate(); validateErr != nil {
-			return nil, fmt.Errorf("validate chain %q: %w", path, validateErr)
-		}
-
-		if capErr := chain.ValidateCapabilities(registry); capErr != nil {
-			return nil, fmt.Errorf("validate chain %q: %w", path, capErr)
-		}
-
-		if existing, ok := idSources[chain.ID]; ok {
-			return nil, fmt.Errorf("duplicate chain ID %q found in %q and %q", chain.ID, existing, path)
-		}
-		idSources[chain.ID] = path
-
 		chains = append(chains, chain)
 	}
 
@@ -100,21 +86,10 @@ func LoadChainsFS(fsys fs.FS, dir string, registry policy.CapabilityRegistry) ([
 			return nil, fmt.Errorf("read chain %q: %w", path, readErr)
 		}
 
-		var chain policy.ChainDefinition
-		if unmarshalErr := yamlv3.Unmarshal(data, &chain); unmarshalErr != nil {
-			return nil, fmt.Errorf("parse chain %q: %w", path, unmarshalErr)
+		chain, parseErr := parseAndValidateChain(data, path, registry, idSources)
+		if parseErr != nil {
+			return nil, parseErr
 		}
-		if validateErr := chain.Validate(); validateErr != nil {
-			return nil, fmt.Errorf("validate chain %q: %w", path, validateErr)
-		}
-		if capErr := chain.ValidateCapabilities(registry); capErr != nil {
-			return nil, fmt.Errorf("validate chain %q: %w", path, capErr)
-		}
-		if existing, ok := idSources[chain.ID]; ok {
-			return nil, fmt.Errorf("duplicate chain ID %q found in %q and %q", chain.ID, existing, path)
-		}
-		idSources[chain.ID] = path
-
 		chains = append(chains, chain)
 	}
 
@@ -123,4 +98,22 @@ func LoadChainsFS(fsys fs.FS, dir string, registry policy.CapabilityRegistry) ([
 	})
 
 	return chains, nil
+}
+
+func parseAndValidateChain(data []byte, path string, registry policy.CapabilityRegistry, idSources map[kernel.ChainID]string) (policy.ChainDefinition, error) {
+	var chain policy.ChainDefinition
+	if err := yamlv3.Unmarshal(data, &chain); err != nil {
+		return chain, fmt.Errorf("parse chain %q: %w", path, err)
+	}
+	if err := chain.Validate(); err != nil {
+		return chain, fmt.Errorf("validate chain %q: %w", path, err)
+	}
+	if err := chain.ValidateCapabilities(registry); err != nil {
+		return chain, fmt.Errorf("validate chain %q: %w", path, err)
+	}
+	if existing, ok := idSources[chain.ID]; ok {
+		return chain, fmt.Errorf("duplicate chain ID %q found in %q and %q", chain.ID, existing, path)
+	}
+	idSources[chain.ID] = path
+	return chain, nil
 }

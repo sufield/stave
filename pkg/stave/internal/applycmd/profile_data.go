@@ -111,32 +111,10 @@ func loadControlsMulti(ctx context.Context, profiles []Profile) (string, []polic
 	_, statErr := os.Stat(base)
 	useEmbedded := statErr != nil
 
-	seenDir := make(map[string]struct{})
-	seenCtl := make(map[kernel.ControlID]struct{})
-	var primaryDir string
-	var controls []policy.ControlDefinition
-	for _, prof := range profiles {
-		dir := controlDirForProfile(prof, base, useEmbedded)
-		if primaryDir == "" {
-			primaryDir = dir
-		}
-		if _, dup := seenDir[dir]; dup {
-			continue
-		}
-		seenDir[dir] = struct{}{}
-		loaded, err := loadControlDir(ctx, dir, useEmbedded)
-		if err != nil {
-			return "", nil, err
-		}
-		for i := range loaded {
-			if _, dup := seenCtl[loaded[i].ID]; dup {
-				continue
-			}
-			seenCtl[loaded[i].ID] = struct{}{}
-			controls = append(controls, loaded[i])
-		}
+	ctlDir, controls, err := loadDedupedControls(ctx, profiles, base, useEmbedded)
+	if err != nil {
+		return "", nil, err
 	}
-	ctlDir := primaryDir
 
 	var frameworks []policy.ComplianceFramework
 	for _, prof := range profiles {
@@ -162,6 +140,35 @@ func loadControlsMulti(ctx context.Context, profiles []Profile) (string, []polic
 		return "", nil, fmt.Errorf("%w: no %s controls found in %s", appeval.ErrNoControls, label, ctlDir)
 	}
 	return ctlDir, controls, nil
+}
+
+func loadDedupedControls(ctx context.Context, profiles []Profile, base string, useEmbedded bool) (string, []policy.ControlDefinition, error) {
+	seenDir := make(map[string]struct{})
+	seenCtl := make(map[kernel.ControlID]struct{})
+	var primaryDir string
+	var controls []policy.ControlDefinition
+	for _, prof := range profiles {
+		dir := controlDirForProfile(prof, base, useEmbedded)
+		if primaryDir == "" {
+			primaryDir = dir
+		}
+		if _, dup := seenDir[dir]; dup {
+			continue
+		}
+		seenDir[dir] = struct{}{}
+		loaded, err := loadControlDir(ctx, dir, useEmbedded)
+		if err != nil {
+			return "", nil, err
+		}
+		for i := range loaded {
+			if _, dup := seenCtl[loaded[i].ID]; dup {
+				continue
+			}
+			seenCtl[loaded[i].ID] = struct{}{}
+			controls = append(controls, loaded[i])
+		}
+	}
+	return primaryDir, controls, nil
 }
 
 func controlDirForProfile(prof Profile, base string, useEmbedded bool) string {

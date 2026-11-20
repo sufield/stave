@@ -152,27 +152,7 @@ func Resolve(input ResolutionInput) ResolvedPermissions {
 		PrincipalARN: input.PrincipalARN,
 	}
 
-	// Check completeness.
-	if len(input.MalformedLayers) > 0 {
-		// A present-but-unparseable policy layer means the effective
-		// permissions are under-scoped (a missing Deny/SCP looks more
-		// permissive). Treat as inconclusive rather than trusting the result.
-		result.Incomplete = true
-		result.IncompleteReasons = append(result.IncompleteReasons,
-			"policy layer(s) present but unparseable: "+strings.Join(input.MalformedLayers, ", "))
-	}
-	if !input.SCPPresent {
-		result.Incomplete = true
-		result.IncompleteReasons = append(result.IncompleteReasons,
-			"org.scp_hierarchy absent from snapshot")
-	}
-	if input.BoundaryPresent && input.BoundaryPolicy == nil {
-		result.Incomplete = true
-		result.IncompleteReasons = append(result.IncompleteReasons,
-			"permission boundary policy document absent from snapshot")
-	}
-	if result.Incomplete {
-		result.PrivilegeLevel = PrivilegeLevelUnknown
+	if checkInputCompleteness(input, &result) {
 		return result
 	}
 
@@ -229,6 +209,29 @@ func Resolve(input ResolutionInput) ResolvedPermissions {
 	}
 
 	return result
+}
+
+func checkInputCompleteness(input ResolutionInput, result *ResolvedPermissions) bool {
+	if len(input.MalformedLayers) > 0 {
+		result.Incomplete = true
+		result.IncompleteReasons = append(result.IncompleteReasons,
+			"policy layer(s) present but unparseable: "+strings.Join(input.MalformedLayers, ", "))
+	}
+	if !input.SCPPresent {
+		result.Incomplete = true
+		result.IncompleteReasons = append(result.IncompleteReasons,
+			"org.scp_hierarchy absent from snapshot")
+	}
+	if input.BoundaryPresent && input.BoundaryPolicy == nil {
+		result.Incomplete = true
+		result.IncompleteReasons = append(result.IncompleteReasons,
+			"permission boundary policy document absent from snapshot")
+	}
+	if result.Incomplete {
+		result.PrivilegeLevel = PrivilegeLevelUnknown
+		return true
+	}
+	return false
 }
 
 // collectSCPCeiling computes the intersection of allowed actions

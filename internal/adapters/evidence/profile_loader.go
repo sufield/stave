@@ -155,24 +155,11 @@ func parseProfile(data []byte, filename string) (*coreevidence.FrameworkProfile,
 		})
 	}
 
-	// Handle extends: inherit parent requirements.
 	if dto.Extends != "" {
-		parent, parentErr := LoadProfile(dto.Extends)
-		if parentErr != nil {
-			return nil, fmt.Errorf("%s: extends %q: %w", filename, dto.Extends, parentErr)
+		merged, mergeErr := mergeParentRequirements(dto.Extends, reqs, filename)
+		if mergeErr != nil {
+			return nil, mergeErr
 		}
-		// Merge: parent requirements first, child overrides by ID.
-		childIDs := make(map[string]struct{}, len(reqs))
-		for _, r := range reqs {
-			childIDs[r.ID] = struct{}{}
-		}
-		var merged []coreevidence.Requirement
-		for _, pr := range parent.Requirements {
-			if _, ok := childIDs[pr.ID]; !ok {
-				merged = append(merged, pr)
-			}
-		}
-		merged = append(merged, reqs...)
 		reqs = merged
 	}
 
@@ -184,6 +171,24 @@ func parseProfile(data []byte, filename string) (*coreevidence.FrameworkProfile,
 		FrameworkKey: dto.FrameworkKey,
 		Requirements: reqs,
 	}, nil
+}
+
+func mergeParentRequirements(extends string, childReqs []coreevidence.Requirement, filename string) ([]coreevidence.Requirement, error) {
+	parent, err := LoadProfile(extends)
+	if err != nil {
+		return nil, fmt.Errorf("%s: extends %q: %w", filename, extends, err)
+	}
+	childIDs := make(map[string]struct{}, len(childReqs))
+	for _, r := range childReqs {
+		childIDs[r.ID] = struct{}{}
+	}
+	var merged []coreevidence.Requirement
+	for _, pr := range parent.Requirements {
+		if _, ok := childIDs[pr.ID]; !ok {
+			merged = append(merged, pr)
+		}
+	}
+	return append(merged, childReqs...), nil
 }
 
 func convertYAMLRequirement(r yamlRequirement, filename string) (coreevidence.Requirement, error) {

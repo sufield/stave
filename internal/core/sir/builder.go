@@ -514,31 +514,30 @@ func buildIdentityFacts(snapshots []asset.Snapshot, chains map[asset.ID][]RoleCh
 				continue
 			}
 			seen[id] = struct{}{}
-			fact := IdentityFact{
-				PrincipalID: string(id),
-				Source:      SourceRef{Kind: "identity", ID: string(id)},
-			}
-			// Clone Properties so a downstream consumer that
-			// mutates the SIR fact's map cannot leak edits back
-			// into the original observation snapshot. Empty maps
-			// are dropped (omitempty on the JSON tag handles the
-			// wire side; this skips the allocation on the Go side).
-			if len(ci.Properties) > 0 {
-				props := make(map[string]any, len(ci.Properties))
-				maps.Copy(props, ci.Properties)
-				fact.Properties = props
-			}
-			if chain, ok := chains[id]; ok && len(chain) > 0 {
-				cloned := make([]RoleChainFact, len(chain))
-				copy(cloned, chain)
-				sortRoleChains(cloned)
-				fact.RoleChains = cloned
-			}
-			out = append(out, fact)
+			out = append(out, buildOneIdentityFact(ci, chains[id]))
 		}
 	}
 	slices.SortFunc(out, func(a, b IdentityFact) int { return cmp.Compare(a.PrincipalID, b.PrincipalID) })
 	return out
+}
+
+func buildOneIdentityFact(ci *asset.CloudIdentity, roleChains []RoleChainFact) IdentityFact {
+	fact := IdentityFact{
+		PrincipalID: string(ci.ID),
+		Source:      SourceRef{Kind: "identity", ID: string(ci.ID)},
+	}
+	if len(ci.Properties) > 0 {
+		props := make(map[string]any, len(ci.Properties))
+		maps.Copy(props, ci.Properties)
+		fact.Properties = props
+	}
+	if len(roleChains) > 0 {
+		cloned := make([]RoleChainFact, len(roleChains))
+		copy(cloned, roleChains)
+		sortRoleChains(cloned)
+		fact.RoleChains = cloned
+	}
+	return fact
 }
 
 // sortRoleChains imposes a total order on a single principal's

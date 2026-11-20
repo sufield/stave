@@ -330,14 +330,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// compounds. Markers stay out of Summary.Violations and the
 	// attack-stage summary by design: they contribute to compound
 	// risk chains but are not violations themselves.
-	failures := make([]risk.FailingControl, 0, len(report.Findings)+len(report.MarkerFindings))
-	for i := range report.Findings {
-		failures = append(failures, report.Findings[i].ToFailingControl())
-	}
-	violationCount := len(failures)
-	for i := range report.MarkerFindings {
-		failures = append(failures, report.MarkerFindings[i].ToFailingControl())
-	}
+	failures, violationCount := collectFailures(report)
 
 	controlLookup := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
 	for i := range controls {
@@ -403,46 +396,7 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 	// marker findings carry no attack-stage semantics on their own.
 	report.AttackStageSummary = risk.BuildAttackStageSummary(failures[:violationCount], controlLookup)
 
-	// Rank findings by exposure score (silent killer detection).
-	// ChainMembership must be annotated before this loop runs so the
-	// chain-bonus factor feeds into per-finding scores.
-	rankInputs := make([]risk.RankInput, len(report.Findings))
-	for i := range report.Findings {
-		rankInputs[i] = report.Findings[i].ToRankInput()
-	}
-	report.TopExposures = risk.RankExposures(rankInputs, controlLookup, 0)
-
-	// Propagate the per-finding score + breakdown back onto each
-	// Finding so downstream sorts and output can read the score
-	// without a parallel lookup. Matches metrics.md § Metric 1
-	// improvement signal: "score and breakdown are emitted on every
-	// finding, not only on the top-N slice".
-	for i := range report.TopExposures {
-		er := &report.TopExposures[i]
-		if er.IsDanglingReference(len(report.Findings)) {
-			// A dangling reference means the rank pipeline is out
-			// of sync with the finding set — stale ranker, upstream
-			// filter that dropped findings without updating indices,
-			// or a hand-built fixture with mismatched parallel
-			// arrays. Warn so the data-integrity gap surfaces
-			// instead of leaving a 0-score row with no trail.
-			slog.Warn("workflow: dangling exposure reference; skipping",
-				"control_id", er.ControlID, "asset_id", er.AssetID,
-				"finding_index", er.FindingIndex, "findings_available", len(report.Findings))
-			continue
-		}
-		f := &report.Findings[er.FindingIndex]
-		f.ExposureScore = er.ExposureScore
-		// Point directly at the slice element's field. The previous
-		// shape (`breakdown := er.Breakdown; f.ScoreBreakdown = &breakdown`)
-		// allocated a fresh per-iteration copy; pointing into the
-		// existing TopExposures slice avoids the per-iteration alloc
-		// and keeps the score breakdown a single source of truth.
-		// TopExposures is not mutated after this loop (sortFindings
-		// below reorders Findings, not TopExposures), so the shared
-		// pointer is stable for the report's lifetime.
-		f.ScoreBreakdown = &er.Breakdown
-	}
+	rankAndPropagateExposures(report, controlLookup)
 
 	// Re-sort findings by the newly-populated score.
 	evaluation.SortFindings(report.Findings)
@@ -455,30 +409,45 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 
 // annotateChainMembership cross-references fired chains with individual
 // findings and populates ChainMembership on each contributing finding.
+func collectFailures(report *evaluation.ComplianceReport) ([]risk.FailingControl, int) {
+	failures := make([]risk.FailingControl, 0, len(report.Findings)+len(report.MarkerFindings))
+	for i := range report.Findings {
+		failures = append(failures, report.Findings[i].ToFailingControl())
+	}
+	violationCount := len(failures)
+	for i := range report.MarkerFindings {
+		failures = append(failures, report.MarkerFindings[i].ToFailingControl())
+	}
+	return failures, violationCount
+}
+
+func rankAndPropagateExposures(report *evaluation.ComplianceReport, controlLookup map[kernel.ControlID]*policy.ControlDefinition) {
+	rankInputs := make([]risk.RankInput, len(report.Findings))
+	for i := range report.Findings {
+		rankInputs[i] = report.Findings[i].ToRankInput()
+	}
+	report.TopExposures = risk.RankExposures(rankInputs, controlLookup, 0)
+
+	for i := range report.TopExposures {
+		er := &report.TopExposures[i]
+		if er.IsDanglingReference(len(report.Findings)) {
+			slog.Warn("workflow: dangling exposure reference; skipping",
+				"control_id", er.ControlID, "asset_id", er.AssetID,
+				"finding_index", er.FindingIndex, "findings_available", len(report.Findings))
+			continue
+		}
+		f := &report.Findings[er.FindingIndex]
+		f.ExposureScore = er.ExposureScore
+		f.ScoreBreakdown = &er.Breakdown
+	}
+}
+
 func annotateChainMembership(report *evaluation.ComplianceReport) {
 	if !report.HasChainFindings() {
 		return
 	}
 
-	// Build a lookup: controlID → list of chain membership entries.
-	type entry struct {
-		controlIDs sets.Set[kernel.ControlID]
-		membership evaluation.ChainMembershipEntry
-	}
-	chainEntries := make([]entry, 0, len(report.ChainFindings))
-	for i := range report.ChainFindings {
-		cf := &report.ChainFindings[i]
-		cidSet := sets.New[kernel.ControlID](cf.ControlsFailing...)
-		chainEntries = append(chainEntries, entry{
-			controlIDs: cidSet,
-			membership: evaluation.ChainMembershipEntry{
-				ChainID:       cf.ChainID,
-				ChainSeverity: cf.Severity,
-				StageSpan:     risk.SortStagesByKillChain(cf.AttackStages),
-				Narrative:     cf.Description,
-			},
-		})
-	}
+	chainEntries := buildChainMembershipEntries(report.ChainFindings)
 
 	for i := range report.Findings {
 		f := &report.Findings[i]
@@ -502,6 +471,28 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 	}
 
 	annotateGraphChains(report)
+}
+
+type chainMembershipEntry struct {
+	controlIDs sets.Set[kernel.ControlID]
+	membership evaluation.ChainMembershipEntry
+}
+
+func buildChainMembershipEntries(chainFindings []findings.CompoundFinding) []chainMembershipEntry {
+	entries := make([]chainMembershipEntry, 0, len(chainFindings))
+	for i := range chainFindings {
+		cf := &chainFindings[i]
+		entries = append(entries, chainMembershipEntry{
+			controlIDs: sets.New[kernel.ControlID](cf.ControlsFailing...),
+			membership: evaluation.ChainMembershipEntry{
+				ChainID:       cf.ChainID,
+				ChainSeverity: cf.Severity,
+				StageSpan:     risk.SortStagesByKillChain(cf.AttackStages),
+				Narrative:     cf.Description,
+			},
+		})
+	}
+	return entries
 }
 
 func annotateGraphChains(report *evaluation.ComplianceReport) {

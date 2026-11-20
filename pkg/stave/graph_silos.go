@@ -138,20 +138,7 @@ func buildSiloReport(controls []policy.ControlDefinition, chains []policy.ChainD
 		top = top[:10]
 	}
 
-	dist := map[string]int{"0_chains": 0, "1-5_chains": 0, "6-20_chains": 0, "21+_chains": 0}
-	for svc := range serviceControls {
-		c := serviceChains[svc]
-		switch {
-		case c == 0:
-			dist["0_chains"]++
-		case c <= 5:
-			dist["1-5_chains"]++
-		case c <= 20:
-			dist["6-20_chains"]++
-		default:
-			dist["21+_chains"]++
-		}
-	}
+	dist := computeChainDistribution(serviceControls, serviceChains)
 
 	assetTypeControls := indexControlsByAssetType(controls)
 	schemaTypes := contractschema.AssetTypesWithSchema()
@@ -201,6 +188,24 @@ func indexControlsByService(controls []policy.ControlDefinition) map[string]int 
 		}
 	}
 	return m
+}
+
+func computeChainDistribution(serviceControls map[string]int, serviceChains map[string]int) map[string]int {
+	dist := map[string]int{"0_chains": 0, "1-5_chains": 0, "6-20_chains": 0, "21+_chains": 0}
+	for svc := range serviceControls {
+		c := serviceChains[svc]
+		switch {
+		case c == 0:
+			dist["0_chains"]++
+		case c <= 5:
+			dist["1-5_chains"]++
+		case c <= 20:
+			dist["6-20_chains"]++
+		default:
+			dist["21+_chains"]++
+		}
+	}
+	return dist
 }
 
 // indexChainConnectivity returns per-service chain counts and connections.

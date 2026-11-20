@@ -262,38 +262,7 @@ func WithSIRDocument(doc *sir.Document) GraphOption {
 // supplied GraphExport. Reads only — does not recompute. The SIR
 // builder is the single source of truth for both fields.
 func hydrateGraphFromSIR(g *GraphExport, doc *sir.Document) {
-	// Per-asset lifecycle: iterate AssetNodes (already sorted)
-	// and look up each by ID in the SIR's AssetFact slice. Two
-	// passes through a small slice rather than a map because
-	// AssetFact slices are typically O(10s); the constant-factor
-	// improvement isn't worth a map allocation per call.
-	for i := range g.Assets {
-		assetID := string(g.Assets[i].ID)
-		for j := range doc.Assets {
-			af := &doc.Assets[j]
-			if af.ID != assetID {
-				continue
-			}
-			if af.Lifecycle == nil {
-				break
-			}
-			lc := af.Lifecycle
-			// Skip the block when nothing's worth reporting —
-			// the omitempty contract on the json tag relies on
-			// nil here, not on a zero-valued struct.
-			if !lc.Provisioned && !lc.Decommissioned &&
-				lc.FirstSeen.IsZero() && lc.LastSeen.IsZero() {
-				break
-			}
-			g.Assets[i].Lifecycle = &AssetLifecycleInfo{
-				Provisioned:    lc.Provisioned,
-				Decommissioned: lc.Decommissioned,
-				FirstSeen:      lc.FirstSeen,
-				LastSeen:       lc.LastSeen,
-			}
-			break
-		}
-	}
+	hydrateAssetLifecycles(g, doc)
 
 	for i := range doc.Identities {
 		id := &doc.Identities[i]
@@ -309,6 +278,33 @@ func hydrateGraphFromSIR(g *GraphExport, doc *sir.Document) {
 			cmp.Compare(a.FinalRole, b.FinalRole),
 		)
 	})
+}
+
+func hydrateAssetLifecycles(g *GraphExport, doc *sir.Document) {
+	for i := range g.Assets {
+		assetID := string(g.Assets[i].ID)
+		for j := range doc.Assets {
+			af := &doc.Assets[j]
+			if af.ID != assetID {
+				continue
+			}
+			if af.Lifecycle == nil {
+				break
+			}
+			lc := af.Lifecycle
+			if !lc.Provisioned && !lc.Decommissioned &&
+				lc.FirstSeen.IsZero() && lc.LastSeen.IsZero() {
+				break
+			}
+			g.Assets[i].Lifecycle = &AssetLifecycleInfo{
+				Provisioned:    lc.Provisioned,
+				Decommissioned: lc.Decommissioned,
+				FirstSeen:      lc.FirstSeen,
+				LastSeen:       lc.LastSeen,
+			}
+			break
+		}
+	}
 }
 
 func buildReachabilityPath(principalID string, ch *sir.RoleChainFact) ReachabilityPath {

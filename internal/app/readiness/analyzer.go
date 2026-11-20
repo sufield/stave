@@ -126,35 +126,51 @@ func classifyChains(controls []policy.ControlDefinition, chains []policy.ChainDe
 	forecast := ChainForecast{Total: len(chains)}
 
 	for i := range chains {
-		chain := &chains[i]
-		blocked := false
-		indeterminate := false
-
-		for _, memberID := range chain.ControlIDs {
-			ctl, ok := ctlIndex[memberID]
-			if !ok {
-				indeterminate = true
-				continue
-			}
-			if !ctl.HasApplicableAssetTypes() {
-				indeterminate = true
-				continue
-			}
-			if !anyObserved(ctl.ApplicableAssetTypes, observed) {
-				blocked = true
-			}
-		}
-
-		switch {
-		case blocked:
+		switch classifyChainStatus(&chains[i], ctlIndex, observed) {
+		case chainBlocked:
 			forecast.Blocked++
-		case indeterminate:
+		case chainIndeterminate:
 			forecast.Indeterminate++
 		default:
 			forecast.CanFire++
 		}
 	}
 	return forecast
+}
+
+type chainStatus int
+
+const (
+	chainCanFire chainStatus = iota
+	chainBlocked
+	chainIndeterminate
+)
+
+func classifyChainStatus(chain *policy.ChainDefinition, ctlIndex map[kernel.ControlID]*policy.ControlDefinition, observed map[kernel.AssetType]int) chainStatus {
+	blocked := false
+	indeterminate := false
+	for _, memberID := range chain.ControlIDs {
+		ctl, ok := ctlIndex[memberID]
+		if !ok {
+			indeterminate = true
+			continue
+		}
+		if !ctl.HasApplicableAssetTypes() {
+			indeterminate = true
+			continue
+		}
+		if !anyObserved(ctl.ApplicableAssetTypes, observed) {
+			blocked = true
+		}
+	}
+	switch {
+	case blocked:
+		return chainBlocked
+	case indeterminate:
+		return chainIndeterminate
+	default:
+		return chainCanFire
+	}
 }
 
 // rankActions uses a greedy weighted set cover to recommend the
@@ -238,8 +254,21 @@ func marginalValue(
 		}
 	}
 
-	// Chains unblocked: currently blocked, ALL members would fire
-	// after adding assetType to simulated.
+	newChains = countUnblockedChains(assetType, chains, ctlIndex, simulated)
+	return newChains, newControls
+}
+
+// describeAction returns a one-line human-friendly description
+// for collecting the given asset type. Phase 1 emits generic
+// language; a follow-on registry mapping asset.Type → collector
+// invocation will let this synthesize specific commands.
+func countUnblockedChains(
+	assetType kernel.AssetType,
+	chains []policy.ChainDefinition,
+	ctlIndex map[kernel.ControlID]*policy.ControlDefinition,
+	simulated map[kernel.AssetType]int,
+) int {
+	count := 0
 	for i := range chains {
 		chain := &chains[i]
 		wasBlocked := false
@@ -251,27 +280,21 @@ func marginalValue(
 				continue
 			}
 			if anyObserved(ctl.ApplicableAssetTypes, simulated) {
-				continue // member already fires
+				continue
 			}
 			wasBlocked = true
-			// Would this member fire if assetType were added?
-			memberFires := slices.Contains(ctl.ApplicableAssetTypes, assetType)
-			if !memberFires {
+			if !slices.Contains(ctl.ApplicableAssetTypes, assetType) {
 				wouldBeUnblocked = false
 				break
 			}
 		}
 		if wasBlocked && wouldBeUnblocked {
-			newChains++
+			count++
 		}
 	}
-	return newChains, newControls
+	return count
 }
 
-// describeAction returns a one-line human-friendly description
-// for collecting the given asset type. Phase 1 emits generic
-// language; a follow-on registry mapping asset.Type → collector
-// invocation will let this synthesize specific commands.
 func describeAction(t kernel.AssetType) string {
 	return "Collect " + string(t) + " observations and re-run stave readiness."
 }

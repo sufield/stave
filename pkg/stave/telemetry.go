@@ -25,16 +25,7 @@ func MapTelemetry(data []byte, severity, resourceARN string) ([]byte, error) {
 		return nil, fmt.Errorf("parse assessment: %w", err)
 	}
 
-	filter := apptelemetry.Filter{ResourceARN: resourceARN}
-	if severity != "" {
-		filter.Severities = make(map[string]struct{})
-		for s := range strings.SplitSeq(severity, ",") {
-			trimmed := strings.TrimSpace(strings.ToLower(s))
-			if trimmed != "" {
-				filter.Severities[trimmed] = struct{}{}
-			}
-		}
-	}
+	filter := buildTelemetryFilter(resourceARN, severity)
 
 	events := apptelemetry.MapAssessment(&assessment, filter, nil)
 
@@ -70,16 +61,7 @@ func MapTelemetryHistory(dir, severity, resourceARN string) ([]byte, error) {
 		return nil, fmt.Errorf("no JSON files in %s", dir)
 	}
 
-	filter := apptelemetry.Filter{ResourceARN: resourceARN}
-	if severity != "" {
-		filter.Severities = make(map[string]struct{})
-		for s := range strings.SplitSeq(severity, ",") {
-			trimmed := strings.TrimSpace(strings.ToLower(s))
-			if trimmed != "" {
-				filter.Severities[trimmed] = struct{}{}
-			}
-		}
-	}
+	filter := buildTelemetryFilter(resourceARN, severity)
 
 	tracker := apptelemetry.NewWindowTracker()
 	var buf bytes.Buffer
@@ -108,4 +90,18 @@ func MapTelemetryHistory(dir, severity, resourceARN string) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+func buildTelemetryFilter(resourceARN, severity string) apptelemetry.Filter {
+	filter := apptelemetry.Filter{ResourceARN: resourceARN}
+	if severity != "" {
+		filter.Severities = make(map[string]struct{})
+		for s := range strings.SplitSeq(severity, ",") {
+			trimmed := strings.TrimSpace(strings.ToLower(s))
+			if trimmed != "" {
+				filter.Severities[trimmed] = struct{}{}
+			}
+		}
+	}
+	return filter
 }

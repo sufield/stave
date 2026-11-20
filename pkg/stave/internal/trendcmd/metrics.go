@@ -473,33 +473,28 @@ func computeFrameworkTrends(assessments []*report.Assessment, complianceFlag str
 		if totalReqs == 0 {
 			continue
 		}
-
-		var scores []float64
-		for _, a := range assessments {
-			violated := remediation.FindingSet(a.Findings).ViolatedRequirements(policy.ComplianceFramework(fw))
-			satisfied := totalReqs - len(violated)
-			score := float64(satisfied) / float64(totalReqs)
-			scores = append(scores, score)
-		}
-
-		dir := "stable"
-		if len(scores) >= 2 {
-			last := scores[len(scores)-1]
-			prev := scores[len(scores)-2]
-			if last > prev {
-				dir = "improving"
-			} else if last < prev {
-				dir = "regressing"
-			}
-		}
-
-		trends = append(trends, frameworkTrend{
-			Framework: fw,
-			Scores:    scores,
-			Direction: dir,
-		})
+		trends = append(trends, buildFrameworkTrend(fw, totalReqs, assessments))
 	}
 	return trends
+}
+
+func buildFrameworkTrend(fw string, totalReqs int, assessments []*report.Assessment) frameworkTrend {
+	scores := make([]float64, len(assessments))
+	for i, a := range assessments {
+		violated := remediation.FindingSet(a.Findings).ViolatedRequirements(policy.ComplianceFramework(fw))
+		scores[i] = float64(totalReqs-len(violated)) / float64(totalReqs)
+	}
+	dir := "stable"
+	if len(scores) >= 2 {
+		last := scores[len(scores)-1]
+		prev := scores[len(scores)-2]
+		if last > prev {
+			dir = "improving"
+		} else if last < prev {
+			dir = "regressing"
+		}
+	}
+	return frameworkTrend{Framework: fw, Scores: scores, Direction: dir}
 }
 
 // computeSLATrend extracts SLA compliance rate per assessment run.

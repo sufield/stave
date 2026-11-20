@@ -79,6 +79,14 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 		})
 	}
 
+	indexChainPaths(&idx, chains, controlPaths)
+
+	stabilizeIndex(&idx)
+
+	return idx
+}
+
+func indexChainPaths(idx *Index, chains []policy.ChainDefinition, controlPaths map[kernel.ControlID][]string) {
 	for i := range chains {
 		chain := &chains[i]
 		chainPaths := map[string]struct{}{}
@@ -91,10 +99,6 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 			idx.PathToChains[p] = append(idx.PathToChains[p], chain.ID)
 		}
 	}
-
-	stabilizeIndex(&idx)
-
-	return idx
 }
 
 func stabilizeIndex(idx *Index) {

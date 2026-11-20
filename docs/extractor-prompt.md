@@ -57,7 +57,7 @@ controls regardless of how the observations were created.
 
 If you need a data source or resource type the built-in extractors
 don't cover, write a function that produces `List ObsAsset` and
-serialize to the schema above. Any language works — the contract is
+serialize to the schema above. Any language works. The contract is
 the only coupling point.
 
 ### Using Steampipe

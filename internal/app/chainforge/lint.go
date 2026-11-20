@@ -56,31 +56,7 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]st
 			chain.EscalationThreshold, len(chain.ControlIDs)))
 	}
 
-	// Check member controls exist in catalog.
-	for _, cid := range chain.ControlIDs {
-		if controlIDs != nil {
-			if _, ok := controlIDs[cid]; !ok {
-				result.Errors = append(result.Errors, fmt.Sprintf(
-					"member control %q not found in catalog", cid))
-			}
-		}
-	}
-
-	// Validate capability strings against the catalog registry.
-	if registry != nil {
-		for _, cap := range chain.Preconditions {
-			if !registry.IsValid(cap) {
-				result.Errors = append(result.Errors, fmt.Sprintf(
-					"precondition %q is not a valid capability", cap))
-			}
-		}
-		for _, cap := range chain.Postconditions {
-			if !registry.IsValid(cap) {
-				result.Errors = append(result.Errors, fmt.Sprintf(
-					"postcondition %q is not a valid capability", cap))
-			}
-		}
-	}
+	lintChainCatalogRefs(chain, controlIDs, registry, &result)
 
 	lintImplicitDependencies(chain.ImplicitDependencies, &result)
 
@@ -96,6 +72,31 @@ func LintChain(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]st
 	}
 
 	return result
+}
+
+func lintChainCatalogRefs(chain *policy.ChainDefinition, controlIDs map[kernel.ControlID]struct{}, registry policy.CapabilityRegistry, result *LintResult) {
+	if controlIDs != nil {
+		for _, cid := range chain.ControlIDs {
+			if _, ok := controlIDs[cid]; !ok {
+				result.Errors = append(result.Errors, fmt.Sprintf(
+					"member control %q not found in catalog", cid))
+			}
+		}
+	}
+	if registry != nil {
+		for _, cap := range chain.Preconditions {
+			if !registry.IsValid(cap) {
+				result.Errors = append(result.Errors, fmt.Sprintf(
+					"precondition %q is not a valid capability", cap))
+			}
+		}
+		for _, cap := range chain.Postconditions {
+			if !registry.IsValid(cap) {
+				result.Errors = append(result.Errors, fmt.Sprintf(
+					"postcondition %q is not a valid capability", cap))
+			}
+		}
+	}
 }
 
 func lintImplicitDependencies(deps []policy.ImplicitDependency, result *LintResult) {

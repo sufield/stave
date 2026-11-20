@@ -156,17 +156,7 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 	snaps := sortedSnapshots(input.Snapshots)
 	endTime := resolveFinalizationTime(input.EvalTime, snaps[len(snaps)-1].CapturedAt)
 
-	// Phase 1: Pivot data to Asset-Major order O(Snapshots * Assets)
-	assetHistories := make(map[asset.ID][]observation)
-	for _, snap := range snaps {
-		for _, a := range snap.Assets {
-			assetHistories[a.ID] = append(assetHistories[a.ID], observation{
-				at:         snap.CapturedAt,
-				state:      a,
-				identities: snap.Identities,
-			})
-		}
-	}
+	assetHistories := pivotToAssetMajor(snaps)
 
 	// Phase 2: Analyze streaks per control O(Controls * Assets)
 	stats := make(map[kernel.ControlID]controlStat, len(input.Controls))
@@ -196,6 +186,20 @@ func computeStats(input Input) map[kernel.ControlID]controlStat {
 }
 
 // Helpers
+
+func pivotToAssetMajor(snaps []asset.Snapshot) map[asset.ID][]observation {
+	histories := make(map[asset.ID][]observation)
+	for _, snap := range snaps {
+		for _, a := range snap.Assets {
+			histories[a.ID] = append(histories[a.ID], observation{
+				at:         snap.CapturedAt,
+				state:      a,
+				identities: snap.Identities,
+			})
+		}
+	}
+	return histories
+}
 
 func (s *session) globalMaxStreak() (time.Duration, string) {
 	var best time.Duration

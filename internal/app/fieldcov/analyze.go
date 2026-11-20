@@ -263,19 +263,10 @@ func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]str
 		Frameworks: extractFrameworks(ctl),
 	}
 
-	if canCheckAssetPresence(ctl, presentAssetTypes) {
-		hasAsset := false
-		for _, at := range ctl.ApplicableAssetTypes {
-			if _, ok := presentAssetTypes[string(at)]; ok {
-				hasAsset = true
-				break
-			}
-		}
-		if !hasAsset {
-			result.Classification = NoAssets
-			result.AssetType = ctl.ApplicableAssetTypes[0]
-			return result
-		}
+	if missingType, missing := lacksObservedAssetType(ctl, presentAssetTypes); missing {
+		result.Classification = NoAssets
+		result.AssetType = missingType
+		return result
 	}
 
 	// A kind-gate in a top-level "all" block (e.g. streaming.kind == msk_cluster)
@@ -333,6 +324,18 @@ func classifyControl(ctl *policy.ControlDefinition, presentFields map[string]str
 	}
 
 	return result
+}
+
+func lacksObservedAssetType(ctl *policy.ControlDefinition, presentAssetTypes map[string]struct{}) (kernel.AssetType, bool) {
+	if !canCheckAssetPresence(ctl, presentAssetTypes) {
+		return "", false
+	}
+	for _, at := range ctl.ApplicableAssetTypes {
+		if _, ok := presentAssetTypes[string(at)]; ok {
+			return "", false
+		}
+	}
+	return ctl.ApplicableAssetTypes[0], true
 }
 
 // fieldRef is a field reference extracted from a predicate.
@@ -577,22 +580,8 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 }
 
 func buildShoppingList(silentRisk, incomplete ControlResults, controls []policy.ControlDefinition) map[kernel.AssetType][]ShoppingItem {
+	fieldToControls, fieldToSeverity := accumulateMissingFields(silentRisk, incomplete)
 	sevOrder := policy.SeverityOrderOf
-	fieldToControls := make(map[string][]kernel.ControlID)
-	fieldToSeverity := make(map[string]policy.Severity)
-	combined := make([]ControlResult, 0, len(silentRisk)+len(incomplete))
-	combined = append(combined, silentRisk...)
-	combined = append(combined, incomplete...)
-	for i := range combined {
-		r := &combined[i]
-		for _, f := range r.MissingFields {
-			strF := f.String()
-			fieldToControls[strF] = append(fieldToControls[strF], r.ControlID)
-			if current, ok := fieldToSeverity[strF]; !ok || sevOrder(r.Severity.String()) < sevOrder(current.String()) {
-				fieldToSeverity[strF] = r.Severity
-			}
-		}
-	}
 	controlAssetType := make(map[kernel.ControlID]kernel.AssetType, len(controls))
 	for i := range controls {
 		if controls[i].HasApplicableAssetTypes() {
@@ -628,6 +617,26 @@ func buildShoppingList(silentRisk, incomplete ControlResults, controls []policy.
 		shopping[at] = items
 	}
 	return shopping
+}
+
+func accumulateMissingFields(silentRisk, incomplete ControlResults) (map[string][]kernel.ControlID, map[string]policy.Severity) {
+	sevOrder := policy.SeverityOrderOf
+	fieldToControls := make(map[string][]kernel.ControlID)
+	fieldToSeverity := make(map[string]policy.Severity)
+	combined := make([]ControlResult, 0, len(silentRisk)+len(incomplete))
+	combined = append(combined, silentRisk...)
+	combined = append(combined, incomplete...)
+	for i := range combined {
+		r := &combined[i]
+		for _, f := range r.MissingFields {
+			strF := f.String()
+			fieldToControls[strF] = append(fieldToControls[strF], r.ControlID)
+			if current, ok := fieldToSeverity[strF]; !ok || sevOrder(r.Severity.String()) < sevOrder(current.String()) {
+				fieldToSeverity[strF] = r.Severity
+			}
+		}
+	}
+	return fieldToControls, fieldToSeverity
 }
 
 func classifyResults(report *Report, results []ControlResult) (silentRisk, incomplete ControlResults) {

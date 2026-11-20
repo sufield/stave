@@ -226,32 +226,19 @@ func Build(input BuildInput) *CoverageReport {
 
 	for _, td := range AllTactics {
 		ctls := byStage[td.StaveID]
-		tc := TacticCoverage{
-			TacticID:     td.ID,
-			TacticName:   td.Name,
-			ControlCount: len(ctls),
-			Controls:     ctls,
-		}
+		tc := buildTacticCoverage(td, ctls, input.MinControls, hasOverlay, failingControls)
 
-		if len(ctls) == 0 {
-			tc.Status = StatusNoCoverage
+		switch tc.Status {
+		case StatusNoCoverage:
 			noCoverageCount++
-		} else if len(ctls) < input.MinControls {
-			tc.Status = StatusThin
+		case StatusThin:
 			thinCount++
 			coveredCount++
-		} else {
-			tc.Status = StatusCovered
+		case StatusCovered:
 			coveredCount++
 		}
-
-		if hasOverlay && len(ctls) > 0 {
-			passing, failing := countPosture(ctls, failingControls)
-			tc.PassingCount = &passing
-			tc.FailingCount = &failing
-			pct := float64(passing) / float64(len(ctls)) * 100
-			tc.CoveragePercent = &pct
-			totalPassing += passing
+		if tc.PassingCount != nil {
+			totalPassing += *tc.PassingCount
 			totalControls += len(ctls)
 		}
 
@@ -302,6 +289,31 @@ func Build(input BuildInput) *CoverageReport {
 }
 
 // NavigatorLayer produces an ATT&CK Navigator layer JSON.
+func buildTacticCoverage(td TacticDef, ctls []kernel.ControlID, minControls int, hasOverlay bool, failingControls map[kernel.ControlID]struct{}) TacticCoverage {
+	tc := TacticCoverage{
+		TacticID:     td.ID,
+		TacticName:   td.Name,
+		ControlCount: len(ctls),
+		Controls:     ctls,
+	}
+	switch {
+	case len(ctls) == 0:
+		tc.Status = StatusNoCoverage
+	case len(ctls) < minControls:
+		tc.Status = StatusThin
+	default:
+		tc.Status = StatusCovered
+	}
+	if hasOverlay && len(ctls) > 0 {
+		passing, failing := countPosture(ctls, failingControls)
+		tc.PassingCount = &passing
+		tc.FailingCount = &failing
+		pct := float64(passing) / float64(len(ctls)) * 100
+		tc.CoveragePercent = &pct
+	}
+	return tc
+}
+
 func countPosture(ctls []kernel.ControlID, failing map[kernel.ControlID]struct{}) (passing, failCount int) {
 	for _, cid := range ctls {
 		if _, ok := failing[cid]; ok {

@@ -34,23 +34,7 @@ func ResolvePrincipal(cfg PrincipalConfig) ([]byte, error) {
 	}
 	snap := &snaps[len(snaps)-1]
 
-	// Find the target principal in snapshot identities.
-	var targetIdentity *identityRef
-	for i := range snap.Identities {
-		if string(snap.Identities[i].ID) == cfg.PrincipalARN {
-			targetIdentity = &identityRef{identity: &snap.Identities[i]}
-			break
-		}
-	}
-	// Fall back to assets (IAM roles appear in assets too).
-	if targetIdentity == nil {
-		for i := range snap.Assets {
-			if string(snap.Assets[i].ID) == cfg.PrincipalARN {
-				targetIdentity = &identityRef{asset: &snap.Assets[i]}
-				break
-			}
-		}
-	}
+	targetIdentity := findPrincipal(snap, cfg.PrincipalARN)
 	if targetIdentity == nil {
 		return nil, fmt.Errorf("principal %s not found in snapshot", cfg.PrincipalARN)
 	}
@@ -77,6 +61,20 @@ func ResolvePrincipal(cfg PrincipalConfig) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
+}
+
+func findPrincipal(snap *asset.Snapshot, arn string) *identityRef {
+	for i := range snap.Identities {
+		if string(snap.Identities[i].ID) == arn {
+			return &identityRef{identity: &snap.Identities[i]}
+		}
+	}
+	for i := range snap.Assets {
+		if string(snap.Assets[i].ID) == arn {
+			return &identityRef{asset: &snap.Assets[i]}
+		}
+	}
+	return nil
 }
 
 // renderPrincipal dispatches to the format-specific principal renderer.

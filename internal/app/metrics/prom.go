@@ -47,24 +47,7 @@ func Write(w io.Writer, in Input) {
 	}
 	fmt.Fprintln(w)
 
-	// SLA burn rates.
-	slaMetrics := computeSLAMetrics(a.Findings)
-	hasSLAOutput := false
-	for _, sev := range canonicalSeverities {
-		if _, ok := slaMetrics[sev]; ok {
-			hasSLAOutput = true
-			break
-		}
-	}
-	if hasSLAOutput {
-		writeComment(w, "stave_sla_burn_rate", "SLA burn rate by severity (0-1)")
-		for _, sev := range canonicalSeverities {
-			if rate, ok := slaMetrics[sev]; ok {
-				fmt.Fprintf(w, "stave_sla_burn_rate{severity=%q} %.2f\n", sev.String(), rate)
-			}
-		}
-		fmt.Fprintln(w)
-	}
+	writeSLABurnRates(w, a.Findings)
 
 	// Chain activations.
 	if a.HasChainFindings() {
@@ -92,6 +75,27 @@ func Write(w io.Writer, in Input) {
 		}
 		fmt.Fprintln(w)
 	}
+}
+
+func writeSLABurnRates(w io.Writer, findings []remediation.Finding) {
+	slaMetrics := computeSLAMetrics(findings)
+	hasSLAOutput := false
+	for _, sev := range canonicalSeverities {
+		if _, ok := slaMetrics[sev]; ok {
+			hasSLAOutput = true
+			break
+		}
+	}
+	if !hasSLAOutput {
+		return
+	}
+	writeComment(w, "stave_sla_burn_rate", "SLA burn rate by severity (0-1)")
+	for _, sev := range canonicalSeverities {
+		if rate, ok := slaMetrics[sev]; ok {
+			fmt.Fprintf(w, "stave_sla_burn_rate{severity=%q} %.2f\n", sev.String(), rate)
+		}
+	}
+	fmt.Fprintln(w)
 }
 
 func countBySeverity(findings []remediation.Finding) map[policy.Severity]int {

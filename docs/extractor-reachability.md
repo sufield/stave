@@ -6,7 +6,7 @@ inspection boundary detection.
 
 ## Implementation
 
-**Source:** `iam-explainer/Stave/Extract/Reachability.lean`
+**Source:** `iam-lean/Stave/Extract/Reachability.lean`
 (`Extract.Reachability` namespace)
 
 Pure function over already-collected data. No live API calls.

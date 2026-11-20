@@ -46,24 +46,27 @@ func ExpandArchetype(ctx context.Context, controlsDir, archetypeID, findingID, s
 
 // expandArchetypeFromControls is the resolve+filter+scan+render core,
 // split out so it can be unit-tested with a hand-built control set.
-func expandArchetypeFromControls(controls []policy.ControlDefinition, controlsDir, archetypeID, findingID, snapshotsDir, format string) ([]byte, error) {
-	archID := archetypeID
-	var finding *policy.ControlDefinition
-	if findingID != "" {
-		ctlID := kernel.ControlID(findingID)
-		for i := range controls {
-			if controls[i].ID == ctlID {
-				finding = &controls[i]
-				break
+func resolveArchetypeFromFinding(controls []policy.ControlDefinition, controlsDir, archetypeID, findingID string) (string, *policy.ControlDefinition, error) {
+	if findingID == "" {
+		return archetypeID, nil, nil
+	}
+	ctlID := kernel.ControlID(findingID)
+	for i := range controls {
+		if controls[i].ID == ctlID {
+			ctl := &controls[i]
+			if ctl.Archetype.IsEmpty() {
+				return "", nil, fmt.Errorf("control %q has no archetype field: %w", findingID, ErrInvalidInput)
 			}
+			return ctl.Archetype.String(), ctl, nil
 		}
-		if finding == nil {
-			return nil, fmt.Errorf("control %q not found in %s: %w", findingID, controlsDir, ErrInvalidInput)
-		}
-		if finding.Archetype.IsEmpty() {
-			return nil, fmt.Errorf("control %q has no archetype field: %w", findingID, ErrInvalidInput)
-		}
-		archID = finding.Archetype.String()
+	}
+	return "", nil, fmt.Errorf("control %q not found in %s: %w", findingID, controlsDir, ErrInvalidInput)
+}
+
+func expandArchetypeFromControls(controls []policy.ControlDefinition, controlsDir, archetypeID, findingID, snapshotsDir, format string) ([]byte, error) {
+	archID, finding, err := resolveArchetypeFromFinding(controls, controlsDir, archetypeID, findingID)
+	if err != nil {
+		return nil, err
 	}
 
 	arch, ok := archetype.Lookup(archID)
