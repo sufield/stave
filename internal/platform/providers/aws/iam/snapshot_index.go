@@ -85,20 +85,7 @@ func ResolveAllPrincipals(snap *asset.Snapshot) (
 		input := BuildResolutionInput(id)
 		result := Resolve(input)
 		resolved[string(id.ID)] = &result
-
-		trustJSON := stringProperty(id.Properties, "identity", "trust_policy_json")
-		if trustJSON != "" {
-			if doc, err := ParsePolicyDocument(trustJSON); err == nil {
-				trusts[string(id.ID)] = &doc
-			} else {
-				// Present-but-unparseable trust policy: mark the principal
-				// inconclusive (via the pointer already stored in resolved)
-				// rather than silently treating it as having no trust policy.
-				result.Incomplete = true
-				result.IncompleteReasons = append(result.IncompleteReasons,
-					"trust policy present but unparseable")
-			}
-		}
+		resolveTrustPolicy(string(id.ID), id.Properties, &result, trusts)
 	}
 	for i := range snap.Assets {
 		a := &snap.Assets[i]
@@ -108,7 +95,6 @@ func ResolveAllPrincipals(snap *asset.Snapshot) (
 		if _, exists := resolved[string(a.ID)]; exists {
 			continue
 		}
-
 		temp := &asset.CloudIdentity{
 			ID:         a.ID,
 			Type:       a.Type,
@@ -118,17 +104,7 @@ func ResolveAllPrincipals(snap *asset.Snapshot) (
 		input := BuildResolutionInput(temp)
 		result := Resolve(input)
 		resolved[string(a.ID)] = &result
-
-		trustJSON := stringProperty(a.Properties, "identity", "trust_policy_json")
-		if trustJSON != "" {
-			if doc, err := ParsePolicyDocument(trustJSON); err == nil {
-				trusts[string(a.ID)] = &doc
-			} else {
-				result.Incomplete = true
-				result.IncompleteReasons = append(result.IncompleteReasons,
-					"trust policy present but unparseable")
-			}
-		}
+		resolveTrustPolicy(string(a.ID), a.Properties, &result, trusts)
 	}
 
 	// Populate ResourcePolicyGrants with cross-account ∧ rule.
@@ -180,6 +156,20 @@ func ExtractAccountIDFromARN(arn string) string {
 // is missing or any intermediate node is not a map. Variadic for
 // readability at call sites — three keys deep is the deepest path
 // stave's collectors emit (identity.policies_json shape).
+func resolveTrustPolicy(id string, props map[string]any, result *ResolvedPermissions, trusts map[string]*PolicyDocument) {
+	trustJSON := stringProperty(props, "identity", "trust_policy_json")
+	if trustJSON == "" {
+		return
+	}
+	if doc, err := ParsePolicyDocument(trustJSON); err == nil {
+		trusts[id] = &doc
+	} else {
+		result.Incomplete = true
+		result.IncompleteReasons = append(result.IncompleteReasons,
+			"trust policy present but unparseable")
+	}
+}
+
 func stringProperty(props map[string]any, keys ...string) string {
 	v, ok := walkProperty(props, keys)
 	if !ok {

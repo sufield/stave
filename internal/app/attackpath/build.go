@@ -270,24 +270,7 @@ func deriveEdges(chains []policy.ChainDefinition, active map[kernel.ChainID]stru
 		if _, ok := active[a.ID]; !ok || len(a.Postconditions) == 0 {
 			continue
 		}
-		for j := range chains {
-			b := &chains[j]
-			if _, ok := active[b.ID]; a.ID == b.ID || !ok || len(b.Preconditions) == 0 {
-				continue
-			}
-			for _, post := range a.Postconditions {
-				for _, pre := range b.Preconditions {
-					if post == pre {
-						edges = append(edges, Edge{
-							FromChain:     a.ID,
-							ToChain:       b.ID,
-							ViaCapability: CapabilityID(post),
-							Description:   capLabel(CapabilityID(post)) + " enables " + strings.ReplaceAll(string(b.ID), "_", " "),
-						})
-					}
-				}
-			}
-		}
+		edges = matchPostconditionEdges(a, chains, active, edges)
 	}
 	slices.SortFunc(edges, func(a, b Edge) int {
 		return cmp.Or(
@@ -297,6 +280,28 @@ func deriveEdges(chains []policy.ChainDefinition, active map[kernel.ChainID]stru
 		)
 	})
 	return edges
+}
+
+func matchPostconditionEdges(a *policy.ChainDefinition, chains []policy.ChainDefinition, active map[kernel.ChainID]struct{}, out []Edge) []Edge {
+	for j := range chains {
+		b := &chains[j]
+		if _, ok := active[b.ID]; a.ID == b.ID || !ok || len(b.Preconditions) == 0 {
+			continue
+		}
+		for _, post := range a.Postconditions {
+			for _, pre := range b.Preconditions {
+				if post == pre {
+					out = append(out, Edge{
+						FromChain:     a.ID,
+						ToChain:       b.ID,
+						ViaCapability: CapabilityID(post),
+						Description:   capLabel(CapabilityID(post)) + " enables " + strings.ReplaceAll(string(b.ID), "_", " "),
+					})
+				}
+			}
+		}
+	}
+	return out
 }
 
 var (

@@ -330,26 +330,8 @@ func GenerateSummary(r *Report) ExecutiveSummary {
 		}
 	}
 
-	// Attention items.
-	var attention []AttentionItem
-	for _, t := range r.Teams {
-		if t.Trajectory == TrajectoryRegressing {
-			attention = append(attention, AttentionItem{
-				Subject: t.Name,
-				Reason:  fmt.Sprintf("Score %.1f, %d critical findings open", t.Score, t.CriticalOpen),
-				Contact: t.Contact,
-			})
-		}
-	}
-
-	// Positive signals.
-	var positive []string
-	if r.Posture.Delta30d > 0 {
-		positive = append(positive, fmt.Sprintf("Posture improved %.1f points", r.Posture.Delta30d))
-	}
-	if r.AttackCoverage.TacticsCovered == r.AttackCoverage.TacticsTotal && r.AttackCoverage.TacticsTotal > 0 {
-		positive = append(positive, fmt.Sprintf("Full ATT&CK tactic coverage (%d/%d)", r.AttackCoverage.TacticsCovered, r.AttackCoverage.TacticsTotal))
-	}
+	attention := collectAttentionItems(r)
+	positive := collectPositiveSignals(r)
 
 	return ExecutiveSummary{
 		OneLiner:  oneLiner,
@@ -357,4 +339,29 @@ func GenerateSummary(r *Report) ExecutiveSummary {
 		Attention: attention,
 		Positive:  positive,
 	}
+}
+
+func collectAttentionItems(r *Report) []AttentionItem {
+	var items []AttentionItem
+	for _, t := range r.Teams {
+		if t.Trajectory == TrajectoryRegressing {
+			items = append(items, AttentionItem{
+				Subject: t.Name,
+				Reason:  fmt.Sprintf("Score %.1f, %d critical findings open", t.Score, t.CriticalOpen),
+				Contact: t.Contact,
+			})
+		}
+	}
+	return items
+}
+
+func collectPositiveSignals(r *Report) []string {
+	var positive []string
+	if r.Posture.Delta30d > 0 {
+		positive = append(positive, fmt.Sprintf("Posture improved %.1f points", r.Posture.Delta30d))
+	}
+	if r.AttackCoverage.TacticsCovered == r.AttackCoverage.TacticsTotal && r.AttackCoverage.TacticsTotal > 0 {
+		positive = append(positive, fmt.Sprintf("Full ATT&CK tactic coverage (%d/%d)", r.AttackCoverage.TacticsCovered, r.AttackCoverage.TacticsTotal))
+	}
+	return positive
 }

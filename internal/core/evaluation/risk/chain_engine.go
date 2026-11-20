@@ -452,29 +452,7 @@ func bucketFailuresByChain(
 	for j := range failures {
 		f := &failures[j]
 		for _, ci := range controlToChains[f.ControlID] {
-			chain := &chains[ci]
-			scope, resolved := groupingKey(chain, f.AssetID, scopeResolver)
-			if scope == "" {
-				continue
-			}
-			b := buckets[ci]
-			if b == nil {
-				b = &chainBuckets{
-					byScope:         make(map[string]map[kernel.ControlID]struct{}),
-					assetsByScope:   make(map[string]map[asset.ID]struct{}),
-					resolvedByScope: make(map[string]struct{}),
-				}
-				buckets[ci] = b
-			}
-			if b.byScope[scope] == nil {
-				b.byScope[scope] = make(map[kernel.ControlID]struct{})
-				b.assetsByScope[scope] = make(map[asset.ID]struct{})
-			}
-			b.byScope[scope][f.ControlID] = struct{}{}
-			b.assetsByScope[scope][f.AssetID] = struct{}{}
-			if resolved {
-				b.resolvedByScope[scope] = struct{}{}
-			}
+			bucketFailure(f, &chains[ci], buckets, ci, scopeResolver)
 		}
 	}
 	return buckets

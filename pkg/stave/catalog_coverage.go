@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
 
@@ -40,6 +41,26 @@ func RenderCatalogCoverage(ctx context.Context, opts CatalogCoverageOptions) ([]
 		return nil, err
 	}
 
+	services := aggregateCoverageByService(controls)
+
+	report := catalogCoverageReport{
+		TotalControls: len(controls),
+		TotalServices: len(services),
+		Services:      services,
+	}
+
+	var buf bytes.Buffer
+	if opts.Format == "json" {
+		if err := jsonutil.WriteIndented(&buf, report); err != nil {
+			return nil, fmt.Errorf("render catalog coverage: %w", err)
+		}
+	} else {
+		renderCatalogCoverageText(&buf, report)
+	}
+	return buf.Bytes(), nil
+}
+
+func aggregateCoverageByService(controls []policy.ControlDefinition) []catalogCoverageService {
 	type svcData struct {
 		controls   int
 		categories map[string]struct{}
@@ -64,7 +85,6 @@ func RenderCatalogCoverage(ctx context.Context, opts CatalogCoverageOptions) ([]
 			d.assetTypes[string(at)] = struct{}{}
 		}
 	}
-
 	services := make([]catalogCoverageService, 0, len(byService))
 	for svc, d := range byService {
 		ats := make([]string, 0, len(d.assetTypes))
@@ -82,22 +102,7 @@ func RenderCatalogCoverage(ctx context.Context, opts CatalogCoverageOptions) ([]
 	slices.SortFunc(services, func(a, b catalogCoverageService) int {
 		return cmp.Compare(a.Service, b.Service)
 	})
-
-	report := catalogCoverageReport{
-		TotalControls: len(controls),
-		TotalServices: len(byService),
-		Services:      services,
-	}
-
-	var buf bytes.Buffer
-	if opts.Format == "json" {
-		if err := jsonutil.WriteIndented(&buf, report); err != nil {
-			return nil, fmt.Errorf("render catalog coverage: %w", err)
-		}
-	} else {
-		renderCatalogCoverageText(&buf, report)
-	}
-	return buf.Bytes(), nil
+	return services
 }
 
 func renderCatalogCoverageText(buf *bytes.Buffer, r catalogCoverageReport) {

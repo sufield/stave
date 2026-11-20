@@ -1390,21 +1390,7 @@ func incompatiblePairFacts(assets []sir.AssetFact) []Fact {
 			continue
 		}
 		evid := fmt.Sprintf("assets[%d].properties.identity.permission_categories.incompatible_pairs", i)
-		for pi, raw := range pairs {
-			pair, ok := raw.([]any)
-			if !ok || len(pair) != 2 {
-				continue
-			}
-			a0, ok0 := pair[0].(string)
-			a1, ok1 := pair[1].(string)
-			if !ok0 || !ok1 || a0 == "" || a1 == "" {
-				continue
-			}
-			out = append(out, Fact{
-				Subject: a.ID, Predicate: "has_incompatible_pair", Object: a0 + "+" + a1,
-				Source: "permission_categories", Evidence: fmt.Sprintf("%s[%d]", evid, pi),
-			})
-		}
+		out = collectIncompatiblePairs(a.ID, pairs, evid, out)
 	}
 	return out
 }
@@ -1422,6 +1408,25 @@ func incompatiblePairFacts(assets []sir.AssetFact) []Fact {
 // offending category in the produced answer set.
 //
 // Empty / absent / wrong-shape arrays yield no facts.
+func collectIncompatiblePairs(assetID string, pairs []any, evid string, out []Fact) []Fact {
+	for pi, raw := range pairs {
+		pair, ok := raw.([]any)
+		if !ok || len(pair) != 2 {
+			continue
+		}
+		a0, ok0 := pair[0].(string)
+		a1, ok1 := pair[1].(string)
+		if !ok0 || !ok1 || a0 == "" || a1 == "" {
+			continue
+		}
+		out = append(out, Fact{
+			Subject: assetID, Predicate: "has_incompatible_pair", Object: a0 + "+" + a1,
+			Source: "permission_categories", Evidence: fmt.Sprintf("%s[%d]", evid, pi),
+		})
+	}
+	return out
+}
+
 func forbiddenCategoryFacts(assets []sir.AssetFact) []Fact {
 	var out []Fact
 	for i := range assets {

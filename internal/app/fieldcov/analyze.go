@@ -571,7 +571,13 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 	report.SilentRisk = silentRisk
 	report.IncompleteResults = incomplete
 
-	// Build shopping list grouped by asset type — use first field prefix.
+	report.ShoppingList = buildShoppingList(silentRisk, incomplete, input.Controls)
+
+	return report
+}
+
+func buildShoppingList(silentRisk, incomplete ControlResults, controls []policy.ControlDefinition) map[kernel.AssetType][]ShoppingItem {
+	sevOrder := policy.SeverityOrderOf
 	fieldToControls := make(map[string][]kernel.ControlID)
 	fieldToSeverity := make(map[string]policy.Severity)
 	combined := make([]ControlResult, 0, len(silentRisk)+len(incomplete))
@@ -587,15 +593,13 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 			}
 		}
 	}
-
-	// Prefer control-declared asset types over the heuristic.
-	controlAssetType := make(map[kernel.ControlID]kernel.AssetType, len(input.Controls))
-	for i := range input.Controls {
-		if input.Controls[i].HasApplicableAssetTypes() {
-			controlAssetType[input.Controls[i].ID] = input.Controls[i].ApplicableAssetTypes[0]
+	controlAssetType := make(map[kernel.ControlID]kernel.AssetType, len(controls))
+	for i := range controls {
+		if controls[i].HasApplicableAssetTypes() {
+			controlAssetType[controls[i].ID] = controls[i].ApplicableAssetTypes[0]
 		}
 	}
-
+	shopping := make(map[kernel.AssetType][]ShoppingItem)
 	for field, ctls := range fieldToControls {
 		var assetType kernel.AssetType
 		for _, ctlID := range ctls {
@@ -607,26 +611,23 @@ func buildReport(input AnalyzeInput, results []ControlResult) *Report {
 		if assetType == "" {
 			assetType = deriveAssetType(field)
 		}
-		report.ShoppingList[assetType] = append(report.ShoppingList[assetType], ShoppingItem{
+		shopping[assetType] = append(shopping[assetType], ShoppingItem{
 			Field:       field,
 			RequiredBy:  ctls,
 			MaxSeverity: fieldToSeverity[field],
 		})
 	}
-
-	// Sort shopping list items by severity, with Field as tie-breaker.
-	for at := range report.ShoppingList {
-		items := report.ShoppingList[at]
+	for at := range shopping {
+		items := shopping[at]
 		slices.SortFunc(items, func(a, b ShoppingItem) int {
 			if sa, sb := sevOrder(a.MaxSeverity.String()), sevOrder(b.MaxSeverity.String()); sa != sb {
 				return cmp.Compare(sa, sb)
 			}
 			return cmp.Compare(a.Field, b.Field)
 		})
-		report.ShoppingList[at] = items
+		shopping[at] = items
 	}
-
-	return report
+	return shopping
 }
 
 func classifyResults(report *Report, results []ControlResult) (silentRisk, incomplete ControlResults) {

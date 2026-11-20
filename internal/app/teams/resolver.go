@@ -150,66 +150,52 @@ func LoadManifest(path string) (*Manifest, error) {
 // resolution hierarchy: tag → fallback tag → ARN pattern →
 // control ownership → default → unassigned.
 func (m *Manifest) ResolveOwner(tags map[string]string, resourceARN string, controlID kernel.ControlID) OwnerResult {
-	// 1. Primary tag match.
 	if tagVal, ok := tags[m.OwnerTagKey]; ok {
-		for i := range m.Teams {
-			if string(m.Teams[i].ID) == tagVal {
-				return OwnerResult{
-					TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
-					Contact: m.Teams[i].Contact, ResolutionPath: "tag",
-				}
-			}
+		if r, ok := m.findTeamByID(tagVal, "tag"); ok {
+			return r
 		}
 	}
-
-	// 2. Fallback tag match.
 	if tagVal, ok := tags[m.FallbackTagKey]; ok {
-		for i := range m.Teams {
-			if string(m.Teams[i].ID) == tagVal {
-				return OwnerResult{
-					TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
-					Contact: m.Teams[i].Contact, ResolutionPath: "fallback_tag",
-				}
-			}
+		if r, ok := m.findTeamByID(tagVal, "fallback_tag"); ok {
+			return r
 		}
 	}
-
-	// 3. ARN pattern match.
 	for i := range m.Teams {
 		if m.Teams[i].ResourcePatterns.MatchesAny(resourceARN) {
-			return OwnerResult{
-				TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
-				Contact: m.Teams[i].Contact, ResolutionPath: "arn_pattern",
-			}
+			return resultFromTeam(&m.Teams[i], "arn_pattern")
 		}
 	}
-
-	// 4. Control ID ownership match.
 	for i := range m.Teams {
 		for _, pattern := range m.Teams[i].ControlOwnership {
 			if globMatch(string(pattern), string(controlID)) {
-				return OwnerResult{
-					TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
-					Contact: m.Teams[i].Contact, ResolutionPath: "control_ownership",
-				}
+				return resultFromTeam(&m.Teams[i], "control_ownership")
 			}
 		}
 	}
-
-	// 5. Default team.
 	for i := range m.Teams {
 		if m.Teams[i].IsDefault {
-			return OwnerResult{
-				TeamID: m.Teams[i].ID, TeamName: m.Teams[i].DisplayName,
-				Contact: m.Teams[i].Contact, ResolutionPath: "default",
-			}
+			return resultFromTeam(&m.Teams[i], "default")
 		}
 	}
-
-	// 6. Unassigned.
 	return OwnerResult{
 		TeamID: "unassigned", TeamName: "Unassigned",
 		ResolutionPath: "unassigned",
+	}
+}
+
+func (m *Manifest) findTeamByID(id, path string) (OwnerResult, bool) {
+	for i := range m.Teams {
+		if string(m.Teams[i].ID) == id {
+			return resultFromTeam(&m.Teams[i], path), true
+		}
+	}
+	return OwnerResult{}, false
+}
+
+func resultFromTeam(t *Team, path string) OwnerResult {
+	return OwnerResult{
+		TeamID: t.ID, TeamName: t.DisplayName,
+		Contact: t.Contact, ResolutionPath: path,
 	}
 }
 

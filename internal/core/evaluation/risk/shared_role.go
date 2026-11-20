@@ -22,22 +22,7 @@ func ComputeSharedRoleIndex(snapshots []asset.Snapshot) SharedRoleIndex {
 
 	for i := range snapshots {
 		for j := range snapshots[i].Assets {
-			a := &snapshots[i].Assets[j]
-			if string(a.Type) != "aws_lambda_function" {
-				continue
-			}
-			roleARN := extractLambdaRoleARN(a.Properties)
-			if roleARN == "" {
-				continue
-			}
-			if seen[roleARN] == nil {
-				seen[roleARN] = make(map[asset.ID]bool)
-			}
-			if seen[roleARN][a.ID] {
-				continue
-			}
-			seen[roleARN][a.ID] = true
-			roleToAssets[roleARN] = append(roleToAssets[roleARN], a.ID)
+			indexLambdaRole(&snapshots[i].Assets[j], roleToAssets, seen)
 		}
 	}
 
@@ -91,6 +76,24 @@ func SharedRoleBlastMultiplier(count int) float64 {
 	}
 	m := math.Log2(float64(count))
 	return min(m, 5.0)
+}
+
+func indexLambdaRole(a *asset.Asset, roleToAssets map[string][]asset.ID, seen map[string]map[asset.ID]bool) {
+	if string(a.Type) != "aws_lambda_function" {
+		return
+	}
+	roleARN := extractLambdaRoleARN(a.Properties)
+	if roleARN == "" {
+		return
+	}
+	if seen[roleARN] == nil {
+		seen[roleARN] = make(map[asset.ID]bool)
+	}
+	if seen[roleARN][a.ID] {
+		return
+	}
+	seen[roleARN][a.ID] = true
+	roleToAssets[roleARN] = append(roleToAssets[roleARN], a.ID)
 }
 
 func extractLambdaRoleARN(props map[string]any) string {

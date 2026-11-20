@@ -92,8 +92,12 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 		}
 	}
 
-	// Stabilise output: every slice sorted once at the end so
-	// downstream consumers and tests see deterministic ordering.
+	stabilizeIndex(&idx)
+
+	return idx
+}
+
+func stabilizeIndex(idx *Index) {
 	for k := range idx.PathToControls {
 		ids := idx.PathToControls[k]
 		slices.SortFunc(ids, func(a, b kernel.ControlID) int {
@@ -113,8 +117,6 @@ func Build(controls []policy.ControlDefinition, chains []policy.ChainDefinition)
 		slices.Sort(paths)
 		idx.TypeToPaths[k] = paths
 	}
-
-	return idx
 }
 
 // rank gives a comparable score for severity so callers can ask

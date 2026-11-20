@@ -345,43 +345,44 @@ func resolveServiceExecChains(input RoleChainInput) []RoleChain {
 	var chains []RoleChain
 
 	for _, primitive := range serviceExecPrimitives {
-		hasTrigger := principalHasAnyAction(resolved, primitive.TriggerActions)
-		if !hasTrigger {
+		if !principalHasAnyAction(resolved, primitive.TriggerActions) {
 			continue
 		}
-		for _, grant := range resolved.EffectiveAllow {
-			if !isPassRoleAction(grant.Action) {
-				continue
-			}
-			targetARN := grant.Resource
-			if targetARN == "" || targetARN == "*" {
-				continue
-			}
-			if !roleTrustsService(input.ServiceTrusts, targetARN, primitive.ServicePrincipal) {
-				continue
-			}
+		chains = matchServiceExecGrants(input, resolved, primitive, chains)
+	}
+	return chains
+}
 
-			var level PrivilegeLevel
-			targetResolved, canonicalTargetARN, inSnapshot := lookupResolved(input.ResolvedIndex, targetARN)
-			if inSnapshot {
-				level = targetResolved.PrivilegeLevel
-				targetARN = canonicalTargetARN
-			}
-
-			hop := RoleHop{
+func matchServiceExecGrants(input RoleChainInput, resolved *ResolvedPermissions, primitive serviceExec, out []RoleChain) []RoleChain {
+	for _, grant := range resolved.EffectiveAllow {
+		if !isPassRoleAction(grant.Action) {
+			continue
+		}
+		targetARN := grant.Resource
+		if targetARN == "" || targetARN == "*" {
+			continue
+		}
+		if !roleTrustsService(input.ServiceTrusts, targetARN, primitive.ServicePrincipal) {
+			continue
+		}
+		var level PrivilegeLevel
+		targetResolved, canonicalTargetARN, inSnapshot := lookupResolved(input.ResolvedIndex, targetARN)
+		if inSnapshot {
+			level = targetResolved.PrivilegeLevel
+			targetARN = canonicalTargetARN
+		}
+		out = append(out, RoleChain{
+			Hops: []RoleHop{{
 				FromARN:        input.PrincipalARN,
 				ToARN:          targetARN,
 				IsCrossAccount: !principalInAccount(targetARN, input.AccountID),
 				Type:           primitive.HopType,
-			}
-			chains = append(chains, RoleChain{
-				Hops:            []RoleHop{hop},
-				FinalRoleARN:    targetARN,
-				TransitiveLevel: level,
-			})
-		}
+			}},
+			FinalRoleARN:    targetARN,
+			TransitiveLevel: level,
+		})
 	}
-	return chains
+	return out
 }
 
 func principalHasAnyAction(resolved *ResolvedPermissions, candidates []string) bool {

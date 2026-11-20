@@ -27,41 +27,7 @@ func SuggestChains(
 ) []findingsdata.ChainSuggestion {
 	chained := chainedControlSetFromFindings(chainFindings)
 
-	// Group unchained high/critical failures by asset.
-	type controlOnAsset struct {
-		controlID kernel.ControlID
-		severity  policy.Severity
-	}
-	byAsset := make(map[asset.ID][]controlOnAsset)
-	seen := make(map[asset.ID]map[kernel.ControlID]struct{})
-
-	for i := range failures {
-		cid := failures[i].ControlID
-		aid := failures[i].AssetID
-
-		if _, ok := chained[cid]; ok {
-			continue
-		}
-		def := controlLookup[cid]
-		if def == nil {
-			continue
-		}
-		if def.Severity != policy.SeverityCritical && def.Severity != policy.SeverityHigh {
-			continue
-		}
-
-		if seen[aid] == nil {
-			seen[aid] = make(map[kernel.ControlID]struct{})
-		}
-		if _, dup := seen[aid][cid]; dup {
-			continue
-		}
-		seen[aid][cid] = struct{}{}
-		byAsset[aid] = append(byAsset[aid], controlOnAsset{
-			controlID: cid,
-			severity:  def.Severity,
-		})
-	}
+	byAsset := groupUnchainedByAsset(failures, chained, controlLookup)
 
 	// Emit a suggestion for each asset with 2+ unchained controls.
 	var suggestions []findingsdata.ChainSuggestion
@@ -105,6 +71,46 @@ func SuggestChains(
 	})
 
 	return suggestions
+}
+
+type controlOnAsset struct {
+	controlID kernel.ControlID
+	severity  policy.Severity
+}
+
+func groupUnchainedByAsset(
+	failures []FailingControl,
+	chained map[kernel.ControlID]struct{},
+	controlLookup map[kernel.ControlID]*policy.ControlDefinition,
+) map[asset.ID][]controlOnAsset {
+	byAsset := make(map[asset.ID][]controlOnAsset)
+	seen := make(map[asset.ID]map[kernel.ControlID]struct{})
+	for i := range failures {
+		cid := failures[i].ControlID
+		aid := failures[i].AssetID
+		if _, ok := chained[cid]; ok {
+			continue
+		}
+		def := controlLookup[cid]
+		if def == nil {
+			continue
+		}
+		if def.Severity != policy.SeverityCritical && def.Severity != policy.SeverityHigh {
+			continue
+		}
+		if seen[aid] == nil {
+			seen[aid] = make(map[kernel.ControlID]struct{})
+		}
+		if _, dup := seen[aid][cid]; dup {
+			continue
+		}
+		seen[aid][cid] = struct{}{}
+		byAsset[aid] = append(byAsset[aid], controlOnAsset{
+			controlID: cid,
+			severity:  def.Severity,
+		})
+	}
+	return byAsset
 }
 
 func chainedControlSetFromFindings(cfs []findingsdata.CompoundFinding) map[kernel.ControlID]struct{} {

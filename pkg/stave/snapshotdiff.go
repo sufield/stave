@@ -97,28 +97,7 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 		r.AfterTime.Format("2006-01-02T15:04:05Z"), r.AfterAssets)
 
 	if r.HasPropertyChanges() {
-		fmt.Fprintf(w, "PROPERTY CHANGES (%d)\n", len(r.PropertyChanges))
-		fmt.Fprintln(w, strings.Repeat("─", 55))
-
-		currentAsset := ""
-		for i := range r.PropertyChanges {
-			c := &r.PropertyChanges[i]
-			if string(c.AssetID) != currentAsset {
-				currentAsset = string(c.AssetID)
-				fmt.Fprintf(w, "  %s\n", c.AssetID)
-			}
-			riskTag := ""
-			switch c.RiskDirection {
-			case diff.RiskIncreasing:
-				riskTag = " [RISK+]"
-			case diff.RiskDecreasing:
-				riskTag = " [RISK-]"
-			}
-			fmt.Fprintf(w, "    %s:%s\n", c.Property, riskTag)
-			fmt.Fprintf(w, "      before: %v\n", c.Before)
-			fmt.Fprintf(w, "      after:  %v\n", c.After)
-		}
-		fmt.Fprintln(w)
+		writePropertyChanges(w, r.PropertyChanges)
 	}
 
 	if r.HasNewAssets() {
@@ -158,4 +137,28 @@ func writeSnapshotDiffText(w io.Writer, r *snapshotdiff.DiffResult) {
 		fmt.Fprintf(w, "  Neutral changes:         %d\n", r.RiskSummary.Neutral)
 		fmt.Fprintln(w)
 	}
+}
+
+func writePropertyChanges(w io.Writer, changes snapshotdiff.PropertyChanges) {
+	fmt.Fprintf(w, "PROPERTY CHANGES (%d)\n", changes.Len())
+	fmt.Fprintln(w, strings.Repeat("─", 55))
+	currentAsset := ""
+	for i := range changes {
+		c := &changes[i]
+		if string(c.AssetID) != currentAsset {
+			currentAsset = string(c.AssetID)
+			fmt.Fprintf(w, "  %s\n", c.AssetID)
+		}
+		riskTag := ""
+		switch c.RiskDirection {
+		case diff.RiskIncreasing:
+			riskTag = " [RISK+]"
+		case diff.RiskDecreasing:
+			riskTag = " [RISK-]"
+		}
+		fmt.Fprintf(w, "    %s:%s\n", c.Property, riskTag)
+		fmt.Fprintf(w, "      before: %v\n", c.Before)
+		fmt.Fprintf(w, "      after:  %v\n", c.After)
+	}
+	fmt.Fprintln(w)
 }

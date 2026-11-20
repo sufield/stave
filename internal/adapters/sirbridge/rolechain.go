@@ -59,71 +59,49 @@ func (s *AWSRoleChainSource) RoleChains(snapshots []asset.Snapshot) (map[asset.I
 	}
 
 	for i := range snapshots {
-		snap := &snapshots[i]
-		resolved, trusts := iam.ResolveAllPrincipals(snap)
-		if len(resolved) == 0 {
-			continue
-		}
-		// Iter 3: extract service-principal trusts as a side-channel
-		// so the chain walker can recognise execution-role hops
-		// (Lambda / ECS / CFN / etc.). The iam.PolicyDocument parser
-		// drops Principal blocks; ExtractServiceTrusts probes the
-		// raw trust JSON to recover the data without changing the
-		// existing iam.Statement shape.
-		serviceTrusts := iam.ExtractServiceTrusts(snap)
-		// Iter 4: same probing strategy for AWS-principal trusts —
-		// account-root (arn:aws:iam::<acct>:root) and exact-ARN
-		// trust entries that the Statement parser drops. Closes
-		// the trust-transitivity gap from gap-prompt.md so a
-		// compromised principal in a trusted account is recognised
-		// as an assumer of every role that account-root-trusts it.
-		awsPrincipalTrusts := iam.ExtractAWSTrustedPrincipals(snap)
-		// Iter 5 (TOCTOU): extract scheduled-deletion timestamps
-		// from identity properties so the chain walker can stamp
-		// chains traversing a soon-to-be-deleted role with the
-		// future-ghost-reference horizon. Per gap-prompt.md:9 — a
-		// chain reachable now but stale at T is unsafe under
-		// time-of-check / time-of-use semantics.
-		scheduledDeletions := iam.ExtractScheduledDeletions(snap)
-		// Iter 6 (confused deputy): extract resource→role bindings
-		// for Lambda functions, CFN stacks, and other service
-		// resources that have a pre-attached IAM role. The
-		// invoke-existing walker uses this map to detect privesc
-		// paths where the attacker has a trigger action on the
-		// resource but no PassRole — the binding pre-existed the
-		// attack, so the role is reused as-is. Per gap-prompt.md:10.
-		resourceRoleBindings := iam.ExtractResourceRoleBindings(snap)
-		for j := range snap.Identities {
-			id := &snap.Identities[j]
-			chains := iam.ResolveChains(iam.RoleChainInput{
-				PrincipalARN:         string(id.ID),
-				ResolvedIndex:        resolved,
-				TrustPolicies:        trusts,
-				ServiceTrusts:        serviceTrusts,
-				AWSPrincipalTrusts:   awsPrincipalTrusts,
-				ScheduledDeletions:   scheduledDeletions,
-				ResourceRoleBindings: resourceRoleBindings,
-				AccountID:            iam.ExtractAccountIDFromARN(string(id.ID)),
-			})
-			if len(chains) == 0 {
-				continue
-			}
-			seen := make(map[string]struct{}, len(out[id.ID]))
-			for _, existing := range out[id.ID] {
-				seen[dedupKey(existing)] = struct{}{}
-			}
-			for _, ch := range chains {
-				fact := translateRoleChain(ch)
-				key := dedupKey(fact)
-				if _, dup := seen[key]; dup {
-					continue
-				}
-				seen[key] = struct{}{}
-				out[id.ID] = append(out[id.ID], fact)
-			}
-		}
+		resolveSnapshotChains(&snapshots[i], out, dedupKey)
 	}
 	return out, nil
+}
+
+func resolveSnapshotChains(snap *asset.Snapshot, out map[asset.ID][]sir.RoleChainFact, dedupKey func(sir.RoleChainFact) string) {
+	resolved, trusts := iam.ResolveAllPrincipals(snap)
+	if len(resolved) == 0 {
+		return
+	}
+	serviceTrusts := iam.ExtractServiceTrusts(snap)
+	awsPrincipalTrusts := iam.ExtractAWSTrustedPrincipals(snap)
+	scheduledDeletions := iam.ExtractScheduledDeletions(snap)
+	resourceRoleBindings := iam.ExtractResourceRoleBindings(snap)
+	for j := range snap.Identities {
+		id := &snap.Identities[j]
+		chains := iam.ResolveChains(iam.RoleChainInput{
+			PrincipalARN:         string(id.ID),
+			ResolvedIndex:        resolved,
+			TrustPolicies:        trusts,
+			ServiceTrusts:        serviceTrusts,
+			AWSPrincipalTrusts:   awsPrincipalTrusts,
+			ScheduledDeletions:   scheduledDeletions,
+			ResourceRoleBindings: resourceRoleBindings,
+			AccountID:            iam.ExtractAccountIDFromARN(string(id.ID)),
+		})
+		if len(chains) == 0 {
+			continue
+		}
+		seen := make(map[string]struct{}, len(out[id.ID]))
+		for _, existing := range out[id.ID] {
+			seen[dedupKey(existing)] = struct{}{}
+		}
+		for _, ch := range chains {
+			fact := translateRoleChain(ch)
+			key := dedupKey(fact)
+			if _, dup := seen[key]; dup {
+				continue
+			}
+			seen[key] = struct{}{}
+			out[id.ID] = append(out[id.ID], fact)
+		}
+	}
 }
 
 // translateRoleChain maps one iam.RoleChain into the SIR's

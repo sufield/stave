@@ -152,15 +152,14 @@ type Input struct {
 }
 
 // Analyze performs the gap analysis between two frameworks.
-func Analyze(input Input) *Result {
-	// Classify each finding by framework membership.
-	type classified struct {
-		finding    *remediation.Finding
-		inBaseline bool
-		inTarget   bool
-		failing    bool
-	}
+type classified struct {
+	finding    *remediation.Finding
+	inBaseline bool
+	inTarget   bool
+	failing    bool
+}
 
+func Analyze(input Input) *Result {
 	// Collect unique controls and their framework membership.
 	controlMap := make(map[kernel.ControlID]*classified, len(input.Findings))
 
@@ -188,30 +187,7 @@ func Analyze(input Input) *Result {
 	// For free coverage estimation, we need the total control count
 	// from framework metadata — approximate from what we can see.
 
-	var shared, targetOnly, baselineOnly []CompareItem
-
-	for cid, c := range controlMap {
-		item := CompareItem{
-			ControlID:  cid,
-			Severity:   c.finding.ControlSeverity,
-			DwellHours: DwellHours(c.finding.DwellHours()),
-		}
-		if c.inBaseline {
-			item.Baseline = extractCitations(c.finding.ControlCompliance, input.BaselineKey)
-		}
-		if c.inTarget {
-			item.Target = extractCitations(c.finding.ControlCompliance, input.TargetKey)
-		}
-
-		switch {
-		case c.inBaseline && c.inTarget:
-			shared = append(shared, item)
-		case c.inBaseline && !c.inTarget:
-			baselineOnly = append(baselineOnly, item)
-		case !c.inBaseline && c.inTarget:
-			targetOnly = append(targetOnly, item)
-		}
-	}
+	shared, targetOnly, baselineOnly := partitionByFramework(controlMap, input.BaselineKey, input.TargetKey)
 
 	// Sort: shared by severity, target-only by severity.
 	sortBySeverity := func(items []CompareItem) {
@@ -289,6 +265,31 @@ func Analyze(input Input) *Result {
 		},
 		LeadershipSummary: summary,
 	}
+}
+
+func partitionByFramework(controlMap map[kernel.ControlID]*classified, baselineKey, targetKey policy.ComplianceFramework) (shared, targetOnly, baselineOnly []CompareItem) {
+	for cid, c := range controlMap {
+		item := CompareItem{
+			ControlID:  cid,
+			Severity:   c.finding.ControlSeverity,
+			DwellHours: DwellHours(c.finding.DwellHours()),
+		}
+		if c.inBaseline {
+			item.Baseline = extractCitations(c.finding.ControlCompliance, baselineKey)
+		}
+		if c.inTarget {
+			item.Target = extractCitations(c.finding.ControlCompliance, targetKey)
+		}
+		switch {
+		case c.inBaseline && c.inTarget:
+			shared = append(shared, item)
+		case c.inBaseline && !c.inTarget:
+			baselineOnly = append(baselineOnly, item)
+		case !c.inBaseline && c.inTarget:
+			targetOnly = append(targetOnly, item)
+		}
+	}
+	return
 }
 
 func normalizeKey(v string) string {

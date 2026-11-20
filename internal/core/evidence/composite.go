@@ -103,44 +103,7 @@ type gapEntry struct {
 func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 	gaps := collectGapEntries(assessments)
 
-	// Partition into shared and unique.
-	var shared []SharedGap
-	var unique []UniqueGap
-	uniqueControlIDs := make(map[kernel.ControlID]struct{})
-
-	for _, entry := range gaps {
-		uniqueControlIDs[entry.controlID] = struct{}{}
-		fwSet := make(map[string]struct{})
-		for _, v := range entry.violations {
-			fwSet[v.Framework] = struct{}{}
-		}
-
-		if len(fwSet) >= 2 {
-			shared = append(shared, SharedGap{
-				ControlID:          entry.controlID,
-				ControlName:        entry.controlName,
-				ResourceARN:        entry.resourceARN,
-				Severity:           entry.severity,
-				FindingID:          entry.findingID,
-				ViolatedFrameworks: deduplicateViolations(entry.violations),
-				FrameworkCount:     len(fwSet),
-				ObligationsClosed:  len(entry.violations),
-				RemediationAction:  entry.remediation,
-			})
-		} else {
-			for _, v := range entry.violations {
-				unique = append(unique, UniqueGap{
-					ControlID:         entry.controlID,
-					ResourceARN:       entry.resourceARN,
-					Severity:          entry.severity,
-					FindingID:         entry.findingID,
-					Framework:         v.Framework,
-					RequirementID:     v.RequirementID,
-					RemediationAction: entry.remediation,
-				})
-			}
-		}
-	}
+	shared, unique, uniqueControlIDs := partitionGaps(gaps)
 
 	// Sort shared by obligations_closed descending.
 	slices.SortFunc(shared, func(a, b SharedGap) int {
@@ -193,6 +156,45 @@ func BuildCompositeGaps(assessments []*ProfileAssessment) CompositeGapReport {
 		UniqueGaps:          unique,
 		TopNSharedGapImpact: topN,
 	}
+}
+
+func partitionGaps(gaps map[gapKey]*gapEntry) ([]SharedGap, []UniqueGap, map[kernel.ControlID]struct{}) {
+	var shared []SharedGap
+	var unique []UniqueGap
+	uniqueControlIDs := make(map[kernel.ControlID]struct{})
+	for _, entry := range gaps {
+		uniqueControlIDs[entry.controlID] = struct{}{}
+		fwSet := make(map[string]struct{})
+		for _, v := range entry.violations {
+			fwSet[v.Framework] = struct{}{}
+		}
+		if len(fwSet) >= 2 {
+			shared = append(shared, SharedGap{
+				ControlID:          entry.controlID,
+				ControlName:        entry.controlName,
+				ResourceARN:        entry.resourceARN,
+				Severity:           entry.severity,
+				FindingID:          entry.findingID,
+				ViolatedFrameworks: deduplicateViolations(entry.violations),
+				FrameworkCount:     len(fwSet),
+				ObligationsClosed:  len(entry.violations),
+				RemediationAction:  entry.remediation,
+			})
+		} else {
+			for _, v := range entry.violations {
+				unique = append(unique, UniqueGap{
+					ControlID:         entry.controlID,
+					ResourceARN:       entry.resourceARN,
+					Severity:          entry.severity,
+					FindingID:         entry.findingID,
+					Framework:         v.Framework,
+					RequirementID:     v.RequirementID,
+					RemediationAction: entry.remediation,
+				})
+			}
+		}
+	}
+	return shared, unique, uniqueControlIDs
 }
 
 func collectGapEntries(assessments []*ProfileAssessment) map[gapKey]*gapEntry {

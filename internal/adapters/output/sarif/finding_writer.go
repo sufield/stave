@@ -61,31 +61,9 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 	rules, ruleIndex := buildRules(remFindings)
 	results := buildResults(remFindings, ruleIndex)
 
-	// Annotate each SARIF result with its Issue fingerprint so
-	// downstream consumers can reconstruct the consolidated view.
-	// See docs/product/metrics.md § Metric 2.
 	if enriched.Result.HasIssues() {
-		// Verify the architectural contract before walking the two
-		// slices in lockstep — buildResults is required to preserve
-		// per-finding order so issue-id metadata lands on the right
-		// SARIF row. A future change that filters or reorders would
-		// otherwise silently mis-attribute the annotations.
-		if err := verifyPositionalInvariant(results, remFindings); err != nil {
+		if err := annotateIssueFingerprints(results, remFindings, enriched.Result.Issues); err != nil {
 			return nil, err
-		}
-		fidToIssue := make(map[string]string, len(remFindings))
-		for _, iss := range enriched.Result.Issues {
-			for _, fid := range iss.MemberFindingIDs {
-				fidToIssue[string(fid)] = string(iss.IssueID)
-			}
-		}
-		for i := range results {
-			if issueID, ok := fidToIssue[string(remFindings[i].FindingID)]; ok {
-				if results[i].PartialFingerprints == nil {
-					results[i].PartialFingerprints = map[string]string{}
-				}
-				results[i].PartialFingerprints["stave/issue_id"] = issueID
-			}
 		}
 	}
 
@@ -140,6 +118,27 @@ func (w *FindingWriter) MarshalFindings(enriched *appcontracts.EnrichedResult) (
 // violated; a silent mismatch would attribute issue-id metadata to
 // the wrong SARIF row, sending operators to investigate the wrong
 // finding.
+func annotateIssueFingerprints(results []sarifResult, findings []remediation.Finding, issues []evaluation.Issue) error {
+	if err := verifyPositionalInvariant(results, findings); err != nil {
+		return err
+	}
+	fidToIssue := make(map[string]string, len(findings))
+	for _, iss := range issues {
+		for _, fid := range iss.MemberFindingIDs {
+			fidToIssue[string(fid)] = string(iss.IssueID)
+		}
+	}
+	for i := range results {
+		if issueID, ok := fidToIssue[string(findings[i].FindingID)]; ok {
+			if results[i].PartialFingerprints == nil {
+				results[i].PartialFingerprints = map[string]string{}
+			}
+			results[i].PartialFingerprints["stave/issue_id"] = issueID
+		}
+	}
+	return nil
+}
+
 func verifyPositionalInvariant(results []sarifResult, findings []remediation.Finding) error {
 	if len(results) != len(findings) {
 		return fmt.Errorf(

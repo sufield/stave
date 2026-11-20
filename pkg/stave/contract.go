@@ -167,26 +167,11 @@ func renderContractList(idx predindex.Index, steampipeDir, format string) ([]byt
 	withSchema := 0
 	withSteampipe := 0
 	for _, t := range types {
-		row := contractListRow{AssetType: t}
-		if _, err := contractschema.AssetTypeSchema(t); err == nil {
-			row.HasSchema = true
+		row := buildContractRow(t, idx, steampipeDir)
+		if row.HasSchema {
 			withSchema++
 		}
-		paths := idx.TypeToPaths[kernel.AssetType(t)]
-		ctlSet := map[kernel.ControlID]struct{}{}
-		chSet := map[kernel.ChainID]struct{}{}
-		for _, p := range paths {
-			for _, c := range idx.PathToControls[p] {
-				ctlSet[c] = struct{}{}
-			}
-			for _, c := range idx.PathToChains[p] {
-				chSet[c] = struct{}{}
-			}
-		}
-		row.ControlsCount = len(ctlSet)
-		row.ChainsCount = len(chSet)
-		if findSteampipeMapping(steampipeDir, t) != "" {
-			row.SteampipeMapping = true
+		if row.SteampipeMapping {
 			withSteampipe++
 		}
 		rows = append(rows, row)
@@ -209,6 +194,30 @@ func renderContractList(idx predindex.Index, steampipeDir, format string) ([]byt
 		}
 	}
 	return buf.Bytes(), nil
+}
+
+func buildContractRow(t string, idx predindex.Index, steampipeDir string) contractListRow {
+	row := contractListRow{AssetType: t}
+	if _, err := contractschema.AssetTypeSchema(t); err == nil {
+		row.HasSchema = true
+	}
+	paths := idx.TypeToPaths[kernel.AssetType(t)]
+	ctlSet := map[kernel.ControlID]struct{}{}
+	chSet := map[kernel.ChainID]struct{}{}
+	for _, p := range paths {
+		for _, c := range idx.PathToControls[p] {
+			ctlSet[c] = struct{}{}
+		}
+		for _, c := range idx.PathToChains[p] {
+			chSet[c] = struct{}{}
+		}
+	}
+	row.ControlsCount = len(ctlSet)
+	row.ChainsCount = len(chSet)
+	if findSteampipeMapping(steampipeDir, t) != "" {
+		row.SteampipeMapping = true
+	}
+	return row
 }
 
 // findSteampipeMapping returns the (workspace-relative) path of the

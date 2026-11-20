@@ -321,33 +321,8 @@ func computeNearbyFrameworks(failingIDs sets.Set[kernel.ControlID], allControlID
 
 	var nearby []NearbyFramework
 	for fw := range allFWs {
-		total := 0
-		passing := 0
-		for _, ctlID := range allControlIDs {
-			cc, ok := controlCompliance[ctlID]
-			if !ok {
-				continue
-			}
-			if _, has := cc[policy.ComplianceFramework(fw)]; !has {
-				continue
-			}
-			total++
-			if !failingIDs.Contains(ctlID) {
-				passing++
-			}
-		}
-		if total == 0 {
-			continue
-		}
-		pct := passing * 100 / total
-		gap := total - passing
-		// Only report frameworks with >= 80% readiness.
-		if pct >= 80 {
-			nearby = append(nearby, NearbyFramework{
-				Framework:        fw,
-				ReadinessPercent: pct,
-				GapCount:         gap,
-			})
+		if nf, ok := computeFrameworkReadiness(fw, failingIDs, allControlIDs, controlCompliance); ok {
+			nearby = append(nearby, nf)
 		}
 	}
 	// allFWs is a set (map) iterated in random order; sort the result by
@@ -358,6 +333,36 @@ func computeNearbyFrameworks(failingIDs sets.Set[kernel.ControlID], allControlID
 		return cmp.Compare(a.Framework, b.Framework)
 	})
 	return nearby
+}
+
+func computeFrameworkReadiness(fw string, failingIDs sets.Set[kernel.ControlID], allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[policy.ComplianceFramework]string) (NearbyFramework, bool) {
+	total := 0
+	passing := 0
+	for _, ctlID := range allControlIDs {
+		cc, ok := controlCompliance[ctlID]
+		if !ok {
+			continue
+		}
+		if _, has := cc[policy.ComplianceFramework(fw)]; !has {
+			continue
+		}
+		total++
+		if !failingIDs.Contains(ctlID) {
+			passing++
+		}
+	}
+	if total == 0 {
+		return NearbyFramework{}, false
+	}
+	pct := passing * 100 / total
+	if pct < 80 {
+		return NearbyFramework{}, false
+	}
+	return NearbyFramework{
+		Framework:        fw,
+		ReadinessPercent: pct,
+		GapCount:         total - passing,
+	}, true
 }
 
 // InputFreshness summarises the age of the input snapshots relative to

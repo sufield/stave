@@ -299,29 +299,7 @@ func buildSteps(spec policy.RemediationSpec) []Step {
 
 	steps := make([]Step, 0, len(groups))
 	for i, g := range groups {
-		step := Step{
-			StepNumber:  i + 1,
-			Title:       "Set " + g.namespace,
-			SafeDefault: g.allSafe,
-			Confidence:  confidenceLabel(spec.Confidence),
-		}
-
-		var actionParts []string
-		for _, c := range g.changes {
-			actionParts = append(actionParts,
-				fmt.Sprintf("  %s: %s → %s", c.PropertyPath, c.CurrentValue, c.RequiredValue))
-		}
-		step.Action = strings.Join(actionParts, "\n")
-
-		if !g.allSafe {
-			step.Caution = "This change may affect existing behavior. Verify dependencies before applying."
-		}
-
-		if spec.Action != "" && i == 0 {
-			step.Action = spec.Action + "\n" + step.Action
-		}
-
-		steps = append(steps, step)
+		steps = append(steps, buildGroupStep(i, g, spec))
 	}
 
 	if len(steps) == 0 && spec.Action != "" {
@@ -334,6 +312,28 @@ func buildSteps(spec policy.RemediationSpec) []Step {
 	}
 
 	return steps
+}
+
+func buildGroupStep(idx int, g changeGroup, spec policy.RemediationSpec) Step {
+	step := Step{
+		StepNumber:  idx + 1,
+		Title:       "Set " + g.namespace,
+		SafeDefault: g.allSafe,
+		Confidence:  confidenceLabel(spec.Confidence),
+	}
+	actionParts := make([]string, 0, len(g.changes))
+	for _, c := range g.changes {
+		actionParts = append(actionParts,
+			fmt.Sprintf("  %s: %s → %s", c.PropertyPath, c.CurrentValue, c.RequiredValue))
+	}
+	step.Action = strings.Join(actionParts, "\n")
+	if !g.allSafe {
+		step.Caution = "This change may affect existing behavior. Verify dependencies before applying."
+	}
+	if spec.Action != "" && idx == 0 {
+		step.Action = spec.Action + "\n" + step.Action
+	}
+	return step
 }
 
 type changeGroup struct {
