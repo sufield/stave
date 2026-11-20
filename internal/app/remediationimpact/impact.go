@@ -166,25 +166,43 @@ func Analyze(in Input) (*Report, error) {
 		return cmp.Compare(string(a.AssetID), string(b.AssetID))
 	})
 
-	// Find deactivated chains. Project (ChainID, severity-label)
-	// off the assessment without naming findings.CompoundFinding —
-	// the only fields read are c.ChainID and c.Severity.String().
-	// Iterates Before first to build the set, then deletes any
-	// chain still active in After, matching the original semantics
-	// of two-map set difference.
+	deactivated := findDeactivatedChains(in.Before, in.After)
+
+	// Score delta.
+	scoreBefore := computeSimpleScore(in.Before)
+	scoreAfter := computeSimpleScore(in.After)
+
+	r := &Report{
+		BeforeFindings:    len(in.Before.Findings),
+		AfterFindings:     len(in.After.Findings),
+		Closed:            closed,
+		ChainsDeactivated: deactivated,
+		ScoreBefore:       scoreBefore,
+		ScoreAfter:        scoreAfter,
+		ScoreDelta:        ScoreDelta(scoreAfter - scoreBefore),
+	}
+
+	if in.PredictedDelta != 0 || len(in.PredictedClosed) > 0 {
+		r.Efficiency = computeEfficiency(in, ScoreDelta(scoreAfter-scoreBefore), afterKeys)
+	}
+
+	return r, nil
+}
+
+func findDeactivatedChains(before, after *report.Assessment) DeactivatedChains {
 	type chainKey struct {
 		chainID kernel.ChainID
 		assetID asset.ID
 		scopeID kernel.ScopeID
 	}
-	beforeSev := make(map[chainKey]policy.Severity, len(in.Before.ChainFindings))
-	for i := range in.Before.ChainFindings {
-		c := &in.Before.ChainFindings[i]
+	beforeSev := make(map[chainKey]policy.Severity, len(before.ChainFindings))
+	for i := range before.ChainFindings {
+		c := &before.ChainFindings[i]
 		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: kernel.ScopeID(c.ScopeID)}
 		beforeSev[k] = c.Severity
 	}
-	for i := range in.After.ChainFindings {
-		c := &in.After.ChainFindings[i]
+	for i := range after.ChainFindings {
+		c := &after.ChainFindings[i]
 		k := chainKey{chainID: c.ChainID, assetID: c.AssetID, scopeID: kernel.ScopeID(c.ScopeID)}
 		delete(beforeSev, k)
 	}
@@ -206,26 +224,7 @@ func Analyze(in Input) (*Report, error) {
 		}
 		return cmp.Compare(a.ScopeID, b.ScopeID)
 	})
-
-	// Score delta.
-	scoreBefore := computeSimpleScore(in.Before)
-	scoreAfter := computeSimpleScore(in.After)
-
-	r := &Report{
-		BeforeFindings:    len(in.Before.Findings),
-		AfterFindings:     len(in.After.Findings),
-		Closed:            closed,
-		ChainsDeactivated: deactivated,
-		ScoreBefore:       scoreBefore,
-		ScoreAfter:        scoreAfter,
-		ScoreDelta:        ScoreDelta(scoreAfter - scoreBefore),
-	}
-
-	if in.PredictedDelta != 0 || len(in.PredictedClosed) > 0 {
-		r.Efficiency = computeEfficiency(in, ScoreDelta(scoreAfter-scoreBefore), afterKeys)
-	}
-
-	return r, nil
+	return deactivated
 }
 
 func computeEfficiency(in Input, realized ScoreDelta, afterKeys map[findingKey]*remediation.Finding) *Efficiency {

@@ -199,47 +199,20 @@ func (m MTTRDays) Duration() time.Duration {
 
 // IsZero reports whether MTTR is 0.
 func (m MTTRDays) IsZero() bool { return m == 0 }
+
+type mttrWindow struct {
+	sev     policy.Severity
+	openAt  time.Time
+	closeAt time.Time
+}
+
 func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.Time) map[policy.Severity]MTTRDays {
 	var cutoff time.Time
 	if lookback > 0 {
 		cutoff = now.Add(-lookback)
 	}
-	type fkey struct {
-		ctl     kernel.ControlID
-		ast     asset.ID
-		astType kernel.AssetType
-	}
-	type mttrWindow struct {
-		sev     policy.Severity
-		openAt  time.Time
-		closeAt time.Time
-	}
 
-	open := make(map[fkey]*mttrWindow)
-	var closed []mttrWindow
-
-	for _, a := range sorted {
-		currentKeys := make(map[fkey]struct{}, len(a.Findings))
-		for i := range a.Findings {
-			k := fkey{a.Findings[i].ControlID, a.Findings[i].AssetID, a.Findings[i].AssetType}
-			currentKeys[k] = struct{}{}
-			if _, exists := open[k]; !exists {
-				open[k] = &mttrWindow{
-					sev:    a.Findings[i].ControlSeverity,
-					openAt: a.Run.EvalTime,
-				}
-			}
-		}
-		for k, w := range open {
-			if _, ok := currentKeys[k]; !ok {
-				w.closeAt = a.Run.EvalTime
-				if cutoff.IsZero() || !w.closeAt.Before(cutoff) {
-					closed = append(closed, *w)
-				}
-				delete(open, k)
-			}
-		}
-	}
+	closed := trackMTTRWindows(sorted, cutoff)
 
 	// Aggregate by severity.
 	type agg struct {
@@ -265,6 +238,39 @@ func computeMTTR(sorted []*report.Assessment, lookback time.Duration, now time.T
 		}
 	}
 	return result
+}
+
+func trackMTTRWindows(sorted []*report.Assessment, cutoff time.Time) []mttrWindow {
+	type fkey struct {
+		ctl     kernel.ControlID
+		ast     asset.ID
+		astType kernel.AssetType
+	}
+	open := make(map[fkey]*mttrWindow)
+	var closed []mttrWindow
+	for _, a := range sorted {
+		currentKeys := make(map[fkey]struct{}, len(a.Findings))
+		for i := range a.Findings {
+			k := fkey{a.Findings[i].ControlID, a.Findings[i].AssetID, a.Findings[i].AssetType}
+			currentKeys[k] = struct{}{}
+			if _, exists := open[k]; !exists {
+				open[k] = &mttrWindow{
+					sev:    a.Findings[i].ControlSeverity,
+					openAt: a.Run.EvalTime,
+				}
+			}
+		}
+		for k, w := range open {
+			if _, ok := currentKeys[k]; !ok {
+				w.closeAt = a.Run.EvalTime
+				if cutoff.IsZero() || !w.closeAt.Before(cutoff) {
+					closed = append(closed, *w)
+				}
+				delete(open, k)
+			}
+		}
+	}
+	return closed
 }
 
 func weightedMTTR(findings []remediation.Finding, mttr map[policy.Severity]MTTRDays) MTTRDays {

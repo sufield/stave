@@ -18,28 +18,7 @@ func FormatControlOutput(w io.Writer, cfg catalog.DiscoveryRequest, rows []catal
 	if w == nil {
 		return errors.New("writer is nil")
 	}
-	rawFormat := strings.TrimSpace(cfg.OutputFormat)
-	var format appcontracts.OutputFormat
-	if strings.EqualFold(rawFormat, "json") {
-		format = appcontracts.FormatJSON
-	} else if strings.EqualFold(rawFormat, "csv") {
-		format = "csv"
-	} else if strings.EqualFold(rawFormat, "text") || rawFormat == "" {
-		format = appcontracts.FormatText
-	} else {
-		needsLower := false
-		for i := 0; i < len(rawFormat); i++ {
-			if rawFormat[i] >= 'A' && rawFormat[i] <= 'Z' {
-				needsLower = true
-				break
-			}
-		}
-		if needsLower {
-			format = appcontracts.OutputFormat(strings.ToLower(rawFormat))
-		} else {
-			format = appcontracts.OutputFormat(rawFormat)
-		}
-	}
+	format := parseOutputFormat(cfg.OutputFormat)
 
 	if format == appcontracts.FormatJSON {
 		if err := jsonutil.WriteIndented(w, rows); err != nil {
@@ -61,6 +40,30 @@ func FormatControlOutput(w io.Writer, cfg catalog.DiscoveryRequest, rows []catal
 	default:
 		return fmt.Errorf("unsupported --format %q (use: text, json, csv)", cfg.OutputFormat)
 	}
+}
+
+func parseOutputFormat(raw string) appcontracts.OutputFormat {
+	raw = strings.TrimSpace(raw)
+	if strings.EqualFold(raw, "json") {
+		return appcontracts.FormatJSON
+	}
+	if strings.EqualFold(raw, "csv") {
+		return "csv"
+	}
+	if strings.EqualFold(raw, "text") || raw == "" {
+		return appcontracts.FormatText
+	}
+	needsLower := false
+	for i := 0; i < len(raw); i++ {
+		if raw[i] >= 'A' && raw[i] <= 'Z' {
+			needsLower = true
+			break
+		}
+	}
+	if needsLower {
+		return appcontracts.OutputFormat(strings.ToLower(raw))
+	}
+	return appcontracts.OutputFormat(raw)
 }
 
 // WriteCSV writes control rows as CSV.

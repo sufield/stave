@@ -299,35 +299,39 @@ func buildExport(
 			continue
 		}
 
-		er := EvidenceRecordExport{
-			ControlID:   string(rec.ControlID),
-			ControlName: rec.ControlName,
-			ResourceARN: rec.ResourceARN,
-			Verdict:     rec.Verdict.String(),
-			Severity:    recSev,
-			EvaluatedAt: rec.EvaluatedAt,
-			ReasoningTrace: TraceExport{
-				InvariantEvaluated: rec.ReasoningTrace.InvariantEvaluated,
-				FailCondition:      rec.ReasoningTrace.FailCondition,
-				FindingMessage:     rec.ReasoningTrace.FindingMessage,
-			},
-		}
-		for _, c := range rec.Citations {
-			er.Citations = append(er.Citations, CitationExp{
-				Framework:   c.Framework,
-				Requirement: c.Requirement,
-			})
-		}
-		for _, o := range rec.ReasoningTrace.ObservationProperties {
-			er.ReasoningTrace.Observations = append(er.ReasoningTrace.Observations, ObservationExp{
-				Field: o.Field,
-				Value: o.Value,
-			})
-		}
-		export.Evidence = append(export.Evidence, er)
+		export.Evidence = append(export.Evidence, mapEvidenceRecord(rec, recSev))
 	}
 
 	return export
+}
+
+func mapEvidenceRecord(rec *evidence.EvidenceRecord, sev policy.Severity) EvidenceRecordExport {
+	er := EvidenceRecordExport{
+		ControlID:   string(rec.ControlID),
+		ControlName: rec.ControlName,
+		ResourceARN: rec.ResourceARN,
+		Verdict:     rec.Verdict.String(),
+		Severity:    sev,
+		EvaluatedAt: rec.EvaluatedAt,
+		ReasoningTrace: TraceExport{
+			InvariantEvaluated: rec.ReasoningTrace.InvariantEvaluated,
+			FailCondition:      rec.ReasoningTrace.FailCondition,
+			FindingMessage:     rec.ReasoningTrace.FindingMessage,
+		},
+	}
+	for _, c := range rec.Citations {
+		er.Citations = append(er.Citations, CitationExp{
+			Framework:   c.Framework,
+			Requirement: c.Requirement,
+		})
+	}
+	for _, o := range rec.ReasoningTrace.ObservationProperties {
+		er.ReasoningTrace.Observations = append(er.ReasoningTrace.Observations, ObservationExp{
+			Field: o.Field,
+			Value: o.Value,
+		})
+	}
+	return er
 }
 
 func buildRequirementExport(ra *evidence.RequirementAssessment, findings []evaluation.Finding, frameworkKey string) RequirementExport {

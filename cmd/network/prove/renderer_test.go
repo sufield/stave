@@ -707,6 +707,3 @@ func Test_verdictCounterexampleHeader(t *testing.T) {
 		}
 	})
 }
-
-
-

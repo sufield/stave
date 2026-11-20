@@ -15,6 +15,7 @@ import (
 	"github.com/sufield/stave/internal/core/evaluation"
 	"github.com/sufield/stave/internal/core/evaluation/engine"
 	"github.com/sufield/stave/internal/core/evaluation/risk"
+	"github.com/sufield/stave/internal/core/findings"
 	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/internal/core/ports"
 	"github.com/sufield/stave/internal/util/sets"
@@ -531,17 +532,22 @@ func annotateGraphChains(report *evaluation.ComplianceReport) {
 // annotateExploitability classifies each finding as exploitable, one_away,
 // or reachable based on its position in the attack graph.
 func annotateExploitability(report *evaluation.ComplianceReport) {
-	// Build near-miss lookup: controlID → near-miss entries.
-	type nmEntry struct {
-		controlIDs sets.Set[kernel.ControlID]
-		nearMiss   evaluation.NearMissEntry
-	}
-	var nmEntries []nmEntry
-	for i := range report.NearMissChains {
-		nm := &report.NearMissChains[i]
-		cidSet := sets.New[kernel.ControlID](nm.ControlsFailing...)
-		nmEntries = append(nmEntries, nmEntry{
-			controlIDs: cidSet,
+	nmEntries := buildNearMissLookup(report.NearMissChains)
+	classifyExploitability(report.Findings, nmEntries)
+	classifyExploitability(report.MarkerFindings, nmEntries)
+}
+
+type nearMissLookupEntry struct {
+	controlIDs sets.Set[kernel.ControlID]
+	nearMiss   evaluation.NearMissEntry
+}
+
+func buildNearMissLookup(chains []findings.NearMissChain) []nearMissLookupEntry {
+	entries := make([]nearMissLookupEntry, 0, len(chains))
+	for i := range chains {
+		nm := &chains[i]
+		entries = append(entries, nearMissLookupEntry{
+			controlIDs: sets.New[kernel.ControlID](nm.ControlsFailing...),
 			nearMiss: evaluation.NearMissEntry{
 				ChainID:         nm.ChainID,
 				ChainSeverity:   nm.Severity,
@@ -551,28 +557,27 @@ func annotateExploitability(report *evaluation.ComplianceReport) {
 			},
 		})
 	}
+	return entries
+}
 
-	classifyFindings := func(fs []evaluation.Finding) {
-		for i := range fs {
-			f := &fs[i]
-			if f.IsChainMember() {
-				f.Exploitability = evaluation.ExploitabilityExploitable
-				continue
-			}
-			for _, ne := range nmEntries {
-				if ne.controlIDs.Contains(f.ControlID) {
-					f.NearMissChains = append(f.NearMissChains, ne.nearMiss)
-				}
-			}
-			if len(f.NearMissChains) > 0 {
-				f.Exploitability = evaluation.ExploitabilityOneAway
-				continue
-			}
-			f.Exploitability = evaluation.ExploitabilityReachable
+func classifyExploitability(fs []evaluation.Finding, nmEntries []nearMissLookupEntry) {
+	for i := range fs {
+		f := &fs[i]
+		if f.IsChainMember() {
+			f.Exploitability = evaluation.ExploitabilityExploitable
+			continue
 		}
+		for _, ne := range nmEntries {
+			if ne.controlIDs.Contains(f.ControlID) {
+				f.NearMissChains = append(f.NearMissChains, ne.nearMiss)
+			}
+		}
+		if len(f.NearMissChains) > 0 {
+			f.Exploitability = evaluation.ExploitabilityOneAway
+			continue
+		}
+		f.Exploitability = evaluation.ExploitabilityReachable
 	}
-	classifyFindings(report.Findings)
-	classifyFindings(report.MarkerFindings)
 }
 
 // annotateDecidingLayer derives the responsible policy layer for each

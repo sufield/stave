@@ -107,47 +107,7 @@ func Analyze(input Input) Report {
 		FieldCompliance:        {},
 	}
 
-	coveredTypes := make(map[kernel.AssetType]struct{})
-	stagesSeen := make(map[kernel.AttackStage]struct{})
-
-	for i := range input.Controls {
-		ctl := &input.Controls[i]
-
-		// severity
-		if ctl.Severity.IsValid() {
-			inc(completeness, FieldSeverity, true)
-		} else {
-			inc(completeness, FieldSeverity, false)
-		}
-
-		// remediation.action
-		if ctl.Remediation.HasAction() {
-			inc(completeness, FieldRemediationAction, true)
-		} else {
-			inc(completeness, FieldRemediationAction, false)
-		}
-
-		// attack_stage
-		stage := ctl.AttackStage()
-		if stage != "" {
-			inc(completeness, FieldAttackStage, true)
-			stagesSeen[stage] = struct{}{}
-		} else {
-			inc(completeness, FieldAttackStage, false)
-		}
-
-		// compliance
-		if ctl.HasComplianceCitations() {
-			inc(completeness, FieldCompliance, true)
-		} else {
-			inc(completeness, FieldCompliance, false)
-		}
-
-		// Track covered asset domains.
-		if ctl.Domain != "" {
-			coveredTypes[kernel.AssetType(ctl.Domain)] = struct{}{}
-		}
-	}
+	coveredTypes, stagesSeen := tallyControls(input.Controls, completeness)
 
 	// Compute overall percentage.
 	overallPct := QualityPercentage(0.0)
@@ -196,6 +156,26 @@ func Analyze(input Input) Report {
 		BlindSpots:    blindSpots,
 		MITREGaps:     mitreGaps,
 	}
+}
+
+func tallyControls(controls []policy.ControlDefinition, completeness map[MetadataField]FieldStat) (map[kernel.AssetType]struct{}, map[kernel.AttackStage]struct{}) {
+	coveredTypes := make(map[kernel.AssetType]struct{})
+	stagesSeen := make(map[kernel.AttackStage]struct{})
+	for i := range controls {
+		ctl := &controls[i]
+		inc(completeness, FieldSeverity, ctl.Severity.IsValid())
+		inc(completeness, FieldRemediationAction, ctl.Remediation.HasAction())
+		stage := ctl.AttackStage()
+		inc(completeness, FieldAttackStage, stage != "")
+		if stage != "" {
+			stagesSeen[stage] = struct{}{}
+		}
+		inc(completeness, FieldCompliance, ctl.HasComplianceCitations())
+		if ctl.Domain != "" {
+			coveredTypes[kernel.AssetType(ctl.Domain)] = struct{}{}
+		}
+	}
+	return coveredTypes, stagesSeen
 }
 
 func inc(m map[MetadataField]FieldStat, key MetadataField, present bool) {

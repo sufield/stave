@@ -96,13 +96,7 @@ func computeForecastScore(a *report.Assessment) float64 {
 }
 
 func buildMTTRHistory(assessments []*report.Assessment) map[policy.Severity][]float64 {
-	type fkey struct{ ctl, ast string }
-	type window struct {
-		sev    policy.Severity
-		openAt time.Time
-	}
-
-	open := make(map[fkey]*window)
+	open := make(map[mttrHistoryKey]*mttrHistoryWindow)
 	resolvedDurations := make(map[policy.Severity][]float64)
 
 	severities := []policy.Severity{policy.SeverityCritical, policy.SeverityHigh, policy.SeverityMedium, policy.SeverityLow}
@@ -113,26 +107,7 @@ func buildMTTRHistory(assessments []*report.Assessment) map[policy.Severity][]fl
 	}
 
 	for _, a := range assessments {
-		currentKeys := make(map[fkey]struct{}, len(a.Findings))
-		for i := range a.Findings {
-			k := fkey{string(a.Findings[i].ControlID), string(a.Findings[i].AssetID)}
-			currentKeys[k] = struct{}{}
-			if _, exists := open[k]; !exists {
-				sev, _ := policy.ParseSeverity(a.Findings[i].SeverityLabel())
-				open[k] = &window{
-					sev:    sev,
-					openAt: a.Run.EvalTime,
-				}
-			}
-		}
-		for k, w := range open {
-			if _, ok := currentKeys[k]; !ok {
-				hours := a.Run.EvalTime.Sub(w.openAt).Hours()
-				resolvedDurations[w.sev] = append(resolvedDurations[w.sev], hours)
-				delete(open, k)
-			}
-		}
-
+		trackMTTRHistoryStep(a, open, resolvedDurations)
 		for _, sev := range severities {
 			durations := resolvedDurations[sev]
 			if len(durations) == 0 {
@@ -148,6 +123,34 @@ func buildMTTRHistory(assessments []*report.Assessment) map[policy.Severity][]fl
 	}
 
 	return result
+}
+
+type mttrHistoryKey struct{ ctl, ast string }
+type mttrHistoryWindow struct {
+	sev    policy.Severity
+	openAt time.Time
+}
+
+func trackMTTRHistoryStep(a *report.Assessment, open map[mttrHistoryKey]*mttrHistoryWindow, resolved map[policy.Severity][]float64) {
+	currentKeys := make(map[mttrHistoryKey]struct{}, len(a.Findings))
+	for i := range a.Findings {
+		k := mttrHistoryKey{string(a.Findings[i].ControlID), string(a.Findings[i].AssetID)}
+		currentKeys[k] = struct{}{}
+		if _, exists := open[k]; !exists {
+			sev, _ := policy.ParseSeverity(a.Findings[i].SeverityLabel())
+			open[k] = &mttrHistoryWindow{
+				sev:    sev,
+				openAt: a.Run.EvalTime,
+			}
+		}
+	}
+	for k, w := range open {
+		if _, ok := currentKeys[k]; !ok {
+			hours := a.Run.EvalTime.Sub(w.openAt).Hours()
+			resolved[w.sev] = append(resolved[w.sev], hours)
+			delete(open, k)
+		}
+	}
 }
 
 func writeForecastTable(w io.Writer, r *forecast.Result) {

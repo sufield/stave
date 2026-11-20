@@ -188,28 +188,7 @@ func emitChainFinding(
 		return findingsdata.CompoundFinding{}, false
 	}
 
-	// Collect attack stages and compute scope-aware blast multiplier.
-	stageSet := make(map[kernel.AttackStage]struct{})
-	maxBlast := 1.0
-	for _, cid := range failing {
-		if ctl, ok := controlLookup[cid]; ok {
-			if stage := ctl.AttackStage(); stage != "" {
-				stageSet[stage] = struct{}{}
-			}
-			mult := scopeAdjustedBlast(ctl)
-			if mult > maxBlast {
-				maxBlast = mult
-			}
-		}
-	}
-
-	stages := make([]kernel.AttackStage, 0, len(stageSet))
-	for s := range stageSet {
-		stages = append(stages, s)
-	}
-	slices.SortFunc(stages, func(a, b kernel.AttackStage) int {
-		return cmp.Compare(string(a), string(b))
-	})
+	stages, maxBlast := collectStagesAndBlast(failing, controlLookup)
 
 	escalation := ChainEscalation(len(failing))
 	base := baseScoreFromMembers(failing, controlLookup)
@@ -250,6 +229,30 @@ func emitChainFinding(
 
 // canResolveScopeField reports whether the chain specifies a ScopeField and
 // a resolver is available to evaluate it.
+func collectStagesAndBlast(failing []kernel.ControlID, controlLookup map[kernel.ControlID]*policy.ControlDefinition) ([]kernel.AttackStage, float64) {
+	stageSet := make(map[kernel.AttackStage]struct{})
+	maxBlast := 1.0
+	for _, cid := range failing {
+		if ctl, ok := controlLookup[cid]; ok {
+			if stage := ctl.AttackStage(); stage != "" {
+				stageSet[stage] = struct{}{}
+			}
+			mult := scopeAdjustedBlast(ctl)
+			if mult > maxBlast {
+				maxBlast = mult
+			}
+		}
+	}
+	stages := make([]kernel.AttackStage, 0, len(stageSet))
+	for s := range stageSet {
+		stages = append(stages, s)
+	}
+	slices.SortFunc(stages, func(a, b kernel.AttackStage) int {
+		return cmp.Compare(string(a), string(b))
+	})
+	return stages, maxBlast
+}
+
 func canResolveScopeField(chain *policy.ChainDefinition, resolver ScopeResolver) bool {
 	return chain.HasScopeField() && resolver != nil
 }

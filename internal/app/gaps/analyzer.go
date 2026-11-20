@@ -59,24 +59,7 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 	// the catalog-wide count of every control reading that path,
 	// including VPC/security-group controls that never see a
 	// Lambda asset.
-	controlAppliesTo := map[kernel.ControlID]map[kernel.AssetType]struct{}{}
-	for i := range controls {
-		ctl := &controls[i]
-		m := map[kernel.AssetType]struct{}{}
-		for _, at := range ctl.ApplicableAssetTypes {
-			m[at] = struct{}{}
-		}
-		controlAppliesTo[ctl.ID] = m
-	}
-	controlReadsPath := map[kernel.ControlID]map[string]struct{}{}
-	for path, ctls := range idx.PathToControls {
-		for _, id := range ctls {
-			if controlReadsPath[id] == nil {
-				controlReadsPath[id] = map[string]struct{}{}
-			}
-			controlReadsPath[id][path] = struct{}{}
-		}
-	}
+	controlAppliesTo, controlReadsPath := buildControlLookups(controls, idx.PathToControls)
 
 	chainByID := make(map[kernel.ChainID]*policy.ChainDefinition, len(chains))
 	for i := range chains {
@@ -113,6 +96,28 @@ func Analyze(controls []policy.ControlDefinition, chains []policy.ChainDefinitio
 		Gaps:    gaps,
 		Summary: buildSummary(gaps, indeterminateCount(controls), topN),
 	}
+}
+
+func buildControlLookups(controls []policy.ControlDefinition, pathToControls map[string][]kernel.ControlID) (map[kernel.ControlID]map[kernel.AssetType]struct{}, map[kernel.ControlID]map[string]struct{}) {
+	appliesTo := map[kernel.ControlID]map[kernel.AssetType]struct{}{}
+	for i := range controls {
+		ctl := &controls[i]
+		m := map[kernel.AssetType]struct{}{}
+		for _, at := range ctl.ApplicableAssetTypes {
+			m[at] = struct{}{}
+		}
+		appliesTo[ctl.ID] = m
+	}
+	readsPath := map[kernel.ControlID]map[string]struct{}{}
+	for path, ctls := range pathToControls {
+		for _, id := range ctls {
+			if readsPath[id] == nil {
+				readsPath[id] = map[string]struct{}{}
+			}
+			readsPath[id][path] = struct{}{}
+		}
+	}
+	return appliesTo, readsPath
 }
 
 func blockedControls(
@@ -245,36 +250,7 @@ func buildSummary(gaps []FieldGap, indet int, topN int) Summary {
 	if indet > 0 {
 		s.IndeterminateDisclaimer = "Additional gaps may exist on controls without applicable_asset_types declarations; run `stave readiness` for asset-type-level coverage."
 	}
-	chainSet := map[kernel.ChainID]struct{}{}
-	for i := range gaps {
-		r := gaps[i].Remediation
-		switch r.Type {
-		case RemediationTag:
-			s.TagGaps++
-		case RemediationAPI:
-			s.ApiGaps++
-		case RemediationDerived:
-			s.DerivedGaps++
-		case RemediationCollector:
-			s.CollectorGaps++
-		default:
-			// classifyRemediation only emits one of the four known
-			// types. Any other value is a bug — bucket it as
-			// "collector" so the counts still partition TotalGaps
-			// while the unknown type leaks into the gap list for
-			// debugging.
-			s.CollectorGaps++
-		}
-		if r.FixableByAgent {
-			s.FixableByAgentGaps++
-		} else {
-			s.NotFixableByAgentGaps++
-		}
-		for _, c := range gaps[i].ChainsBlocked {
-			chainSet[c] = struct{}{}
-		}
-	}
-	s.ChainsBlockedTotal = len(chainSet)
+	classifyGapCounts(gaps, &s)
 
 	if topN > 0 && len(gaps) > 0 {
 		n := min(topN, len(gaps))
@@ -298,4 +274,30 @@ func buildSummary(gaps []FieldGap, indet int, topN int) Summary {
 		}
 	}
 	return s
+}
+
+func classifyGapCounts(gaps []FieldGap, s *Summary) {
+	chainSet := map[kernel.ChainID]struct{}{}
+	for i := range gaps {
+		r := gaps[i].Remediation
+		switch r.Type {
+		case RemediationTag:
+			s.TagGaps++
+		case RemediationAPI:
+			s.ApiGaps++
+		case RemediationDerived:
+			s.DerivedGaps++
+		default:
+			s.CollectorGaps++
+		}
+		if r.FixableByAgent {
+			s.FixableByAgentGaps++
+		} else {
+			s.NotFixableByAgentGaps++
+		}
+		for _, c := range gaps[i].ChainsBlocked {
+			chainSet[c] = struct{}{}
+		}
+	}
+	s.ChainsBlockedTotal = len(chainSet)
 }

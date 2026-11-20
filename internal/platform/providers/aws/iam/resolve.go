@@ -730,53 +730,7 @@ func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 	var profile RiskProfile
 
 	for _, grant := range effective {
-		action := strings.ToLower(grant.Action)
-
-		// Count risk categories across all grants (not just broad ones).
-		for _, cat := range sensitiveActions.Classify(action) {
-			switch cat {
-			case coreiam.ActionCredentialExposure:
-				profile.CredentialExposure++
-			case coreiam.ActionDataAccess:
-				profile.DataAccess++
-			case coreiam.ActionPrivEsc:
-				profile.PrivEsc++
-			case coreiam.ActionResourceExposure:
-				profile.ResourceExposure++
-			case coreiam.ActionDiscovery:
-				profile.Discovery++
-			}
-		}
-
-		if !isEffectivelyBroadResource(grant.Resource) {
-			continue
-		}
-
-		// Admin indicators: full wildcard, iam:*, or IAM policy-
-		// mutation actions. Uses the registry's PrivEsc category
-		// for IAM-prefixed actions, plus iam:CreatePolicy (classified
-		// as ResourceExposure in the registry but functionally admin
-		// when on a broad resource). iam:PassRole and iam:CreateRole
-		// are elevated, not admin — excluded via isIAMAdminAction.
-		if action == "*" || action == "iam:*" || isIAMAdminAction(action) {
-			hasAdmin = true
-		}
-		// Elevated indicators: PassRole, broad service wildcards,
-		// financial commitment actions, or any registry PrivEsc action
-		// on a broad resource.
-		if isElevatedAction(action) {
-			hasElevated = true
-		}
-		if !hasElevated && sensitiveActions.HasCredentialExposure(action) {
-			hasElevated = true
-		}
-		if sensitiveActions.HasDataAccess(action) {
-			hasBroadDataAccess = true
-		}
-
-		if idx := strings.IndexByte(action, ':'); idx > 0 {
-			serviceCount[action[:idx]] = struct{}{}
-		}
+		classifyGrant(grant, &profile, &hasAdmin, &hasElevated, &hasBroadDataAccess, serviceCount)
 	}
 
 	var level PrivilegeLevel
@@ -791,6 +745,42 @@ func classifyPrivilege(effective []ActionGrant) (PrivilegeLevel, RiskProfile) {
 		level = PrivilegeLevelLimited
 	}
 	return level, profile
+}
+
+func classifyGrant(grant ActionGrant, profile *RiskProfile, hasAdmin, hasElevated, hasBroadDataAccess *bool, serviceCount map[string]struct{}) {
+	action := strings.ToLower(grant.Action)
+	for _, cat := range sensitiveActions.Classify(action) {
+		switch cat {
+		case coreiam.ActionCredentialExposure:
+			profile.CredentialExposure++
+		case coreiam.ActionDataAccess:
+			profile.DataAccess++
+		case coreiam.ActionPrivEsc:
+			profile.PrivEsc++
+		case coreiam.ActionResourceExposure:
+			profile.ResourceExposure++
+		case coreiam.ActionDiscovery:
+			profile.Discovery++
+		}
+	}
+	if !isEffectivelyBroadResource(grant.Resource) {
+		return
+	}
+	if action == "*" || action == "iam:*" || isIAMAdminAction(action) {
+		*hasAdmin = true
+	}
+	if isElevatedAction(action) {
+		*hasElevated = true
+	}
+	if !*hasElevated && sensitiveActions.HasCredentialExposure(action) {
+		*hasElevated = true
+	}
+	if sensitiveActions.HasDataAccess(action) {
+		*hasBroadDataAccess = true
+	}
+	if idx := strings.IndexByte(action, ':'); idx > 0 {
+		serviceCount[action[:idx]] = struct{}{}
+	}
 }
 
 // isIAMAdminAction reports whether an IAM action grants admin-level

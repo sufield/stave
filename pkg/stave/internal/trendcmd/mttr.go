@@ -17,48 +17,7 @@ type violationWindow struct {
 
 // computeMTTR calculates mean time to remediate from a sequence of assessments.
 func computeMTTR(assessments []*report.Assessment) map[string]mttrEntry {
-	// Track open windows by violation key.
-	windows := make(map[string]*violationWindow)
-	var closedWindows []violationWindow
-
-	// Build severity index from findings.
-	severityOf := make(map[string]string) // controlID:assetID → severity
-
-	for _, a := range assessments {
-		capturedAt := a.Run.EvalTime
-		currentKeys := make(map[string]struct{})
-
-		for i := range a.Findings {
-			f := &a.Findings[i]
-			key := string(f.ControlID) + ":" + string(f.AssetID)
-			currentKeys[key] = struct{}{}
-
-			sev := f.SeverityLabel()
-			if sev == "" {
-				sev = "unknown"
-			}
-			severityOf[key] = sev
-
-			// Open window if not already open.
-			if _, exists := windows[key]; !exists {
-				windows[key] = &violationWindow{
-					key:      key,
-					severity: sev,
-					openedAt: capturedAt,
-				}
-			}
-		}
-
-		// Close windows for violations no longer present.
-		for key, w := range windows {
-			if _, ok := currentKeys[key]; !ok {
-				w.closedAt = capturedAt
-				w.closed = true
-				closedWindows = append(closedWindows, *w)
-				delete(windows, key)
-			}
-		}
-	}
+	closedWindows := trackViolationWindows(assessments)
 
 	// Aggregate closed windows by severity.
 	type accumulator struct {
@@ -94,4 +53,38 @@ func computeMTTR(assessments []*report.Assessment) map[string]mttrEntry {
 	}
 
 	return result
+}
+
+func trackViolationWindows(assessments []*report.Assessment) []violationWindow {
+	windows := make(map[string]*violationWindow)
+	var closed []violationWindow
+	for _, a := range assessments {
+		capturedAt := a.Run.EvalTime
+		currentKeys := make(map[string]struct{})
+		for i := range a.Findings {
+			f := &a.Findings[i]
+			key := string(f.ControlID) + ":" + string(f.AssetID)
+			currentKeys[key] = struct{}{}
+			sev := f.SeverityLabel()
+			if sev == "" {
+				sev = "unknown"
+			}
+			if _, exists := windows[key]; !exists {
+				windows[key] = &violationWindow{
+					key:      key,
+					severity: sev,
+					openedAt: capturedAt,
+				}
+			}
+		}
+		for key, w := range windows {
+			if _, ok := currentKeys[key]; !ok {
+				w.closedAt = capturedAt
+				w.closed = true
+				closed = append(closed, *w)
+				delete(windows, key)
+			}
+		}
+	}
+	return closed
 }

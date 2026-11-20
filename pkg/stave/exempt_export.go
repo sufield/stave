@@ -58,86 +58,18 @@ func exemptBuildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment
 	var poamItems []map[string]any
 	var risks []map[string]any
 
-	// Type 1: Accepted risk items from acknowledgments.
 	ackIDs := make(map[string]struct{})
 	for i := range af.Acknowledgments {
 		a := &af.Acknowledgments[i]
 		if !a.IsExportable() {
 			continue
 		}
-
 		cid := string(a.ControlID)
 		assetID := string(a.AssetID)
 		ackIDs[cid+"@"+assetID] = struct{}{}
-		itemUUID := exemptPOAMUUID("poam-item", cid, assetID)
-		riskUUID := exemptPOAMUUID("risk", cid, assetID)
-
-		status := a.ExportStatus()
-
-		risk := map[string]any{
-			"uuid":   riskUUID,
-			"title":  "Risk: " + cid + " on " + assetID,
-			"status": status,
-			"responses": []map[string]any{
-				{
-					"uuid":        exemptPOAMUUID("response", cid, assetID),
-					"lifecycle":   "accept",
-					"title":       "Risk Accepted",
-					"description": a.Reason,
-					"props": []map[string]string{
-						{"name": "approved-by", "value": a.Approver},
-						{"name": "approved-date", "value": a.AcknowledgedDate},
-					},
-				},
-			},
-		}
-		risks = append(risks, risk)
-
-		props := []map[string]string{
-			{"name": "stave-control-id", "value": cid},
-			{"name": "stave-asset-id", "value": assetID},
-			{"name": "stave-approver", "value": a.Approver},
-			{"name": "stave-acknowledged-date", "value": a.AcknowledgedDate},
-			{"name": "stave-status", "value": string(a.Status)},
-		}
-		if len(a.CompensatingControls) > 0 {
-			comps := make([]string, len(a.CompensatingControls))
-			for i, c := range a.CompensatingControls {
-				comps[i] = string(c)
-			}
-			props = append(props, map[string]string{
-				"name": "stave-compensating-controls", "value": strings.Join(comps, ","),
-			})
-		}
-
-		item := map[string]any{
-			"uuid":        itemUUID,
-			"title":       "Accepted Risk: " + cid + " on " + assetID,
-			"description": a.Reason,
-			"related-risks": []map[string]string{
-				{"risk-uuid": riskUUID},
-			},
-			"props": props,
-		}
-
-		if a.ExpiryDate != "" {
-			item["remediations"] = []map[string]any{
-				{
-					"uuid":      exemptPOAMUUID("remediation", cid, assetID),
-					"lifecycle": "recommendation",
-					"title":     "Review before expiry",
-					"milestones": []map[string]any{
-						{
-							"uuid":     exemptPOAMUUID("milestone", cid, assetID),
-							"title":    "Expiry review",
-							"due-date": a.ExpiryDate + "T00:00:00Z",
-						},
-					},
-				},
-			}
-		}
-
+		item, risk := buildAcknowledgmentPOAMItem(a, cid, assetID)
 		poamItems = append(poamItems, item)
+		risks = append(risks, risk)
 	}
 
 	// Type 2: Open findings from assessment.
@@ -192,6 +124,75 @@ func exemptBuildPOAM(af *appexempt.AcceptanceFile, assessment *report.Assessment
 			"poam-items": poamItems,
 		},
 	}
+}
+
+func buildAcknowledgmentPOAMItem(a *appexempt.AcknowledgmentEntry, cid, assetID string) (map[string]any, map[string]any) {
+	itemUUID := exemptPOAMUUID("poam-item", cid, assetID)
+	riskUUID := exemptPOAMUUID("risk", cid, assetID)
+
+	risk := map[string]any{
+		"uuid":   riskUUID,
+		"title":  "Risk: " + cid + " on " + assetID,
+		"status": a.ExportStatus(),
+		"responses": []map[string]any{
+			{
+				"uuid":        exemptPOAMUUID("response", cid, assetID),
+				"lifecycle":   "accept",
+				"title":       "Risk Accepted",
+				"description": a.Reason,
+				"props": []map[string]string{
+					{"name": "approved-by", "value": a.Approver},
+					{"name": "approved-date", "value": a.AcknowledgedDate},
+				},
+			},
+		},
+	}
+
+	props := []map[string]string{
+		{"name": "stave-control-id", "value": cid},
+		{"name": "stave-asset-id", "value": assetID},
+		{"name": "stave-approver", "value": a.Approver},
+		{"name": "stave-acknowledged-date", "value": a.AcknowledgedDate},
+		{"name": "stave-status", "value": string(a.Status)},
+	}
+	if len(a.CompensatingControls) > 0 {
+		comps := make([]string, len(a.CompensatingControls))
+		for i, c := range a.CompensatingControls {
+			comps[i] = string(c)
+		}
+		props = append(props, map[string]string{
+			"name": "stave-compensating-controls", "value": strings.Join(comps, ","),
+		})
+	}
+
+	item := map[string]any{
+		"uuid":        itemUUID,
+		"title":       "Accepted Risk: " + cid + " on " + assetID,
+		"description": a.Reason,
+		"related-risks": []map[string]string{
+			{"risk-uuid": riskUUID},
+		},
+		"props": props,
+	}
+
+	if a.ExpiryDate != "" {
+		item["remediations"] = []map[string]any{
+			{
+				"uuid":      exemptPOAMUUID("remediation", cid, assetID),
+				"lifecycle": "recommendation",
+				"title":     "Review before expiry",
+				"milestones": []map[string]any{
+					{
+						"uuid":     exemptPOAMUUID("milestone", cid, assetID),
+						"title":    "Expiry review",
+						"due-date": a.ExpiryDate + "T00:00:00Z",
+					},
+				},
+			},
+		}
+	}
+
+	return item, risk
 }
 
 func exemptPOAMUUID(parts ...string) string {

@@ -223,9 +223,21 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 		failingIDs.Add(r.Findings[i].ControlID)
 	}
 
+	readiness, totalCitations := tallyFrameworkReadiness(frameworks, allControlIDs, controlCompliance, failingIDs)
+	r.Summary.FrameworkReadiness = readiness
+	r.Summary.FrameworkCitationsSatisfied = totalCitations
+
+	// Super-Fix: find the violated control covering the most frameworks.
+	r.Summary.SuperFix = computeSuperFix(failingIDs, controlCompliance, frameworks)
+
+	// Nearby frameworks: check all frameworks for near-readiness.
+	requestedSet := sets.New[string](frameworks...)
+	r.Summary.NearbyFrameworks = computeNearbyFrameworks(failingIDs, allControlIDs, controlCompliance, requestedSet)
+}
+
+func tallyFrameworkReadiness(frameworks []string, allControlIDs []kernel.ControlID, controlCompliance map[kernel.ControlID]map[policy.ComplianceFramework]string, failingIDs sets.Set[kernel.ControlID]) ([]FrameworkReadiness, int) {
 	var totalCitations int
 	readiness := make([]FrameworkReadiness, 0, len(frameworks))
-
 	for _, fw := range frameworks {
 		total := 0
 		passing := 0
@@ -243,12 +255,6 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 				totalCitations++
 			}
 		}
-		// A requested framework with zero mapped controls is NOT 100%
-		// compliant — that would be a false guarantee. Report 0% so it
-		// can never be mistaken for full coverage; TotalControls: 0
-		// distinguishes "no controls mapped" from "0 of N passing". The
-		// framework stays in the list (the user requested it explicitly)
-		// rather than being silently dropped like the nearby path.
 		pct := 0
 		if total > 0 {
 			pct = passing * 100 / total
@@ -260,16 +266,7 @@ func (r *ComplianceReport) CalculateReadiness(frameworks []string, allControlIDs
 			ReadinessPercent: pct,
 		})
 	}
-
-	r.Summary.FrameworkReadiness = readiness
-	r.Summary.FrameworkCitationsSatisfied = totalCitations
-
-	// Super-Fix: find the violated control covering the most frameworks.
-	r.Summary.SuperFix = computeSuperFix(failingIDs, controlCompliance, frameworks)
-
-	// Nearby frameworks: check all frameworks for near-readiness.
-	requestedSet := sets.New[string](frameworks...)
-	r.Summary.NearbyFrameworks = computeNearbyFrameworks(failingIDs, allControlIDs, controlCompliance, requestedSet)
+	return readiness, totalCitations
 }
 
 func computeSuperFix(failingIDs sets.Set[kernel.ControlID], controlCompliance map[kernel.ControlID]map[policy.ComplianceFramework]string, frameworks []string) *SuperFix {

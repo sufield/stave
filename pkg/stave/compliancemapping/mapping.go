@@ -188,6 +188,22 @@ func (m *Mapping) Verify(catalogIDs map[string]bool) IntegrityReport {
 		PartialNoReason:   []string{},
 		CatalogTotal:      len(catalogIDs),
 	}
+	collectMappingIssues(m, catalogIDs, &rep)
+	slices.Sort(rep.DuplicateIDs)
+	slices.Sort(rep.PartialNoReason)
+	slices.SortFunc(rep.DanglingRefs, func(a, b DanglingRef) int {
+		if c := cmp.Compare(a.FrameworkID, b.FrameworkID); c != 0 {
+			return c
+		}
+		return cmp.Compare(a.StaveControl, b.StaveControl)
+	})
+	slices.SortFunc(rep.InvalidConfidence, func(a, b ConfidenceIssue) int {
+		return cmp.Compare(a.FrameworkID, b.FrameworkID)
+	})
+	return rep
+}
+
+func collectMappingIssues(m *Mapping, catalogIDs map[string]bool, rep *IntegrityReport) {
 	seen := map[string]bool{}
 	distinct := map[string]bool{}
 	for di := range m.Domains {
@@ -212,18 +228,6 @@ func (m *Mapping) Verify(catalogIDs map[string]bool) IntegrityReport {
 		}
 	}
 	rep.ReferencedControl = len(distinct)
-	slices.Sort(rep.DuplicateIDs)
-	slices.Sort(rep.PartialNoReason)
-	slices.SortFunc(rep.DanglingRefs, func(a, b DanglingRef) int {
-		if c := cmp.Compare(a.FrameworkID, b.FrameworkID); c != 0 {
-			return c
-		}
-		return cmp.Compare(a.StaveControl, b.StaveControl)
-	})
-	slices.SortFunc(rep.InvalidConfidence, func(a, b ConfidenceIssue) int {
-		return cmp.Compare(a.FrameworkID, b.FrameworkID)
-	})
-	return rep
 }
 
 // HasFailures reports whether any covered control failed — used to map to exit 3.

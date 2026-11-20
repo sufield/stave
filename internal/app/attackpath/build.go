@@ -444,38 +444,40 @@ func capDescription(id CapabilityID) string {
 // tool registry and records which tools could exploit each chain.
 func annotateTools(nodes []ChainNode, chains []policy.ChainDefinition, tools ToolLookup) {
 	for i := range nodes {
-		caps := make(map[CapabilityID]struct{})
-		ch := &chains[i]
-		for _, c := range ch.Preconditions {
-			caps[CapabilityID(c)] = struct{}{}
-		}
-		for _, c := range ch.Postconditions {
-			caps[CapabilityID(c)] = struct{}{}
-		}
+		nodes[i].ToolAnnotations = matchToolsForChain(&chains[i], tools)
+	}
+}
 
-		toolMatches := make(map[string][]CapabilityID) // tool name → matched caps
-		for cap := range caps {
-			for _, t := range tools.ToolsForCapability(string(cap)) {
-				toolMatches[t.Name] = append(toolMatches[t.Name], cap)
-			}
-		}
-		if len(toolMatches) == 0 {
-			continue
-		}
-
-		names := make([]string, 0, len(toolMatches))
-		for name := range toolMatches {
-			names = append(names, name)
-		}
-		slices.Sort(names)
-
-		for _, name := range names {
-			matched := toolMatches[name]
-			slices.SortFunc(matched, func(a, b CapabilityID) int { return cmp.Compare(string(a), string(b)) })
-			nodes[i].ToolAnnotations = append(nodes[i].ToolAnnotations, ToolAnnotation{
-				ToolName:            name,
-				MatchedCapabilities: matched,
-			})
+func matchToolsForChain(ch *policy.ChainDefinition, tools ToolLookup) []ToolAnnotation {
+	caps := make(map[CapabilityID]struct{})
+	for _, c := range ch.Preconditions {
+		caps[CapabilityID(c)] = struct{}{}
+	}
+	for _, c := range ch.Postconditions {
+		caps[CapabilityID(c)] = struct{}{}
+	}
+	toolMatches := make(map[string][]CapabilityID)
+	for cap := range caps {
+		for _, t := range tools.ToolsForCapability(string(cap)) {
+			toolMatches[t.Name] = append(toolMatches[t.Name], cap)
 		}
 	}
+	if len(toolMatches) == 0 {
+		return nil
+	}
+	names := make([]string, 0, len(toolMatches))
+	for name := range toolMatches {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	out := make([]ToolAnnotation, 0, len(names))
+	for _, name := range names {
+		matched := toolMatches[name]
+		slices.SortFunc(matched, func(a, b CapabilityID) int { return cmp.Compare(string(a), string(b)) })
+		out = append(out, ToolAnnotation{
+			ToolName:            name,
+			MatchedCapabilities: matched,
+		})
+	}
+	return out
 }

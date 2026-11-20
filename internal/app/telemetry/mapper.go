@@ -23,43 +23,48 @@ type ControlFingerprints map[kernel.ControlID]kernel.Digest
 func MapAssessment(a *report.Assessment, filter Filter, controlFPs ControlFingerprints) []Event {
 	var events []Event
 	for i := range a.Findings {
-		f := &a.Findings[i]
-		if !matchesFilter(f, filter) {
-			continue
+		if e, ok := mapFindingToEvent(&a.Findings[i], a, filter, controlFPs); ok {
+			events = append(events, e)
 		}
-		e := Event{
-			SchemaVersion:     schemaVersion,
-			CapturedAt:        a.Run.EvalTime,
-			FindingID:         string(f.FindingID),
-			ControlID:         f.ControlID,
-			ControlName:       f.ControlName,
-			Severity:          f.ControlSeverity,
-			ResourceID:        f.AssetID,
-			ResourceType:      f.AssetType,
-			Verdict:           evaluation.VerdictViolation,
-			PolicyFingerprint: string(a.Run.PolicyFingerprint),
-			ExposureScore:     float64(f.ExposureScore),
-			Exploitability:    string(f.Exploitability),
-			Status:            string(a.Status),
-		}
-		if controlFPs != nil {
-			e.ControlFingerprint = string(controlFPs[f.ControlID])
-		}
-		if score := computeEnvironmentalScore(f); score > 0 {
-			e.EnvironmentalScore = &score
-		}
-		if dwell := f.DwellDays(); dwell > 0 {
-			e.UnsafeDurationDays = UnsafeDurationDays(dwell)
-		}
-		for _, cm := range f.ChainMembership {
-			e.CompoundChains = append(e.CompoundChains, cm.ChainID)
-			if len(cm.StageSpan) > 0 && e.AttackStage == "" {
-				e.AttackStage = string(cm.StageSpan[0])
-			}
-		}
-		events = append(events, e)
 	}
 	return events
+}
+
+func mapFindingToEvent(f *remediation.Finding, a *report.Assessment, filter Filter, controlFPs ControlFingerprints) (Event, bool) {
+	if !matchesFilter(f, filter) {
+		return Event{}, false
+	}
+	e := Event{
+		SchemaVersion:     schemaVersion,
+		CapturedAt:        a.Run.EvalTime,
+		FindingID:         string(f.FindingID),
+		ControlID:         f.ControlID,
+		ControlName:       f.ControlName,
+		Severity:          f.ControlSeverity,
+		ResourceID:        f.AssetID,
+		ResourceType:      f.AssetType,
+		Verdict:           evaluation.VerdictViolation,
+		PolicyFingerprint: string(a.Run.PolicyFingerprint),
+		ExposureScore:     float64(f.ExposureScore),
+		Exploitability:    string(f.Exploitability),
+		Status:            string(a.Status),
+	}
+	if controlFPs != nil {
+		e.ControlFingerprint = string(controlFPs[f.ControlID])
+	}
+	if score := computeEnvironmentalScore(f); score > 0 {
+		e.EnvironmentalScore = &score
+	}
+	if dwell := f.DwellDays(); dwell > 0 {
+		e.UnsafeDurationDays = UnsafeDurationDays(dwell)
+	}
+	for _, cm := range f.ChainMembership {
+		e.CompoundChains = append(e.CompoundChains, cm.ChainID)
+		if len(cm.StageSpan) > 0 && e.AttackStage == "" {
+			e.AttackStage = string(cm.StageSpan[0])
+		}
+	}
+	return e, true
 }
 
 // MapAssessmentWithWindows converts an Assessment into events with window tracking.

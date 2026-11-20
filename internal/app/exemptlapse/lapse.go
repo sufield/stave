@@ -117,64 +117,57 @@ func Detect(in Input) LapsedFindings {
 		evalTime = ports.RealClock{}.Now()
 	}
 	var lapsed LapsedFindings
-
 	for i := range in.Findings {
-		f := &in.Findings[i]
-
-		if !f.IsSuppressed() {
-			continue
+		if lf, ok := classifyLapsed(&in.Findings[i], evalTime); ok {
+			lapsed = append(lapsed, lf)
 		}
-		if f.Suppression == nil || f.Suppression.Valid {
-			continue
-		}
-		if !f.Suppression.IsLapsed() {
-			continue
-		}
-
-		expiry, err := time.Parse("2006-01-02", f.Suppression.ExpiryDate)
-		if err != nil && f.Suppression.IsExpired() {
-			continue
-		}
-
-		daysSince := DaysSinceExpiry(0)
-		if !expiry.IsZero() {
-			daysSince = DaysSinceExpiry(max(0, int(evalTime.Sub(expiry).Hours()/24)))
-		}
-
-		originalSev := f.ControlSeverity
-		if !originalSev.IsSet() {
-			originalSev = policy.SeverityMedium
-		}
-		effectiveSev := originalSev
-
-		var bumpReason string
-		if daysSince.IsSeverityBumped() {
-			effectiveSev = originalSev.Bump(1)
-			bumpReason = "Known risk allowed to expire unreviewed"
-		}
-
-		var compensatingNote string
-		if f.Suppression.IsCompensatingFailing() {
-			compensatingNote = "Compensating control is failing"
-		}
-
-		exemptionID := NewExemptionID(f.ControlID, f.AssetType, f.AssetID)
-
-		lf := LapsedFinding{
-			FindingType:        FindingTypeExemptionLapsed,
-			ControlID:          f.ControlID,
-			AssetID:            f.AssetID,
-			Severity:           effectiveSev,
-			OriginalSeverity:   originalSev,
-			ExemptionID:        exemptionID,
-			GrantedAt:          f.Suppression.AcknowledgedDate,
-			ExpiredAt:          f.Suppression.ExpiryDate,
-			DaysSinceExpiry:    daysSince,
-			SeverityBumpReason: bumpReason,
-			CompensatingNote:   compensatingNote,
-		}
-		lapsed = append(lapsed, lf)
 	}
-
 	return lapsed
+}
+
+func classifyLapsed(f *evaluation.Finding, evalTime time.Time) (LapsedFinding, bool) {
+	if !f.IsSuppressed() {
+		return LapsedFinding{}, false
+	}
+	if f.Suppression == nil || f.Suppression.Valid {
+		return LapsedFinding{}, false
+	}
+	if !f.Suppression.IsLapsed() {
+		return LapsedFinding{}, false
+	}
+	expiry, err := time.Parse("2006-01-02", f.Suppression.ExpiryDate)
+	if err != nil && f.Suppression.IsExpired() {
+		return LapsedFinding{}, false
+	}
+	daysSince := DaysSinceExpiry(0)
+	if !expiry.IsZero() {
+		daysSince = DaysSinceExpiry(max(0, int(evalTime.Sub(expiry).Hours()/24)))
+	}
+	originalSev := f.ControlSeverity
+	if !originalSev.IsSet() {
+		originalSev = policy.SeverityMedium
+	}
+	effectiveSev := originalSev
+	var bumpReason string
+	if daysSince.IsSeverityBumped() {
+		effectiveSev = originalSev.Bump(1)
+		bumpReason = "Known risk allowed to expire unreviewed"
+	}
+	var compensatingNote string
+	if f.Suppression.IsCompensatingFailing() {
+		compensatingNote = "Compensating control is failing"
+	}
+	return LapsedFinding{
+		FindingType:        FindingTypeExemptionLapsed,
+		ControlID:          f.ControlID,
+		AssetID:            f.AssetID,
+		Severity:           effectiveSev,
+		OriginalSeverity:   originalSev,
+		ExemptionID:        NewExemptionID(f.ControlID, f.AssetType, f.AssetID),
+		GrantedAt:          f.Suppression.AcknowledgedDate,
+		ExpiredAt:          f.Suppression.ExpiryDate,
+		DaysSinceExpiry:    daysSince,
+		SeverityBumpReason: bumpReason,
+		CompensatingNote:   compensatingNote,
+	}, true
 }

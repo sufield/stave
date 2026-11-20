@@ -82,24 +82,7 @@ func (p Pack) Resolve(catalog []ControlMeta) []string {
 	if p.Controls.MinSeverity != "" {
 		minRank = severityRank[strings.ToLower(p.Controls.MinSeverity)]
 	}
-	matched := map[string]string{} // id -> severity
-	for _, c := range catalog {
-		hit := want[c.ID]
-		if !hit {
-			for _, pat := range p.Controls.IDPatterns {
-				if ok, _ := path.Match(pat, c.ID); ok {
-					hit = true
-					break
-				}
-			}
-		}
-		if !hit && minRank > 0 && severityRank[strings.ToLower(c.Severity)] >= minRank {
-			hit = true
-		}
-		if hit {
-			matched[c.ID] = c.Severity
-		}
-	}
+	matched := matchControls(catalog, want, p.Controls.IDPatterns, minRank)
 	out := make([]string, 0, len(matched))
 	for id := range matched {
 		out = append(out, id)
@@ -117,6 +100,28 @@ func (p Pack) Resolve(catalog []ControlMeta) []string {
 	}
 	slices.Sort(out)
 	return out
+}
+
+func matchControls(catalog []ControlMeta, want map[string]bool, patterns []string, minRank int) map[string]string {
+	matched := map[string]string{}
+	for _, c := range catalog {
+		hit := want[c.ID]
+		if !hit {
+			for _, pat := range patterns {
+				if ok, _ := path.Match(pat, c.ID); ok {
+					hit = true
+					break
+				}
+			}
+		}
+		if !hit && minRank > 0 && severityRank[strings.ToLower(c.Severity)] >= minRank {
+			hit = true
+		}
+		if hit {
+			matched[c.ID] = c.Severity
+		}
+	}
+	return matched
 }
 
 // Missing returns explicitly-listed IDs that are not present in the catalog.

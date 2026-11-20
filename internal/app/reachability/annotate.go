@@ -41,33 +41,7 @@ func AnnotateFindings(findings []remediation.Finding, idx *access.ResourceAccess
 // []evaluation.Finding slices without round-tripping through
 // []remediation.Finding.
 func BuildContext(entries []access.ResourceAccessEntry) *evaluation.ReachabilityContext {
-	// Deduplicate entries by PrincipalARN.
-	merged := make(map[string]*access.ResourceAccessEntry)
-	for i := range entries {
-		e := &entries[i]
-		m, ok := merged[e.PrincipalARN]
-		if !ok {
-			m = &access.ResourceAccessEntry{
-				PrincipalARN: e.PrincipalARN,
-			}
-			merged[e.PrincipalARN] = m
-		}
-		if e.IsPublic {
-			m.IsPublic = true
-		}
-		if e.IsCrossAccount {
-			m.IsCrossAccount = true
-		}
-		m.Actions = append(m.Actions, e.Actions...)
-	}
-
-	uniqueEntries := make([]access.ResourceAccessEntry, 0, len(merged))
-	for _, m := range merged {
-		uniqueEntries = append(uniqueEntries, *m)
-	}
-	slices.SortFunc(uniqueEntries, func(a, b access.ResourceAccessEntry) int {
-		return strings.Compare(a.PrincipalARN, b.PrincipalARN)
-	})
+	uniqueEntries := deduplicateByPrincipal(entries)
 
 	ctx := &evaluation.ReachabilityContext{
 		TotalReachablePrincipals: len(uniqueEntries),
@@ -100,6 +74,35 @@ func BuildContext(entries []access.ResourceAccessEntry) *evaluation.Reachability
 	)))
 
 	return ctx
+}
+
+func deduplicateByPrincipal(entries []access.ResourceAccessEntry) []access.ResourceAccessEntry {
+	merged := make(map[string]*access.ResourceAccessEntry)
+	for i := range entries {
+		e := &entries[i]
+		m, ok := merged[e.PrincipalARN]
+		if !ok {
+			m = &access.ResourceAccessEntry{
+				PrincipalARN: e.PrincipalARN,
+			}
+			merged[e.PrincipalARN] = m
+		}
+		if e.IsPublic {
+			m.IsPublic = true
+		}
+		if e.IsCrossAccount {
+			m.IsCrossAccount = true
+		}
+		m.Actions = append(m.Actions, e.Actions...)
+	}
+	out := make([]access.ResourceAccessEntry, 0, len(merged))
+	for _, m := range merged {
+		out = append(out, *m)
+	}
+	slices.SortFunc(out, func(a, b access.ResourceAccessEntry) int {
+		return strings.Compare(a.PrincipalARN, b.PrincipalARN)
+	})
+	return out
 }
 
 // isPrivileged checks if a principal has admin-level or wildcard permissions.
