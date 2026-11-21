@@ -38,7 +38,7 @@ The **MITRE** column appears only when at least one finding has a MITRE ATT&CK m
 
 After the findings table, the output shows:
 
-- **Indeterminate** controls (data missing from the observation snapshot)
+- **Indeterminate** findings (controls that could not be evaluated due to data missing from the observation snapshot) — text output caps display at 3 by default and prints `... and N more (use --indeterminate-only to see all)`. Pass `--indeterminate-only` to see all indeterminate findings. JSON and SARIF outputs always include all indeterminate findings.
 - **Compound Chains** and **Near-Miss Chains** (when present)
 
 Pass `--verbose` for the full view with evidence, reasoning, remediation actions, and exploitability tiers.
