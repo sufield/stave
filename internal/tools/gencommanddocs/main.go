@@ -43,32 +43,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Curated-catalog modes: generate or check commands-catalog.md from the
-	// annotation data + the live cobra tree.
 	if *catalog != "" || *catalogCheck != "" {
-		buf, err := renderCatalog(app.Root)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			os.Exit(1)
-		}
-		if *catalogCheck != "" {
-			existing, readErr := os.ReadFile(*catalogCheck)
-			if readErr != nil {
-				fmt.Fprintf(os.Stderr, "error: %v\n", readErr)
-				os.Exit(1)
-			}
-			if !bytes.Equal(existing, buf.Bytes()) {
-				fmt.Fprintf(os.Stderr, "%s is stale. Run: make docs-commands-catalog\n", *catalogCheck)
-				os.Exit(1)
-			}
-			fmt.Printf("%s: in sync\n", *catalogCheck)
-			return
-		}
-		if err := os.WriteFile(*catalog, buf.Bytes(), 0o600); err != nil {
-			fmt.Fprintf(os.Stderr, "error: write %s: %v\n", *catalog, err)
-			os.Exit(1)
-		}
-		fmt.Printf("wrote %s (%d annotated commands)\n", *catalog, len(catalogAnnotations))
+		runCatalogMode(app.Root, *catalog, *catalogCheck)
 		return
 	}
 
@@ -111,6 +87,32 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Printf("wrote %s (%d commands)\n", *outPath, total)
+}
+
+func runCatalogMode(root *cobra.Command, catalog, catalogCheck string) {
+	buf, err := renderCatalog(root)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+	if catalogCheck != "" {
+		existing, readErr := os.ReadFile(catalogCheck)
+		if readErr != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", readErr)
+			os.Exit(1)
+		}
+		if !bytes.Equal(existing, buf.Bytes()) {
+			fmt.Fprintf(os.Stderr, "%s is stale. Run: make docs-commands-catalog\n", catalogCheck)
+			os.Exit(1)
+		}
+		fmt.Printf("%s: in sync\n", catalogCheck)
+		return
+	}
+	if err := os.WriteFile(catalog, buf.Bytes(), 0o600); err != nil {
+		fmt.Fprintf(os.Stderr, "error: write %s: %v\n", catalog, err)
+		os.Exit(1)
+	}
+	fmt.Printf("wrote %s (%d annotated commands)\n", catalog, len(catalogAnnotations))
 }
 
 // renderCatalog generates the curated when-to-use catalog

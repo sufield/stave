@@ -138,28 +138,7 @@ func main() {
 
 	fixtureDirs := findFixtureDirs(*fixturesDir)
 
-	globalReachable := map[string]bool{}
-	globalUnreachable := map[string]bool{}
-	var results []fixtureResult
-
-	for _, dir := range fixtureDirs {
-		assetTypes := loadFixtureAssetTypes(dir)
-		r := fixtureResult{
-			dir:         dir,
-			reachable:   map[string]int{},
-			unreachable: map[string]int{},
-		}
-		for at, count := range assetTypes {
-			if _, ok := typedIndex[at]; ok {
-				r.reachable[at] = count
-				globalReachable[at] = true
-			} else {
-				r.unreachable[at] = count
-				globalUnreachable[at] = true
-			}
-		}
-		results = append(results, r)
-	}
+	results, globalReachable, globalUnreachable := classifyFixtureReachability(fixtureDirs, typedIndex)
 
 	if *showUnreachable {
 		types := make([]string, 0, len(globalUnreachable))
@@ -245,6 +224,31 @@ func main() {
 }
 
 // ponytail: simple heuristic — refine list as catalog grows
+func classifyFixtureReachability(fixtureDirs []string, typedIndex map[string][]string) ([]fixtureResult, map[string]bool, map[string]bool) {
+	globalReachable := map[string]bool{}
+	globalUnreachable := map[string]bool{}
+	var results []fixtureResult
+	for _, dir := range fixtureDirs {
+		assetTypes := loadFixtureAssetTypes(dir)
+		r := fixtureResult{
+			dir:         dir,
+			reachable:   map[string]int{},
+			unreachable: map[string]int{},
+		}
+		for at, count := range assetTypes {
+			if _, ok := typedIndex[at]; ok {
+				r.reachable[at] = count
+				globalReachable[at] = true
+			} else {
+				r.unreachable[at] = count
+				globalUnreachable[at] = true
+			}
+		}
+		results = append(results, r)
+	}
+	return results, globalReachable, globalUnreachable
+}
+
 func isContextual(assetType string) bool {
 	contextualPrefixes := []string{
 		"DEFAULT",

@@ -73,28 +73,7 @@ func ExtractCommands(content []byte, file string, langs []string) ([]ExtractedCo
 }
 
 func parseBlock(lines []string, file string, startLine int, lang string) []ExtractedCommand {
-	var (
-		skip        bool
-		skipReason  string
-		expectError bool
-	)
-
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if idx := strings.Index(trimmed, "doctest:skip"); idx >= 0 {
-			skip = true
-			if after := strings.Index(trimmed[idx:], "—"); after >= 0 {
-				skipReason = strings.TrimSpace(trimmed[idx+after:])
-			} else if after := strings.Index(trimmed[idx:], "--"); after >= 0 {
-				skipReason = strings.TrimSpace(trimmed[idx+after:])
-			} else {
-				skipReason = "doctest:skip"
-			}
-		}
-		if strings.Contains(trimmed, "doctest:expect-error") {
-			expectError = true
-		}
-	}
+	skip, skipReason, expectError := scanBlockDirectives(lines)
 
 	var commands []ExtractedCommand
 	var continuation string
@@ -164,6 +143,26 @@ func isStaveCommand(line string) bool {
 		return false
 	}
 	return true
+}
+
+func scanBlockDirectives(lines []string) (skip bool, skipReason string, expectError bool) {
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if idx := strings.Index(trimmed, "doctest:skip"); idx >= 0 {
+			skip = true
+			if after := strings.Index(trimmed[idx:], "—"); after >= 0 {
+				skipReason = strings.TrimSpace(trimmed[idx+after:])
+			} else if after := strings.Index(trimmed[idx:], "--"); after >= 0 {
+				skipReason = strings.TrimSpace(trimmed[idx+after:])
+			} else {
+				skipReason = "doctest:skip"
+			}
+		}
+		if strings.Contains(trimmed, "doctest:expect-error") {
+			expectError = true
+		}
+	}
+	return
 }
 
 func stripInlineComment(cmd string) string {

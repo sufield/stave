@@ -194,29 +194,7 @@ func main() {
 		})
 	}
 
-	// Parse chains for capability references
-	capChainCount := map[string]int{}
-	if entries, err := os.ReadDir(chainsDir); err == nil {
-		for _, e := range entries {
-			if filepath.Ext(e.Name()) != ".yaml" {
-				continue
-			}
-			data, err := os.ReadFile(filepath.Join(chainsDir, e.Name()))
-			if err != nil {
-				continue
-			}
-			var ch chainYAML
-			if err := yaml.Unmarshal(data, &ch); err != nil {
-				continue
-			}
-			for _, cap := range ch.Preconditions {
-				capChainCount[cap]++
-			}
-			for _, cap := range ch.Postconditions {
-				capChainCount[cap]++
-			}
-		}
-	}
+	capChainCount := countCapabilityChainRefs(chainsDir)
 
 	// Write JSONL
 	w := bufio.NewWriter(os.Stdout)
@@ -255,6 +233,34 @@ func main() {
 			ChainCount: capChainCount[name],
 		})
 	}
+}
+
+func countCapabilityChainRefs(chainsDir string) map[string]int {
+	counts := map[string]int{}
+	entries, err := os.ReadDir(chainsDir)
+	if err != nil {
+		return counts
+	}
+	for _, e := range entries {
+		if filepath.Ext(e.Name()) != ".yaml" {
+			continue
+		}
+		data, readErr := os.ReadFile(filepath.Join(chainsDir, e.Name()))
+		if readErr != nil {
+			continue
+		}
+		var ch chainYAML
+		if yaml.Unmarshal(data, &ch) != nil {
+			continue
+		}
+		for _, cap := range ch.Preconditions {
+			counts[cap]++
+		}
+		for _, cap := range ch.Postconditions {
+			counts[cap]++
+		}
+	}
+	return counts
 }
 
 func collectOps(rules []ruleYAML, ops map[string]bool) {

@@ -111,17 +111,7 @@ func main() {
 
 		fmt.Printf("  Total findings: %d\n\n", len(findings))
 
-		uFindings := make(map[string][]string)
-		for _, f := range findings {
-			for _, u := range universals {
-				for _, p := range u.Patterns {
-					if strings.Contains(f.ControlID, p) {
-						uFindings[u.ID] = append(uFindings[u.ID], f.ControlID)
-						break
-					}
-				}
-			}
-		}
+		uFindings := matchUniversalFindings(findings)
 
 		for _, u := range universals {
 			totalChecks++
@@ -157,4 +147,19 @@ func main() {
 	if failed > 0 {
 		os.Exit(1)
 	}
+}
+
+func matchUniversalFindings(findings []finding) map[string][]string {
+	m := make(map[string][]string)
+	for _, f := range findings {
+		for _, u := range universals {
+			for _, p := range u.Patterns {
+				if strings.Contains(f.ControlID, p) {
+					m[u.ID] = append(m[u.ID], f.ControlID)
+					break
+				}
+			}
+		}
+	}
+	return m
 }

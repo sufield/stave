@@ -115,38 +115,7 @@ func crossReference(serviceName string, secOps []SecurityOp, catalog *policy.Cat
 	classifier := taxonomy.NewClassifier()
 
 	serviceTag := normalizeServiceTag(serviceName)
-	var existingControls []ExistingControl
-	fieldSet := make(map[string]bool)
-
-	for _, ctl := range catalog.List() {
-		if !hasTag(ctl.ScopeTags, serviceTag) {
-			continue
-		}
-
-		var fieldPaths []string
-		ctl.UnsafePredicate.Walk(func(r policy.PredicateRule) {
-			if !r.Field.IsZero() {
-				fieldPaths = append(fieldPaths, r.Field.String())
-			}
-		})
-		for _, p := range fieldPaths {
-			fieldSet[p] = true
-		}
-
-		cats := classifier.ClassifyFields(
-			string(ctl.ID), ctl.Name, ctl.Description, fieldPaths,
-		)
-		var catStrs []string
-		for _, c := range cats {
-			catStrs = append(catStrs, string(c))
-		}
-
-		existingControls = append(existingControls, ExistingControl{
-			ID:         string(ctl.ID),
-			Name:       ctl.Name,
-			Categories: catStrs,
-		})
-	}
+	existingControls, fieldSet := collectServiceControls(catalog, serviceTag, classifier)
 
 	var totalSec int
 	var coveredFields []CoveredField
@@ -190,6 +159,38 @@ func crossReference(serviceName string, secOps []SecurityOp, catalog *policy.Cat
 		UncoveredFields:  uncoveredFields,
 		CoveragePct:      coveragePct,
 	}
+}
+
+func collectServiceControls(catalog *policy.Catalog, serviceTag string, classifier *taxonomy.Classifier) ([]ExistingControl, map[string]bool) {
+	var existingControls []ExistingControl
+	fieldSet := make(map[string]bool)
+	for _, ctl := range catalog.List() {
+		if !hasTag(ctl.ScopeTags, serviceTag) {
+			continue
+		}
+		var fieldPaths []string
+		ctl.UnsafePredicate.Walk(func(r policy.PredicateRule) {
+			if !r.Field.IsZero() {
+				fieldPaths = append(fieldPaths, r.Field.String())
+			}
+		})
+		for _, p := range fieldPaths {
+			fieldSet[p] = true
+		}
+		cats := classifier.ClassifyFields(
+			string(ctl.ID), ctl.Name, ctl.Description, fieldPaths,
+		)
+		var catStrs []string
+		for _, c := range cats {
+			catStrs = append(catStrs, string(c))
+		}
+		existingControls = append(existingControls, ExistingControl{
+			ID:         string(ctl.ID),
+			Name:       ctl.Name,
+			Categories: catStrs,
+		})
+	}
+	return existingControls, fieldSet
 }
 
 func isCovered(f awsmeta.Field, controlFields map[string]bool) bool {

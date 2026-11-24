@@ -40,29 +40,7 @@ func reportTextVerified(all []discoveredPath, novel, confirmed []discoveredPath,
 	fmt.Fprintln(w)
 
 	if verification != nil {
-		engine := "contradiction"
-		for _, v := range verification {
-			if v.Engine != "" && v.Engine != "none" {
-				engine = v.Engine
-				break
-			}
-		}
-		fmt.Fprintf(w, "CONDITION VERIFICATION (engine: %s):\n", engine)
-		var sat, unsat, uncon int
-		for _, v := range verification {
-			switch v.Status {
-			case "satisfiable":
-				sat++
-			case "unsatisfiable":
-				unsat++
-			case "unconstrained":
-				uncon++
-			}
-		}
-		fmt.Fprintf(w, "  %-26s %d\n", "satisfiable:", sat)
-		fmt.Fprintf(w, "  %-26s %d\n", "unsatisfiable:", unsat)
-		fmt.Fprintf(w, "  %-26s %d\n", "unconstrained:", uncon)
-		fmt.Fprintln(w)
+		printVerificationSummary(w, verification)
 	}
 
 	fmt.Fprintf(w, "DEDUPLICATION:  %d novel, %d confirmed\n", len(novel), len(confirmed))
@@ -108,6 +86,32 @@ func reportTextVerified(all []discoveredPath, novel, confirmed []discoveredPath,
 	if len(novel) == 0 && len(confirmed) == 0 {
 		fmt.Fprintln(w, "No security-relevant paths discovered.")
 	}
+}
+
+func printVerificationSummary(w *os.File, verification map[int]verifyStatus) {
+	engine := "contradiction"
+	for _, v := range verification {
+		if v.Engine != "" && v.Engine != "none" {
+			engine = v.Engine
+			break
+		}
+	}
+	fmt.Fprintf(w, "CONDITION VERIFICATION (engine: %s):\n", engine)
+	var sat, unsat, uncon int
+	for _, v := range verification {
+		switch v.Status {
+		case "satisfiable":
+			sat++
+		case "unsatisfiable":
+			unsat++
+		case "unconstrained":
+			uncon++
+		}
+	}
+	fmt.Fprintf(w, "  %-26s %d\n", "satisfiable:", sat)
+	fmt.Fprintf(w, "  %-26s %d\n", "unsatisfiable:", unsat)
+	fmt.Fprintf(w, "  %-26s %d\n", "unconstrained:", uncon)
+	fmt.Fprintln(w)
 }
 
 func printVerification(w *os.File, idx int, verification map[int]verifyStatus) {

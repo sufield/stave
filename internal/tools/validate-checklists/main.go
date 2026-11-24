@@ -108,38 +108,41 @@ func validateBytes(path string, data []byte) []string {
 	}
 
 	if verdictBearing {
-		counts := make(map[string]int)
-		for _, c := range cl.Checks {
-			if c.Verdict == "" {
-				fail("%s: missing verdict (file is verdict-bearing)", c.ID)
-				continue
-			}
-			if !allowedVerdicts[c.Verdict] {
-				fail("%s: invalid verdict %q", c.ID, c.Verdict)
-				continue
-			}
-			counts[c.Verdict]++
-			if c.Verdict == "EVIDENCE-GATED" && c.VerdictCondition == "" {
-				fail("%s: EVIDENCE-GATED without verdict_condition", c.ID)
-			}
-			if c.Verdict == "GAP-AUTHOR" && c.VerdictReason == "" {
-				fail("%s: GAP-AUTHOR without verdict_reason", c.ID)
-			}
-			if c.Verdict == "OOS" && c.VerdictReason == "" {
-				fail("%s: OOS without verdict_reason", c.ID)
-			}
-		}
-
-		total := 0
-		for _, n := range counts {
-			total += n
-		}
-		if total != len(cl.Checks) {
-			fail("verdict partition incomplete: %d verdicts for %d checks", total, len(cl.Checks))
-		}
+		validateVerdicts(cl.Checks, fail)
 	}
 
 	return errs
+}
+
+func validateVerdicts(checks []check, fail func(string, ...any)) {
+	counts := make(map[string]int)
+	for _, c := range checks {
+		if c.Verdict == "" {
+			fail("%s: missing verdict (file is verdict-bearing)", c.ID)
+			continue
+		}
+		if !allowedVerdicts[c.Verdict] {
+			fail("%s: invalid verdict %q", c.ID, c.Verdict)
+			continue
+		}
+		counts[c.Verdict]++
+		if c.Verdict == "EVIDENCE-GATED" && c.VerdictCondition == "" {
+			fail("%s: EVIDENCE-GATED without verdict_condition", c.ID)
+		}
+		if c.Verdict == "GAP-AUTHOR" && c.VerdictReason == "" {
+			fail("%s: GAP-AUTHOR without verdict_reason", c.ID)
+		}
+		if c.Verdict == "OOS" && c.VerdictReason == "" {
+			fail("%s: OOS without verdict_reason", c.ID)
+		}
+	}
+	total := 0
+	for _, n := range counts {
+		total += n
+	}
+	if total != len(checks) {
+		fail("verdict partition incomplete: %d verdicts for %d checks", total, len(checks))
+	}
 }
 
 func main() {

@@ -338,37 +338,12 @@ func emitG3Facts(outDir string) (map[string]int, error) {
 		tagsByAsset[t.Subject][key] = val
 	}
 
-	// Build authorized.facts.
-	authPath := filepath.Join(outDir, "authorized.facts")
-	authFile, err := os.Create(authPath)
-	if err != nil {
-		return nil, fmt.Errorf("create %s: %w", authPath, err)
-	}
-	defer authFile.Close()
-
-	authCount := 0
-	// Stable iteration order for determinism.
 	resList := slices.Sorted(maps.Keys(resources))
 	prinList := slices.Sorted(maps.Keys(principals))
 
-	for _, r := range resList {
-		ownerValues := ownershipValues(tagsByAsset[r])
-		if len(ownerValues) == 0 {
-			// Fail-open: authorize every principal.
-			for _, p := range prinList {
-				fmt.Fprintf(authFile, "%s\t%s\n", p, r)
-				authCount++
-			}
-			continue
-		}
-		// Tagged resource: authorize principals whose ownership tags
-		// match ANY of the resource's ownership values.
-		for _, p := range prinList {
-			if hasMatchingOwnership(tagsByAsset[p], ownerValues) {
-				fmt.Fprintf(authFile, "%s\t%s\n", p, r)
-				authCount++
-			}
-		}
+	authCount, err := writeAuthorizedFacts(outDir, resList, prinList, tagsByAsset)
+	if err != nil {
+		return nil, err
 	}
 
 	// Build sensitivity.facts.
@@ -399,6 +374,34 @@ func emitG3Facts(outDir string) (map[string]int, error) {
 		"authorized":  authCount,
 		"sensitivity": sensCount,
 	}, nil
+}
+
+func writeAuthorizedFacts(outDir string, resources, principals []string, tagsByAsset map[string]map[string]string) (int, error) {
+	authPath := filepath.Join(outDir, "authorized.facts")
+	authFile, err := os.Create(authPath)
+	if err != nil {
+		return 0, fmt.Errorf("create %s: %w", authPath, err)
+	}
+	defer authFile.Close()
+
+	count := 0
+	for _, r := range resources {
+		ownerValues := ownershipValues(tagsByAsset[r])
+		if len(ownerValues) == 0 {
+			for _, p := range principals {
+				fmt.Fprintf(authFile, "%s\t%s\n", p, r)
+				count++
+			}
+			continue
+		}
+		for _, p := range principals {
+			if hasMatchingOwnership(tagsByAsset[p], ownerValues) {
+				fmt.Fprintf(authFile, "%s\t%s\n", p, r)
+				count++
+			}
+		}
+	}
+	return count, nil
 }
 
 // emitScopeFacts reads has_type.facts, parses the account_id from
@@ -619,32 +622,7 @@ func emitBucketHijackFacts(outDir string) (map[string]int, error) {
 		return nil, err
 	}
 
-	// Scan each router type's observation facts for bucket references.
-	var refRows, isdRows []string
-	routerAccts := map[string]string{}
-
-	for _, r := range routerRegistry {
-		pairs, readErr := readFactPairs(filepath.Join(outDir, r.bucketPred+".facts"))
-		if readErr != nil || len(pairs) == 0 {
-			continue
-		}
-		for _, p := range pairs {
-			name := p.Object
-			if r.extractBucket != nil {
-				name = r.extractBucket(name)
-			}
-			if name == "" {
-				continue
-			}
-			routerARN := p.Subject
-			refRows = append(refRows, fmt.Sprintf("%s\t%s\t%s", routerARN, name, r.routerType))
-			isdRows = append(isdRows, fmt.Sprintf("arn:aws:s3:::%s\t%s\t%s", name, routerARN, r.routerType))
-
-			if acct := accountFromARN(routerARN); acct != "" {
-				routerAccts[routerARN] = acct
-			}
-		}
-	}
+	refRows, isdRows, routerAccts := scanRouterBucketReferences(outDir)
 
 	// references_bucket — 3-col: router, bucket_name, router_type.
 	slices.Sort(refRows)
@@ -718,6 +696,33 @@ func emitBucketHijackFacts(outDir string) (map[string]int, error) {
 	}
 
 	return counts, nil
+}
+
+func scanRouterBucketReferences(outDir string) (refRows, isdRows []string, routerAccts map[string]string) {
+	routerAccts = map[string]string{}
+	for _, r := range routerRegistry {
+		pairs, readErr := readFactPairs(filepath.Join(outDir, r.bucketPred+".facts"))
+		if readErr != nil || len(pairs) == 0 {
+			continue
+		}
+		for _, p := range pairs {
+			name := p.Object
+			if r.extractBucket != nil {
+				name = r.extractBucket(name)
+			}
+			if name == "" {
+				continue
+			}
+			routerARN := p.Subject
+			refRows = append(refRows, fmt.Sprintf("%s\t%s\t%s", routerARN, name, r.routerType))
+			isdRows = append(isdRows, fmt.Sprintf("arn:aws:s3:::%s\t%s\t%s", name, routerARN, r.routerType))
+
+			if acct := accountFromARN(routerARN); acct != "" {
+				routerAccts[routerARN] = acct
+			}
+		}
+	}
+	return
 }
 
 // resolveBucketAccounts maps each S3 bucket ARN to its owning

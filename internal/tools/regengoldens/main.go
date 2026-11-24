@@ -156,31 +156,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	// First pass: decide which fixtures are in scope. Print the
-	// up-front total so the operator knows how much work the run
-	// will do — large regen passes are slow and the early signal
-	// helps with abort-or-wait decisions.
-	type job struct{ name, fixDir string }
-	var jobs []job
-	skipped := 0
-	for _, e := range entries {
-		if !e.IsDir() {
-			continue
-		}
-		name := e.Name()
-		if filterRE != nil && !filterRE.MatchString(name) {
-			continue
-		}
-		fixDir := filepath.Join(*rootFlag, name)
-		if !isRunnableFixture(fixDir) {
-			continue
-		}
-		if affected != nil && !fixtureIntersectsAffected(fixDir, affected) {
-			skipped++
-			continue
-		}
-		jobs = append(jobs, job{name: name, fixDir: fixDir})
-	}
+	jobs, skipped := collectJobs(entries, *rootFlag, filterRE, affected)
 	if skipped > 0 && affected != nil {
 		fmt.Fprintf(os.Stderr, "skipped %d fixtures unaffected by changes vs %s\n", skipped, *since)
 	}
@@ -218,26 +194,8 @@ func main() {
 		wg.Wait()
 	}
 
-	// Inject per-job skipped placeholder rows so the report
-	// preserves the "every fixture in the tree is accounted for"
-	// invariant the printer relies on.
 	if skipped > 0 && affected != nil {
-		for _, e := range entries {
-			if !e.IsDir() {
-				continue
-			}
-			name := e.Name()
-			if filterRE != nil && !filterRE.MatchString(name) {
-				continue
-			}
-			fixDir := filepath.Join(*rootFlag, name)
-			if !isRunnableFixture(fixDir) {
-				continue
-			}
-			if !fixtureIntersectsAffected(fixDir, affected) {
-				reports = append(reports, fixtureReport{Fixture: name, Category: catClean})
-			}
-		}
+		reports = append(reports, collectSkippedPlaceholders(entries, *rootFlag, filterRE, affected)...)
 	}
 
 	slices.SortFunc(reports, func(a, b fixtureReport) int { return cmp.Compare(a.Fixture, b.Fixture) })
@@ -322,14 +280,27 @@ func affectedDomains(baseRef string) (map[string]struct{}, error) {
 		untrackedOut = []byte(b.String())
 	}
 	out := append(append([]byte{}, diffOut...), untrackedOut...)
-	domains := map[string]struct{}{}
-	var outOfScope []string
-	for raw := range strings.SplitSeq(string(out), "\n") {
+	domains, outOfScope := classifyChangedPaths(string(out), prefix)
+	if len(outOfScope) > 0 {
+		fmt.Fprintf(os.Stderr, "out-of-scope changes vs %s (forcing full regen):\n", baseRef)
+		for _, p := range outOfScope[:min(len(outOfScope), 5)] {
+			fmt.Fprintf(os.Stderr, "  %s\n", p)
+		}
+		if len(outOfScope) > 5 {
+			fmt.Fprintf(os.Stderr, "  … (+%d more)\n", len(outOfScope)-5)
+		}
+		return nil, nil
+	}
+	return domains, nil
+}
+
+func classifyChangedPaths(combined, prefix string) (domains map[string]struct{}, outOfScope []string) {
+	domains = map[string]struct{}{}
+	for raw := range strings.SplitSeq(combined, "\n") {
 		line := strings.TrimSpace(raw)
 		if line == "" {
 			continue
 		}
-		// Restrict to changes inside our subtree.
 		if prefix != "" {
 			rel, ok := strings.CutPrefix(line, prefix)
 			if !ok {
@@ -354,8 +325,6 @@ func affectedDomains(baseRef string) (map[string]struct{}, error) {
 				domains[strings.ToLower(pack)] = struct{}{}
 			}
 		case strings.HasPrefix(line, "chains/"):
-			// Chain filenames are <domain>_<rest>.yaml. Domain is the
-			// token before the first underscore.
 			base := strings.TrimSuffix(filepath.Base(line), ".yaml")
 			if dom, _, ok := strings.Cut(base, "_"); ok && dom != "" {
 				domains[strings.ToLower(dom)] = struct{}{}
@@ -363,23 +332,11 @@ func affectedDomains(baseRef string) (map[string]struct{}, error) {
 				outOfScope = append(outOfScope, line)
 			}
 		case isGoldenSafe(line):
-			// Generated artifact derived from the embedded controls;
-			// no observable effect on golden output.
 		default:
 			outOfScope = append(outOfScope, line)
 		}
 	}
-	if len(outOfScope) > 0 {
-		fmt.Fprintf(os.Stderr, "out-of-scope changes vs %s (forcing full regen):\n", baseRef)
-		for _, p := range outOfScope[:min(len(outOfScope), 5)] {
-			fmt.Fprintf(os.Stderr, "  %s\n", p)
-		}
-		if len(outOfScope) > 5 {
-			fmt.Fprintf(os.Stderr, "  … (+%d more)\n", len(outOfScope)-5)
-		}
-		return nil, nil
-	}
-	return domains, nil
+	return
 }
 
 // gitPrefix returns the cwd's path within the git repo (with trailing
@@ -513,6 +470,53 @@ func isRunnableFixture(fixDir string) bool {
 	return exists(controlsDir) && exists(observationsDir)
 }
 
+func collectSkippedPlaceholders(entries []os.DirEntry, root string, filterRE *regexp.Regexp, affected map[string]struct{}) []fixtureReport {
+	var placeholders []fixtureReport
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if filterRE != nil && !filterRE.MatchString(name) {
+			continue
+		}
+		fixDir := filepath.Join(root, name)
+		if !isRunnableFixture(fixDir) {
+			continue
+		}
+		if !fixtureIntersectsAffected(fixDir, affected) {
+			placeholders = append(placeholders, fixtureReport{Fixture: name, Category: catClean})
+		}
+	}
+	return placeholders
+}
+
+type regenJob struct{ name, fixDir string }
+
+func collectJobs(entries []os.DirEntry, root string, filterRE *regexp.Regexp, affected map[string]struct{}) ([]regenJob, int) {
+	var jobs []regenJob
+	skipped := 0
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		name := e.Name()
+		if filterRE != nil && !filterRE.MatchString(name) {
+			continue
+		}
+		fixDir := filepath.Join(root, name)
+		if !isRunnableFixture(fixDir) {
+			continue
+		}
+		if affected != nil && !fixtureIntersectsAffected(fixDir, affected) {
+			skipped++
+			continue
+		}
+		jobs = append(jobs, regenJob{name: name, fixDir: fixDir})
+	}
+	return jobs, skipped
+}
+
 // processFixture runs the correct stave invocation for the fixture, diffs
 // the result against the existing goldens, classifies, and (unless
 // dry-run) writes updated goldens.
@@ -532,35 +536,10 @@ func processFixture(name, fixDir string, dryRun bool) fixtureReport {
 		return r
 	}
 
-	// Validate stdout as JSON before deriving any golden. Derived
-	// goldens (summary, count, source_evidence) call json.Unmarshal
-	// on stdout — if it's empty or truncated, that fails with
-	// "unexpected end of JSON input" with no fixture-level context.
-	// Catch it here with a preview so the developer can see what
-	// stave actually produced.
-	needsJSONStdout := false
-	for _, g := range goldens {
-		if g != "expected.exit" {
-			needsJSONStdout = true
-			break
-		}
-	}
-	if needsJSONStdout {
-		trimmed := bytes.TrimSpace(stdout)
-		if len(trimmed) == 0 {
-			r.Category = catError
-			r.Err = fmt.Errorf("stave produced empty stdout (exit %d); cannot derive JSON goldens", exitCode)
-			return r
-		}
-		if !json.Valid(trimmed) {
-			preview := string(trimmed)
-			if len(preview) > 300 {
-				preview = preview[:300] + "..."
-			}
-			r.Category = catError
-			r.Err = fmt.Errorf("stave produced invalid JSON (exit %d, len=%d): %q", exitCode, len(trimmed), preview)
-			return r
-		}
+	if err := validateStdoutJSON(goldens, stdout, exitCode); err != nil {
+		r.Category = catError
+		r.Err = err
+		return r
 	}
 
 	cat := catClean
@@ -605,6 +584,31 @@ func processFixture(name, fixDir string, dryRun bool) fixtureReport {
 	}
 	r.Category = cat
 	return r
+}
+
+func validateStdoutJSON(goldens []string, stdout []byte, exitCode int) error {
+	needsJSON := false
+	for _, g := range goldens {
+		if g != "expected.exit" {
+			needsJSON = true
+			break
+		}
+	}
+	if !needsJSON {
+		return nil
+	}
+	trimmed := bytes.TrimSpace(stdout)
+	if len(trimmed) == 0 {
+		return fmt.Errorf("stave produced empty stdout (exit %d); cannot derive JSON goldens", exitCode)
+	}
+	if !json.Valid(trimmed) {
+		preview := string(trimmed)
+		if len(preview) > 300 {
+			preview = preview[:300] + "..."
+		}
+		return fmt.Errorf("stave produced invalid JSON (exit %d, len=%d): %q", exitCode, len(trimmed), preview)
+	}
+	return nil
 }
 
 // runStave picks the invocation shape from the fixture layout (command.txt,

@@ -104,18 +104,7 @@ func parseFile(path, root string) ([]relation, error) {
 	relPath, _ := filepath.Rel(root, path)
 	lines := strings.Split(string(data), "\n")
 
-	// First pass: collect .input and .output names.
-	inputSet := map[string]bool{}
-	outputSet := map[string]bool{}
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if m := inputRe.FindStringSubmatch(trimmed); m != nil {
-			inputSet[m[1]] = true
-		}
-		if m := outputRe.FindStringSubmatch(trimmed); m != nil {
-			outputSet[m[1]] = true
-		}
-	}
+	inputSet, outputSet := collectIONames(lines)
 
 	// Second pass: extract relations with doc comments.
 	var rels []relation
@@ -210,6 +199,21 @@ func parseFile(path, root string) ([]relation, error) {
 	}
 
 	return rels, nil
+}
+
+func collectIONames(lines []string) (inputSet, outputSet map[string]bool) {
+	inputSet = map[string]bool{}
+	outputSet = map[string]bool{}
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if m := inputRe.FindStringSubmatch(trimmed); m != nil {
+			inputSet[m[1]] = true
+		}
+		if m := outputRe.FindStringSubmatch(trimmed); m != nil {
+			outputSet[m[1]] = true
+		}
+	}
+	return
 }
 
 func cleanDoc(lines []string) string {

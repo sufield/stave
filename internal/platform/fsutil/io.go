@@ -327,27 +327,9 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 
 	cleanPath := filepath.Clean(path)
 
-	// 1. Find the deepest existing ancestor
-	ancestor := cleanPath
-	for range maxPathDepth {
-		fi, err := os.Lstat(ancestor)
-		if err == nil {
-			if fi.Mode()&os.ModeSymlink != 0 {
-				return fmt.Errorf("%w: %s (use --allow-symlink-output to override)", ErrSymlinkForbidden, ancestor)
-			}
-			if !fi.IsDir() {
-				return fmt.Errorf("path component is not a directory: %s", ancestor)
-			}
-			break
-		}
-		if !os.IsNotExist(err) {
-			return fmt.Errorf("security check failed for %q: %w", ancestor, err)
-		}
-		parent := filepath.Dir(ancestor)
-		if parent == ancestor {
-			break
-		}
-		ancestor = parent
+	ancestor, err := findDeepestExistingAncestor(cleanPath)
+	if err != nil {
+		return err
 	}
 
 	// 2. Get relative path from ancestor to cleanPath
@@ -370,8 +352,12 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		}
 	}
 	current := ancestor
-	var createdByUs []string
+	return createComponentsSafely(current, components, opts.Perm)
+}
 
+func createComponentsSafely(base string, components []string, perm os.FileMode) error {
+	current := base
+	var createdByUs []string
 	for _, part := range components {
 		if part == "" || part == "." {
 			continue
@@ -397,7 +383,7 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		if hook != nil {
 			hook(current)
 		}
-		if mkErr := os.Mkdir(current, opts.Perm); mkErr != nil && !os.IsExist(mkErr) {
+		if mkErr := os.Mkdir(current, perm); mkErr != nil && !os.IsExist(mkErr) {
 			return fmt.Errorf("mkdir: %w", mkErr)
 		}
 		createdByUs = append(createdByUs, current)
@@ -415,6 +401,31 @@ func SafeMkdirAll(path string, opts WriteOptions) error {
 		}
 	}
 	return nil
+}
+
+func findDeepestExistingAncestor(cleanPath string) (string, error) {
+	ancestor := cleanPath
+	for range maxPathDepth {
+		fi, err := os.Lstat(ancestor)
+		if err == nil {
+			if fi.Mode()&os.ModeSymlink != 0 {
+				return "", fmt.Errorf("%w: %s (use --allow-symlink-output to override)", ErrSymlinkForbidden, ancestor)
+			}
+			if !fi.IsDir() {
+				return "", fmt.Errorf("path component is not a directory: %s", ancestor)
+			}
+			return ancestor, nil
+		}
+		if !os.IsNotExist(err) {
+			return "", fmt.Errorf("security check failed for %q: %w", ancestor, err)
+		}
+		parent := filepath.Dir(ancestor)
+		if parent == ancestor {
+			return ancestor, nil
+		}
+		ancestor = parent
+	}
+	return ancestor, nil
 }
 
 // SafeOpenAppend opens a file for appending, enforcing symlink protection

@@ -207,11 +207,16 @@ func scanFileSource(fset *token.FileSet, relPath string, src []byte) ([]Goroutin
 		return true
 	})
 
+	out := resolveGoroutines(fset, relPath, gostmts, fns)
+	return out, nil
+}
+
+func resolveGoroutines(fset *token.FileSet, relPath string, gostmts []*ast.GoStmt, fns []funcRange) []Goroutine {
 	var out []Goroutine
 	for _, g := range gostmts {
 		p := g.Pos()
-		var scope *funcRange // innermost function of any kind (signal scope)
-		var named *funcRange // innermost named declaration (reporting name)
+		var scope *funcRange
+		var named *funcRange
 		for i := range fns {
 			fn := &fns[i]
 			if !fn.contains(p) {
@@ -234,7 +239,7 @@ func scanFileSource(fset *token.FileSet, relPath string, src []byte) ([]Goroutin
 		}
 		managed := len(signals) > 0
 		if signals == nil {
-			signals = []string{} // emit [] not null for clean, jq-parseable output
+			signals = []string{}
 		}
 		out = append(out, Goroutine{
 			File:    relPath,
@@ -244,11 +249,9 @@ func scanFileSource(fset *token.FileSet, relPath string, src []byte) ([]Goroutin
 			Signals: signals,
 		})
 	}
-	return out, nil
+	return out
 }
 
-// declName renders a function declaration name, prefixing the receiver type for
-// methods so report rows are unambiguous (e.g. "Engine.Run").
 func declName(fd *ast.FuncDecl) string {
 	if fd.Recv != nil && len(fd.Recv.List) > 0 {
 		if recv := receiverType(fd.Recv.List[0].Type); recv != "" {

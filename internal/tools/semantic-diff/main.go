@@ -159,32 +159,7 @@ func runChainDiff(chainPath string, compiler *cel.Compiler, verbose bool) int {
 		return 0
 	}
 
-	// Build control ID → compiled predicate + fields
-	type controlEntry struct {
-		def    *policy.ControlDefinition
-		cp     cel.CompiledPredicate
-		fields []fieldInfo
-	}
-	var entries []controlEntry
-	for i := range controls {
-		ctl := &controls[i]
-		if !isChainMember(chain, ctl.ID) {
-			continue
-		}
-		if ctl.UnsafePredicate.IsEmpty() {
-			continue
-		}
-		cp, err := compiler.Compile(ctl.UnsafePredicate)
-		if err != nil {
-			log.Printf("SKIP chain member %s: %v", ctl.ID, err)
-			continue
-		}
-		entries = append(entries, controlEntry{
-			def:    ctl,
-			cp:     cp,
-			fields: extractFields(ctl.UnsafePredicate),
-		})
-	}
+	entries := compileChainMembers(chain, controls, compiler)
 
 	if len(entries) < int(chain.EscalationThreshold) {
 		log.Printf("SKIP chain %s: only %d members loaded, threshold=%d",
@@ -274,6 +249,36 @@ func runChainDiff(chainPath string, compiler *cel.Compiler, verbose bool) int {
 	fmt.Printf("[%s] chain %s: %d vectors, %d divergences\n",
 		status, chain.ID, totalVectors, divergences)
 	return divergences
+}
+
+type controlEntry struct {
+	def    *policy.ControlDefinition
+	cp     cel.CompiledPredicate
+	fields []fieldInfo
+}
+
+func compileChainMembers(chain policy.ChainDefinition, controls []policy.ControlDefinition, compiler *cel.Compiler) []controlEntry {
+	var entries []controlEntry
+	for i := range controls {
+		ctl := &controls[i]
+		if !isChainMember(chain, ctl.ID) {
+			continue
+		}
+		if ctl.UnsafePredicate.IsEmpty() {
+			continue
+		}
+		cp, err := compiler.Compile(ctl.UnsafePredicate)
+		if err != nil {
+			log.Printf("SKIP chain member %s: %v", ctl.ID, err)
+			continue
+		}
+		entries = append(entries, controlEntry{
+			def:    ctl,
+			cp:     cp,
+			fields: extractFields(ctl.UnsafePredicate),
+		})
+	}
+	return entries
 }
 
 func loadChain(path string) (policy.ChainDefinition, error) {
