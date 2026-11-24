@@ -88,15 +88,57 @@ func TrendReport(ctx context.Context, cfg TrendConfig) (output []byte, warnings 
 		runs[i].FilePath = ""
 	}
 
+	rep, err := buildTrendReport(assessments, runs, cfg.Compliance)
+	if err != nil {
+		return nil, warnings, err
+	}
+
+	if rep.Summary.FirstViolationRate > 0 {
+		change := (rep.Summary.LatestViolationRate - rep.Summary.FirstViolationRate) /
+			rep.Summary.FirstViolationRate * 100
+		rep.Summary.NetChangePercent = change
+	}
+	rep.Summary.Direction = rep.Velocity.Direction
+
+	if cfg.TeamManifest != "" {
+		if tErr := applyTeamTrends(&rep, assessments, cfg); tErr != nil {
+			return nil, warnings, tErr
+		}
+	}
+
+	var buf bytes.Buffer
+	if rErr := renderTrend(cfg.Format, &buf, &rep); rErr != nil {
+		return nil, warnings, rErr
+	}
+	return buf.Bytes(), warnings, nil
+}
+
+func applyTeamTrends(rep *trendReport, assessments []*report.Assessment, cfg TrendConfig) error {
+	manifest, err := teams.LoadManifest(cfg.TeamManifest)
+	if err != nil {
+		return fmt.Errorf("load team manifest: %w", err)
+	}
+	rep.TeamTrends, rep.TeamSummary = computeTeamTrends(assessments, manifest, cfg.Team, cfg.RegressionOnly)
+	if cfg.Rollup != "" {
+		group := manifest.HierarchyByID(teams.HierarchyGroupID(cfg.Rollup))
+		if group == nil {
+			return fmt.Errorf("hierarchy group %q not found in manifest", cfg.Rollup)
+		}
+		rep.Rollup = computeRollup(rep.TeamTrends, group)
+	}
+	return nil
+}
+
+func buildTrendReport(assessments []*report.Assessment, runs []runMetrics, compliance string) (trendReport, error) {
 	mttr := computeMTTR(assessments)
 	velocity := computeVelocity(runs, 5)
 	projection := computeProjection(runs, velocity)
-	frameworkTrends := computeFrameworkTrends(assessments, cfg.Compliance)
+	frameworkTrends := computeFrameworkTrends(assessments, compliance)
 	slaTrend := computeSLATrend(assessments)
 
 	chains, chainsErr := ctlyaml.LoadChains("chains", capabilities.Builtin())
 	if chainsErr != nil {
-		return nil, warnings, fmt.Errorf("loading chains: %w", chainsErr)
+		return trendReport{}, fmt.Errorf("loading chains: %w", chainsErr)
 	}
 	chainDefs := len(chains)
 	maxChainWeight := appscore.ChainMaxWeight(chains)
@@ -105,7 +147,7 @@ func TrendReport(ctx context.Context, cfg TrendConfig) (output []byte, warnings 
 	scoreResult := computePostureScore(latestAssessment, slaTrend, chainDefs, maxChainWeight)
 
 	scoreVal := scoreResult.Score.Value()
-	rep := trendReport{
+	return trendReport{
 		GeneratedAt: time.Now().UTC(),
 		Period: period{
 			Start:    assessments[0].Run.EvalTime,
@@ -124,38 +166,7 @@ func TrendReport(ctx context.Context, cfg TrendConfig) (output []byte, warnings 
 		SLATrend:        slaTrend,
 		PostureScore:    &scoreVal,
 		PostureRubric:   string(scoreResult.RubricBand),
-	}
-
-	if rep.Summary.FirstViolationRate > 0 {
-		change := (rep.Summary.LatestViolationRate - rep.Summary.FirstViolationRate) /
-			rep.Summary.FirstViolationRate * 100
-		rep.Summary.NetChangePercent = change
-	}
-	rep.Summary.Direction = velocity.Direction
-
-	if cfg.TeamManifest != "" {
-		manifest, manifestErr := teams.LoadManifest(cfg.TeamManifest)
-		if manifestErr != nil {
-			return nil, warnings, fmt.Errorf("load team manifest: %w", manifestErr)
-		}
-		teamTrends, teamSummary := computeTeamTrends(assessments, manifest, cfg.Team, cfg.RegressionOnly)
-		rep.TeamTrends = teamTrends
-		rep.TeamSummary = teamSummary
-
-		if cfg.Rollup != "" {
-			group := manifest.HierarchyByID(teams.HierarchyGroupID(cfg.Rollup))
-			if group == nil {
-				return nil, warnings, fmt.Errorf("hierarchy group %q not found in manifest", cfg.Rollup)
-			}
-			rep.Rollup = computeRollup(teamTrends, group)
-		}
-	}
-
-	var buf bytes.Buffer
-	if rErr := renderTrend(cfg.Format, &buf, &rep); rErr != nil {
-		return nil, warnings, rErr
-	}
-	return buf.Bytes(), warnings, nil
+	}, nil
 }
 
 func computePostureScore(a *report.Assessment, slaTrend []slaTrendMetric, chainDefs int, maxChainWeight float64) appscore.Result {

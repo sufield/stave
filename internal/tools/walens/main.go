@@ -159,39 +159,8 @@ func main() {
 
 	baseline := readBaseline(*scorecardPath)
 
-	regressed := false
-	for slug, cur := range results {
-		prev, ok := baseline[slug]
-		if !ok {
-			fmt.Fprintf(os.Stderr, "new fixture: %s (%d violations) — no baseline\n", slug, cur.Violations)
-			continue
-		}
-		if cur.Violations < prev {
-			fmt.Fprintf(os.Stderr, "REGRESSION: %s violations dropped %d → %d\n", slug, prev, cur.Violations)
-			regressed = true
-		} else if cur.Violations > prev {
-			delta := cur.Violations - prev
-			if *maxDelta > 0 && delta > *maxDelta {
-				fmt.Fprintf(os.Stderr, "REGRESSION: %s violations spiked %d → %d (delta %d > max %d)\n",
-					slug, prev, cur.Violations, delta, *maxDelta)
-				regressed = true
-			} else {
-				fmt.Fprintf(os.Stderr, "improvement: %s violations rose %d → %d\n", slug, prev, cur.Violations)
-			}
-		}
-	}
-
-	// Detect new lenses without fixtures
-	var unmappedNames []string
-	for _, s := range allStats {
-		if _, ok := lensToFixture[s.DirName]; !ok {
-			fmt.Fprintf(os.Stderr, "new lens (no fixture): %s (%d invertible practices)\n", s.DirName, s.Invertible)
-			unmappedNames = append(unmappedNames, s.DirName)
-		}
-	}
-	if len(unmappedNames) > 0 {
-		fmt.Fprintf(os.Stderr, "unmapped lenses (%d): %s\n", len(unmappedNames), strings.Join(unmappedNames, ", "))
-	}
+	regressed := checkRegressions(results, baseline, *maxDelta)
+	reportUnmappedLenses(allStats)
 
 	if err := writeScorecard(*scorecardPath, allStats, results); err != nil {
 		fmt.Fprintf(os.Stderr, "error: write scorecard: %v\n", err)
@@ -204,6 +173,44 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Fprintf(os.Stderr, "\nPASSED: no coverage regression\n")
+}
+
+func checkRegressions(results map[string]fixtureResult, baseline map[string]int, maxDelta int) bool {
+	regressed := false
+	for slug, cur := range results {
+		prev, ok := baseline[slug]
+		if !ok {
+			fmt.Fprintf(os.Stderr, "new fixture: %s (%d violations) — no baseline\n", slug, cur.Violations)
+			continue
+		}
+		if cur.Violations < prev {
+			fmt.Fprintf(os.Stderr, "REGRESSION: %s violations dropped %d → %d\n", slug, prev, cur.Violations)
+			regressed = true
+		} else if cur.Violations > prev {
+			delta := cur.Violations - prev
+			if maxDelta > 0 && delta > maxDelta {
+				fmt.Fprintf(os.Stderr, "REGRESSION: %s violations spiked %d → %d (delta %d > max %d)\n",
+					slug, prev, cur.Violations, delta, maxDelta)
+				regressed = true
+			} else {
+				fmt.Fprintf(os.Stderr, "improvement: %s violations rose %d → %d\n", slug, prev, cur.Violations)
+			}
+		}
+	}
+	return regressed
+}
+
+func reportUnmappedLenses(allStats []lensStats) {
+	var unmappedNames []string
+	for _, s := range allStats {
+		if _, ok := lensToFixture[s.DirName]; !ok {
+			fmt.Fprintf(os.Stderr, "new lens (no fixture): %s (%d invertible practices)\n", s.DirName, s.Invertible)
+			unmappedNames = append(unmappedNames, s.DirName)
+		}
+	}
+	if len(unmappedNames) > 0 {
+		fmt.Fprintf(os.Stderr, "unmapped lenses (%d): %s\n", len(unmappedNames), strings.Join(unmappedNames, ", "))
+	}
 }
 
 func parseLensRepo(repoPath string) ([]lensStats, error) {

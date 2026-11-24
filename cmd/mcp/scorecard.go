@@ -9,6 +9,7 @@ import (
 	"slices"
 	"text/template"
 
+	"github.com/sufield/stave/internal/core/evidence"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -104,36 +105,7 @@ func buildScorecardView(reports []*stave.ComplianceReport) scorecardView {
 			Total:        r.TotalRequirements,
 			Active:       i == 0,
 		}
-		for j := range r.Requirements {
-			ra := &r.Requirements[j]
-			status, class, canExpand := "PASS", "pass", false
-			switch {
-			case ra.IsNotEvaluated():
-				status, class = "N/A", "na"
-			case !ra.IsMet():
-				status, class, canExpand = "FAIL", "fail", true
-			}
-			rv := reqView{
-				ID:        html.EscapeString(ra.RequirementID),
-				Title:     html.EscapeString(ra.Description),
-				Status:    status,
-				Class:     class,
-				Findings:  ra.FailCount,
-				CanExpand: canExpand,
-			}
-			if canExpand {
-				for _, e := range ra.Evidence {
-					if e.IsFail() {
-						rv.Fails = append(rv.Fails, failCtl{
-							ControlID: html.EscapeString(string(e.ControlID)),
-							Asset:     html.EscapeString(e.ResourceARN),
-							Name:      html.EscapeString(e.ControlName),
-						})
-					}
-				}
-			}
-			fw.Requirements = append(fw.Requirements, rv)
-		}
+		fw.Requirements = buildRequirementViews(r.Requirements)
 		sv.Frameworks = append(sv.Frameworks, fw)
 		sv.Compare = append(sv.Compare, compareRow{
 			Name:       html.EscapeString(r.FrameworkName),
@@ -152,6 +124,41 @@ func buildScorecardView(reports []*stave.ComplianceReport) scorecardView {
 
 // percentColor maps a compliance percentage to a color: green > 90,
 // amber 70–90, red < 70.
+func buildRequirementViews(reqs []evidence.RequirementAssessment) []reqView {
+	var views []reqView
+	for j := range reqs {
+		ra := &reqs[j]
+		status, class, canExpand := "PASS", "pass", false
+		switch {
+		case ra.IsNotEvaluated():
+			status, class = "N/A", "na"
+		case !ra.IsMet():
+			status, class, canExpand = "FAIL", "fail", true
+		}
+		rv := reqView{
+			ID:        html.EscapeString(ra.RequirementID),
+			Title:     html.EscapeString(ra.Description),
+			Status:    status,
+			Class:     class,
+			Findings:  ra.FailCount,
+			CanExpand: canExpand,
+		}
+		if canExpand {
+			for _, e := range ra.Evidence {
+				if e.IsFail() {
+					rv.Fails = append(rv.Fails, failCtl{
+						ControlID: html.EscapeString(string(e.ControlID)),
+						Asset:     html.EscapeString(e.ResourceARN),
+						Name:      html.EscapeString(e.ControlName),
+					})
+				}
+			}
+		}
+		views = append(views, rv)
+	}
+	return views
+}
+
 func percentColor(p float64) string {
 	switch {
 	case p > 90:

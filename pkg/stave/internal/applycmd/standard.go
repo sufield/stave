@@ -229,13 +229,7 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 		report.Metadata.Attestation = req.AttestationStatus
 	}
 
-	if err = annotateOwners(report, req.TeamManifest, req.OwnerFilter); err != nil {
-		return StandardResult{}, err
-	}
-	if err = annotateReachability(report, req.ObservationsDir); err != nil {
-		return StandardResult{}, err
-	}
-	if err = annotateFreshness(ctx, report, req.ObservationsDir, req.FreshnessThreshold, req.SkipFreshness, now); err != nil {
+	if err = annotateReport(ctx, report, req, now); err != nil {
 		return StandardResult{}, err
 	}
 
@@ -309,6 +303,16 @@ func EvaluateStandard(ctx context.Context, req StandardRequest) (StandardResult,
 // false), silently changing durations, security_state, gating, and the exit
 // code on every no---eval-time run. --eval-time is normalized to UTC to match the
 // pre-facade parseEvalTime, so non-UTC offsets render byte-identically.
+func annotateReport(ctx context.Context, report *evaluation.ComplianceReport, req StandardRequest, now time.Time) error {
+	if err := annotateOwners(report, req.TeamManifest, req.OwnerFilter); err != nil {
+		return err
+	}
+	if err := annotateReachability(report, req.ObservationsDir); err != nil {
+		return err
+	}
+	return annotateFreshness(ctx, report, req.ObservationsDir, req.FreshnessThreshold, req.SkipFreshness, now)
+}
+
 func parseStandardTimes(maxUnsafeStr, nowStr string) (time.Duration, time.Time, error) {
 	// Parse unconditionally: the pre-facade appeval.parseMaxUnsafeDuration
 	// rejected an empty value (kernel.ParseDuration → ErrEmptyDuration → exit

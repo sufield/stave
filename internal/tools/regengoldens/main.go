@@ -126,24 +126,7 @@ func main() {
 		}
 	}
 
-	// Compute affected domains from git diff. nil result → full regen
-	// (either flag unset, or non-pack changes detected).
-	var affected map[string]struct{}
-	if *since != "" {
-		var err error
-		affected, err = affectedDomains(*since)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "compute affected domains vs %s: %v\n", *since, err)
-			os.Exit(2)
-		}
-		if affected == nil {
-			fmt.Fprintf(os.Stderr, "non-pack changes detected vs %s; falling back to full regen\n", *since)
-		} else if len(affected) == 0 {
-			fmt.Fprintf(os.Stderr, "no control / pack changes vs %s; nothing to regenerate\n", *since)
-		} else {
-			fmt.Fprintf(os.Stderr, "affected domains vs %s: %s\n", *since, joinSorted(affected))
-		}
-	}
+	affected := resolveAffectedDomains(*since)
 
 	if _, err := os.Stat(stavePath); err != nil {
 		fmt.Fprintf(os.Stderr, "stave binary not found at %s — run `make build` first\n", stavePath)
@@ -169,30 +152,7 @@ func main() {
 	fmt.Fprintf(os.Stderr, "regenerating %d fixtures (%s) with %d worker(s); per-fixture timeout %s\n",
 		len(jobs), scopeNote, *workers, fixtureTimeout)
 
-	// Second pass: run with a bounded worker pool. A buffered
-	// channel of size *workers acts as a semaphore — a worker
-	// must acquire a slot before invoking stave, releasing on
-	// completion. sync.WaitGroup tracks completion; results are
-	// collected via a results channel, drained after Wait().
-	reports := make([]fixtureReport, len(jobs))
-	if *workers == 1 {
-		for i, j := range jobs {
-			reports[i] = processFixture(j.name, j.fixDir, *dryRun)
-		}
-	} else {
-		sem := make(chan struct{}, *workers)
-		var wg sync.WaitGroup
-		for i, j := range jobs {
-			wg.Add(1)
-			sem <- struct{}{}
-			go func() {
-				defer wg.Done()
-				defer func() { <-sem }()
-				reports[i] = processFixture(j.name, j.fixDir, *dryRun)
-			}()
-		}
-		wg.Wait()
-	}
+	reports := runFixtureJobs(jobs, *workers, *dryRun)
 
 	if skipped > 0 && affected != nil {
 		reports = append(reports, collectSkippedPlaceholders(entries, *rootFlag, filterRE, affected)...)
@@ -245,6 +205,48 @@ func main() {
 // Anything else inside the subtree triggers full-regen fallback. The
 // list of out-of-scope paths is logged so the operator can see why
 // scoping degraded.
+func resolveAffectedDomains(since string) map[string]struct{} {
+	if since == "" {
+		return nil
+	}
+	affected, err := affectedDomains(since)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "compute affected domains vs %s: %v\n", since, err)
+		os.Exit(2)
+	}
+	if affected == nil {
+		fmt.Fprintf(os.Stderr, "non-pack changes detected vs %s; falling back to full regen\n", since)
+	} else if len(affected) == 0 {
+		fmt.Fprintf(os.Stderr, "no control / pack changes vs %s; nothing to regenerate\n", since)
+	} else {
+		fmt.Fprintf(os.Stderr, "affected domains vs %s: %s\n", since, joinSorted(affected))
+	}
+	return affected
+}
+
+func runFixtureJobs(jobs []regenJob, workers int, dryRun bool) []fixtureReport {
+	reports := make([]fixtureReport, len(jobs))
+	if workers == 1 {
+		for i, j := range jobs {
+			reports[i] = processFixture(j.name, j.fixDir, dryRun)
+		}
+	} else {
+		sem := make(chan struct{}, workers)
+		var wg sync.WaitGroup
+		for i, j := range jobs {
+			wg.Add(1)
+			sem <- struct{}{}
+			go func() {
+				defer wg.Done()
+				defer func() { <-sem }()
+				reports[i] = processFixture(j.name, j.fixDir, dryRun)
+			}()
+		}
+		wg.Wait()
+	}
+	return reports
+}
+
 func affectedDomains(baseRef string) (map[string]struct{}, error) {
 	prefix, err := gitPrefix()
 	if err != nil {

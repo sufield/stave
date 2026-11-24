@@ -115,24 +115,7 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 		a.Confidence = evaluation.DefaultConfidenceCalculator()
 		a.confidenceInitialized = true
 	}
-	if h, m := eval.ConfidenceHighMultiplier(), eval.ConfidenceMedMultiplier(); h > 0 || m > 0 {
-		if h > 0 {
-			if h > MaxConfigurableConfidenceMultiplier {
-				logger.Warn("config: clamping confidence_high_multiplier to configured maximum",
-					"requested", h, "max", MaxConfigurableConfidenceMultiplier)
-				h = MaxConfigurableConfidenceMultiplier
-			}
-			a.Confidence.HighMultiplier = h
-		}
-		if m > 0 {
-			if m > MaxConfigurableConfidenceMultiplier {
-				logger.Warn("config: clamping confidence_med_multiplier to configured maximum",
-					"requested", m, "max", MaxConfigurableConfidenceMultiplier)
-				m = MaxConfigurableConfidenceMultiplier
-			}
-			a.Confidence.MedMultiplier = m
-		}
-	}
+	resolveConfidenceMultipliers(&a.Confidence, eval, logger)
 
 	// Max validation errors reported (default 3)
 	if n := eval.MaxValidationErrors(); n > 0 {
@@ -142,6 +125,26 @@ func (a *App) resolveConfigurableLimits(eval *appconfig.GovernanceResolver) {
 			n = MaxConfigurableValidationErrors
 		}
 		contractvalidator.SetMaxValidationErrors(n)
+	}
+}
+
+func resolveConfidenceMultipliers(c *evaluation.ConfidenceCalculator, eval *appconfig.GovernanceResolver, logger *slog.Logger) {
+	h, m := eval.ConfidenceHighMultiplier(), eval.ConfidenceMedMultiplier()
+	if h > 0 {
+		if h > MaxConfigurableConfidenceMultiplier {
+			logger.Warn("config: clamping confidence_high_multiplier to configured maximum",
+				"requested", h, "max", MaxConfigurableConfidenceMultiplier)
+			h = MaxConfigurableConfidenceMultiplier
+		}
+		c.HighMultiplier = h
+	}
+	if m > 0 {
+		if m > MaxConfigurableConfidenceMultiplier {
+			logger.Warn("config: clamping confidence_med_multiplier to configured maximum",
+				"requested", m, "max", MaxConfigurableConfidenceMultiplier)
+			m = MaxConfigurableConfidenceMultiplier
+		}
+		c.MedMultiplier = m
 	}
 }
 
