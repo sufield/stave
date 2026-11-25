@@ -48,97 +48,113 @@ func writeMarkdownTo(w io.Writer, r *Report) {
 	fmt.Fprintf(w, "# %s — %s\n\n", r.Title, r.Period)
 	fmt.Fprintf(w, "**Generated:** %s\n\n", r.GeneratedAt)
 
-	// Posture.
+	writePostureSection(w, r.Posture)
+	writeFindingsSummarySection(w, r.FindingsSummary)
+	writeSLASection(w, r.SLA)
+	writeTopFindingsSection(w, r.TopFindings)
+	if r.Chains.ActiveCount > 0 {
+		writeActiveChains(w, r.Chains.Active)
+	}
+	fmt.Fprintf(w, "## ATT&CK Coverage\n\n%d/%d tactics covered (%.0f%%)\n\n",
+		r.AttackCoverage.TacticsCovered, r.AttackCoverage.TacticsTotal, r.AttackCoverage.CoveragePct)
+	writeFrameworkSection(w, r.FrameworkReady)
+	writeTeamsSection(w, r.Teams)
+	writeExecutiveSummarySection(w, r.ExecutiveSummary)
+}
+
+func writePostureSection(w io.Writer, p PostureSection) {
 	arrow := ""
-	if r.Posture.Delta30d > 0 {
+	if p.Delta30d > 0 {
 		arrow = " ↑"
-	} else if r.Posture.Delta30d < 0 {
+	} else if p.Delta30d < 0 {
 		arrow = " ↓"
 	}
 	fmt.Fprintln(w, "## Posture Score")
-	fmt.Fprintf(w, "\n**%.1f** (%s) — %+.1f in 30 days%s\n\n", r.Posture.Score, r.Posture.Band, r.Posture.Delta30d, arrow)
+	fmt.Fprintf(w, "\n**%.1f** (%s) — %+.1f in 30 days%s\n\n", p.Score, p.Band, p.Delta30d, arrow)
+}
 
-	// Findings.
+func writeFindingsSummarySection(w io.Writer, f FindingsSummary) {
 	fmt.Fprintln(w, "## Findings Summary")
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "| Severity | Open |")
 	fmt.Fprintln(w, "|----------|------|")
-	fmt.Fprintf(w, "| Critical | %d |\n", r.FindingsSummary.Critical)
-	fmt.Fprintf(w, "| High | %d |\n", r.FindingsSummary.High)
-	fmt.Fprintf(w, "| Medium | %d |\n", r.FindingsSummary.Medium)
-	fmt.Fprintf(w, "| Low | %d |\n", r.FindingsSummary.Low)
-	fmt.Fprintf(w, "| **Total** | **%d** |\n\n", r.FindingsSummary.Total)
+	fmt.Fprintf(w, "| Critical | %d |\n", f.Critical)
+	fmt.Fprintf(w, "| High | %d |\n", f.High)
+	fmt.Fprintf(w, "| Medium | %d |\n", f.Medium)
+	fmt.Fprintf(w, "| Low | %d |\n", f.Low)
+	fmt.Fprintf(w, "| **Total** | **%d** |\n\n", f.Total)
+}
 
-	// SLA.
-	if r.SLA != nil {
-		fmt.Fprintf(w, "## SLA Compliance (%s)\n\n", r.SLA.ProfileName)
-		fmt.Fprintf(w, "Overall: %.1f%%\n\n", r.SLA.CompliancePct)
-		fmt.Fprintln(w, "| Severity | Within SLA | Breached | Compliance |")
-		fmt.Fprintln(w, "|----------|-----------|----------|------------|")
-		for _, sev := range []string{"critical", "high", "medium", "low"} {
-			if s, ok := r.SLA.BySeverity[sev]; ok {
-				fmt.Fprintf(w, "| %s | %d/%d | %d | %.1f%% |\n",
-					strutil.TitleCase(sev), s.Within, s.Total, s.Breached, s.Pct)
-			}
+func writeSLASection(w io.Writer, sla *SLASection) {
+	if sla == nil {
+		return
+	}
+	fmt.Fprintf(w, "## SLA Compliance (%s)\n\n", sla.ProfileName)
+	fmt.Fprintf(w, "Overall: %.1f%%\n\n", sla.CompliancePct)
+	fmt.Fprintln(w, "| Severity | Within SLA | Breached | Compliance |")
+	fmt.Fprintln(w, "|----------|-----------|----------|------------|")
+	for _, sev := range []string{"critical", "high", "medium", "low"} {
+		if s, ok := sla.BySeverity[sev]; ok {
+			fmt.Fprintf(w, "| %s | %d/%d | %d | %.1f%% |\n",
+				strutil.TitleCase(sev), s.Within, s.Total, s.Breached, s.Pct)
 		}
-		fmt.Fprintln(w)
 	}
+	fmt.Fprintln(w)
+}
 
-	// Top findings.
-	if len(r.TopFindings) > 0 {
-		fmt.Fprintln(w, "## Top Findings")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "| Rank | Control | Severity | Dwell | SLA |")
-		fmt.Fprintln(w, "|------|---------|----------|-------|-----|")
-		for i := range r.TopFindings {
-			f := &r.TopFindings[i]
-			sla := ""
-			if f.IsAnyBreach() {
-				sla = "BREACHED"
-			}
-			fmt.Fprintf(w, "| %d | %s | %s | %.0fh | %s |\n",
-				f.Rank, f.ControlID, strings.ToUpper(f.Severity.String()), f.DwellHours, sla)
+func writeTopFindingsSection(w io.Writer, findings []TopFinding) {
+	if len(findings) == 0 {
+		return
+	}
+	fmt.Fprintln(w, "## Top Findings")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "| Rank | Control | Severity | Dwell | SLA |")
+	fmt.Fprintln(w, "|------|---------|----------|-------|-----|")
+	for i := range findings {
+		f := &findings[i]
+		sla := ""
+		if f.IsAnyBreach() {
+			sla = "BREACHED"
 		}
-		fmt.Fprintln(w)
+		fmt.Fprintf(w, "| %d | %s | %s | %.0fh | %s |\n",
+			f.Rank, f.ControlID, strings.ToUpper(f.Severity.String()), f.DwellHours, sla)
 	}
+	fmt.Fprintln(w)
+}
 
-	if r.Chains.ActiveCount > 0 {
-		writeActiveChains(w, r.Chains.Active)
+func writeFrameworkSection(w io.Writer, frameworks []FrameworkReadiness) {
+	if len(frameworks) == 0 {
+		return
 	}
-
-	// ATT&CK.
-	fmt.Fprintf(w, "## ATT&CK Coverage\n\n%d/%d tactics covered (%.0f%%)\n\n",
-		r.AttackCoverage.TacticsCovered, r.AttackCoverage.TacticsTotal, r.AttackCoverage.CoveragePct)
-
-	// Framework readiness.
-	if len(r.FrameworkReady) > 0 {
-		fmt.Fprintln(w, "## Framework Readiness")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "| Framework | Passing | Total | Readiness |")
-		fmt.Fprintln(w, "|-----------|---------|-------|-----------|")
-		for _, fw := range r.FrameworkReady {
-			fmt.Fprintf(w, "| %s | %d | %d | %.1f%% |\n", fw.Framework, fw.Passing, fw.Total, fw.ReadinessPct)
-		}
-		fmt.Fprintln(w)
+	fmt.Fprintln(w, "## Framework Readiness")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "| Framework | Passing | Total | Readiness |")
+	fmt.Fprintln(w, "|-----------|---------|-------|-----------|")
+	for _, fw := range frameworks {
+		fmt.Fprintf(w, "| %s | %d | %d | %.1f%% |\n", fw.Framework, fw.Passing, fw.Total, fw.ReadinessPct)
 	}
+	fmt.Fprintln(w)
+}
 
-	// Teams.
-	if len(r.Teams) > 0 {
-		fmt.Fprintln(w, "## Team Posture")
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "| Team | Score | Trend | Critical | SLA% |")
-		fmt.Fprintln(w, "|------|-------|-------|----------|------|")
-		for _, t := range r.Teams {
-			fmt.Fprintf(w, "| %s | %.1f | %s | %d | %.0f%% |\n", t.Name, t.Score, t.Trajectory, t.CriticalOpen, t.SLACompPct)
-		}
-		fmt.Fprintln(w)
+func writeTeamsSection(w io.Writer, teams []TeamSection) {
+	if len(teams) == 0 {
+		return
 	}
+	fmt.Fprintln(w, "## Team Posture")
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "| Team | Score | Trend | Critical | SLA% |")
+	fmt.Fprintln(w, "|------|-------|-------|----------|------|")
+	for _, t := range teams {
+		fmt.Fprintf(w, "| %s | %.1f | %s | %d | %.0f%% |\n", t.Name, t.Score, t.Trajectory, t.CriticalOpen, t.SLACompPct)
+	}
+	fmt.Fprintln(w)
+}
 
-	// Executive summary.
+func writeExecutiveSummarySection(w io.Writer, es ExecutiveSummary) {
 	fmt.Fprintln(w, "## Executive Summary")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, r.ExecutiveSummary.Paragraph)
-	for _, a := range r.ExecutiveSummary.Attention {
+	fmt.Fprintln(w, es.Paragraph)
+	for _, a := range es.Attention {
 		fmt.Fprintf(w, "\n**Attention required:** %s — %s", a.Subject, a.Reason)
 		if a.Contact != "" {
 			fmt.Fprintf(w, " Contact: %s", a.Contact)

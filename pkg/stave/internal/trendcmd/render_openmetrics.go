@@ -15,44 +15,10 @@ func renderTrendOpenMetrics(out io.Writer, r *trendReport) error {
 	latest := &r.Runs[len(r.Runs)-1]
 	tsMs := latest.CapturedAt.UnixMilli()
 
-	// violations_total by severity
-	fmt.Fprintln(w, "# HELP stave_violations_total Current violation count by severity")
-	fmt.Fprintln(w, "# TYPE stave_violations_total gauge")
-	for sev, count := range latest.BySeverity {
-		fmt.Fprintf(w, "stave_violations_total{severity=%q} %d %d\n", sev, count, tsMs)
-	}
-	fmt.Fprintln(w)
+	emitViolationMetrics(w, latest, tsMs)
+	emitMTTRMetrics(w, r.MTTR, tsMs)
+	emitFrameworkMetrics(w, r.FrameworkTrends, tsMs)
 
-	// violation_rate
-	fmt.Fprintln(w, "# HELP stave_violation_rate Current violation rate")
-	fmt.Fprintln(w, "# TYPE stave_violation_rate gauge")
-	fmt.Fprintf(w, "stave_violation_rate %g %d\n\n", latest.ViolationRate, tsMs)
-
-	// mttr_days (omitted when no closed windows)
-	if r.HasMTTR() {
-		fmt.Fprintln(w, "# HELP stave_mttr_days Mean time to remediate by severity")
-		fmt.Fprintln(w, "# TYPE stave_mttr_days gauge")
-		for sev, entry := range r.MTTR {
-			fmt.Fprintf(w, "stave_mttr_days{severity=%q} %g %d\n", sev, entry.AvgDays, tsMs)
-		}
-		fmt.Fprintln(w)
-	}
-
-	// framework_coverage (only when compliance specified)
-	if r.HasFrameworkTrends() {
-		fmt.Fprintln(w, "# HELP stave_framework_coverage Compliance framework satisfaction rate")
-		fmt.Fprintln(w, "# TYPE stave_framework_coverage gauge")
-		for i := range r.FrameworkTrends {
-			ft := &r.FrameworkTrends[i]
-			if len(ft.Scores) > 0 {
-				latestScore := ft.Scores[len(ft.Scores)-1]
-				fmt.Fprintf(w, "stave_framework_coverage{framework=%q} %g %d\n", ft.Framework, latestScore, tsMs)
-			}
-		}
-		fmt.Fprintln(w)
-	}
-
-	// velocity_per_run
 	fmt.Fprintln(w, "# HELP stave_velocity_per_run Net violation change per run")
 	fmt.Fprintln(w, "# TYPE stave_velocity_per_run gauge")
 	fmt.Fprintf(w, "stave_velocity_per_run %g %d\n\n", r.Velocity.AvgNetChange, tsMs)
@@ -88,6 +54,47 @@ func renderTrendOpenMetrics(out io.Writer, r *trendReport) error {
 
 	fmt.Fprintln(w, "# EOF")
 	return w.err
+}
+
+func emitViolationMetrics(w io.Writer, latest *runMetrics, tsMs int64) {
+	fmt.Fprintln(w, "# HELP stave_violations_total Current violation count by severity")
+	fmt.Fprintln(w, "# TYPE stave_violations_total gauge")
+	for sev, count := range latest.BySeverity {
+		fmt.Fprintf(w, "stave_violations_total{severity=%q} %d %d\n", sev, count, tsMs)
+	}
+	fmt.Fprintln(w)
+
+	fmt.Fprintln(w, "# HELP stave_violation_rate Current violation rate")
+	fmt.Fprintln(w, "# TYPE stave_violation_rate gauge")
+	fmt.Fprintf(w, "stave_violation_rate %g %d\n\n", latest.ViolationRate, tsMs)
+}
+
+func emitMTTRMetrics(w io.Writer, mttr map[string]mttrEntry, tsMs int64) {
+	if len(mttr) == 0 {
+		return
+	}
+	fmt.Fprintln(w, "# HELP stave_mttr_days Mean time to remediate by severity")
+	fmt.Fprintln(w, "# TYPE stave_mttr_days gauge")
+	for sev, entry := range mttr {
+		fmt.Fprintf(w, "stave_mttr_days{severity=%q} %g %d\n", sev, entry.AvgDays, tsMs)
+	}
+	fmt.Fprintln(w)
+}
+
+func emitFrameworkMetrics(w io.Writer, trends []frameworkTrend, tsMs int64) {
+	if len(trends) == 0 {
+		return
+	}
+	fmt.Fprintln(w, "# HELP stave_framework_coverage Compliance framework satisfaction rate")
+	fmt.Fprintln(w, "# TYPE stave_framework_coverage gauge")
+	for i := range trends {
+		ft := &trends[i]
+		if len(ft.Scores) > 0 {
+			latestScore := ft.Scores[len(ft.Scores)-1]
+			fmt.Fprintf(w, "stave_framework_coverage{framework=%q} %g %d\n", ft.Framework, latestScore, tsMs)
+		}
+	}
+	fmt.Fprintln(w)
 }
 
 func renderTeamOpenMetrics(w io.Writer, trends []teamTrend, tsMs int64) {

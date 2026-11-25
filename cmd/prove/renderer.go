@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/sufield/stave/pkg/stave"
 )
 
 // Renderer is the format-dispatch interface for `stave prove`.
@@ -66,6 +68,15 @@ func (textRenderer) Render(w io.Writer, o *ProveOutput) error {
 	if r.SolveTimeMs > 0 {
 		fmt.Fprintf(w, "Time:    %dms\n", r.SolveTimeMs)
 	}
+	renderProveDetails(w, r)
+	renderComplianceEvidence(w, o.Compliance)
+	if o.CertificateRef != "" {
+		fmt.Fprintf(w, "\nCertificate: %s\n", o.CertificateRef)
+	}
+	return nil
+}
+
+func renderProveDetails(w io.Writer, r *stave.ProveResult) {
 	if len(r.Witness) > 0 {
 		fmt.Fprintf(w, "\nWitness:\n")
 		for k, v := range r.Witness {
@@ -84,19 +95,17 @@ func (textRenderer) Render(w io.Writer, o *ProveOutput) error {
 	if len(r.ModelCoverage.NotModeled) > 0 {
 		fmt.Fprintf(w, "Not modeled: %s\n", strings.Join(r.ModelCoverage.NotModeled, ", "))
 	}
+}
 
-	if len(o.Compliance) > 0 {
-		fmt.Fprintf(w, "\nCompliance evidence:\n")
-		for fw, reqs := range o.Compliance {
-			fmt.Fprintf(w, "  %s:\n", fw)
-			for _, req := range reqs {
-				fmt.Fprintf(w, "    %s — %s\n", req.ID, req.Description)
-			}
+func renderComplianceEvidence(w io.Writer, compliance map[string][]ComplianceRequirement) {
+	if len(compliance) == 0 {
+		return
+	}
+	fmt.Fprintf(w, "\nCompliance evidence:\n")
+	for fw, reqs := range compliance {
+		fmt.Fprintf(w, "  %s:\n", fw)
+		for _, req := range reqs {
+			fmt.Fprintf(w, "    %s — %s\n", req.ID, req.Description)
 		}
 	}
-
-	if o.CertificateRef != "" {
-		fmt.Fprintf(w, "\nCertificate: %s\n", o.CertificateRef)
-	}
-	return nil
 }

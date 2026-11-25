@@ -35,38 +35,8 @@ func renderTrendTable(out io.Writer, r *trendReport) error {
 		r.Period.Start.Format("2006-01-02"), r.Period.End.Format("2006-01-02"), r.Period.RunCount)
 
 	renderViolationRate(w, sep, r.Runs, r.Summary.Direction)
-
-	// MTTR.
-	if r.HasMTTR() {
-		fmt.Fprintln(w, "MEAN TIME TO REMEDIATE (closed windows only)")
-		fmt.Fprintln(w, sep)
-		for _, sev := range []string{"critical", "high", "medium", "low"} {
-			if entry, ok := r.MTTR[sev]; ok {
-				fmt.Fprintf(w, "  %-10s avg %5.1f days  (%d windows closed)\n", sev, entry.AvgDays, entry.WindowCount)
-			}
-		}
-		fmt.Fprintln(w)
-	}
-
-	// Framework trajectory.
-	if r.HasFrameworkTrends() {
-		fmt.Fprintln(w, "FRAMEWORK COVERAGE TRAJECTORY")
-		fmt.Fprintln(w, sep)
-		for i := range r.FrameworkTrends {
-			ft := &r.FrameworkTrends[i]
-			var scoreParts []string
-			showCount := 5
-			start := 0
-			if len(ft.Scores) > showCount {
-				start = len(ft.Scores) - showCount
-			}
-			for _, s := range ft.Scores[start:] {
-				scoreParts = append(scoreParts, fmt.Sprintf("%.0f%%", s*100))
-			}
-			fmt.Fprintf(w, "  %-12s %s%s\n", ft.Framework, strings.Join(scoreParts, " → "), ft.Arrow())
-		}
-		fmt.Fprintln(w)
-	}
+	renderMTTR(w, sep, r)
+	renderFrameworkTrajectory(w, sep, r)
 
 	// Velocity.
 	fmt.Fprintln(w, "VELOCITY")
@@ -115,6 +85,42 @@ func renderViolationRate(w io.Writer, sep string, runs []runMetrics, direction s
 			i+1, run.CapturedAt.Format("2006-01-02"), bar, run.ViolationCount, run.ViolationRate*100)
 	}
 	fmt.Fprintf(w, "\nDirection: %s\n\n", strings.ToUpper(direction))
+}
+
+func renderMTTR(w io.Writer, sep string, r *trendReport) {
+	if !r.HasMTTR() {
+		return
+	}
+	fmt.Fprintln(w, "MEAN TIME TO REMEDIATE (closed windows only)")
+	fmt.Fprintln(w, sep)
+	for _, sev := range []string{"critical", "high", "medium", "low"} {
+		if entry, ok := r.MTTR[sev]; ok {
+			fmt.Fprintf(w, "  %-10s avg %5.1f days  (%d windows closed)\n", sev, entry.AvgDays, entry.WindowCount)
+		}
+	}
+	fmt.Fprintln(w)
+}
+
+func renderFrameworkTrajectory(w io.Writer, sep string, r *trendReport) {
+	if !r.HasFrameworkTrends() {
+		return
+	}
+	fmt.Fprintln(w, "FRAMEWORK COVERAGE TRAJECTORY")
+	fmt.Fprintln(w, sep)
+	for i := range r.FrameworkTrends {
+		ft := &r.FrameworkTrends[i]
+		var scoreParts []string
+		showCount := 5
+		start := 0
+		if len(ft.Scores) > showCount {
+			start = len(ft.Scores) - showCount
+		}
+		for _, s := range ft.Scores[start:] {
+			scoreParts = append(scoreParts, fmt.Sprintf("%.0f%%", s*100))
+		}
+		fmt.Fprintf(w, "  %-12s %s%s\n", ft.Framework, strings.Join(scoreParts, " → "), ft.Arrow())
+	}
+	fmt.Fprintln(w)
 }
 
 func renderSLATrend(w io.Writer, sep string, trend []slaTrendMetric) {

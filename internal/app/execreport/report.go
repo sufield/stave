@@ -309,7 +309,19 @@ func GenerateSummary(r *Report) ExecutiveSummary {
 		}
 	}
 
-	// Paragraph.
+	paragraph := buildSummaryParagraph(r, direction, period)
+	attention := collectAttentionItems(r)
+	positive := collectPositiveSignals(r)
+
+	return ExecutiveSummary{
+		OneLiner:  oneLiner,
+		Paragraph: paragraph,
+		Attention: attention,
+		Positive:  positive,
+	}
+}
+
+func buildSummaryParagraph(r *Report, direction, period string) string {
 	var parts []string
 	parts = append(parts, fmt.Sprintf("Account security posture %s during %s.", direction, period))
 	parts = append(parts, fmt.Sprintf("%d findings are currently open.", r.FindingsSummary.Total))
@@ -317,28 +329,17 @@ func GenerateSummary(r *Report) ExecutiveSummary {
 	if r.Chains.ActiveCount > 0 {
 		parts = append(parts, fmt.Sprintf("%d active compound chain(s) indicate elevated risk.", r.Chains.ActiveCount))
 	}
-
 	for _, t := range r.Teams {
 		if t.Trajectory == TrajectoryRegressing {
 			parts = append(parts, fmt.Sprintf("Team %s is regressing (score %.1f) with %d critical findings.", t.Name, t.Score, t.CriticalOpen))
 		}
 	}
-
 	for _, fw := range r.FrameworkReady {
 		if fw.Failing > 0 {
 			parts = append(parts, fmt.Sprintf("%s compliance is %.1f%% — %d controls require remediation.", fw.Framework, fw.ReadinessPct, fw.Failing))
 		}
 	}
-
-	attention := collectAttentionItems(r)
-	positive := collectPositiveSignals(r)
-
-	return ExecutiveSummary{
-		OneLiner:  oneLiner,
-		Paragraph: strings.Join(parts, " "),
-		Attention: attention,
-		Positive:  positive,
-	}
+	return strings.Join(parts, " ")
 }
 
 func collectAttentionItems(r *Report) []AttentionItem {

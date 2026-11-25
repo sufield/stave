@@ -184,25 +184,8 @@ func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth 
 			continue
 		}
 
-		// Section 2: Why this matters.
-		if pb.Narrative.HasWhyThisMatters() {
-			fmt.Fprintln(w, "\nWHY THIS MATTERS")
-			fmt.Fprintln(w, strings.Repeat("\u2500", 64))
-			fmt.Fprintln(w, pb.Narrative.WhyThisMatters)
-		}
-
-		// Section 3: Current state.
-		if pb.Narrative.HasCurrentState() {
-			fmt.Fprintln(w, "\nCURRENT STATE")
-			fmt.Fprintln(w, strings.Repeat("\u2500", 64))
-			for _, s := range pb.Narrative.CurrentState {
-				marker := ""
-				if s.RequiredValue != "" {
-					marker = "  \u2190 must be " + s.RequiredValue
-				}
-				fmt.Fprintf(w, "  %-40s %s%s\n", s.PropertyPath+":", s.CurrentValue, marker)
-			}
-		}
+		writeWhyThisMatters(w, &pb.Narrative)
+		writeCurrentState(w, &pb.Narrative)
 
 		// Section 4: Steps.
 		writeNarrativeSteps(w, pb.Narrative.Steps)
@@ -212,6 +195,30 @@ func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth 
 		}
 
 		fmt.Fprintln(w)
+	}
+}
+
+func writeWhyThisMatters(w io.Writer, ns *narrative.NarrativeSections) {
+	if !ns.HasWhyThisMatters() {
+		return
+	}
+	fmt.Fprintln(w, "\nWHY THIS MATTERS")
+	fmt.Fprintln(w, strings.Repeat("─", 64))
+	fmt.Fprintln(w, ns.WhyThisMatters)
+}
+
+func writeCurrentState(w io.Writer, ns *narrative.NarrativeSections) {
+	if !ns.HasCurrentState() {
+		return
+	}
+	fmt.Fprintln(w, "\nCURRENT STATE")
+	fmt.Fprintln(w, strings.Repeat("─", 64))
+	for _, s := range ns.CurrentState {
+		marker := ""
+		if s.RequiredValue != "" {
+			marker = "  ← must be " + s.RequiredValue
+		}
+		fmt.Fprintf(w, "  %-40s %s%s\n", s.PropertyPath+":", s.CurrentValue, marker)
 	}
 }
 

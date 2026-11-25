@@ -152,42 +152,54 @@ func renderPrincipalTable(w io.Writer, result iam.ResolvedPermissions, cfg Princ
 		return nil
 	}
 
-	if result.HasEffectiveAllows() {
-		fmt.Fprintln(w, "\nEFFECTIVE PERMISSIONS")
-		fmt.Fprintln(w, strings.Repeat("-", 70))
-		fmt.Fprintf(w, "%-30s %-25s %s\n", "Action", "Resource scope", "Source")
-		fmt.Fprintln(w, strings.Repeat("-", 70))
-		for _, a := range result.EffectiveAllow {
-			action := a.Action
-			if cfg.FilterService != "" && !strings.HasPrefix(action, cfg.FilterService+":") {
-				continue
-			}
-			resource := truncateARN(a.Resource, 25)
-			fmt.Fprintf(w, "%-30s %-25s %s\n", action, resource, a.Source)
-		}
-	}
-
-	if cfg.ShowDenied && result.HasExplicitDenies() {
-		fmt.Fprintln(w, "\nEXPLICIT DENIES")
-		fmt.Fprintln(w, strings.Repeat("-", 70))
-		for _, d := range result.ExplicitDeny {
-			fmt.Fprintf(w, "  %s on %s (%s)\n", d.Action, d.Resource, d.Source)
-		}
-	}
-
-	if result.HasSCPBlocked() {
-		fmt.Fprintf(w, "\nSCP CEILING (%d actions blocked)\n", len(result.SCPBlocked))
-		fmt.Fprintln(w, strings.Repeat("-", 70))
-		for _, a := range result.SCPBlocked {
-			fmt.Fprintf(w, "  %s\n", a)
-		}
-	}
+	renderEffectivePermissions(w, result.EffectiveAllow, cfg.FilterService)
+	renderExplicitDenies(w, result.ExplicitDeny, cfg.ShowDenied)
+	renderSCPBlocked(w, result.SCPBlocked)
 
 	if cfg.ShowChains && result.HasRoleChains() {
 		renderRoleChains(w, result.PrincipalARN, result.RoleChains)
 	}
 
 	return nil
+}
+
+func renderEffectivePermissions(w io.Writer, allows []iam.ActionGrant, filterService string) {
+	if len(allows) == 0 {
+		return
+	}
+	fmt.Fprintln(w, "\nEFFECTIVE PERMISSIONS")
+	fmt.Fprintln(w, strings.Repeat("-", 70))
+	fmt.Fprintf(w, "%-30s %-25s %s\n", "Action", "Resource scope", "Source")
+	fmt.Fprintln(w, strings.Repeat("-", 70))
+	for _, a := range allows {
+		if filterService != "" && !strings.HasPrefix(a.Action, filterService+":") {
+			continue
+		}
+		resource := truncateARN(a.Resource, 25)
+		fmt.Fprintf(w, "%-30s %-25s %s\n", a.Action, resource, a.Source)
+	}
+}
+
+func renderExplicitDenies(w io.Writer, denies []iam.ActionGrant, show bool) {
+	if !show || len(denies) == 0 {
+		return
+	}
+	fmt.Fprintln(w, "\nEXPLICIT DENIES")
+	fmt.Fprintln(w, strings.Repeat("-", 70))
+	for _, d := range denies {
+		fmt.Fprintf(w, "  %s on %s (%s)\n", d.Action, d.Resource, d.Source)
+	}
+}
+
+func renderSCPBlocked(w io.Writer, blocked []string) {
+	if len(blocked) == 0 {
+		return
+	}
+	fmt.Fprintf(w, "\nSCP CEILING (%d actions blocked)\n", len(blocked))
+	fmt.Fprintln(w, strings.Repeat("-", 70))
+	for _, a := range blocked {
+		fmt.Fprintf(w, "  %s\n", a)
+	}
 }
 
 func renderRoleChains(w io.Writer, principalARN string, chains []iam.RoleChain) {

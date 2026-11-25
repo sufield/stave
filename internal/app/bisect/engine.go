@@ -155,11 +155,6 @@ func (e *Engine) checkMonotonicity(ctx context.Context, before []asset.Snapshot,
 
 func (e *Engine) runScan(ctx context.Context, snapshots []asset.Snapshot, result Result) (Result, error) {
 	inViolation := false
-	// Track the current window by index, not pointer: append() on
-	// result.Windows can reallocate the backing array and leave a
-	// stored *ViolationWindow pointing at freed memory. Index-based
-	// access via result.Windows[currentWindowIdx] always reflects
-	// the live slice.
 	currentWindowIdx := -1
 
 	for i, snap := range snapshots {
@@ -172,49 +167,64 @@ func (e *Engine) runScan(ctx context.Context, snapshots []asset.Snapshot, result
 		}
 
 		if violated && !inViolation {
-			// Transition: PASS → VIOLATION (new window opens).
-			w := ViolationWindow{
-				EntryAfter: snap.CapturedAt,
-				IsOngoing:  true,
-			}
-			if i > 0 {
-				w.EntryBefore = snapshots[i-1].CapturedAt
-			}
-			result.Windows = append(result.Windows, w)
-			currentWindowIdx = len(result.Windows) - 1
+			currentWindowIdx = openWindow(&result, snapshots, i)
 			inViolation = true
 		} else if !violated && inViolation {
-			// Transition: VIOLATION → PASS (window closes). Mutate
-			// the slice element directly — no aliased pointer to
-			// keep in sync.
-			if currentWindowIdx >= 0 {
-				result.Windows[currentWindowIdx].ExitBefore = snapshots[i-1].CapturedAt
-				result.Windows[currentWindowIdx].ExitAfter = snap.CapturedAt
-				result.Windows[currentWindowIdx].IsOngoing = false
-			}
+			closeWindow(&result, snapshots, i, currentWindowIdx)
 			currentWindowIdx = -1
 			inViolation = false
 		}
 	}
 
-	// Compute delta for the first window if any exist.
-	if len(result.Windows) > 0 {
-		w := result.Windows[0]
-		if !w.EntryBefore.IsZero() {
-			before := findSnapshotAt(snapshots, w.EntryBefore)
-			after := findSnapshotAt(snapshots, w.EntryAfter)
-			if before != nil && after != nil {
-				delta, dErr := computeDelta(*before, *after)
-				if dErr != nil {
-					return result, fmt.Errorf("compute delta (scan window): %w", dErr)
-				}
-				result.Delta = delta
-			}
-		}
+	if err := computeFirstWindowDelta(snapshots, &result); err != nil {
+		return result, err
 	}
-
 	result.IsMonotonic = len(result.Windows) <= 1
 	return result, nil
+}
+
+// openWindow appends a new violation window and returns its index.
+func openWindow(result *Result, snapshots []asset.Snapshot, i int) int {
+	w := ViolationWindow{
+		EntryAfter: snapshots[i].CapturedAt,
+		IsOngoing:  true,
+	}
+	if i > 0 {
+		w.EntryBefore = snapshots[i-1].CapturedAt
+	}
+	result.Windows = append(result.Windows, w)
+	return len(result.Windows) - 1
+}
+
+// closeWindow marks the window at idx as closed.
+func closeWindow(result *Result, snapshots []asset.Snapshot, i, idx int) {
+	if idx < 0 {
+		return
+	}
+	result.Windows[idx].ExitBefore = snapshots[i-1].CapturedAt
+	result.Windows[idx].ExitAfter = snapshots[i].CapturedAt
+	result.Windows[idx].IsOngoing = false
+}
+
+func computeFirstWindowDelta(snapshots []asset.Snapshot, result *Result) error {
+	if len(result.Windows) == 0 {
+		return nil
+	}
+	w := result.Windows[0]
+	if w.EntryBefore.IsZero() {
+		return nil
+	}
+	before := findSnapshotAt(snapshots, w.EntryBefore)
+	after := findSnapshotAt(snapshots, w.EntryAfter)
+	if before == nil || after == nil {
+		return nil
+	}
+	delta, err := computeDelta(*before, *after)
+	if err != nil {
+		return fmt.Errorf("compute delta (scan window): %w", err)
+	}
+	result.Delta = delta
+	return nil
 }
 
 func (e *Engine) eval(ctx context.Context, snap asset.Snapshot, result *Result) (bool, error) {

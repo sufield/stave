@@ -509,17 +509,7 @@ func renderCatalogChainView(w io.Writer, r catalogReport, chains []appcaps.Capab
 		families = filtered
 	}
 
-	total := 0
-	sevCounts := map[string]int{}
-	for i := range families {
-		for j := range families[i].chains {
-			total++
-			sev := strings.ToLower(families[i].chains[j].Severity)
-			if sev != "" {
-				sevCounts[sev]++
-			}
-		}
-	}
+	total, sevCounts := countChainSeverities(families)
 
 	fmt.Fprintf(w, "CHAINS BY FAMILY%*sTOTAL: %d\n\n", 39, " ", total)
 
@@ -541,6 +531,26 @@ func renderCatalogChainView(w io.Writer, r catalogReport, chains []appcaps.Capab
 		fmt.Fprintln(w)
 	}
 
+	writeChainFooter(w, total, sevCounts, r.verbose)
+	return nil
+}
+
+func countChainSeverities(families []chainFamily) (int, map[string]int) {
+	total := 0
+	sevCounts := map[string]int{}
+	for i := range families {
+		for j := range families[i].chains {
+			total++
+			sev := strings.ToLower(families[i].chains[j].Severity)
+			if sev != "" {
+				sevCounts[sev]++
+			}
+		}
+	}
+	return total, sevCounts
+}
+
+func writeChainFooter(w io.Writer, total int, sevCounts map[string]int, verbose bool) {
 	var footer strings.Builder
 	fmt.Fprintf(&footer, "%d chains", total)
 	parts := make([]string, 0, 4)
@@ -553,10 +563,9 @@ func renderCatalogChainView(w io.Writer, r catalogReport, chains []appcaps.Capab
 		fmt.Fprintf(&footer, " (%s)", strings.Join(parts, ", "))
 	}
 	fmt.Fprintln(w, footer.String())
-	if !r.verbose {
+	if !verbose {
 		fmt.Fprintln(w, "Use --verbose for full descriptions")
 	}
-	return nil
 }
 
 // catalogControlGroups returns the control_group capabilities, sorted by

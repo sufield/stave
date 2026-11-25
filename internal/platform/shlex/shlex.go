@@ -43,57 +43,26 @@ func Split(s string) ([]string, error) {
 		switch ch {
 		case '\'':
 			inToken = true
-			i++ // Skip opening quote
-			for {
-				if i >= len(runes) {
-					return nil, ErrUnclosedSingleQuote
-				}
-				if runes[i] == '\'' {
-					break
-				}
-				builder.WriteRune(runes[i])
-				i++
+			next, err := parseSingleQuoted(runes, i+1, &builder)
+			if err != nil {
+				return nil, err
 			}
-			i++ // Skip closing quote
+			i = next
 
 		case '"':
 			inToken = true
-			i++ // Skip opening quote
-			for {
-				if i >= len(runes) {
-					return nil, ErrUnclosedDoubleQuote
-				}
-				if runes[i] == '"' {
-					break
-				}
-				if runes[i] == '\\' && i+1 < len(runes) {
-					i++ // Consume backslash
-					switch runes[i] {
-					case '"', '\\':
-						builder.WriteRune(runes[i])
-					case 'n':
-						builder.WriteRune('\n')
-					case 't':
-						builder.WriteRune('\t')
-					case 'r':
-						builder.WriteRune('\r')
-					default:
-						builder.WriteRune('\\')
-						builder.WriteRune(runes[i])
-					}
-				} else {
-					builder.WriteRune(runes[i])
-				}
-				i++
+			next, err := parseDoubleQuoted(runes, i+1, &builder)
+			if err != nil {
+				return nil, err
 			}
-			i++ // Skip closing quote
+			i = next
 
 		case '\\':
 			if i+1 >= len(runes) {
 				return nil, ErrTrailingBackslash
 			}
 			inToken = true
-			i++ // Skip backslash
+			i++
 			builder.WriteRune(runes[i])
 			i++
 
@@ -117,4 +86,49 @@ func Split(s string) ([]string, error) {
 	}
 
 	return tokens, nil
+}
+
+func parseSingleQuoted(runes []rune, start int, builder *strings.Builder) (int, error) {
+	i := start
+	for {
+		if i >= len(runes) {
+			return 0, ErrUnclosedSingleQuote
+		}
+		if runes[i] == '\'' {
+			return i + 1, nil
+		}
+		builder.WriteRune(runes[i])
+		i++
+	}
+}
+
+func parseDoubleQuoted(runes []rune, start int, builder *strings.Builder) (int, error) {
+	i := start
+	for {
+		if i >= len(runes) {
+			return 0, ErrUnclosedDoubleQuote
+		}
+		if runes[i] == '"' {
+			return i + 1, nil
+		}
+		if runes[i] == '\\' && i+1 < len(runes) {
+			i++
+			switch runes[i] {
+			case '"', '\\':
+				builder.WriteRune(runes[i])
+			case 'n':
+				builder.WriteRune('\n')
+			case 't':
+				builder.WriteRune('\t')
+			case 'r':
+				builder.WriteRune('\r')
+			default:
+				builder.WriteRune('\\')
+				builder.WriteRune(runes[i])
+			}
+		} else {
+			builder.WriteRune(runes[i])
+		}
+		i++
+	}
 }

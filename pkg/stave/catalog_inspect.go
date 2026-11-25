@@ -191,55 +191,50 @@ func renderControlDetailText(buf *bytes.Buffer, d ControlDetail) {
 		fmt.Fprintf(buf, "  Corpus:          %s\n", d.CorpusReference)
 	}
 
-	if d.HasApplicableAssetTypes() {
-		fmt.Fprintf(buf, "\nApplicable Asset Types:\n")
-		for _, at := range d.ApplicableAssetTypes {
-			fmt.Fprintf(buf, "  %s\n", at)
-		}
-	}
-
-	if d.HasCompliance() {
-		fmt.Fprintf(buf, "\nCompliance:\n")
-		keys := make([]string, 0, len(d.Compliance))
-		for k := range d.Compliance {
-			keys = append(keys, k)
-		}
-		slices.Sort(keys)
-		for _, k := range keys {
-			fmt.Fprintf(buf, "  %-20s %s\n", k+":", d.Compliance[k])
-		}
-	}
-
-	if d.HasObservationFields() {
-		fmt.Fprintf(buf, "\nObservation Fields:\n")
-		for _, f := range d.ObservationFields {
-			fmt.Fprintf(buf, "  %s\n", f)
-		}
-	}
-
-	if d.HasTaxonomy() {
-		fmt.Fprintf(buf, "\nTaxonomy:\n")
-		for _, t := range d.Taxonomy {
-			fmt.Fprintf(buf, "  %s\n", t)
-		}
-	}
-
-	if d.HasChains() {
-		fmt.Fprintf(buf, "\nChains:\n")
-		for _, ch := range d.Chains {
-			fmt.Fprintf(buf, "  %s\n", ch)
-		}
-	}
-
-	if d.HasRemediation() {
-		fmt.Fprintf(buf, "\nRemediation:\n")
-		fmt.Fprintf(buf, "  %s\n", d.Remediation.Description)
-		if d.Remediation.HasAction() {
-			fmt.Fprintf(buf, "\n  Action: %s\n", d.Remediation.Action)
-		}
-	}
+	writeDetailList(buf, "Applicable Asset Types", d.HasApplicableAssetTypes(), d.ApplicableAssetTypes)
+	writeDetailCompliance(buf, d)
+	writeDetailList(buf, "Observation Fields", d.HasObservationFields(), d.ObservationFields)
+	writeDetailList(buf, "Taxonomy", d.HasTaxonomy(), d.Taxonomy)
+	writeDetailList(buf, "Chains", d.HasChains(), d.Chains)
+	writeDetailRemediation(buf, d)
 
 	fmt.Fprintf(buf, "\nDescription:\n  %s\n", d.Description)
+}
+
+func writeDetailList(buf *bytes.Buffer, heading string, has bool, items []string) {
+	if !has {
+		return
+	}
+	fmt.Fprintf(buf, "\n%s:\n", heading)
+	for _, item := range items {
+		fmt.Fprintf(buf, "  %s\n", item)
+	}
+}
+
+func writeDetailCompliance(buf *bytes.Buffer, d ControlDetail) {
+	if !d.HasCompliance() {
+		return
+	}
+	fmt.Fprintf(buf, "\nCompliance:\n")
+	keys := make([]string, 0, len(d.Compliance))
+	for k := range d.Compliance {
+		keys = append(keys, k)
+	}
+	slices.Sort(keys)
+	for _, k := range keys {
+		fmt.Fprintf(buf, "  %-20s %s\n", k+":", d.Compliance[k])
+	}
+}
+
+func writeDetailRemediation(buf *bytes.Buffer, d ControlDetail) {
+	if !d.HasRemediation() {
+		return
+	}
+	fmt.Fprintf(buf, "\nRemediation:\n")
+	fmt.Fprintf(buf, "  %s\n", d.Remediation.Description)
+	if d.Remediation.HasAction() {
+		fmt.Fprintf(buf, "\n  Action: %s\n", d.Remediation.Action)
+	}
 }
 
 func categoryIDsToStrings(ids []kernel.CategoryID) []string {

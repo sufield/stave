@@ -364,60 +364,84 @@ func writeMappingValidationText(w io.Writer, r mappingReport) error {
 	}
 	fmt.Fprintln(w)
 
+	if err := writeMappingOperations(w, r.Operations); err != nil {
+		return err
+	}
+
+	writeMappingFindings(w, "Structural:", r.Structural)
+	writeMappingSchemaFit(w, r.HasSchema, r.Schema)
+
+	if err := writeMappingCoverage(w, r.Coverage); err != nil {
+		return err
+	}
+	fmt.Fprintf(w, "Result: %s\n", r.OverallStatus)
+	return nil
+}
+
+func writeMappingOperations(w io.Writer, ops mappingOpCounts) error {
 	fmt.Fprintln(w, "Operations:")
-	kinds := slices.Sorted(maps.Keys(r.Operations.ByKind))
+	kinds := slices.Sorted(maps.Keys(ops.ByKind))
 	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
 	for _, k := range kinds {
-		fmt.Fprintf(tw, "  %s\t%d\n", k, r.Operations.ByKind[k])
+		fmt.Fprintf(tw, "  %s\t%d\n", k, ops.ByKind[k])
 	}
-	fmt.Fprintf(tw, "  total\t%d\n", r.Operations.Total)
+	fmt.Fprintf(tw, "  total\t%d\n", ops.Total)
 	if err := tw.Flush(); err != nil {
 		return fmt.Errorf("flush operations table: %w", err)
 	}
 	fmt.Fprintln(w)
+	return nil
+}
 
-	fmt.Fprintln(w, "Structural:")
-	if len(r.Structural) == 0 {
+func writeMappingFindings(w io.Writer, header string, findings []mappingFinding) {
+	fmt.Fprintln(w, header)
+	if len(findings) == 0 {
 		fmt.Fprintln(w, "  ok")
 	} else {
-		for _, f := range r.Structural {
+		for _, f := range findings {
 			renderMappingFinding(w, f)
 		}
 	}
 	fmt.Fprintln(w)
+}
 
+func writeMappingSchemaFit(w io.Writer, hasSchema bool, findings []mappingFinding) {
 	fmt.Fprintln(w, "Schema fit:")
-	if !r.HasSchema {
+	if !hasSchema {
 		fmt.Fprintln(w, "  skipped — no per-asset schema")
-	} else if len(r.Schema) == 0 {
+		fmt.Fprintln(w)
+		return
+	}
+	if len(findings) == 0 {
 		fmt.Fprintln(w, "  ok")
 	} else {
-		for _, f := range r.Schema {
+		for _, f := range findings {
 			renderMappingFinding(w, f)
 		}
 	}
 	fmt.Fprintln(w)
+}
 
+func writeMappingCoverage(w io.Writer, c mappingCoverage) error {
 	fmt.Fprintln(w, "Catalog coverage:")
-	c := r.Coverage
 	if c.CatalogPaths == 0 {
 		fmt.Fprintln(w, "  catalog reads no paths for this asset type")
-	} else {
-		fmt.Fprintf(w, "  catalog reads %d paths; mapping populates %d (%.0f%%)\n",
-			c.CatalogPaths, c.Populated, c.PercentPopulated)
-		if len(c.UnpopulatedTop) > 0 {
-			fmt.Fprintln(w, "  top unpopulated paths:")
-			gw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-			for _, g := range c.UnpopulatedTop {
-				fmt.Fprintf(gw, "    %s\t%d controls\t%d chains\n", g.Path, g.Controls, g.Chains)
-			}
-			if err := gw.Flush(); err != nil {
-				return fmt.Errorf("flush coverage table: %w", err)
-			}
+		fmt.Fprintln(w)
+		return nil
+	}
+	fmt.Fprintf(w, "  catalog reads %d paths; mapping populates %d (%.0f%%)\n",
+		c.CatalogPaths, c.Populated, c.PercentPopulated)
+	if len(c.UnpopulatedTop) > 0 {
+		fmt.Fprintln(w, "  top unpopulated paths:")
+		gw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
+		for _, g := range c.UnpopulatedTop {
+			fmt.Fprintf(gw, "    %s\t%d controls\t%d chains\n", g.Path, g.Controls, g.Chains)
+		}
+		if err := gw.Flush(); err != nil {
+			return fmt.Errorf("flush coverage table: %w", err)
 		}
 	}
 	fmt.Fprintln(w)
-	fmt.Fprintf(w, "Result: %s\n", r.OverallStatus)
 	return nil
 }
 

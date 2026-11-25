@@ -118,25 +118,30 @@ func runList(w io.Writer, profilesDir string) error {
 		}
 	}
 
-	if profilesDir != "" {
-		entries, readErr := os.ReadDir(profilesDir)
-		if readErr == nil {
-			var custom []string
-			for _, e := range entries {
-				if !e.IsDir() && strings.HasSuffix(e.Name(), ".yaml") {
-					custom = append(custom, e.Name())
-				}
-			}
-			if len(custom) > 0 {
-				fmt.Fprintf(w, "\nCustom (%d, from %s):\n", len(custom), profilesDir)
-				for _, name := range custom {
-					fmt.Fprintf(w, "  %s\n", strings.TrimSuffix(name, ".yaml"))
-				}
-			}
+	listCustomProfiles(w, profilesDir)
+	return nil
+}
+
+func listCustomProfiles(w io.Writer, dir string) {
+	if dir == "" {
+		return
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	var custom []string
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".yaml") {
+			custom = append(custom, e.Name())
 		}
 	}
-
-	return nil
+	if len(custom) > 0 {
+		fmt.Fprintf(w, "\nCustom (%d, from %s):\n", len(custom), dir)
+		for _, name := range custom {
+			fmt.Fprintf(w, "  %s\n", strings.TrimSuffix(name, ".yaml"))
+		}
+	}
 }
 
 func runValidate(w io.Writer, file string) error {

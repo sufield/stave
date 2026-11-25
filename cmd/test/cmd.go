@@ -130,7 +130,20 @@ func writeTable(w io.Writer, results []stave.TestResult, summary stave.TestSumma
 		return nil
 	}
 
-	// Show failures.
+	writeTestFailures(w, results, verbose)
+
+	fmt.Fprintf(w, "RESULTS\n")
+	fmt.Fprintf(w, "  Total:   %d test cases across %d controls\n", summary.TotalCases, summary.ControlsTested)
+	fmt.Fprintf(w, "  Passed:  %d\n", summary.Passed)
+	fmt.Fprintf(w, "  Failed:  %d\n", summary.Failed)
+
+	if summary.AllPassed() {
+		fmt.Fprintf(w, "\nAll %d tests passed.\n", summary.TotalCases)
+	}
+	return nil
+}
+
+func writeTestFailures(w io.Writer, results []stave.TestResult, verbose bool) {
 	failures := 0
 	for i := range results {
 		r := &results[i]
@@ -157,16 +170,6 @@ func writeTable(w io.Writer, results []stave.TestResult, summary stave.TestSumma
 			}
 		}
 	}
-
-	fmt.Fprintf(w, "RESULTS\n")
-	fmt.Fprintf(w, "  Total:   %d test cases across %d controls\n", summary.TotalCases, summary.ControlsTested)
-	fmt.Fprintf(w, "  Passed:  %d\n", summary.Passed)
-	fmt.Fprintf(w, "  Failed:  %d\n", summary.Failed)
-
-	if summary.AllPassed() {
-		fmt.Fprintf(w, "\nAll %d tests passed.\n", summary.TotalCases)
-	}
-	return nil
 }
 
 func writeJSON(w io.Writer, results []stave.TestResult, summary stave.TestSummary) error {

@@ -169,63 +169,47 @@ func extractKMSKeyID(a asset.Asset) string {
 // extractClassification retrieves the data-classification tag.
 // Falls back to "unclassified" when missing.
 func extractClassification(a asset.Asset) string {
-	var tags map[string]any
-	if rawTags, present := a.Properties["tags"]; present {
-		typed, tagsOK := rawTags.(map[string]any)
-		if !tagsOK {
-			// Symmetric with the storage.tags malformed-shape
-			// warning below. Without this, an extractor bug
-			// that put a list / string at properties.tags
-			// silently produced "unclassified" with no operator
-			// signal.
-			slog.Warn("extractClassification: tags has unexpected type; falling back to unclassified",
-				"asset_id", string(a.ID),
-				"actual_type", fmt.Sprintf("%T", rawTags),
-			)
-			return "unclassified"
-		}
-		tags = typed
-	}
-	if tags == nil {
-		// Try nested storage.tags path. A non-map value at
-		// `storage.tags` is treated as malformed input rather than
-		// silently dropped — the previous shape discarded the type
-		// assertion's `ok` and routed every shape mismatch into the
-		// default "unclassified" label, so an extractor bug that put
-		// a string or list there produced confidence-degrading
-		// findings with no signal back to the operator.
-		if storage, ok := a.Properties["storage"].(map[string]any); ok {
-			rawTags, present := storage["tags"]
-			if present {
-				typedTags, tagsOK := rawTags.(map[string]any)
-				if !tagsOK {
-					// Explicit fail-open: log the malformed shape
-					// and return the default classification. The
-					// early return makes the degraded path obvious
-					// to future maintainers — without it, the
-					// outer "if tags == nil" fallthrough handled
-					// both the absent and malformed cases via the
-					// same return, blurring the intent.
-					slog.Warn("extractClassification: storage.tags has unexpected type; falling back to unclassified",
-						"asset_id", string(a.ID),
-						"actual_type", fmt.Sprintf("%T", rawTags),
-					)
-					return "unclassified"
-				}
-				tags = typedTags
-			}
-		}
-	}
+	tags := extractTags(a)
 	if tags == nil {
 		return "unclassified"
 	}
-	// Check multiple common tag key variants.
 	for _, key := range []string{"data-classification", "data_classification", "DataClassification"} {
 		if dc, ok := tags[key].(string); ok && dc != "" {
 			return toLowerTrim(dc)
 		}
 	}
 	return "unclassified"
+}
+
+func extractTags(a asset.Asset) map[string]any {
+	if rawTags, present := a.Properties["tags"]; present {
+		typed, ok := rawTags.(map[string]any)
+		if !ok {
+			slog.Warn("extractClassification: tags has unexpected type; falling back to unclassified",
+				"asset_id", string(a.ID),
+				"actual_type", fmt.Sprintf("%T", rawTags),
+			)
+			return nil
+		}
+		return typed
+	}
+	storage, ok := a.Properties["storage"].(map[string]any)
+	if !ok {
+		return nil
+	}
+	rawTags, present := storage["tags"]
+	if !present {
+		return nil
+	}
+	typed, ok := rawTags.(map[string]any)
+	if !ok {
+		slog.Warn("extractClassification: storage.tags has unexpected type; falling back to unclassified",
+			"asset_id", string(a.ID),
+			"actual_type", fmt.Sprintf("%T", rawTags),
+		)
+		return nil
+	}
+	return typed
 }
 
 // getOrCreateMap gets or creates a map[string]any at the given key.

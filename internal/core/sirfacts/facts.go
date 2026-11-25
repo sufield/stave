@@ -290,21 +290,27 @@ func assetFacts(assets []sir.AssetFact) []Fact {
 		if a.Vendor != "" {
 			out = append(out, Fact{Subject: a.ID, Predicate: "has_vendor", Object: a.Vendor, Source: "asset", Evidence: evid + ".vendor"})
 		}
-		if a.Lifecycle != nil {
-			lc := a.Lifecycle
-			if !lc.FirstSeen.IsZero() {
-				out = append(out, Fact{Subject: a.ID, Predicate: "first_seen_at", Object: lc.FirstSeen.UTC().Format("2006-01-02T15:04:05Z"), Source: "lifecycle", Evidence: evid + ".lifecycle.first_seen"})
-			}
-			if !lc.LastSeen.IsZero() {
-				out = append(out, Fact{Subject: a.ID, Predicate: "last_seen_at", Object: lc.LastSeen.UTC().Format("2006-01-02T15:04:05Z"), Source: "lifecycle", Evidence: evid + ".lifecycle.last_seen"})
-			}
-			if lc.Provisioned {
-				out = append(out, Fact{Subject: a.ID, Predicate: "is_provisioned", Object: "true", Source: "lifecycle", Evidence: evid + ".lifecycle.provisioned"})
-			}
-			if lc.Decommissioned {
-				out = append(out, Fact{Subject: a.ID, Predicate: "is_decommissioned", Object: "true", Source: "lifecycle", Evidence: evid + ".lifecycle.decommissioned"})
-			}
-		}
+		out = append(out, lifecycleFacts(a.ID, a.Lifecycle, evid)...)
+	}
+	return out
+}
+
+func lifecycleFacts(id string, lc *sir.AssetLifecycleFact, evid string) []Fact {
+	if lc == nil {
+		return nil
+	}
+	var out []Fact
+	if !lc.FirstSeen.IsZero() {
+		out = append(out, Fact{Subject: id, Predicate: "first_seen_at", Object: lc.FirstSeen.UTC().Format("2006-01-02T15:04:05Z"), Source: "lifecycle", Evidence: evid + ".lifecycle.first_seen"})
+	}
+	if !lc.LastSeen.IsZero() {
+		out = append(out, Fact{Subject: id, Predicate: "last_seen_at", Object: lc.LastSeen.UTC().Format("2006-01-02T15:04:05Z"), Source: "lifecycle", Evidence: evid + ".lifecycle.last_seen"})
+	}
+	if lc.Provisioned {
+		out = append(out, Fact{Subject: id, Predicate: "is_provisioned", Object: "true", Source: "lifecycle", Evidence: evid + ".lifecycle.provisioned"})
+	}
+	if lc.Decommissioned {
+		out = append(out, Fact{Subject: id, Predicate: "is_decommissioned", Object: "true", Source: "lifecycle", Evidence: evid + ".lifecycle.decommissioned"})
 	}
 	return out
 }
@@ -1606,14 +1612,7 @@ func scanTrustAdmissions(assetIdx int, identity map[string]any) map[string]strin
 		if !strings.EqualFold(stmt.Effect, "Allow") {
 			continue
 		}
-		hasAssume := false
-		for _, act := range coerceStringList(stmt.Action) {
-			if act == "sts:AssumeRole" || act == "sts:*" || act == "*" {
-				hasAssume = true
-				break
-			}
-		}
-		if !hasAssume {
+		if !hasAssumeAction(stmt.Action) {
 			continue
 		}
 		pmap, ok := stmt.Principal.(map[string]any)
@@ -1628,6 +1627,15 @@ func scanTrustAdmissions(assetIdx int, identity map[string]any) map[string]strin
 		}
 	}
 	return admitted
+}
+
+func hasAssumeAction(action any) bool {
+	for _, act := range coerceStringList(action) {
+		if act == "sts:AssumeRole" || act == "sts:*" || act == "*" {
+			return true
+		}
+	}
+	return false
 }
 
 func assumeEdgeFacts(assets []sir.AssetFact) []Fact {

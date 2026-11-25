@@ -95,42 +95,9 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 	fmt.Fprintf(sw, "          %d new findings shown\n", r.TotalRecentCount())
 	fmt.Fprintln(sw)
 
-	if r.HasNewFindings() {
-		fmt.Fprintf(sw, "NEW THIS ASSESSMENT (%d)\n", len(r.NewFindings))
-		for i := range r.NewFindings {
-			f := &r.NewFindings[i]
-			fmt.Fprintf(sw, "  %-30s  %-8s  %s\n", f.Finding.ControlID, strings.ToUpper(f.Finding.SeverityLabel()), f.Finding.AssetID)
-		}
-		fmt.Fprintln(sw)
-	}
-
-	if r.HasReturnedFindings() {
-		fmt.Fprintf(sw, "RETURNED AFTER ABSENCE (%d)\n", len(r.ReturnedFindings))
-		for i := range r.ReturnedFindings {
-			f := &r.ReturnedFindings[i]
-			fmt.Fprintf(sw, "  %-30s  %-8s  %s\n", f.Finding.ControlID, strings.ToUpper(f.Finding.SeverityLabel()), f.Finding.AssetID)
-			if f.LastSeen != nil {
-				fmt.Fprintf(sw, "    Previously seen: %s\n", f.LastSeen.Format("2006-01-02"))
-			}
-			if f.Cycles > 0 {
-				fmt.Fprintf(sw, "    Cycles: %d — investigate oscillation\n", f.Cycles)
-			}
-		}
-		fmt.Fprintln(sw)
-	}
-
-	if r.HasResolvedFindings() {
-		fmt.Fprintf(sw, "RECENTLY RESOLVED (%d) — fixed since last assessment\n", len(r.ResolvedFindings))
-		for i := range r.ResolvedFindings {
-			f := &r.ResolvedFindings[i]
-			dwell := ""
-			if f.DwellDays > 0 {
-				dwell = fmt.Sprintf("  dwell: %dd", int(f.DwellDays))
-			}
-			fmt.Fprintf(sw, "  %-30s  %-8s  resolved%s\n", f.ControlID, strings.ToUpper(f.SeverityLabel()), dwell)
-		}
-		fmt.Fprintln(sw)
-	}
+	writeNewFindings(sw, r.NewFindings)
+	writeReturnedFindings(sw, r.ReturnedFindings)
+	writeResolvedFindings(sw, r.ResolvedFindings)
 
 	if !r.HasRecentFindings() {
 		fmt.Fprintln(sw, "No new findings since last assessment.")
@@ -139,6 +106,52 @@ func writeNewOnlyText(w io.Writer, r *findingfilter.Result) error {
 
 	fmt.Fprintf(sw, "Run without --new-only to see all %d findings.\n", r.TotalFindings)
 	return sw.err
+}
+
+func writeNewFindings(w io.Writer, findings findingfilter.ClassifiedFindings) {
+	if len(findings) == 0 {
+		return
+	}
+	fmt.Fprintf(w, "NEW THIS ASSESSMENT (%d)\n", len(findings))
+	for i := range findings {
+		f := &findings[i]
+		fmt.Fprintf(w, "  %-30s  %-8s  %s\n", f.Finding.ControlID, strings.ToUpper(f.Finding.SeverityLabel()), f.Finding.AssetID)
+	}
+	fmt.Fprintln(w)
+}
+
+func writeReturnedFindings(w io.Writer, findings findingfilter.ClassifiedFindings) {
+	if len(findings) == 0 {
+		return
+	}
+	fmt.Fprintf(w, "RETURNED AFTER ABSENCE (%d)\n", len(findings))
+	for i := range findings {
+		f := &findings[i]
+		fmt.Fprintf(w, "  %-30s  %-8s  %s\n", f.Finding.ControlID, strings.ToUpper(f.Finding.SeverityLabel()), f.Finding.AssetID)
+		if f.LastSeen != nil {
+			fmt.Fprintf(w, "    Previously seen: %s\n", f.LastSeen.Format("2006-01-02"))
+		}
+		if f.Cycles > 0 {
+			fmt.Fprintf(w, "    Cycles: %d — investigate oscillation\n", f.Cycles)
+		}
+	}
+	fmt.Fprintln(w)
+}
+
+func writeResolvedFindings(w io.Writer, findings findingfilter.ResolvedFindings) {
+	if len(findings) == 0 {
+		return
+	}
+	fmt.Fprintf(w, "RECENTLY RESOLVED (%d) — fixed since last assessment\n", len(findings))
+	for i := range findings {
+		f := &findings[i]
+		dwell := ""
+		if f.DwellDays > 0 {
+			dwell = fmt.Sprintf("  dwell: %dd", int(f.DwellDays))
+		}
+		fmt.Fprintf(w, "  %-30s  %-8s  resolved%s\n", f.ControlID, strings.ToUpper(f.SeverityLabel()), dwell)
+	}
+	fmt.Fprintln(w)
 }
 
 // loadHistoryAssessments loads all assessment JSON files from dir. An empty

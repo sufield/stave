@@ -147,33 +147,36 @@ func renderSearchText(w io.Writer, query string, hits []appcaps.Hit) {
 	}
 	fmt.Fprintf(w, "Matches for %q (%d):\n\n", query, len(hits))
 	for i := range hits {
-		c := &hits[i].Capability
-		fmt.Fprintf(w, "#%d  %s", i+1, c.Title)
-		if c.Severity != "" {
-			fmt.Fprintf(w, "   [%s]", strings.ToUpper(c.Severity))
-		}
-		fmt.Fprintln(w)
-		if c.UseWhen != "" {
-			fmt.Fprintf(w, "    Use when: %s\n", c.UseWhen)
-		}
-		if c.Description != "" {
-			fmt.Fprintf(w, "    Detects:  %s\n", c.Description)
-		}
-		if c.ExampleCmd != "" {
-			fmt.Fprintf(w, "    Command:  %s\n", c.ExampleCmd)
-		}
-		if len(c.ControlIDs) > 0 {
-			n := len(c.ControlIDs)
-			limit := min(n, 3)
-			extra := ""
-			if n > limit {
-				extra = fmt.Sprintf(" (+%d more)", n-limit)
-			}
-			fmt.Fprintf(w, "    Controls: %s%s\n", strings.Join(c.ControlIDs[:limit], ", "), extra)
-		}
-		if len(c.ChainIDs) > 0 {
-			fmt.Fprintf(w, "    Chains:   %s\n", strings.Join(c.ChainIDs, ", "))
-		}
-		fmt.Fprintln(w)
+		renderSearchHit(w, i+1, &hits[i].Capability)
 	}
+}
+
+func renderSearchHit(w io.Writer, rank int, c *appcaps.Capability) {
+	fmt.Fprintf(w, "#%d  %s", rank, c.Title)
+	if c.Severity != "" {
+		fmt.Fprintf(w, "   [%s]", strings.ToUpper(c.Severity))
+	}
+	fmt.Fprintln(w)
+	if c.UseWhen != "" {
+		fmt.Fprintf(w, "    Use when: %s\n", c.UseWhen)
+	}
+	if c.Description != "" {
+		fmt.Fprintf(w, "    Detects:  %s\n", c.Description)
+	}
+	if c.ExampleCmd != "" {
+		fmt.Fprintf(w, "    Command:  %s\n", c.ExampleCmd)
+	}
+	if len(c.ControlIDs) > 0 {
+		n := len(c.ControlIDs)
+		limit := min(n, 3)
+		extra := ""
+		if n > limit {
+			extra = fmt.Sprintf(" (+%d more)", n-limit)
+		}
+		fmt.Fprintf(w, "    Controls: %s%s\n", strings.Join(c.ControlIDs[:limit], ", "), extra)
+	}
+	if len(c.ChainIDs) > 0 {
+		fmt.Fprintf(w, "    Chains:   %s\n", strings.Join(c.ChainIDs, ", "))
+	}
+	fmt.Fprintln(w)
 }
