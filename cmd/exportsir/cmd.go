@@ -190,11 +190,11 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 		ControlsDir:     opts.ControlsDir,
 		ObservationsDir: opts.ObservationsDir,
 		Format:          normalizeFormat(opts.Format),
-		EvalTime:      now,
-		Validate:      opts.Validate,
-		AllowlistMode: allowlistMode,
-		ClosedWorld:   opts.ClosedWorld,
-		StripCatalog:  opts.StripCatalog,
+		EvalTime:        now,
+		Validate:        opts.Validate,
+		AllowlistMode:   allowlistMode,
+		ClosedWorld:     opts.ClosedWorld,
+		StripCatalog:    opts.StripCatalog,
 	})
 	if err != nil {
 		if errors.Is(err, stave.ErrInvalidInput) {
