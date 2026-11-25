@@ -10,6 +10,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/sufield/stave/internal/app/expand"
+	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/taxonomy"
 	"github.com/sufield/stave/internal/util/jsonutil"
 )
@@ -47,55 +48,7 @@ func RenderMatrix(ctx context.Context, opts MatrixOptions) ([]byte, error) {
 		return nil, err
 	}
 
-	entries := make([]taxonomy.ControlEntry, 0, len(controls))
-	for i := range controls {
-		svc := strings.ToLower(expand.ServiceFromControlID(controls[i].ID).String())
-		if svc == "unknown" || svc == "" {
-			continue
-		}
-		entries = append(entries, taxonomy.ControlEntry{
-			Service:  svc,
-			Taxonomy: controls[i].Taxonomy,
-		})
-	}
-
-	m := taxonomy.BuildMatrix(entries)
-	totals := m.CategoryTotals()
-	gaps := m.GapCells()
-
-	// Count services per category
-	svcCount := make(map[string]int)
-	for _, c := range m.Cells {
-		svcCount[string(c.Category)+"\x00"+c.Service] = 1
-	}
-	svcPerCat := make(map[string]int)
-	for key := range svcCount {
-		cat, _, _ := strings.Cut(key, "\x00")
-		svcPerCat[cat]++
-	}
-
-	summary := make([]matrixSummaryRow, 0, len(totals))
-	for _, t := range totals {
-		summary = append(summary, matrixSummaryRow{
-			Category: string(t.Category),
-			Services: svcPerCat[string(t.Category)],
-			Controls: t.ControlCount,
-		})
-	}
-
-	gapRows := make([]matrixGapRow, 0, len(gaps))
-	for _, g := range gaps {
-		gapRows = append(gapRows, matrixGapRow{
-			Category: string(g.Category),
-			Service:  g.Service,
-		})
-	}
-	slices.SortFunc(gapRows, func(a, b matrixGapRow) int {
-		if a.Category != b.Category {
-			return cmp.Compare(a.Category, b.Category)
-		}
-		return cmp.Compare(a.Service, b.Service)
-	})
+	summary, gapRows, m := buildMatrixData(controls)
 
 	var buf bytes.Buffer
 	if opts.Format == "json" {
@@ -130,4 +83,57 @@ func RenderMatrix(ctx context.Context, opts MatrixOptions) ([]byte, error) {
 		}
 	}
 	return buf.Bytes(), nil
+}
+
+func buildMatrixData(controls []policy.ControlDefinition) ([]matrixSummaryRow, []matrixGapRow, *taxonomy.Matrix) {
+	entries := make([]taxonomy.ControlEntry, 0, len(controls))
+	for i := range controls {
+		svc := strings.ToLower(expand.ServiceFromControlID(controls[i].ID).String())
+		if svc == "unknown" || svc == "" {
+			continue
+		}
+		entries = append(entries, taxonomy.ControlEntry{
+			Service:  svc,
+			Taxonomy: controls[i].Taxonomy,
+		})
+	}
+
+	m := taxonomy.BuildMatrix(entries)
+	totals := m.CategoryTotals()
+	gaps := m.GapCells()
+
+	svcCount := make(map[string]int)
+	for _, c := range m.Cells {
+		svcCount[string(c.Category)+"\x00"+c.Service] = 1
+	}
+	svcPerCat := make(map[string]int)
+	for key := range svcCount {
+		cat, _, _ := strings.Cut(key, "\x00")
+		svcPerCat[cat]++
+	}
+
+	summary := make([]matrixSummaryRow, 0, len(totals))
+	for _, t := range totals {
+		summary = append(summary, matrixSummaryRow{
+			Category: string(t.Category),
+			Services: svcPerCat[string(t.Category)],
+			Controls: t.ControlCount,
+		})
+	}
+
+	gapRows := make([]matrixGapRow, 0, len(gaps))
+	for _, g := range gaps {
+		gapRows = append(gapRows, matrixGapRow{
+			Category: string(g.Category),
+			Service:  g.Service,
+		})
+	}
+	slices.SortFunc(gapRows, func(a, b matrixGapRow) int {
+		if a.Category != b.Category {
+			return cmp.Compare(a.Category, b.Category)
+		}
+		return cmp.Compare(a.Service, b.Service)
+	})
+
+	return summary, gapRows, m
 }

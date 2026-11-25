@@ -88,31 +88,8 @@ func run(cmd *cobra.Command, o *options) error {
 	}
 
 	counts := pack.CountByService(controlIDs, metas, services)
-	var rows []row
-	var total pack.SeverityCounts
-	for svc, c := range counts {
-		rows = append(rows, row{Service: svc, SeverityCounts: c})
-		total.Critical += c.Critical
-		total.High += c.High
-		total.Medium += c.Medium
-		total.Low += c.Low
-		total.Info += c.Info
-		total.Total += c.Total
-	}
-	slices.SortFunc(rows, func(a, b row) int { return cmp.Compare(a.Service, b.Service) })
-
-	order := make([]row, len(rows))
-	copy(order, rows)
-	slices.SortStableFunc(order, func(a, b row) int {
-		if c := cmp.Compare(b.Critical, a.Critical); c != 0 {
-			return c
-		}
-		return cmp.Compare(b.High, a.High)
-	})
-	collectionOrder := make([]string, len(order))
-	for i, r := range order {
-		collectionOrder[i] = r.Service
-	}
+	rows, total := buildSeverityRows(counts)
+	collectionOrder := priorityOrder(rows)
 
 	p := preview{Pack: o.pack, Rows: rows, Total: total, CollectionOrder: collectionOrder}
 	if o.pack == "" {
@@ -127,4 +104,36 @@ func run(cmd *cobra.Command, o *options) error {
 		return fmt.Errorf("render plan: %w", err)
 	}
 	return nil
+}
+
+func buildSeverityRows(counts map[string]pack.SeverityCounts) ([]row, pack.SeverityCounts) {
+	var rows []row
+	var total pack.SeverityCounts
+	for svc, c := range counts {
+		rows = append(rows, row{Service: svc, SeverityCounts: c})
+		total.Critical += c.Critical
+		total.High += c.High
+		total.Medium += c.Medium
+		total.Low += c.Low
+		total.Info += c.Info
+		total.Total += c.Total
+	}
+	slices.SortFunc(rows, func(a, b row) int { return cmp.Compare(a.Service, b.Service) })
+	return rows, total
+}
+
+func priorityOrder(rows []row) []string {
+	order := make([]row, len(rows))
+	copy(order, rows)
+	slices.SortStableFunc(order, func(a, b row) int {
+		if c := cmp.Compare(b.Critical, a.Critical); c != 0 {
+			return c
+		}
+		return cmp.Compare(b.High, a.High)
+	})
+	result := make([]string, len(order))
+	for i, r := range order {
+		result[i] = r.Service
+	}
+	return result
 }

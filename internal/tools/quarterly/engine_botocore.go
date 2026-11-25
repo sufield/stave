@@ -42,34 +42,10 @@ func (e *botocoreEngine) Run(ctx context.Context) (*EngineResult, error) {
 
 		fieldSet := serviceFieldSets[svc]
 
-		for _, op := range schema.Operations {
-			for _, f := range op.Fields {
-				if !isSecurityRelevant(f.Path) {
-					continue
-				}
-				totalFields++
-
-				if isCoveredByControls(f, fieldSet) {
-					coveredCount++
-					continue
-				}
-
-				cats := classifier.Classify(f.Path)
-				var catStrs []string
-				for _, c := range cats {
-					catStrs = append(catStrs, string(c))
-				}
-
-				gaps = append(gaps, Gap{
-					Service:    svc,
-					Property:   fmt.Sprintf("%s.%s", op.Name, f.Path),
-					Severity:   "Medium",
-					Taxonomy:   catStrs,
-					Source:     "botocore",
-					Confidence: "Medium",
-				})
-			}
-		}
+		opGaps, checked, covered := classifyOperationFields(svc, schema.Operations, fieldSet, classifier)
+		totalFields += checked
+		coveredCount += covered
+		gaps = append(gaps, opGaps...)
 	}
 
 	return &EngineResult{
@@ -80,6 +56,37 @@ func (e *botocoreEngine) Run(ctx context.Context) (*EngineResult, error) {
 		Duration:     time.Since(start),
 		DataSource:   "botocore (system)",
 	}, nil
+}
+
+func classifyOperationFields(svc string, ops []awsmeta.Operation, fieldSet map[string]bool, classifier *taxonomy.Classifier) ([]Gap, int, int) {
+	var gaps []Gap
+	var total, covered int
+	for _, op := range ops {
+		for _, f := range op.Fields {
+			if !isSecurityRelevant(f.Path) {
+				continue
+			}
+			total++
+			if isCoveredByControls(f, fieldSet) {
+				covered++
+				continue
+			}
+			cats := classifier.Classify(f.Path)
+			var catStrs []string
+			for _, c := range cats {
+				catStrs = append(catStrs, string(c))
+			}
+			gaps = append(gaps, Gap{
+				Service:    svc,
+				Property:   fmt.Sprintf("%s.%s", op.Name, f.Path),
+				Severity:   "Medium",
+				Taxonomy:   catStrs,
+				Source:     "botocore",
+				Confidence: "Medium",
+			})
+		}
+	}
+	return gaps, total, covered
 }
 
 func loadCatalog() *policy.Catalog {

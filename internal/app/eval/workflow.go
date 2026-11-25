@@ -337,20 +337,8 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 		controlLookup[controls[i].ID] = &controls[i]
 	}
 
-	// Detect chain-based compound findings.
 	if len(chainDefs) > 0 {
-		// Warn about chain ControlIDs that reference controls not in the
-		// loaded catalog — these silently never fire, producing false
-		// negatives with no diagnostic. (HAZOP 1.7)
-		for i := range chainDefs {
-			for _, cid := range chainDefs[i].ControlIDs {
-				if _, ok := controlLookup[cid]; !ok {
-					slog.Warn("chain references non-existent control — will never fire for this ID",
-						"chain", chainDefs[i].ID, "control", cid)
-				}
-			}
-		}
-
+		warnOrphanedChainRefs(chainDefs, controlLookup)
 		scopeResolver := risk.NewScopeResolverFromSnapshots(snapshots)
 		report.ChainFindings = risk.DetectChains(failures, chainDefs, controlLookup, scopeResolver)
 		report.NearMissChains = risk.DetectNearMisses(failures, chainDefs, scopeResolver)
@@ -409,6 +397,17 @@ func (w *AuditWorkflow) enrichWithRiskReasoning(
 
 // annotateChainMembership cross-references fired chains with individual
 // findings and populates ChainMembership on each contributing finding.
+func warnOrphanedChainRefs(chainDefs []policy.ChainDefinition, controlLookup map[kernel.ControlID]*policy.ControlDefinition) {
+	for i := range chainDefs {
+		for _, cid := range chainDefs[i].ControlIDs {
+			if _, ok := controlLookup[cid]; !ok {
+				slog.Warn("chain references non-existent control — will never fire for this ID",
+					"chain", chainDefs[i].ID, "control", cid)
+			}
+		}
+	}
+}
+
 func collectFailures(report *evaluation.ComplianceReport) ([]risk.FailingControl, int) {
 	failures := make([]risk.FailingControl, 0, len(report.Findings)+len(report.MarkerFindings))
 	for i := range report.Findings {

@@ -103,22 +103,7 @@ func buildSiloReport(controls []policy.ControlDefinition, chains []policy.ChainD
 	serviceControls := indexControlsByService(controls)
 	serviceChains, serviceConnections := indexChainConnectivity(chains)
 
-	var silos, connected []ServiceConnectivity
-	for svc, count := range serviceControls {
-		sc := ServiceConnectivity{
-			Service:     svc,
-			Controls:    count,
-			Chains:      serviceChains[svc],
-			ConnectedTo: serviceConnections[svc],
-		}
-		slices.Sort(sc.ConnectedTo)
-		if sc.Chains == 0 && sc.Controls >= minControls {
-			sc.Question = structuralQuestion(svc, count)
-			silos = append(silos, sc)
-		} else if sc.Chains > 0 {
-			connected = append(connected, sc)
-		}
-	}
+	silos, connected := partitionConnectivity(serviceControls, serviceChains, serviceConnections, minControls)
 
 	slices.SortFunc(silos, func(a, b ServiceConnectivity) int {
 		if a.Controls != b.Controls {
@@ -179,6 +164,26 @@ func buildSiloReport(controls []policy.ControlDefinition, chains []policy.ChainD
 }
 
 // indexControlsByService maps lowercase service name → control count.
+func partitionConnectivity(serviceControls map[string]int, serviceChains map[string]int, serviceConnections map[string][]string, minControls int) ([]ServiceConnectivity, []ServiceConnectivity) {
+	var silos, connected []ServiceConnectivity
+	for svc, count := range serviceControls {
+		sc := ServiceConnectivity{
+			Service:     svc,
+			Controls:    count,
+			Chains:      serviceChains[svc],
+			ConnectedTo: serviceConnections[svc],
+		}
+		slices.Sort(sc.ConnectedTo)
+		if sc.Chains == 0 && sc.Controls >= minControls {
+			sc.Question = structuralQuestion(svc, count)
+			silos = append(silos, sc)
+		} else if sc.Chains > 0 {
+			connected = append(connected, sc)
+		}
+	}
+	return silos, connected
+}
+
 func indexControlsByService(controls []policy.ControlDefinition) map[string]int {
 	m := make(map[string]int)
 	for i := range controls {

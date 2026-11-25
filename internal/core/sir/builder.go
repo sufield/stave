@@ -409,6 +409,23 @@ func buildAssetFacts(snapshots []asset.Snapshot, driftMap map[asset.ID]asset.Dri
 	if len(snapshots) == 0 {
 		return nil
 	}
+	seen, firstSeen, lastSeen := indexAssetObservations(snapshots)
+	out := make([]AssetFact, 0, len(seen))
+	for id, f := range seen {
+		f.Lifecycle = lifecycleFromDrift(driftMap[id], firstSeen[id], lastSeen[id])
+		out = append(out, f)
+	}
+	slices.SortFunc(out, func(a, b AssetFact) int { return cmp.Compare(a.ID, b.ID) })
+	return out
+}
+
+// lifecycleFromDrift assembles an AssetLifecycleFact from the
+// drift transition (if any) for an asset and its first/last seen
+// timestamps. Returns nil for assets that have no transition AND
+// no observation timestamps — in that degenerate case the SIR
+// omits the lifecycle block entirely rather than emitting an
+// all-zero one that the solver would have to special-case.
+func indexAssetObservations(snapshots []asset.Snapshot) (map[asset.ID]AssetFact, map[asset.ID]time.Time, map[asset.ID]time.Time) {
 	seen := make(map[asset.ID]AssetFact)
 	firstSeen := make(map[asset.ID]time.Time)
 	lastSeen := make(map[asset.ID]time.Time)
@@ -433,21 +450,9 @@ func buildAssetFacts(snapshots []asset.Snapshot, driftMap map[asset.ID]asset.Dri
 			}
 		}
 	}
-	out := make([]AssetFact, 0, len(seen))
-	for id, f := range seen {
-		f.Lifecycle = lifecycleFromDrift(driftMap[id], firstSeen[id], lastSeen[id])
-		out = append(out, f)
-	}
-	slices.SortFunc(out, func(a, b AssetFact) int { return cmp.Compare(a.ID, b.ID) })
-	return out
+	return seen, firstSeen, lastSeen
 }
 
-// lifecycleFromDrift assembles an AssetLifecycleFact from the
-// drift transition (if any) for an asset and its first/last seen
-// timestamps. Returns nil for assets that have no transition AND
-// no observation timestamps — in that degenerate case the SIR
-// omits the lifecycle block entirely rather than emitting an
-// all-zero one that the solver would have to special-case.
 func lifecycleFromDrift(driftKind asset.DriftType, firstSeen, lastSeen time.Time) *AssetLifecycleFact {
 	if driftKind == "" && firstSeen.IsZero() && lastSeen.IsZero() {
 		return nil

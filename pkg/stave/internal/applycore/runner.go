@@ -436,6 +436,47 @@ func LoadControls(ctx context.Context, dir string) ([]policy.ControlDefinition, 
 // resolveControls loads the control set used by the evaluation.
 // Empty dir uses the embedded builtin catalog. Non-empty dir defers
 // loading to the workflow's PolicyRepo.
+func applyControlFilters(ctx context.Context, controls []policy.ControlDefinition, ctlRepo appcontracts.ControlRepository, in Inputs) ([]policy.ControlDefinition, appcontracts.ControlRepository, *policy.ExceptionConfig, error) {
+	var exceptionCfg *policy.ExceptionConfig
+	if in.ProjectConfig != nil {
+		resolved, err := appeval.ResolveProjectConfig(*in.ProjectConfig)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("resolve project config: %w", err)
+		}
+		exceptionCfg = resolved.ExceptionConfig
+		if len(resolved.PreloadedControls) > 0 {
+			controls = resolved.PreloadedControls
+			ctlRepo = nil
+		}
+	}
+
+	if len(in.ControlIDAllowlist) > 0 {
+		var err error
+		if controls == nil && ctlRepo != nil {
+			controls, err = ctlRepo.LoadControls(ctx, in.ControlsDir)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("load controls for --pack scope: %w", err)
+			}
+			ctlRepo = nil
+		}
+		controls = filterControlsByID(controls, in.ControlIDAllowlist)
+	}
+
+	if len(in.ExcludeLifecycle) > 0 {
+		var err error
+		if controls == nil && ctlRepo != nil {
+			controls, err = ctlRepo.LoadControls(ctx, in.ControlsDir)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("load controls for lifecycle filter: %w", err)
+			}
+			ctlRepo = nil
+		}
+		controls = filterByLifecycle(controls, in.ExcludeLifecycle)
+	}
+
+	return controls, ctlRepo, exceptionCfg, nil
+}
+
 func resolveControls(dir string) ([]policy.ControlDefinition, appcontracts.ControlRepository, error) {
 	if dir != "" {
 		loader := ctlyaml.NewControlLoader(ctlyaml.WithAliasResolver(builtinpredicate.ResolverFunc()))

@@ -171,27 +171,7 @@ func Run(ctx context.Context, cfg Config) (*Result, error) {
 
 	r := newResultBuilder()
 	for i := range sortedSnaps {
-		snap := &sortedSnaps[i]
-		if r.latestAt.IsZero() || snap.CapturedAt.After(r.latestAt) {
-			r.latestAt = snap.CapturedAt
-		}
-		for j := range snap.Assets {
-			r.processAsset(&snap.Assets[j])
-		}
-		for j := range snap.Identities {
-			r.processIdentity(&snap.Identities[j])
-		}
-		// Resolve effective permissions for this snapshot if a
-		// resolver is configured. We feed the resolver the
-		// snapshot in its loaded shape rather than the post-
-		// extraction PolicyDocument list because the resolver
-		// expects raw asset.Snapshot to access SCP / boundary /
-		// identity policies the same way the engine does.
-		if cfg.EffectivePermissions != nil {
-			for _, perm := range cfg.EffectivePermissions.ResolveSnapshot(snap) {
-				r.recordEffectivePermission(perm)
-			}
-		}
+		r.ingestSnapshot(&sortedSnaps[i], cfg.EffectivePermissions)
 	}
 	// Fall back to wall-clock when no snapshots were loaded so
 	// GeneratedAt is always populated. A zero time renders as
@@ -212,6 +192,23 @@ type resultBuilder struct {
 	kmsKeyPolicies       map[string]PolicyDocument
 	edges                map[string]AssetEdge
 	effectivePermissions map[string]ports.EffectivePermission
+}
+
+func (r *resultBuilder) ingestSnapshot(snap *asset.Snapshot, resolver ports.EffectivePermissionResolver) {
+	if r.latestAt.IsZero() || snap.CapturedAt.After(r.latestAt) {
+		r.latestAt = snap.CapturedAt
+	}
+	for j := range snap.Assets {
+		r.processAsset(&snap.Assets[j])
+	}
+	for j := range snap.Identities {
+		r.processIdentity(&snap.Identities[j])
+	}
+	if resolver != nil {
+		for _, perm := range resolver.ResolveSnapshot(snap) {
+			r.recordEffectivePermission(perm)
+		}
+	}
 }
 
 func newResultBuilder() *resultBuilder {

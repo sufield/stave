@@ -49,20 +49,7 @@ func run(cmd *cobra.Command, o *options) error {
 	}
 
 	names := pack.PacksForServices(o.services, all, metas)
-	packs := make([]*pack.Pack, 0, len(names))
-	covered := map[string]bool{}
-	controlIDs := map[string]bool{}
-	for _, n := range names {
-		p := all[n]
-		packs = append(packs, p)
-		for _, s := range pack.ServicesForPack(p, metas) {
-			covered[s] = true
-		}
-		for _, id := range p.Resolve(metas) {
-			controlIDs[id] = true
-		}
-	}
-
+	packs, covered, controlIDs := resolvePackDetails(names, all, metas)
 	merged := pack.MergeRequirements(packs)
 
 	if o.policy {
@@ -102,4 +89,21 @@ func run(cmd *cobra.Command, o *options) error {
 		return fmt.Errorf("render manifest: %w", err)
 	}
 	return nil
+}
+
+func resolvePackDetails(names []string, all map[string]*pack.Pack, metas []pack.ControlMeta) ([]*pack.Pack, map[string]bool, map[string]bool) {
+	packs := make([]*pack.Pack, 0, len(names))
+	covered := map[string]bool{}
+	controlIDs := map[string]bool{}
+	for _, n := range names {
+		p := all[n]
+		packs = append(packs, p)
+		for _, s := range pack.ServicesForPack(p, metas) {
+			covered[s] = true
+		}
+		for _, id := range p.Resolve(metas) {
+			controlIDs[id] = true
+		}
+	}
+	return packs, covered, controlIDs
 }

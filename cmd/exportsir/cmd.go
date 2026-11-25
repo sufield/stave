@@ -189,17 +189,7 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 	out, validationOut, err := cliapi.ExportSIR(ctx, cliapi.ExportSIRConfig{
 		ControlsDir:     opts.ControlsDir,
 		ObservationsDir: opts.ObservationsDir,
-		Format: func() string {
-			fmtTrimmed := strings.TrimSpace(opts.Format)
-			if strings.EqualFold(fmtTrimmed, "jsonl") {
-				return "jsonl"
-			} else if strings.EqualFold(fmtTrimmed, "smt2") {
-				return "smt2"
-			} else if strings.EqualFold(fmtTrimmed, "json") {
-				return "json"
-			}
-			return strings.ToLower(fmtTrimmed)
-		}(),
+		Format:          normalizeFormat(opts.Format),
 		EvalTime:      now,
 		Validate:      opts.Validate,
 		AllowlistMode: allowlistMode,
@@ -232,6 +222,20 @@ func run(ctx context.Context, w io.Writer, errW io.Writer, opts *options) error 
 // empty, the current wall-clock time. The empty case is the
 // only place export-sir reads the wall clock; downstream
 // determinism for fixture tests requires --eval-time to be supplied.
+func normalizeFormat(raw string) string {
+	trimmed := strings.TrimSpace(raw)
+	switch {
+	case strings.EqualFold(trimmed, "jsonl"):
+		return "jsonl"
+	case strings.EqualFold(trimmed, "smt2"):
+		return "smt2"
+	case strings.EqualFold(trimmed, "json"):
+		return "json"
+	default:
+		return strings.ToLower(trimmed)
+	}
+}
+
 func resolveEvalTime(raw string) (time.Time, error) {
 	trimmed := strings.TrimSpace(raw)
 	if trimmed == "" {

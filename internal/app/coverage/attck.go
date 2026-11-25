@@ -193,28 +193,9 @@ func Build(input BuildInput) *CoverageReport {
 		input.MinControls = 2
 	}
 
-	// Group controls by attack stage.
-	byStage := make(map[kernel.AttackStage][]kernel.ControlID) // stave_stage → []controlID
-	var unannotated []kernel.ControlID
-	for i := range input.Controls {
-		ctl := &input.Controls[i]
-		stage := ctl.AttackStage()
-		if stage == "" {
-			unannotated = append(unannotated, ctl.ID)
-			continue
-		}
-		byStage[stage] = append(byStage[stage], ctl.ID)
-	}
-
-	// Group findings by control ID for posture overlay.
-	var failingControls map[kernel.ControlID]struct{}
+	byStage, unannotated := groupControlsByStage(input.Controls)
+	failingControls := indexFailingControls(input.Findings)
 	hasOverlay := len(input.Findings) > 0
-	if hasOverlay {
-		failingControls = make(map[kernel.ControlID]struct{})
-		for i := range input.Findings {
-			failingControls[input.Findings[i].ControlID] = struct{}{}
-		}
-	}
 
 	// Build per-tactic coverage.
 	var tactics []TacticCoverage
@@ -289,6 +270,31 @@ func Build(input BuildInput) *CoverageReport {
 }
 
 // NavigatorLayer produces an ATT&CK Navigator layer JSON.
+func groupControlsByStage(controls []policy.ControlDefinition) (map[kernel.AttackStage][]kernel.ControlID, []kernel.ControlID) {
+	byStage := make(map[kernel.AttackStage][]kernel.ControlID)
+	var unannotated []kernel.ControlID
+	for i := range controls {
+		stage := controls[i].AttackStage()
+		if stage == "" {
+			unannotated = append(unannotated, controls[i].ID)
+			continue
+		}
+		byStage[stage] = append(byStage[stage], controls[i].ID)
+	}
+	return byStage, unannotated
+}
+
+func indexFailingControls(findings []remediation.Finding) map[kernel.ControlID]struct{} {
+	if len(findings) == 0 {
+		return nil
+	}
+	m := make(map[kernel.ControlID]struct{}, len(findings))
+	for i := range findings {
+		m[findings[i].ControlID] = struct{}{}
+	}
+	return m
+}
+
 func buildTacticCoverage(td TacticDef, ctls []kernel.ControlID, minControls int, hasOverlay bool, failingControls map[kernel.ControlID]struct{}) TacticCoverage {
 	tc := TacticCoverage{
 		TacticID:     td.ID,

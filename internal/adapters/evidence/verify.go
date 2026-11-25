@@ -44,16 +44,12 @@ func Verify(bundleData, publicKeyPEM []byte) (VerifyResult, error) {
 		return VerifyResult{}, fmt.Errorf("parse manifest: %w", err)
 	}
 
-	for _, entry := range manifest.Files {
-		data, exists := files[entry.File]
-		if !exists {
-			return VerifyResult{}, fmt.Errorf("manifest references missing file %q", entry.File)
-		}
-		sum := sha256.Sum256(data)
-		got := hex.EncodeToString(sum[:])
-		if got != entry.SHA256 {
-			return VerifyResult{ManifestValid: false, FileCount: len(manifest.Files)}, nil
-		}
+	valid, hashErr := verifyManifestHashes(manifest.Files, files)
+	if hashErr != nil {
+		return VerifyResult{}, hashErr
+	}
+	if !valid {
+		return VerifyResult{ManifestValid: false, FileCount: len(manifest.Files)}, nil
 	}
 
 	result := VerifyResult{
@@ -88,6 +84,20 @@ func Verify(bundleData, publicKeyPEM []byte) (VerifyResult, error) {
 	}
 
 	return result, nil
+}
+
+func verifyManifestHashes(entries []manifestEntry, files map[string][]byte) (bool, error) {
+	for _, entry := range entries {
+		data, exists := files[entry.File]
+		if !exists {
+			return false, fmt.Errorf("manifest references missing file %q", entry.File)
+		}
+		sum := sha256.Sum256(data)
+		if hex.EncodeToString(sum[:]) != entry.SHA256 {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 func extractTarGz(data []byte) (map[string][]byte, error) {
