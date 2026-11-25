@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"strings"
+
+	"github.com/sufield/stave/pkg/stave/pack"
 )
 
 // Renderer is the format-dispatch interface for `stave discover`.
@@ -44,11 +46,21 @@ func (textRenderer) Render(w io.Writer, m manifest) error {
 	fmt.Fprintf(w, "Packs covering them: %s\n", joinOrNone(m.Packs))
 	fmt.Fprintf(w, "Controls that will evaluate: %d\n", m.ControlCount)
 
+	writeRequirements(w, &m.Requirements)
+
+	fmt.Fprintf(w, "\nNext: 1) collect the calls above with your own tool (AWS CLI, Steampipe, …) → raw snapshots\n")
+	fmt.Fprintf(w, "      2) convert the snapshots into obs.v0.1 observations with your extractor (NOT Stave)\n")
+	fmt.Fprintf(w, "      3) run `stave apply -o <observations>`.\n")
+	fmt.Fprintf(w, "      Stave never collects data or touches AWS — it reads the observations you produce.\n")
+	return nil
+}
+
+func writeRequirements(w io.Writer, req *pack.Requirements) {
 	fmt.Fprintf(w, "\nCollect these (read-only) AWS API calls:\n")
-	if !m.Requirements.HasAPICalls() {
+	if !req.HasAPICalls() {
 		fmt.Fprintf(w, "  (none — no covering pack declares API requirements)\n")
 	}
-	for _, sc := range m.Requirements.AWSAPICalls {
+	for _, sc := range req.AWSAPICalls {
 		fmt.Fprintf(w, "  %s:\n", sc.Service)
 		for _, c := range sc.Calls {
 			fmt.Fprintf(w, "    %s\n", c)
@@ -58,25 +70,19 @@ func (textRenderer) Render(w io.Writer, m manifest) error {
 		}
 	}
 
-	if m.Requirements.HasObservationSignals() {
+	if req.HasObservationSignals() {
 		fmt.Fprintf(w, "\nRequired observation signals:\n")
-		for _, s := range m.Requirements.ObservationSignals {
+		for _, s := range req.ObservationSignals {
 			fmt.Fprintf(w, "  %s\n", s)
 		}
 	}
 
-	if mp := strings.TrimSpace(m.Requirements.MinimumPermissions); mp != "" {
+	if mp := strings.TrimSpace(req.MinimumPermissions); mp != "" {
 		fmt.Fprintf(w, "\nMinimum collector permissions:\n")
 		for line := range strings.SplitSeq(mp, "\n") {
 			fmt.Fprintf(w, "  %s\n", line)
 		}
 	}
-
-	fmt.Fprintf(w, "\nNext: 1) collect the calls above with your own tool (AWS CLI, Steampipe, …) → raw snapshots\n")
-	fmt.Fprintf(w, "      2) convert the snapshots into obs.v0.1 observations with your extractor (NOT Stave)\n")
-	fmt.Fprintf(w, "      3) run `stave apply -o <observations>`.\n")
-	fmt.Fprintf(w, "      Stave never collects data or touches AWS — it reads the observations you produce.\n")
-	return nil
 }
 
 func joinOrNone(s []string) string {

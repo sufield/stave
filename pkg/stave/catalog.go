@@ -514,25 +514,28 @@ func renderCatalogChainView(w io.Writer, r catalogReport, chains []appcaps.Capab
 	fmt.Fprintf(w, "CHAINS BY FAMILY%*sTOTAL: %d\n\n", 39, " ", total)
 
 	for i := range families {
-		fam := &families[i]
-		header := fmt.Sprintf("── %s (%d) ", fam.name, len(fam.chains))
-		pad := max(65-len(header), 3)
-		fmt.Fprintf(w, "%s%s\n", header, strings.Repeat("─", pad))
-
-		for j := range fam.chains {
-			c := &fam.chains[j]
-			tag := chainSevTag(c.Severity)
-			desc := c.Description
-			if !r.verbose {
-				desc = truncateDescription(desc, 45)
-			}
-			fmt.Fprintf(w, "  %s  %-34s  %s\n", tag, c.Title, desc)
-		}
-		fmt.Fprintln(w)
+		writeChainFamily(w, &families[i], r.verbose)
 	}
 
 	writeChainFooter(w, total, sevCounts, r.verbose)
 	return nil
+}
+
+func writeChainFamily(w io.Writer, fam *chainFamily, verbose bool) {
+	header := fmt.Sprintf("── %s (%d) ", fam.name, len(fam.chains))
+	pad := max(65-len(header), 3)
+	fmt.Fprintf(w, "%s%s\n", header, strings.Repeat("─", pad))
+
+	for j := range fam.chains {
+		c := &fam.chains[j]
+		tag := chainSevTag(c.Severity)
+		desc := c.Description
+		if !verbose {
+			desc = truncateDescription(desc, 45)
+		}
+		fmt.Fprintf(w, "  %s  %-34s  %s\n", tag, c.Title, desc)
+	}
+	fmt.Fprintln(w)
 }
 
 func countChainSeverities(families []chainFamily) (int, map[string]int) {

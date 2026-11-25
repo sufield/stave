@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/sufield/stave/cmd/cmdutil"
+	"github.com/sufield/stave/internal/core/kernel"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -154,22 +155,26 @@ func writeTestFailures(w io.Writer, results []stave.TestResult, verbose bool) {
 					fmt.Fprintf(w, "FAILURES\n%s\n\n", strings.Repeat("-", 60))
 				}
 				failures++
-				fmt.Fprintf(w, "%s\n", r.ControlID)
-				fmt.Fprintf(w, "  FAIL: %q\n", c.Name)
-				fmt.Fprintf(w, "    Expected: %s\n", c.ExpectedVerdict)
-				fmt.Fprintf(w, "    Got:      %s\n", c.ActualVerdict)
-				if c.Diagnosis != "" {
-					fmt.Fprintf(w, "    Diagnosis: %s\n", c.Diagnosis)
-				}
-				if c.Hint != "" {
-					fmt.Fprintf(w, "    Hint: %s\n", c.Hint)
-				}
-				fmt.Fprintln(w)
+				writeFailedCase(w, r.ControlID, c)
 			} else if verbose {
 				fmt.Fprintf(w, "  ok  %s :: %s\n", r.ControlID, c.Name)
 			}
 		}
 	}
+}
+
+func writeFailedCase(w io.Writer, controlID kernel.ControlID, c *stave.TestCaseResult) {
+	fmt.Fprintf(w, "%s\n", controlID)
+	fmt.Fprintf(w, "  FAIL: %q\n", c.Name)
+	fmt.Fprintf(w, "    Expected: %s\n", c.ExpectedVerdict)
+	fmt.Fprintf(w, "    Got:      %s\n", c.ActualVerdict)
+	if c.Diagnosis != "" {
+		fmt.Fprintf(w, "    Diagnosis: %s\n", c.Diagnosis)
+	}
+	if c.Hint != "" {
+		fmt.Fprintf(w, "    Hint: %s\n", c.Hint)
+	}
+	fmt.Fprintln(w)
 }
 
 func writeJSON(w io.Writer, results []stave.TestResult, summary stave.TestSummary) error {

@@ -53,7 +53,13 @@ func fromCompoundFinding(c *findings.CompoundFinding, idx map[findingKey]*remedi
 		assets = []asset.ID{c.AssetID}
 	}
 
-	for _, ctrlID := range c.ControlsFailing {
+	dto.MemberEvidence = collectMemberEvidence(c.ControlsFailing, assets, idx)
+	return dto
+}
+
+func collectMemberEvidence(controlIDs []kernel.ControlID, assets []asset.ID, idx map[findingKey]*remediation.Finding) []ChainMemberEvidenceDTO {
+	var evidence []ChainMemberEvidenceDTO
+	for _, ctrlID := range controlIDs {
 		for _, astID := range assets {
 			f, ok := idx[findingKey{ctrlID, astID}]
 			if !ok {
@@ -63,25 +69,30 @@ func fromCompoundFinding(c *findings.CompoundFinding, idx map[findingKey]*remedi
 				ControlID:         ctrlID,
 				AssetID:           astID,
 				Misconfigurations: f.Evidence.Misconfigurations,
+				ReasoningTrace:    mapReasoningTrace(f),
+				Delta:             fromDeltaPaths(f.Delta),
 			}
-			if f.HasReasoningTrace() {
-				me.ReasoningTrace = make([]MatchedClauseDTO, len(f.ReasoningTrace))
-				for j, mc := range f.ReasoningTrace {
-					me.ReasoningTrace[j] = MatchedClauseDTO{
-						PredicateExpr:  mc.PredicateExpr,
-						ObservationKey: mc.ObservationKey.String(),
-						Operator:       string(mc.Operator),
-						ExpectedValue:  mc.ExpectedValue,
-						ObservedValue:  mc.ObservedValue,
-					}
-				}
-			}
-			me.Delta = fromDeltaPaths(f.Delta)
-			dto.MemberEvidence = append(dto.MemberEvidence, me)
+			evidence = append(evidence, me)
 		}
 	}
+	return evidence
+}
 
-	return dto
+func mapReasoningTrace(f *remediation.Finding) []MatchedClauseDTO {
+	if !f.HasReasoningTrace() {
+		return nil
+	}
+	out := make([]MatchedClauseDTO, len(f.ReasoningTrace))
+	for i, mc := range f.ReasoningTrace {
+		out[i] = MatchedClauseDTO{
+			PredicateExpr:  mc.PredicateExpr,
+			ObservationKey: mc.ObservationKey.String(),
+			Operator:       string(mc.Operator),
+			ExpectedValue:  mc.ExpectedValue,
+			ObservedValue:  mc.ObservedValue,
+		}
+	}
+	return out
 }
 
 func fromNearMissChains(in []findings.NearMissChain) []NearMissChainDTO {

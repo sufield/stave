@@ -171,92 +171,7 @@ func renderOSCAL(
 
 	// Build one result per framework.
 	for i, profile := range profiles {
-		assessment := assessments[i]
-		resultUUID := uuidV5("result", profile.ID, pkg.SnapshotID)
-
-		// Reviewed controls.
-		var controlSelects []oscalControlSelect
-		controlSeen := make(map[string]struct{})
-		for ri := range assessment.Requirements {
-			req := &assessment.Requirements[ri]
-			oscalID := toOSCALControlID(profile.FrameworkKey, req.RequirementID)
-			if _, ok := controlSeen[oscalID]; !ok {
-				controlSeen[oscalID] = struct{}{}
-				controlSelects = append(controlSelects, oscalControlSelect{ControlID: oscalID})
-			}
-		}
-
-		// Findings and observations.
-		var findings []oscalFinding
-		var observations []oscalObservation
-
-		for ri := range assessment.Requirements {
-			req := &assessment.Requirements[ri]
-			oscalCtlID := toOSCALControlID(profile.FrameworkKey, req.RequirementID)
-
-			state, reason := req.OscalState()
-
-			findingUUID := uuidV5("finding", profile.ID, req.RequirementID, pkg.SnapshotID)
-
-			// Build observations from evidence records.
-			var obsRefs []oscalObsRef
-			for _, rec := range req.Evidence {
-				obsUUID := uuidV5("observation", string(rec.ControlID), rec.ResourceARN, pkg.SnapshotID)
-
-				obs := oscalObservation{
-					UUID:        obsUUID,
-					Title:       string(rec.ControlID) + " on " + rec.ResourceARN,
-					Description: rec.ReasoningTrace.FindingMessage,
-					Methods:     []string{"EXAMINE", "TEST"},
-					Types:       []string{"finding"},
-					Collected:   rec.EvaluatedAt.Format(time.RFC3339),
-					RelevantEvidence: []oscalEvidence{
-						{
-							Description: "Stave control evaluation",
-							Props: []oscalProp{
-								{Name: "control-id", Value: string(rec.ControlID)},
-								{Name: "verdict", Value: rec.Verdict.String()},
-								{Name: "severity", Value: rec.Severity},
-							},
-						},
-					},
-				}
-				observations = append(observations, obs)
-				obsRefs = append(obsRefs, oscalObsRef{ObservationUUID: obsUUID})
-			}
-
-			finding := oscalFinding{
-				UUID:        findingUUID,
-				Title:       req.RequirementID + ": " + req.Description,
-				Description: fmt.Sprintf("%s requirement %s", profile.ID, req.RequirementID),
-				Target: oscalTarget{
-					Type:     "statement-id",
-					TargetID: oscalCtlID,
-					Status:   oscalStatus{State: state, Reason: reason},
-				},
-				RelatedObservations: obsRefs,
-			}
-			findings = append(findings, finding)
-		}
-
-		result := oscalResult{
-			UUID:        resultUUID,
-			Title:       "Assessment Result — " + profile.Name,
-			Description: "Automated assessment from snapshot " + pkg.SnapshotID,
-			Start:       snapshotTime.Format(time.RFC3339),
-			End:         now.Format(time.RFC3339),
-			ReviewedControls: oscalReviewedControls{
-				ControlSelections: []oscalControlSelection{
-					{
-						Description:     profile.Name + " controls evaluated",
-						IncludeControls: controlSelects,
-					},
-				},
-			},
-			Findings:     findings,
-			Observations: deduplicateObservations(observations),
-		}
-
+		result := buildOSCALResult(profile, assessments[i], pkg.SnapshotID, snapshotTime, now)
 		doc.AssessmentResults.Results = append(doc.AssessmentResults.Results, result)
 	}
 
@@ -267,6 +182,85 @@ func renderOSCAL(
 	}
 
 	return nil
+}
+
+func buildOSCALResult(profile *evidence.FrameworkProfile, assessment *evidence.ProfileAssessment, snapshotID string, start, end time.Time) oscalResult {
+	resultUUID := uuidV5("result", profile.ID, snapshotID)
+
+	var controlSelects []oscalControlSelect
+	controlSeen := make(map[string]struct{})
+	for ri := range assessment.Requirements {
+		req := &assessment.Requirements[ri]
+		oscalID := toOSCALControlID(profile.FrameworkKey, req.RequirementID)
+		if _, ok := controlSeen[oscalID]; !ok {
+			controlSeen[oscalID] = struct{}{}
+			controlSelects = append(controlSelects, oscalControlSelect{ControlID: oscalID})
+		}
+	}
+
+	var findings []oscalFinding
+	var observations []oscalObservation
+	for ri := range assessment.Requirements {
+		req := &assessment.Requirements[ri]
+		oscalCtlID := toOSCALControlID(profile.FrameworkKey, req.RequirementID)
+		state, reason := req.OscalState()
+		findingUUID := uuidV5("finding", profile.ID, req.RequirementID, snapshotID)
+
+		var obsRefs []oscalObsRef
+		for _, rec := range req.Evidence {
+			obsUUID := uuidV5("observation", string(rec.ControlID), rec.ResourceARN, snapshotID)
+			obs := oscalObservation{
+				UUID:        obsUUID,
+				Title:       string(rec.ControlID) + " on " + rec.ResourceARN,
+				Description: rec.ReasoningTrace.FindingMessage,
+				Methods:     []string{"EXAMINE", "TEST"},
+				Types:       []string{"finding"},
+				Collected:   rec.EvaluatedAt.Format(time.RFC3339),
+				RelevantEvidence: []oscalEvidence{
+					{
+						Description: "Stave control evaluation",
+						Props: []oscalProp{
+							{Name: "control-id", Value: string(rec.ControlID)},
+							{Name: "verdict", Value: rec.Verdict.String()},
+							{Name: "severity", Value: rec.Severity},
+						},
+					},
+				},
+			}
+			observations = append(observations, obs)
+			obsRefs = append(obsRefs, oscalObsRef{ObservationUUID: obsUUID})
+		}
+
+		findings = append(findings, oscalFinding{
+			UUID:        findingUUID,
+			Title:       req.RequirementID + ": " + req.Description,
+			Description: fmt.Sprintf("%s requirement %s", profile.ID, req.RequirementID),
+			Target: oscalTarget{
+				Type:     "statement-id",
+				TargetID: oscalCtlID,
+				Status:   oscalStatus{State: state, Reason: reason},
+			},
+			RelatedObservations: obsRefs,
+		})
+	}
+
+	return oscalResult{
+		UUID:        resultUUID,
+		Title:       "Assessment Result — " + profile.Name,
+		Description: "Automated assessment from snapshot " + snapshotID,
+		Start:       start.Format(time.RFC3339),
+		End:         end.Format(time.RFC3339),
+		ReviewedControls: oscalReviewedControls{
+			ControlSelections: []oscalControlSelection{
+				{
+					Description:     profile.Name + " controls evaluated",
+					IncludeControls: controlSelects,
+				},
+			},
+		},
+		Findings:     findings,
+		Observations: deduplicateObservations(observations),
+	}
 }
 
 // toOSCALControlID converts a Stave requirement ID to OSCAL format.

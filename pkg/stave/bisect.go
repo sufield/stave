@@ -163,16 +163,7 @@ func writeBisectText(stdout, stderr io.Writer, result appbisect.Result) {
 		writeBisectWindow(stdout, w, i, len(result.Windows))
 	}
 
-	if result.Delta != nil && len(result.Delta.Changes) > 0 {
-		fmt.Fprintln(stdout, "State delta (between the two snapshots on either side of the transition):")
-		fmt.Fprintln(stdout)
-		for _, change := range result.Delta.Changes {
-			for _, d := range change.Drifts {
-				fmt.Fprintf(stdout, "  %-40s %v  →  %v\n", d.Attribute+":", d.OldValue, d.NewValue)
-			}
-		}
-		fmt.Fprintln(stdout)
-	}
+	writeBisectDelta(stdout, result.Delta)
 
 	if result.ShouldWarnMultipleWindows() {
 		fmt.Fprintln(stderr, "WARNING: Multiple violation windows detected in this snapshot range.")
@@ -189,6 +180,20 @@ func writeBisectText(stdout, stderr io.Writer, result appbisect.Result) {
 	fmt.Fprintln(stdout, "Stave operates on snapshots. It cannot attribute changes to")
 	fmt.Fprintln(stdout, "specific events within a window. To narrow the window, collect")
 	fmt.Fprintln(stdout, "snapshots at higher frequency for this resource.")
+}
+
+func writeBisectDelta(w io.Writer, delta *asset.InfrastructureDrift) {
+	if delta == nil || len(delta.Changes) == 0 {
+		return
+	}
+	fmt.Fprintln(w, "State delta (between the two snapshots on either side of the transition):")
+	fmt.Fprintln(w)
+	for _, change := range delta.Changes {
+		for _, d := range change.Drifts {
+			fmt.Fprintf(w, "  %-40s %v  →  %v\n", d.Attribute+":", d.OldValue, d.NewValue)
+		}
+	}
+	fmt.Fprintln(w)
 }
 
 func writeBisectWindow(w io.Writer, win appbisect.ViolationWindow, index, total int) {

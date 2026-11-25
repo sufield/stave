@@ -101,39 +101,13 @@ func renderContractType(assetType string, idx predindex.Index, steampipeDir, for
 		return nil, fmt.Errorf("no controls declare applicable_asset_types: [%s]: %w", assetType, ErrInvalidInput)
 	}
 
-	rows := make([]contractPathRow, 0, len(paths))
-	chainSet := map[kernel.ChainID]struct{}{}
-	controlSet := map[kernel.ControlID]struct{}{}
-	for _, p := range paths {
-		ctls := idx.PathToControls[p]
-		chs := idx.PathToChains[p]
-		for _, c := range ctls {
-			controlSet[c] = struct{}{}
-		}
-		for _, ch := range chs {
-			chainSet[ch] = struct{}{}
-		}
-		rows = append(rows, contractPathRow{
-			Path:             p,
-			ControlsCount:    len(ctls),
-			ChainsCount:      len(chs),
-			MaxSeverity:      idx.PathMaxSeverity[p].String(),
-			IsIntentProperty: isIntentProperty(p),
-		})
-	}
-	slices.SortFunc(rows, func(a, b contractPathRow) int {
-		return cmp.Or(
-			cmp.Compare(b.ChainsCount, a.ChainsCount),
-			cmp.Compare(b.ControlsCount, a.ControlsCount),
-			cmp.Compare(a.Path, b.Path),
-		)
-	})
+	rows, controlCount, chainCount := buildContractRows(idx, paths)
 
 	report := contractTypeReport{
 		AssetType:     assetType,
 		PropertyPaths: rows,
-		ControlsCount: len(controlSet),
-		ChainsCount:   len(chainSet),
+		ControlsCount: controlCount,
+		ChainsCount:   chainCount,
 	}
 	if _, err := contractschema.AssetTypeSchema(assetType); err == nil {
 		report.HasSchema = true
@@ -223,6 +197,37 @@ func buildContractRow(t string, idx predindex.Index, steampipeDir string) contra
 // findSteampipeMapping returns the (workspace-relative) path of the
 // matching contracts/steampipe/<type>.yaml when it exists, or the empty
 // string when no mapping is present.
+func buildContractRows(idx predindex.Index, paths []string) ([]contractPathRow, int, int) {
+	rows := make([]contractPathRow, 0, len(paths))
+	chainSet := map[kernel.ChainID]struct{}{}
+	controlSet := map[kernel.ControlID]struct{}{}
+	for _, p := range paths {
+		ctls := idx.PathToControls[p]
+		chs := idx.PathToChains[p]
+		for _, c := range ctls {
+			controlSet[c] = struct{}{}
+		}
+		for _, ch := range chs {
+			chainSet[ch] = struct{}{}
+		}
+		rows = append(rows, contractPathRow{
+			Path:             p,
+			ControlsCount:    len(ctls),
+			ChainsCount:      len(chs),
+			MaxSeverity:      idx.PathMaxSeverity[p].String(),
+			IsIntentProperty: isIntentProperty(p),
+		})
+	}
+	slices.SortFunc(rows, func(a, b contractPathRow) int {
+		return cmp.Or(
+			cmp.Compare(b.ChainsCount, a.ChainsCount),
+			cmp.Compare(b.ControlsCount, a.ControlsCount),
+			cmp.Compare(a.Path, b.Path),
+		)
+	})
+	return rows, len(controlSet), len(chainSet)
+}
+
 func findSteampipeMapping(dir, assetType string) string {
 	if dir == "" {
 		return ""

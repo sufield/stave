@@ -99,26 +99,8 @@ func renderSilosText(w io.Writer, r *stave.SiloReport) error {
 
 	fmt.Fprintf(w, "Catalog: %d controls, %d chains, %d services\n\n", r.TotalControls, r.TotalChains, r.TotalServices)
 
-	if !r.HasSilos() {
-		fmt.Fprintf(w, "No silos found — every service with controls participates in at least one chain.\n")
-	} else {
-		fmt.Fprintf(w, "Silos (%d services with controls but zero compound chains):\n\n", r.SiloCount)
-		for _, s := range r.Silos {
-			fmt.Fprintf(w, "  %-20s %3d controls    0 chains\n", s.Service, s.Controls)
-			if s.Question != "" {
-				fmt.Fprintf(w, "    %s\n\n", s.Question)
-			}
-		}
-	}
-
-	if r.HasMostConnected() {
-		fmt.Fprintf(w, "Most connected:\n\n")
-		for _, s := range r.MostConnected {
-			peers := strings.Join(s.ConnectedTo, ", ")
-			fmt.Fprintf(w, "  %-20s %3d chains    connected to: %s\n", s.Service, s.Chains, peers)
-		}
-		fmt.Fprintln(w)
-	}
+	writeSilosSection(w, r)
+	writeMostConnectedSection(w, r)
 
 	fmt.Fprintf(w, "Distribution:\n")
 	fmt.Fprintf(w, "  0 chains:    %d\n", r.Distribution["0_chains"])
@@ -141,4 +123,30 @@ func renderSilosText(w io.Writer, r *stave.SiloReport) error {
 	}
 
 	return nil
+}
+
+func writeSilosSection(w io.Writer, r *stave.SiloReport) {
+	if !r.HasSilos() {
+		fmt.Fprintf(w, "No silos found — every service with controls participates in at least one chain.\n")
+		return
+	}
+	fmt.Fprintf(w, "Silos (%d services with controls but zero compound chains):\n\n", r.SiloCount)
+	for _, s := range r.Silos {
+		fmt.Fprintf(w, "  %-20s %3d controls    0 chains\n", s.Service, s.Controls)
+		if s.Question != "" {
+			fmt.Fprintf(w, "    %s\n\n", s.Question)
+		}
+	}
+}
+
+func writeMostConnectedSection(w io.Writer, r *stave.SiloReport) {
+	if !r.HasMostConnected() {
+		return
+	}
+	fmt.Fprintf(w, "Most connected:\n\n")
+	for _, s := range r.MostConnected {
+		peers := strings.Join(s.ConnectedTo, ", ")
+		fmt.Fprintf(w, "  %-20s %3d chains    connected to: %s\n", s.Service, s.Chains, peers)
+	}
+	fmt.Fprintln(w)
 }

@@ -475,6 +475,31 @@ func buildOneChainResult(cf *findings.CompoundFinding, existingRules map[kernel.
 		}
 	}
 
+	props := buildChainProperties(cf)
+
+	return sarifResult{
+		RuleID:    ruleID,
+		RuleIndex: ruleIdx,
+		Level:     cf.Severity.SARIFLevel(),
+		Message: sarifMessage{
+			Text: cf.Narrative,
+		},
+		Locations: []sarifLocation{
+			{
+				LogicalLocations: []sarifLogicalLocation{
+					{
+						Name:               string(cf.AssetID),
+						FullyQualifiedName: string(cf.AssetID),
+						Kind:               "resource",
+					},
+				},
+			},
+		},
+		Properties: props,
+	}, newRule
+}
+
+func buildChainProperties(cf *findings.CompoundFinding) map[string]any {
 	props := map[string]any{
 		"stave/severity":       cf.Severity.String(),
 		"stave/compound_score": cf.CompoundScore,
@@ -500,27 +525,7 @@ func buildOneChainResult(cf *findings.CompoundFinding, existingRules map[kernel.
 		}
 		props["stave/attack_stages"] = stages
 	}
-
-	return sarifResult{
-		RuleID:    ruleID,
-		RuleIndex: ruleIdx,
-		Level:     cf.Severity.SARIFLevel(),
-		Message: sarifMessage{
-			Text: cf.Narrative,
-		},
-		Locations: []sarifLocation{
-			{
-				LogicalLocations: []sarifLogicalLocation{
-					{
-						Name:               string(cf.AssetID),
-						FullyQualifiedName: string(cf.AssetID),
-						Kind:               "resource",
-					},
-				},
-			},
-		},
-		Properties: props,
-	}, newRule
+	return props
 }
 
 // buildIndeterminateResults converts indeterminate findings to SARIF results

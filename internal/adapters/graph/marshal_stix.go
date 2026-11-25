@@ -70,11 +70,28 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 		objects = append(objects, obj)
 	}
 
-	// Edges → STIX relationships. Dangling edges are skipped with a
-	// warning log so partial graph exports remain importable.
+	// Edges → STIX relationships.
+	objects = appendSTIXRelationships(objects, g.Edges, nodeSTIXIDs, nowStr, staveIdentityID)
+
+	bundle := map[string]any{
+		"type":         "bundle",
+		"id":           stixID("bundle", g.Source.AssessmentOutput+nowStr),
+		"spec_version": "2.1",
+		"objects":      objects,
+	}
+
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(bundle); err != nil {
+		return fmt.Errorf("encode STIX bundle: %w", err)
+	}
+	return nil
+}
+
+func appendSTIXRelationships(objects []map[string]any, edges []Edge, nodeSTIXIDs map[string]string, nowStr, identityID string) []map[string]any {
 	var skipped int
-	for i := range g.Edges {
-		e := &g.Edges[i]
+	for i := range edges {
+		e := &edges[i]
 		relType := stixRelTypeMap[e.Type]
 		if relType == "" {
 			relType = "related-to"
@@ -92,8 +109,7 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 			skipped++
 			continue
 		}
-
-		rel := map[string]any{
+		objects = append(objects, map[string]any{
 			"type":              "relationship",
 			"id":                stixID("relationship", e.From+"|"+e.To+"|"+string(e.Type)),
 			"spec_version":      "2.1",
@@ -102,28 +118,14 @@ func MarshalSTIX(w io.Writer, g *GraphData) error {
 			"target_ref":        tgtRef,
 			"created":           nowStr,
 			"modified":          nowStr,
-			"created_by_ref":    staveIdentityID,
-		}
-		objects = append(objects, rel)
+			"created_by_ref":    identityID,
+		})
 	}
 	if skipped > 0 {
 		slog.Warn("graph: stix export skipped dangling edges",
-			"skipped", skipped, "total_edges", len(g.Edges))
+			"skipped", skipped, "total_edges", len(edges))
 	}
-
-	bundle := map[string]any{
-		"type":         "bundle",
-		"id":           stixID("bundle", g.Source.AssessmentOutput+nowStr),
-		"spec_version": "2.1",
-		"objects":      objects,
-	}
-
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
-	if err := enc.Encode(bundle); err != nil {
-		return fmt.Errorf("encode STIX bundle: %w", err)
-	}
-	return nil
+	return objects
 }
 
 func stixID(objectType, content string) string {

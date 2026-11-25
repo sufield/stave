@@ -180,30 +180,8 @@ func sanitizeFinding(f *remediation.Finding, s kernel.Sanitizer) remediation.Fin
 		out.Evidence.SourceEvidence = &se
 	}
 
-	// ReasoningTrace carries the same observed values that flow
-	// through Misconfiguration.ActualValue. The trace is built before
-	// sanitization runs (engine/finding_builder.go), so sanitization
-	// must mask its values alongside the Misconfigurations.
-	if f.HasReasoningTrace() {
-		trace := make([]evaluation.MatchedClause, len(f.ReasoningTrace))
-		for i, mc := range f.ReasoningTrace {
-			mc.ObservedValue = sanitizeActualValue(mc.ObservedValue, s)
-			trace[i] = mc
-		}
-		out.ReasoningTrace = trace
-	}
-
-	// DeltaPath.CurrentValue is a string snapshot of the observed
-	// value rendered for human-readable fix guidance — route it
-	// through the per-field Sanitizer.
-	if f.HasDelta() {
-		delta := make([]policy.DeltaPath, len(f.Delta))
-		for i, d := range f.Delta {
-			d.CurrentValue = s.Value(d.CurrentValue)
-			delta[i] = d
-		}
-		out.Delta = delta
-	}
+	out.ReasoningTrace = sanitizeTrace(f.ReasoningTrace, s)
+	out.Delta = sanitizeDelta(f.Delta, s)
 
 	if f.RemediationPlan != nil {
 		plan := *f.RemediationPlan
@@ -219,6 +197,30 @@ func sanitizeFinding(f *remediation.Finding, s kernel.Sanitizer) remediation.Fin
 		out.RemediationPlan = &plan
 	}
 
+	return out
+}
+
+func sanitizeTrace(trace []evaluation.MatchedClause, s kernel.Sanitizer) []evaluation.MatchedClause {
+	if len(trace) == 0 {
+		return nil
+	}
+	out := make([]evaluation.MatchedClause, len(trace))
+	for i, mc := range trace {
+		mc.ObservedValue = sanitizeActualValue(mc.ObservedValue, s)
+		out[i] = mc
+	}
+	return out
+}
+
+func sanitizeDelta(delta []policy.DeltaPath, s kernel.Sanitizer) []policy.DeltaPath {
+	if len(delta) == 0 {
+		return nil
+	}
+	out := make([]policy.DeltaPath, len(delta))
+	for i, d := range delta {
+		d.CurrentValue = s.Value(d.CurrentValue)
+		out[i] = d
+	}
 	return out
 }
 

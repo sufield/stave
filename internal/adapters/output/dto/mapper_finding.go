@@ -51,6 +51,23 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 		DecidingLayer:       string(f.DecidingLayer),
 	}
 
+	enrichOptionalFields(&dto, f)
+
+	enrichSLAFields(&dto, f)
+	enrichTraceAndAlternatives(&dto, f)
+
+	// Normalize empty severity to match omitempty behavior.
+	if dto.ControlSeverity == "" {
+		dto.ControlSeverity = ""
+	}
+	if len(dto.ControlCompliance) == 0 {
+		dto.ControlCompliance = nil
+	}
+
+	return dto
+}
+
+func enrichOptionalFields(dto *FindingDTO, f *remediation.Finding) {
 	if f.HasSource() {
 		dto.Source = &SourceRefDTO{File: f.Source.File, Line: f.Source.Line}
 	}
@@ -79,7 +96,9 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	if f.HasNearMissChains() {
 		dto.NearMissChains = mapSlice(f.NearMissChains, fromNearMissEntry)
 	}
+}
 
+func enrichSLAFields(dto *FindingDTO, f *remediation.Finding) {
 	dto.SLADeadlineHours = f.SLADeadlinePtr()
 	if f.HasSLA() {
 		breached := f.SLABreachedFlag()
@@ -97,6 +116,9 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 	dto.LifecycleEscalatedSeverity = f.LifecycleEscalatedSeverityValue().String()
 	dto.ExposureScore = f.ExposureScore.Value()
 	dto.ScoreBreakdown = f.ScoreBreakdown
+}
+
+func enrichTraceAndAlternatives(dto *FindingDTO, f *remediation.Finding) {
 	if f.HasReasoningTrace() {
 		dto.ReasoningTrace = make([]MatchedClauseDTO, len(f.ReasoningTrace))
 		for i, mc := range f.ReasoningTrace {
@@ -121,16 +143,6 @@ func FromFinding(f *remediation.Finding) FindingDTO {
 			}
 		}
 	}
-
-	// Normalize empty severity to match omitempty behavior.
-	if dto.ControlSeverity == "" {
-		dto.ControlSeverity = ""
-	}
-	if len(dto.ControlCompliance) == 0 {
-		dto.ControlCompliance = nil
-	}
-
-	return dto
 }
 
 // buildRemediationContext packages the asset identity, violation

@@ -141,23 +141,26 @@ func (w *FindingWriter) writeConciseTable(d *drawer, enriched *appcontracts.Enri
 		d.f("  %-4s %-10s %-40s %s\n", "#", "Severity", "Control", "Asset")
 	}
 	for i := range enriched.Findings {
-		f := &enriched.Findings[i]
-		mitre := extractMITRE(f.CorpusReference)
-		control := shortControlID(string(f.ControlID))
-		assetName := shortAssetID(string(f.AssetID))
-		if hasMITRE {
-			d.f("  %-4d %-10s %-12s %-40s %s\n",
-				i+1, f.ControlSeverity, mitre, control, assetName)
-		} else {
-			d.f("  %-4d %-10s %-40s %s\n",
-				i+1, f.ControlSeverity, control, assetName)
-		}
-		if f.ControlName != "" {
-			d.f("  %4s %s\n", "", f.ControlName)
-		}
-		if f.Defect != "" {
-			d.f("  %4s Trigger: %s\n", "", f.Defect)
-		}
+		writeConciseRow(d, i+1, &enriched.Findings[i], hasMITRE)
+	}
+}
+
+func writeConciseRow(d *drawer, num int, f *appcontracts.EnrichedFinding, hasMITRE bool) {
+	mitre := extractMITRE(f.CorpusReference)
+	control := shortControlID(string(f.ControlID))
+	assetName := shortAssetID(string(f.AssetID))
+	if hasMITRE {
+		d.f("  %-4d %-10s %-12s %-40s %s\n",
+			num, f.ControlSeverity, mitre, control, assetName)
+	} else {
+		d.f("  %-4d %-10s %-40s %s\n",
+			num, f.ControlSeverity, control, assetName)
+	}
+	if f.ControlName != "" {
+		d.f("  %4s %s\n", "", f.ControlName)
+	}
+	if f.Defect != "" {
+		d.f("  %4s Trigger: %s\n", "", f.Defect)
 	}
 }
 

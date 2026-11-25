@@ -41,30 +41,35 @@ func renderTable(w io.Writer, export *EvidenceExport, verbose bool) error { //no
 
 	// Gap detail
 	if export.HasGaps() {
-		fmt.Fprintf(w, "\nGAPS\n")
-		fmt.Fprintln(w, sep)
-
-		for i := range export.Requirements {
-			r := &export.Requirements[i]
-			if !r.HasGaps() {
-				continue
-			}
-			fmt.Fprintf(w, "\n%s %s [%s — %d gap(s)]\n", r.ID, r.Description, r.Status.Label(), len(r.Gaps))
-
-			for j := range r.Gaps {
-				g := &r.Gaps[j]
-				arn := truncate(g.ResourceARN, 65)
-				fmt.Fprintf(w, "  %s  %s\n", g.ControlID, arn)
-				fmt.Fprintf(w, "  %s: %s\n", strings.ToUpper(g.Severity.String()), g.Message)
-
-				if verbose {
-					renderVerboseTrace(w, export, g.ControlID, g.ResourceARN)
-				}
-			}
-		}
+		renderGapDetail(w, export, verbose)
 	}
 
 	return nil
+}
+
+func renderGapDetail(w io.Writer, export *EvidenceExport, verbose bool) {
+	sep := strings.Repeat("-", 80)
+	fmt.Fprintf(w, "\nGAPS\n")
+	fmt.Fprintln(w, sep)
+
+	for i := range export.Requirements {
+		r := &export.Requirements[i]
+		if !r.HasGaps() {
+			continue
+		}
+		fmt.Fprintf(w, "\n%s %s [%s — %d gap(s)]\n", r.ID, r.Description, r.Status.Label(), len(r.Gaps))
+
+		for j := range r.Gaps {
+			g := &r.Gaps[j]
+			arn := truncate(g.ResourceARN, 65)
+			fmt.Fprintf(w, "  %s  %s\n", g.ControlID, arn)
+			fmt.Fprintf(w, "  %s: %s\n", strings.ToUpper(g.Severity.String()), g.Message)
+
+			if verbose {
+				renderVerboseTrace(w, export, g.ControlID, g.ResourceARN)
+			}
+		}
+	}
 }
 
 func renderVerboseTrace(w io.Writer, export *EvidenceExport, controlID, resourceARN string) {

@@ -448,28 +448,21 @@ func annotateChainMembership(report *evaluation.ComplianceReport) {
 
 	chainEntries := buildChainMembershipEntries(report.ChainFindings)
 
-	for i := range report.Findings {
-		f := &report.Findings[i]
-		for _, ce := range chainEntries {
-			if ce.controlIDs.Contains(f.ControlID) {
-				f.AddChainMembership(ce.membership)
-			}
-		}
-	}
-	// Marker findings can be chain members too (cross-resource
-	// compounds compose markers with violations). Annotate them so
-	// downstream consumers see "this informational fact is one
-	// link in chain X" — same shape as violations.
-	for i := range report.MarkerFindings {
-		f := &report.MarkerFindings[i]
-		for _, ce := range chainEntries {
-			if ce.controlIDs.Contains(f.ControlID) {
-				f.AddChainMembership(ce.membership)
-			}
-		}
-	}
+	applyChainEntries(report.Findings, chainEntries)
+	applyChainEntries(report.MarkerFindings, chainEntries)
 
 	annotateGraphChains(report)
+}
+
+func applyChainEntries(findings []evaluation.Finding, entries []chainMembershipEntry) {
+	for i := range findings {
+		f := &findings[i]
+		for _, ce := range entries {
+			if ce.controlIDs.Contains(f.ControlID) {
+				f.AddChainMembership(ce.membership)
+			}
+		}
+	}
 }
 
 type chainMembershipEntry struct {
