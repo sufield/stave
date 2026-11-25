@@ -99,38 +99,38 @@ func run(cases []TestCase, skipAWS bool) []Result {
 	var results []Result
 	for _, tc := range cases {
 		staveResult := resolveWithStave(tc)
-
 		for _, action := range tc.Actions {
-			stavePresent := actionInGrants(strings.ToLower(action), staveResult.EffectiveAllow)
-
-			r := Result{
-				CaseName:     tc.Name,
-				Action:       action,
-				StavePresent: stavePresent,
-				StaveLevel:   string(staveResult.PrivilegeLevel),
-				Notes:        tc.Notes,
-			}
-
-			if !skipAWS {
-				awsResult := checkAccessNotGranted(tc.PolicyJSON, action)
-				r.AWSResult = awsResult
-				r.AWSGranted = awsResult == "FAIL"
-				r.Agree = r.StavePresent == r.AWSGranted
-				if !r.Agree {
-					if r.AWSGranted && !r.StavePresent {
-						r.DisagreeType = "false_negative"
-					} else {
-						r.DisagreeType = "false_positive"
-					}
-				}
-			} else {
-				r.Agree = true
-			}
-
-			results = append(results, r)
+			results = append(results, evaluateAction(tc, action, staveResult, skipAWS))
 		}
 	}
 	return results
+}
+
+func evaluateAction(tc TestCase, action string, staveResult iam.ResolvedPermissions, skipAWS bool) Result {
+	stavePresent := actionInGrants(strings.ToLower(action), staveResult.EffectiveAllow)
+	r := Result{
+		CaseName:     tc.Name,
+		Action:       action,
+		StavePresent: stavePresent,
+		StaveLevel:   string(staveResult.PrivilegeLevel),
+		Notes:        tc.Notes,
+	}
+	if !skipAWS {
+		awsResult := checkAccessNotGranted(tc.PolicyJSON, action)
+		r.AWSResult = awsResult
+		r.AWSGranted = awsResult == "FAIL"
+		r.Agree = r.StavePresent == r.AWSGranted
+		if !r.Agree {
+			if r.AWSGranted && !r.StavePresent {
+				r.DisagreeType = "false_negative"
+			} else {
+				r.DisagreeType = "false_positive"
+			}
+		}
+	} else {
+		r.Agree = true
+	}
+	return r
 }
 
 func resolveWithStave(tc TestCase) iam.ResolvedPermissions {

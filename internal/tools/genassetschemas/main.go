@@ -83,27 +83,14 @@ func main() {
 
 	stale := false
 	for _, at := range selected {
-		schema := buildSchema(at, byType[at])
-		out, err := marshalIndent(schema)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "marshal %s: %v\n", at, err)
+		isStale, serr := processAssetTypeSchema(at, byType[at], *outDir, *check)
+		if serr != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", serr)
 			os.Exit(1)
 		}
-		path := filepath.Join(*outDir, string(at)+".schema.json")
-		if *check {
-			existing, readErr := os.ReadFile(path)
-			if readErr != nil || !bytes.Equal(bytes.TrimSpace(existing), bytes.TrimSpace(out)) {
-				fmt.Fprintf(os.Stderr, "STALE: %s\n", path)
-				stale = true
-			}
-			continue
+		if isStale {
+			stale = true
 		}
-		if err := os.WriteFile(path, out, 0o600); err != nil {
-			fmt.Fprintf(os.Stderr, "write %s: %v\n", path, err)
-			os.Exit(1)
-		}
-		fmt.Fprintf(os.Stderr, "wrote %s (%d controls, %d property paths)\n",
-			path, len(byType[at]), countProperties(schema))
 	}
 	if *check && stale {
 		fmt.Fprintln(os.Stderr, "FAIL: one or more asset-type schemas are stale; run `make gen-asset-schemas`")
@@ -112,6 +99,29 @@ func main() {
 	if *check {
 		fmt.Fprintln(os.Stderr, "OK: all asset-type schemas up to date")
 	}
+}
+
+func processAssetTypeSchema(at kernel.AssetType, controls []policy.ControlDefinition, outDir string, check bool) (bool, error) {
+	schema := buildSchema(at, controls)
+	out, err := marshalIndent(schema)
+	if err != nil {
+		return false, fmt.Errorf("marshal %s: %w", at, err)
+	}
+	path := filepath.Join(outDir, string(at)+".schema.json")
+	if check {
+		existing, readErr := os.ReadFile(path)
+		if readErr != nil || !bytes.Equal(bytes.TrimSpace(existing), bytes.TrimSpace(out)) {
+			fmt.Fprintf(os.Stderr, "STALE: %s\n", path)
+			return true, nil
+		}
+		return false, nil
+	}
+	if err := os.WriteFile(path, out, 0o600); err != nil {
+		return false, fmt.Errorf("write %s: %w", path, err)
+	}
+	fmt.Fprintf(os.Stderr, "wrote %s (%d controls, %d property paths)\n",
+		path, len(controls), countProperties(schema))
+	return false, nil
 }
 
 func loadControls() ([]policy.ControlDefinition, error) {

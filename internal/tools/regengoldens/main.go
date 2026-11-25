@@ -546,46 +546,42 @@ func processFixture(name, fixDir string, dryRun bool) fixtureReport {
 
 	cat := catClean
 	for _, g := range goldens {
-		newContent, derivErr := deriveGolden(g, stdout, exitCode)
-		if derivErr != nil {
+		subCat, detail, err := processOneGolden(g, fixDir, stdout, exitCode, dryRun)
+		if err != nil {
 			r.Category = catError
-			r.Err = derivErr
+			r.Err = err
 			return r
 		}
-		// Refuse to overwrite a JSON-typed golden with non-JSON
-		// content. A regression that wrote a stave error payload
-		// into expected.out.json corrupted the fixture and made
-		// downstream e2e tests fail with confusing parse errors.
-		// Preserve the prior file when the produced content isn't
-		// valid JSON.
-		if isJSONGolden(g) && !json.Valid(newContent) {
-			r.Category = catError
-			r.Err = fmt.Errorf("%s: produced output is not valid JSON; refusing to overwrite golden", g)
-			return r
-		}
-		oldContent, _ := os.ReadFile(filepath.Join(fixDir, g))
-		subCat, detail := classifyDiff(g, oldContent, newContent)
 		if detail != "" {
 			r.Details = append(r.Details, detail)
 		}
 		cat = mergeCategory(cat, subCat)
-		if !dryRun && subCat != catClean {
-			target := filepath.Join(fixDir, g)
-			tmpPath := target + ".tmp"
-			if err := os.WriteFile(tmpPath, newContent, 0o644); err != nil {
-				r.Category = catError
-				r.Err = err
-				return r
-			}
-			if err := os.Rename(tmpPath, target); err != nil {
-				r.Category = catError
-				r.Err = err
-				return r
-			}
-		}
 	}
 	r.Category = cat
 	return r
+}
+
+func processOneGolden(g, fixDir string, stdout []byte, exitCode int, dryRun bool) (diffCategory, string, error) {
+	newContent, err := deriveGolden(g, stdout, exitCode)
+	if err != nil {
+		return catError, "", err
+	}
+	if isJSONGolden(g) && !json.Valid(newContent) {
+		return catError, "", fmt.Errorf("%s: produced output is not valid JSON; refusing to overwrite golden", g)
+	}
+	oldContent, _ := os.ReadFile(filepath.Join(fixDir, g))
+	subCat, detail := classifyDiff(g, oldContent, newContent)
+	if !dryRun && subCat != catClean {
+		target := filepath.Join(fixDir, g)
+		tmpPath := target + ".tmp"
+		if err := os.WriteFile(tmpPath, newContent, 0o644); err != nil {
+			return catError, "", err
+		}
+		if err := os.Rename(tmpPath, target); err != nil {
+			return catError, "", err
+		}
+	}
+	return subCat, detail, nil
 }
 
 func validateStdoutJSON(goldens []string, stdout []byte, exitCode int) error {

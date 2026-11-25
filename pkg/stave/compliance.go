@@ -23,6 +23,9 @@ import (
 // overall coverage percentage.
 type ComplianceReport = coreevidence.ProfileAssessment
 
+// RequirementAssessment is one requirement within a compliance report.
+type RequirementAssessment = coreevidence.RequirementAssessment
+
 // Compliance evaluates the snapshots in snapshotsDir against the
 // requested compliance framework profile (e.g. "hipaa",
 // "cis_aws_v3.0", "pci_dss_v4.0") and returns the requirement-level

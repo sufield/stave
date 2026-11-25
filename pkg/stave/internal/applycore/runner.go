@@ -189,47 +189,9 @@ func Run(ctx context.Context, in Inputs) (*Result, error) {
 		return nil, err
 	}
 
-	// Project config: when supplied, resolve exception rules and any
-	// preloaded controls. nil project config keeps the prior behavior
-	// (no exceptions, controls from the standard ControlsDir path).
-	var exceptionCfg *policy.ExceptionConfig
-	if in.ProjectConfig != nil {
-		resolved, resolveErr := appeval.ResolveProjectConfig(*in.ProjectConfig)
-		if resolveErr != nil {
-			return nil, fmt.Errorf("resolve project config: %w", resolveErr)
-		}
-		exceptionCfg = resolved.ExceptionConfig
-		if len(resolved.PreloadedControls) > 0 {
-			controls = resolved.PreloadedControls
-			ctlRepo = nil
-		}
-	}
-
-	// Apply the --pack allowlist last, once the final control source is
-	// known. On the dir path resolveControls defers loading to ctlRepo and
-	// leaves controls nil; filtering nil would silently evaluate zero
-	// controls (a false COMPLIANT). Materialize the set eagerly, filter it,
-	// and preload it so the workflow honors the scope on every source.
-	if len(in.ControlIDAllowlist) > 0 {
-		if controls == nil && ctlRepo != nil {
-			controls, err = ctlRepo.LoadControls(ctx, in.ControlsDir)
-			if err != nil {
-				return nil, fmt.Errorf("load controls for --pack scope: %w", err)
-			}
-			ctlRepo = nil
-		}
-		controls = filterControlsByID(controls, in.ControlIDAllowlist)
-	}
-
-	if len(in.ExcludeLifecycle) > 0 {
-		if controls == nil && ctlRepo != nil {
-			controls, err = ctlRepo.LoadControls(ctx, in.ControlsDir)
-			if err != nil {
-				return nil, fmt.Errorf("load controls for lifecycle filter: %w", err)
-			}
-			ctlRepo = nil
-		}
-		controls = filterByLifecycle(controls, in.ExcludeLifecycle)
+	controls, ctlRepo, exceptionCfg, err := applyControlFilters(ctx, controls, ctlRepo, in)
+	if err != nil {
+		return nil, err
 	}
 
 	maxUnsafe := in.MaxUnsafe

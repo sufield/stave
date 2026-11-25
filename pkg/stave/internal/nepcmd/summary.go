@@ -38,28 +38,7 @@ func NepSummary(cfg SummaryConfig) ([]byte, error) {
 
 	for arn, r := range resolved {
 		summary.addPrincipal(r)
-
-		chains := iam.ResolveChains(iam.RoleChainInput{
-			PrincipalARN:  arn,
-			ResolvedIndex: resolved,
-			TrustPolicies: trustPolicies,
-			AccountID:     iam.ExtractAccountIDFromARN(arn),
-		})
-		if iam.HasTransitiveAdmin(chains) {
-			summary.TransitiveAdmin++
-		}
-		for _, chain := range chains {
-			for _, hop := range chain.Hops {
-				if hop.IsCrossAccount {
-					summary.CrossAccountChains++
-					break
-				}
-			}
-		}
-		depth := iam.MaxDepth(chains)
-		if depth > summary.MaxChainDepth {
-			summary.MaxChainDepth = depth
-		}
+		summary.addChainMetrics(arn, resolved, trustPolicies)
 	}
 
 	var buf bytes.Buffer
@@ -93,6 +72,29 @@ type nepSummary struct {
 	CrossAccountChains    int `json:"cross_account_chains"`
 	MaxChainDepth         int `json:"max_chain_depth"`
 	IneffectiveBoundaries int `json:"ineffective_boundaries"`
+}
+
+func (s *nepSummary) addChainMetrics(arn string, resolved map[string]*iam.ResolvedPermissions, trustPolicies map[string]*iam.PolicyDocument) {
+	chains := iam.ResolveChains(iam.RoleChainInput{
+		PrincipalARN:  arn,
+		ResolvedIndex: resolved,
+		TrustPolicies: trustPolicies,
+		AccountID:     iam.ExtractAccountIDFromARN(arn),
+	})
+	if iam.HasTransitiveAdmin(chains) {
+		s.TransitiveAdmin++
+	}
+	for _, chain := range chains {
+		for _, hop := range chain.Hops {
+			if hop.IsCrossAccount {
+				s.CrossAccountChains++
+				break
+			}
+		}
+	}
+	if depth := iam.MaxDepth(chains); depth > s.MaxChainDepth {
+		s.MaxChainDepth = depth
+	}
 }
 
 func (s *nepSummary) addPrincipal(r *iam.ResolvedPermissions) {

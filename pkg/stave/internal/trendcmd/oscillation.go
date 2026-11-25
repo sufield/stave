@@ -51,27 +51,7 @@ func ClassifyOscillation(ctx context.Context, cfg OscillationConfig) ([]byte, []
 		vals[i] = *a
 	}
 
-	type fkey struct{ ctl, ast string }
-	pairs := make(map[fkey]struct{})
-	for i := range vals {
-		for j := range vals[i].Findings {
-			f := &vals[i].Findings[j]
-			pairs[fkey{string(f.ControlID), string(f.AssetID)}] = struct{}{}
-		}
-	}
-
-	var results oscillation.Classifications
-	for k := range pairs {
-		c := oscillation.Classify(oscillation.Input{
-			Assessments:     vals,
-			ControlID:       kernel.ControlID(k.ctl),
-			AssetID:         asset.ID(k.ast),
-			MinOscillations: cfg.MinOscillations,
-		})
-		if c.Pattern != "" {
-			results = append(results, c)
-		}
-	}
+	results := classifyFindingPairs(vals, cfg.MinOscillations)
 
 	slices.SortFunc(results, func(a, b oscillation.Classification) int {
 		if a.Pattern != b.Pattern {
@@ -88,6 +68,30 @@ func ClassifyOscillation(ctx context.Context, cfg OscillationConfig) ([]byte, []
 		return nil, warnings, rErr
 	}
 	return buf.Bytes(), warnings, nil
+}
+
+func classifyFindingPairs(vals []report.Assessment, minOscillations int) oscillation.Classifications {
+	type fkey struct{ ctl, ast string }
+	pairs := make(map[fkey]struct{})
+	for i := range vals {
+		for j := range vals[i].Findings {
+			f := &vals[i].Findings[j]
+			pairs[fkey{string(f.ControlID), string(f.AssetID)}] = struct{}{}
+		}
+	}
+	var results oscillation.Classifications
+	for k := range pairs {
+		c := oscillation.Classify(oscillation.Input{
+			Assessments:     vals,
+			ControlID:       kernel.ControlID(k.ctl),
+			AssetID:         asset.ID(k.ast),
+			MinOscillations: minOscillations,
+		})
+		if c.Pattern != "" {
+			results = append(results, c)
+		}
+	}
+	return results
 }
 
 func writeOscillationTable(w io.Writer, results oscillation.Classifications) {

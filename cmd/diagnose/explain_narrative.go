@@ -14,6 +14,7 @@ import (
 	ctlyaml "github.com/sufield/stave/internal/adapters/controls/yaml"
 	"github.com/sufield/stave/internal/app/narrative"
 	"github.com/sufield/stave/internal/controldata"
+	"github.com/sufield/stave/internal/core/evaluation/remediation"
 	"github.com/sufield/stave/internal/core/capabilities"
 	policy "github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/core/kernel"
@@ -93,16 +94,7 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 		return fmt.Errorf("parse assessment: %w", jsonErr)
 	}
 
-	// Load controls for metadata.
-	store := builtinctl.NewControlStore(controldata.FS, ".")
-	controls, ctlErr := store.All()
-	if ctlErr != nil {
-		slog.Warn("control metadata unavailable for narrative", "error", ctlErr)
-	}
-	controlMap := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
-	for i := range controls {
-		controlMap[controls[i].ID] = &controls[i]
-	}
+	controlMap := loadControlMap()
 
 	// Load chains.
 	var chains []policy.ChainDefinition
@@ -114,20 +106,7 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 		}
 	}
 
-	// Filter findings.
-	var selected []int
-	for i := range assessment.Findings {
-		f := &assessment.Findings[i]
-		switch {
-		case opts.FindingID != "" && string(f.FindingID) == opts.FindingID:
-			selected = append(selected, i)
-		case opts.ControlID != "" && string(f.ControlID) == opts.ControlID:
-			selected = append(selected, i)
-		case opts.AssetID != "" && string(f.AssetID) == opts.AssetID:
-			selected = append(selected, i)
-		}
-	}
-
+	selected := selectFindings(assessment.Findings, opts)
 	if len(selected) == 0 {
 		return errors.New("no matching findings found")
 	}
@@ -153,6 +132,35 @@ func runExplainNarrative(stdout io.Writer, opts *explainNarrativeOpts) error {
 		return fmt.Errorf("write narrative output: %w", err)
 	}
 	return nil
+}
+
+func loadControlMap() map[kernel.ControlID]*policy.ControlDefinition {
+	store := builtinctl.NewControlStore(controldata.FS, ".")
+	controls, err := store.All()
+	if err != nil {
+		slog.Warn("control metadata unavailable for narrative", "error", err)
+	}
+	m := make(map[kernel.ControlID]*policy.ControlDefinition, len(controls))
+	for i := range controls {
+		m[controls[i].ID] = &controls[i]
+	}
+	return m
+}
+
+func selectFindings(findings []remediation.Finding, opts *explainNarrativeOpts) []int {
+	var selected []int
+	for i := range findings {
+		f := &findings[i]
+		switch {
+		case opts.FindingID != "" && string(f.FindingID) == opts.FindingID:
+			selected = append(selected, i)
+		case opts.ControlID != "" && string(f.ControlID) == opts.ControlID:
+			selected = append(selected, i)
+		case opts.AssetID != "" && string(f.AssetID) == opts.AssetID:
+			selected = append(selected, i)
+		}
+	}
+	return selected
 }
 
 func writeNarrativePlaybooks(w io.Writer, playbooks []narrative.Playbook, depth string) {

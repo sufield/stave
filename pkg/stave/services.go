@@ -10,6 +10,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/sufield/stave/internal/core/controldef"
 	"github.com/sufield/stave/internal/platform/fsutil"
 	"github.com/sufield/stave/internal/util/jsonutil"
 	"gopkg.in/yaml.v3"
@@ -137,6 +138,23 @@ func RenderServicesList(ctx context.Context, opts ServicesListOptions) ([]byte, 
 		return nil, err
 	}
 
+	filtered := filterServices(enriched, opts)
+	slices.SortFunc(filtered, func(a, b ServiceWithControls) int {
+		return cmp.Compare(a.ID, b.ID)
+	})
+
+	var buf bytes.Buffer
+	if opts.Format == "json" {
+		if err := jsonutil.WriteIndented(&buf, filtered); err != nil {
+			return nil, fmt.Errorf("render services list: %w", err)
+		}
+	} else {
+		renderServicesListText(&buf, filtered)
+	}
+	return buf.Bytes(), nil
+}
+
+func filterServices(enriched []ServiceWithControls, opts ServicesListOptions) []ServiceWithControls {
 	filtered := make([]ServiceWithControls, 0, len(enriched))
 	for i := range enriched {
 		s := &enriched[i]
@@ -154,19 +172,7 @@ func RenderServicesList(ctx context.Context, opts ServicesListOptions) ([]byte, 
 		}
 		filtered = append(filtered, *s)
 	}
-	slices.SortFunc(filtered, func(a, b ServiceWithControls) int {
-		return cmp.Compare(a.ID, b.ID)
-	})
-
-	var buf bytes.Buffer
-	if opts.Format == "json" {
-		if err := jsonutil.WriteIndented(&buf, filtered); err != nil {
-			return nil, fmt.Errorf("render services list: %w", err)
-		}
-	} else {
-		renderServicesListText(&buf, filtered)
-	}
-	return buf.Bytes(), nil
+	return filtered
 }
 
 func renderServicesListText(buf *bytes.Buffer, services []ServiceWithControls) {
@@ -243,29 +249,7 @@ func RenderServicesInspect(ctx context.Context, opts ServicesInspectOptions) ([]
 	if err != nil {
 		return nil, err
 	}
-	var rows []serviceControlRow
-	for i := range controls {
-		id := string(controls[i].ID)
-		if !strings.HasPrefix(id, "CTL.") {
-			continue
-		}
-		rest := strings.TrimPrefix(id, "CTL.")
-		svc, _, ok := strings.Cut(rest, ".")
-		if !ok {
-			continue
-		}
-		if !strings.EqualFold(svc, opts.ServiceID) {
-			continue
-		}
-		rows = append(rows, serviceControlRow{
-			ID:       id,
-			Severity: strings.ToUpper(controls[i].Severity.String()),
-			Name:     controls[i].Name,
-		})
-	}
-	slices.SortFunc(rows, func(a, b serviceControlRow) int {
-		return cmp.Compare(a.ID, b.ID)
-	})
+	rows := controlRowsForService(controls, opts.ServiceID)
 
 	result := serviceInspectResult{
 		ServiceWithControls: *found,
@@ -281,6 +265,33 @@ func RenderServicesInspect(ctx context.Context, opts ServicesInspectOptions) ([]
 		renderServicesInspectText(&buf, result)
 	}
 	return buf.Bytes(), nil
+}
+
+func controlRowsForService(controls []controldef.ControlDefinition, serviceID string) []serviceControlRow {
+	var rows []serviceControlRow
+	for i := range controls {
+		id := string(controls[i].ID)
+		if !strings.HasPrefix(id, "CTL.") {
+			continue
+		}
+		rest := strings.TrimPrefix(id, "CTL.")
+		svc, _, ok := strings.Cut(rest, ".")
+		if !ok {
+			continue
+		}
+		if !strings.EqualFold(svc, serviceID) {
+			continue
+		}
+		rows = append(rows, serviceControlRow{
+			ID:       id,
+			Severity: strings.ToUpper(controls[i].Severity.String()),
+			Name:     controls[i].Name,
+		})
+	}
+	slices.SortFunc(rows, func(a, b serviceControlRow) int {
+		return cmp.Compare(a.ID, b.ID)
+	})
+	return rows
 }
 
 func renderServicesInspectText(buf *bytes.Buffer, r serviceInspectResult) {
@@ -347,11 +358,25 @@ func RenderServicesCoverage(ctx context.Context, opts ServicesCoverageOptions) (
 		return nil, err
 	}
 
+	report := buildCoverageReport(enriched, opts.Category)
+
+	var buf bytes.Buffer
+	if opts.Format == "json" {
+		if err := jsonutil.WriteIndented(&buf, report); err != nil {
+			return nil, fmt.Errorf("render services coverage: %w", err)
+		}
+	} else {
+		renderServicesCoverageText(&buf, report)
+	}
+	return buf.Bytes(), nil
+}
+
+func buildCoverageReport(enriched []ServiceWithControls, category string) servicesCoverageReport {
 	catMap := map[string]*categoryCoverage{}
 	var report servicesCoverageReport
 	for i := range enriched {
 		s := &enriched[i]
-		if opts.Category != "" && !strings.EqualFold(s.Category, opts.Category) {
+		if category != "" && !strings.EqualFold(s.Category, category) {
 			continue
 		}
 		report.Total++
@@ -391,16 +416,7 @@ func RenderServicesCoverage(ctx context.Context, opts ServicesCoverageOptions) (
 		return cmp.Compare(a.Category, b.Category)
 	})
 	report.ByCategory = cats
-
-	var buf bytes.Buffer
-	if opts.Format == "json" {
-		if err := jsonutil.WriteIndented(&buf, report); err != nil {
-			return nil, fmt.Errorf("render services coverage: %w", err)
-		}
-	} else {
-		renderServicesCoverageText(&buf, report)
-	}
-	return buf.Bytes(), nil
+	return report
 }
 
 func renderServicesCoverageText(buf *bytes.Buffer, r servicesCoverageReport) {

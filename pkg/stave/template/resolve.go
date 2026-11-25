@@ -32,24 +32,24 @@ func LoadAll(explicitDir string, embeddedFS fs.FS) ([]Template, error) {
 		if err != nil {
 			return nil, fmt.Errorf("load templates from %s: %w", dir, err)
 		}
-		for i := range ts {
-			if !seen[ts[i].Metadata.Name] {
-				seen[ts[i].Metadata.Name] = true
-				all = append(all, ts[i])
-			}
-		}
+		all = mergeTemplates(all, ts, seen)
 	}
 
 	embedded, err := LoadFromFS(embeddedFS, ".")
 	if err != nil {
 		return nil, fmt.Errorf("load embedded templates: %w", err)
 	}
-	for i := range embedded {
-		if !seen[embedded[i].Metadata.Name] {
-			seen[embedded[i].Metadata.Name] = true
-			all = append(all, embedded[i])
-		}
-	}
+	all = mergeTemplates(all, embedded, seen)
 
 	return all, nil
+}
+
+func mergeTemplates(dst, src []Template, seen map[string]bool) []Template {
+	for i := range src {
+		if !seen[src[i].Metadata.Name] {
+			seen[src[i].Metadata.Name] = true
+			dst = append(dst, src[i])
+		}
+	}
+	return dst
 }

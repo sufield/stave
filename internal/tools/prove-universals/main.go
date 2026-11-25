@@ -372,6 +372,45 @@ func loadAssets(dir string) []asset {
 	return all
 }
 
+func proveUniversal(u universal, assets []asset, formulaDir string, verbose bool) bool {
+	formulaPath := filepath.Join(formulaDir, u.file)
+	formulaContent, err := os.ReadFile(formulaPath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "read formula %s: %v\n", formulaPath, err)
+		os.Exit(4)
+	}
+
+	gs := u.match(assets)
+	grounding := generateGrounding(u.sort, u.preds, gs)
+	formula := insertGrounding(string(formulaContent), grounding)
+
+	if verbose {
+		fmt.Printf("--- %s grounding ---\n%s\n", u.id, grounding)
+	}
+
+	result, output := runZ3(formula)
+	ok := result == "sat" || result == "unsat"
+
+	label := "violation"
+	if result == "unsat" {
+		label = "holds"
+	} else if result != "sat" {
+		label = result
+	}
+
+	vacuous := ""
+	if len(gs) == 0 && result == "unsat" {
+		vacuous = " (vacuous)"
+	}
+
+	fmt.Printf("  %-4s  %-6s  %-10s  grounded=%d%s\n", u.id, result, label, len(gs), vacuous)
+
+	if verbose && result != "sat" && result != "unsat" {
+		fmt.Printf("    z3 output: %s\n", output)
+	}
+	return ok
+}
+
 func main() {
 	obsDir := flag.String("observations", "", "observation snapshots directory")
 	formulaDir := flag.String("formulas", "data/universals", "SMT-LIB formula directory")
@@ -393,45 +432,11 @@ func main() {
 
 	pass, fail := 0, 0
 	for _, u := range defs {
-		formulaPath := filepath.Join(*formulaDir, u.file)
-		formulaContent, err := os.ReadFile(formulaPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "read formula %s: %v\n", formulaPath, err)
-			os.Exit(4)
-		}
-
-		gs := u.match(assets)
-		grounding := generateGrounding(u.sort, u.preds, gs)
-		formula := insertGrounding(string(formulaContent), grounding)
-
-		if *verbose {
-			fmt.Printf("--- %s grounding ---\n%s\n", u.id, grounding)
-		}
-
-		result, output := runZ3(formula)
-		switch result {
-		case "sat", "unsat":
+		ok := proveUniversal(u, assets, *formulaDir, *verbose)
+		if ok {
 			pass++
-		default:
+		} else {
 			fail++
-		}
-
-		label := "violation"
-		if result == "unsat" {
-			label = "holds"
-		} else if result != "sat" {
-			label = result
-		}
-
-		vacuous := ""
-		if len(gs) == 0 && result == "unsat" {
-			vacuous = " (vacuous)"
-		}
-
-		fmt.Printf("  %-4s  %-6s  %-10s  grounded=%d%s\n", u.id, result, label, len(gs), vacuous)
-
-		if *verbose && result != "sat" && result != "unsat" {
-			fmt.Printf("    z3 output: %s\n", output)
 		}
 	}
 

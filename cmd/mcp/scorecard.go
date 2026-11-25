@@ -9,7 +9,6 @@ import (
 	"slices"
 	"text/template"
 
-	"github.com/sufield/stave/internal/core/evidence"
 	"github.com/sufield/stave/pkg/stave"
 )
 
@@ -124,7 +123,7 @@ func buildScorecardView(reports []*stave.ComplianceReport) scorecardView {
 
 // percentColor maps a compliance percentage to a color: green > 90,
 // amber 70–90, red < 70.
-func buildRequirementViews(reqs []evidence.RequirementAssessment) []reqView {
+func buildRequirementViews(reqs []stave.RequirementAssessment) []reqView {
 	var views []reqView
 	for j := range reqs {
 		ra := &reqs[j]

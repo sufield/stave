@@ -178,67 +178,8 @@ func runChainDiff(chainPath string, compiler *cel.Compiler, verbose bool) int {
 
 	for mask := range n {
 		totalVectors++
-
-		// Build a combined asset with properties from all firing controls
-		props := make(map[string]any)
-		var celFires, refFires int
-
-		for bit, e := range entries {
-			shouldFire := mask&(1<<bit) != 0
-
-			if shouldFire {
-				// Set all fields to unsafe values
-				for _, f := range e.fields {
-					setNestedField(props, f.Path, f.Value)
-				}
-			}
-			// If not firing, leave fields absent
-		}
-
-		a := asset.Asset{
-			ID:         "chain-test",
-			Type:       kernel.AssetType("aws_iam_user"),
-			Vendor:     "aws",
-			Properties: props,
-		}
-
-		// Evaluate each control
-		for bit, e := range entries {
-			shouldFire := mask&(1<<bit) != 0
-
-			celResult, celErr := cel.Evaluate(e.cp, a, nil, e.def.Params.Raw())
-			if celErr != nil {
-				celResult = false
-			}
-
-			vec := make(testVector)
-			for _, f := range e.fields {
-				if shouldFire {
-					vec[f.Path] = fieldState{Present: true, Value: f.Value}
-				} else {
-					vec[f.Path] = fieldState{Present: false}
-				}
-			}
-			refResult := evalReference(e.def.UnsafePredicate, vec)
-
-			if celResult {
-				celFires++
-			}
-			if refResult {
-				refFires++
-			}
-		}
-
-		celChainFires := celFires >= chain.EscalationThreshold
-		refChainFires := refFires >= chain.EscalationThreshold
-
-		if celChainFires != refChainFires {
+		if evaluateChainMask(chain, entries, mask, verbose) {
 			divergences++
-			fmt.Printf("CHAIN DIVERGENCE %s: cel_fires=%d ref_fires=%d threshold=%d mask=%b\n",
-				chain.ID, celFires, refFires, chain.EscalationThreshold, mask)
-		} else if verbose {
-			fmt.Printf("  OK chain %s: fires=%v (%d/%d >= %d) mask=%b\n",
-				chain.ID, celChainFires, celFires, len(entries), chain.EscalationThreshold, mask)
 		}
 	}
 
@@ -249,6 +190,65 @@ func runChainDiff(chainPath string, compiler *cel.Compiler, verbose bool) int {
 	fmt.Printf("[%s] chain %s: %d vectors, %d divergences\n",
 		status, chain.ID, totalVectors, divergences)
 	return divergences
+}
+
+func evaluateChainMask(chain policy.ChainDefinition, entries []controlEntry, mask int, verbose bool) bool {
+	props := make(map[string]any)
+	for bit, e := range entries {
+		if mask&(1<<bit) != 0 {
+			for _, f := range e.fields {
+				setNestedField(props, f.Path, f.Value)
+			}
+		}
+	}
+
+	a := asset.Asset{
+		ID:         "chain-test",
+		Type:       kernel.AssetType("aws_iam_user"),
+		Vendor:     "aws",
+		Properties: props,
+	}
+
+	var celFires, refFires int
+	for bit, e := range entries {
+		shouldFire := mask&(1<<bit) != 0
+
+		celResult, celErr := cel.Evaluate(e.cp, a, nil, e.def.Params.Raw())
+		if celErr != nil {
+			celResult = false
+		}
+
+		vec := make(testVector)
+		for _, f := range e.fields {
+			if shouldFire {
+				vec[f.Path] = fieldState{Present: true, Value: f.Value}
+			} else {
+				vec[f.Path] = fieldState{Present: false}
+			}
+		}
+		refResult := evalReference(e.def.UnsafePredicate, vec)
+
+		if celResult {
+			celFires++
+		}
+		if refResult {
+			refFires++
+		}
+	}
+
+	celChainFires := celFires >= chain.EscalationThreshold
+	refChainFires := refFires >= chain.EscalationThreshold
+
+	if celChainFires != refChainFires {
+		fmt.Printf("CHAIN DIVERGENCE %s: cel_fires=%d ref_fires=%d threshold=%d mask=%b\n",
+			chain.ID, celFires, refFires, chain.EscalationThreshold, mask)
+		return true
+	}
+	if verbose {
+		fmt.Printf("  OK chain %s: fires=%v (%d/%d >= %d) mask=%b\n",
+			chain.ID, celChainFires, celFires, len(entries), chain.EscalationThreshold, mask)
+	}
+	return false
 }
 
 type controlEntry struct {

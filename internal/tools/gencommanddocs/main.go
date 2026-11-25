@@ -128,32 +128,8 @@ func renderCatalog(root *cobra.Command) (*bytes.Buffer, error) {
 	all, leaves := collectPaths(root)
 	short := shortByPath(root)
 
-	annotated := map[string]struct{}{}
-	var phantom []string
-	for _, a := range catalogAnnotations {
-		annotated[a.Path] = struct{}{}
-		if _, ok := all[a.Path]; !ok {
-			phantom = append(phantom, a.Path)
-		}
-	}
-	var missing []string
-	for c := range leaves {
-		if _, ok := annotated[c]; !ok {
-			missing = append(missing, c)
-		}
-	}
-	slices.Sort(phantom)
-	slices.Sort(missing)
-	if len(phantom) > 0 || len(missing) > 0 {
-		var b strings.Builder
-		b.WriteString("catalog annotations are out of sync with the binary:\n")
-		for _, c := range phantom {
-			fmt.Fprintf(&b, "  phantom (remove from catalog_meta.go): %s\n", c)
-		}
-		for _, c := range missing {
-			fmt.Fprintf(&b, "  missing  (add to catalog_meta.go):       %s\n", c)
-		}
-		return nil, fmt.Errorf("%s", b.String())
+	if err := validateCatalogAnnotations(all, leaves); err != nil {
+		return nil, err
 	}
 
 	var buf bytes.Buffer
@@ -185,6 +161,37 @@ func renderCatalog(root *cobra.Command) (*bytes.Buffer, error) {
 
 // annotationsForGroup returns the annotations in the given group,
 // preserving catalogAnnotations slice order (editorial ordering).
+func validateCatalogAnnotations(all, leaves map[string]struct{}) error {
+	annotated := map[string]struct{}{}
+	var phantom []string
+	for _, a := range catalogAnnotations {
+		annotated[a.Path] = struct{}{}
+		if _, ok := all[a.Path]; !ok {
+			phantom = append(phantom, a.Path)
+		}
+	}
+	var missing []string
+	for c := range leaves {
+		if _, ok := annotated[c]; !ok {
+			missing = append(missing, c)
+		}
+	}
+	slices.Sort(phantom)
+	slices.Sort(missing)
+	if len(phantom) > 0 || len(missing) > 0 {
+		var b strings.Builder
+		b.WriteString("catalog annotations are out of sync with the binary:\n")
+		for _, c := range phantom {
+			fmt.Fprintf(&b, "  phantom (remove from catalog_meta.go): %s\n", c)
+		}
+		for _, c := range missing {
+			fmt.Fprintf(&b, "  missing  (add to catalog_meta.go):       %s\n", c)
+		}
+		return fmt.Errorf("%s", b.String())
+	}
+	return nil
+}
+
 func annotationsForGroup(group string) []catalogAnnotation {
 	var out []catalogAnnotation
 	for _, a := range catalogAnnotations {

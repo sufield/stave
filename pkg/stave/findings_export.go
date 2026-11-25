@@ -122,18 +122,9 @@ func ExportTickets(assessmentData []byte, teamManifest, team, format string) ([]
 	}
 	tickets := ticketexport.Generate(findings)
 
-	// Team-manifest enrichment.
 	if teamManifest != "" {
-		manifest, manifestErr := teams.LoadManifest(teamManifest)
-		if manifestErr != nil {
-			return nil, fmt.Errorf("load team manifest: %w", manifestErr)
-		}
-		for i := range tickets {
-			t := &tickets[i]
-			if t.Team == "" {
-				owner := manifest.ResolveOwner(nil, string(t.AssetID), t.ControlID)
-				t.Team = teams.TeamID(owner.TeamName)
-			}
+		if err := enrichTicketTeams(tickets, teamManifest); err != nil {
+			return nil, err
 		}
 	}
 
@@ -155,6 +146,21 @@ func ExportTickets(assessmentData []byte, teamManifest, team, format string) ([]
 		}
 	}
 	return buf.Bytes(), nil
+}
+
+func enrichTicketTeams(tickets ticketexport.Tickets, teamManifest string) error {
+	manifest, err := teams.LoadManifest(teamManifest)
+	if err != nil {
+		return fmt.Errorf("load team manifest: %w", err)
+	}
+	for i := range tickets {
+		t := &tickets[i]
+		if t.Team == "" {
+			owner := manifest.ResolveOwner(nil, string(t.AssetID), t.ControlID)
+			t.Team = teams.TeamID(owner.TeamName)
+		}
+	}
+	return nil
 }
 
 func writeTicketsExportCSV(w io.Writer, tickets ticketexport.Tickets) (err error) {
