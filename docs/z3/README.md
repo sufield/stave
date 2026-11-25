@@ -115,7 +115,7 @@ observation assets into Z3 constants with predicate truth values, plus a
 
 ## SIR as Z3 Input Format
 
-`stave export-sir --format smt2` serializes the Stave Intermediate
+`stave export sir --format smt2` serializes the Stave Intermediate
 Representation as SMT-LIB v2.
 
 **Location:** `internal/core/sirfacts/facts.go` → `SerializeSMT2()`.
@@ -199,6 +199,7 @@ internal/
 ## CLI Reference
 
 ```bash
+# doctest:skip — requires CGO z3 build + observation fixtures
 # In-process Z3 queries (requires CGO build)
 stave prove -o observations --query compatibility \
   --principal arn:aws:iam::123:role/X --action s3:GetObject \
@@ -221,9 +222,12 @@ z3 proof.smt2  # verify independently
 
 # Universal properties (no CGO, z3 binary on PATH)
 stave prove -o observations --query universal \
-  --formulas formulas/ --grounding grounding-map.yaml
+  --formulas formulas/ --grounding-map grounding-map.yaml
+```
 
+```bash
+# doctest:skip — requires observation fixtures
 # SIR as SMT-LIB (facts for external solver)
-stave export-sir -o observations --format smt2
-stave export-sir -o observations --format smt2 --closed-world
+stave export sir -o observations --format smt2
+stave export sir -o observations --format smt2 --closed-world
 ```
