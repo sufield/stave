@@ -265,32 +265,46 @@ func (w *FindingWriter) writeViolationsFromEnriched(d *drawer, result *evaluatio
 	exploitableFindings, oneAwayFindings, reachableFindings := partitionByExploitability(enriched)
 
 	num := 1
-	for i := range exploitableFindings {
-		f := &exploitableFindings[i]
-		w.writeChainMemberFinding(d, num, f)
+	num = w.writeExploitableSection(d, exploitableFindings, num)
+	num = w.writeOneAwaySection(d, oneAwayFindings, num, len(exploitableFindings) > 0)
+	_ = w.writeReachableSection(d, reachableFindings, num,
+		len(exploitableFindings) > 0 || len(oneAwayFindings) > 0)
+}
+
+func (w *FindingWriter) writeExploitableSection(d *drawer, findings []remediation.Finding, num int) int {
+	for i := range findings {
+		w.writeChainMemberFinding(d, num, &findings[i])
 		num++
 	}
-	if len(oneAwayFindings) > 0 {
-		if len(exploitableFindings) > 0 {
-			d.f("\n%s\n", strings.Repeat("\u2500", 60))
-		}
-		for i := range oneAwayFindings {
-			f := &oneAwayFindings[i]
-			w.writeOneAwayFinding(d, num, f)
-			num++
-		}
+	return num
+}
+
+func (w *FindingWriter) writeOneAwaySection(d *drawer, findings []remediation.Finding, num int, needSep bool) int {
+	if len(findings) == 0 {
+		return num
 	}
-	if len(reachableFindings) > 0 {
-		if len(exploitableFindings) > 0 || len(oneAwayFindings) > 0 {
-			d.f("\n%s\n", strings.Repeat("\u2500", 60))
-		}
-		showLabel := len(exploitableFindings) > 0 || len(oneAwayFindings) > 0
-		for i := range reachableFindings {
-			f := &reachableFindings[i]
-			w.writeIsolatedFinding(d, num, f, showLabel)
-			num++
-		}
+	if needSep {
+		d.f("\n%s\n", strings.Repeat("─", 60))
 	}
+	for i := range findings {
+		w.writeOneAwayFinding(d, num, &findings[i])
+		num++
+	}
+	return num
+}
+
+func (w *FindingWriter) writeReachableSection(d *drawer, findings []remediation.Finding, num int, needSep bool) int {
+	if len(findings) == 0 {
+		return num
+	}
+	if needSep {
+		d.f("\n%s\n", strings.Repeat("─", 60))
+	}
+	for i := range findings {
+		w.writeIsolatedFinding(d, num, &findings[i], needSep)
+		num++
+	}
+	return num
 }
 
 func partitionByExploitability(findings []remediation.Finding) (exploitable, oneAway, reachable []remediation.Finding) {

@@ -29,30 +29,42 @@ func WriteList(w io.Writer, f *AcceptanceFile, format, listType string, showExpi
 		acks, exceptions, exemptions)
 
 	if listType == "all" || listType == "acknowledgment" {
-		for i := range f.Acknowledgments {
-			a := &f.Acknowledgments[i]
-			if !showExpired && a.IsInactive() {
-				continue
-			}
-			fmt.Fprintf(w, "  [ACK]  %-40s  expires %s  %s  %s\n",
-				a.ID, a.ExpiryDate, a.Approver, strings.ToUpper(string(a.Status)))
-		}
+		writeAcknowledgments(w, f.Acknowledgments, showExpired)
 	}
 	if listType == "all" || listType == "exception" {
-		for _, e := range f.Exceptions {
-			exp := "never"
-			if e.ExpiryDate != "" {
-				exp = e.ExpiryDate
-			}
-			fmt.Fprintf(w, "  [EXC]  %s@%s  expires %s\n", e.ControlID, e.AssetID, exp)
-		}
+		writeExceptions(w, f.Exceptions)
 	}
 	if listType == "all" || listType == "exemption" {
-		for _, e := range f.Exemptions {
-			fmt.Fprintf(w, "  [EXM]  %s  %s\n", e.AssetPattern, e.Reason)
-		}
+		writeExemptions(w, f.Exemptions)
 	}
 	return nil
+}
+
+func writeAcknowledgments(w io.Writer, acks []AcknowledgmentEntry, showExpired bool) {
+	for i := range acks {
+		a := &acks[i]
+		if !showExpired && a.IsInactive() {
+			continue
+		}
+		fmt.Fprintf(w, "  [ACK]  %-40s  expires %s  %s  %s\n",
+			a.ID, a.ExpiryDate, a.Approver, strings.ToUpper(string(a.Status)))
+	}
+}
+
+func writeExceptions(w io.Writer, exceptions []ExceptionEntry) {
+	for _, e := range exceptions {
+		exp := "never"
+		if e.ExpiryDate != "" {
+			exp = e.ExpiryDate
+		}
+		fmt.Fprintf(w, "  [EXC]  %s@%s  expires %s\n", e.ControlID, e.AssetID, exp)
+	}
+}
+
+func writeExemptions(w io.Writer, exemptions []ExemptionEntry) {
+	for _, e := range exemptions {
+		fmt.Fprintf(w, "  [EXM]  %s  %s\n", e.AssetPattern, e.Reason)
+	}
 }
 
 // WriteHistory renders the full acknowledgment audit trail in

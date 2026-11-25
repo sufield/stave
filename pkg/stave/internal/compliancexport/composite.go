@@ -93,34 +93,42 @@ func renderCompositeTable(w io.Writer, export CompositeEvidenceExport) {
 	}
 
 	if export.Composite.HasTopNImpact() {
-		fmt.Fprintln(w, "\nTOP-N IMPACT ANALYSIS")
-		fmt.Fprintln(w, strings.Repeat("-", 70))
-		for _, t := range export.Composite.TopNSharedGapImpact {
-			if t.TopNGaps == 0 {
-				continue
-			}
-			fmt.Fprintf(w, "  Fix top %2d shared gaps -> closes %d/%d obligations (%.1f%%)\n",
-				t.TopNGaps, t.ObligationsClosed, t.TotalObligations, t.ClosurePercent)
-		}
+		renderTopNImpact(w, export.Composite.TopNSharedGapImpact)
 	}
 
 	if export.Composite.HasUniqueGaps() {
-		fmt.Fprintf(w, "\nUNIQUE GAPS — Framework-specific (%d)\n", len(export.Composite.UniqueGaps))
-		fmt.Fprintln(w, strings.Repeat("-", 70))
-		byFW := make(map[string][]evidence.UniqueGap)
-		for _, g := range export.Composite.UniqueGaps {
-			byFW[g.Framework] = append(byFW[g.Framework], g)
-		}
-		for fw, gaps := range byFW {
-			fmt.Fprintf(w, "  %s (%d gaps):\n", fw, len(gaps))
-			for _, g := range gaps {
-				fmt.Fprintf(w, "    %s  %s  %s\n", g.ControlID, g.ResourceARN, g.RequirementID)
-			}
-		}
+		renderUniqueGaps(w, export.Composite.UniqueGaps)
 	}
 
 	fmt.Fprintf(w, "\nUnique gaps: %d  Shared gaps: %d\n",
 		export.Composite.UniqueGapCount, len(export.Composite.SharedGaps))
+}
+
+func renderTopNImpact(w io.Writer, impact []evidence.GapImpactSummary) {
+	fmt.Fprintln(w, "\nTOP-N IMPACT ANALYSIS")
+	fmt.Fprintln(w, strings.Repeat("-", 70))
+	for _, t := range impact {
+		if t.TopNGaps == 0 {
+			continue
+		}
+		fmt.Fprintf(w, "  Fix top %2d shared gaps -> closes %d/%d obligations (%.1f%%)\n",
+			t.TopNGaps, t.ObligationsClosed, t.TotalObligations, t.ClosurePercent)
+	}
+}
+
+func renderUniqueGaps(w io.Writer, gaps []evidence.UniqueGap) {
+	fmt.Fprintf(w, "\nUNIQUE GAPS — Framework-specific (%d)\n", len(gaps))
+	fmt.Fprintln(w, strings.Repeat("-", 70))
+	byFW := make(map[string][]evidence.UniqueGap)
+	for _, g := range gaps {
+		byFW[g.Framework] = append(byFW[g.Framework], g)
+	}
+	for fw, fwGaps := range byFW {
+		fmt.Fprintf(w, "  %s (%d gaps):\n", fw, len(fwGaps))
+		for _, g := range fwGaps {
+			fmt.Fprintf(w, "    %s  %s  %s\n", g.ControlID, g.ResourceARN, g.RequirementID)
+		}
+	}
 }
 
 func renderSharedGaps(w io.Writer, gaps []evidence.SharedGap) {

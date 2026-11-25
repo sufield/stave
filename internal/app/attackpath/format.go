@@ -25,27 +25,19 @@ func WriteDOT(w io.Writer, g *Graph) error {
 	fmt.Fprintln(w)
 
 	// Emit edges: capability → capability via chain.
+	chainIndex := make(map[kernel.ChainID]*ChainNode, len(g.ChainNodes))
+	for i := range g.ChainNodes {
+		chainIndex[g.ChainNodes[i].ChainID] = &g.ChainNodes[i]
+	}
 	for _, edge := range g.Edges {
-		// Find the chain node to get severity.
-		sev := ""
-		for i := range g.ChainNodes {
-			if g.ChainNodes[i].ChainID == edge.FromChain {
-				sev = g.ChainNodes[i].Severity.String()
-				break
-			}
+		cn := chainIndex[edge.FromChain]
+		if cn == nil {
+			continue
 		}
-		label := dotLabel(string(edge.FromChain)) + `\n[` + sev + `]`
-
-		// Edge goes from precondition capabilities to postcondition capabilities
-		// through the chain. For DOT simplicity, use via_capability as the link.
-		for i := range g.ChainNodes {
-			if g.ChainNodes[i].ChainID == edge.FromChain {
-				for _, pre := range g.ChainNodes[i].Preconditions {
-					fmt.Fprintf(w, "  %s -> %s [label=%q];\n",
-						dotID(string(pre)), dotID(string(edge.ViaCapability)), label)
-				}
-				break
-			}
+		label := dotLabel(string(edge.FromChain)) + `\n[` + cn.Severity.String() + `]`
+		for _, pre := range cn.Preconditions {
+			fmt.Fprintf(w, "  %s -> %s [label=%q];\n",
+				dotID(string(pre)), dotID(string(edge.ViaCapability)), label)
 		}
 	}
 

@@ -367,38 +367,46 @@ func buildFindingProperties(f *remediation.Finding, alts []map[string]any) map[s
 		props["stave/near_miss_chains"] = marshalNearMissChains(f.NearMissChains)
 	}
 	if f.HasReasoningTrace() {
-		trace := make([]map[string]any, len(f.ReasoningTrace))
-		for i, mc := range f.ReasoningTrace {
-			trace[i] = map[string]any{
-				"predicate_expr":  mc.PredicateExpr,
-				"observation_key": mc.ObservationKey,
-				"operator":        mc.Operator,
-				"expected_value":  mc.ExpectedValue,
-				"observed_value":  mc.ObservedValue,
-			}
-		}
-		props["reasoning_trace"] = trace
+		props["reasoning_trace"] = marshalReasoningTrace(f.ReasoningTrace)
 	}
 	if len(alts) > 0 {
 		props["alternatives"] = alts
 	}
 	if f.HasDelta() {
-		deltas := make([]map[string]any, len(f.Delta))
-		for i, d := range f.Delta {
-			deltas[i] = map[string]any{
-				"property":      d.PropertyPath,
-				"label":         d.PropertyLabel,
-				"current_value": d.CurrentValue,
-				"fix_action":    d.FixAction,
-			}
-		}
-		props["stave/delta"] = deltas
+		props["stave/delta"] = marshalDelta(f.Delta)
 	}
 
 	if len(props) == 0 {
 		return nil
 	}
 	return props
+}
+
+func marshalReasoningTrace(trace []evaluation.MatchedClause) []map[string]any {
+	out := make([]map[string]any, len(trace))
+	for i, mc := range trace {
+		out[i] = map[string]any{
+			"predicate_expr":  mc.PredicateExpr,
+			"observation_key": mc.ObservationKey,
+			"operator":        mc.Operator,
+			"expected_value":  mc.ExpectedValue,
+			"observed_value":  mc.ObservedValue,
+		}
+	}
+	return out
+}
+
+func marshalDelta(delta []policy.DeltaPath) []map[string]any {
+	out := make([]map[string]any, len(delta))
+	for i, d := range delta {
+		out[i] = map[string]any{
+			"property":      d.PropertyPath,
+			"label":         d.PropertyLabel,
+			"current_value": d.CurrentValue,
+			"fix_action":    d.FixAction,
+		}
+	}
+	return out
 }
 
 func marshalNearMissChains(chains []evaluation.NearMissEntry) []map[string]any {

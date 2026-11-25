@@ -94,30 +94,43 @@ func (r *Reporter) writeText(res *appvalidation.Report, report Report) error {
 		}
 	}
 
-	if _, err := fmt.Fprintf(r.Writer, "---\nChecked: %d controls, %d snapshots, %d asset observations",
-		res.Summary.ControlsLoaded,
-		res.Summary.SnapshotsLoaded,
-		res.Summary.AssetObservationsLoaded); err != nil {
+	if err := writeSummaryFooter(r.Writer, res.Summary); err != nil {
+		return err
+	}
+	if r.FixHints {
+		if err := writeFixHints(r.Writer, report.FixHints); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func writeSummaryFooter(w io.Writer, s appvalidation.Summary) error {
+	if _, err := fmt.Fprintf(w, "---\nChecked: %d controls, %d snapshots, %d asset observations",
+		s.ControlsLoaded, s.SnapshotsLoaded, s.AssetObservationsLoaded); err != nil {
 		return fmt.Errorf("write output: %w", err)
 	}
-
-	if res.Summary.IdentityObservationsLoaded > 0 {
-		if _, err := fmt.Fprintf(r.Writer, ", %d identity observations", res.Summary.IdentityObservationsLoaded); err != nil {
+	if s.IdentityObservationsLoaded > 0 {
+		if _, err := fmt.Fprintf(w, ", %d identity observations", s.IdentityObservationsLoaded); err != nil {
 			return fmt.Errorf("write output: %w", err)
 		}
 	}
-	if _, err := fmt.Fprintln(r.Writer); err != nil {
+	if _, err := fmt.Fprintln(w); err != nil {
 		return fmt.Errorf("write output: %w", err)
 	}
+	return nil
+}
 
-	if r.FixHints && len(report.FixHints) > 0 {
-		if _, err := fmt.Fprintln(r.Writer, "\nSuggested next commands:"); err != nil {
+func writeFixHints(w io.Writer, hints []string) error {
+	if len(hints) == 0 {
+		return nil
+	}
+	if _, err := fmt.Fprintln(w, "\nSuggested next commands:"); err != nil {
+		return fmt.Errorf("write output: %w", err)
+	}
+	for _, h := range hints {
+		if _, err := fmt.Fprintf(w, "  - %s\n", h); err != nil {
 			return fmt.Errorf("write output: %w", err)
-		}
-		for _, h := range report.FixHints {
-			if _, err := fmt.Fprintf(r.Writer, "  - %s\n", h); err != nil {
-				return fmt.Errorf("write output: %w", err)
-			}
 		}
 	}
 	return nil

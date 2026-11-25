@@ -74,24 +74,8 @@ func (r *VersionRunner) Run(edition Edition, verbose, verify bool) error {
 		fmt.Fprintf(&sb, "Project root: %s\nLockfile:     %v (%s)\nLock hash:    %s\n",
 			compose.EmptyDash(out.ProjectRoot), out.LockPresent, compose.EmptyDash(out.LockFile), compose.EmptyDash(out.LockHash))
 	}
-
 	if verify {
-		fmt.Fprintf(&sb, "\nIntegrity:\n")
-		fmt.Fprintf(&sb, "  Binary hash:  %s\n", compose.EmptyDash(out.BinaryHash))
-		fmt.Fprintf(&sb, "  Policy hash:  %s\n", compose.EmptyDash(out.PolicyHash))
-		if out.IntegrityError != "" {
-			fmt.Fprintf(&sb, "  WARNING:      %s\n", out.IntegrityError)
-		}
-		fmt.Fprintf(&sb, "  Controls:     %d embedded\n", out.ControlCount)
-		if out.GoVersion != "" {
-			fmt.Fprintf(&sb, "  Go version:   %s\n", out.GoVersion)
-		}
-		if len(out.Modules) > 0 {
-			fmt.Fprintf(&sb, "  Modules:      %d dependencies\n", len(out.Modules))
-			for _, m := range out.Modules {
-				fmt.Fprintf(&sb, "    %s\n", m)
-			}
-		}
+		writeIntegritySection(&sb, &out)
 	}
 
 	_, err := fmt.Fprint(r.Stdout, sb.String())
@@ -116,6 +100,25 @@ func (r *VersionRunner) enrichWithProjectInfo(out *versionOutput) {
 		if data, readErr := fsutil.ReadFileLimited(lockPath); readErr == nil {
 			sum := sha256.Sum256(data)
 			out.LockHash = hex.EncodeToString(sum[:])
+		}
+	}
+}
+
+func writeIntegritySection(sb *strings.Builder, out *versionOutput) {
+	fmt.Fprintf(sb, "\nIntegrity:\n")
+	fmt.Fprintf(sb, "  Binary hash:  %s\n", compose.EmptyDash(out.BinaryHash))
+	fmt.Fprintf(sb, "  Policy hash:  %s\n", compose.EmptyDash(out.PolicyHash))
+	if out.IntegrityError != "" {
+		fmt.Fprintf(sb, "  WARNING:      %s\n", out.IntegrityError)
+	}
+	fmt.Fprintf(sb, "  Controls:     %d embedded\n", out.ControlCount)
+	if out.GoVersion != "" {
+		fmt.Fprintf(sb, "  Go version:   %s\n", out.GoVersion)
+	}
+	if len(out.Modules) > 0 {
+		fmt.Fprintf(sb, "  Modules:      %d dependencies\n", len(out.Modules))
+		for _, m := range out.Modules {
+			fmt.Fprintf(sb, "    %s\n", m)
 		}
 	}
 }

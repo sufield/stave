@@ -90,41 +90,49 @@ func exemptWriteSuggestTable(w io.Writer, r *exemptionsuggest.Result) error {
 	fmt.Fprintln(w)
 
 	if len(r.Oscillating) > 0 {
-		fmt.Fprintf(w, "OSCILLATING — root cause required, not re-remediation (%d)\n", len(r.Oscillating))
-		for i := range r.Oscillating {
-			c := &r.Oscillating[i]
-			fmt.Fprintf(w, "  %-30s  %-8s  %s\n",
-				c.ControlID,
-				strings.ToUpper(c.Severity.String()),
-				c.AssetID)
-			fmt.Fprintf(w, "    Cycles: %d in %d days\n", c.Cycles, r.WindowDays)
-			if c.HasOwner() {
-				fmt.Fprintf(w, "    Team: %s\n", c.OwnerKey())
-			}
-			fmt.Fprintf(w, "    Command: %s\n", c.ExemptCmd)
-		}
-		fmt.Fprintln(w)
+		writeOscillatingSection(w, r.Oscillating, r.WindowDays)
 	}
 
 	if len(r.Chronic) > 0 {
-		fmt.Fprintf(w, "CHRONIC — open >%dd, no exemption (%d)\n", r.MinDwellDays, len(r.Chronic))
-		for i := range r.Chronic {
-			c := &r.Chronic[i]
-			team := ""
-			if c.HasOwner() {
-				team = "  Team " + c.OwnerKey()
-			}
-			fmt.Fprintf(w, "  %-30s  %-8s  open %dd%s\n",
-				c.ControlID,
-				strings.ToUpper(c.Severity.String()),
-				int(c.DwellDays),
-				team)
-			fmt.Fprintf(w, "    Command: %s\n", c.ExemptCmd)
-		}
-		fmt.Fprintln(w)
+		writeChronicSection(w, r.Chronic, r.MinDwellDays)
 	}
 
 	return nil
+}
+
+func writeOscillatingSection(w io.Writer, candidates []exemptionsuggest.Candidate, windowDays int) {
+	fmt.Fprintf(w, "OSCILLATING — root cause required, not re-remediation (%d)\n", len(candidates))
+	for i := range candidates {
+		c := &candidates[i]
+		fmt.Fprintf(w, "  %-30s  %-8s  %s\n",
+			c.ControlID,
+			strings.ToUpper(c.Severity.String()),
+			c.AssetID)
+		fmt.Fprintf(w, "    Cycles: %d in %d days\n", c.Cycles, windowDays)
+		if c.HasOwner() {
+			fmt.Fprintf(w, "    Team: %s\n", c.OwnerKey())
+		}
+		fmt.Fprintf(w, "    Command: %s\n", c.ExemptCmd)
+	}
+	fmt.Fprintln(w)
+}
+
+func writeChronicSection(w io.Writer, candidates []exemptionsuggest.Candidate, minDwellDays int) {
+	fmt.Fprintf(w, "CHRONIC — open >%dd, no exemption (%d)\n", minDwellDays, len(candidates))
+	for i := range candidates {
+		c := &candidates[i]
+		team := ""
+		if c.HasOwner() {
+			team = "  Team " + c.OwnerKey()
+		}
+		fmt.Fprintf(w, "  %-30s  %-8s  open %dd%s\n",
+			c.ControlID,
+			strings.ToUpper(c.Severity.String()),
+			int(c.DwellDays),
+			team)
+		fmt.Fprintf(w, "    Command: %s\n", c.ExemptCmd)
+	}
+	fmt.Fprintln(w)
 }
 
 func exemptCollectKeys(acceptanceFile string) map[string]struct{} {

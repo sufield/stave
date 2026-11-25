@@ -39,47 +39,55 @@ func WriteTable(w io.Writer, r *Report) {
 	}
 
 	if len(r.ShoppingList) > 0 {
-		fmt.Fprintln(w, "EXTRACTOR SHOPPING LIST — fields to add to close gaps")
-		fmt.Fprintln(w, strings.Repeat("-", 72))
-		var assetTypes []kernel.AssetType
-		for at := range r.ShoppingList {
-			assetTypes = append(assetTypes, at)
-		}
-		slices.SortFunc(assetTypes, func(a, b kernel.AssetType) int {
-			return cmp.Compare(string(a), string(b))
-		})
-		for _, at := range assetTypes {
-			fmt.Fprintf(w, "\n  Asset type: %s\n", at)
-			for _, item := range r.ShoppingList[at] {
-				fmt.Fprintf(w, "    + %-40s (%s — %s)\n",
-					item.Field, strings.Join(controlIDStrings(item.RequiredBy), ", "), strings.ToUpper(item.MaxSeverity.String()))
-			}
-		}
-		fmt.Fprintln(w)
+		writeShoppingList(w, r.ShoppingList)
 	}
 
 	if len(r.FrameworkCoverage) > 0 {
-		fmt.Fprintln(w, "COMPLIANCE FRAMEWORK IMPACT")
-		fmt.Fprintln(w, strings.Repeat("-", 72))
-		fmt.Fprintf(w, "  %-12s %-12s %-12s %-12s %s\n",
-			"Framework", "Evaluable", "Incomplete", "Silent Risk", "Coverage")
-		fmt.Fprintf(w, "  %-12s %-12s %-12s %-12s %s\n",
-			strings.Repeat("-", 10), strings.Repeat("-", 10),
-			strings.Repeat("-", 10), strings.Repeat("-", 10), strings.Repeat("-", 8))
-		var fws []policy.ComplianceFramework
-		for fw := range r.FrameworkCoverage {
-			fws = append(fws, fw)
+		writeFrameworkCoverage(w, r.FrameworkCoverage)
+	}
+}
+
+func writeShoppingList(w io.Writer, list map[kernel.AssetType][]ShoppingItem) {
+	fmt.Fprintln(w, "EXTRACTOR SHOPPING LIST — fields to add to close gaps")
+	fmt.Fprintln(w, strings.Repeat("-", 72))
+	var assetTypes []kernel.AssetType
+	for at := range list {
+		assetTypes = append(assetTypes, at)
+	}
+	slices.SortFunc(assetTypes, func(a, b kernel.AssetType) int {
+		return cmp.Compare(string(a), string(b))
+	})
+	for _, at := range assetTypes {
+		fmt.Fprintf(w, "\n  Asset type: %s\n", at)
+		for _, item := range list[at] {
+			fmt.Fprintf(w, "    + %-40s (%s — %s)\n",
+				item.Field, strings.Join(controlIDStrings(item.RequiredBy), ", "), strings.ToUpper(item.MaxSeverity.String()))
 		}
-		slices.SortFunc(fws, func(a, b policy.ComplianceFramework) int {
-			return cmp.Compare(string(a), string(b))
-		})
-		for _, fw := range fws {
-			fc := r.FrameworkCoverage[fw]
-			fmt.Fprintf(w, "  %-12s %-12s %-12d %-12d %.1f%%\n",
-				shortFramework(fw),
-				fmt.Sprintf("%d/%d", fc.Evaluable, fc.Total),
-				fc.Incomplete, fc.SilentRisk, fc.CoveragePct)
-		}
+	}
+	fmt.Fprintln(w)
+}
+
+func writeFrameworkCoverage(w io.Writer, coverage map[policy.ComplianceFramework]*FrameworkCoverage) {
+	fmt.Fprintln(w, "COMPLIANCE FRAMEWORK IMPACT")
+	fmt.Fprintln(w, strings.Repeat("-", 72))
+	fmt.Fprintf(w, "  %-12s %-12s %-12s %-12s %s\n",
+		"Framework", "Evaluable", "Incomplete", "Silent Risk", "Coverage")
+	fmt.Fprintf(w, "  %-12s %-12s %-12s %-12s %s\n",
+		strings.Repeat("-", 10), strings.Repeat("-", 10),
+		strings.Repeat("-", 10), strings.Repeat("-", 10), strings.Repeat("-", 8))
+	var fws []policy.ComplianceFramework
+	for fw := range coverage {
+		fws = append(fws, fw)
+	}
+	slices.SortFunc(fws, func(a, b policy.ComplianceFramework) int {
+		return cmp.Compare(string(a), string(b))
+	})
+	for _, fw := range fws {
+		fc := coverage[fw]
+		fmt.Fprintf(w, "  %-12s %-12s %-12d %-12d %.1f%%\n",
+			shortFramework(fw),
+			fmt.Sprintf("%d/%d", fc.Evaluable, fc.Total),
+			fc.Incomplete, fc.SilentRisk, fc.CoveragePct)
 	}
 }
 

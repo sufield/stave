@@ -37,27 +37,8 @@ func formatVerify(a *stave.Assessment, score *stave.ScoreResult, detailed bool) 
 	fmt.Fprintf(&b, "  SLA breaches:  %d (violations past their max-unsafe window)\n", a.SLABreaches)
 
 	ranked := rankBySeverity(a.Findings)
-	if len(ranked) > 0 {
-		fmt.Fprintf(&b, "\nTop findings by severity:\n")
-		for i := range ranked {
-			if i >= 10 {
-				break
-			}
-			f := &ranked[i]
-			fmt.Fprintf(&b, "  %d. [%s] %s — %s: %s\n",
-				i+1, f.Severity, f.ControlID, f.AssetID, findingMessage(f))
-		}
-	}
-
-	fmt.Fprintf(&b, "\nChain findings: %d\n", len(a.ChainFindings))
-	for i := range a.ChainFindings {
-		if i >= 3 {
-			break
-		}
-		c := &a.ChainFindings[i]
-		fmt.Fprintf(&b, "  - %s [%s]: %s (%d failing controls)\n",
-			c.ChainID, c.Severity, c.Description, len(c.ControlsFailing))
-	}
+	writeTopFindings(&b, ranked)
+	writeChainSummary(&b, a.ChainFindings)
 
 	fmt.Fprintf(&b, "\nEvaluated: %s | Snapshots: %d | Assets: %d\n",
 		a.Run.EvalTime.Format("2006-01-02T15:04:05Z07:00"), a.Run.Snapshots, a.Summary.TotalAssets)
@@ -96,6 +77,33 @@ func rankBySeverity(findings []stave.Finding) []stave.Finding {
 		return cmp.Compare(a.AssetID, b.AssetID)
 	})
 	return out
+}
+
+func writeTopFindings(b *strings.Builder, ranked []stave.Finding) {
+	if len(ranked) == 0 {
+		return
+	}
+	fmt.Fprintf(b, "\nTop findings by severity:\n")
+	for i := range ranked {
+		if i >= 10 {
+			break
+		}
+		f := &ranked[i]
+		fmt.Fprintf(b, "  %d. [%s] %s — %s: %s\n",
+			i+1, f.Severity, f.ControlID, f.AssetID, findingMessage(f))
+	}
+}
+
+func writeChainSummary(b *strings.Builder, chains []stave.ChainFinding) {
+	fmt.Fprintf(b, "\nChain findings: %d\n", len(chains))
+	for i := range chains {
+		if i >= 3 {
+			break
+		}
+		c := &chains[i]
+		fmt.Fprintf(b, "  - %s [%s]: %s (%d failing controls)\n",
+			c.ChainID, c.Severity, c.Description, len(c.ControlsFailing))
+	}
 }
 
 func severityRank(s stave.Severity) int {
